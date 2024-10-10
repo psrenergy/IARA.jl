@@ -1,0 +1,176 @@
+id = "ThermalPlant"
+icon = "lucide/factory.svg"
+label.en = "Thermal Plant"
+
+[[card]]
+query = """
+SELECT 
+  CASE 
+    WHEN COUNT(*) = 0 THEN 'inactive'
+    ELSE 'active'
+  END
+FROM ThermalPlant;
+"""
+type = "string"
+label.en = "Status"
+
+[[card]]
+query = "SELECT COUNT(*) FROM ThermalPlant"
+type = "integer"
+label.en = "Elements"
+unit.en = "Thermal Plant(s)"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/log-in.svg"
+
+[[attribute_group]]
+id = "om_cost"
+label.en = "O&M Cost"
+icon = "lucide/log-in.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date and time"
+format = "yyyy-MM-dd HH:mm"
+unit = "yyyy-MM-dd HH:mm"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Name of the Thermal plant"
+
+[[attribute]]
+id = "has_commitment"
+label.en = "Has Commitment"
+tooltip.en = "Whether the thermal plant has commitment"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "existing"
+label.en = "Existing"
+tooltip.en = "Whether the thermal plant is existing"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "min_generation"
+label.en = "Minimum Generation"
+tooltip.en = "Minimum generation of the thermal plant"
+unit.en = "MW"
+hide = true
+
+[[attribute]]
+id = "max_generation"
+label.en = "Maximum Generation"
+tooltip.en = "Maximum generation of the thermal plant"
+unit.en = "MW"
+
+[[attribute]]
+id = "om_cost"
+label.en = "O&M Cost"
+tooltip.en = "Operation and maintenance cost of the thermal plant"
+unit.en = "$/MWh"
+
+[[attribute]]
+id = "max_ramp_up"
+label.en = "Maximum Ramp Up"
+tooltip.en = "Maximum ramp up of the thermal plant"
+unit.en = "MW/block"
+hide = true
+
+[[attribute]]
+id = "max_ramp_down"
+label.en = "Maximum Ramp Down"
+tooltip.en = "Maximum ramp down of the thermal plant"
+unit.en = "MW/block"
+hide = true
+
+[[attribute]]
+id = "min_uptime"
+label.en = "Minimum Uptime"
+tooltip.en = "Minimum uptime of the thermal plant"
+unit.en = "blocks"
+hide = true
+
+[[attribute]]
+id = "max_uptime"
+label.en = "Maximum Uptime"
+tooltip.en = "Maximum uptime of the thermal plant"
+unit.en = "blocks"
+hide = true
+
+[[attribute]]
+id = "min_downtime"
+label.en = "Minimum Downtime"
+tooltip.en = "Minimum downtime of the thermal plant"
+unit.en = "blocks"
+hide = true
+
+[[attribute]]
+id = "max_startups"
+label.en = "Maximum Startups"
+tooltip.en = "Maximum number of startups of the thermal plant"
+hide = true
+
+[[attribute]]
+id = "max_shutdowns"
+label.en = "Maximum Shutdowns"
+tooltip.en = "Maximum number of shutdowns of the thermal plant"
+hide = true
+
+[[attribute]]
+id = "startup_cost"
+label.en = "Startup Cost"
+tooltip.en = "Startup cost of the thermal plant"
+unit.en = "$"
+hide = true
+
+[[attribute]]
+id = "shutdown_cost"
+label.en = "Shutdown Cost"
+tooltip.en = "Shutdown cost of the thermal plant"
+unit.en = "$"
+hide = true
+
+[[attribute]]
+id = "commitment_initial_condition"
+label.en = "Commitment Initial Condition"
+tooltip.en = "Initial condition of the commitment of the thermal plant"
+hide = true
+
+[[attribute]]
+id = "generation_initial_condition"
+label.en = "Generation Initial Condition"
+tooltip.en = "Initial condition of the generation of the thermal plant"
+unit.en = "MW"
+hide = true
+
+[[attribute]]
+id = "uptime_initial_condition"
+label.en = "Uptime Initial Condition"
+tooltip.en = "Initial condition of the uptime of the thermal plant"
+unit.en = "blocks"
+hide = true
+
+[[attribute]]
+id = "downtime_initial_condition"
+label.en = "Downtime Initial Condition"
+tooltip.en = "Initial condition of the downtime of the thermal plant"
+unit.en = "blocks"
+hide = true
+
+[[attribute]]
+id = "bus_id"
+label.en = "Bus"
+tooltip.en = "Bus"
+
+[[attribute]]
+id = "assetowner_id"
+label.en = "AssetOwner"
+tooltip.en = "AssetOwner"

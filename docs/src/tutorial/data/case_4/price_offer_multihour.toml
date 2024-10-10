@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["stage", "scenario", "profile"]
+dimension_size = [1, 1, 1]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "stage"
+frequency = "month"
+unit = "$/MWh"
+labels = ["bg_1", "bg_2"]

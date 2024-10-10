@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["stage", "scenario", "block"]
+dimension_size = [3, 4, 5]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "stage"
+frequency = "monthly"
+unit = "GWh"
+labels = ["single_thermal_reserve - min_downtime_plant", "two_thermals_reserve - max_uptime_plant", "two_thermals_reserve - unconstrained_plant"]

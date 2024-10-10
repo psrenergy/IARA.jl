@@ -1,0 +1,67 @@
+id = "Branch"
+icon = "lucide/utility-pole.svg"
+label.en = "Branch"
+
+[[card]]
+query = """
+SELECT 
+  CASE 
+    WHEN COUNT(*) = 0 THEN 'inactive'
+    ELSE 'active'
+  END
+FROM Branch;
+"""
+type = "string"
+label.en = "Status"
+
+[[card]]
+query = "SELECT COUNT(*) FROM Branch"
+type = "integer"
+label.en = "Elements"
+unit.en = "Branch(es)"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/log-in.svg"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Name of the branch"
+
+[[attribute]]
+id = "modeled_as_dc_line"
+label.en = "Modeled as DC Line"
+tooltip.en = "Modeled as DC line"
+type = "enum"
+enum = "bool"
+
+[[attribute]]
+id = "bus_to"
+label.en = "Bus To"
+tooltip.en = "Bus to"
+
+[[attribute]]
+id = "bus_from"
+label.en = "Bus From"
+tooltip.en = "Bus from"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date and time"
+format = "yyyy-MM-dd HH:mm"
+unit = "yyyy-MM-dd HH:mm"
+
+[[attribute]]
+id = "capacity"
+label.en = "Maximum Flow Capacity"
+tooltip.en = "Maximum flow capacity of the branch"
+unit = "MW"
+
+[[attribute]]
+id = "reactance"
+label.en = "Reactance"
+tooltip.en = "Reactance of the branch"
+unit = "p.u."

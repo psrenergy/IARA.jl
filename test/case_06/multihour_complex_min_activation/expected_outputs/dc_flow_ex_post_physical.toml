@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["stage", "scenario", "subscenario", "block"]
+dimension_size = [3, 4, 1, 2]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "stage"
+frequency = "monthly"
+unit = "MW"
+labels = ["dc_1"]

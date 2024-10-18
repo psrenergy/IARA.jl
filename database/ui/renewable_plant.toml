@@ -1,0 +1,84 @@
+id = "RenewablePlant"
+icon = "lucide/sun.svg"
+label.en = "Renewable Plant"
+
+[[card]]
+query = """
+SELECT 
+  CASE 
+    WHEN COUNT(*) = 0 THEN 'inactive'
+    ELSE 'active'
+  END
+FROM RenewablePlant;
+"""
+type = "string"
+label.en = "Status"
+
+[[card]]
+query = "SELECT COUNT(*) FROM RenewablePlant"
+type = "integer"
+label.en = "Elements"
+unit.en = "Renewable plant(s)"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/log-in.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date and time"
+format = "yyyy-MM-dd HH:mm"
+unit = "yyyy-MM-dd HH:mm"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Name of the renewable plant"
+
+[[attribute]]
+id = "existing"
+label.en = "Existing"
+tooltip.en = "Existing renewable plant"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "max_generation"
+label.en = "Maximum Generation"
+tooltip.en = "Maximum generation of the renewable plant"
+unit = "MW"
+
+[[attribute]]
+id = "om_cost"
+label.en = "O&M Cost"
+tooltip.en = "Operation and maintenance cost of the renewable plant"
+unit = "$/MWh"
+hide = true
+
+[[attribute]]
+id = "curtailment_cost"
+label.en = "Curtailment Cost"
+tooltip.en = "Curtailment cost of the renewable plant"
+unit = "$/MWh"
+hide = true
+
+[[attribute]]
+id = "technology_type"
+label.en = "Technology Type"
+tooltip.en = "Technology type of the renewable plant"
+type = "enum"
+enum = "renewable_plant_technology_type"
+hide = true
+
+[[attribute]]
+id = "bus_id"
+label.en = "Bus"
+tooltip.en = "Bus"
+
+[[attribute]]
+id = "assetowner_id"
+label.en = "AssetOwner"
+tooltip.en = "AssetOwner"

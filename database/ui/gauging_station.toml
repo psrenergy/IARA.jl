@@ -1,0 +1,49 @@
+id = "GaugingStation"
+icon = "lucide/map-pinned.svg"
+label.en = "Gauging Station"
+
+[[card]]
+query = """
+SELECT 
+  CASE 
+    WHEN COUNT(*) = 0 THEN 'inactive'
+    ELSE 'active'
+  END
+FROM GaugingStation;
+"""
+type = "string"
+label.en = "Status"
+
+[[card]]
+query = "SELECT COUNT(*) FROM GaugingStation"
+type = "integer"
+label.en = "Elements"
+unit.en = "Gauging Station(s)"
+
+[[attribute_group]]
+id = "historical_inflow"
+label.en = "Parameters"
+icon = "lucide/log-in.svg"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Name of the gauging station"
+
+[[attribute]]
+id = "gaugingstation_downstream"
+label.en = "Downstream Gauging Station"
+tooltip.en = "Downstream gauging station"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date and time"
+format = "yyyy-MM-dd HH:mm"
+unit = "yyyy-MM-dd HH:mm"
+
+[[attribute]]
+id = "historical_inflow"
+label.en = "Historical inflow"
+tooltip.en = "Historical inflow of the gauging station"
+unit = "m³/s"

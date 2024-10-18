@@ -1,0 +1,40 @@
+#  Copyright (c) 2024: PSR, CCEE (Câmara de Comercialização de Energia  
+#      Elétrica), and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#############################################################################
+# IARA
+# See https://github.com/psrenergy/IARA.jl
+#############################################################################
+
+db = load_study(PATH; read_only = false)
+
+number_of_subscenarios = 2
+
+# Update base case elements
+update_configuration!(db;
+    number_of_subscenarios,
+)
+
+# Create and link CSV files
+# -------------------------
+# Demand
+mv(joinpath(PATH, "demand.csv"), joinpath(PATH, "demand_ex_ante.csv"); force = true)
+mv(joinpath(PATH, "demand.toml"), joinpath(PATH, "demand_ex_ante.toml"); force = true)
+
+demand_ex_post = zeros(1, number_of_blocks, number_of_subscenarios, number_of_scenarios, number_of_stages)
+demand_ex_post[:, :, 1, :, :] = demand .- (0.1 / 1e3)
+demand_ex_post[:, :, 2, :, :] = demand .+ (0.1 / 1e3)
+write_timeseries_file(
+    joinpath(PATH, "demand_ex_post"),
+    demand_ex_post;
+    dimensions = ["stage", "scenario", "subscenario", "block"],
+    labels = ["dem_1"],
+    time_dimension = "stage",
+    dimension_size = [number_of_stages, number_of_scenarios, number_of_subscenarios, number_of_blocks],
+    initial_date = "2020-01-01T00:00:00",
+    unit = "GWh",
+)
+
+close_study!(db)

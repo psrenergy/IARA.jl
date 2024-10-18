@@ -1,0 +1,149 @@
+id = "Configuration"
+icon = "lucide/settings-2.svg"
+label.en = "Configuration"
+
+[[card]]
+query = "SELECT number_of_stages FROM Configuration"
+type = "integer"
+label.en = "Number of Stages"
+unit.en = ""
+
+[[card]]
+query = "SELECT number_of_scenarios FROM Configuration"
+type = "integer"
+label.en = "Number of Scenarios"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Name of the configuration"
+
+[[attribute]]
+id = "number_of_stages"
+label.en = "Number of Stages"
+tooltip.en = "Number of stages in the study horizon"
+
+[[attribute]]
+id = "number_of_scenarios"
+label.en = "Number of Scenarios"
+tooltip.en = "Number of scenarios in the study"
+
+[[attribute]]
+id = "number_of_blocks"
+label.en = "Number of Blocks"
+tooltip.en = "Number of blocks in the study"
+
+[[attribute]]
+id = "initial_date_time"
+label.en = "Initial Date"
+tooltip.en = "Initial date and time of the study. Format: yyyy-mm-ddTHH:MM:SS"
+hide = true
+
+[[attribute]]
+id = "stage_type"
+label.en = "Stage Type"
+tooltip.en = "Stage type"
+type = "enum"
+enum = "conf_stage_type"
+hide = true
+
+[[attribute]]
+id = "block_duration_in_hours"
+label.en = "Block Duration"
+tooltip.en = "Block duration"
+unit.en = "hours"
+hide = true
+
+[[attribute]]
+id = "run_mode"
+label.en = "Run Mode"
+tooltip.en = "Run mode"
+type = "enum"
+enum = "conf_run_mode"
+hide = true
+
+[[attribute]]
+id = "linear_policy_graph"
+label.en = "Linear Policy Graph"
+tooltip.en = "Use a linear policy graph in the optimization model"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "use_binary_variables"
+label.en = "Use Binary Variables"
+tooltip.en = "Use binary variables in the optimization model"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "loop_blocks_for_thermal_constraints"
+label.en = "Loop Blocks for Thermal Constraints"
+tooltip.en = "Consider first and last blocks connected for thermal constraints"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "yearly_discount_rate"
+label.en = "Yearly Discount Rate"
+tooltip.en = "Yearly discount rate"
+hide = true
+
+[[attribute]]
+id = "yearly_duration_in_hours"
+label.en = "Yearly Duration"
+tooltip.en = "Yearly duration"
+unit.en = "hours"
+hide = true
+
+[[attribute]]
+id = "number_of_stages_to_simulate"
+label.en = "Number of Stages to Simulate"
+tooltip.en = "Number of stages to simulate"
+hide = true
+
+[[attribute]]
+id = "demand_deficit_cost"
+label.en = "Demand Deficit Cost"
+tooltip.en = "Cost of demand deficit"
+unit.en = "$/MWh"
+hide = true
+
+[[attribute]]
+id = "hydro_minimum_outflow_violation_cost"
+label.en = "Hydro Minimum Outflow Violation Cost"
+tooltip.en = "Cost of hydro minimum outflow violation"
+unit.en = "$/m³/s"
+hide = true
+
+[[attribute]]
+id = "hydro_spillage_cost"
+label.en = "Hydro Spillage Cost"
+tooltip.en = "Cost of hydro spillage"
+unit.en = "$/hm³"
+hide = true
+
+[[attribute]]
+id = "aggregate_buses_for_strategic_bidding"
+label.en = "Aggregate Buses For Strategic Bidding"
+tooltip.en = "Aggregate buses for strategic bidding"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "parp_max_lags"
+label.en = "PAR(p) Maximum Lag"
+tooltip.en = "PAR(p) maximum lag"
+hide = true
+
+[[attribute]]
+id = "read_inflow_from_file"
+label.en = "Read Inflow From File"
+tooltip.en = "Read inflow data from file"
+type = "enum"
+enum = "bool"
+hide = true

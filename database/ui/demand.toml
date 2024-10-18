@@ -1,0 +1,82 @@
+id = "Demand"
+icon = "lucide/zap.svg"
+label.en = "Demand"
+
+[[card]]
+query = """
+SELECT 
+  CASE 
+    WHEN COUNT(*) = 0 THEN 'inactive'
+    ELSE 'active'
+  END
+FROM Demand;
+"""
+type = "string"
+label.en = "Status"
+
+[[card]]
+query = "SELECT COUNT(*) FROM Demand"
+type = "integer"
+label.en = "Elements"
+unit.en = "Demand(s)"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Name of the demand"
+
+[[attribute]]
+id = "is_elastic"
+label.en = "Elastic Demand"
+tooltip.en = "Elastic demand"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "is_flexible"
+label.en = "Flexible Demand"
+tooltip.en = "Flexible demand"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "existing"
+label.en = "Existing"
+tooltip.en = "Existing Demand"
+type = "enum"
+enum = "bool"
+hide = true
+
+[[attribute]]
+id = "max_shift_up"
+label.en = "Max Shift Up"
+tooltip.en = "Max shift up"
+unit = "MW"
+hide = true
+
+[[attribute]]
+id = "max_shift_down"
+label.en = "Max Shift Down"
+tooltip.en = "Max shift down"
+unit = "MW"
+hide = true
+
+[[attribute]]
+id = "curtailment_cost"
+label.en = "Curtailment Cost"
+tooltip.en = "Curtailment cost"
+unit = "$/MWh"
+
+[[attribute]]
+id = "max_curtailment"
+label.en = "Maximum Curtailment"
+tooltip.en = "Max curtailment"
+unit = "MW"
+hide = true
+
+[[attribute]]
+id = "bus_id"
+label.en = "Bus"
+tooltip.en = "Bus"

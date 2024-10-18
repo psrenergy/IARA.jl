@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["stage", "scenario", "block"]
+dimension_size = [2, 12, 1]
+initial_date = "2000-01-01 00:00:00"
+time_dimension = "stage"
+frequency = "month"
+unit = "GWh"
+labels = ["Demand1", "Demand2", "Demand3"]

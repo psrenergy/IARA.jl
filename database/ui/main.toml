@@ -1,0 +1,20 @@
+model = "IARA"
+extension = "iara"
+executable = "IARA.bat"
+dashboard = "results/iara_dashboard_summarized.html"
+documentation = "index.html"
+collections = [
+    "configuration",
+    "asset_owner",
+    "zone",
+    "bus",
+    "branch",
+    "dc_line",
+    "demand",
+    "gauging_station",
+    "hydro_plant",
+    "thermal_plant",
+    "renewable_plant",
+    "battery",
+    "reserve",
+]

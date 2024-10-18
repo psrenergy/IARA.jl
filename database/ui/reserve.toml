@@ -1,0 +1,91 @@
+id = "Reserve"
+icon = "lucide/ratio.svg"
+label.en = "Reserve"
+
+[[card]]
+query = """
+SELECT 
+  CASE 
+    WHEN COUNT(*) = 0 THEN 'inactive'
+    ELSE 'active'
+  END
+FROM Reserve;
+"""
+type = "string"
+label.en = "Status"
+
+[[card]]
+query = "SELECT COUNT(*) FROM Reserve"
+type = "integer"
+label.en = "Elements"
+unit.en = "Reserve(s)"
+
+[[attribute_group]]
+id = "thermal_plant"
+label.en = "Thermal Plant"
+icon = "lucide/factory.svg"
+
+[[attribute_group]]
+id = "hydro_plant"
+label.en = "Hydro Plant"
+icon = "lucide/waves.svg"
+
+[[attribute_group]]
+id = "battery"
+label.en = "Battery"
+icon = "lucide/battery-medium.svg"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Name of the reseve"
+
+[[attribute]]
+id = "constraint_type"
+label.en = "Constraint Type"
+tooltip.en = "Reserve constraint type"
+type = "enum"
+enum = "reserve_constraint_type"
+
+[[attribute]]
+id = "direction"
+label.en = "Direction"
+tooltip.en = "Direction"
+type = "enum"
+enum = "reserve_direction"
+
+[[attribute]]
+id = "violation_cost"
+label.en = "Violation Cost"
+tooltip.en = "Violation cost"
+unit.en = "$"
+
+[[attribute]]
+id = "angular_coefficient"
+label.en = "Angular Coefficient"
+tooltip.en = "Angular coefficient"
+
+[[attribute]]
+id = "linear_coefficient"
+label.en = "Linear Coefficient"
+tooltip.en = "Linear coefficient"
+
+[[attribute]]
+id = "reserve_requirement"
+label.en = "Reserve Requirement"
+tooltip.en = "Reserve requirement file name"
+
+[[attribute]]
+id = "thermalplant_id"
+label.en = "Thermal Plant"
+tooltip.en = "Thermal plant"
+
+[[attribute]]
+id = "hydroplant_id"
+label.en = "Hydro Plant"
+tooltip.en = "Hydro plant"
+
+[[attribute]]
+id = "battery_id"
+label.en = "Battery"
+tooltip.en = "Battery"

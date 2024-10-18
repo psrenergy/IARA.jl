@@ -8,7 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export update_configuration!
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -32,19 +31,41 @@ Configurations for the problem.
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     hydro_balance_block_resolution::Configurations_HydroBalanceBlockResolution.T =
         Configurations_HydroBalanceBlockResolution.CHRONOLOGICAL_BLOCKS
-    use_binary_variables::Bool = false
-    loop_blocks_for_thermal_constraints::Bool = false
+    use_binary_variables::Configurations_BinaryVariableUsage.T = Configurations_BinaryVariableUsage.USE
+    loop_blocks_for_thermal_constraints::Configurations_ConsiderBlocksLoopForThermalConstraints.T =
+        Configurations_ConsiderBlocksLoopForThermalConstraints.DO_NOT_CONSIDER
     yearly_discount_rate::Float64 = 0.0
     yearly_duration_in_hours::Float64 = 0.0
-    aggregate_buses_for_strategic_bidding::Bool = false
+    aggregate_buses_for_strategic_bidding::Configurations_BusesAggregationForStrategicBidding.T =
+        Configurations_BusesAggregationForStrategicBidding.DO_NOT_AGGREGATE
     parp_max_lags::Int = 0
     inflow_source::Configurations_InflowSource.T = Configurations_InflowSource.READ_FROM_FILE
     clearing_bid_source::Configurations_ClearingBidSource.T = Configurations_ClearingBidSource.READ_FROM_FILE
     clearing_hydro_representation::Configurations_ClearingHydroRepresentation.T =
         Configurations_ClearingHydroRepresentation.PURE_BIDS
-    ex_post_physical_hydro_representation::Configurations_ExPostPhysicalHydroRepresentation.T =
-        Configurations_ExPostPhysicalHydroRepresentation.SAME_AS_CLEARING
-    clearing_integer_variables::Configurations_ClearingIntegerVariables.T = Configurations_ClearingIntegerVariables.FIX
+    clearing_model_type_ex_ante_physical::Configurations_ClearingModelType.T =
+        Configurations_ClearingModelType.NOT_DEFINED
+    clearing_model_type_ex_ante_commercial::Configurations_ClearingModelType.T =
+        Configurations_ClearingModelType.NOT_DEFINED
+    clearing_model_type_ex_post_physical::Configurations_ClearingModelType.T =
+        Configurations_ClearingModelType.NOT_DEFINED
+    clearing_model_type_ex_post_commercial::Configurations_ClearingModelType.T =
+        Configurations_ClearingModelType.NOT_DEFINED
+    use_fcf_in_clearing::Bool = false
+    clearing_integer_variables_ex_ante_physical_type::Configurations_ClearingIntegerVariables.T =
+        Configurations_ClearingIntegerVariables.FIXED
+    clearing_integer_variables_ex_ante_commercial_type::Configurations_ClearingIntegerVariables.T =
+        Configurations_ClearingIntegerVariables.FIXED
+    clearing_integer_variables_ex_post_physical_type::Configurations_ClearingIntegerVariables.T =
+        Configurations_ClearingIntegerVariables.FIXED
+    clearing_integer_variables_ex_post_commercial_type::Configurations_ClearingIntegerVariables.T =
+        Configurations_ClearingIntegerVariables.FIXED
+    clearing_integer_variables_ex_ante_commercial_source::RunTime_ClearingProcedure.T =
+        RunTime_ClearingProcedure.EX_ANTE_PHYSICAL
+    clearing_integer_variables_ex_post_physical_source::RunTime_ClearingProcedure.T =
+        RunTime_ClearingProcedure.EX_ANTE_PHYSICAL
+    clearing_integer_variables_ex_post_commercial_source::RunTime_ClearingProcedure.T =
+        RunTime_ClearingProcedure.EX_ANTE_PHYSICAL
     clearing_network_representation::Configurations_ClearingNetworkRepresentation.T =
         Configurations_ClearingNetworkRepresentation.NODAL_NODAL
     settlement_type::Configurations_SettlementType.T = Configurations_SettlementType.EX_ANTE
@@ -98,22 +119,22 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_block_resolution")[1] |>
         Configurations_HydroBalanceBlockResolution.T
     configurations.use_binary_variables =
-        PSRI.get_parms(inputs.db, "Configuration", "use_binary_variables")[1] |> Bool
+        PSRI.get_parms(inputs.db, "Configuration", "use_binary_variables")[1] |> Configurations_BinaryVariableUsage.T
     loop_blocks_for_thermal_constraints =
         PSRI.get_parms(inputs.db, "Configuration", "loop_blocks_for_thermal_constraints")[1]
     configurations.loop_blocks_for_thermal_constraints =
         if is_null(loop_blocks_for_thermal_constraints)
-            false
+            Configurations_ConsiderBlocksLoopForThermalConstraints.DO_NOT_CONSIDER
         else
-            loop_blocks_for_thermal_constraints |> Bool
+            loop_blocks_for_thermal_constraints |> Configurations_ConsiderBlocksLoopForThermalConstraints.T
         end
     aggregate_buses_for_strategic_bidding =
         PSRI.get_parms(inputs.db, "Configuration", "aggregate_buses_for_strategic_bidding")[1]
     configurations.aggregate_buses_for_strategic_bidding =
         if is_null(aggregate_buses_for_strategic_bidding)
-            false
+            Configurations_BusesAggregationForStrategicBidding.DO_NOT_AGGREGATE
         else
-            aggregate_buses_for_strategic_bidding |> Bool
+            aggregate_buses_for_strategic_bidding |> Configurations_BusesAggregationForStrategicBidding.T
         end
     configurations.inflow_source =
         PSRI.get_parms(inputs.db, "Configuration", "inflow_source")[1] |> Configurations_InflowSource.T
@@ -122,12 +143,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.clearing_hydro_representation =
         PSRI.get_parms(inputs.db, "Configuration", "clearing_hydro_representation")[1] |>
         Configurations_ClearingHydroRepresentation.T
-    configurations.ex_post_physical_hydro_representation =
-        PSRI.get_parms(inputs.db, "Configuration", "ex_post_physical_hydro_representation")[1] |>
-        Configurations_ExPostPhysicalHydroRepresentation.T
-    configurations.clearing_integer_variables =
-        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables")[1] |>
-        Configurations_ClearingIntegerVariables.T
     configurations.clearing_network_representation =
         PSRI.get_parms(inputs.db, "Configuration", "clearing_network_representation")[1] |>
         Configurations_ClearingNetworkRepresentation.T
@@ -151,6 +166,42 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "hydro_spillage_cost")[1]
     configurations.number_of_virtual_reservoir_bidding_segments =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_virtual_reservoir_bidding_segments")[1]
+
+    configurations.clearing_model_type_ex_ante_physical =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_ante_physical")[1] |>
+        Configurations_ClearingModelType.T
+    configurations.clearing_model_type_ex_ante_commercial =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_ante_commercial")[1] |>
+        Configurations_ClearingModelType.T
+    configurations.clearing_model_type_ex_post_physical =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_post_physical")[1] |>
+        Configurations_ClearingModelType.T
+    configurations.clearing_model_type_ex_post_commercial =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_post_commercial")[1] |>
+        Configurations_ClearingModelType.T
+    configurations.use_fcf_in_clearing =
+        PSRI.get_parms(inputs.db, "Configuration", "use_fcf_in_clearing")[1] |> Bool
+    configurations.clearing_integer_variables_ex_ante_physical_type =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_ante_physical_type")[1] |>
+        Configurations_ClearingIntegerVariables.T
+    configurations.clearing_integer_variables_ex_ante_commercial_type =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_ante_commercial_type")[1] |>
+        Configurations_ClearingIntegerVariables.T
+    configurations.clearing_integer_variables_ex_post_physical_type =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_physical_type")[1] |>
+        Configurations_ClearingIntegerVariables.T
+    configurations.clearing_integer_variables_ex_post_commercial_type =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_commercial_type")[1] |>
+        Configurations_ClearingIntegerVariables.T
+    configurations.clearing_integer_variables_ex_ante_commercial_source =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_ante_commercial_source")[1] |>
+        RunTime_ClearingProcedure.T
+    configurations.clearing_integer_variables_ex_post_physical_source =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_physical_source")[1] |>
+        RunTime_ClearingProcedure.T
+    configurations.clearing_integer_variables_ex_post_commercial_source =
+        PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_commercial_source")[1] |>
+        RunTime_ClearingProcedure.T
 
     # Load vectors
     configurations.block_duration_in_hours = PSRI.get_vectors(inputs.db, "Configuration", "block_duration_in_hours")[1]
@@ -286,6 +337,64 @@ function validate(configurations::Configurations)
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
        configurations.clearing_bid_source == Configurations_ClearingBidSource.READ_FROM_FILE
         @error("Virtual reservoirs cannot be used with clearing bid source READ_FROM_FILE.")
+        num_errors += 1
+    end
+    if configurations.run_mode == Configurations_RunMode.MARKET_CLEARING
+        if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+            if configurations.clearing_model_type_ex_ante_physical != Configurations_ClearingModelType.HYBRID ||
+               configurations.clearing_model_type_ex_ante_commercial != Configurations_ClearingModelType.HYBRID ||
+               configurations.clearing_model_type_ex_post_physical != Configurations_ClearingModelType.HYBRID ||
+               configurations.clearing_model_type_ex_post_commercial != Configurations_ClearingModelType.HYBRID
+                @warn("All clearing models must be hybrid when using virtual reservoirs.")
+            end
+            configurations.clearing_model_type_ex_ante_physical = Configurations_ClearingModelType.HYBRID
+            configurations.clearing_model_type_ex_ante_commercial = Configurations_ClearingModelType.HYBRID
+            configurations.clearing_model_type_ex_post_physical = Configurations_ClearingModelType.HYBRID
+            configurations.clearing_model_type_ex_post_commercial = Configurations_ClearingModelType.HYBRID
+        end
+        if configurations.clearing_model_type_ex_ante_physical == Configurations_ClearingModelType.NOT_DEFINED
+            @error("Ex-ante physical clearing model type must be defined.")
+            num_errors += 1
+        end
+        if configurations.clearing_model_type_ex_ante_commercial == Configurations_ClearingModelType.NOT_DEFINED
+            @error("Ex-ante commercial clearing model type must be defined.")
+            num_errors += 1
+        end
+        if configurations.clearing_model_type_ex_post_physical == Configurations_ClearingModelType.NOT_DEFINED
+            @error("Ex-post physical clearing model type must be defined.")
+            num_errors += 1
+        end
+        if configurations.clearing_model_type_ex_post_commercial == Configurations_ClearingModelType.NOT_DEFINED
+            @error("Ex-post commercial clearing model type must be defined.")
+            num_errors += 1
+        end
+    end
+    if configurations.clearing_integer_variables_ex_ante_physical_type ==
+       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP
+        @error(
+            "Ex-ante physical clearing model cannot have fixed integer variables from previous step, because it is the first step."
+        )
+        num_errors += 1
+    end
+    if configurations.clearing_integer_variables_ex_ante_commercial_type ==
+       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP &&
+       Int(configurations.clearing_integer_variables_ex_ante_commercial_source) >=
+       Int(RunTime_ClearingProcedure.EX_ANTE_COMMERCIAL)
+        @error("Ex-ante commercial clearing model cannot have fixed integer variables from itself or future procedure.")
+        num_errors += 1
+    end
+    if configurations.clearing_integer_variables_ex_post_physical_type ==
+       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP &&
+       Int(configurations.clearing_integer_variables_ex_post_physical_source) >=
+       Int(RunTime_ClearingProcedure.EX_POST_PHYSICAL)
+        @error("Ex-post physical clearing model cannot have fixed integer variables from itself or future procedure.")
+        num_errors += 1
+    end
+    if configurations.clearing_integer_variables_ex_post_commercial_type ==
+       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP &&
+       Int(configurations.clearing_integer_variables_ex_post_commercial_source) >=
+       Int(RunTime_ClearingProcedure.EX_POST_COMMERCIAL)
+        @error("Ex-post commercial clearing model cannot have fixed integer variables from itself")
         num_errors += 1
     end
     return num_errors
@@ -490,7 +599,8 @@ linear_policy_graph(inputs::AbstractInputs) =
 
 Return whether binary variables should be used.
 """
-use_binary_variables(inputs::AbstractInputs) = inputs.collections.configurations.use_binary_variables
+use_binary_variables(inputs::AbstractInputs) =
+    inputs.collections.configurations.use_binary_variables == Configurations_BinaryVariableUsage.USE
 
 """
     loop_blocks_for_thermal_constraints(inputs)
@@ -498,7 +608,8 @@ use_binary_variables(inputs::AbstractInputs) = inputs.collections.configurations
 Return whether blocks should be looped for thermal constraints.
 """
 loop_blocks_for_thermal_constraints(inputs::AbstractInputs) =
-    inputs.collections.configurations.loop_blocks_for_thermal_constraints
+    inputs.collections.configurations.loop_blocks_for_thermal_constraints ==
+    Configurations_ConsiderBlocksLoopForThermalConstraints.CONSIDER
 
 """
     yearly_discount_rate(inputs)
@@ -530,7 +641,8 @@ yearly_duration_in_hours(inputs::AbstractInputs) =
 Return whether buses should be aggregated for strategic bidding.
 """
 aggregate_buses_for_strategic_bidding(inputs::AbstractInputs) =
-    inputs.collections.configurations.aggregate_buses_for_strategic_bidding
+    inputs.collections.configurations.aggregate_buses_for_strategic_bidding ==
+    Configurations_BusesAggregationForStrategicBidding.AGGREGATE
 
 """
     parp_max_lags(inputs)
@@ -579,20 +691,99 @@ clearing_hydro_representation(inputs::AbstractInputs) =
     inputs.collections.configurations.clearing_hydro_representation
 
 """
-    ex_post_physical_hydro_representation(inputs)
+    clearing_model_type_ex_ante_physical(inputs)
 
-Return the ex-post physical hydro representation.
+Return the ex-ante physical clearing model type.
 """
-ex_post_physical_hydro_representation(inputs::AbstractInputs) =
-    inputs.collections.configurations.ex_post_physical_hydro_representation
+clearing_model_type_ex_ante_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_model_type_ex_ante_physical
 
 """
-    clearing_integer_variables(inputs)
+    clearing_model_type_ex_ante_commercial(inputs)
 
-Return the clearing integer variables.
+Return the ex-ante commercial clearing model type.
 """
-clearing_integer_variables(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables
+clearing_model_type_ex_ante_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_model_type_ex_ante_commercial
+
+"""
+    clearing_model_type_ex_post_physical(inputs)
+
+Return the ex-post physical clearing model type.
+"""
+clearing_model_type_ex_post_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_model_type_ex_post_physical
+
+"""
+    clearing_model_type_ex_post_commercial(inputs)
+
+Return the ex-post commercial clearing model type.
+"""
+clearing_model_type_ex_post_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_model_type_ex_post_commercial
+
+"""
+    clearing_integer_variables_ex_ante_physical_type(inputs)
+
+Return the clearing integer variables type for ex-ante physical.
+"""
+clearing_integer_variables_ex_ante_physical_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_integer_variables_ex_ante_physical_type
+
+"""
+    clearing_integer_variables_ex_ante_commercial_type(inputs)
+
+Return the clearing integer variables type for ex-ante commercial.
+"""
+clearing_integer_variables_ex_ante_commercial_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_integer_variables_ex_ante_commercial_type
+
+"""
+    clearing_integer_variables_ex_post_physical_type(inputs)
+
+Return the clearing integer variables type for ex-post physical.
+"""
+clearing_integer_variables_ex_post_physical_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_integer_variables_ex_post_physical_type
+
+"""
+    clearing_integer_variables_ex_post_commercial_type(inputs)
+
+Return the clearing integer variables type for ex-post commercial.
+"""
+clearing_integer_variables_ex_post_commercial_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_integer_variables_ex_post_commercial_type
+
+"""
+    clearing_integer_variables_ex_ante_commercial_source(inputs)
+
+Return the source of the clearing integer variables for ex-ante commercial.
+"""
+clearing_integer_variables_ex_ante_commercial_source(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_integer_variables_ex_ante_commercial_source
+
+"""
+    clearing_integer_variables_ex_post_physical_source(inputs)
+
+Return the source of the clearing integer variables for ex-post physical.
+"""
+clearing_integer_variables_ex_post_physical_source(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_integer_variables_ex_post_physical_source
+
+"""
+    clearing_integer_variables_ex_post_commercial_source(inputs)
+
+Return the source of the clearing integer variables for ex-post commercial.
+"""
+clearing_integer_variables_ex_post_commercial_source(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_integer_variables_ex_post_commercial_source
+
+"""
+    use_fcf_in_clearing(inputs)
+
+Return whether the FCF should be used in clearing.
+"""
+use_fcf_in_clearing(inputs::AbstractInputs) = inputs.collections.configurations.use_fcf_in_clearing
 
 """
     clearing_network_representation(inputs)

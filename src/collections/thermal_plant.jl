@@ -8,10 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_thermal_plant!
-export update_thermal_plant!
-export update_thermal_plant_relation!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -23,8 +19,8 @@ Thermal plants are high-level data structures that represent thermal electricity
 """
 @collection @kwdef mutable struct ThermalPlant <: AbstractCollection
     label::Vector{String} = []
-    has_commitment::Vector{Bool} = []
-    existing::Vector{Bool} = []
+    has_commitment::Vector{ThermalPlant_HasCommitment.T} = []
+    existing::Vector{ThermalPlant_Existence.T} = []
     min_generation::Vector{Float64} = []
     max_generation::Vector{Float64} = []
     om_cost::Vector{Float64} = []
@@ -37,7 +33,7 @@ Thermal plants are high-level data structures that represent thermal electricity
     max_shutdowns::Vector{Int} = []
     startup_cost::Vector{Float64} = []
     shutdown_cost::Vector{Float64} = []
-    commitment_initial_condition::Vector{Int} = []
+    commitment_initial_condition::Vector{ThermalPlant_CommitmentInitialCondition.T} = []
     generation_initial_condition::Vector{Float64} = []
     uptime_initial_condition::Vector{Float64} = []
     downtime_initial_condition::Vector{Float64} = []
@@ -64,7 +60,7 @@ function initialize!(thermal_plant::ThermalPlant, inputs::AbstractInputs)
 
     thermal_plant.label = PSRI.get_parms(inputs.db, "ThermalPlant", "label")
     thermal_plant.has_commitment =
-        PSRI.get_parms(inputs.db, "ThermalPlant", "has_commitment") .|> Bool
+        PSRI.get_parms(inputs.db, "ThermalPlant", "has_commitment") .|> ThermalPlant_HasCommitment.T
     thermal_plant.max_ramp_up = PSRI.get_parms(inputs.db, "ThermalPlant", "max_ramp_up")
     thermal_plant.max_ramp_down = PSRI.get_parms(inputs.db, "ThermalPlant", "max_ramp_down")
     thermal_plant.min_uptime = PSRI.get_parms(inputs.db, "ThermalPlant", "min_uptime")
@@ -74,7 +70,8 @@ function initialize!(thermal_plant::ThermalPlant, inputs::AbstractInputs)
     thermal_plant.max_shutdowns = PSRI.get_parms(inputs.db, "ThermalPlant", "max_shutdowns")
     thermal_plant.shutdown_cost = PSRI.get_parms(inputs.db, "ThermalPlant", "shutdown_cost")
     thermal_plant.commitment_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalPlant", "commitment_initial_condition")
+        PSRI.get_parms(inputs.db, "ThermalPlant", "commitment_initial_condition") .|>
+        ThermalPlant_CommitmentInitialCondition.T
     thermal_plant.generation_initial_condition =
         PSRI.get_parms(inputs.db, "ThermalPlant", "generation_initial_condition")
     thermal_plant.uptime_initial_condition =
@@ -99,12 +96,13 @@ function update_time_series_from_db!(
     db::DatabaseSQLite,
     stage_date_time::DateTime,
 )
-    thermal_plant.existing = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalPlant",
-        "existing";
-        date_time = stage_date_time,
-    )
+    thermal_plant.existing =
+        PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalPlant",
+            "existing";
+            date_time = stage_date_time,
+        ) .|> ThermalPlant_Existence.T
     thermal_plant.min_generation = PSRDatabaseSQLite.read_time_series_row(
         db,
         "ThermalPlant",
@@ -319,14 +317,6 @@ function validate(thermal_plant::ThermalPlant)
             )
             num_errors += 1
         end
-        if !is_null(thermal_plant.commitment_initial_condition[i]) &&
-           thermal_plant.commitment_initial_condition[i] != 0 &&
-           thermal_plant.commitment_initial_condition[i] != 1
-            @error(
-                "Thermal Plant $(thermal_plant.label[i]) Commitment Initial Condition must be 0 or 1. Current value is $(thermal_plant.commitment_initial_condition[i])."
-            )
-            num_errors += 1
-        end
         if !is_null(thermal_plant.generation_initial_condition[i]) &&
            (
             thermal_plant.generation_initial_condition[i] < 0 ||
@@ -415,7 +405,11 @@ thermal_plant_min_generation(inputs::AbstractInputs, idx::Int) =
     is_null(inputs.collections.thermal_plant.min_generation[idx]) ? 0.0 :
     inputs.collections.thermal_plant.min_generation[idx]
 
-has_commitment(thermal_plant::ThermalPlant, idx::Int) = thermal_plant.has_commitment[idx]
+has_commitment(thermal_plant::ThermalPlant, idx::Int) =
+    thermal_plant.has_commitment[idx] == ThermalPlant_HasCommitment.HAS_COMMITMENT
 
 has_ramp_constraints(thermal_plant::ThermalPlant, idx::Int) =
     !is_null(thermal_plant.max_ramp_up[idx]) || !is_null(thermal_plant.max_ramp_down[idx])
+
+has_commitment_initial_condition(thermal_plant::ThermalPlant, idx::Int) =
+    thermal_plant.commitment_initial_condition[idx] != ThermalPlant_CommitmentInitialCondition.UNDEFINED

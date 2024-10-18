@@ -106,29 +106,35 @@ end
 @enumx Configurations_ClearingHydroRepresentation begin
     PURE_BIDS = 0
     VIRTUAL_RESERVOIRS = 1
-    FUTURE_COST_FUNCTION = 2
-end
-
-"""
-    Configurations_ExPostPhysicalHydroRepresentation
-
-  - `SAME_AS_CLEARING`: Same as clearing (0)
-  - `FUTURE_COST_FUNCTION`: Future cost function (1)
-"""
-@enumx Configurations_ExPostPhysicalHydroRepresentation begin
-    SAME_AS_CLEARING = 0
-    FUTURE_COST_FUNCTION = 1
 end
 
 """
     Configurations_ClearingIntegerVariables
 
-  - `FIX`: Fix (0)
-  - `LINEARIZE`: Linearize (1)
+  - `FIXED`: Fixed (0)
+  - `FIXED_FROM_PREVIOUS_STEP`: Fixed from previous step (1)
+  - `LINEARIZED`: Linearize (2)
 """
 @enumx Configurations_ClearingIntegerVariables begin
-    FIX = 0
-    LINEARIZE = 1
+    FIXED = 0
+    FIXED_FROM_PREVIOUS_STEP = 1
+    LINEARIZED = 2
+end
+
+"""
+    Configurations_ClearingModelType
+
+  - `NOT_DEFINED`: Not defined (-1)
+  - `COST_BASED`: Cost based (0)
+  - `BID_BASED`: Bid based (1)
+  - `HYBRID`: Hybrid (2)
+"""
+
+@enumx Configurations_ClearingModelType begin
+    NOT_DEFINED = -1
+    COST_BASED = 0
+    BID_BASED = 1
+    HYBRID = 2
 end
 
 """
@@ -182,25 +188,36 @@ end
 end
 
 """
-    Reserve_ConstraintType
+  Configurations_BinaryVariableUsage
 
-  - `EQUALITY`: Equality constraint (0)
-  - `INEQUALITY`: Inequality constraint (1)
+  - `USE`: Use binary variables (1)
+  - `DO_NOT_USE`: Do not use binary variables (0)
 """
-@enumx Reserve_ConstraintType begin
-    EQUALITY = 0
-    INEQUALITY = 1
+@enumx Configurations_BinaryVariableUsage begin
+    USE = 1
+    DO_NOT_USE = 0
 end
 
 """
-    Reserve_Direction
+    Configurations_ConsiderBlocksLoopForThermalConstraints
 
-  - `UP`: Upward direction (0)
-  - `DOWN`: Downward direction (1)
+  - `CONSIDER`: Consider blocks loop for thermal constraints (1)
+  - `DO_NOT_CONSIDER`: Do not consider blocks loop for thermal constraints (0)
 """
-@enumx Reserve_Direction begin
-    UP = 0
-    DOWN = 1
+@enumx Configurations_ConsiderBlocksLoopForThermalConstraints begin
+    CONSIDER = 1
+    DO_NOT_CONSIDER = 0
+end
+
+"""
+    Configurations_BusesAggregationForStrategicBidding
+
+  - `AGGREGATE`: Aggregate buses for strategic bidding (1)
+  - `DO_NOT_AGGREGATE`: Do not aggregate buses for strategic bidding (0)
+  """
+@enumx Configurations_BusesAggregationForStrategicBidding begin
+    AGGREGATE = 1
+    DO_NOT_AGGREGATE = 0
 end
 
 """
@@ -272,24 +289,127 @@ end
 end
 
 """
-    RunTime_ClearingModelType
+    RunTime_ClearingProcedure
 
   - `EX_ANTE_PHYSICAL`: Ex-Ante physical (0)
   - `EX_ANTE_COMMERCIAL`: Ex-Ante commercial (1)
   - `EX_POST_PHYSICAL`: Ex-Post physical (2)
   - `EX_POST_COMMERCIAL`: Ex-Post commercial (3)
 """
-@enumx RunTime_ClearingModelType begin
+@enumx RunTime_ClearingProcedure begin
     EX_ANTE_PHYSICAL = 0
     EX_ANTE_COMMERCIAL = 1
     EX_POST_PHYSICAL = 2
     EX_POST_COMMERCIAL = 3
 end
 
-export Configurations_PolicyGraphType, Configurations_InflowSource, Configurations_RunMode, Configurations_StageType,
-    Configurations_BlockAggregationType, Reserve_ConstraintType, Reserve_Direction, HydroPlant_InitialVolumeType,
-    Demand_DemandType, Branch_LineModel, AssetOwner_PriceType, Outputs_PlotScenarios, HydroPlant_OperationType,
-    BiddingGroup_BidType, Configurations_ClearingHydroRepresentation, Configurations_ExPostPhysicalHydroRepresentation,
-    Configurations_ClearingIntegerVariables, Configurations_ClearingNetworkRepresentation,
-    Configurations_SettlementType, Configurations_MakeWholePayments, Configurations_PriceCap, RunTime_ClearingModelType,
-    Configurations_ClearingBidSource
+"""
+  Battery_Existence
+
+  - `EXISTS`: Battery exists (1)
+  - `DOES_NOT_EXIST`: Battery does not exist (0)
+"""
+@enumx Battery_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  Branch_Existence
+
+  - `EXISTS`: Branch exists (1)
+  - `DOES_NOT_EXIST`: Branch does not exist (0)
+"""
+@enumx Branch_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  DCLine_Existence
+
+  - `EXISTS`: DC Line exists (1)
+  - `DOES_NOT_EXIST`: DC Line does not exist (0)
+"""
+@enumx DCLine_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  Demand_Existence
+
+  - `EXISTS`: Demand exists (1)
+  - `DOES_NOT_EXIST`: Demand does not exist (0)
+"""
+@enumx Demand_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  HydroPlant_Existence
+
+  - `EXISTS`: Hydro Plant exists (1)
+  - `DOES_NOT_EXIST`: Hydro Plant does not exist (0)
+"""
+@enumx HydroPlant_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  RenewablePlant_Existence
+
+  - `EXISTS`: Renewable Plant exists (1)
+  - `DOES_NOT_EXIST`: Renewable Plant does not exist (0)
+"""
+@enumx RenewablePlant_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  ThermalPlant_Existence
+
+  - `EXISTS`: Thermal Plant exists (1)
+  - `DOES_NOT_EXIST`: Thermal Plant does not exist (0)
+"""
+@enumx ThermalPlant_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  HydroPlant_HasCommitment
+
+  - `HAS_COMMITMENT`: Hydro Plant has commitment (1)
+  - `NO_COMMITMENT`: Hydro Plant has no commitment (0)
+"""
+@enumx HydroPlant_HasCommitment begin
+    HAS_COMMITMENT = 1
+    NO_COMMITMENT = 0
+end
+
+"""
+  ThermalPlant_HasCommitment
+
+  - `HAS_COMMITMENT`: Thermal Plant has commitment (1)
+  - `NO_COMMITMENT`: Thermal Plant has no commitment (0)
+"""
+@enumx ThermalPlant_HasCommitment begin
+    HAS_COMMITMENT = 1
+    NO_COMMITMENT = 0
+end
+
+"""
+  ThermalPlant_CommitmentInitialCondition
+
+  - `ON`: Initial condition is ON (1)
+  - `OFF`: Initial condition is OFF (0)
+"""
+@enumx ThermalPlant_CommitmentInitialCondition begin
+    ON = 1
+    OFF = 0
+    UNDEFINED = 2
+end

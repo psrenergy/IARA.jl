@@ -39,9 +39,9 @@ cp(PATH_ORIGINAL, PATH_EXECUTION; force = true);
 
 db = IARA.load_study(PATH_EXECUTION; read_only = false);
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.CENTRALIZED_OPERATION,
+    run_mode = IARA.Configurations_RunMode.CENTRALIZED_OPERATION,
 )
 ; #hide
 
@@ -82,9 +82,9 @@ mv(
 
 db = IARA.load_study(PATH_EXECUTION; read_only = false);
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.MARKET_CLEARING,
+    run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
 )
 ; #hide
 

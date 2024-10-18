@@ -15,8 +15,6 @@ IARA.Configurations_ExPostPhysicalHydroRepresentation
 IARA.Configurations_PriceCap
 IARA.Configurations_StageType 
 IARA.Configurations_BlockAggregationType  
-IARA.Reserve_ConstraintType  
-IARA.Reserve_Direction  
 IARA.HydroPlant_InitialVolumeType 
 IARA.HydroPlant_OperationType
 IARA.Demand_DemandType  

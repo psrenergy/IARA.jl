@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    PlotTechnologyHistogram
+
+Type for plotting a histogram where the observations are the total of generation for a technology, considering all scenarios, stages and blocks.
+"""
 abstract type PlotTechnologyHistogram <: PlotType end
 
 function plot_data(
@@ -18,8 +23,7 @@ function plot_data(
     title::String = "",
     unit::String = "",
     file_path::String,
-    initial_date::DateTime,
-    stage_type::Configurations_StageType.T,
+    kwargs...,
 ) where {N}
 
     # observations are each scenario - block for plant i
@@ -36,17 +40,22 @@ function plot_data(
         end
     end
 
-    plot_ref = plot()
-    plot_ref(;
+    config = Config(;
         x = data_to_plot,
         type = "histogram",
     )
 
-    plot_ref.layout.title.text = title * " - Scenario - Block"
-    plot_ref.layout.xaxis.title = unit
-    plot_ref.layout.yaxis.title = "Frequency"
+    main_configuration = Config(;
+        title = title * " - Scenario - Block",
+        xaxis = Dict("title" => unit),
+        yaxis = Dict("title" => "Frequency"),
+    )
 
-    _save_plot(plot_ref, file_path * "_hist.html")
+    if file_path == ""
+        return Plot(config, main_configuration)
+    else
+        _save_plot(Plot(config, main_configuration), file_path * "_hist.html")
+    end
 
     return
 end

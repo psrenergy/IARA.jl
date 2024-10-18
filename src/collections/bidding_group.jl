@@ -8,10 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_bidding_group!
-export update_bidding_group!
-export update_bidding_group_relation!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------

@@ -79,7 +79,6 @@ Possible complexities **within** the optimization problem:
   - Representation of strategic/centralized/price-taker units
 - New constraints and dual variables:
   - Virtual reservoirs
-  - Reserve products
 
 ### 3.5 Uncertainty Paradigm and the Cyclic Policy Graph
 - **Motivation (e.g., hydropower):**

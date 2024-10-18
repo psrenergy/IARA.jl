@@ -8,10 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_battery!
-export update_battery!
-export update_battery_relation!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -23,7 +19,7 @@ Collection representing the batteries in the system.
 """
 @collection @kwdef mutable struct Battery <: AbstractCollection
     label::Vector{String} = []
-    existing::Vector{Bool} = []
+    existing::Vector{Battery_Existence.T} = []
     initial_storage::Vector{Float64} = []
     min_storage::Vector{Float64} = []
     max_storage::Vector{Float64} = []
@@ -66,12 +62,13 @@ end
 Update the Battery time series from the database.
 """
 function update_time_series_from_db!(battery::Battery, db::DatabaseSQLite, stage_date_time::DateTime)
-    battery.existing = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "Battery",
-        "existing";
-        date_time = stage_date_time,
-    )
+    battery.existing =
+        PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "Battery",
+            "existing";
+            date_time = stage_date_time,
+        ) .|> Battery_Existence.T
     battery.min_storage = PSRDatabaseSQLite.read_time_series_row(
         db,
         "Battery",

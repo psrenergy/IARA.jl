@@ -8,10 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_demand!
-export update_demand!
-export update_demand_relation!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -24,7 +20,7 @@ Demand collection definition.
 @collection @kwdef mutable struct Demand <: AbstractCollection
     label::Vector{String} = []
     demand_type::Vector{Demand_DemandType.T} = []
-    existing::Vector{Bool} = []
+    existing::Vector{Demand_Existence.T} = []
     max_shift_up::Vector{Float64} = []
     max_shift_down::Vector{Float64} = []
     curtailment_cost::Vector{Float64} = []
@@ -80,12 +76,13 @@ end
 Update the Demand collection time series from the database.
 """
 function update_time_series_from_db!(demand::Demand, db::DatabaseSQLite, stage_date_time::DateTime)
-    demand.existing = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "Demand",
-        "existing";
-        date_time = stage_date_time,
-    )
+    demand.existing =
+        PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "Demand",
+            "existing";
+            date_time = stage_date_time,
+        ) .|> Demand_Existence.T
 
     return nothing
 end

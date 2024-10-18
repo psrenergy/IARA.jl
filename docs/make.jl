@@ -45,7 +45,10 @@ pages = [
             "Centralized Operation Problem" => "centralized_operation_problem.md",
             "Price Taker Problem" => "price_taker_problem.md",
             "Strategic Bid Problem" => "strategic_bid_problem.md",
-            "Market Clearing Problem" => "market_clearing_problem.md",
+            "Market Clearing Problem" => [
+                "market_clearing_problem.md",
+                "clearing_procedure.md",
+            ],
         ],
     ],
     "Tutorial" => [
@@ -69,6 +72,9 @@ pages = [
         "Case 5" => [
             "tutorial/build_reservoir_case.md",
             "tutorial/run_reservoir_case.md",
+        ],
+        "Case 7" => [
+            "tutorial/build_modifications_case.md",
         ],
     ],
     "Use Guides" => "use_guides.md",

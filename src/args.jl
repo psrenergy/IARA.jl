@@ -11,11 +11,13 @@
 mutable struct Args
     path::String
     write_lp::Bool
+    plot_results::Bool
     function Args(args::Vector{String})
         parsed_args = parse_commandline(args)
         return new(
             parsed_args["path"],
             parsed_args["write-lp"],
+            parsed_args["plot-results"],
         )
     end
 end
@@ -48,6 +50,10 @@ function parse_commandline(args)
         "--write-lp"
         help = "write subproblems to LP files"
         action = :store_true
+        "--plot-results", "-o"
+        help = "plot results"
+        arg_type = Bool
+        default = true
     end
     #! format: on
     # dump args into dict

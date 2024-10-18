@@ -91,7 +91,7 @@ function any_elements(
 end
 
 function is_existing(@nospecialize(c), i::Int)
-    return c.existing[i]
+    return c.existing[i] |> Int == 1
 end
 
 function iara_log(@nospecialize(collection::C)) where {C <: AbstractCollection}

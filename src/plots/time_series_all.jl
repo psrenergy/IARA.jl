@@ -8,17 +8,25 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    PlotTimeSeriesAll
+
+Type for a time series plot with all scenarios.
+"""
 abstract type PlotTimeSeriesAll <: PlotType end
 
 function merge_scenario_agent(
     ::Type{PlotTimeSeriesAll},
     data::Array{Float64, 3},
     agent_names::Vector{String},
-    scenario_names::Union{Vector{String}, Nothing} = nothing,
+    scenario_names::Union{Vector{String}, Nothing} = nothing;
+    kwargs...,
 )
     num_stages = size(data, 3)
     num_scenarios = size(data, 2)
     num_agents = size(data, 1)
+
+    queried_scenarios = get(kwargs, :scenario, nothing)
 
     reshaped_data = Array{Float64, 2}(undef, num_scenarios * num_agents, num_stages)
     modified_names = Vector{String}(undef, num_scenarios * num_agents)
@@ -27,7 +35,8 @@ function merge_scenario_agent(
         for scenario in 1:num_scenarios
             reshaped_data[i, :] = data[agent, scenario, :]
             if isnothing(scenario_names)
-                modified_names[i] = agent_names[agent] * " ( Scenario $(scenario) )"
+                scenario_true_index = isnothing(queried_scenarios) ? scenario : queried_scenarios[scenario]
+                modified_names[i] = agent_names[agent] * " ( Scenario $(scenario_true_index) )"
             else
                 modified_names[i] = agent_names[agent] * " " * scenario_names[scenario]
             end
@@ -41,9 +50,10 @@ function reshape_time_series!(
     ::Type{PlotTimeSeriesAll},
     data::Array{Float32, 3},
     agent_names::Vector{String},
-    dimensions::Vector{String},
+    dimensions::Vector{String};
+    kwargs...,
 )
-    time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, data, agent_names)
+    time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, data, agent_names; kwargs...)
     return time_series, agent_names
 end
 
@@ -51,15 +61,16 @@ function reshape_time_series!(
     ::Type{PlotTimeSeriesAll},
     data::Array{Float32, 4},
     agent_names::Vector{String},
-    dimensions::Vector{String},
+    dimensions::Vector{String};
+    kwargs...,
 )
     if !("block" in dimensions) && ("bid_segment" in dimensions)
-        time_series, agent_names = merge_segment_agent(data, agent_names)
-        time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names)
+        time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
+        time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
     elseif ("block" in dimensions) && !("bid_segment" in dimensions)
         time_series = merge_stage_block(data)
-        time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names)
+        time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
     else
         error(
@@ -72,24 +83,25 @@ function reshape_time_series!(
     ::Type{PlotTimeSeriesAll},
     data::Array{Float32, 5},
     agent_names::Vector{String},
-    dimensions::Vector{String},
+    dimensions::Vector{String};
+    kwargs...,
 )
     if !("subscenario" in dimensions)
-        time_series, agent_names = merge_segment_agent(data, agent_names)
+        time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
         time_series = merge_stage_block(time_series)
-        time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names)
+        time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
     elseif !("bid_segment" in dimensions)
         time_series = merge_stage_block(data)
-        time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names)
+        time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
         time_series, modified_agent_names =
-            merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names)
+            merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names; kwargs...)
         return time_series, modified_agent_names
     elseif !("block" in dimensions)
-        time_series, agent_names = merge_segment_agent(data, agent_names)
-        time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names)
+        time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
+        time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
         time_series, modified_agent_names =
-            merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names)
+            merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names; kwargs...)
         return time_series, modified_agent_names
     else
         error(
@@ -103,12 +115,13 @@ function reshape_time_series!(
     data::Array{Float32, 6},
     agent_names::Vector{String},
     dimensions::Vector{String},
+    kwargs...,
 )
-    time_series, agent_names = merge_segment_agent(data, agent_names)
+    time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
     time_series = merge_stage_block(time_series)
-    time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names)
+    time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
     time_series, modified_agent_names =
-        merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names)
+        merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names; kwargs...)
     return time_series, modified_agent_names
 end
 
@@ -122,41 +135,50 @@ function plot_data(
     file_path::String,
     initial_date::DateTime,
     stage_type::Configurations_StageType.T,
+    kwargs...,
 ) where {N}
-    traces, trace_names = reshape_time_series!(PlotTimeSeriesAll, data, agent_names, dimensions)
+    traces, trace_names = reshape_time_series!(PlotTimeSeriesAll, data, agent_names, dimensions; kwargs...)
     number_of_stages = size(traces, 2)
     number_of_traces = size(traces, 1)
 
     initial_number_of_stages = size(data, N)
-    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_stages, initial_date, stage_type)
+    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_stages, initial_date, stage_type; kwargs...)
 
     plot_type = ifelse(number_of_stages == 1, "bar", "line")
 
-    plot_ref = plot()
+    configs = Vector{Config}()
 
     title = title * " - All scenarios"
     for trace in 1:number_of_traces
-        plot_ref(;
-            x = 1:number_of_stages,
-            y = traces[trace, :],
-            name = trace_names[trace],
-            line = Dict("color" => get_plot_color(trace)),
-            type = plot_type,
-            text = hover_ticks,
-            hovertemplate = "%{y} $unit<br>%{text}",
+        push!(
+            configs,
+            Config(;
+                x = 1:number_of_stages,
+                y = traces[trace, :],
+                name = trace_names[trace],
+                line = Dict("color" => get_plot_color(trace)),
+                type = plot_type,
+                text = hover_ticks,
+                hovertemplate = "%{y} $unit<br>%{text}",
+            ),
         )
     end
 
-    plot_ref.layout.title.text = title
-    plot_ref.layout.yaxis.title = unit
-    plot_ref.layout.xaxis = Dict(
-        "title" => "Stage",
-        "tickmode" => "array",
-        "tickvals" => [i for i in eachindex(plot_ticks)],
-        "ticktext" => plot_ticks,
-    )
+    main_configuration = Config(;
+        title = title,
+        xaxis = Dict(
+            "title" => "Stage",
+            "tickmode" => "array",
+            "tickvals" => [i for i in eachindex(plot_ticks)],
+            "ticktext" => plot_ticks,
+        ),
+        yaxis = Dict("title" => unit))
 
-    _save_plot(plot_ref, file_path * "_all.html")
+    if file_path == ""
+        return Plot(configs, main_configuration)
+    else
+        _save_plot(Plot(configs, main_configuration), file_path * "_all.html")
+    end
 
     return
 end

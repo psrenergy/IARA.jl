@@ -19,25 +19,17 @@ function thermal_commitment!(
     commitment_indexes =
         index_of_elements(inputs, ThermalPlant; run_time_options, filters = [is_existing, has_commitment])
 
+    @variable(
+        model.jump_model,
+        thermal_commitment[
+            b in blocks(inputs),
+            t in commitment_indexes,
+        ],
+        binary = true,
+    )
+
     if use_binary_variables(inputs)
-        @variable(
-            model.jump_model,
-            thermal_commitment[
-                b in blocks(inputs),
-                t in commitment_indexes,
-            ],
-            binary = true,
-        )
-    else
-        @variable(
-            model.jump_model,
-            thermal_commitment[
-                b in blocks(inputs),
-                t in commitment_indexes,
-            ],
-            lower_bound = 0.0,
-            upper_bound = 1.0,
-        )
+        add_symbol_to_integer_variables_list!(run_time_options, :thermal_commitment)
     end
 
     @variable(
@@ -112,7 +104,12 @@ function thermal_commitment!(
         filters = [has_commitment],
     )
 
-    add_symbol_to_query_from_subproblem_result!(outputs, :thermal_commitment)
+    if run_time_options.clearing_model_procedure != RunTime_ClearingProcedure.EX_POST_COMMERCIAL
+        add_symbol_to_query_from_subproblem_result!(outputs, :thermal_commitment)
+        if use_binary_variables(inputs)
+            add_symbol_to_serialize!(outputs, :thermal_commitment)
+        end
+    end
 
     initialize!(
         QuiverOutput,

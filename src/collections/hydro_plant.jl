@@ -8,13 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_hydro_plant!
-export update_hydro_plant!
-export update_hydro_plant_relation!
-export update_hydro_plant_time_series_parameter!
-export set_hydro_turbine_to!
-export set_hydro_spill_to!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -25,7 +18,7 @@ Hydro plants are high-level data structures that represent hydro electricity gen
 """
 @collection @kwdef mutable struct HydroPlant <: AbstractCollection
     label::Vector{String} = []
-    existing::Vector{Bool} = []
+    existing::Vector{HydroPlant_Existence.T} = []
     max_generation::Vector{Float64} = []
     production_factor::Vector{Float64} = []
     max_turbining::Vector{Float64} = []
@@ -35,7 +28,7 @@ Hydro plants are high-level data structures that represent hydro electricity gen
     initial_volume_type::Vector{HydroPlant_InitialVolumeType.T} = []
     min_outflow::Vector{Float64} = []
     om_cost::Vector{Float64} = []
-    has_commitment::Vector{Bool} = []
+    has_commitment::Vector{HydroPlant_HasCommitment.T} = []
     operation_type::Vector{HydroPlant_OperationType.T} = []
     min_generation::Vector{Float64} = []
     # index of the bus to which the hydro plant belongs in the collection Bus
@@ -75,7 +68,8 @@ function initialize!(hydro_plant::HydroPlant, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "HydroPlant", "initial_volume_type") .|> HydroPlant_InitialVolumeType.T
     hydro_plant.operation_type =
         PSRI.get_parms(inputs.db, "HydroPlant", "operation_type") .|> HydroPlant_OperationType.T
-    hydro_plant.has_commitment = PSRI.get_parms(inputs.db, "HydroPlant", "has_commitment") .|> Bool
+    hydro_plant.has_commitment =
+        PSRI.get_parms(inputs.db, "HydroPlant", "has_commitment") .|> HydroPlant_HasCommitment.T
     hydro_plant.bus_index = PSRI.get_map(inputs.db, "HydroPlant", "Bus", "id")
     hydro_plant.bidding_group_index = PSRI.get_map(inputs.db, "HydroPlant", "BiddingGroup", "id")
     hydro_plant.gauging_station_index = PSRI.get_map(inputs.db, "HydroPlant", "GaugingStation", "id")
@@ -103,12 +97,13 @@ function update_time_series_from_db!(
     db::DatabaseSQLite,
     stage_date_time::DateTime,
 )
-    hydro_plant.existing = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "HydroPlant",
-        "existing";
-        date_time = stage_date_time,
-    )
+    hydro_plant.existing =
+        PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "HydroPlant",
+            "existing";
+            date_time = stage_date_time,
+        ) .|> HydroPlant_Existence.T
     hydro_plant.production_factor = PSRDatabaseSQLite.read_time_series_row(
         db,
         "HydroPlant",
@@ -438,8 +433,8 @@ function validate(hydro_plant::HydroPlant)
             )
             num_errors += 1
         end
-        if hydro_plant.has_commitment[i]
-            if isnan(hydro_plant.min_generation[i])
+        if hydro_plant.has_commitment[i] == HydroPlant_HasCommitment.HAS_COMMITMENT
+            if is_null(hydro_plant.min_generation[i])
                 @error(
                     "Hydro Plant $(hydro_plant.label[i]) Minimum generation must be defined if it has commitment."
                 )
@@ -612,7 +607,8 @@ Return the hydro opportunity cost time series file for all hydro plants.
 hydro_plant_opportunity_cost_file(inputs::AbstractInputs) = "hydro_opportunity_cost"
 
 has_min_outflow(hydro_plant::HydroPlant, idx::Int) = hydro_plant.min_outflow[idx] > 0
-has_commitment(hydro_plant::HydroPlant, idx::Int) = hydro_plant.has_commitment[idx]
+has_commitment(hydro_plant::HydroPlant, idx::Int) =
+    hydro_plant.has_commitment[idx] == HydroPlant_HasCommitment.HAS_COMMITMENT
 operates_with_reservoir(hydro_plant::HydroPlant, idx::Int) =
     hydro_plant.operation_type[idx] == HydroPlant_OperationType.RESERVOIR
 operates_as_run_of_river(hydro_plant::HydroPlant, idx::Int) =
@@ -626,7 +622,7 @@ function hydro_volume_from_previous_stage(inputs::AbstractInputs, stage::Int, sc
     else
         volume = read_serialized_clearing_variable(
             inputs,
-            RunTime_ClearingModelType.EX_POST_PHYSICAL,
+            RunTime_ClearingProcedure.EX_POST_PHYSICAL,
             :hydro_volume;
             stage = stage - 1,
             scenario = scenario,

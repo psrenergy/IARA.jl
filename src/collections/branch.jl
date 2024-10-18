@@ -8,10 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_branch!
-export update_branch!
-export update_branch_relation!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -23,7 +19,7 @@ Collection representing the Branches in the system.
 """
 @collection @kwdef mutable struct Branch <: AbstractCollection
     label::Vector{String} = []
-    existing::Vector{Bool} = []
+    existing::Vector{Branch_Existence.T} = []
     capacity::Vector{Float64} = []
     reactance::Vector{Float64} = []
     line_model::Vector{Branch_LineModel.T} = []
@@ -64,12 +60,13 @@ end
 Update the Branch collection time series from the database.
 """
 function update_time_series_from_db!(branch::Branch, db::DatabaseSQLite, stage_date_time::DateTime)
-    branch.existing = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "Branch",
-        "existing";
-        date_time = stage_date_time,
-    )
+    branch.existing =
+        PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "Branch",
+            "existing";
+            date_time = stage_date_time,
+        ) .|> Branch_Existence.T
     branch.capacity = PSRDatabaseSQLite.read_time_series_row(
         db,
         "Branch",

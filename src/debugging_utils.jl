@@ -18,6 +18,7 @@
     )
 
 Set hooks to write lps to the file if user asks to write lps or if the model is infeasible.
+Also, set hooks to fix integer variables from previous problem, fix integer variables, and relax integrality.
 """
 function set_custom_hook(
     node::SDDP.Node,
@@ -26,6 +27,27 @@ function set_custom_hook(
     t::Integer,
     scen::Integer,
 )
+    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+        function fix_integer_variables_from_previous_problem_hook(model::JuMP.Model)
+            fix_discrete_variables_from_previous_problem!(inputs, run_time_options, model, t, scen)
+            optimize!(model; ignore_optimize_hook = true)
+            return nothing
+        end
+
+        function fix_integer_variables_hook(model::JuMP.Model)
+            optimize!(model; ignore_optimize_hook = true)
+            undo = fix_discrete_variables(model)
+            optimize!(model; ignore_optimize_hook = true)
+            return nothing
+        end
+    end
+
+    function relax_integrality_hook(model::JuMP.Model)
+        relax_integrality(model)
+        optimize!(model; ignore_optimize_hook = true)
+        return nothing
+    end
+
     if inputs.args.write_lp
         filename = lp_filename(inputs, run_time_options, t, scen)
         function write_lp_hook(model)
@@ -40,9 +62,7 @@ function set_custom_hook(
             return nothing
         end
 
-        if JuMP.solver_name(node.subproblem) == "Parametric Optimizer with HiGHS attached"
-            set_optimize_hook(node.subproblem, write_lp_hook)
-        else
+        if JuMP.solver_name(node.subproblem) != "Parametric Optimizer with HiGHS attached"
             SDDP.write_subproblem_to_file(node, filename * ".lp")
         end
     else
@@ -62,9 +82,32 @@ function set_custom_hook(
             end
             return nothing
         end
-
-        set_optimize_hook(node.subproblem, treat_infeasibilities)
     end
+
+    function all_optimize_hooks(model)
+        if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+            if clearing_has_fixed_binary_variables(inputs, run_time_options)
+                fix_integer_variables_hook(model)
+            elseif clearing_has_fixed_binary_variables_from_previous_problem(inputs, run_time_options)
+                fix_integer_variables_from_previous_problem_hook(model)
+            elseif clearing_has_linearized_binary_variables(inputs, run_time_options)
+                relax_integrality_hook(model)
+            end
+        end
+        if !use_binary_variables(inputs)
+            relax_integrality_hook(model)
+        end
+        if inputs.args.write_lp
+            if JuMP.solver_name(node.subproblem) == "Parametric Optimizer with HiGHS attached"
+                write_lp_hook(model)
+            end
+        else
+            treat_infeasibilities(model)
+        end
+        return nothing
+    end
+    set_optimize_hook(node.subproblem, all_optimize_hooks)
+
     return
 end
 
@@ -73,7 +116,7 @@ function lp_filename(inputs::Inputs, run_time_options::RunTimeOptions, t::Intege
        run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
         return joinpath(path_case(inputs), "t$(t)_s$(scen)_a$(run_time_options.asset_owner_index).lp")
     else
-        return joinpath(path_case(inputs), "t$(t)_s$(scen).lp")
+        return joinpath(path_case(inputs), "$(run_time_options.clearing_model_procedure)_t$(t)_s$(scen).lp")
     end
 end
 

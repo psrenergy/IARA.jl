@@ -29,14 +29,14 @@ cp(PATH_ORIGINAL, PATH_EXECUTION; force = true);
 #hide
 
 # Before running, let's load the case and update the run mode to `MARKET_CLEARING`.
-db = load_study(PATH_EXECUTION; read_only = false)
+db = IARA.load_study(PATH_EXECUTION; read_only = false)
 
-update_configuration!(
+IARA.update_configuration!(
     db;
     run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
 )
 
-close_study!(db)
+IARA.close_study!(db)
 ; #hide
 
 # Now we are able to run the case with [`IARA.main`](@ref).

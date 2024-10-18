@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    PlotTechnologyHistogramStageBlock
+
+Type for plotting a histogram where the observations are the total of generation for a technology at block i, stage j, considering all scenarios.
+"""
 abstract type PlotTechnologyHistogramStageBlock <: PlotType end
 
 function plot_data(
@@ -18,8 +23,7 @@ function plot_data(
     title::String = "",
     unit::String = "",
     file_path::String,
-    initial_date::DateTime,
-    stage_type::Configurations_StageType.T,
+    kwargs...,
 ) where {N}
 
     # observations are each scenario for plant i in block - stage j
@@ -38,22 +42,31 @@ function plot_data(
         end
     end
 
-    plot_ref = plot()
+    configs = Vector{Config}()
     for stage in 1:num_stages
         for block in 1:num_blocks
-            plot_ref(;
-                x = data_to_plot[block],
-                type = "histogram",
-                name = "Block $block - Stage $stage",
+            push!(
+                configs,
+                Config(;
+                    x = data_to_plot[block],
+                    type = "histogram",
+                    name = "Block $block - Stage $stage",
+                ),
             )
         end
     end
 
-    plot_ref.layout.title.text = title * " - Stage - Block<br><i>Observations for scenarios in each block and stage</i>"
-    plot_ref.layout.xaxis.title = unit
-    plot_ref.layout.yaxis.title = "Frequency"
+    main_configuration = Config(;
+        title = title * " - Stage - Block",
+        xaxis = Dict("title" => unit),
+        yaxis = Dict("title" => "Frequency"),
+    )
 
-    _save_plot(plot_ref, file_path * "_hist_stage_block.html")
+    if file_path == ""
+        return Plot(configs, main_configuration)
+    else
+        _save_plot(Plot(configs, main_configuration), file_path * "_hist_stage_block.html")
+    end
 
     return
 end

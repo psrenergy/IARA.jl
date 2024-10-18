@@ -24,14 +24,6 @@
 - ``J^H_Z(j)``: Set of hydro plants that spill water to hydro plant $j$.
 - ``L^{DC}``: Set of DC lines. $L^{DC} \subseteq L$.
 - ``L^{AC}``: Set of branches. $L^{AC} = L \setminus L^{DC}$.
-- ``R``: Set of reserve requirements.
-- ``R^E``: Set of reserve requirements with equality constraints. $R^E \subseteq R$.
-- ``R^I``: Set of reserve requirements with inequality constraints. $R^I = R \setminus R^E$.
-- ``R^{up}``: Set of reserve requirements with upward slope. $R^{up} \subseteq R$.
-- ``R^{down}``: Set of reserve requirements with downward slope. $R^{down} = R \setminus R^{up}$.
-- ``J^T_R(r)``: Set of thermal plants in reserve requirement $r$.
-- ``J^H_R(r)``: Set of hydro plants in reserve requirement $r$.
-- ``J^B_R(r)``: Set of batteries in reserve requirement $r$.
 - ``d(\tau)``: Duration in hours of subperiod $\tau$.
 - ``C_{u \rightarrow v}``: Conversion factor from unit $u$ to unit $v$.
 
@@ -108,13 +100,6 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``\overline{f}_j``: Maximum flow (MW) of line $j$.
 - ``X_j``: Reactance (p.u.) of line $j$.
 
-### Reserve Requirements
-
-- ``R^R_r``: Required amount (MW) of reserve generation for requirement $r$.
-- ``C^\varphi_r``: Cost of violation (\$/MWh) of reserve requirement $r$.
-- ``a^R_r``: Slope of the linear transformation of reserve requirement $r$.
-- ``b^R_r``: Intercept of the linear transformation of reserve requirement $r$.
-
 
 ## Variables
 
@@ -163,12 +148,6 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 ### Network Nodes
 
 - ``\theta_{n, \tau}``: Voltage angle (rad) at node $n$ during subperiod $\tau$.
-
-### Reserve Requirements
-- ``r^T_{r, j, \tau}``: Reserve generation (MWh) of thermal plant $j$ for requirement $r$ during subperiod $\tau$.
-- ``r^H_{r, j, \tau}``: Reserve generation (MWh) of hydro plant $j$ for requirement $r$ during subperiod $\tau$.
-- ``r^B_{r, j, \tau}``: Reserve generation (MWh) of battery $j$ for requirement $r$ during subperiod $\tau$.
-- ``\varphi_{r, \tau}``: Violation (MWh) of reserve requirement $r$ during subperiod $\tau$.
 
 ## Subproblem Constraints
 
@@ -389,122 +368,6 @@ When considering the compact version of the power flow, the following constraint
     \forall j \in L^{AC}, \tau \in B(t)
 ```
 
-### Reserve Generation
-
-#### Reserve equality fulfillment
-```math
-    a^R_r   \bigg(
-    \sum_{j \in J^T_R(r)}{r^T_{r, j, \tau}}
-    + \sum_{j \in J^H_R(r)}{r^H_{r, j, \tau}}
-    + \sum_{j \in J^B_R(r)}{r^B_{r, j, \tau}}
-    \bigg) 
-    + b^R_r = d(\tau) \cdot R^R_r - \varphi_{r, \tau}
-    \quad \forall r \in R^I, \tau \in B(t)
-```
-
-#### Reserve inequality fulfillment
-```math
-    a^R_r   \bigg(
-    \sum_{j \in J^T_R(r)}{r^T_{r, j, \tau}}
-    + \sum_{j \in J^H_R(r)}{r^H_{r, j, \tau}}
-    + \sum_{j \in J^B_R(r)}{r^B_{r, j, \tau}}
-    \bigg) 
-    + b^R_r \geq d(\tau) \cdot R^R_r - \varphi_{r, \tau}
-    \quad \forall r \in R^I, \tau \in B(t)
-```
-
-### Thermal Reserve Generation
-
-#### General conditions
-
-```math
-    g^T_{j, \tau} + \sum_{r \in R^{up} | j \in J^T_R(r)}{r^T_{r, j, \tau} } \leq \overline{G}^T_j \cdot d(\tau)
-    \quad \forall j \in J^T \setminus J^{TC}, \tau \in B(t)
-```
-
-```math
-    g^T_{j, \tau} - \sum_{r \in R^{down} | j \in J^T_R(r)}{r^T_{r, j, \tau}}  \geq 0
-    \quad \forall j \in J^T \setminus J^{TC}, \tau \in B(t)
-```
-
-#### Commitment plants
-
-```math
-    g^T_{j, \tau} + \sum_{r \in R^{up} | j \in J^T_R(r)}{r^T_{r, j, \tau} } \leq \overline{G}^T_j x^T_{j, \tau}\cdot d(\tau)
-    \quad \forall j \in J^{TC}, \tau \in B(t)
-```
-
-```math
-    g^T_{j, \tau} - \sum_{r \in R^{down} | j \in J^T_R(r)}{r^T_{r, j, \tau} } \geq \underline{G}^T_j x^T_{j, \tau} \cdot d(\tau)
-    \quad \forall j \in J^{TC}, \tau \in B(t)
-```
-
-#### Ramp
-
-```math
-    \frac{  g^T_{j, \tau} +\sum_{r \in R^{up} | j \in J^T_R(r)}{r^T_{r, j, \tau}}}{d(\tau)} - \frac{g^T_{j, \tau-1} - \sum_{r \in R^{down} | j \in J^T_R(r)}{r^T_{r, j, \tau-1}}}{d(\tau-1)}  \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2} \\
-    \quad \forall j \in J^T, \tau \in B(t)
-```
-
-```math
-    \frac{g^T_{j, \tau-1} +\sum_{r \in R^{up} | j \in J^T_R(r)}{r^T_{r, j, \tau-1}  }}{d(\tau-1)} - \frac{g^T_{j, \tau} - \sum_{r \in R^{down} | j \in J^T_R(r)}{r^T_{r, j, \tau}}}{d(\tau)}  \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2} \\
-    \quad \forall j \in J^T, \tau \in B(t)
-```
-
-### Hydro Reserve Generation
-
-#### General conditions
-```math
-    g^H_{j, \tau} + \sum_{r \in R^{up} | j \in J^H_R(r)}{r^H_{r, j, \tau}} \leq \overline{G}^H_j\cdot d(\tau)
-    \quad \forall J^H \setminus J^{HC}, \tau \in B(t)
-```
-
-```math
-    g^H_{j, \tau} - \sum_{r \in R^{down} | j \in J^H_R(r)}{r^H_{r, j, \tau}} \geq 0
-    \quad \forall j \in J^H \setminus J^{HC}, \tau \in B(t)
-```
-
-```math
-    \rho_j \left(z_{j, \tau} +  v_{j, \tau} \right) \cdot C_{hm^3/h \rightarrow m^3/s}
-    \geq \sum_{r \in R^{up} | j \in J^H_R(r)}{r^H_{r, j, \tau}} \\
-    \quad \forall j \in J^H, \tau \in B(t)
-```
-
-#### Commitment plants
-```math
-    g^H_{j, \tau} + \sum_{r \in R^{up} | j \in J^H_R(r)}{r^H_{r, j, \tau}} \leq \overline{G}^H_j x^H_{j, \tau} \cdot d(\tau)
-    \quad \forall j \in J^{HC}, \tau \in B(t)
-```
-
-```math
-    g^H_{j, \tau} - \sum_{r \in R^{down} | j \in J^H_R(r)}{r^H_{r, j, \tau}} \geq \underline{G}^H_j x^H_{j, \tau}\cdot d(\tau)
-    \quad \forall j \in J^{HC}, \tau \in B(t)
-```
-
-### Battery Reserve Generation
-
-```math
-    g^B_{j, \tau} + \sum_{r \in R^{up} | j \in J^B_R(r)}{r^B_{r, j, \tau}} \leq G^B_j\cdot d(\tau)
-    \quad \forall j \in J^B, \tau \in B(t)
-```
-
-```math
-    g^B_{j, \tau} - \sum_{r \in R^{down} | j \in J^B_R(r)}{r^B_{r, j, \tau}} \geq -G^B_j\cdot d(\tau)
-    \quad \forall j \in J^B, \tau \in B(t)
-```
-
-```math
-    s^B_{j, \tau} - C_{MW \rightarrow GW} \cdot d(\tau) \cdot \big( g^B_{j, \tau} + \sum_{r \in R^{up} | j \in J^B_R(r)}{r^B_{r, j, \tau}} \big)
-    \geq \underline{s}^B_j
-    \\ \forall j \in J^B, \tau \in B(t)
-```
-
-```math
-    s^B_{j, \tau} -  C_{MW \rightarrow GW} \cdot d(\tau) \cdot \big( g^B_{j, \tau} - \sum_{r \in R^{down} | j \in J^B_R(r)}{r^B_{r, j, \tau}} \big)
-    \leq \overline{s}^B_j \\
-    \quad \forall j \in J^B, \tau \in B(t)
-```
-
 ### Hydro Bounds
 
 #### Volume bounds
@@ -610,27 +473,6 @@ The incidence matrix defines the connections between the network nodes and branc
 ```math
     0 \leq d^E_{j, \tau} \leq D_{j, \tau, \omega}, \quad
     \forall j \in J^{DE}, \tau \in B(t)
-```
-
-### Reserve Generation Bounds
-```math
-    r^T_{r, j, \tau} \geq 0, \quad
-    \forall r \in R, j \in J^T_R(r), \tau \in B(t)
-```
-
-```math
-    r^H_{r, j, \tau} \geq 0, \quad
-    \forall r \in R, j \in J^H_R(r), \tau \in B(t)
-```
-
-```math
-    r^B_{r, j, \tau} \geq 0, \quad
-    \forall r \in R, j \in J^B_R(r), \tau \in B(t)
-```
-
-```math
-    \varphi_{r, \tau} \geq 0, \quad
-    \forall r \in R, \tau \in B(t)
 ```
 
 ## Objective Function

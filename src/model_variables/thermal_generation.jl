@@ -36,7 +36,8 @@ function thermal_generation!(
     ) # k$
 
     # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
-    if run_mode(inputs) == IARA.Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == IARA.Configurations_RunMode.MARKET_CLEARING &&
+       clearing_model_type(inputs, run_time_options) != IARA.Configurations_ClearingModelType.COST_BASED
         model.obj_exp = @expression(
             model.jump_model,
             model.obj_exp + thermal_total_om_cost / 1e3

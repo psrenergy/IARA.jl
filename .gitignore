@@ -58,7 +58,6 @@ compile/setup/setup.ini
 !**/expected_outputs/*.toml
 !**/expected_outputs/*.csv
 test/**/plots
-test/*/*/*/*.csv
 
 # Test case outputs
 test/*/*/outputs/*

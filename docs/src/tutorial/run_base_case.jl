@@ -54,18 +54,18 @@ cp(PATH_ORIGINAL, PATH_MARKET_CLEARING; force = true);
 
 # Let's load the case with [`IARA.load_study`](@ref). As we are updating the run mode, we need to open it using `read_only = false`.
 
-db = load_study(PATH_CENTRALIZED; read_only = false);
+db = IARA.load_study(PATH_CENTRALIZED; read_only = false);
 #hide
 
 # In order to run the case in `Centralized Operation`, we need to set the run mode in the configurations, with [`IARA.update_configuration!`](@ref).
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.CENTRALIZED_OPERATION,
+    run_mode = IARA.Configurations_RunMode.CENTRALIZED_OPERATION,
 )
 
 # After setting the run mode, we can close the study with [`IARA.close_study!`](@ref).
-close_study!(db)
+IARA.close_study(db)
 ; #hide
 
 # Now we are able to run the case with [`IARA.main`](@ref).
@@ -106,19 +106,19 @@ IARA.main([PATH_CENTRALIZED])
 
 # Let's load the case with [`IARA.load_study`](@ref). As we are updating the run mode, we need to open it using `read_only = false`.
 
-db = load_study(PATH_MARKET_CLEARING; read_only = false);
+db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false);
 #hide
 
 # In order to run the case in `Market Clearing`, we need to set the run mode and the clearing bid source (where the bid quantity and price offers will come from).
 # For this example we will be using the `HEURISTIC_BIDS` as the clearing bid source. This setting will automatically generate bids for each Bidding Group.
 # We can set these two parameters in the configurations, with [`IARA.update_configuration!`](@ref).
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.MARKET_CLEARING,
-    clearing_bid_source = Configurations_ClearingBidSource.HEURISTIC_BIDS,
+    run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
+    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
 )
-close_study!(db)
+IARA.close_study!(db)
 
 # Now we are able to run the case with [`IARA.main`](@ref).
 

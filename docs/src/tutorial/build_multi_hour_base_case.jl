@@ -52,7 +52,7 @@ number_of_bidding_groups = 2
 
 const PATH_BASE_CASE = joinpath(@__DIR__, "data", "case_3")
 
-db = create_study!(PATH_BASE_CASE;
+db = IARA.create_study!(PATH_BASE_CASE;
     number_of_stages = number_of_stages,
     number_of_scenarios = number_of_scenarios,
     number_of_blocks = number_of_blocks,
@@ -71,16 +71,16 @@ db = create_study!(PATH_BASE_CASE;
 
 # In this tutorial we are concerned only with highlighting the specifications of a clearing with multi-hour bids.
 # Therefore, we will be simplifying it by using a single zone and a single bus. 
-# We can add each of them by using the [`IARA.add_zone!`](@ref) and [`IARA.add_bus!`](@ref) functions.
+# We can add each of them by using the [`IARA.add_zone!`](@ref) and [`IARA.IARA.add_bus!`](@ref) functions.
 
-add_zone!(db; label = "zone_1")
-add_bus!(db; label = "bus_1", zone_id = "zone_1")
+IARA.add_zone!(db; label = "zone_1")
+IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 
 #  ## Demand
 
 # This case will have a single demand, which we can add with the function [`IARA.add_demand!`](@ref).
 
-add_demand!(db;
+IARA.add_demand!(db;
     label = "dem_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -92,9 +92,9 @@ add_demand!(db;
 # We can now link the time series files for the demand to the database. You can find this time series file in the [`data/case_3`]() folder.
 # Let's take a quick look at the file.
 
-time_series_dataframe(joinpath(PATH_BASE_CASE, "demand.csv"))
+IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "demand.csv"))
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "Demand";
     demand = "demand",
@@ -107,20 +107,20 @@ link_time_series_to_file(
 
 # We can add an Asset Owner with the function [`IARA.add_asset_owner!`](@ref).
 
-add_asset_owner!(db;
+IARA.add_asset_owner!(db;
     label = "asset_owner_1",
     price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 
 # Now we can define its Bidding Groups with [`IARA.add_bidding_group!`](@ref).
 
-add_bidding_group!(db;
+IARA.add_bidding_group!(db;
     label = "bg_1",
     assetowner_id = "asset_owner_1",
     multihour_bid_max_profiles = 1,
 )
 
-add_bidding_group!(db;
+IARA.add_bidding_group!(db;
     label = "bg_2",
     assetowner_id = "asset_owner_1",
     simple_bid_max_segments = 1,
@@ -131,15 +131,15 @@ add_bidding_group!(db;
 
 # ### Quantity Offer
 
-time_series_dataframe(joinpath(PATH_BASE_CASE, "quantity_offer.csv"))
+IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "quantity_offer.csv"))
 
 # ### Price Offer
 
-time_series_dataframe(joinpath(PATH_BASE_CASE, "price_offer.csv"))
+IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "price_offer.csv"))
 
 #
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
     quantity_offer = "quantity_offer",
@@ -150,17 +150,19 @@ link_time_series_to_file(
 
 # ### Quantity Offer
 
-time_series_dataframe(
+IARA.time_series_dataframe(
     joinpath(PATH_BASE_CASE, "quantity_offer_multihour.csv"),
 )
 
 # ### Price Offer
 
-time_series_dataframe(joinpath(PATH_BASE_CASE, "price_offer_multihour.csv"))
+IARA.time_series_dataframe(
+    joinpath(PATH_BASE_CASE, "price_offer_multihour.csv"),
+)
 
 #
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
     quantity_offer_multihour = "quantity_offer_multihour",
@@ -169,7 +171,7 @@ link_time_series_to_file(
 
 # ## Plants
 
-add_thermal_plant!(db;
+IARA.add_thermal_plant!(db;
     label = "ter_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -183,7 +185,7 @@ add_thermal_plant!(db;
     bus_id = "bus_1",
 )
 
-add_thermal_plant!(db;
+IARA.add_thermal_plant!(db;
     label = "ter_2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -199,4 +201,4 @@ add_thermal_plant!(db;
 
 # ## Closing the case
 
-close_study!(db)
+IARA.close_study!(db)

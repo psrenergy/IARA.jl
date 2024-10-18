@@ -16,6 +16,13 @@ Abstract type for a plot type.
 abstract type PlotType end
 
 """
+    RelationPlotType
+
+Abstract type for a plot type.
+"""
+abstract type RelationPlotType <: PlotType end
+
+"""
     plot_data
 
 Concrete implementation on how to plot a specific plot type.
@@ -86,8 +93,11 @@ function get_plot_ticks(
     data::Array{Float64, 2},
     num_stages::Int,
     initial_date_time::DateTime,
-    stage_type::Configurations_StageType.T,
+    stage_type::Configurations_StageType.T;
+    kwargs...,
 )
+    queried_blocks = get(kwargs, :block, nothing)
+
     num_ticks = size(data, 2)
     num_blocks = 0
     if num_stages != num_ticks
@@ -100,7 +110,11 @@ function get_plot_ticks(
         if num_blocks == 0
             for i in 0:num_stages-1
                 push!(plot_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
-                push!(hover_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
+                block_true_index = isnothing(queried_blocks) ? 1 : queried_blocks[1]
+                push!(
+                    hover_ticks,
+                    Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") * "<br>Block $block_true_index",
+                )
             end
             return plot_ticks, hover_ticks
         else
@@ -111,7 +125,11 @@ function get_plot_ticks(
                     else
                         push!(plot_ticks, "") # we do not display ticks for each block, only when hovering
                     end
-                    push!(hover_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") * "<br>Block $j")
+                    block_true_index = isnothing(queried_blocks) ? j : queried_blocks[j]
+                    push!(
+                        hover_ticks,
+                        Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") * "<br>Block $block_true_index",
+                    )
                 end
             end
             return plot_ticks, hover_ticks
@@ -160,11 +178,13 @@ function merge_stage_block(data::Array{T, 5}) where {T <: Real}
     return reshaped_data
 end
 
-function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String})
+function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String}; kwargs...)
     num_segments = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
     num_stages = size(data, 4)
+
+    queried_segments = get(kwargs, :segment, nothing)
 
     reshaped_data = Array{Float64, 3}(undef, num_agents * num_segments, num_scenarios, num_stages)
     modified_names = Vector{String}(undef, num_agents * num_segments)
@@ -175,7 +195,10 @@ function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String
                 for agent in 1:num_agents
                     reshaped_data[(agent-1)*num_segments+segment, scenario, stage] =
                         data[agent, segment, scenario, stage]
-                    modified_names[(agent-1)*num_segments+segment] = agent_names[agent] * " (Segment $segment)"
+                    segment_true_index = isnothing(queried_segments) ? segment : queried_segments[segment]
+
+                    modified_names[(agent-1)*num_segments+segment] =
+                        agent_names[agent] * " (Segment $segment_true_index)"
                 end
             end
         end
@@ -183,12 +206,14 @@ function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String
     return reshaped_data, modified_names
 end
 
-function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String})
+function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String}; kwargs...)
     num_segments = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 4)
     num_stages = size(data, 5)
     num_blocks = size(data, 3)
+
+    queried_segments = get(kwargs, :segment, nothing)
 
     reshaped_data = Array{Float64, 4}(undef, num_agents * num_segments, num_blocks, num_scenarios, num_stages)
     modified_names = Vector{String}(undef, num_agents * num_segments)
@@ -200,7 +225,10 @@ function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String
                     for agent in 1:num_agents
                         reshaped_data[(agent-1)*num_segments+segment, block, scenario, stage] =
                             data[agent, segment, block, scenario, stage]
-                        modified_names[(agent-1)*num_segments+segment] = agent_names[agent] * " (Segment $segment)"
+                        segment_true_index = isnothing(queried_segments) ? segment : queried_segments[segment]
+
+                        modified_names[(agent-1)*num_segments+segment] =
+                            agent_names[agent] * " (Segment $segment_true_index)"
                     end
                 end
             end
@@ -209,13 +237,15 @@ function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String
     return reshaped_data, modified_names
 end
 
-function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String})
+function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String}; kwargs...)
     num_agents = size(data, 1)
     num_segments = size(data, 2)
     num_scenarios = size(data, 5)
     num_stages = size(data, 6)
     num_subscenarios = size(data, 4)
     num_blocks = size(data, 3)
+
+    queried_segments = get(kwargs, :segment, nothing)
 
     reshaped_data =
         Array{Float64, 5}(undef, num_agents * num_segments, num_blocks, num_scenarios, num_subscenarios, num_stages)
@@ -229,7 +259,9 @@ function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String
                         for agent in 1:num_agents
                             reshaped_data[(agent-1)*num_segments+segment, block, scenario, subscenario, stage] =
                                 data[agent, segment, block, subscenario, scenario, stage]
-                            modified_names[(agent-1)*num_segments+segment] = agent_names[agent] * " (Segment $segment)"
+                            segment_true_index = isnothing(queried_segments) ? segment : queried_segments[segment]
+                            modified_names[(agent-1)*num_segments+segment] =
+                                agent_names[agent] * " (Segment $segment_true_index)"
                         end
                     end
                 end
@@ -239,11 +271,14 @@ function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String
     return reshaped_data, modified_names
 end
 
-function merge_scenario_subscenario_agent(data::Array{Float32, 4}, agent_names::Vector{String})
+function merge_scenario_subscenario_agent(data::Array{Float32, 4}, agent_names::Vector{String}; kwargs...)
     num_subscenarios = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
     num_stageblock = size(data, 4)
+
+    queried_scenarios = get(kwargs, :scenario, nothing)
+    queried_subscenarios = get(kwargs, :subscenario, nothing)
 
     reshaped_data = Array{Float64, 2}(undef, num_agents * num_scenarios * num_subscenarios, num_stageblock)
     modified_names = Vector{String}(undef, num_agents * num_scenarios * num_subscenarios)
@@ -258,8 +293,11 @@ function merge_scenario_subscenario_agent(data::Array{Float32, 4}, agent_names::
                     ] =
                         data[agent, subscenario, scenario, stageblock]
                 end
+                scenario_true_index = isnothing(queried_scenarios) ? scenario : queried_scenarios[scenario]
+                subscenario_true_index =
+                    isnothing(queried_subscenarios) ? subscenario : queried_subscenarios[subscenario]
                 modified_names[(agent-1)*num_subscenarios*num_scenarios+(subscenario-1)*num_scenarios+scenario] =
-                    agent_names[agent] * " (Scenario $scenario - Subscenario $subscenario)"
+                    agent_names[agent] * " (Scenario $scenario_true_index - Subscenario $subscenario_true_index)"
             end
         end
     end
@@ -268,12 +306,16 @@ end
 
 function merge_scenario_subscenario(
     data::Array{T, 4},
-    agent_names::Vector{String},
+    agent_names::Vector{String};
+    kwargs...,
 ) where {T <: Real}
     num_subscenarios = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
     num_stageblock = size(data, 4)
+
+    queried_scenarios = get(kwargs, :scenario, nothing)
+    queried_subscenarios = get(kwargs, :subscenario, nothing)
 
     reshaped_data = Array{Float64, 3}(undef, num_agents, num_scenarios * num_subscenarios, num_stageblock)
     modified_scenario_names = Vector{String}(undef, num_scenarios * num_subscenarios)
@@ -284,7 +326,9 @@ function merge_scenario_subscenario(
                 reshaped_data[agent, (scenario-1)*num_subscenarios+subscenario, :] =
                     data[agent, subscenario, scenario, :]
             end
-            modified_scenario_names[(scenario-1)*num_subscenarios+subscenario] = "( Scenario $scenario - Subscenario $subscenario )"
+            scenario_true_index = isnothing(queried_scenarios) ? scenario : queried_scenarios[scenario]
+            subscenario_true_index = isnothing(queried_subscenarios) ? subscenario : queried_subscenarios[subscenario]
+            modified_scenario_names[(scenario-1)*num_subscenarios+subscenario] = "( Scenario $scenario_true_index - Subscenario $subscenario_true_index )"
         end
     end
 
@@ -519,7 +563,7 @@ function build_plots(
         plot_config_generation = PlotConfig(
             "Generation",
             "generation",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles, PlotTimeSeriesStackedMean],
             inputs,
         )
         push!(plot_configs, plot_config_generation)

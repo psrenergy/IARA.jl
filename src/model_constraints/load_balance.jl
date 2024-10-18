@@ -47,7 +47,8 @@ function load_balance!(
     end
 
     # Generation expression
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
+    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION ||
+       clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.COST_BASED
         hydro_plants = index_of_elements(inputs, HydroPlant; filters = [is_existing])
         thermal_plants = index_of_elements(inputs, ThermalPlant; filters = [is_existing])
         renewable_plants = index_of_elements(inputs, RenewablePlant; filters = [is_existing])

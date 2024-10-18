@@ -8,9 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_reserve!
-export update_reserve!
-
 @collection @kwdef mutable struct Reserve <: AbstractCollection
     label::Vector{String} = []
     constraint_type::Vector{Reserve_ConstraintType.T} = []

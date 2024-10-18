@@ -57,14 +57,14 @@ cp(
     force = true,
 )
 
-db = load_study(PATH_HYDRO; read_only = false);
+db = IARA.load_study(PATH_HYDRO; read_only = false);
 #hide
 
 # ## Changing the number of scenarios
 
 # We will change the number of scenarios to 12, using the [`IARA.update_configuration!`](@ref) function.
 
-update_configuration!(
+IARA.update_configuration!(
     db;
     number_of_scenarios = 12,
 )
@@ -74,16 +74,16 @@ update_configuration!(
 
 # We will add a new Asset Owner called `Hydro Owner`, using the [`IARA.add_asset_owner!`](@ref) function.
 
-add_asset_owner!(
+IARA.add_asset_owner!(
     db;
     label = "Hydro Owner",
-    price_type = AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
 )
 
 # Now we will add a new Bidding Group called `Hydro Owner Group`, using the [`IARA.add_bidding_group!`](@ref) function.
 # For this example, the Bidding Group will have a risk factor of 20%.
 
-add_bidding_group!(
+IARA.add_bidding_group!(
     db;
     label = "Hydro Owner",
     assetowner_id = "Hydro Owner",
@@ -98,7 +98,7 @@ add_bidding_group!(
 # When adding a Hydro Plant, we need to associate a Gauging Station to it.
 # When creating a Hydro Plant, if no Gauging Station is provided, the package will create one automatically.
 
-add_gauging_station!(db;
+IARA.add_gauging_station!(db;
     label = "gauging_station",
 )
 
@@ -118,9 +118,9 @@ add_gauging_station!(db;
 # We can feed some data about the hydro plant that varies with time, such as maximum and minimum generation. 
 # For that, we need to pass a DataFrame in the `parameters` argument.
 
-add_hydro_plant!(db;
+IARA.add_hydro_plant!(db;
     label = "Hydro1",
-    operation_type = HydroPlant_OperationType.RUN_OF_RIVER,
+    operation_type = IARA.HydroPlant_OperationType.RUN_OF_RIVER,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1], # 1 = true
@@ -152,33 +152,33 @@ add_hydro_plant!(db;
 
 # ### Demands:
 
-time_series_dataframe(joinpath(PATH_HYDRO, "demands.csv"))
+IARA.time_series_dataframe(joinpath(PATH_HYDRO, "demands.csv"))
 
 # ### Solar generation:
 
-time_series_dataframe(joinpath(PATH_HYDRO, "solar_generation.csv"))
+IARA.time_series_dataframe(joinpath(PATH_HYDRO, "solar_generation.csv"))
 
 # ### Inflows:
 
-time_series_dataframe(joinpath(PATH_HYDRO, "inflow.csv"))
+IARA.time_series_dataframe(joinpath(PATH_HYDRO, "inflow.csv"))
 
 # ### Linking the time series
 
 # Now need to link the time series with the function [`IARA.link_time_series_to_file`](@ref).
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "Demand";
     demand = "demands",
 )
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "RenewablePlant";
     generation = "solar_generation",
 )
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "HydroPlant";
     inflow = "inflow",
@@ -188,4 +188,4 @@ link_time_series_to_file(
 
 # Now that we have added all the elements and linked the time series files, we can close the database to run the case, with the function [`IARA.close_study!`](@ref).
 
-close_study!(db)
+IARA.close_study!(db)

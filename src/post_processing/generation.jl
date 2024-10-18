@@ -10,7 +10,7 @@
 
 function post_processing_generation(inputs::Inputs)
     generation = zeros(
-        6,
+        5,
         number_of_blocks(inputs),
         number_of_scenarios(inputs),
         number_of_stages(inputs),
@@ -35,14 +35,11 @@ function post_processing_generation(inputs::Inputs)
     deficit, _ = read_timeseries_file_in_outputs("deficit", inputs)
     generation[5, :, :, :] = sum(deficit; dims = 1)
 
-    demand, _ = read_timeseries_file_in_outputs("demand", inputs)
-    generation[6, :, :, :] = sum(demand; dims = 1)
-
     write_timeseries_file(
         joinpath(path_case(inputs), "outputs", "generation"),
         generation;
         dimensions = ["stage", "scenario", "block"],
-        labels = ["hydro", "thermal", "renewable", "battery", "deficit", "demand"],
+        labels = ["hydro", "thermal", "renewable", "battery", "deficit"],
         time_dimension = "stage",
         dimension_size = [number_of_stages(inputs), number_of_scenarios(inputs), number_of_blocks(inputs)],
         initial_date = initial_date_time(inputs),

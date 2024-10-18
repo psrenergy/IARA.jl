@@ -37,6 +37,13 @@ function add_symbol_to_query_from_subproblem_result!(outputs::Outputs, symbols_f
     return nothing
 end
 
+function add_symbol_to_integer_variables_list!(run_time_options::RunTimeOptions, symbol_to_serialize::Symbol)
+    if !(symbol_to_serialize in run_time_options.clearing_integer_variables_in_model)
+        push!(run_time_options.clearing_integer_variables_in_model, symbol_to_serialize)
+    end
+    return nothing
+end
+
 function add_symbol_to_serialize!(outputs::Outputs, symbol_to_serialize::Symbol)
     push!(outputs.list_of_symbols_to_serialize, symbol_to_serialize)
     return nothing
@@ -515,8 +522,8 @@ function run_time_file_suffixes(run_time_options::RunTimeOptions)
     if !is_null(run_time_options.asset_owner_index)
         suffix *= "_asset_owner_$(run_time_options.asset_owner_index)"
     end
-    if run_time_options.clearing_model_type !== nothing
-        suffix *= "_$(lowercase(string(run_time_options.clearing_model_type)))"
+    if run_time_options.clearing_model_procedure !== nothing
+        suffix *= "_$(lowercase(string(run_time_options.clearing_model_procedure)))"
     end
 
     return suffix

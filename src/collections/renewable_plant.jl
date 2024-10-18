@@ -8,11 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_renewable_plant!
-export update_renewable_plant!
-export update_renewable_plant_relation!
-export update_renewable_plant_time_series!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -24,7 +19,7 @@ Renewable plants are high-level data structures that represent non-dispatchable 
 """
 @collection @kwdef mutable struct RenewablePlant <: AbstractCollection
     label::Vector{String} = []
-    existing::Vector{Bool} = []
+    existing::Vector{RenewablePlant_Existence.T} = []
     max_generation::Vector{Float64} = []
     om_cost::Vector{Float64} = []
     curtailment_cost::Vector{Float64} = []
@@ -76,12 +71,13 @@ function update_time_series_from_db!(
     db::DatabaseSQLite,
     stage_date_time::DateTime,
 )
-    renewable_plant.existing = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "RenewablePlant",
-        "existing";
-        date_time = stage_date_time,
-    )
+    renewable_plant.existing =
+        PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "RenewablePlant",
+            "existing";
+            date_time = stage_date_time,
+        ) .|> RenewablePlant_Existence.T
     renewable_plant.max_generation = PSRDatabaseSQLite.read_time_series_row(
         db,
         "RenewablePlant",

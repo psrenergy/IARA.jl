@@ -28,11 +28,15 @@ cp(PATH_ORIGINAL, PATH_EXECUTION; force = true);
 #hide
 
 # Before running, let's load the case and update the run mode to `MARKET_CLEARING`.
-db = load_study(PATH_EXECUTION; read_only = false)
+db = IARA.load_study(PATH_EXECUTION; read_only = false)
 
-update_configuration!(
+IARA.update_configuration!(
     db;
     run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
+    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
 )
 ; #hide
 

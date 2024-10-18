@@ -51,7 +51,7 @@ m3_per_second_to_hm3_per_hour = 3600.0 / 1e6
 
 const PATH_CASE = joinpath(@__DIR__, "data", "case_5")
 
-db = create_study!(PATH_CASE;
+db = IARA.create_study!(PATH_CASE;
     number_of_stages = number_of_stages,
     number_of_scenarios = number_of_scenarios,
     number_of_blocks = number_of_blocks,
@@ -65,8 +65,8 @@ db = create_study!(PATH_CASE;
     demand_deficit_cost = 500.0,
     hydro_minimum_outflow_violation_cost = 600.0,
     number_of_virtual_reservoir_bidding_segments = maximum_number_of_bidding_segments,
-    clearing_hydro_representation = Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
-    clearing_bid_source = Configurations_ClearingBidSource.HEURISTIC_BIDS,
+    clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
+    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
 )
 ; #hide
 
@@ -74,15 +74,15 @@ db = create_study!(PATH_CASE;
 
 # Let's add a zone and a bus to our case. This case will have a single zone and a single bus for simplicity.
 
-add_zone!(db; label = "zone_1")
+IARA.add_zone!(db; label = "zone_1")
 
-add_bus!(db; label = "bus_1", zone_id = "zone_1")
+IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 
 # ## Hydro Plant
 
 # Now we can add our hydro plants that will be linked to the virtual reservoir.
 
-add_hydro_plant!(db;
+IARA.add_hydro_plant!(db;
     label = "hydro_1",
     initial_volume = 100.0,
     bus_id = "bus_1",
@@ -99,7 +99,7 @@ add_hydro_plant!(db;
     ),
 )
 
-add_hydro_plant!(db;
+IARA.add_hydro_plant!(db;
     label = "hydro_2",
     initial_volume = 0.0,
     bus_id = "bus_1",
@@ -118,21 +118,21 @@ add_hydro_plant!(db;
 
 # ### Setting Hydro Plant relations
 
-set_hydro_turbine_to!(db, "hydro_1", "hydro_2")
-set_hydro_spill_to!(db, "hydro_1", "hydro_2")
+IARA.set_hydro_turbine_to!(db, "hydro_1", "hydro_2")
+IARA.set_hydro_spill_to!(db, "hydro_1", "hydro_2")
 
 # ## Asset Owner
 
 # Let's add two asset owners to our case. Both of them will be price makers.
 
-add_asset_owner!(db;
+IARA.add_asset_owner!(db;
     label = "asset_owner_1",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     segment_fraction = [1.0],
     risk_factor = [0.1],
 )
 
-add_asset_owner!(db;
+IARA.add_asset_owner!(db;
     label = "asset_owner_2",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     segment_fraction = [1.0],
@@ -143,7 +143,7 @@ add_asset_owner!(db;
 
 # Now we can add the virtual reservoir to our case. Notice that we are setting the inflow allocation and linking the asset owners and hydro plants.
 
-add_virtual_reservoir!(db;
+IARA.add_virtual_reservoir!(db;
     label = "reservoir_1",
     assetowner_id = ["asset_owner_1", "asset_owner_2"],
     inflow_allocation = [0.4, 0.6],
@@ -154,7 +154,7 @@ add_virtual_reservoir!(db;
 
 # This case will have a single demand, which we can add with the function [`IARA.add_demand!`](@ref).
 
-add_demand!(db;
+IARA.add_demand!(db;
     label = "dem_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -172,13 +172,13 @@ add_demand!(db;
 
 # Let's take a look into each of these files before linking them.
 
-time_series_dataframe(
+IARA.time_series_dataframe(
     joinpath(PATH_CASE, "demand.csv"),
 )
 
 #
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "Demand";
     demand = "demand",
@@ -186,13 +186,13 @@ link_time_series_to_file(
 
 # To simplify our case, we are setting the inflow to zero, so we are only working with the initial volume of the first Hydro Plant.
 
-time_series_dataframe(
+IARA.time_series_dataframe(
     joinpath(PATH_CASE, "inflow.csv"),
 )
 
 #
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "HydroPlant";
     inflow = "inflow",
@@ -200,4 +200,4 @@ link_time_series_to_file(
 
 # ## Closing the study
 
-close_study!(db)
+IARA.close_study!(db)

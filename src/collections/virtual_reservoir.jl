@@ -8,8 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_virtual_reservoir!
-
 @collection @kwdef mutable struct VirtualReservoir <: AbstractCollection
     label::Vector{String} = []
     hydro_plant_indices::Vector{Vector{Int}} = []

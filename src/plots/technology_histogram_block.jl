@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    PlotTechnologyHistogramBlock
+
+Type for plotting a histogram where the observations are the total of generation for a technology at block i, considering all scenarios and stages.
+"""
 abstract type PlotTechnologyHistogramBlock <: PlotType end
 
 function plot_data(

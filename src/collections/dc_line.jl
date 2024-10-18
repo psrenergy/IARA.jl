@@ -8,11 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_dc_line!
-export update_dc_line!
-export update_dc_line_relation!
-export update_dc_line_time_series_parameter!
-
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------
@@ -24,7 +19,7 @@ Collection representing the DC lines in the system.
 """
 @collection @kwdef mutable struct DCLine <: AbstractCollection
     label::Vector{String} = []
-    existing::Vector{Bool} = []
+    existing::Vector{DCLine_Existence.T} = []
     capacity_to::Vector{Float64} = []
     capacity_from::Vector{Float64} = []
     # index of the bus to in collection Bus
@@ -63,12 +58,13 @@ end
 Update the DC Line collection time series from the database.
 """
 function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, stage_date_time::DateTime)
-    dc_line.existing = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "DCLine",
-        "existing";
-        date_time = stage_date_time,
-    )
+    dc_line.existing =
+        PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "DCLine",
+            "existing";
+            date_time = stage_date_time,
+        ) .|> DCLine_Existence.T
     dc_line.capacity_to = PSRDatabaseSQLite.read_time_series_row(
         db,
         "DCLine",

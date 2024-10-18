@@ -63,3 +63,11 @@ In this case we introduce the concept of a Virtual Reservoir, giving a simple ex
 #### [Running](tutorial/run_reservoir_case.md)
 
 For this instance, we will be running the case using the **Market Bidding** run mode.
+
+## Advanced Topics
+
+### Case 6: Introducing Modification Parameters
+
+#### [Building and Running](tutorial/build_modifications_case.md)
+
+In this case we introduce the concept of Modification Parameters, which allow the user to set changes in the case elements at specific points in time.

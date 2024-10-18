@@ -8,9 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export add_gauging_station!
-export update_gauging_station!
-export update_gauging_station_relation!
 # ---------------------------------------------------------------------
 # Collection definition
 # ---------------------------------------------------------------------

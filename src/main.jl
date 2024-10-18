@@ -30,7 +30,9 @@ function main(args::Vector{String})
     try
         run_algorithms(inputs)
         post_processing(inputs)
-        build_plots(inputs)
+        if args.plot_results
+            build_plots(inputs)
+        end
     finally
         clean_up(inputs)
     end
@@ -183,18 +185,18 @@ function simulate_all_stages_and_scenarios_of_market_clearing(
             end
 
             # Clearing problems
-            run_time_options = RunTimeOptions(; clearing_model_type = RunTime_ClearingModelType.EX_ANTE_PHYSICAL)
+            run_time_options = RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_ANTE_PHYSICAL)
             run_clearing_simulation(inputs, ex_ante_physical_outputs, run_time_options, stage)
 
             run_time_options =
-                RunTimeOptions(; clearing_model_type = RunTime_ClearingModelType.EX_ANTE_COMMERCIAL)
+                RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_ANTE_COMMERCIAL)
             run_clearing_simulation(inputs, ex_ante_commercial_outputs, run_time_options, stage)
 
-            run_time_options = RunTimeOptions(; clearing_model_type = RunTime_ClearingModelType.EX_POST_PHYSICAL)
+            run_time_options = RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_POST_PHYSICAL)
             run_clearing_simulation(inputs, ex_post_physical_outputs, run_time_options, stage)
 
             run_time_options =
-                RunTimeOptions(; clearing_model_type = RunTime_ClearingModelType.EX_POST_COMMERCIAL)
+                RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_POST_COMMERCIAL)
             run_clearing_simulation(inputs, ex_post_commercial_outputs, run_time_options, stage)
         end
     finally
@@ -216,14 +218,10 @@ function run_clearing_simulation(
     run_time_options::RunTimeOptions,
     stage::Int,
 )
-    println("   Running simulation $(run_time_options.clearing_model_type)")
+    println("   Running simulation $(run_time_options.clearing_model_procedure)")
     model = build_model(inputs, run_time_options; current_stage = stage)
 
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.FUTURE_COST_FUNCTION
-        read_cuts_to_model!(model, inputs; current_stage = stage)
-    elseif ex_post_physical_hydro_representation(inputs) ==
-           Configurations_ExPostPhysicalHydroRepresentation.FUTURE_COST_FUNCTION &&
-           run_time_options.clearing_model_type == Configurations_ClearingModelType.EX_POST_PHYSICAL
+    if use_fcf_in_clearing(inputs)
         read_cuts_to_model!(model, inputs; current_stage = stage)
     end
 
@@ -244,7 +242,7 @@ function run_clearing_simulation(
             )
 
             if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-               run_time_options.clearing_model_type == RunTime_ClearingModelType.EX_POST_PHYSICAL
+               run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
                 post_process_virtual_reservoirs!(
                     inputs,
                     run_time_options,

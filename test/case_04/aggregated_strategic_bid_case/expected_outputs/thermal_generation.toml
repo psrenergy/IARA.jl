@@ -5,4 +5,4 @@ initial_date = "2020-01-01 00:00:00"
 time_dimension = "stage"
 frequency = "month"
 unit = "GWh"
-labels = ["ter_1", "ter_2", "ter_3", "ter_4"]
+labels = ["ter_ab_1", "ter_ab_2", "ter_ab_3", "ter_ab_4"]

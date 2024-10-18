@@ -72,12 +72,12 @@ yearly_discount_rate = 0.1
 # Using [`IARA.create_study!`](@ref) we can create a new study. 
 # This function will return a database reference that will store all the information about the case.
 
-db = create_study!(PATH_BASE_CASE;
+db = IARA.create_study!(PATH_BASE_CASE;
     number_of_stages = number_of_stages,
     number_of_scenarios = number_of_scenarios,
     number_of_blocks = number_of_blocks,
     block_duration_in_hours = block_duration_in_hours,
-    policy_graph_type = Configurations_PolicyGraphType.CYCLIC,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC,
     number_of_nodes = number_of_stages,
     yearly_discount_rate = yearly_discount_rate,
     demand_deficit_cost = 3000.0,
@@ -94,7 +94,7 @@ db = create_study!(PATH_BASE_CASE;
 # For this case, we will have a single bus, named "Island", to which all the elements will be connected.
 # We can add a bus to the database using the functionalities [`IARA.add_bus!`](@ref).
 
-add_bus!(db; label = "Island")
+IARA.add_bus!(db; label = "Island")
 
 # ## Financial elements
 
@@ -105,11 +105,11 @@ add_bus!(db; label = "Island")
 
 # We can add a zone to the database using the method [`IARA.add_zone!`](@ref).
 
-add_zone!(db; label = "Island Zone")
+IARA.add_zone!(db; label = "Island Zone")
 
 # Now we can link the bus to the zone, using the function [`IARA.update_bus_relation!`](@ref).
 
-update_bus_relation!(
+IARA.update_bus_relation!(
     db,
     "Island";
     collection = "Zone",
@@ -129,15 +129,15 @@ update_bus_relation!(
 
 # We can add an asset owner to the database using the functionalities [`IARA.add_asset_owner!`](@ref).
 
-add_asset_owner!(
+IARA.add_asset_owner!(
     db;
     label = "Thermal Owner",
-    price_type = AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
 )
-add_asset_owner!(
+IARA.add_asset_owner!(
     db;
     label = "Price Taker",
-    price_type = AssetOwner_PriceType.PRICE_TAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 
 # ### Bidding Groups
@@ -152,7 +152,7 @@ add_asset_owner!(
 
 # In the `simple_bid_max_segments` we need to set the maximum number of segments that the Bidding Group can have. For this case, we will set it to the number of plants that each owner has.
 
-add_bidding_group!(
+IARA.add_bidding_group!(
     db;
     label = "Thermal Owner",
     assetowner_id = "Thermal Owner",
@@ -160,7 +160,7 @@ add_bidding_group!(
     segment_fraction = [1.0],
     simple_bid_max_segments = 2, # number of plants
 )
-add_bidding_group!(
+IARA.add_bidding_group!(
     db;
     label = "Price Taker",
     assetowner_id = "Price Taker",
@@ -182,7 +182,7 @@ add_bidding_group!(
 
 # For this case, the demand will exist from the beginning.
 
-add_demand!(db;
+IARA.add_demand!(db;
     label = "Demand1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -191,7 +191,7 @@ add_demand!(db;
     bus_id = "Island",
 )
 
-add_demand!(db;
+IARA.add_demand!(db;
     label = "Demand2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -200,7 +200,7 @@ add_demand!(db;
     bus_id = "Island",
 )
 
-add_demand!(db;
+IARA.add_demand!(db;
     label = "Demand3",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -227,7 +227,7 @@ add_demand!(db;
 
 # We will start by adding a solar plant to the database, using [`IARA.add_renewable_plant!`](@ref).
 
-add_renewable_plant!(
+IARA.add_renewable_plant!(
     db;
     label = "Solar1",
     parameters = DataFrame(;
@@ -247,7 +247,7 @@ add_renewable_plant!(
 
 # Now we can add the thermal plants to the database, using [`IARA.add_thermal_plant!`](@ref).
 
-add_thermal_plant!(
+IARA.add_thermal_plant!(
     db;
     label = "Thermal1",
     parameters = DataFrame(;
@@ -260,7 +260,7 @@ add_thermal_plant!(
     bus_id = "Island",
 )
 
-add_thermal_plant!(
+IARA.add_thermal_plant!(
     db;
     label = "Thermal2",
     parameters = DataFrame(;
@@ -273,7 +273,7 @@ add_thermal_plant!(
     bus_id = "Island",
 )
 
-add_thermal_plant!(
+IARA.add_thermal_plant!(
     db;
     label = "Thermal3",
     parameters = DataFrame(;
@@ -286,7 +286,7 @@ add_thermal_plant!(
     bus_id = "Island",
 )
 
-add_thermal_plant!(
+IARA.add_thermal_plant!(
     db;
     label = "Thermal4",
     parameters = DataFrame(;
@@ -299,7 +299,7 @@ add_thermal_plant!(
     bus_id = "Island",
 )
 
-add_thermal_plant!(
+IARA.add_thermal_plant!(
     db;
     label = "Thermal5",
     parameters = DataFrame(;
@@ -312,7 +312,7 @@ add_thermal_plant!(
     bus_id = "Island",
 )
 
-add_thermal_plant!(
+IARA.add_thermal_plant!(
     db;
     label = "Thermal6",
     parameters = DataFrame(;
@@ -340,21 +340,21 @@ add_thermal_plant!(
 
 # Let's take a quick look at the demand file using [`IARA.time_series_dataframe`](@ref).
 
-time_series_dataframe(joinpath(PATH_BASE_CASE, "demands.csv"))
+IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "demands.csv"))
 
 # and the solar generation file
 
-time_series_dataframe(joinpath(PATH_BASE_CASE, "solar_generation.csv"))
+IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "solar_generation.csv"))
 
 # Now, we have to link them to the database.
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "RenewablePlant";
     generation = "solar_generation",
 )
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "Demand";
     demand = "demands",
@@ -364,4 +364,4 @@ link_time_series_to_file(
 
 # Now that we have added all the elements and linked the time series files, we can close the database to run the case with the function [`IARA.close_study!`](@ref).
 
-close_study!(db)
+IARA.close_study!(db)

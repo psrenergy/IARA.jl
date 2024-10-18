@@ -53,19 +53,3 @@ label.en = "Elevation"
 [[hydro_initial_volume_type]]
 id = 2
 label.en = "Volume"
-
-[[reserve_constraint_type]]
-id = 0
-label.en = "Equality"
-
-[[reserve_constraint_type]]
-id = 1
-label.en = "Inequality"
-
-[[reserve_direction]]
-id = 0
-label.en = "Up"
-
-[[reserve_direction]]
-id = 1
-label.en = "Down"

@@ -39,9 +39,9 @@ cp(PATH_ORIGINAL, PATH_EXECUTION; force = true);
 
 db = IARA.load_study(PATH_EXECUTION; read_only = false);
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.CENTRALIZED_OPERATION,
+    run_mode = IARA.Configurations_RunMode.CENTRALIZED_OPERATION,
 )
 ; #hide
 
@@ -82,9 +82,14 @@ mv(
 
 db = IARA.load_study(PATH_EXECUTION; read_only = false);
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.MARKET_CLEARING,
+    run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
+    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
+    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
 )
 ; #hide
 

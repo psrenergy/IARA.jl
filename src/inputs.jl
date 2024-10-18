@@ -8,8 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export create_study!, load_study, close_study!
-
 # ---------------------------------------------------------------------
 # Input definition
 # ---------------------------------------------------------------------
@@ -30,7 +28,6 @@ Collection of all input collections.
     dc_line::DCLine = DCLine()
     branch::Branch = Branch()
     battery::Battery = Battery()
-    reserve::Reserve = Reserve()
     asset_owner::AssetOwner = AssetOwner()
     gauging_station::GaugingStation = GaugingStation()
     bidding_group::BiddingGroup = BiddingGroup()
@@ -301,7 +298,7 @@ path_case(db::DatabaseSQLite) = dirname(PSRDatabaseSQLite.database_path(db))
 """
     buses_represented_for_strategic_bidding(inputs)
 
-If the 'aggregate_buses_for_strategic_bidding' flag is set to 'true', return [1].
+If the 'aggregate_buses_for_strategic_bidding' attribute is set to AGGREGATE, return [1].
 Otherwise, return the index of all Buses.
 """
 function buses_represented_for_strategic_bidding(inputs)
@@ -606,13 +603,6 @@ end
 Return the elastic demand price time series.
 """
 time_series_elastic_demand_price(inputs) = inputs.time_series.elastic_demand_price
-
-"""
-    time_series_reserve_requirement(inputs)
-
-Return the reserve requirement time series.
-"""
-time_series_reserve_requirement(inputs) = inputs.time_series.reserve_requirement
 
 """
     time_series_hydro_generation(inputs)

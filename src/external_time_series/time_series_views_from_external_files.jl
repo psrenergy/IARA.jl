@@ -43,8 +43,6 @@ in chunks.
     spot_price::TimeSeriesView{Float64, 2} = TimeSeriesView{Float64, 2}()
     elastic_demand_price::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
-    reserve_requirement::TimeSeriesView{Float64, 2} =
-        TimeSeriesView{Float64, 2}()
     hydro_generation::TimeSeriesView{Float64, 2} = TimeSeriesView{Float64, 2}()
     hydro_opportunity_cost::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
@@ -305,17 +303,6 @@ function initialize_time_series_from_external_files(inputs)
             joinpath(path_case(inputs), demand_elastic_demand_price_file(inputs));
             expected_unit = raw"$/MWh",
             labels_to_read = elastic_demand_labels(inputs),
-        )
-    end
-
-    # Reserve requirement
-    if any_elements(inputs, Reserve)
-        num_errors += initialize_time_series_view_from_external_file(
-            inputs.time_series.reserve_requirement,
-            inputs,
-            joinpath(path_case(inputs), reserve_requirement_file(inputs));
-            # expected_unit = "MW", TODO: check this
-            labels_to_read = reserve_label(inputs),
         )
     end
 

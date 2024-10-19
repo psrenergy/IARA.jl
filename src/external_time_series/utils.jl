@@ -8,9 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export write_timeseries_file
-export read_timeseries_file
-
 """
     write_timeseries_file(
         file_path::String, 

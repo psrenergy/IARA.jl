@@ -8,8 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export time_series_dataframe, link_time_series_to_file, delete_element!
-
 function locate_inputs_in_args(args...)
     for arg in args
         if arg isa Inputs
@@ -151,16 +149,10 @@ end
 
 function use_binary_variables(inputs, run_time_options)
     if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
-        return inputs.collections.configurations.use_binary_variables
+        return inputs.collections.configurations.use_binary_variables == Configurations_BinaryVariableUsage.USE
     elseif run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID ||
            run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
-        return run_time_options.use_binary_variables
-    elseif run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
-        if run_time_options.clearing_type == Configurations_ClearingType.EX_POST_PHYSICAL
-            # Some option based on clearing enums
-        else
-            # Some other option based on clearing enums
-        end
+        return run_time_options.use_binary_variables == Configurations_BinaryVariableUsage.USE
     end
 end
 

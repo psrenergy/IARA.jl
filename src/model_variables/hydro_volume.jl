@@ -96,7 +96,7 @@ function hydro_volume!(
     hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(outputs, :hydro_volume)
-    if run_time_options.clearing_model_type == RunTime_ClearingModelType.EX_POST_PHYSICAL
+    if run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
         add_symbol_to_serialize!(outputs, :hydro_volume)
     end
 
@@ -111,7 +111,7 @@ function hydro_volume!(
         run_time_options,
     )
 
-    if run_time_options.clearing_model_type == RunTime_ClearingModelType.EX_POST_PHYSICAL
+    if run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
         add_symbol_to_serialize!(outputs, :hydro_volume)
     end
 

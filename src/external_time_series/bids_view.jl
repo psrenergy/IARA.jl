@@ -8,8 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-export write_bids_time_series_file
-
 """ 
     BidsView
 

@@ -60,17 +60,17 @@ cp(PATH_ORIGINAL, PATH_CENTRALIZED; force = true);
 #hide
 
 # Before running, we need to load the case and set the run mode to `CENTRALIZED_OPERATION`.
-db = load_study(PATH_CENTRALIZED; read_only = false)
+db = IARA.load_study(PATH_CENTRALIZED; read_only = false)
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.CENTRALIZED_OPERATION,
+    run_mode = IARA.Configurations_RunMode.CENTRALIZED_OPERATION,
 )
 ; #hide 
 
 # Before running we need to close the database with [`IARA.close_study!`](@ref).
 
-close_study!(db)
+IARA.close_study!(db)
 
 # Now, let's run the case with [`IARA.main`](@ref).
 
@@ -147,16 +147,20 @@ cp(
 
 # Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `HEURISTIC_BIDS`.
 
-db = load_study(PATH_MARKET_CLEARING; read_only = false)
+db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false)
 
-update_configuration!(
+IARA.update_configuration!(
     db;
-    run_mode = Configurations_RunMode.MARKET_CLEARING,
-    clearing_bid_source = Configurations_ClearingBidSource.HEURISTIC_BIDS,
+    run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
+    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
+    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
 )
 ; #hide
 
-close_study!(db)
+IARA.close_study!(db)
 
 # Now, let's run the case with [`IARA.main`](@ref).
 

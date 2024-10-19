@@ -45,7 +45,7 @@ cp(
     force = true,
 )
 
-db = load_study(PATH_MIN_ACTIVATION; read_only = false);
+db = IARA.load_study(PATH_MIN_ACTIVATION; read_only = false);
 #hide
 
 # ## Minimum Activation Level Time series
@@ -53,25 +53,25 @@ db = load_study(PATH_MIN_ACTIVATION; read_only = false);
 # In the [`data/case_4`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_4) folder, we have a time series files for the minimum activation level for the Bidding Group with the multi-hour bid.
 # Let's take a quick look at the file and load it into the database.
 
-time_series_dataframe(
+IARA.time_series_dataframe(
     joinpath(PATH_MIN_ACTIVATION, "minimum_activation_level_multihour.csv"),
 )
 
 # 
 
-time_series_dataframe(
+IARA.time_series_dataframe(
     joinpath(PATH_MIN_ACTIVATION, "parent_profile_multihour.csv"),
 )
 
 # 
 
-time_series_dataframe(
+IARA.time_series_dataframe(
     joinpath(PATH_MIN_ACTIVATION, "complementary_grouping_multihour.csv"),
 )
 
 # 
 
-link_time_series_to_file(
+IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
     minimum_activation_level_multihour = "minimum_activation_level_multihour",
@@ -82,5 +82,5 @@ link_time_series_to_file(
 
 # ## Closing the case
 
-close_study!(db)
+IARA.close_study!(db)
 ; #hide

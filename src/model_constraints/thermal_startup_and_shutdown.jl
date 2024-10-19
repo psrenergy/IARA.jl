@@ -60,14 +60,14 @@ function thermal_startup_and_shutdown!(
     # Startup and shutdown initial conditions
     if model.stage == 1
         initial_condition_indexes =
-            [t for t in commitment_indexes if !is_null(thermal_plant_commitment_initial_condition(inputs, t))]
+            [t for t in commitment_indexes if has_commitment_initial_condition(inputs.collections.thermal_plant, t)]
         @constraint(
             model.jump_model,
             thermal_startup_and_shutdown_initial[
                 t in initial_condition_indexes
             ],
             thermal_startup[1, t] - thermal_shutdown[1, t] ==
-            thermal_commitment[1, t] - thermal_plant_commitment_initial_condition(inputs, t)
+            thermal_commitment[1, t] - Int(thermal_plant_commitment_initial_condition(inputs, t))
         )
         @constraint(
             model.jump_model,
@@ -75,7 +75,7 @@ function thermal_startup_and_shutdown!(
                 t in initial_condition_indexes
             ],
             thermal_startup[1, t] + thermal_shutdown[1, t] <=
-            thermal_commitment[1, t] + thermal_plant_commitment_initial_condition(inputs, t)
+            thermal_commitment[1, t] + Int(thermal_plant_commitment_initial_condition(inputs, t))
         )
         @constraint(
             model.jump_model,
@@ -83,7 +83,7 @@ function thermal_startup_and_shutdown!(
                 t in initial_condition_indexes
             ],
             thermal_startup[1, t] + thermal_shutdown[1, t] +
-            thermal_commitment[1, t] + thermal_plant_commitment_initial_condition(inputs, t)
+            thermal_commitment[1, t] + Int(thermal_plant_commitment_initial_condition(inputs, t))
             <=
             2
         )

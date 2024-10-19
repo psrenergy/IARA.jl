@@ -16,5 +16,4 @@ collections = [
     "thermal_plant",
     "renewable_plant",
     "battery",
-    "reserve",
 ]

@@ -22,24 +22,16 @@ function multihour_min_activation_level!(
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
 
     # Model variables
-    if clearing_has_linearized_binary_variables(inputs, run_time_options)
-        @variable(
-            model.jump_model,
-            minimum_activation_level_multihour_indicator[
-                bg in multihour_bidding_groups,
-                profile in 1:maximum_multihour_profiles(inputs, bg),
-            ],
-            lower_bound = 0.0,
-            upper_bound = 1.0,
-        )
-    else
-        @variable(
-            model.jump_model,
-            minimum_activation_level_multihour_indicator[
-                bg in multihour_bidding_groups,
-                profile in 1:maximum_multihour_profiles(inputs, bg),
-            ], Bin
-        )
+    @variable(
+        model.jump_model,
+        minimum_activation_level_multihour_indicator[
+            bg in multihour_bidding_groups,
+            profile in 1:maximum_multihour_profiles(inputs, bg),
+        ], Bin
+    )
+
+    if use_binary_variables(inputs)
+        add_symbol_to_integer_variables_list!(run_time_options, :minimum_activation_level_multihour_indicator)
     end
 
     # Model parameters
@@ -82,23 +74,6 @@ function multihour_min_activation_level!(
         )
     end
 
-    if clearing_has_fixed_binary_variables(inputs, run_time_options)
-        minimum_activation_level_multihour_indicator =
-            get_model_object(model, :minimum_activation_level_multihour_indicator)
-
-        ex_ante_physical_values = read_serialized_clearing_variable(
-            inputs,
-            RunTime_ClearingModelType.EX_ANTE_PHYSICAL,
-            :minimum_activation_level_multihour_indicator;
-            stage = model.stage,
-            scenario = scenario,
-        )
-
-        fix.(
-            minimum_activation_level_multihour_indicator,
-            ex_ante_physical_values,
-        )
-    end
     return nothing
 end
 
@@ -108,8 +83,10 @@ function multihour_min_activation_level!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    if run_time_options.clearing_model_type == RunTime_ClearingModelType.EX_ANTE_PHYSICAL
-        add_symbol_to_serialize!(outputs, :minimum_activation_level_multihour_indicator)
+    if run_time_options.clearing_model_procedure != RunTime_ClearingProcedure.EX_POST_COMMERCIAL
+        if use_binary_variables(inputs)
+            add_symbol_to_serialize!(outputs, :minimum_activation_level_multihour_indicator)
+        end
         add_symbol_to_query_from_subproblem_result!(outputs, :minimum_activation_level_multihour_indicator)
     end
 

@@ -207,7 +207,7 @@ function virtual_reservoir_energy_stock_from_previous_stage(inputs::AbstractInpu
     else
         return read_serialized_clearing_variable(
             inputs,
-            RunTime_ClearingModelType.EX_POST_PHYSICAL,
+            RunTime_ClearingProcedure.EX_POST_PHYSICAL,
             :virtual_reservoir_post_processed_energy_stock;
             stage = stage - 1,
             scenario = scenario,

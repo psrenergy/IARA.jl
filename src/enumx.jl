@@ -38,7 +38,6 @@ end
   - `STRATEGIC_BID`: Strategic bid (2)
   - `MARKET_CLEARING`: Market clearing (3)
   - `CENTRALIZED_OPERATION_SIMULATION`: Centralized operation simulation (4)
-  - `HEURISTIC_BID`: Heuristic bid (5)
 """
 @enumx Configurations_RunMode begin
     CENTRALIZED_OPERATION = 0
@@ -46,40 +45,39 @@ end
     STRATEGIC_BID = 2
     MARKET_CLEARING = 3
     CENTRALIZED_OPERATION_SIMULATION = 4
-    HEURISTIC_BID = 5
 end
 
 """
-    Configurations_StageType
+    Configurations_PeriodType
 
-  - `MONTHLY`: Monthly stage (0)
+  - `MONTHLY`: Monthly period (0)
 """
-@enumx Configurations_StageType begin
+@enumx Configurations_PeriodType begin
     MONTHLY = 0
 end
 
-@enumx Configurations_HydroBalanceBlockResolution begin
-    CHRONOLOGICAL_BLOCKS = 0
-    AGGREGATED_BLOCKS = 1
+@enumx Configurations_HydroBalanceSubperiodResolution begin
+    CHRONOLOGICAL_SUBPERIODS = 0
+    AGGREGATED_SUBPERIODS = 1
 end
 
 # TODO review this implementation in favour of something more generic
-function stage_type_string(stage_type::Configurations_StageType.T)
-    if stage_type == Configurations_StageType.MONTHLY
+function period_type_string(period_type::Configurations_PeriodType.T)
+    if period_type == Configurations_PeriodType.MONTHLY
         return "monthly"
     else
-        error("Stage type not implemented")
+        error("Period type not implemented")
     end
 end
 
 """
-    Configurations_BlockAggregationType
+    Configurations_SubperiodAggregationType
 
   - `SUM`: Sum (0)
   - `AVERAGE`: Average (1)
   - `LAST_VALUE`: Last value (2)
 """
-@enumx Configurations_BlockAggregationType begin
+@enumx Configurations_SubperiodAggregationType begin
     SUM = 0
     AVERAGE = 1
     LAST_VALUE = 2
@@ -89,7 +87,7 @@ end
   Configurations_ClearingBidSource
 
   - `READ_FROM_FILE`: Read from file (0)
-  - `HEURISTIC_BIDS`: Run the heuristic bids module concurrently with clearing, one stage at a time (1)
+  - `HEURISTIC_BIDS`: Run the heuristic bids module concurrently with clearing, one period at a time (1)
 """
 @enumx Configurations_ClearingBidSource begin
     READ_FROM_FILE = 0
@@ -198,12 +196,12 @@ end
 end
 
 """
-    Configurations_ConsiderBlocksLoopForThermalConstraints
+    Configurations_ConsiderSubperiodsLoopForThermalConstraints
 
-  - `CONSIDER`: Consider blocks loop for thermal constraints (1)
-  - `DO_NOT_CONSIDER`: Do not consider blocks loop for thermal constraints (0)
+  - `CONSIDER`: Consider subperiods loop for thermal constraints (1)
+  - `DO_NOT_CONSIDER`: Do not consider subperiods loop for thermal constraints (0)
 """
-@enumx Configurations_ConsiderBlocksLoopForThermalConstraints begin
+@enumx Configurations_ConsiderSubperiodsLoopForThermalConstraints begin
     CONSIDER = 1
     DO_NOT_CONSIDER = 0
 end
@@ -220,35 +218,35 @@ end
 end
 
 """
-    HydroPlant_InitialVolumeType
+    HydroUnit_InitialVolumeType
 
   - `PER_UNIT`: Initial volume in per unit (0)
   - `VOLUME`: Initial volume in hm³ (2)
 """
-@enumx HydroPlant_InitialVolumeType begin
+@enumx HydroUnit_InitialVolumeType begin
     PER_UNIT = 0
     VOLUME = 2
 end
 
 """
-    HydroPlant_OperationType
+    HydroUnit_OperationType
 
   - `RESERVOIR`: Reservoir operation (0)
   - `RUN_OF_RIVER`: Run of river operation (1)
 """
-@enumx HydroPlant_OperationType begin
+@enumx HydroUnit_OperationType begin
     RESERVOIR = 0
     RUN_OF_RIVER = 1
 end
 
 """
-    Demand_DemandType
+    Demand_Unit_DemandType
 
   - `INELASTIC`: Inelastic demand (0)
   - `ELASTIC`: Elastic demand (1)
   - `FLEXIBLE`: Flexible demand (2)
 """
-@enumx Demand_DemandType begin
+@enumx Demand_Unit_DemandType begin
     INELASTIC = 0
     ELASTIC = 1
     FLEXIBLE = 2
@@ -303,12 +301,12 @@ end
 end
 
 """
-  Battery_Existence
+  Battery_Unit_Existence
 
-  - `EXISTS`: Battery exists (1)
-  - `DOES_NOT_EXIST`: Battery does not exist (0)
+  - `EXISTS`: Battery Unit exists (1)
+  - `DOES_NOT_EXIST`: Battery Unit does not exist (0)
 """
-@enumx Battery_Existence begin
+@enumx Battery_Unit_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end
@@ -336,79 +334,101 @@ end
 end
 
 """
-  Demand_Existence
+  Demand_Unit_Existence
 
   - `EXISTS`: Demand exists (1)
   - `DOES_NOT_EXIST`: Demand does not exist (0)
 """
-@enumx Demand_Existence begin
+@enumx Demand_Unit_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end
 
 """
-  HydroPlant_Existence
+  HydroUnit_Existence
 
-  - `EXISTS`: Hydro Plant exists (1)
-  - `DOES_NOT_EXIST`: Hydro Plant does not exist (0)
+  - `EXISTS`: Hydro Unit exists (1)
+  - `DOES_NOT_EXIST`: Hydro Unit does not exist (0)
 """
-@enumx HydroPlant_Existence begin
+@enumx HydroUnit_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end
 
 """
-  RenewablePlant_Existence
+  RenewableUnit_Existence
 
-  - `EXISTS`: Renewable Plant exists (1)
-  - `DOES_NOT_EXIST`: Renewable Plant does not exist (0)
+  - `EXISTS`: Renewable Unit exists (1)
+  - `DOES_NOT_EXIST`: Renewable Unit does not exist (0)
 """
-@enumx RenewablePlant_Existence begin
+@enumx RenewableUnit_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end
 
 """
-  ThermalPlant_Existence
+  ThermalUnit_Existence
 
-  - `EXISTS`: Thermal Plant exists (1)
-  - `DOES_NOT_EXIST`: Thermal Plant does not exist (0)
+  - `EXISTS`: Thermal Unit exists (1)
+  - `DOES_NOT_EXIST`: Thermal Unit does not exist (0)
 """
-@enumx ThermalPlant_Existence begin
+@enumx ThermalUnit_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end
 
 """
-  HydroPlant_HasCommitment
+  HydroUnit_HasCommitment
 
-  - `HAS_COMMITMENT`: Hydro Plant has commitment (1)
-  - `NO_COMMITMENT`: Hydro Plant has no commitment (0)
+  - `HAS_COMMITMENT`: Hydro Unit has commitment (1)
+  - `NO_COMMITMENT`: Hydro Unit has no commitment (0)
 """
-@enumx HydroPlant_HasCommitment begin
+@enumx HydroUnit_HasCommitment begin
     HAS_COMMITMENT = 1
     NO_COMMITMENT = 0
 end
 
 """
-  ThermalPlant_HasCommitment
+  ThermalUnit_HasCommitment
 
-  - `HAS_COMMITMENT`: Thermal Plant has commitment (1)
-  - `NO_COMMITMENT`: Thermal Plant has no commitment (0)
+  - `HAS_COMMITMENT`: Thermal Unit has commitment (1)
+  - `NO_COMMITMENT`: Thermal Unit has no commitment (0)
 """
-@enumx ThermalPlant_HasCommitment begin
+@enumx ThermalUnit_HasCommitment begin
     HAS_COMMITMENT = 1
     NO_COMMITMENT = 0
 end
 
 """
-  ThermalPlant_CommitmentInitialCondition
+  ThermalUnit_CommitmentInitialCondition
 
   - `ON`: Initial condition is ON (1)
   - `OFF`: Initial condition is OFF (0)
 """
-@enumx ThermalPlant_CommitmentInitialCondition begin
+@enumx ThermalUnit_CommitmentInitialCondition begin
     ON = 1
     OFF = 0
     UNDEFINED = 2
+end
+
+"""
+  Configurations_VirtualReservoirWaveguideSource
+
+  - `USER_PROVIDED`: User provided (0)
+  - `UNIFORM_VOLUME_PERCENTAGE`: Uniform volume percentage (1)
+"""
+@enumx Configurations_VirtualReservoirWaveguideSource begin
+    USER_PROVIDED = 0
+    UNIFORM_VOLUME_PERCENTAGE = 1
+end
+
+"""
+  Configurations_WaveguideUserProvidedSource
+
+  - `CSV_FILE`: CSV file (0)
+  - `EXISTING_DATA`: Existing data (1)
+"""
+@enumx Configurations_WaveguideUserProvidedSource begin
+    CSV_FILE = 0
+    EXISTING_DATA = 1
 end

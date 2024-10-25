@@ -6,21 +6,21 @@
 
 # In this tutorial, we will understand an important concept of the IARA package: time series modifications.
 
-# If we take a look at the documentation for the constructor functions such as [`IARA.add_demand!`](@ref), [`IARA.add_thermal_plant!`](@ref), and [`IARA.add_hydro_plant!`](@ref), we can see that they all have a parameter called `parameters`.
+# If we take a look at the documentation for the constructor functions such as [`IARA.add_demand_unit!`](@ref), [`IARA.add_thermal_unit!`](@ref), and [`IARA.add_hydro_unit!`](@ref), we can see that they all have a parameter called `parameters`.
 
 # These `parameters` are inputed as `DataFrames` and need to have at least one row, which we can call the registry of the element.
 # This registry is used to define the initial state of the element, and it can be modified in time by adding more rows to the `parameters` DataFrame.
 
 # In this tutorial we will present a very simple example of how to use modifications parameters.
-# We will create two Thermal Plants: `Thermal1` and `Thermal2`.
+# We will create two Thermal Units: `Thermal1` and `Thermal2`.
 
 # The first will exist from the beginning of the case and will have a maximum generation of 20 MW and an O&M cost of 10 \$/MWh.
 # The second will not exist at the beginning of the case, but will be ready for use on the 1st of March 2020, with an O&M cost of 5 \$/MWh and a maximum generation of 30 MW.
 
-# We expect that the first plant will stop operating after the second plant is ready for use.
+# We expect that the first unit will stop operating after the second unit is ready for use.
 
-# However, we will add a modification for the first plant on the 1st of April 2020, where it will have a new O&M cost of 3 \$/MWh and a maximum generation of 20 MW.
-# This will make the first plant more competitive and it will start operating again.
+# However, we will add a modification for the first unit on the 1st of April 2020, where it will have a new O&M cost of 3 \$/MWh and a maximum generation of 20 MW.
+# This will make the first unit more competitive and it will start operating again.
 
 # We'll start by importing the necessary packages.
 import Pkg #hide
@@ -35,10 +35,10 @@ using IARA
 const PATH_MODIFICATIONS_CASE = joinpath(@__DIR__, "data", "case_6")
 ; #hide
 
-number_of_stages = 4
-number_of_blocks = 1
+number_of_periods = 4
+number_of_subperiods = 1
 number_of_scenarios = 1
-block_duration_in_hours = [24.0]
+subperiod_duration_in_hours = [24.0]
 yearly_discount_rate = 0.1
 ; #hide
 
@@ -48,12 +48,12 @@ yearly_discount_rate = 0.1
 # We will set the initial date of the case to the 1st of January 2020.
 
 db = IARA.create_study!(PATH_MODIFICATIONS_CASE;
-    number_of_stages = number_of_stages,
+    number_of_periods = number_of_periods,
     number_of_scenarios = number_of_scenarios,
-    number_of_blocks = number_of_blocks,
-    block_duration_in_hours = block_duration_in_hours,
+    number_of_subperiods = number_of_subperiods,
+    subperiod_duration_in_hours = subperiod_duration_in_hours,
     policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC,
-    number_of_nodes = number_of_stages,
+    number_of_nodes = number_of_periods,
     yearly_discount_rate = yearly_discount_rate,
     demand_deficit_cost = 3000.0,
     initial_date_time = "2020-01-01",
@@ -66,7 +66,7 @@ IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 
 # ## Demand
 
-IARA.add_demand!(db;
+IARA.add_demand_unit!(db;
     label = "dem_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -75,9 +75,9 @@ IARA.add_demand!(db;
     bus_id = "bus_1",
 )
 
-# ## Thermal Plants
+# ## Thermal Units
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal1",
     parameters = DataFrame(;
@@ -89,7 +89,7 @@ IARA.add_thermal_plant!(
     bus_id = "bus_1",
 )
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal2",
     parameters = DataFrame(;
@@ -116,7 +116,7 @@ IARA.time_series_dataframe(joinpath(PATH_MODIFICATIONS_CASE, "demand.csv"))
 
 IARA.link_time_series_to_file(
     db,
-    "Demand";
+    "DemandUnit";
     demand = "demand",
 )
 ; #hide
@@ -157,10 +157,10 @@ IARA.main([PATH_MODIFICATIONS_CASE_EXECUTION])
 #  └── ...
 # ```
 
-# Let's take a look at the thermal generation of the plants.
+# Let's take a look at the thermal generation of the units.
 
 # ```@raw html
 # <iframe src="case_6_execution\\outputs\\plots\\thermal_generation_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
-# As we can see, the first plant stops operating after the second plant is ready for use, and starts operating again after the modification on the 1st of April 2020.
+# As we can see, the first unit stops operating after the second unit is ready for use, and starts operating again after the modification on the 1st of April 2020.

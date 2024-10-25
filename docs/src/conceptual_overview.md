@@ -17,7 +17,7 @@ This section introduces the fundamental differences between bid-based and cost-b
 
 ![Diagram](./assets/image2.png)
 
-We have two optimization problems with slightly different formats (MinCost and Clearing stages).
+We have two optimization problems with slightly different formats (MinCost and Clearing periods).
 
 - **Input data:**
   - Exogenous net demand $D$
@@ -48,7 +48,7 @@ Although the intuitive representation presented for the MinCost and Clearing opt
 
 - **Multi-zone and multi-hour problems:**
   - In practice, there is a balance equation (and therefore a demand value $D$ and a price result $\pi$) for each hour and each zone. The representation can be extended by adding variables, such as $\{\pi_{zh}\}$ for each zone and hour.
-  - Transfers between zones (e.g., interconnections) or between hours (e.g., batteries) can be represented as additional physical variables (analogous to the $u_{j}$ variables) or as additional bids (analogous to the $g_{j}$ variables).
+  - Transfers between zones (e.g., interconnections) or between hours (e.g., battery units) can be represented as additional physical variables (analogous to the $u_{j}$ variables) or as additional bids (analogous to the $g_{j}$ variables).
   
 - **Constraints involving multiple units:**
   - The feasible region of each unit $u_{j}$ is not always isolated as $u_{j} \in \mathcal{U}_{j}$. Units can be interconnected, such as in a constraint like $u_{1} + u_{2} \leq 100$.
@@ -58,13 +58,13 @@ Although the intuitive representation presented for the MinCost and Clearing opt
   - In its simplest version, stochasticity can be introduced by allowing parameters such as 𝒰_𝑗(𝜔) and 𝐷(𝜔) (among others) to vary with scenario 𝜔.
   - An additional consideration relates to uncertainty materializing after the asset owners' last opportunity to submit information (gate closure), which can be incorporated into the MinCost and Clearing submodules.
 
-- **Multi-stage intertemporal problem:**
-  - As mentioned earlier, a "multi-hour" problem representation can be used for some shorter-term temporal couplings, such as unit commitment or battery operation, typically normalized over a few hours.
+- **Multi-period intertemporal problem:**
+  - As mentioned earlier, a "multi-hour" problem representation can be used for some shorter-term temporal couplings, such as unit commitment or battery unit operation, typically normalized over a few hours.
   - However, this strategy is insufficient for some cases of interest. In Brazil, it is common for reservoir hydroelectric plants to consider the expected supply-demand balance up to 1 year (8760 hours) ahead or more.
-  - Incorporating this aspect into the problem involves introducing state variables in a multi-stage problem, and we use the Stochastic Dual Dynamic Programming (SDDP) strategy in particular.
+  - Incorporating this aspect into the problem involves introducing state variables in a multi-period problem, and we use the Stochastic Dual Dynamic Programming (SDDP) strategy in particular.
 
-- **Additional components in the Clearing stage:**
-  - Depending on market rules, the Clearing stage can be significantly more complex. More details can be found in this link.
+- **Additional components in the Clearing period:**
+  - Depending on market rules, the Clearing period can be significantly more complex. More details can be found in this link.
 
 ### 3.4 Aspects of the Market Clearing Optimization Problem
 
@@ -85,8 +85,8 @@ Possible complexities **within** the optimization problem:
   - Ex ante vs. ex post (!)
   - State variable → ex ante (stochastic or deterministic) → ex post
   - ALWAYS represent 1 year (and without expansion)
-  - Flexibility in the number of stages in the cycle/subcycle/cluster
-  - Each stage is an optimization problem (whether MinCost or Clearing)
+  - Flexibility in the number of periods in the cycle/subcycle/cluster
+  - Each period is an optimization problem (whether MinCost or Clearing)
   
 - **Physical elements:** The dynamics between renewable generation and hydroelectric generation are particularly relevant for the Brazilian case, especially involving resource randomness and the need for intertemporal reservoir management.
 

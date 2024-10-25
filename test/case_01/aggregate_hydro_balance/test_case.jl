@@ -32,7 +32,7 @@ if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
     Main.compare_outputs(PATH;
-        test_only_first_block = ["hydro_initial_volume"],
+        test_only_first_subperiod = ["hydro_initial_volume"],
     )
 end
 

@@ -3,10 +3,10 @@ db = IARA.load_study(PATH; read_only = false)
 IARA.add_bidding_group!(db;
     label = "bg_1",
     assetowner_id = "asset_owner_1",
-    simple_bid_max_segments = 2,
+    independent_bid_max_segments = 2,
 )
 
-IARA.add_thermal_plant!(db;
+IARA.add_thermal_unit!(db;
     label = "ter_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -20,7 +20,7 @@ IARA.add_thermal_plant!(db;
     bus_id = "bus_1",
 )
 
-IARA.add_thermal_plant!(db;
+IARA.add_thermal_unit!(db;
     label = "ter_2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],

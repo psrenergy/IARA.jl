@@ -20,18 +20,18 @@ function bidding_group_multihour_precedence!(
     linear_combination_bid_segments_multihour = get_model_object(model, :linear_combination_bid_segments_multihour)
     bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options)
-    multihour_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
+    profile_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
     maximum_bidding_profiles = maximum_number_of_bidding_profiles(inputs)
 
-    parent_multihour_bids = zeros(Int,
+    parent_profile_bids = zeros(Int,
         length(bidding_groups),
         maximum_bidding_profiles,
     )
 
-    for (i_bg, bg) in enumerate(multihour_bidding_groups), profile in 1:maximum_multihour_profiles(inputs, bg)
-        parent_multihour_bids[bg, profile] = time_series_parent_profile_multihour(inputs)[i_bg, profile]
-        if parent_multihour_bids[bg, profile] == profile
+    for (i_bg, bg) in enumerate(profile_bidding_groups), profile in 1:maximum_multihour_profiles(inputs, bg)
+        parent_profile_bids[bg, profile] = time_series_parent_profile_multihour(inputs)[i_bg, profile]
+        if parent_profile_bids[bg, profile] == profile
             error("Bidding group $bg profile $profile is its own parent")
         end
     end
@@ -40,13 +40,13 @@ function bidding_group_multihour_precedence!(
     @constraint(
         model.jump_model,
         bidding_group_multihour_precedence[
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             profile in 1:maximum_multihour_profiles(inputs, bg);
-            is_valid_parent(parent_multihour_bids[bg, profile], profile),
+            is_valid_parent(parent_profile_bids[bg, profile], profile),
         ],
         linear_combination_bid_segments_multihour[bg, profile]
         <=
-        linear_combination_bid_segments_multihour[bg, parent_multihour_bids[bg, profile]],
+        linear_combination_bid_segments_multihour[bg, parent_profile_bids[bg, profile]],
     )
 
     return nothing
@@ -80,8 +80,8 @@ function bidding_group_multihour_precedence!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

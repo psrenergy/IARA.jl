@@ -20,7 +20,7 @@ function bus_voltage_angle!(
 
     @variable(
         model.jump_model,
-        bus_voltage_angle[b in blocks(inputs), n in buses],
+        bus_voltage_angle[b in subperiods(inputs), n in buses],
     )
 
     return nothing
@@ -52,7 +52,7 @@ function bus_voltage_angle!(
         outputs;
         inputs,
         output_name = "bus_voltage_angle",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "rad",
         labels = bus_label(inputs)[buses],
         run_time_options,
@@ -64,8 +64,8 @@ function bus_voltage_angle!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
@@ -74,13 +74,13 @@ function bus_voltage_angle!(
 
     bus_voltage_angle_difference = bus_voltage_angle.data[:, :] .- bus_voltage_angle.data[:, 1]
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "bus_voltage_angle",
         bus_voltage_angle_difference;
-        stage,
+        period,
         scenario,
         subscenario,
     )

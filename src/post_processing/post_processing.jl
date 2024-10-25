@@ -19,6 +19,10 @@ function post_processing(inputs)
     if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
         post_processing_generation(inputs)
     end
+    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+        create_bidding_group_generation_files(inputs)
+        post_processing_bidding_group_revenue(inputs)
+    end
     return nothing
 end
 

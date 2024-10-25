@@ -1,3 +1,3 @@
-stage,scenario,block,profile,bg_1 - bus_1,bg_2 - bus_1
+period,scenario,subperiod,profile,bg_1 - bus_1,bg_2 - bus_1
 1,1,1,1,25,0
 1,1,2,1,50,0

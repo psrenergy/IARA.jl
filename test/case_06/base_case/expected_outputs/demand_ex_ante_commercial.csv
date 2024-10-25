@@ -1,4 +1,4 @@
-stage,scenario,block,dem_1
+period,scenario,subperiod,dem_1
 1,1,1,0.005
 1,1,2,0.005
 1,2,1,0.005

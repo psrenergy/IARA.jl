@@ -8,19 +8,19 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function build_graph(inputs::Inputs; current_stage::Union{Nothing, Int} = nothing)
-    # For the market clearing problem type, we simulate each stage individually
+function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothing)
+    # For the market clearing problem type, we simulate each period individually
     if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
-        if isnothing(current_stage)
-            error("current_stage must be provided for the MARKET_CLEARING run mode")
+        if isnothing(current_period)
+            error("current_period must be provided for the MARKET_CLEARING run mode")
         end
         graph = SDDP.Graph(0)
-        SDDP.add_node(graph, current_stage)
-        SDDP.add_edge(graph, 0 => current_stage, 1.0)
+        SDDP.add_node(graph, current_period)
+        SDDP.add_edge(graph, 0 => current_period, 1.0)
         return graph
     end
     if linear_policy_graph(inputs)
-        graph_size = number_of_stages(inputs)
+        graph_size = number_of_periods(inputs)
         return SDDP.LinearGraph(graph_size)
     end
 

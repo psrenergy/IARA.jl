@@ -15,9 +15,9 @@
     violation_cost::Vector{Float64} = []
     angular_coefficient::Vector{Float64} = []
     linear_coefficient::Vector{Float64} = []
-    thermal_plant_indices::Vector{Vector{Int}} = []
-    hydro_plant_indices::Vector{Vector{Int}} = []
-    battery_indices::Vector{Vector{Int}} = []
+    thermal_unit_indices::Vector{Vector{Int}} = []
+    hydro_unit_indices::Vector{Vector{Int}} = []
+    battery_unit_indices::Vector{Vector{Int}} = []
     requirement_file::String = ""
 end
 
@@ -33,9 +33,9 @@ function initialize!(reserve::Reserve, inputs::AbstractInputs)
     reserve.violation_cost = PSRI.get_parms(inputs.db, "Reserve", "violation_cost")
     reserve.angular_coefficient = PSRI.get_parms(inputs.db, "Reserve", "angular_coefficient")
     reserve.linear_coefficient = PSRI.get_parms(inputs.db, "Reserve", "linear_coefficient")
-    reserve.thermal_plant_indices = PSRI.get_vector_map(inputs.db, "Reserve", "ThermalPlant", "id")
-    reserve.hydro_plant_indices = PSRI.get_vector_map(inputs.db, "Reserve", "HydroPlant", "id")
-    reserve.battery_indices = PSRI.get_vector_map(inputs.db, "Reserve", "Battery", "id")
+    reserve.thermal_unit_indices = PSRI.get_vector_map(inputs.db, "Reserve", "ThermalUnit", "id")
+    reserve.hydro_unit_indices = PSRI.get_vector_map(inputs.db, "Reserve", "HydroUnit", "id")
+    reserve.battery_unit_indices = PSRI.get_vector_map(inputs.db, "Reserve", "BatteryUnit", "id")
 
     reserve.requirement_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Reserve", "reserve_requirement")
@@ -58,9 +58,9 @@ function validate(reserve::Reserve)
             @error "Violation cost for reserve $(reserve_label) must be greater than zero."
             num_errors += 1
         end
-        if isempty(reserve.thermal_plant_indices[i]) && isempty(reserve.hydro_plant_indices[i]) &&
-           isempty(reserve.battery_indices[i])
-            @error "Reserve $(reserve_label) must be associated with at least one thermal plant, hydro plant, or battery."
+        if isempty(reserve.thermal_unit_indices[i]) && isempty(reserve.hydro_unit_indices[i]) &&
+           isempty(reserve.battery_unit_indices[i])
+            @error "Reserve $(reserve_label) must be associated with at least one thermal unit, hydro unit, or battery_unit unit."
             num_errors += 1
         end
     end
@@ -78,11 +78,11 @@ function validate_relations(inputs::AbstractInputs, reserve::Reserve)
 end
 
 """
-    update_time_series_from_db!(reserve::Reserve, db::DatabaseSQLite, stage_date_time::DateTime)
+    update_time_series_from_db!(reserve::Reserve, db::DatabaseSQLite, period_date_time::DateTime)
 
 Update the Reserve collection time series from the database.
 """
-function update_time_series_from_db!(reserve::Reserve, db::DatabaseSQLite, stage_date_time::DateTime)
+function update_time_series_from_db!(reserve::Reserve, db::DatabaseSQLite, period_date_time::DateTime)
     return nothing
 end
 
@@ -138,9 +138,9 @@ reserve_linear_coefficient(inputs::AbstractInputs, idx::Int) =
     is_null(inputs.collections.reserve.linear_coefficient[idx]) ? 0.0 :
     inputs.collections.reserve.linear_coefficient[idx]
 
-has_thermal_plant(reserve::Reserve, idx::Int) = !isempty(reserve.thermal_plant_indices[idx])
-has_hydro_plant(reserve::Reserve, idx::Int) = !isempty(reserve.hydro_plant_indices[idx])
-has_battery(reserve::Reserve, idx::Int) = !isempty(reserve.battery_indices[idx])
+has_thermal_unit(reserve::Reserve, idx::Int) = !isempty(reserve.thermal_unit_indices[idx])
+has_hydro_unit(reserve::Reserve, idx::Int) = !isempty(reserve.hydro_unit_indices[idx])
+has_battery_unit(reserve::Reserve, idx::Int) = !isempty(reserve.battery_unit_indices[idx])
 is_equality(reserve::Reserve, idx::Int) = reserve.constraint_type[idx] == Reserve_ConstraintType.EQUALITY
 is_inequality(reserve::Reserve, idx::Int) = reserve.constraint_type[idx] == Reserve_ConstraintType.INEQUALITY
 

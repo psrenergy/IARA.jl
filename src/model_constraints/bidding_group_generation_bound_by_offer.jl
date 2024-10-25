@@ -17,8 +17,9 @@ function bidding_group_generation_bound_by_offer!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    simple_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_simple_bids])
-    blks = blocks(inputs)
+    independent_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
+    blks = subperiods(inputs)
 
     # Model variables
     bidding_group_generation = get_model_object(model, :bidding_group_generation)
@@ -32,7 +33,7 @@ function bidding_group_generation_bound_by_offer!(
         model.jump_model,
         bidding_group_generation_bound_by_offer[
             blk in blks,
-            bg in simple_bidding_groups,
+            bg in independent_bidding_groups,
             bds in 1:maximum_bid_segments(inputs, bg),
             bus in buses,
         ],
@@ -68,8 +69,8 @@ function bidding_group_generation_bound_by_offer!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

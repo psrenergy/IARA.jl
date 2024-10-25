@@ -19,7 +19,7 @@ function dc_flow!(
     dc_lines = index_of_elements(inputs, DCLine; filters = [is_existing])
     @variable(
         model.jump_model,
-        dc_flow[b in blocks(inputs), l in dc_lines],
+        dc_flow[b in subperiods(inputs), l in dc_lines],
         lower_bound = -dc_line_capacity_from(inputs, l),
         upper_bound = dc_line_capacity_to(inputs, l),
     )
@@ -53,7 +53,7 @@ function dc_flow!(
         outputs;
         inputs,
         output_name = "dc_flow",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "MW",
         labels = dc_line_label(inputs)[dc_lines],
         run_time_options,
@@ -65,8 +65,8 @@ function dc_flow!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
@@ -81,13 +81,13 @@ function dc_flow!(
         elements_to_write = existing_dc_lines,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "dc_flow",
         dc_flow.data;
-        stage,
+        period,
         scenario,
         subscenario,
         indices_of_elements_in_output,

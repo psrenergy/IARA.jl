@@ -16,8 +16,8 @@ function hydro_inflow!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    num_existing_hydros = number_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
-    existing_hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
+    num_existing_hydros = number_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
 
     if read_inflow_from_file(inputs)
         # Time series
@@ -25,11 +25,11 @@ function hydro_inflow!(
         # Parameters
         @variable(
             model.jump_model,
-            inflow[b in blocks(inputs), h in existing_hydro_plants]
+            inflow[b in subperiods(inputs), h in existing_hydro_units]
             in
             MOI.Parameter(
-                inflow_series[hydro_plant_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
-                block_duration_in_hours(inputs, b),
+                inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
+                subperiod_duration_in_hours(inputs, b),
             ),
         )
     else
@@ -39,19 +39,19 @@ function hydro_inflow!(
         # Parameters
         @variable(
             model.jump_model,
-            inflow_noise[h in existing_hydro_plants]
+            inflow_noise[h in existing_hydro_units]
             in
             MOI.Parameter(
-                inflow_noise_series[hydro_plant_gauging_station_index(inputs, h)],
+                inflow_noise_series[hydro_unit_gauging_station_index(inputs, h)],
             ),
         )
 
         if parp_max_lags(inputs) > 0
             # Initial state
             normalized_initial_state = zeros(num_existing_hydros, parp_max_lags(inputs))
-            for h in existing_hydro_plants, tau in 1:parp_max_lags(inputs)
-                stage_idx = mod1(stage_index_in_year(inputs, tau) - parp_max_lags(inputs), stages_per_year(inputs))
-                normalized_initial_state[h, tau] = normalized_initial_inflow(inputs, stage_idx, h, tau)
+            for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
+                period_idx = mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
+                normalized_initial_state[h, tau] = normalized_initial_inflow(inputs, period_idx, h, tau)
             end
             # Time series
             inflow_noise_series = time_series_inflow_noise(inputs)
@@ -59,7 +59,7 @@ function hydro_inflow!(
             @variable(
                 model.jump_model,
                 normalized_inflow[
-                    h in existing_hydro_plants,
+                    h in existing_hydro_units,
                     tau in 1:parp_max_lags(inputs),
                 ],
                 SDDP.State,
@@ -68,30 +68,30 @@ function hydro_inflow!(
         end
 
         # Denormalize inflow and convert to hm³
-        # Repeat the same value for all blocks
-        inflow_multiplier = [AffExpr(0) for h in index_of_elements(inputs, HydroPlant; run_time_options)]
+        # Repeat the same value for all subperiods
+        inflow_multiplier = [AffExpr(0) for h in index_of_elements(inputs, HydroUnit; run_time_options)]
         if parp_max_lags(inputs) > 0
-            for h in existing_hydro_plants
+            for h in existing_hydro_units
                 inflow_multiplier[h] = normalized_inflow[h, end].out
             end
         else
-            for h in existing_hydro_plants
-                inflow_multiplier[h] = inflow_noise[hydro_plant_gauging_station_index(inputs, h)]
+            for h in existing_hydro_units
+                inflow_multiplier[h] = inflow_noise[hydro_unit_gauging_station_index(inputs, h)]
             end
         end
         @expression(
             model.jump_model,
-            inflow[b in blocks(inputs), h in existing_hydro_plants],
-            m3_per_second_to_hm3_per_hour() * block_duration_in_hours(inputs, b) *
+            inflow[b in subperiods(inputs), h in existing_hydro_units],
+            m3_per_second_to_hm3_per_hour() * subperiod_duration_in_hours(inputs, b) *
             (
                 inflow_multiplier[h] *
-                time_series_inflow_stage_std_dev(inputs)[
-                    hydro_plant_gauging_station_index(inputs, h),
-                    stage_index_in_year(inputs, model.stage),
+                time_series_inflow_period_std_dev(inputs)[
+                    hydro_unit_gauging_station_index(inputs, h),
+                    period_index_in_year(inputs, model.period),
                 ] +
-                time_series_inflow_stage_average(inputs)[
-                    hydro_plant_gauging_station_index(inputs, h),
-                    stage_index_in_year(inputs, model.stage),
+                time_series_inflow_period_average(inputs)[
+                    hydro_unit_gauging_station_index(inputs, h),
+                    period_index_in_year(inputs, model.period),
                 ]
             )
         )
@@ -100,18 +100,18 @@ function hydro_inflow!(
     # Slack variables
     @variable(
         model.jump_model,
-        inflow_slack[b in blocks(inputs), h in existing_hydro_plants],
+        inflow_slack[b in subperiods(inputs), h in existing_hydro_units],
         lower_bound = 0.0,
     )
 
     # Objective
     inflow_slack_weight = [
-        1.1 .* hydro_plant_downstream_cumulative_production_factor(inputs, h) .* demand_deficit_cost(inputs) /
-        m3_per_second_to_hm3_per_hour() for h in existing_hydro_plants
+        1.1 .* hydro_unit_downstream_cumulative_production_factor(inputs, h) .* demand_deficit_cost(inputs) /
+        m3_per_second_to_hm3_per_hour() for h in existing_hydro_units
     ]
     @expression(
         model.jump_model,
-        inflow_slack_penalty[b in blocks(inputs), (idx, h) in enumerate(existing_hydro_plants)],
+        inflow_slack_penalty[b in subperiods(inputs), (idx, h) in enumerate(existing_hydro_units)],
         inflow_slack[b, h] * inflow_slack_weight[idx]
     )
     model.obj_exp += sum(inflow_slack_penalty) * money_to_thousand_money()
@@ -127,7 +127,7 @@ function hydro_inflow!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
 
     if read_inflow_from_file(inputs)
         # Model parameters
@@ -136,13 +136,13 @@ function hydro_inflow!(
         # Time series
         inflow_series = time_series_inflow(inputs, run_time_options, subscenario)
 
-        for b in blocks(inputs), h in hydro_plants
+        for b in subperiods(inputs), h in hydro_units
             MOI.set(
                 model.jump_model,
                 POI.ParameterValue(),
                 inflow[b, h],
-                inflow_series[hydro_plant_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
-                block_duration_in_hours(inputs, b),
+                inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
+                subperiod_duration_in_hours(inputs, b),
             )
         end
     else
@@ -152,12 +152,12 @@ function hydro_inflow!(
         # Time series
         inflow_noise_series = time_series_inflow_noise(inputs)
 
-        for h in hydro_plants
+        for h in hydro_units
             MOI.set(
                 model.jump_model,
                 POI.ParameterValue(),
                 inflow_noise[h],
-                inflow_noise_series[hydro_plant_gauging_station_index(inputs, h)],
+                inflow_noise_series[hydro_unit_gauging_station_index(inputs, h)],
             )
         end
     end
@@ -171,7 +171,7 @@ function hydro_inflow!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    hydros = index_of_elements(inputs, HydroPlant; run_time_options)
+    hydros = index_of_elements(inputs, HydroUnit; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(outputs, [:inflow_slack, :inflow])
 
@@ -180,9 +180,9 @@ function hydro_inflow!(
         outputs;
         inputs,
         output_name = "inflow_slack",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "m3/s",
-        labels = hydro_plant_label(inputs)[hydros],
+        labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
 
@@ -191,9 +191,9 @@ function hydro_inflow!(
         outputs;
         inputs,
         output_name = "inflow",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "m3/s",
-        labels = hydro_plant_label(inputs)[hydros],
+        labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
 
@@ -204,48 +204,48 @@ function hydro_inflow!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options)
-    existing_hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
 
     inflow_slack = simulation_results.data[:inflow_slack]
     inflow = simulation_results.data[:inflow]
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = hydro_plants,
-        elements_to_write = existing_hydro_plants,
+        elements_in_output_file = hydro_units,
+        elements_to_write = existing_hydro_units,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "inflow_slack",
         inflow_slack.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-        divide_by_block_duration_in_hours = true,
+        divide_by_subperiod_duration_in_hours = true,
         indices_of_elements_in_output,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "inflow",
         inflow.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-        divide_by_block_duration_in_hours = true,
+        divide_by_subperiod_duration_in_hours = true,
         indices_of_elements_in_output,
     )
 

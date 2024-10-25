@@ -22,13 +22,13 @@ function merge_scenario_agent(
     scenario_names::Union{Vector{String}, Nothing} = nothing;
     kwargs...,
 )
-    num_stages = size(data, 3)
+    num_periods = size(data, 3)
     num_scenarios = size(data, 2)
     num_agents = size(data, 1)
 
     queried_scenarios = get(kwargs, :scenario, nothing)
 
-    reshaped_data = Array{Float64, 2}(undef, num_scenarios * num_agents, num_stages)
+    reshaped_data = Array{Float64, 2}(undef, num_scenarios * num_agents, num_periods)
     modified_names = Vector{String}(undef, num_scenarios * num_agents)
     i = 1
     for agent in 1:num_agents
@@ -64,17 +64,17 @@ function reshape_time_series!(
     dimensions::Vector{String};
     kwargs...,
 )
-    if !("block" in dimensions) && ("bid_segment" in dimensions)
+    if !("subperiod" in dimensions) && ("bid_segment" in dimensions)
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
         time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
-    elseif ("block" in dimensions) && !("bid_segment" in dimensions)
-        time_series = merge_stage_block(data)
+    elseif ("subperiod" in dimensions) && !("bid_segment" in dimensions)
+        time_series = merge_period_subperiod(data)
         time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
     else
         error(
-            "A time series output with 4 dimensions should have either 'bid_segment' or 'block' as a dimension.",
+            "A time series output with 4 dimensions should have either 'bid_segment' or 'subperiod' as a dimension.",
         )
     end
 end
@@ -88,16 +88,16 @@ function reshape_time_series!(
 )
     if !("subscenario" in dimensions)
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
-        time_series = merge_stage_block(time_series)
+        time_series = merge_period_subperiod(time_series)
         time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
     elseif !("bid_segment" in dimensions)
-        time_series = merge_stage_block(data)
+        time_series = merge_period_subperiod(data)
         time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
         time_series, modified_agent_names =
             merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names; kwargs...)
         return time_series, modified_agent_names
-    elseif !("block" in dimensions)
+    elseif !("subperiod" in dimensions)
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
         time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
         time_series, modified_agent_names =
@@ -118,7 +118,7 @@ function reshape_time_series!(
     kwargs...,
 )
     time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
-    time_series = merge_stage_block(time_series)
+    time_series = merge_period_subperiod(time_series)
     time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
     time_series, modified_agent_names =
         merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names, modified_scenario_names; kwargs...)
@@ -134,26 +134,26 @@ function plot_data(
     unit::String = "",
     file_path::String,
     initial_date::DateTime,
-    stage_type::Configurations_StageType.T,
+    period_type::Configurations_PeriodType.T,
     kwargs...,
 ) where {N}
     traces, trace_names = reshape_time_series!(PlotTimeSeriesAll, data, agent_names, dimensions; kwargs...)
-    number_of_stages = size(traces, 2)
+    number_of_periods = size(traces, 2)
     number_of_traces = size(traces, 1)
 
-    initial_number_of_stages = size(data, N)
-    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_stages, initial_date, stage_type; kwargs...)
+    initial_number_of_periods = size(data, N)
+    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type; kwargs...)
 
-    plot_type = ifelse(number_of_stages == 1, "bar", "line")
+    plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
     configs = Vector{Config}()
 
-    title = title * " - All scenarios"
+    title = title * " - Individual scenarios"
     for trace in 1:number_of_traces
         push!(
             configs,
             Config(;
-                x = 1:number_of_stages,
+                x = 1:number_of_periods,
                 y = traces[trace, :],
                 name = trace_names[trace],
                 line = Dict("color" => get_plot_color(trace)),
@@ -167,7 +167,7 @@ function plot_data(
     main_configuration = Config(;
         title = title,
         xaxis = Dict(
-            "title" => "Stage",
+            "title" => "Period",
             "tickmode" => "array",
             "tickvals" => [i for i in eachindex(plot_ticks)],
             "ticktext" => plot_ticks,

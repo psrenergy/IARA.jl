@@ -15,16 +15,16 @@ function generate_inflow_scenarios(inputs::Inputs)
 
     # Fit and simulate PAR(p)
     incremental_inflow = calculate_incremental_inflow(inputs, gauging_station_historical_inflow(inputs))
-    parp_models = PARp.(incremental_inflow, stages_per_year(inputs), parp_max_lags(inputs))
+    parp_models = PARp.(incremental_inflow, periods_per_year(inputs), parp_max_lags(inputs))
     fit_par!.(parp_models)
     inflow, noise = simulate_par(
         parp_models,
-        number_of_stages(inputs),
+        number_of_periods(inputs),
         number_of_scenarios(inputs);
         lognormal_noise = false,
         return_noise = true,
     )
-    # inflow and noise have dimensions (number_of_stages(inputs), number_of_gauging_stations, number_of_scenarios(inputs))
+    # inflow and noise have dimensions (number_of_periods(inputs), number_of_gauging_stations, number_of_scenarios(inputs))
     inflow = permutedims(inflow, [2, 3, 1])
     noise = permutedims(noise, [2, 3, 1])
 
@@ -32,19 +32,19 @@ function generate_inflow_scenarios(inputs::Inputs)
     gauging_stations = index_of_elements(inputs, GaugingStation)
     number_of_gauging_stations = number_of_elements(inputs, GaugingStation)
 
-    parp_coefficients = zeros(number_of_gauging_stations, parp_max_lags(inputs), stages_per_year(inputs))
-    inflow_stage_average = zeros(number_of_gauging_stations, stages_per_year(inputs))
-    inflow_stage_std_dev = zeros(number_of_gauging_stations, stages_per_year(inputs))
-    for gauging_station in gauging_stations, stage in 1:stages_per_year(inputs)
-        coefficients = parp_models[gauging_station].best_AR_stage[stage].ϕ
+    parp_coefficients = zeros(number_of_gauging_stations, parp_max_lags(inputs), periods_per_year(inputs))
+    inflow_period_average = zeros(number_of_gauging_stations, periods_per_year(inputs))
+    inflow_period_std_dev = zeros(number_of_gauging_stations, periods_per_year(inputs))
+    for gauging_station in gauging_stations, period in 1:periods_per_year(inputs)
+        coefficients = parp_models[gauging_station].best_AR_stage[period].ϕ
         for (i, coefficient) in enumerate(coefficients)
-            parp_coefficients[gauging_station, i, stage] = coefficient
+            parp_coefficients[gauging_station, i, period] = coefficient
         end
-        inflow_stage_average[gauging_station, stage] = parp_models[gauging_station].μ_stage[stage]
-        inflow_stage_std_dev[gauging_station, stage] = parp_models[gauging_station].σ_stage[stage]
+        inflow_period_average[gauging_station, period] = parp_models[gauging_station].μ_stage[period]
+        inflow_period_std_dev[gauging_station, period] = parp_models[gauging_station].σ_stage[period]
     end
 
-    write_parp_outputs(inputs, inflow, noise, parp_coefficients, inflow_stage_average, inflow_stage_std_dev)
+    write_parp_outputs(inputs, inflow, noise, parp_coefficients, inflow_period_average, inflow_period_std_dev)
 
     return nothing
 end
@@ -53,8 +53,8 @@ function write_parp_outputs(inputs::Inputs,
     inflow::Array{Float64, 3},
     noise::Array{Float64, 3},
     parp_coefficients::Array{Float64, 3},
-    inflow_stage_average::Array{Float64, 2},
-    inflow_stage_std_dev::Array{Float64, 2},
+    inflow_period_average::Array{Float64, 2},
+    inflow_period_std_dev::Array{Float64, 2},
 )
     if !isdir(path_parp(inputs))
         mkdir(path_parp(inputs))
@@ -62,50 +62,50 @@ function write_parp_outputs(inputs::Inputs,
     write_timeseries_file(
         joinpath(path_parp(inputs), gauging_station_inflow_file(inputs)),
         inflow;
-        dimensions = ["stage", "scenario"],
+        dimensions = ["period", "scenario"],
         labels = gauging_station_label(inputs),
-        time_dimension = "stage",
-        dimension_size = [number_of_stages(inputs), number_of_scenarios(inputs)],
+        time_dimension = "period",
+        dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs)],
         initial_date = initial_date_time(inputs),
         unit = "m3/s",
     )
     write_timeseries_file(
         joinpath(path_parp(inputs), gauging_station_inflow_noise_file(inputs)),
         noise;
-        dimensions = ["stage", "scenario"],
+        dimensions = ["period", "scenario"],
         labels = gauging_station_label(inputs),
-        time_dimension = "stage",
-        dimension_size = [number_of_stages(inputs), number_of_scenarios(inputs)],
+        time_dimension = "period",
+        dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs)],
         initial_date = initial_date_time(inputs),
         unit = "m3/s",
     )
     write_timeseries_file(
         joinpath(path_parp(inputs), gauging_station_parp_coefficients_file(inputs)),
         parp_coefficients;
-        dimensions = ["stage", "lag"],
+        dimensions = ["period", "lag"],
         labels = gauging_station_label(inputs),
-        time_dimension = "stage",
-        dimension_size = [stages_per_year(inputs), parp_max_lags(inputs)],
+        time_dimension = "period",
+        dimension_size = [periods_per_year(inputs), parp_max_lags(inputs)],
         initial_date = initial_date_time(inputs),
         unit = "-",
     )
     write_timeseries_file(
-        joinpath(path_parp(inputs), gauging_station_inflow_stage_average_file(inputs)),
-        inflow_stage_average;
-        dimensions = ["inflow_stage"],
+        joinpath(path_parp(inputs), gauging_station_inflow_period_average_file(inputs)),
+        inflow_period_average;
+        dimensions = ["inflow_period"],
         labels = gauging_station_label(inputs),
-        time_dimension = "inflow_stage",
-        dimension_size = [stages_per_year(inputs)],
+        time_dimension = "inflow_period",
+        dimension_size = [periods_per_year(inputs)],
         initial_date = initial_date_time(inputs),
         unit = "m3/s",
     )
     write_timeseries_file(
-        joinpath(path_parp(inputs), gauging_station_inflow_stage_std_dev_file(inputs)),
-        inflow_stage_std_dev;
-        dimensions = ["inflow_stage"],
+        joinpath(path_parp(inputs), gauging_station_inflow_period_std_dev_file(inputs)),
+        inflow_period_std_dev;
+        dimensions = ["inflow_period"],
         labels = gauging_station_label(inputs),
-        time_dimension = "inflow_stage",
-        dimension_size = [stages_per_year(inputs)],
+        time_dimension = "inflow_period",
+        dimension_size = [periods_per_year(inputs)],
         initial_date = initial_date_time(inputs),
         unit = "m3/s",
     )

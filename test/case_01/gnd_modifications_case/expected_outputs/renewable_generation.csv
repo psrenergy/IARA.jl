@@ -1,4 +1,4 @@
-stage,scenario,block,gnd_1,gnd_2
+period,scenario,subperiod,gnd_1,gnd_2
 1,1,1,0.004,0.0
 1,1,2,0.004,0.0
 1,2,1,0.003,0.0

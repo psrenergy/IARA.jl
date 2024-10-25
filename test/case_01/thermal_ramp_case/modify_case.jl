@@ -10,11 +10,11 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.add_thermal_plant!(db;
+IARA.add_thermal_unit!(db;
     label = "ter_2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.ThermalPlant_Existence.EXISTS)],
+        existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         min_generation = [0.0],
         max_generation = [0.5],
         om_cost = [2.0],

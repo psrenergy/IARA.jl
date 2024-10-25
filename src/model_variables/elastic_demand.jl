@@ -16,7 +16,7 @@ function elastic_demand!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    existing_elastic_demand = index_of_elements(inputs, Demand; filters = [is_existing, is_elastic])
+    existing_elastic_demand = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
 
     # Time series
     elastic_demand_price_series = time_series_elastic_demand_price(inputs)
@@ -24,7 +24,7 @@ function elastic_demand!(
     # Variables
     @variable(
         model.jump_model,
-        attended_elastic_demand[b in blocks(inputs), d in existing_elastic_demand],
+        attended_elastic_demand[b in subperiods(inputs), d in existing_elastic_demand],
         lower_bound = 0.0,
     ) # MWh
 
@@ -32,7 +32,7 @@ function elastic_demand!(
 
     @variable(
         model.jump_model,
-        elastic_demand_price[b in blocks(inputs), d in existing_elastic_demand]
+        elastic_demand_price[b in subperiods(inputs), d in existing_elastic_demand]
         in
         MOI.Parameter(
             elastic_demand_price_series[
@@ -48,7 +48,7 @@ function elastic_demand!(
         model.obj_exp -
         money_to_thousand_money() * sum(
             attended_elastic_demand[b, d] * elastic_demand_price[b, d]
-            for b in blocks(inputs), d in existing_elastic_demand
+            for b in subperiods(inputs), d in existing_elastic_demand
         ),
     )
 
@@ -63,7 +63,7 @@ function elastic_demand!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    existing_elastic_demand = index_of_elements(inputs, Demand; filters = [is_existing, is_elastic])
+    existing_elastic_demand = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
 
     # Model parameters
     elastic_demand_price = get_model_object(model, :elastic_demand_price)
@@ -71,7 +71,7 @@ function elastic_demand!(
     # Time series
     elastic_demand_price_series = time_series_elastic_demand_price(inputs)
 
-    for b in blocks(inputs), (i, d) in enumerate(existing_elastic_demand)
+    for b in subperiods(inputs), (i, d) in enumerate(existing_elastic_demand)
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -89,7 +89,7 @@ function elastic_demand!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    elastic_demands = index_of_elements(inputs, Demand; run_time_options, filters = [is_elastic])
+    elastic_demands = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_elastic])
 
     add_symbol_to_query_from_subproblem_result!(outputs, :attended_elastic_demand)
 
@@ -98,9 +98,9 @@ function elastic_demand!(
         outputs;
         inputs,
         output_name = "attended_elastic_demand",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = demand_label(inputs)[elastic_demands],
+        labels = demand_unit_label(inputs)[elastic_demands],
         run_time_options,
     )
     return nothing
@@ -110,14 +110,15 @@ function elastic_demand!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    elastic_demands = index_of_elements(inputs, Demand; run_time_options, filters = [is_elastic])
-    existing_elastic_demands = index_of_elements(inputs, Demand; run_time_options, filters = [is_existing, is_elastic])
+    elastic_demands = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_elastic])
+    existing_elastic_demands =
+        index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing, is_elastic])
 
     attended_elastic_demand = simulation_results.data[:attended_elastic_demand]
 
@@ -126,13 +127,13 @@ function elastic_demand!(
         elements_to_write = existing_elastic_demands,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "attended_elastic_demand",
         attended_elastic_demand.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),

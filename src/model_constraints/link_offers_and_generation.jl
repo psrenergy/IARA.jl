@@ -16,33 +16,34 @@ function link_offers_and_generation!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    blks = blocks(inputs)
+    blks = subperiods(inputs)
     # Generation variables
-    hydro_plants = index_of_elements(inputs, HydroPlant; filters = [is_existing])
-    thermal_plants = index_of_elements(inputs, ThermalPlant; filters = [is_existing])
-    renewable_plants = index_of_elements(inputs, RenewablePlant; filters = [is_existing])
-    batteries = index_of_elements(inputs, Battery; filters = [is_existing])
-    hydro_generation = if any_elements(inputs, HydroPlant; filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
+    thermal_units = index_of_elements(inputs, ThermalUnit; filters = [is_existing])
+    renewable_units = index_of_elements(inputs, RenewableUnit; filters = [is_existing])
+    battery_units = index_of_elements(inputs, BatteryUnit; filters = [is_existing])
+    hydro_generation = if any_elements(inputs, HydroUnit; filters = [is_existing])
         get_model_object(model, :hydro_generation)
     end
-    thermal_generation = if any_elements(inputs, ThermalPlant; filters = [is_existing])
+    thermal_generation = if any_elements(inputs, ThermalUnit; filters = [is_existing])
         get_model_object(model, :thermal_generation)
     end
-    renewable_generation = if any_elements(inputs, RenewablePlant; filters = [is_existing])
+    renewable_generation = if any_elements(inputs, RenewableUnit; filters = [is_existing])
         get_model_object(model, :renewable_generation)
     end
-    battery_generation = if any_elements(inputs, Battery; filters = [is_existing])
-        get_model_object(model, :battery_generation)
+    battery_unit_generation = if any_elements(inputs, BatteryUnit; filters = [is_existing])
+        get_model_object(model, :battery_unit_generation)
     end
     # Offer variables
     all_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
-    simple_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_simple_bids])
-    multihour_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
-    if any_elements(inputs, BiddingGroup; filters = [has_multihour_bids])
+    independent_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
+    profile_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    if any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
         bidding_group_generation_multihour = get_model_object(model, :bidding_group_generation_multihour)
     end
-    if any_elements(inputs, BiddingGroup; filters = [has_simple_bids])
+    if any_elements(inputs, BiddingGroup; filters = [has_independent_bids])
         bidding_group_generation = get_model_object(model, :bidding_group_generation)
     end
     @constraint(
@@ -51,41 +52,41 @@ function link_offers_and_generation!(
         sum(
             bidding_group_generation[blk, bg, bds, bus] for
             bds in 1:maximum_bid_segments(inputs, bg)
-            if bg in simple_bidding_groups;
+            if bg in independent_bidding_groups;
             init = 0.0,
         ) +
         sum(
             bidding_group_generation_multihour[blk, bg, prf, bus] for
             prf in 1:maximum_multihour_profiles(inputs, bg)
-            if bg in multihour_bidding_groups;
+            if bg in profile_bidding_groups;
             init = 0.0,
         ) ==
         sum(
-            hydro_generation[blk, h] for h in hydro_plants
-            if hydro_plant_bus_index(inputs, h) == bus
+            hydro_generation[blk, h] for h in hydro_units
+            if hydro_unit_bus_index(inputs, h) == bus
             &&
-            hydro_plant_bidding_group_index(inputs, h) == bg;
+            hydro_unit_bidding_group_index(inputs, h) == bg;
             init = 0.0,
         ) +
         sum(
-            thermal_generation[blk, t] for t in thermal_plants
-            if thermal_plant_bus_index(inputs, t) == bus
+            thermal_generation[blk, t] for t in thermal_units
+            if thermal_unit_bus_index(inputs, t) == bus
             &&
-            thermal_plant_bidding_group_index(inputs, t) == bg;
+            thermal_unit_bidding_group_index(inputs, t) == bg;
             init = 0.0,
         ) +
         sum(
-            renewable_generation[blk, r] for r in renewable_plants
-            if renewable_plant_bus_index(inputs, r) == bus
+            renewable_generation[blk, r] for r in renewable_units
+            if renewable_unit_bus_index(inputs, r) == bus
             &&
-            renewable_plant_bidding_group_index(inputs, r) == bg;
+            renewable_unit_bidding_group_index(inputs, r) == bg;
             init = 0.0,
         ) +
         sum(
-            battery_generation[blk, bat] for bat in batteries
-            if battery_bus_index(inputs, bat) == bus
+            battery_unit_generation[blk, bat] for bat in battery_units
+            if battery_unit_bus_index(inputs, bat) == bus
             &&
-            battery_bidding_group_index(inputs, bat) == bg;
+            battery_unit_bidding_group_index(inputs, bat) == bg;
             init = 0.0,
         )
     )
@@ -113,8 +114,8 @@ function link_offers_and_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

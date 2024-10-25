@@ -10,37 +10,37 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-new_block_duration = 30.0
+new_subperiod_duration = 30.0
 
 IARA.update_configuration!(db;
     policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC,
     yearly_discount_rate = 0.05,
-    number_of_nodes = number_of_stages,
-    block_duration_in_hours = [new_block_duration for _ in 1:number_of_blocks],
+    number_of_nodes = number_of_periods,
+    subperiod_duration_in_hours = [new_subperiod_duration for _ in 1:number_of_subperiods],
 )
 
-IARA.update_hydro_plant!(
+IARA.update_hydro_unit!(
     db,
     "hyd_1";
-    initial_volume = 12.0 * m3_per_second_to_hm3 * (new_block_duration / block_duration_in_hours),
+    initial_volume = 12.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours),
 )
-IARA.update_hydro_plant_time_series_parameter!(
+IARA.update_hydro_unit_time_series_parameter!(
     db,
     "hyd_1",
     "max_volume",
-    30.0 * m3_per_second_to_hm3 * (new_block_duration / block_duration_in_hours);
+    30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours);
     date_time = DateTime(0),
 )
 
-demand = demand * new_block_duration / block_duration_in_hours
+demand = demand * new_subperiod_duration / subperiod_duration_in_hours
 
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["dem_1"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "GWh",
 )

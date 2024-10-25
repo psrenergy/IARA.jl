@@ -47,11 +47,11 @@ function initialize!(bus::Bus, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(bus::Bus, db::DatabaseSQLite, stage_date_time::DateTime)
+    update_time_series_from_db!(bus::Bus, db::DatabaseSQLite, period_date_time::DateTime)
 
 Update the Bus collection time series from the database.
 """
-function update_time_series_from_db!(bus::Bus, db::DatabaseSQLite, stage_date_time::DateTime)
+function update_time_series_from_db!(bus::Bus, db::DatabaseSQLite, period_date_time::DateTime)
     return nothing
 end
 

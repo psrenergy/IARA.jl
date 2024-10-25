@@ -17,7 +17,7 @@ Dimensions cached in bid time series files are static:
 - 1 - Bidding group
 - 2 - Bus
 - 3 - Bid segment
-- 4 - Block
+- 4 - Subperiod
 """
 @kwdef mutable struct BidsView{T} <: ViewFromExternalFile
     reader::Union{Quiver.Reader{Quiver.binary}, Nothing} = nothing
@@ -37,7 +37,7 @@ function initialize_bids_view_from_external_file!(
     expected_unit::String = "",
     bidding_groups_to_read::Vector{String} = String[],
     buses_to_read::Vector{String} = String[],
-    has_multihour_bids::Bool = false,
+    has_profile_bids::Bool = false,
 ) where {T}
     num_errors = 0
 
@@ -87,8 +87,8 @@ function initialize_bids_view_from_external_file!(
     # Initialize dynamic time series
     ts.data = read_bids_view_from_external_file(
         inputs, ts.reader;
-        stage = 1, scenario = 1, data_type = eltype(ts.data),
-        has_multihour_bids,
+        period = 1, scenario = 1, data_type = eltype(ts.data),
+        has_profile_bids,
     )
 
     return num_errors
@@ -97,20 +97,20 @@ end
 function read_bids_view_from_external_file(
     inputs,
     reader::Quiver.Reader{Quiver.binary};
-    stage::Int,
+    period::Int,
     scenario::Int,
     data_type::Type,
-    has_multihour_bids::Bool = false,
+    has_profile_bids::Bool = false,
 )
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
     bid_segments = bidding_segments(inputs)
     segments_or_profile = bid_segments
-    if has_multihour_bids
+    if has_profile_bids
         bid_profiles = bidding_profiles(inputs)
         segments_or_profile = bid_profiles
     end
-    blks = blocks(inputs)
+    blks = subperiods(inputs)
     num_buses = length(buses)
 
     data = zeros(
@@ -123,16 +123,16 @@ function read_bids_view_from_external_file(
 
     for blk in blks
         # TODO: Generic form?
-        if has_multihour_bids
+        if has_profile_bids
             for prf in bid_profiles
-                Quiver.goto!(reader; stage, scenario, block = blk, profile = prf)
+                Quiver.goto!(reader; period, scenario, subperiod = blk, profile = prf)
                 for bg in bidding_groups, bus in buses
                     data[bg, bus, prf, blk] = reader.data[(bg-1)*(num_buses)+bus]
                 end
             end
         else
             for bds in bid_segments
-                Quiver.goto!(reader; stage, scenario, block = blk, bid_segment = bds)
+                Quiver.goto!(reader; period, scenario, subperiod = blk, bid_segment = bds)
                 for bg in bidding_groups, bus in buses
                     data[bg, bus, bds, blk] = reader.data[(bg-1)*(num_buses)+bus]
                 end
@@ -159,19 +159,20 @@ function write_bids_time_series_file(
     # 1 - bidding group
     # 2 - bus
     # 3 - bid segment
-    # 4 - block
+    # 4 - subperiod
     # 5 - scenario
-    # 6 - stage
-    num_bidding_groups, num_buses, num_bid_segments, num_blocks, num_scenarios, num_stages = size(data)
-    treated_array = zeros(T, num_bidding_groups * num_buses, num_bid_segments, num_blocks, num_scenarios, num_stages)
-    for stage in 1:num_stages
+    # 6 - period
+    num_bidding_groups, num_buses, num_bid_segments, num_subperiods, num_scenarios, num_periods = size(data)
+    treated_array =
+        zeros(T, num_bidding_groups * num_buses, num_bid_segments, num_subperiods, num_scenarios, num_periods)
+    for period in 1:num_periods
         for scenario in 1:num_scenarios
-            for blk in 1:num_blocks
+            for blk in 1:num_subperiods
                 for bds in 1:num_bid_segments
                     for bus in 1:num_buses
                         for bg in 1:num_bidding_groups
-                            treated_array[(bg-1)*(num_buses)+bus, bds, blk, scenario, stage] =
-                                data[bg, bus, bds, blk, scenario, stage]
+                            treated_array[(bg-1)*(num_buses)+bus, bds, blk, scenario, period] =
+                                data[bg, bus, bds, blk, scenario, period]
                         end
                     end
                 end

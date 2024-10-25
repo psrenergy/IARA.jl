@@ -16,7 +16,7 @@ function renewable_generation!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    existing_renewables = index_of_elements(inputs, RenewablePlant; run_time_options, filters = [is_existing])
+    existing_renewables = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
 
     # Time series
     renewable_generation_series = time_series_renewable_generation(inputs)
@@ -24,13 +24,13 @@ function renewable_generation!(
     # Variables
     @variable(
         model.jump_model,
-        renewable_generation[b in blocks(inputs), r in existing_renewables],
+        renewable_generation[b in subperiods(inputs), r in existing_renewables],
         lower_bound = 0.0,
     )
     @variable(
         model.jump_model,
         renewable_curtailment[
-            b in blocks(inputs),
+            b in subperiods(inputs),
             r in existing_renewables,
         ],
         lower_bound = 0.0,
@@ -39,7 +39,7 @@ function renewable_generation!(
     # Parameters
     @variable(
         model.jump_model,
-        renewable_generation_scenario[b in blocks(inputs), r in existing_renewables]
+        renewable_generation_scenario[b in subperiods(inputs), r in existing_renewables]
         in
         MOI.Parameter(renewable_generation_series[r, b])
     )
@@ -51,8 +51,8 @@ function renewable_generation!(
         model.obj_exp +
         money_to_thousand_money() *
         sum(
-            renewable_curtailment[b, r] * renewable_plant_curtailment_cost(inputs, r)
-            for b in blocks(inputs), r in existing_renewables
+            renewable_curtailment[b, r] * renewable_unit_curtailment_cost(inputs, r)
+            for b in subperiods(inputs), r in existing_renewables
         ),
     )
 
@@ -61,8 +61,8 @@ function renewable_generation!(
         renewable_total_om_cost,
         money_to_thousand_money() *
         sum(
-            renewable_generation[b, r] * renewable_plant_om_cost(inputs, r)
-            for b in blocks(inputs), r in existing_renewables
+            renewable_generation[b, r] * renewable_unit_om_cost(inputs, r)
+            for b in subperiods(inputs), r in existing_renewables
         ),
     )
 
@@ -84,7 +84,7 @@ function renewable_generation!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    existing_renewables = index_of_elements(inputs, RenewablePlant; run_time_options, filters = [is_existing])
+    existing_renewables = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
 
     # Model parameters
     renewable_generation_scenario = get_model_object(model, :renewable_generation_scenario)
@@ -92,7 +92,7 @@ function renewable_generation!(
     # Time Series
     renewable_generation_series = time_series_renewable_generation(inputs, run_time_options, subscenario)
 
-    for b in blocks(inputs), r in existing_renewables
+    for b in subperiods(inputs), r in existing_renewables
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -117,9 +117,9 @@ function renewable_generation!(
         outputs;
         inputs,
         output_name = "renewable_generation",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = renewable_plant_label(inputs),
+        labels = renewable_unit_label(inputs),
         run_time_options,
     )
 
@@ -128,9 +128,9 @@ function renewable_generation!(
         outputs;
         inputs,
         output_name = "renewable_curtailment",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = renewable_plant_label(inputs),
+        labels = renewable_unit_label(inputs),
         run_time_options,
     )
     return nothing
@@ -140,14 +140,14 @@ function renewable_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    renewables = index_of_elements(inputs, RenewablePlant; run_time_options)
-    existing_renewables = index_of_elements(inputs, RenewablePlant; run_time_options, filters = [is_existing])
+    renewables = index_of_elements(inputs, RenewableUnit; run_time_options)
+    existing_renewables = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
 
     renewable_generation = simulation_results.data[:renewable_generation]
     renewable_curtailment = simulation_results.data[:renewable_curtailment]
@@ -157,26 +157,26 @@ function renewable_generation!(
         elements_to_write = existing_renewables,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "renewable_generation",
         renewable_generation.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "renewable_curtailment",
         renewable_curtailment.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),

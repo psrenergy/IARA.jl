@@ -16,8 +16,8 @@ function hydro_generation_bound_by_commitment!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    commitment_hydro_plants =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, has_commitment])
+    commitment_hydro_units =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, has_commitment])
 
     # Model Variables
     hydro_generation = get_model_object(model, :hydro_generation)
@@ -27,21 +27,21 @@ function hydro_generation_bound_by_commitment!(
     @constraint(
         model.jump_model,
         hydro_generation_lower_bound[
-            b in blocks(inputs),
-            h in commitment_hydro_plants,
+            b in subperiods(inputs),
+            h in commitment_hydro_units,
         ],
         hydro_generation[b, h] >=
-        hydro_plant_min_generation(inputs, h) * hydro_commitment[b, h] * block_duration_in_hours(inputs, b)
+        hydro_unit_min_generation(inputs, h) * hydro_commitment[b, h] * subperiod_duration_in_hours(inputs, b)
     )
 
     @constraint(
         model.jump_model,
         hydro_generation_upper_bound[
-            b in blocks(inputs),
-            h in commitment_hydro_plants,
+            b in subperiods(inputs),
+            h in commitment_hydro_units,
         ],
         hydro_generation[b, h] <=
-        hydro_plant_max_generation(inputs, h) * hydro_commitment[b, h] * block_duration_in_hours(inputs, b)
+        hydro_unit_max_generation(inputs, h) * hydro_commitment[b, h] * subperiod_duration_in_hours(inputs, b)
     )
     return nothing
 end
@@ -70,8 +70,8 @@ function hydro_generation_bound_by_commitment!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

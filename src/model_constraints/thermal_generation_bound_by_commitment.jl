@@ -16,8 +16,8 @@ function thermal_generation_bound_by_commitment!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    commitment_thermal_plants =
-        index_of_elements(inputs, ThermalPlant; run_time_options, filters = [is_existing, has_commitment])
+    commitment_thermal_units =
+        index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
     # Model Variables
     thermal_generation = get_model_object(model, :thermal_generation)
     thermal_commitment = get_model_object(model, :thermal_commitment)
@@ -26,20 +26,20 @@ function thermal_generation_bound_by_commitment!(
     @constraint(
         model.jump_model,
         thermal_generation_lower_bound[
-            b in blocks(inputs),
-            t in commitment_thermal_plants,
+            b in subperiods(inputs),
+            t in commitment_thermal_units,
         ],
         thermal_generation[b, t] >=
-        thermal_plant_min_generation(inputs, t) * thermal_commitment[b, t] * block_duration_in_hours(inputs, b),
+        thermal_unit_min_generation(inputs, t) * thermal_commitment[b, t] * subperiod_duration_in_hours(inputs, b),
     )
     @constraint(
         model.jump_model,
         thermal_generation_upper_bound[
-            b in blocks(inputs),
-            t in commitment_thermal_plants,
+            b in subperiods(inputs),
+            t in commitment_thermal_units,
         ],
         thermal_generation[b, t] <=
-        thermal_plant_max_generation(inputs, t) * thermal_commitment[b, t] * block_duration_in_hours(inputs, b),
+        thermal_unit_max_generation(inputs, t) * thermal_commitment[b, t] * subperiod_duration_in_hours(inputs, b),
     )
 
     return nothing
@@ -69,8 +69,8 @@ function thermal_generation_bound_by_commitment!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

@@ -13,23 +13,23 @@ db = IARA.load_study(PATH; read_only = false)
 # This case is built on top of the cyclic graph case
 
 number_of_years_to_simulate = 3
-new_number_of_stages = number_of_stages * number_of_years_to_simulate
+new_number_of_periods = number_of_periods * number_of_years_to_simulate
 
 IARA.update_configuration!(db;
-    number_of_stages = new_number_of_stages,
+    number_of_periods = new_number_of_periods,
 )
 
-IARA.update_hydro_plant!(
+IARA.update_hydro_unit!(
     db,
     "hyd_1";
-    initial_volume = 12.0 * m3_per_second_to_hm3 * (new_block_duration / block_duration_in_hours) *
+    initial_volume = 12.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours) *
                      number_of_years_to_simulate,
 )
-IARA.update_hydro_plant_time_series_parameter!(
+IARA.update_hydro_unit_time_series_parameter!(
     db,
     "hyd_1",
     "max_volume",
-    30.0 * m3_per_second_to_hm3 * (new_block_duration / block_duration_in_hours) * number_of_years_to_simulate;
+    30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours) * number_of_years_to_simulate;
     date_time = DateTime(0),
 )
 

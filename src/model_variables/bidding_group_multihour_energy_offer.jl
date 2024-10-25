@@ -18,8 +18,8 @@ function bidding_group_multihour_energy_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     # Define the bidding groups
-    multihour_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
-    blks = blocks(inputs)
+    profile_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    blks = subperiods(inputs)
 
     quantity_offer_multihour_series = time_series_quantity_offer_multihour(inputs)
     price_offer_multihour_series = time_series_price_offer_multihour(inputs)
@@ -29,7 +29,7 @@ function bidding_group_multihour_energy_offer!(
         model.jump_model,
         bidding_group_quantity_offer_multihour[
             blk in blks,
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             prf in 1:maximum_multihour_profiles(inputs, bg),
             bus in buses,
         ]
@@ -39,7 +39,7 @@ function bidding_group_multihour_energy_offer!(
     @variable(
         model.jump_model,
         bidding_group_price_offer_multihour[
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             prf in 1:maximum_multihour_profiles(inputs, bg),
         ]
         in
@@ -51,7 +51,7 @@ function bidding_group_multihour_energy_offer!(
         model.jump_model,
         bidding_group_generation_multihour[
             blk in blks,
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             prf in 1:maximum_multihour_profiles(inputs, bg),
             bus in buses,
         ],
@@ -60,7 +60,7 @@ function bidding_group_multihour_energy_offer!(
     @variable(
         model.jump_model,
         linear_combination_bid_segments_multihour[
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             prf in 1:maximum_multihour_profiles(inputs, bg),
         ],
         lower_bound = 0.0,
@@ -72,7 +72,7 @@ function bidding_group_multihour_energy_offer!(
         model.jump_model,
         accepted_offers_multihour_cost[
             blk in blks,
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             prf in 1:maximum_multihour_profiles(inputs, bg),
             bus in buses,
         ],
@@ -95,8 +95,8 @@ function bidding_group_multihour_energy_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     # Define the bidding groups
-    multihour_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
-    blks = blocks(inputs)
+    profile_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    blks = subperiods(inputs)
 
     quantity_offer_multihour_series = time_series_quantity_offer_multihour(inputs)
     price_offer_multihour_series = time_series_price_offer_multihour(inputs)
@@ -104,7 +104,7 @@ function bidding_group_multihour_energy_offer!(
     bidding_group_price_offer_multihour = get_model_object(model, :bidding_group_price_offer_multihour)
     bidding_group_quantity_offer_multihour = get_model_object(model, :bidding_group_quantity_offer_multihour)
 
-    for bg in multihour_bidding_groups, prf in 1:maximum_multihour_profiles(inputs, bg)
+    for bg in profile_bidding_groups, prf in 1:maximum_multihour_profiles(inputs, bg)
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -112,7 +112,7 @@ function bidding_group_multihour_energy_offer!(
             price_offer_multihour_series[bg, prf],
         )
     end
-    for blk in blks, bg in multihour_bidding_groups, prf in 1:maximum_multihour_profiles(inputs, bg), bus in buses
+    for blk in blks, bg in profile_bidding_groups, prf in 1:maximum_multihour_profiles(inputs, bg), bus in buses
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -140,7 +140,7 @@ function bidding_group_multihour_energy_offer!(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_multihour_bids],
+        filters_to_apply_in_first_collection = [has_profile_bids],
     )
 
     initialize!(
@@ -149,7 +149,7 @@ function bidding_group_multihour_energy_offer!(
         inputs,
         run_time_options,
         output_name = "bidding_group_generation_multihour",
-        dimensions = ["stage", "scenario", "block", "profile"],
+        dimensions = ["period", "scenario", "subperiod", "profile"],
         unit = "GWh",
         labels,
     )
@@ -161,8 +161,8 @@ function bidding_group_multihour_energy_offer!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
@@ -173,12 +173,12 @@ function bidding_group_multihour_energy_offer!(
         run_time_options,
         "bidding_group_generation_multihour",
         simulation_results.data[:bidding_group_generation_multihour].data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
-        has_multihour_bids = true,
-        filters = [has_multihour_bids],
+        has_profile_bids = true,
+        filters = [has_profile_bids],
     )
     return nothing
 end

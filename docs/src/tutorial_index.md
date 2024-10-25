@@ -10,7 +10,7 @@ The data used to build each case is available in the folder [`data`](https://git
 
 #### [Building](tutorial/build_base_case.md)
 
-This tutorial describes the steps to build a simple case comprised of 5 thermal plants and a renewable plant. All plants are connected to a single bus. The case is used to illustrate the basic functionalities of the library,including the setup of temporal parameters, asset owners, financial elements, and the linking of time series data for demand and generation.
+This tutorial describes the steps to build a simple case comprised of 5 thermal units and a renewable unit. All plants are connected to a single bus. The case is used to illustrate the basic functionalities of the library,including the setup of temporal parameters, asset owners, financial elements, and the linking of time series data for demand and generation.
 
 #### [Running](tutorial/run_base_case.md)
 
@@ -18,15 +18,15 @@ In this section, we demonstrate how to run the base case with two different run 
 - **Centralized Operation**
 - **Market Clearing**
 
-### Case 2: Introducing a Hydro Plant
+### Case 2: Introducing a Hydro Unit
 
-#### [Building](tutorial/build_hydroplant_base_case.md)
+#### [Building](tutorial/build_hydrounit_base_case.md)
 
-For this case, we introduce a hydro plant to the [Base Case](tutorial/build_base_case.md). The hydro plant is connected to the same bus as the thermal and renewable plants. This tutorial describes the steps to build the case, including the setup of the hydro plant and the linking of time series data for inflow.
+For this case, we introduce a hydro unit to the [Base Case](tutorial/build_base_case.md). The hydro unit is connected to the same bus as the thermal and renewable units. This tutorial describes the steps to build the case, including the setup of the hydro unit and the linking of time series data for inflow.
 
-#### [Running](tutorial/run_hydroplant_base_case.md)
+#### [Running](tutorial/run_hydrounit_base_case.md)
 
-In this section, we demonstrate how to run the case with the hydro plant with two different run modes:
+In this section, we demonstrate how to run the case with the hydro unit with two different run modes:
 - **Centralized Operation**
 - **Market Clearing**
 
@@ -71,3 +71,9 @@ For this instance, we will be running the case using the **Market Bidding** run 
 #### [Building and Running](tutorial/build_modifications_case.md)
 
 In this case we introduce the concept of Modification Parameters, which allow the user to set changes in the case elements at specific points in time.
+
+### Custom Plots
+
+#### [Tutorial](tutorial/plots_tutorial.md)
+
+In this tutorial we show how to create custom plots based on case results.

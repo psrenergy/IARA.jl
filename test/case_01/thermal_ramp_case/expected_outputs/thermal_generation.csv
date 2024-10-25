@@ -1,4 +1,4 @@
-stage,scenario,block,ter_1,ter_2
+period,scenario,subperiod,ter_1,ter_2
 1,1,1,0.0045,0.0
 1,1,2,0.0045,0.0
 1,2,1,0.0045,0.0

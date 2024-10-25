@@ -17,11 +17,11 @@ function revenue_convex_combination!(
     ::Type{SubproblemBuild},
 )
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
-    blks = blocks(inputs)
+    blks = subperiods(inputs)
     bid_segments = bidding_segments(inputs)
     buses = index_of_elements(inputs, Bus)
 
-    # Number of points in the convex hull for each bus and block
+    # Number of points in the convex hull for each bus and subperiod
     convex_hull_length = length.(asset_owner_revenue_convex_hull(inputs))
 
     # Model variables
@@ -112,8 +112,8 @@ function revenue_convex_combination!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

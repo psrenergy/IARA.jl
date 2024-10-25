@@ -1,4 +1,4 @@
-stage,scenario,block,hydro,thermal,renewable,battery,deficit,demand
+period,scenario,subperiod,hydro,thermal,renewable,battery,deficit,demand
 1,1,1,0.036,0.108,0.096,0.0,0.0,0.24
 1,1,2,0.036,0.108,0.096,0.0,0.0,0.24
 1,2,1,0.06,0.108,0.072,0.0,0.0,0.24

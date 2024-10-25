@@ -42,7 +42,7 @@ mutable struct PlotConfig
     filename::String
     plot_types::Array{DataType, 1}
     initial_date_time::DateTime
-    stage_type::Configurations_StageType.T
+    period_type::Configurations_PeriodType.T
 end
 
 function PlotConfig(
@@ -51,7 +51,7 @@ function PlotConfig(
     plot_types::Array{DataType, 1},
     inputs::Inputs,
 )
-    return PlotConfig(title, filename, plot_types, initial_date_time(inputs), stage_type(inputs))
+    return PlotConfig(title, filename, plot_types, initial_date_time(inputs), period_type(inputs))
 end
 
 function _snake_to_regular(snake_str::String)
@@ -91,66 +91,67 @@ end
 
 function get_plot_ticks(
     data::Array{Float64, 2},
-    num_stages::Int,
+    num_periods::Int,
     initial_date_time::DateTime,
-    stage_type::Configurations_StageType.T;
+    period_type::Configurations_PeriodType.T;
     kwargs...,
 )
-    queried_blocks = get(kwargs, :block, nothing)
+    queried_subperiods = get(kwargs, :subperiod, nothing)
 
     num_ticks = size(data, 2)
-    num_blocks = 0
-    if num_stages != num_ticks
-        num_blocks = num_ticks ÷ num_stages
+    num_subperiods = 0
+    if num_periods != num_ticks
+        num_subperiods = num_ticks ÷ num_periods
     end
     plot_ticks = Vector{String}()
     hover_ticks = Vector{String}()
 
-    if stage_type == Configurations_StageType.MONTHLY
-        if num_blocks == 0
-            for i in 0:num_stages-1
+    if period_type == Configurations_PeriodType.MONTHLY
+        if num_subperiods == 0
+            for i in 0:num_periods-1
                 push!(plot_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
-                block_true_index = isnothing(queried_blocks) ? 1 : queried_blocks[1]
+                subperiod_true_index = isnothing(queried_subperiods) ? 1 : queried_subperiods[1]
                 push!(
                     hover_ticks,
-                    Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") * "<br>Block $block_true_index",
+                    Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") * "<br>Subperiod $subperiod_true_index",
                 )
             end
             return plot_ticks, hover_ticks
         else
-            for i in 0:num_stages-1
-                for j in 1:num_blocks
+            for i in 0:num_periods-1
+                for j in 1:num_subperiods
                     if j == 1
                         push!(plot_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
                     else
-                        push!(plot_ticks, "") # we do not display ticks for each block, only when hovering
+                        push!(plot_ticks, "") # we do not display ticks for each subperiod, only when hovering
                     end
-                    block_true_index = isnothing(queried_blocks) ? j : queried_blocks[j]
+                    subperiod_true_index = isnothing(queried_subperiods) ? j : queried_subperiods[j]
                     push!(
                         hover_ticks,
-                        Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") * "<br>Block $block_true_index",
+                        Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") *
+                        "<br>Subperiod $subperiod_true_index",
                     )
                 end
             end
             return plot_ticks, hover_ticks
         end
     else
-        error("Stage type not implemented.")
+        error("Period type not implemented.")
     end
 end
 
-function merge_stage_block(data::Array{T, 4}) where {T <: Real}
-    num_stages = size(data, 4)
+function merge_period_subperiod(data::Array{T, 4}) where {T <: Real}
+    num_periods = size(data, 4)
     num_scenarios = size(data, 3)
-    num_blocks = size(data, 2)
+    num_subperiods = size(data, 2)
     num_agents = size(data, 1)
 
     reshaped_data =
-        Array{Float64, 3}(undef, num_agents, num_scenarios, num_stages * num_blocks)
+        Array{Float64, 3}(undef, num_agents, num_scenarios, num_periods * num_subperiods)
     i = 1
-    for stage in 1:num_stages
-        for block in 1:num_blocks
-            reshaped_data[:, :, i] = data[:, block, :, stage]
+    for period in 1:num_periods
+        for subperiod in 1:num_subperiods
+            reshaped_data[:, :, i] = data[:, subperiod, :, period]
             i += 1
         end
     end
@@ -158,19 +159,19 @@ function merge_stage_block(data::Array{T, 4}) where {T <: Real}
     return reshaped_data
 end
 
-function merge_stage_block(data::Array{T, 5}) where {T <: Real}
-    num_stages = size(data, 5)
+function merge_period_subperiod(data::Array{T, 5}) where {T <: Real}
+    num_periods = size(data, 5)
     num_scenarios = size(data, 4)
     num_subscenarios = size(data, 3)
-    num_blocks = size(data, 2)
+    num_subperiods = size(data, 2)
     num_agents = size(data, 1)
 
     reshaped_data =
-        Array{Float64, 4}(undef, num_agents, num_subscenarios, num_scenarios, num_stages * num_blocks)
+        Array{Float64, 4}(undef, num_agents, num_subscenarios, num_scenarios, num_periods * num_subperiods)
     i = 1
-    for stage in 1:num_stages
-        for block in 1:num_blocks
-            reshaped_data[:, :, :, i] = data[:, block, :, :, stage]
+    for period in 1:num_periods
+        for subperiod in 1:num_subperiods
+            reshaped_data[:, :, :, i] = data[:, subperiod, :, :, period]
             i += 1
         end
     end
@@ -182,19 +183,19 @@ function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String
     num_segments = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
-    num_stages = size(data, 4)
+    num_periods = size(data, 4)
 
     queried_segments = get(kwargs, :segment, nothing)
 
-    reshaped_data = Array{Float64, 3}(undef, num_agents * num_segments, num_scenarios, num_stages)
+    reshaped_data = Array{Float64, 3}(undef, num_agents * num_segments, num_scenarios, num_periods)
     modified_names = Vector{String}(undef, num_agents * num_segments)
 
-    for stage in 1:num_stages
+    for period in 1:num_periods
         for scenario in 1:num_scenarios
             for segment in 1:num_segments
                 for agent in 1:num_agents
-                    reshaped_data[(agent-1)*num_segments+segment, scenario, stage] =
-                        data[agent, segment, scenario, stage]
+                    reshaped_data[(agent-1)*num_segments+segment, scenario, period] =
+                        data[agent, segment, scenario, period]
                     segment_true_index = isnothing(queried_segments) ? segment : queried_segments[segment]
 
                     modified_names[(agent-1)*num_segments+segment] =
@@ -210,21 +211,21 @@ function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String
     num_segments = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 4)
-    num_stages = size(data, 5)
-    num_blocks = size(data, 3)
+    num_periods = size(data, 5)
+    num_subperiods = size(data, 3)
 
     queried_segments = get(kwargs, :segment, nothing)
 
-    reshaped_data = Array{Float64, 4}(undef, num_agents * num_segments, num_blocks, num_scenarios, num_stages)
+    reshaped_data = Array{Float64, 4}(undef, num_agents * num_segments, num_subperiods, num_scenarios, num_periods)
     modified_names = Vector{String}(undef, num_agents * num_segments)
 
-    for stage in 1:num_stages
+    for period in 1:num_periods
         for scenario in 1:num_scenarios
-            for block in 1:num_blocks
+            for subperiod in 1:num_subperiods
                 for segment in 1:num_segments
                     for agent in 1:num_agents
-                        reshaped_data[(agent-1)*num_segments+segment, block, scenario, stage] =
-                            data[agent, segment, block, scenario, stage]
+                        reshaped_data[(agent-1)*num_segments+segment, subperiod, scenario, period] =
+                            data[agent, segment, subperiod, scenario, period]
                         segment_true_index = isnothing(queried_segments) ? segment : queried_segments[segment]
 
                         modified_names[(agent-1)*num_segments+segment] =
@@ -241,24 +242,31 @@ function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String
     num_agents = size(data, 1)
     num_segments = size(data, 2)
     num_scenarios = size(data, 5)
-    num_stages = size(data, 6)
+    num_periods = size(data, 6)
     num_subscenarios = size(data, 4)
-    num_blocks = size(data, 3)
+    num_subperiods = size(data, 3)
 
     queried_segments = get(kwargs, :segment, nothing)
 
     reshaped_data =
-        Array{Float64, 5}(undef, num_agents * num_segments, num_blocks, num_scenarios, num_subscenarios, num_stages)
+        Array{Float64, 5}(
+            undef,
+            num_agents * num_segments,
+            num_subperiods,
+            num_scenarios,
+            num_subscenarios,
+            num_periods,
+        )
     modified_names = Vector{String}(undef, num_agents * num_segments)
 
-    for stage in 1:num_stages
+    for period in 1:num_periods
         for scenario in 1:num_scenarios
             for subscenario in 1:num_subscenarios
-                for block in 1:num_blocks
+                for subperiod in 1:num_subperiods
                     for segment in 1:num_segments
                         for agent in 1:num_agents
-                            reshaped_data[(agent-1)*num_segments+segment, block, scenario, subscenario, stage] =
-                                data[agent, segment, block, subscenario, scenario, stage]
+                            reshaped_data[(agent-1)*num_segments+segment, subperiod, scenario, subscenario, period] =
+                                data[agent, segment, subperiod, subscenario, scenario, period]
                             segment_true_index = isnothing(queried_segments) ? segment : queried_segments[segment]
                             modified_names[(agent-1)*num_segments+segment] =
                                 agent_names[agent] * " (Segment $segment_true_index)"
@@ -275,23 +283,23 @@ function merge_scenario_subscenario_agent(data::Array{Float32, 4}, agent_names::
     num_subscenarios = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
-    num_stageblock = size(data, 4)
+    num_periodsubperiod = size(data, 4)
 
     queried_scenarios = get(kwargs, :scenario, nothing)
     queried_subscenarios = get(kwargs, :subscenario, nothing)
 
-    reshaped_data = Array{Float64, 2}(undef, num_agents * num_scenarios * num_subscenarios, num_stageblock)
+    reshaped_data = Array{Float64, 2}(undef, num_agents * num_scenarios * num_subscenarios, num_periodsubperiod)
     modified_names = Vector{String}(undef, num_agents * num_scenarios * num_subscenarios)
 
-    for stageblock in 1:num_stageblock
+    for periodsubperiod in 1:num_periodsubperiod
         for scenario in 1:num_scenarios
             for subscenario in 1:num_subscenarios
                 for agent in 1:num_agents
                     reshaped_data[
                         (agent-1)*num_subscenarios*num_scenarios+(subscenario-1)*num_scenarios+scenario,
-                        stageblock,
+                        periodsubperiod,
                     ] =
-                        data[agent, subscenario, scenario, stageblock]
+                        data[agent, subscenario, scenario, periodsubperiod]
                 end
                 scenario_true_index = isnothing(queried_scenarios) ? scenario : queried_scenarios[scenario]
                 subscenario_true_index =
@@ -312,12 +320,12 @@ function merge_scenario_subscenario(
     num_subscenarios = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
-    num_stageblock = size(data, 4)
+    num_periodsubperiod = size(data, 4)
 
     queried_scenarios = get(kwargs, :scenario, nothing)
     queried_subscenarios = get(kwargs, :subscenario, nothing)
 
-    reshaped_data = Array{Float64, 3}(undef, num_agents, num_scenarios * num_subscenarios, num_stageblock)
+    reshaped_data = Array{Float64, 3}(undef, num_agents, num_scenarios * num_subscenarios, num_periodsubperiod)
     modified_scenario_names = Vector{String}(undef, num_scenarios * num_subscenarios)
 
     for scenario in 1:num_scenarios
@@ -362,7 +370,7 @@ function build_plot_output(
             unit = unit,
             file_path = joinpath(plots_path, plot_config.filename),
             initial_date = plot_config.initial_date_time,
-            stage_type = plot_config.stage_type,
+            period_type = plot_config.period_type,
         )
     end
 
@@ -385,7 +393,7 @@ function build_plots(
 
     plot_configs = PlotConfig[]
 
-    if number_of_elements(inputs, HydroPlant) > 0
+    if number_of_elements(inputs, HydroUnit) > 0
         # Hydro Volume
         plot_config_hydro_volume = PlotConfig(
             "Hydro Initial Volume",
@@ -395,9 +403,9 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
@@ -412,9 +420,9 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
@@ -429,9 +437,9 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
@@ -446,9 +454,9 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
@@ -463,16 +471,16 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
         push!(plot_configs, plot_config_hydro_spillage)
     end
 
-    if number_of_elements(inputs, ThermalPlant) > 0
+    if number_of_elements(inputs, ThermalUnit) > 0
         # Thermal Generation
         plot_config_thermal_generation = PlotConfig(
             "Thermal Generation",
@@ -482,16 +490,16 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
         push!(plot_configs, plot_config_thermal_generation)
     end
 
-    if number_of_elements(inputs, RenewablePlant) > 0
+    if number_of_elements(inputs, RenewableUnit) > 0
         # Renewable Generation
         plot_config_renewable_generation = PlotConfig(
             "Renewable Generation",
@@ -501,9 +509,9 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
@@ -518,9 +526,9 @@ function build_plots(
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
-                PlotTechnologyHistogramStage,
-                PlotTechnologyHistogramBlock,
-                PlotTechnologyHistogramStageBlock,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
             ],
             inputs,
         )
@@ -540,7 +548,8 @@ function build_plots(
         push!(plot_configs, plot_config_dc_flow)
     end
 
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
+    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION ||
+       run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION
         # Deficit
         plot_config_deficit = PlotConfig(
             "Deficit",
@@ -552,7 +561,7 @@ function build_plots(
 
         # Demand
         plot_config_demand = PlotConfig(
-            "Demand",
+            "DemandUnit",
             "demand",
             [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
@@ -581,7 +590,7 @@ function build_plots(
         push!(plot_configs, plot_config_load_marginal_cost)
     end
 
-    if run_mode(inputs) == Configurations_RunMode.HEURISTIC_BID
+    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
         # Energy offer
         plot_config_energy = PlotConfig(
             "Energy Offer per Bidding Group",
@@ -615,7 +624,7 @@ function build_plots(
                     split(file, ".")[1],
                     [PlotTimeSeriesQuantiles, PlotTimeSeriesMean, PlotTimeSeriesAll],
                     initial_date_time(inputs),
-                    stage_type(inputs),
+                    period_type(inputs),
                 )
                 push!(plot_configs, plot_config_clearing)
             end

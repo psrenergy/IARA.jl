@@ -16,7 +16,7 @@ function flexible_demand_window_maximum_curtailment!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    flexible_demands = index_of_elements(inputs, Demand; filters = [is_existing, is_flexible])
+    flexible_demands = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_flexible])
 
     # Model Variables
     demand_curtailment = get_model_object(model, :demand_curtailment)
@@ -33,11 +33,11 @@ function flexible_demand_window_maximum_curtailment!(
         ],
         sum(
             demand_curtailment[b, d] * MW_to_GW()
-            for b in blocks_in_flexible_demand_window(inputs, d, w)
+            for b in subperiods_in_flexible_demand_window(inputs, d, w)
         ) <=
-        demand_max_curtailment(inputs, d) * sum(
+        demand_unit_max_curtailment(inputs, d) * sum(
             demand[b, d]
-            for b in blocks_in_flexible_demand_window(inputs, d, w)
+            for b in subperiods_in_flexible_demand_window(inputs, d, w)
         )
     )
 
@@ -68,8 +68,8 @@ function flexible_demand_window_maximum_curtailment!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

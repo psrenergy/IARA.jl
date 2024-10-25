@@ -10,8 +10,8 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_hydro_plant!(db, "hyd_1"; has_commitment = IARA.HydroPlant_HasCommitment.HAS_COMMITMENT)
-IARA.update_hydro_plant_time_series_parameter!(
+IARA.update_hydro_unit!(db, "hyd_1"; has_commitment = IARA.HydroUnit_HasCommitment.HAS_COMMITMENT)
+IARA.update_hydro_unit_time_series_parameter!(
     db,
     "hyd_1",
     "min_generation",

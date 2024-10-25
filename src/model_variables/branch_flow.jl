@@ -20,7 +20,7 @@ function branch_flow!(
 
     @variable(
         model.jump_model,
-        branch_flow[b in blocks(inputs), l in branches],
+        branch_flow[b in subperiods(inputs), l in branches],
         lower_bound = -branch_capacity(inputs, l),
         upper_bound = branch_capacity(inputs, l),
     )
@@ -54,7 +54,7 @@ function branch_flow!(
         outputs;
         inputs,
         output_name = "branch_flow",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "MW",
         labels = branch_label(inputs)[branches],
         run_time_options,
@@ -66,8 +66,8 @@ function branch_flow!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
@@ -82,13 +82,13 @@ function branch_flow!(
         elements_to_write = existing_branches,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "branch_flow",
         branch_flow.data;
-        stage,
+        period,
         scenario,
         subscenario,
         indices_of_elements_in_output,

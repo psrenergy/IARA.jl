@@ -16,7 +16,7 @@ using IARA
 
 # ## Original Case Recap
 
-# In the original case we had two Bidding Groups, one with a multi-hour bid and the other with a simple bid.
+# In the original case we had two Bidding Groups, one with a multi-hour bid and the other with an independent bid.
 # Runnin the `MARKET_CLEARING` mode, we analyzed the effect of the multi-hour bid in the market.
 
 # ### Changes for this tutorial

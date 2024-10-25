@@ -16,12 +16,12 @@ function flexible_demand!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    flexible_demands = index_of_elements(inputs, Demand; filters = [is_existing, is_flexible])
+    flexible_demands = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_flexible])
 
     @variable(
         model.jump_model,
         attended_flexible_demand[
-            b in blocks(inputs),
+            b in subperiods(inputs),
             d in flexible_demands,
         ],
         lower_bound = 0.0,
@@ -30,7 +30,7 @@ function flexible_demand!(
     @variable(
         model.jump_model,
         demand_curtailment[
-            b in blocks(inputs),
+            b in subperiods(inputs),
             d in flexible_demands,
         ],
         lower_bound = 0.0,
@@ -40,8 +40,8 @@ function flexible_demand!(
         model.jump_model,
         model.obj_exp +
         money_to_thousand_money() * sum(
-            demand_curtailment[b, d] * demand_curtailment_cost(inputs, d)
-            for b in blocks(inputs), d in flexible_demands
+            demand_curtailment[b, d] * demand_unit_curtailment_cost(inputs, d)
+            for b in subperiods(inputs), d in flexible_demands
         ),
     )
 
@@ -65,7 +65,7 @@ function flexible_demand!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    flexible_demands = index_of_elements(inputs, Demand; run_time_options, filters = [is_flexible])
+    flexible_demands = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_flexible])
 
     add_symbol_to_query_from_subproblem_result!(outputs, [:attended_flexible_demand, :demand_curtailment])
 
@@ -74,9 +74,9 @@ function flexible_demand!(
         outputs;
         inputs,
         output_name = "attended_flexible_demand",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = demand_label(inputs)[flexible_demands],
+        labels = demand_unit_label(inputs)[flexible_demands],
         run_time_options,
     )
 
@@ -85,9 +85,9 @@ function flexible_demand!(
         outputs;
         inputs,
         output_name = "demand_curtailment",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = demand_label(inputs)[flexible_demands],
+        labels = demand_unit_label(inputs)[flexible_demands],
         run_time_options,
     )
     return nothing
@@ -97,15 +97,15 @@ function flexible_demand!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    flexible_demands = index_of_elements(inputs, Demand; run_time_options, filters = [is_flexible])
+    flexible_demands = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_flexible])
     existing_flexible_demands =
-        index_of_elements(inputs, Demand; run_time_options, filters = [is_existing, is_flexible])
+        index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing, is_flexible])
 
     attended_flexible_demand = simulation_results.data[:attended_flexible_demand]
     demand_curtailment = simulation_results.data[:demand_curtailment]
@@ -115,26 +115,26 @@ function flexible_demand!(
         elements_to_write = existing_flexible_demands,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "attended_flexible_demand",
         attended_flexible_demand.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "demand_curtailment",
         demand_curtailment.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),

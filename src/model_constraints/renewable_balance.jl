@@ -16,7 +16,7 @@ function renewable_balance!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    renewable_plants = index_of_elements(inputs, RenewablePlant; run_time_options, filters = [is_existing])
+    renewable_units = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
     # Model Variables
     renewable_generation = get_model_object(model, :renewable_generation)
     renewable_curtailment = get_model_object(model, :renewable_curtailment)
@@ -27,9 +27,9 @@ function renewable_balance!(
     # Constraints
     @constraint(
         model.jump_model,
-        renewable_balance[b in blocks(inputs), r in renewable_plants],
+        renewable_balance[b in subperiods(inputs), r in renewable_units],
         renewable_generation[b, r] + renewable_curtailment[b, r] ==
-        renewable_plant_max_generation(inputs, r) * block_duration_in_hours(inputs, b) *
+        renewable_unit_max_generation(inputs, r) * subperiod_duration_in_hours(inputs, b) *
         renewable_generation_scenario[b, r]
     )
 
@@ -60,8 +60,8 @@ function renewable_balance!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

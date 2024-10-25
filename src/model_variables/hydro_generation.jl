@@ -16,29 +16,29 @@ function hydro_generation!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    existing_hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
-    existing_hydro_plants_with_min_outflow =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, has_min_outflow])
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    existing_hydro_units_with_min_outflow =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, has_min_outflow])
 
     # Variables
     @variable(
         model.jump_model,
-        hydro_turbining[b in blocks(inputs), h in existing_hydro_plants],
+        hydro_turbining[b in subperiods(inputs), h in existing_hydro_units],
         lower_bound = 0.0,
         upper_bound =
-            hydro_plant_max_available_turbining(inputs, h) *
-            m3_per_second_to_hm3_per_hour() * block_duration_in_hours(inputs, b),
+            hydro_unit_max_available_turbining(inputs, h) *
+            m3_per_second_to_hm3_per_hour() * subperiod_duration_in_hours(inputs, b),
     )
     @variable(
         model.jump_model,
-        hydro_spillage[b in blocks(inputs), h in existing_hydro_plants],
+        hydro_spillage[b in subperiods(inputs), h in existing_hydro_units],
         lower_bound = 0.0,
     )
     @variable(
         model.jump_model,
         hydro_minimum_outflow_slack[
-            blocks(inputs),
-            existing_hydro_plants_with_min_outflow,
+            subperiods(inputs),
+            existing_hydro_units_with_min_outflow,
         ],
         lower_bound = 0.0,
     )
@@ -46,36 +46,36 @@ function hydro_generation!(
     # Expressions
     @expression(
         model.jump_model,
-        hydro_generation[b in blocks(inputs), h in existing_hydro_plants],
-        hydro_plant_production_factor(inputs, h) * hydro_turbining[b, h] / m3_per_second_to_hm3_per_hour()
+        hydro_generation[b in subperiods(inputs), h in existing_hydro_units],
+        hydro_unit_production_factor(inputs, h) * hydro_turbining[b, h] / m3_per_second_to_hm3_per_hour()
     )
 
     # Objective
     @expression(
         model.jump_model,
         hydro_minimum_outflow_violation_cost_expression[
-            b in blocks(inputs),
-            h in existing_hydro_plants_with_min_outflow,
+            b in subperiods(inputs),
+            h in existing_hydro_units_with_min_outflow,
         ],
         hydro_minimum_outflow_slack[b, h] * hydro_minimum_outflow_violation_cost(inputs)
     )
     @expression(
         model.jump_model,
-        hydro_spillage_penalty[b in blocks(inputs), h in existing_hydro_plants],
+        hydro_spillage_penalty[b in subperiods(inputs), h in existing_hydro_units],
         hydro_spillage[b, h] * hydro_spillage_cost(inputs)
     )
 
     model.obj_exp +=
         money_to_thousand_money() * sum(
-            hydro_minimum_outflow_violation_cost_expression[b, h] for b in blocks(inputs),
-            h in existing_hydro_plants_with_min_outflow;
+            hydro_minimum_outflow_violation_cost_expression[b, h] for b in subperiods(inputs),
+            h in existing_hydro_units_with_min_outflow;
             init = 0.0,
         ) + money_to_thousand_money() * sum(hydro_spillage_penalty)
 
     @expression(
         model.jump_model,
-        hydro_om_cost_expression[b in blocks(inputs), h in existing_hydro_plants],
-        hydro_generation[b, h] * hydro_plant_om_cost(inputs, h)
+        hydro_om_cost_expression[b in subperiods(inputs), h in existing_hydro_units],
+        hydro_generation[b, h] * hydro_unit_om_cost(inputs, h)
     )
 
     # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
@@ -105,7 +105,7 @@ function hydro_generation!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    hydros = index_of_elements(inputs, HydroPlant; run_time_options)
+    hydros = index_of_elements(inputs, HydroUnit; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(
         outputs,
@@ -122,9 +122,9 @@ function hydro_generation!(
         outputs;
         inputs,
         output_name = "hydro_turbining",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "m3/s",
-        labels = hydro_plant_label(inputs)[hydros],
+        labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
 
@@ -133,9 +133,9 @@ function hydro_generation!(
         outputs;
         inputs,
         output_name = "hydro_spillage",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "m3/s",
-        labels = hydro_plant_label(inputs)[hydros],
+        labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
 
@@ -144,9 +144,9 @@ function hydro_generation!(
         outputs;
         inputs,
         output_name = "hydro_generation",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = hydro_plant_label(inputs)[hydros],
+        labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
 
@@ -155,13 +155,13 @@ function hydro_generation!(
         outputs;
         inputs,
         output_name = "hydro_spillage_penalty",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "\$",
-        labels = hydro_plant_label(inputs)[hydros],
+        labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
 
-    if any_elements(inputs, HydroPlant; run_time_options, filters = [has_min_outflow])
+    if any_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
         add_symbol_to_query_from_subproblem_result!(
             outputs,
             [
@@ -170,9 +170,9 @@ function hydro_generation!(
             ],
         )
 
-        hydro_plants_with_minimum_outflow = index_of_elements(
+        hydro_units_with_minimum_outflow = index_of_elements(
             inputs,
-            HydroPlant;
+            HydroUnit;
             run_time_options,
             filters = [has_min_outflow],
         )
@@ -182,9 +182,9 @@ function hydro_generation!(
             outputs;
             inputs,
             output_name = "hydro_minimum_outflow_slack",
-            dimensions = ["stage", "scenario", "block"],
+            dimensions = ["period", "scenario", "subperiod"],
             unit = "m3/s",
-            labels = hydro_plant_label(inputs)[hydro_plants_with_minimum_outflow],
+            labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
             run_time_options,
         )
 
@@ -193,9 +193,9 @@ function hydro_generation!(
             outputs;
             inputs,
             output_name = "hydro_minimum_outflow_violation_cost_expression",
-            dimensions = ["stage", "scenario", "block"],
+            dimensions = ["period", "scenario", "subperiod"],
             unit = "\$",
-            labels = hydro_plant_label(inputs)[hydro_plants_with_minimum_outflow],
+            labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
             run_time_options,
         )
     end
@@ -206,14 +206,14 @@ function hydro_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options)
-    existing_hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
 
     hydro_turbining = simulation_results.data[:hydro_turbining]
     hydro_spillage = simulation_results.data[:hydro_spillage]
@@ -221,76 +221,76 @@ function hydro_generation!(
     hydro_spillage_penalty = simulation_results.data[:hydro_spillage_penalty]
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = hydro_plants,
-        elements_to_write = existing_hydro_plants,
+        elements_in_output_file = hydro_units,
+        elements_to_write = existing_hydro_units,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "hydro_turbining",
         hydro_turbining.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-        divide_by_block_duration_in_hours = true,
+        divide_by_subperiod_duration_in_hours = true,
         indices_of_elements_in_output,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "hydro_spillage",
         hydro_spillage.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-        divide_by_block_duration_in_hours = true,
+        divide_by_subperiod_duration_in_hours = true,
         indices_of_elements_in_output,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "hydro_generation",
         hydro_generation.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "hydro_spillage_penalty",
         hydro_spillage_penalty.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-        divide_by_block_duration_in_hours = true,
+        divide_by_subperiod_duration_in_hours = true,
         indices_of_elements_in_output,
     )
 
-    if any_elements(inputs, HydroPlant; run_time_options, filters = [has_min_outflow])
-        hydro_plants_with_minimum_outflow = index_of_elements(
+    if any_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
+        hydro_units_with_minimum_outflow = index_of_elements(
             inputs,
-            HydroPlant;
+            HydroUnit;
             run_time_options,
             filters = [has_min_outflow],
         )
 
-        existing_hydro_plants_with_min_outflow = index_of_elements(
+        existing_hydro_units_with_min_outflow = index_of_elements(
             inputs,
-            HydroPlant;
+            HydroUnit;
             run_time_options,
             filters = [is_existing, has_min_outflow],
         )
@@ -299,31 +299,31 @@ function hydro_generation!(
         hydro_minimum_outflow_violation_cost = simulation_results.data[:hydro_minimum_outflow_violation_cost_expression]
 
         indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-            elements_in_output_file = hydro_plants_with_minimum_outflow,
-            elements_to_write = existing_hydro_plants_with_min_outflow,
+            elements_in_output_file = hydro_units_with_minimum_outflow,
+            elements_to_write = existing_hydro_units_with_min_outflow,
         )
 
-        write_output_per_block!(
+        write_output_per_subperiod!(
             outputs,
             inputs,
             run_time_options,
             "hydro_minimum_outflow_slack",
             hydro_minimum_outflow_slack.data;
-            stage,
+            period,
             scenario,
             subscenario,
             multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-            divide_by_block_duration_in_hours = true,
+            divide_by_subperiod_duration_in_hours = true,
             indices_of_elements_in_output,
         )
 
-        write_output_per_block!(
+        write_output_per_subperiod!(
             outputs,
             inputs,
             run_time_options,
             "hydro_minimum_outflow_violation_cost_expression",
             hydro_minimum_outflow_violation_cost.data;
-            stage,
+            period,
             scenario,
             subscenario,
             indices_of_elements_in_output,

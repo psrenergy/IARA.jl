@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase02ConnectedBlocksCase
+module TestCase02ConnectedSubperiodsCase
 
 using Test
 using IARA

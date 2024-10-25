@@ -53,29 +53,29 @@ function initialize!(dc_line::DCLine, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(dc_link::DCLine, db::DatabaseSQLite, stage_date_time::DateTime)
+    update_time_series_from_db!(dc_link::DCLine, db::DatabaseSQLite, period_date_time::DateTime)
 
 Update the DC Line collection time series from the database.
 """
-function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, stage_date_time::DateTime)
+function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, period_date_time::DateTime)
     dc_line.existing =
         PSRDatabaseSQLite.read_time_series_row(
             db,
             "DCLine",
             "existing";
-            date_time = stage_date_time,
+            date_time = period_date_time,
         ) .|> DCLine_Existence.T
     dc_line.capacity_to = PSRDatabaseSQLite.read_time_series_row(
         db,
         "DCLine",
         "capacity_to";
-        date_time = stage_date_time,
+        date_time = period_date_time,
     )
     dc_line.capacity_from = PSRDatabaseSQLite.read_time_series_row(
         db,
         "DCLine",
         "capacity_from";
-        date_time = stage_date_time,
+        date_time = period_date_time,
     )
 
     return nothing
@@ -104,7 +104,7 @@ The `parameters` dataframe has columns that may be mandatory or not, depending o
 Required columns:
 
   - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the renewable plant is existing or not (0 -> not existing, 1 -> existing)
+  - `existing::Vector{Int}`: Whether the renewable unit is existing or not (0 -> not existing, 1 -> existing)
   - `capacity_to::Vector{Float64}`: Maximum power flow in the 'to' direction `[MWh]`
   - `capacity_from::Vector{Float64}`: Maximum power flow in the 'from' direction `[MWh]`
 

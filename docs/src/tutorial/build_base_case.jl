@@ -21,38 +21,38 @@ const PATH_BASE_CASE = joinpath(@__DIR__, "data", "case_1")
 
 # ### Parameters indexed in time
 
-# The parameters indexed in time in IARA model are defined by the number of stages and blocks.
+# The parameters indexed in time in IARA model are defined by the number of periods and subperiods.
 
-# A stage represents a macro time period, such as a week, month, season or year.
-# In each stage, the model will solve an optimization problem that represents 
+# A period represents a macro time period, such as a week, month, season or year.
+# In each period, the model will solve an optimization problem that represents 
 # the decisions that need to be made based on available information.
 
-# A block represents a sub time period of the stage, such as an hour, a day, or simply a collection of hours.
+# A subperiod represents a sub time period of the period, such as an hour, a day, or simply a collection of hours.
 
 # A scenario in this context are defined as openings. 
-# Each stage has a number of openings, and as the process evolves,
-# the next stage will have a number of openings that grow exponentially
-# (e.g., if a stage has 3 openings, the next stage will have $3^2 = 9$ possibilities).
+# Each period has a number of openings, and as the process evolves,
+# the next period will have a number of openings that grow exponentially
+# (e.g., if a period has 3 openings, the next period will have $3^2 = 9$ possibilities).
 # These openings represent possible future paths or branches in the decision process.
 # For example, a node could represent a dry or wet season, a high or low demand, or a high or low price scenario.
 
 # A Policy Graph is a representation of the decision making process in the model.
 # There are two types of policy graphs: linear and cyclic.
 
-# In a linear policy graph, the stages are connected in a linear sequence,
-# where the decisions made in one stage affect the decisions in the next stage.
+# In a linear policy graph, the periods are connected in a linear sequence,
+# where the decisions made in one period affect the decisions in the next period.
 
-# In a cyclic policy graph, the stages are connected in a cyclic sequence,
-# where the decisions made in the last stage affect the decisions in the first stage.
+# In a cyclic policy graph, the periods are connected in a cyclic sequence,
+# where the decisions made in the last period affect the decisions in the first period.
 
 # For more details, see the [SDDP.jl documentation](https://sddp.dev/stable/tutorial/first_steps/).
 
-# For this initial case, we will define a cyclic policy graph, with two stages (nodes) that will represent the _Winter_ and _Summer_ seasons
+# For this initial case, we will define a cyclic policy graph, with two periods (nodes) that will represent the _Winter_ and _Summer_ seasons
 # and an yearly discount rate of 10%.
 
-# Additionally, each stage will be consists of a single block, with a duration of 24 hours.
+# Additionally, each period will be consists of a single subperiod, with a duration of 24 hours.
 
-# To illustrate the concept of this cyclic policy graph, we can think of a two-stage diagram as follows:
+# To illustrate the concept of this cyclic policy graph, we can think of a two-period diagram as follows:
 
 # ```@raw html
 # <img src="..\\assets\\simple_cycle_diagram.png"></img>
@@ -62,10 +62,10 @@ const PATH_BASE_CASE = joinpath(@__DIR__, "data", "case_1")
 
 # Now we can initialize our case, with the defined temporal parameters.
 
-number_of_stages = 2
-number_of_blocks = 1
+number_of_periods = 2
+number_of_subperiods = 1
 number_of_scenarios = 4
-block_duration_in_hours = [24.0]
+subperiod_duration_in_hours = [24.0]
 yearly_discount_rate = 0.1
 ; #hide
 
@@ -73,12 +73,12 @@ yearly_discount_rate = 0.1
 # This function will return a database reference that will store all the information about the case.
 
 db = IARA.create_study!(PATH_BASE_CASE;
-    number_of_stages = number_of_stages,
+    number_of_periods = number_of_periods,
     number_of_scenarios = number_of_scenarios,
-    number_of_blocks = number_of_blocks,
-    block_duration_in_hours = block_duration_in_hours,
+    number_of_subperiods = number_of_subperiods,
+    subperiod_duration_in_hours = subperiod_duration_in_hours,
     policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC,
-    number_of_nodes = number_of_stages,
+    number_of_nodes = number_of_periods,
     yearly_discount_rate = yearly_discount_rate,
     demand_deficit_cost = 3000.0,
 );
@@ -150,7 +150,7 @@ IARA.add_asset_owner!(
 
 # We can add a Bidding Group to the database using the method [`IARA.add_bidding_group!`](@ref).
 
-# In the `simple_bid_max_segments` we need to set the maximum number of segments that the Bidding Group can have. For this case, we will set it to the number of plants that each owner has.
+# In the `independent_bid_max_segments` we need to set the maximum number of segments that the Bidding Group can have. For this case, we will set it to the number of units that each owner has.
 
 IARA.add_bidding_group!(
     db;
@@ -158,7 +158,7 @@ IARA.add_bidding_group!(
     assetowner_id = "Thermal Owner",
     risk_factor = [0.5],
     segment_fraction = [1.0],
-    simple_bid_max_segments = 2, # number of plants
+    independent_bid_max_segments = 2, # number of units
 )
 IARA.add_bidding_group!(
     db;
@@ -166,7 +166,7 @@ IARA.add_bidding_group!(
     assetowner_id = "Price Taker",
     risk_factor = [0.5],
     segment_fraction = [1.0],
-    simple_bid_max_segments = 5, # number of plants
+    independent_bid_max_segments = 5, # number of units
 )
 
 # ## Physical Elements
@@ -174,15 +174,15 @@ IARA.add_bidding_group!(
 # ### Demand
 
 # This case will have three demand units.
-# We can add them to the database using the function [`IARA.add_demand!`](@ref).
+# We can add them to the database using the function [`IARA.add_demand_unit!`](@ref).
 # We can enable or disable the demand unit.
 # This can be changed by setting the `existing` attribute to 1 in the `parameters` time series DataFrame.
 
-# The demand over each stage, block and scenario will be defined by a time series file. We will define it at the end of this tutorial.
+# The demand over each period, subperiod and scenario will be defined by a time series file. We will define it at the end of this tutorial.
 
 # For this case, the demand will exist from the beginning.
 
-IARA.add_demand!(db;
+IARA.add_demand_unit!(db;
     label = "Demand1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -191,7 +191,7 @@ IARA.add_demand!(db;
     bus_id = "Island",
 )
 
-IARA.add_demand!(db;
+IARA.add_demand_unit!(db;
     label = "Demand2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -200,7 +200,7 @@ IARA.add_demand!(db;
     bus_id = "Island",
 )
 
-IARA.add_demand!(db;
+IARA.add_demand_unit!(db;
     label = "Demand3",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -209,9 +209,9 @@ IARA.add_demand!(db;
     bus_id = "Island",
 )
 
-# ### Power Plants
+# ### Generation Units
 
-# Our case will have a mix of renewable and thermal plants. In the table below, we can see some characteristics of each plant.
+# Our case will have a mix of renewable and thermal units. In the table below, we can see some characteristics of each unit.
 
 # | **Technology** | **Name** |        **Owner**        | **Maximum Generation (MW)** | **Cost (\$/MWh)** |
 # |:--------------:|:--------:|:-----------------------:|:----------------------------:|:----------------:|
@@ -223,11 +223,11 @@ IARA.add_demand!(db;
 # |     Thermal    | Thermal5 |     Price Taker         |              50              |        1000      |
 # |     Thermal    | Thermal6 |     Price Taker         |              50              |        3000      |
 
-# ### Renewable Plants
+# ### Renewable Units
 
-# We will start by adding a solar plant to the database, using [`IARA.add_renewable_plant!`](@ref).
+# We will start by adding a solar unit to the database, using [`IARA.add_renewable_unit!`](@ref).
 
-IARA.add_renewable_plant!(
+IARA.add_renewable_unit!(
     db;
     label = "Solar1",
     parameters = DataFrame(;
@@ -241,13 +241,13 @@ IARA.add_renewable_plant!(
     bus_id = "Island",
 )
 
-# The generation of the solar plant requires a time series file. Like the demand, we will define it at the end of this tutorial.
+# The generation of the solar unit requires a time series file. Like the demand, we will define it at the end of this tutorial.
 
-# ### Thermal Plants
+# ### Thermal Units
 
-# Now we can add the thermal plants to the database, using [`IARA.add_thermal_plant!`](@ref).
+# Now we can add the thermal units to the database, using [`IARA.add_thermal_unit!`](@ref).
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal1",
     parameters = DataFrame(;
@@ -260,7 +260,7 @@ IARA.add_thermal_plant!(
     bus_id = "Island",
 )
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal2",
     parameters = DataFrame(;
@@ -273,7 +273,7 @@ IARA.add_thermal_plant!(
     bus_id = "Island",
 )
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal3",
     parameters = DataFrame(;
@@ -286,7 +286,7 @@ IARA.add_thermal_plant!(
     bus_id = "Island",
 )
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal4",
     parameters = DataFrame(;
@@ -299,7 +299,7 @@ IARA.add_thermal_plant!(
     bus_id = "Island",
 )
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal5",
     parameters = DataFrame(;
@@ -312,7 +312,7 @@ IARA.add_thermal_plant!(
     bus_id = "Island",
 )
 
-IARA.add_thermal_plant!(
+IARA.add_thermal_unit!(
     db;
     label = "Thermal6",
     parameters = DataFrame(;
@@ -328,7 +328,7 @@ IARA.add_thermal_plant!(
 #  ## Time Series
 
 #md # !!! note "Recap"  
-#md #     In the beginning of this tutorial, we defined that there were 4 scenarios, 2 stages and 1 block per stage.
+#md #     In the beginning of this tutorial, we defined that there were 4 scenarios, 2 periods and 1 subperiod per period.
 
 # ### Loading time series files
 
@@ -350,13 +350,13 @@ IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "solar_generation.csv"))
 
 IARA.link_time_series_to_file(
     db,
-    "RenewablePlant";
+    "RenewableUnit";
     generation = "solar_generation",
 )
 
 IARA.link_time_series_to_file(
     db,
-    "Demand";
+    "DemandUnit";
     demand = "demands",
 )
 

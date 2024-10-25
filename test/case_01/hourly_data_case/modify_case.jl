@@ -10,27 +10,27 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-# Modify the block duration in the database
-new_block_duration = 24.0
+# Modify the subperiod duration in the database
+new_subperiod_duration = 24.0
 IARA.update_configuration!(db;
-    block_duration_in_hours = [new_block_duration for _ in 1:number_of_blocks],
+    subperiod_duration_in_hours = [new_subperiod_duration for _ in 1:number_of_subperiods],
 )
-IARA.update_hydro_plant!(
+IARA.update_hydro_unit!(
     db,
     "hyd_1";
-    initial_volume = 12.0 * m3_per_second_to_hm3 * (new_block_duration / block_duration_in_hours),
+    initial_volume = 12.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours),
 )
-IARA.update_hydro_plant_time_series_parameter!(
+IARA.update_hydro_unit_time_series_parameter!(
     db,
     "hyd_1",
     "max_volume",
-    30.0 * m3_per_second_to_hm3 * (new_block_duration / block_duration_in_hours);
+    30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours);
     date_time = DateTime(0),
 )
 
 # Create hourly inflow
-number_of_hours = Int(number_of_blocks * new_block_duration)
-hourly_inflow = zeros(1, number_of_hours, number_of_scenarios, number_of_stages)
+number_of_hours = Int(number_of_subperiods * new_subperiod_duration)
+hourly_inflow = zeros(1, number_of_hours, number_of_scenarios, number_of_periods)
 for scen in 1:number_of_scenarios
     hourly_inflow[:, :, scen, :] .+= (scen - 1) / 2
     if scen > 1
@@ -43,26 +43,26 @@ end
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     hourly_inflow;
-    dimensions = ["stage", "scenario", "hour"],
+    dimensions = ["period", "scenario", "hour"],
     labels = ["hyd_1_gauging_station"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_hours],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_hours],
     initial_date = "2020-01-01T00:00:00",
     unit = "m3/s",
 )
 
-# Create hour block mapping
-hour_block_map = zeros(1, number_of_hours, number_of_stages)
+# Create hour subperiod mapping
+hour_subperiod_map = zeros(1, number_of_hours, number_of_periods)
 for hour in 1:number_of_hours
-    hour_block_map[:, hour, :] .= ceil(hour / new_block_duration)
+    hour_subperiod_map[:, hour, :] .= ceil(hour / new_subperiod_duration)
 end
 IARA.write_timeseries_file(
-    joinpath(PATH, "hour_block_map"),
-    hour_block_map;
-    dimensions = ["stage", "hour"],
+    joinpath(PATH, "hour_subperiod_map"),
+    hour_subperiod_map;
+    dimensions = ["period", "hour"],
     labels = ["hb_map"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_hours],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_hours],
     initial_date = "2020-01-01T00:00:00",
     unit = " ",
 )
@@ -70,18 +70,18 @@ IARA.write_timeseries_file(
 IARA.link_time_series_to_file(
     db,
     "Configuration";
-    hour_block_map = "hour_block_map",
+    hour_subperiod_map = "hour_subperiod_map",
 )
 
-demand = demand * new_block_duration / block_duration_in_hours
+demand = demand * new_subperiod_duration / subperiod_duration_in_hours
 
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["dem_1"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "GWh",
 )

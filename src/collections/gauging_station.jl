@@ -70,14 +70,14 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(gauging_station::GaugingStation, db::DatabaseSQLite, stage_date_time::DateTime)
+    update_time_series_from_db!(gauging_station::GaugingStation, db::DatabaseSQLite, period_date_time::DateTime)
 
 Update the GaugingStation collection time series from the database.
 """
 function update_time_series_from_db!(
     gauging_station::GaugingStation,
     db::DatabaseSQLite,
-    stage_date_time::DateTime,
+    period_date_time::DateTime,
 )
     return nothing
 end
@@ -89,7 +89,7 @@ Add a Gauging Station to the database.
 
 Required arguments:
 
-  - `label::String`: Hydro Plant label.
+  - `label::String`: Hydro Unit label.
   - `inflow::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
 
 Optional arguments:
@@ -184,15 +184,15 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
-function normalized_initial_inflow(inputs, stage_idx::Integer, h::Integer, tau::Integer)
-    gauging_station_idx = hydro_plant_gauging_station_index(inputs, h)
-    if time_series_inflow_stage_std_dev(inputs)[gauging_station_idx, stage_idx] == 0
+function normalized_initial_inflow(inputs, period_idx::Integer, h::Integer, tau::Integer)
+    gauging_station_idx = hydro_unit_gauging_station_index(inputs, h)
+    if time_series_inflow_period_std_dev(inputs)[gauging_station_idx, period_idx] == 0
         return 0.0
     else
         return (
             gauging_station_inflow_initial_state(inputs)[gauging_station_idx, tau] -
-            time_series_inflow_stage_average(inputs)[gauging_station_idx, stage_idx]
-        ) / time_series_inflow_stage_std_dev(inputs)[gauging_station_idx, stage_idx]
+            time_series_inflow_period_average(inputs)[gauging_station_idx, period_idx]
+        ) / time_series_inflow_period_std_dev(inputs)[gauging_station_idx, period_idx]
     end
 end
 
@@ -219,17 +219,17 @@ gauging_station_parp_coefficients_file(inputs::AbstractInputs) = "parp_coefficie
 gauging_station_parp_coefficients_file() = "parp_coefficients"
 
 """
-    gauging_station_inflow_stage_average_file(inputs)
+    gauging_station_inflow_period_average_file(inputs)
 
-Return the stage average inflow time series file for all gauging stations.
+Return the period average inflow time series file for all gauging stations.
 """
-gauging_station_inflow_stage_average_file(inputs::AbstractInputs) = "inflow_stage_average"
-gauging_station_inflow_stage_average_file() = "inflow_stage_average"
+gauging_station_inflow_period_average_file(inputs::AbstractInputs) = "inflow_period_average"
+gauging_station_inflow_period_average_file() = "inflow_period_average"
 
 """
-    gauging_station_inflow_stage_std_dev_file(inputs)
+    gauging_station_inflow_period_std_dev_file(inputs)
 
-Return the stage standard deviation inflow time series file for all gauging stations.
+Return the period standard deviation inflow time series file for all gauging stations.
 """
-gauging_station_inflow_stage_std_dev_file(inputs::AbstractInputs) = "inflow_stage_std_dev"
-gauging_station_inflow_stage_std_dev_file() = "inflow_stage_std_dev"
+gauging_station_inflow_period_std_dev_file(inputs::AbstractInputs) = "inflow_period_std_dev"
+gauging_station_inflow_period_std_dev_file() = "inflow_period_std_dev"

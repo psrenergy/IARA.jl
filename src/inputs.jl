@@ -19,19 +19,24 @@ Collection of all input collections.
 """
 @kwdef mutable struct Collections <: AbstractCollections
     configurations::Configurations = Configurations()
-    renewable_plant::RenewablePlant = RenewablePlant()
-    hydro_plant::HydroPlant = HydroPlant()
-    thermal_plant::ThermalPlant = ThermalPlant()
+    renewable_unit::RenewableUnit = RenewableUnit()
+    hydro_unit::HydroUnit = HydroUnit()
+    thermal_unit::ThermalUnit = ThermalUnit()
     zone::Zone = Zone()
     bus::Bus = Bus()
-    demand::Demand = Demand()
+    demand_unit::DemandUnit = DemandUnit()
     dc_line::DCLine = DCLine()
     branch::Branch = Branch()
-    battery::Battery = Battery()
+    battery_unit::BatteryUnit = BatteryUnit()
     asset_owner::AssetOwner = AssetOwner()
     gauging_station::GaugingStation = GaugingStation()
     bidding_group::BiddingGroup = BiddingGroup()
     virtual_reservoir::VirtualReservoir = VirtualReservoir()
+end
+
+@kwdef mutable struct Caches
+    templates_for_time_series_files_have_been_generated::Bool = false
+    templates_for_waveguide_files_have_been_generated::Bool = false
 end
 
 @kwdef mutable struct Inputs <: AbstractInputs
@@ -39,6 +44,7 @@ end
     args::Args
     time_series::TimeSeriesViewsFromExternalFiles = TimeSeriesViewsFromExternalFiles()
     collections::Collections = Collections()
+    caches::Caches = Caches()
 end
 
 """
@@ -61,17 +67,17 @@ end
 Required arguments:
 
   - `PATH::String`: the path where the study will be created
-  - `number_of_stages::Int`: the number of stages in the study
+  - `number_of_periods::Int`: the number of periods in the study
   - `number_of_scenarios::Int`: the number of scenarios in the study
-  - `number_of_blocks::Int`: the number of blocks in the study
+  - `number_of_subperiods::Int`: the number of subperiods in the study
   - `demand_deficit_cost::Float64`: the cost of demand deficit in `R\$\\MWh`
   - `yearly_discount_rate::Float64`: the yearly discount rate
-  - `block_duration_in_hours::Vector{Float64}`: block duration in hours (one entry for each block)
+  - `subperiod_duration_in_hours::Vector{Float64}`: subperiod duration in hours (one entry for each subperiod)
 Optional arguments:
 
-  - `stage_type::Int`: the type of the stage
-  - `block_duration_in_hours::Vector{Float64}`: the duration of each block in hours
-  - `loop_blocks_for_thermal_constraints::Int`
+  - `period_type::Int`: the type of the period
+  - `subperiod_duration_in_hours::Vector{Float64}`: the duration of each subperiod in hours
+  - `loop_subperiods_for_thermal_constraints::Int`
   - `number_of_nodes::Int`: the number of nodes in the study
   - `iteration_limit::Int`: the maximum number of iterations of SDDP algorithm
   - `initial_date_time::Dates.DateTime`: the initial `Dates.DateTime` of the study
@@ -145,12 +151,32 @@ function load_inputs(args::Args)
 
     # Initialize or allocate all fields from collections
     initialize!(inputs)
+    close_study!(inputs.db)
+    db_temp = load_study(args.path; read_only = false)
+    read_files_to_database!(inputs, db_temp)
+    close_study!(db_temp)
+    inputs.db = load_study(args.path)
 
     fill_caches!(inputs)
 
     log_inputs(inputs)
 
     return inputs
+end
+
+function read_files_to_database!(inputs::Inputs, db_temp::DatabaseSQLite)
+    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+       virtual_reservoir_waveguide_source(inputs) == Configurations_VirtualReservoirWaveguideSource.USER_PROVIDED &&
+       waveguide_user_provided_source(inputs) == Configurations_WaveguideUserProvidedSource.CSV_FILE
+        read_waveguide_points_from_file_to_db(inputs, db_temp)
+        load_new_attributes_from_db!(inputs, db_temp)
+    end
+    return nothing
+end
+
+function load_new_attributes_from_db!(inputs::Inputs, db_temp)
+    load_new_attributes_from_db!(inputs.collections.hydro_unit, db_temp)
+    return nothing
 end
 
 function initialize!(inputs::Inputs)
@@ -178,15 +204,15 @@ function initialize!(inputs::Inputs)
 end
 
 """
-    update_time_series_from_db!(inputs::Inputs, stage::Int)
+    update_time_series_from_db!(inputs::Inputs, period::Int)
 
-Update the time series stored inside db file for the given stage.
+Update the time series stored inside db file for the given period.
 """
-function update_time_series_from_db!(inputs::Inputs, stage::Int)
-    stage_date_time = date_time_from_stage(inputs, stage)
+function update_time_series_from_db!(inputs::Inputs, period::Int)
+    period_date_time = date_time_from_period(inputs, period)
     for fieldname in fieldnames(Collections)
         collection = getfield(inputs.collections, fieldname)
-        update_time_series_from_db!(collection, inputs.db, stage_date_time)
+        update_time_series_from_db!(collection, inputs.db, period_date_time)
     end
     return nothing
 end
@@ -194,27 +220,27 @@ end
 """
     validate(inputs::Inputs)    
 
-validate that the inputs are consistent through all stages.
+validate that the inputs are consistent through all periods.
 """
 function validate(inputs)
     num_errors = 0
 
-    for stage in stages(inputs)
-        num_errors_in_stage = 0
-        update_time_series_from_db!(inputs, stage)
+    for period in periods(inputs)
+        num_errors_in_period = 0
+        update_time_series_from_db!(inputs, period)
         for fieldname in fieldnames(Collections)
-            num_errors_in_stage += validate(getfield(inputs.collections, fieldname))
+            num_errors_in_period += validate(getfield(inputs.collections, fieldname))
         end
-        if num_errors_in_stage > 0
-            stage_date_time = date_time_from_stage(inputs, stage)
+        if num_errors_in_period > 0
+            period_date_time = date_time_from_period(inputs, period)
             @error(
-                "Input collections have $(num_errors_in_stage) validation errors in stage $(stage) ($(stage_date_time))."
+                "Input collections have $(num_errors_in_period) validation errors in period $(period) ($(period_date_time))."
             )
         end
-        num_errors += num_errors_in_stage
+        num_errors += num_errors_in_period
     end
 
-    # Put the time controller in the first stage
+    # Put the time controller in the first period
     update_time_series_from_db!(inputs, 1)
 
     # Validate relations 
@@ -272,14 +298,16 @@ function fill_caches!(inputs::Inputs)
        clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs)
     end
-    for vr in index_of_elements(inputs, VirtualReservoir)
-        fill_waveguide_points!(inputs, vr)
-        fill_water_to_energy_factors!(inputs, vr)
-        fill_initial_energy_stock!(inputs, vr)
-        fill_order_to_spill_excess_of_inflow!(inputs, vr)
+    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        for vr in index_of_elements(inputs, VirtualReservoir)
+            fill_waveguide_points!(inputs, vr)
+            fill_water_to_energy_factors!(inputs, vr)
+            fill_initial_energy_stock!(inputs, vr)
+            fill_order_to_spill_excess_of_inflow!(inputs, vr)
+        end
     end
-    for h in index_of_elements(inputs, HydroPlant)
-        fill_whether_hydro_plant_is_associated_with_some_virtual_reservoir!(inputs, h)
+    for h in index_of_elements(inputs, HydroUnit)
+        fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
     end
     return nothing
 end
@@ -339,7 +367,7 @@ end
 
 Return the demand time series.
 """
-time_series_demand(inputs) = inputs.time_series.demand
+time_series_demand(inputs) = inputs.time_series.demand_unit
 
 """
     time_series_demand(inputs, run_time_options, subscenario::Int)
@@ -394,7 +422,7 @@ Return the quantity offer time series.
 function time_series_quantity_offer(inputs)
     if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the quantity offer time series in MARKET_CLEARING run mode, use 'time_series_quantity_offer(inputs, stage, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the quantity offer time series in MARKET_CLEARING run mode, use 'time_series_quantity_offer(inputs, period, scenario)'.",
         )
     end
 
@@ -407,7 +435,7 @@ end
 
 function time_series_quantity_offer(
     inputs,
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
@@ -419,7 +447,7 @@ function time_series_quantity_offer(
     if read_bids_from_file(inputs)
         return inputs.time_series.quantity_offer
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; stage = stage, scenario = scenario)
+        quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
         return quantity_offer
     else
         error("Unrecognized bid source: $(clearing_bid_source(inputs))")
@@ -434,7 +462,7 @@ Return the price offer time series.
 function time_series_price_offer(inputs)
     if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the price offer time series in MARKET_CLEARING run mode, use 'time_series_price_offer(inputs, stage, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the price offer time series in MARKET_CLEARING run mode, use 'time_series_price_offer(inputs, period, scenario)'.",
         )
     end
 
@@ -446,7 +474,7 @@ end
 
 function time_series_price_offer(
     inputs,
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
@@ -458,7 +486,7 @@ function time_series_price_offer(
     if read_bids_from_file(inputs)
         return inputs.time_series.price_offer
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; stage = stage, scenario = scenario)
+        quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
         return price_offer
     else
         error("Unrecognized bid source: $(clearing_bid_source(inputs))")
@@ -533,7 +561,7 @@ Return the virtual reservoir quantity offer time series.
 function time_series_virtual_reservoir_quantity_offer(inputs)
     if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir quantity offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs, stage, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir quantity offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs, period, scenario)'.",
         )
     end
     return inputs.time_series.virtual_reservoir_quantity_offer
@@ -541,7 +569,7 @@ end
 
 function time_series_virtual_reservoir_quantity_offer(
     inputs,
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
@@ -554,7 +582,7 @@ function time_series_virtual_reservoir_quantity_offer(
         return inputs.time_series.virtual_reservoir_quantity_offer
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_offer, price_offer =
-            read_serialized_virtual_reservoir_heuristic_bids(inputs; stage = stage, scenario = scenario)
+            read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)
         return quantity_offer
     else
         error("Unrecognized bid source: $(clearing_bid_source(inputs))")
@@ -569,7 +597,7 @@ Return the virtual reservoir price offer time series.
 function time_series_virtual_reservoir_price_offer(inputs)
     if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir price offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_price_offer(inputs, stage, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir price offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_price_offer(inputs, period, scenario)'.",
         )
     end
     return inputs.time_series.virtual_reservoir_price_offer
@@ -577,7 +605,7 @@ end
 
 function time_series_virtual_reservoir_price_offer(
     inputs,
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
@@ -590,7 +618,7 @@ function time_series_virtual_reservoir_price_offer(
         return inputs.time_series.virtual_reservoir_price_offer
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_offer, price_offer =
-            read_serialized_virtual_reservoir_heuristic_bids(inputs; stage = stage, scenario = scenario)
+            read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)
         return price_offer
     else
         error("Unrecognized bid source: $(clearing_bid_source(inputs))")
@@ -631,18 +659,18 @@ function time_series_inflow_noise(inputs)
 end
 
 """
-    time_series_inflow_stage_average(inputs)
+    time_series_inflow_period_average(inputs)
 
-Return the inflow stage average time series.
+Return the inflow period average time series.
 """
-time_series_inflow_stage_average(inputs) = inputs.time_series.inflow_stage_average
+time_series_inflow_period_average(inputs) = inputs.time_series.inflow_period_average
 
 """
-    time_series_inflow_stage_std_dev(inputs)
+    time_series_inflow_period_std_dev(inputs)
 
-Return the inflow stage standard deviation time series.
+Return the inflow period standard deviation time series.
 """
-time_series_inflow_stage_std_dev(inputs) = inputs.time_series.inflow_stage_std_dev
+time_series_inflow_period_std_dev(inputs) = inputs.time_series.inflow_period_std_dev
 
 """
     time_series_parp_coefficients(inputs)
@@ -652,15 +680,15 @@ Return the PAR(p) coefficients time series.
 time_series_parp_coefficients(inputs) = inputs.time_series.parp_coefficients
 
 """
-    hour_block_map(inputs)
+    hour_subperiod_map(inputs)
 
-Return a vector of integers mapping each hour to a single block.
+Return a vector of integers mapping each hour to a single subperiod.
 """
-hour_block_map(inputs) = inputs.time_series.hour_block_mapping.hour_block_map
+hour_subperiod_map(inputs) = inputs.time_series.hour_subperiod_mapping.hour_subperiod_map
 
 """
-    block_hour_map(inputs)
+    subperiod_hour_map(inputs)
 
-Return a vector of vectors, mapping each block to multiple hours.
+Return a vector of vectors, mapping each subperiod to multiple hours.
 """
-block_hour_map(inputs) = inputs.time_series.hour_block_mapping.block_hour_map
+subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod_hour_map

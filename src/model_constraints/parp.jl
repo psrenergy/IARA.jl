@@ -16,7 +16,7 @@ function parp!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
 
     # Model variables
     normalized_inflow = get_model_object(model, :normalized_inflow)
@@ -28,18 +28,18 @@ function parp!(
     @constraint(
         model.jump_model,
         update_inflow_state[
-            h in hydro_plants,
+            h in hydro_units,
             tau in 1:(parp_max_lags(inputs)-1),
         ],
         normalized_inflow[h, tau].out == normalized_inflow[h, tau+1].in
     )
     @constraint(
         model.jump_model,
-        parp[h in hydro_plants],
+        parp[h in hydro_units],
         normalized_inflow[h, end].out ==
         sum(
             time_series_parp_coefficients(inputs)[
-                hydro_plant_gauging_station_index(inputs, h),
+                hydro_unit_gauging_station_index(inputs, h),
                 parp_max_lags(inputs)-tau+1,
             ] * normalized_inflow[h, tau].in for tau in 1:parp_max_lags(inputs)
         ) + inflow_noise[h]
@@ -72,8 +72,8 @@ function parp!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

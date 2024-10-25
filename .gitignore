@@ -68,3 +68,5 @@ test/*/*/*.toml
 test/*/*/parp/*.toml
 test/*/*/parp/*.csv
 docs/src/tutorial/*.md
+
+temp_repo_mirror/

@@ -10,11 +10,11 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.add_battery!(db;
+IARA.add_battery_unit!(db;
     label = "bat_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Battery_Existence.EXISTS)],
+        existing = [Int(IARA.Battery_Unit_Existence.EXISTS)],
         min_storage = [0.0],
         max_storage = [10.0] * 1e3,
         max_capacity = [0.5],
@@ -29,10 +29,10 @@ renewable_generation[:, 1, end, :] .+= 0.25
 IARA.write_timeseries_file(
     joinpath(PATH, "renewable_generation"),
     renewable_generation;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["gnd_1"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "p.u.",
 )

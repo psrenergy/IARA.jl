@@ -1,15 +1,15 @@
 # Price Taker Problem
 
-This problem is defined at stage $t$ and scenario $\omega$ for an asset owner $i$.
+This problem is defined at period $t$ and scenario $\omega$ for an asset owner $i$.
 
 ## Sets
 
 Lists new or modified sets, not present in the centralized operation subproblem.
 
-- ``J^T_i``: Set of thermal plants owned by asset owner $i$.
-- ``J^H_i``: Set of hydro plants owned by asset owner $i$.
-- ``J^R_i``: Set of renewable plants owned by asset owner $i$.
-- ``J^B_i``: Set of batteries owned by asset owner $i$.
+- ``J^T_i``: Set of thermal units owned by asset owner $i$.
+- ``J^H_i``: Set of hydro units owned by asset owner $i$.
+- ``J^R_i``: Set of renewable units owned by asset owner $i$.
+- ``J^B_i``: Set of battery units owned by asset owner $i$.
 
 ## Parameters
 
@@ -25,7 +25,7 @@ Lists new variables, not present in the centralized operation subproblem.
 
 ## Subproblem Constraints
 
-The following constraints are defined for a subproblem at stage $t$ and scenario $\omega$ for an asset owner $i$.
+The following constraints are defined for a subproblem at period $t$ and scenario $\omega$ for an asset owner $i$.
 
 ### Asset owner's total generation
 
@@ -42,7 +42,7 @@ The remaining constraints are a subset of the centralized operation problem, but
 
 ### Hydro Balance
 
-#### Intra-stage balance
+#### Intra-period balance
 
 ```math
     v_{j, \tau+1} = v_{j, \tau}
@@ -52,7 +52,7 @@ The remaining constraints are a subset of the centralized operation problem, but
     \quad \forall j \in J^H_i, \tau \in B(t)
 ```
 
-#### Inter-stage balance
+#### Inter-period balance
 
 ```math
     v^{S_{in}}_j = v_{j, 1}
@@ -71,15 +71,15 @@ The remaining constraints are a subset of the centralized operation problem, but
     \quad \forall j \in J^R_i, \tau \in B(t)
 ```
 
-### Battery Balance
+### Battery Unit Balance
 
-#### Intra-stage balance
+#### Intra-period balance
 ```math
     s^b_{j, \tau+1} = s^b_{j, \tau} - g^B_{j, \tau}
     \quad \forall j \in J^B_i, \tau \in B(t)
 ```
 
-#### Inter-stage balance
+#### Inter-period balance
 
 ```math
     s^{B_{in}}_j = s^b_{j, 1}
@@ -123,7 +123,7 @@ The remaining constraints are a subset of the centralized operation problem, but
     \forall j \in J^R_i
 ```
 
-### Battery bounds
+### Battery Unit bounds
 
 ```math
     -G^B_j \leq g^B_{j, \tau} \leq G^B_j, \quad

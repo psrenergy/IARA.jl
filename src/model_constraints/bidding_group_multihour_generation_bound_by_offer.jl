@@ -18,8 +18,8 @@ function bidding_group_multihour_generation_bound_by_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     # Define the bidding groups
-    multihour_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
-    blks = blocks(inputs)
+    profile_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    blks = subperiods(inputs)
 
     # Model variables
     bidding_group_generation_multihour = get_model_object(model, :bidding_group_generation_multihour)
@@ -33,7 +33,7 @@ function bidding_group_multihour_generation_bound_by_offer!(
         model.jump_model,
         bidding_group_multihour_generation_bound_by_offer_multihour[
             blk in blks,
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             prf in 1:maximum_multihour_profiles(inputs, bg),
             bus in buses,
         ],
@@ -69,8 +69,8 @@ function bidding_group_multihour_generation_bound_by_offer!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

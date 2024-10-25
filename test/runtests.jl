@@ -48,7 +48,7 @@ reduced_test_list = Dict(
 #     "case_01/hydro_cascading_case_run_of_river/test_case.jl",
 #     "case_01/hydro_minimum_outflow_case/test_case.jl",
 #     "case_01/ac_line_foo_case/test_case.jl",
-#     "case_01/battery_case/test_case.jl",
+#     "case_01/battery_unit_case/test_case.jl",
 #     "case_01/gnd_modifications_case/test_case.jl",
 #     "case_01/hydro_cascading_case_run_of_river_existing/test_case.jl",
 #     "case_01/renewable_om_cost_case/test_case.jl",
@@ -66,7 +66,7 @@ reduced_test_list = Dict(
 # ],
 # "case_02" => [
 #     "case_02/reserve_case/test_case.jl",
-#     "case_02/connected_blocks_case/test_case.jl",
+#     "case_02/connected_subperiods_case/test_case.jl",
 #     "case_02/base_case/test_case.jl",
 # ],
 # "case_03" => [
@@ -93,6 +93,10 @@ reduced_test_list = Dict(
 # "case_07" => [
 #     "case_07/virtual_reservoir_and_thermal/test_case.jl",
 #     "case_07/base_case/test_case.jl",
+# ],
+# "case_08" => [
+#     "case_08/base_case/test_case.jl",
+#     "case_08/user_defined_waveguide_case/test_case.jl",
 # ],
 )
 

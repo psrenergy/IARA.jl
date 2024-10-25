@@ -25,6 +25,16 @@ function main(args::Vector{String})
     initialize()
 
     inputs = load_inputs(args)
+    if inputs.caches.templates_for_time_series_files_have_been_generated
+        @info("Templates for time series files have been generated. Please fill them and run the application again.")
+    end
+    if inputs.caches.templates_for_waveguide_files_have_been_generated
+        @info("Templates for waveguide files have been generated. Please fill them and run the application again.")
+    end
+    if inputs.caches.templates_for_time_series_files_have_been_generated ||
+       inputs.caches.templates_for_waveguide_files_have_been_generated
+        return nothing
+    end
     initialize_output_dir(inputs)
 
     try
@@ -56,13 +66,10 @@ function run_algorithms(inputs)
             train_model_and_run_simulation(inputs, run_time_options)
         end
     elseif run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
-        simulate_all_stages_and_scenarios_of_market_clearing(inputs)
+        simulate_all_periods_and_scenarios_of_market_clearing(inputs)
     elseif run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION
         run_time_options = RunTimeOptions()
         load_cuts_and_run_simulation(inputs, run_time_options)
-    elseif run_mode(inputs) == Configurations_RunMode.HEURISTIC_BID
-        run_time_options = RunTimeOptions()
-        run_heuristic_bid(inputs, run_time_options)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
     end
@@ -77,7 +84,7 @@ function train_model_and_run_simulation(
     train_model!(model, inputs)
     outputs = initialize_outputs(inputs, run_time_options)
     try
-        simulate_all_stages_and_scenarios_of_trained_model(model, inputs, outputs, run_time_options)
+        simulate_all_periods_and_scenarios_of_trained_model(model, inputs, outputs, run_time_options)
     finally
         finalize_outputs!(outputs)
     end
@@ -92,43 +99,43 @@ function load_cuts_and_run_simulation(
     read_cuts_to_model!(model, inputs)
     outputs = initialize_outputs(inputs, run_time_options)
     try
-        simulate_all_stages_and_scenarios_of_trained_model(model, inputs, outputs, run_time_options)
+        simulate_all_periods_and_scenarios_of_trained_model(model, inputs, outputs, run_time_options)
     finally
         finalize_outputs!(outputs)
     end
     return nothing
 end
 
-function simulate_all_stages_and_scenarios_of_trained_model(
+function simulate_all_periods_and_scenarios_of_trained_model(
     model::ProblemModel,
     inputs::Inputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
 )
-    # Simulate all stages and scenarios
+    # Simulate all periods and scenarios
     simulation_results = simulate(model, inputs, outputs, run_time_options)
 
-    # Write outputs per stage, scenario and asset owner
-    for stage in 1:number_of_stages(inputs)
-        # Update the time series in the database to the current stage
-        update_time_series_from_db!(inputs, stage)
+    # Write outputs per period, scenario and asset owner
+    for period in 1:number_of_periods(inputs)
+        # Update the time series in the database to the current period
+        update_time_series_from_db!(inputs, period)
         for scenario in 1:number_of_scenarios(inputs)
-            # Update the time series in the external files to the current stage and scenario
-            update_time_series_views_from_external_files!(inputs; stage, scenario)
+            # Update the time series in the external files to the current period and scenario
+            update_time_series_views_from_external_files!(inputs; period, scenario)
 
-            simulation_results_from_stage_scenario = get_simulation_results_from_stage_scenario(
+            simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
                 simulation_results,
-                stage,
+                period,
                 scenario,
             )
 
-            # Write in the files the output of a specific stage and scenario
+            # Write in the files the output of a specific period and scenario
             model_action(
                 outputs,
                 inputs,
                 run_time_options,
-                simulation_results_from_stage_scenario,
-                stage,
+                simulation_results_from_period_scenario,
+                period,
                 scenario,
                 1, # subscenario is fixed to 1
                 WriteOutput,
@@ -139,7 +146,7 @@ function simulate_all_stages_and_scenarios_of_trained_model(
     return nothing
 end
 
-function simulate_all_stages_and_scenarios_of_market_clearing(
+function simulate_all_periods_and_scenarios_of_market_clearing(
     inputs::Inputs,
 )
     # Initialize the outputs
@@ -151,33 +158,33 @@ function simulate_all_stages_and_scenarios_of_market_clearing(
         build_clearing_outputs(inputs)
 
     try
-        for stage in 1:number_of_stages(inputs)
-            println("Running clearing for stage: $stage")
-            # Update the time series in the database to the current stage
-            update_time_series_from_db!(inputs, stage)
+        for period in 1:number_of_periods(inputs)
+            println("Running clearing for period: $period")
+            # Update the time series in the database to the current period
+            update_time_series_from_db!(inputs, period)
 
             # Heuristic bids
             if generate_heuristic_bids_for_clearing(inputs)
                 run_time_options = RunTimeOptions()
                 for scenario in 1:number_of_scenarios(inputs)
-                    # Update the time series in the external files to the current stage and scenario
-                    update_time_series_views_from_external_files!(inputs; stage, scenario)
+                    # Update the time series in the external files to the current period and scenario
+                    update_time_series_views_from_external_files!(inputs; period, scenario)
                     if any_elements(inputs, BiddingGroup)
-                        markup_offers_for_stage_scenario(
+                        markup_offers_for_period_scenario(
                             inputs,
                             heuristic_bids_outputs,
                             run_time_options,
-                            stage,
+                            period,
                             scenario,
                         )
                     end
                     if clearing_hydro_representation(inputs) ==
                        Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-                        virtual_reservoir_markup_offers_for_stage_scenario(
+                        virtual_reservoir_markup_offers_for_period_scenario(
                             inputs,
                             heuristic_bids_outputs,
                             run_time_options,
-                            stage,
+                            period,
                             scenario,
                         )
                     end
@@ -186,18 +193,18 @@ function simulate_all_stages_and_scenarios_of_market_clearing(
 
             # Clearing problems
             run_time_options = RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_ANTE_PHYSICAL)
-            run_clearing_simulation(inputs, ex_ante_physical_outputs, run_time_options, stage)
+            run_clearing_simulation(inputs, ex_ante_physical_outputs, run_time_options, period)
 
             run_time_options =
                 RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_ANTE_COMMERCIAL)
-            run_clearing_simulation(inputs, ex_ante_commercial_outputs, run_time_options, stage)
+            run_clearing_simulation(inputs, ex_ante_commercial_outputs, run_time_options, period)
 
             run_time_options = RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_POST_PHYSICAL)
-            run_clearing_simulation(inputs, ex_post_physical_outputs, run_time_options, stage)
+            run_clearing_simulation(inputs, ex_post_physical_outputs, run_time_options, period)
 
             run_time_options =
                 RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_POST_COMMERCIAL)
-            run_clearing_simulation(inputs, ex_post_commercial_outputs, run_time_options, stage)
+            run_clearing_simulation(inputs, ex_post_commercial_outputs, run_time_options, period)
         end
     finally
         finalize_clearing_outputs!(
@@ -216,49 +223,50 @@ function run_clearing_simulation(
     inputs::Inputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
-    stage::Int,
+    period::Int,
 )
     println("   Running simulation $(run_time_options.clearing_model_procedure)")
-    model = build_model(inputs, run_time_options; current_stage = stage)
+    model = build_model(inputs, run_time_options; current_period = period)
 
     if use_fcf_in_clearing(inputs)
-        read_cuts_to_model!(model, inputs; current_stage = stage)
+        read_cuts_to_model!(model, inputs; current_period = period)
     end
 
-    simulation_results = simulate(model, inputs, outputs, run_time_options; current_stage = stage)
+    simulation_results = simulate(model, inputs, outputs, run_time_options; current_period = period)
 
     for scenario in 1:number_of_scenarios(inputs)
-        # Update the time series in the external files to the current stage and scenario
-        update_time_series_views_from_external_files!(inputs; stage, scenario)
+        # Update the time series in the external files to the current period and scenario
+        update_time_series_views_from_external_files!(inputs; period, scenario)
 
         for subscenario in 1:number_of_subscenarios(inputs, run_time_options)
-            simulation_results_from_stage_scenario_subscenario = get_simulation_results_from_stage_scenario_subscenario(
-                simulation_results,
-                inputs,
-                run_time_options,
-                1, # since we simulate one stage at a time, the simulation_results stage dimension is always 1
-                scenario,
-                subscenario,
-            )
+            simulation_results_from_period_scenario_subscenario =
+                get_simulation_results_from_period_scenario_subscenario(
+                    simulation_results,
+                    inputs,
+                    run_time_options,
+                    1, # since we simulate one period at a time, the simulation_results period dimension is always 1
+                    scenario,
+                    subscenario,
+                )
 
             if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
                run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
                 post_process_virtual_reservoirs!(
                     inputs,
                     run_time_options,
-                    simulation_results_from_stage_scenario_subscenario,
+                    simulation_results_from_period_scenario_subscenario,
                     outputs,
-                    stage,
+                    period,
                     scenario,
                 )
             end
-            # Write in the files the output of a specific stage and scenario
+            # Write in the files the output of a specific period and scenario
             model_action(
                 outputs,
                 inputs,
                 run_time_options,
-                simulation_results_from_stage_scenario_subscenario,
-                stage,
+                simulation_results_from_period_scenario_subscenario,
+                period,
                 scenario,
                 subscenario,
                 WriteOutput,
@@ -270,37 +278,12 @@ function run_clearing_simulation(
                     outputs,
                     inputs,
                     run_time_options,
-                    simulation_results_from_stage_scenario_subscenario;
-                    stage,
+                    simulation_results_from_period_scenario_subscenario;
+                    period,
                     scenario,
                 )
             end
         end
-    end
-
-    return nothing
-end
-
-function run_heuristic_bid(inputs::Inputs, run_time_options::RunTimeOptions)
-    outputs = initialize_outputs(inputs, run_time_options)
-
-    try
-        for stage in 1:number_of_stages(inputs)
-            # Update the time series in the database to the current stage
-            update_time_series_from_db!(inputs, stage)
-            for scenario in 1:number_of_scenarios(inputs)
-                # Update the time series in the external files to the current stage and scenario
-                update_time_series_views_from_external_files!(inputs; stage, scenario)
-
-                if any_elements(inputs, BiddingGroup)
-                    markup_offers_for_stage_scenario(inputs, outputs, run_time_options, stage, scenario)
-                end
-                if any_elements(inputs, VirtualReservoir)
-                end
-            end
-        end
-    finally
-        finalize_outputs!(outputs)
     end
 
     return nothing

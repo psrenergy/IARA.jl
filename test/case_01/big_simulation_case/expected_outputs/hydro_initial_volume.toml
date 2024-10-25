@@ -1,8 +1,8 @@
 version = 1
-dimensions = ["stage", "scenario", "block"]
+dimensions = ["period", "scenario", "subperiod"]
 dimension_size = [9, 4, 2]
 initial_date = "2020-01-01 00:00:00"
-time_dimension = "stage"
+time_dimension = "period"
 frequency = "monthly"
 unit = "hm3"
 labels = ["hyd_1"]

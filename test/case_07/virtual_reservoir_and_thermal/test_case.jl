@@ -1,4 +1,4 @@
-module TestCase07VirtualReservoirThermalPlant
+module TestCase07VirtualReservoirThermalUnit
 
 using Test
 using IARA

@@ -18,14 +18,14 @@ function multihour_min_activation_level!(
 )
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
-    multihour_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
+    profile_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
 
     # Model variables
     @variable(
         model.jump_model,
         minimum_activation_level_multihour_indicator[
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             profile in 1:maximum_multihour_profiles(inputs, bg),
         ], Bin
     )
@@ -40,7 +40,7 @@ function multihour_min_activation_level!(
     @variable(
         model.jump_model,
         multihour_min_activation_level[
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             profile in 1:maximum_multihour_profiles(inputs, bg),
         ]
         in
@@ -59,13 +59,13 @@ function multihour_min_activation_level!(
     ::Type{SubproblemUpdate},
 )
     # Define the bidding groups
-    multihour_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
+    profile_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
 
     minimum_activation_level_multihour_series = time_series_minimum_activation_level_multihour(inputs)
     multihour_min_activation_level = get_model_object(model, :multihour_min_activation_level)
 
-    for bg in multihour_bidding_groups, profile in bidding_profiles(inputs)
+    for bg in profile_bidding_groups, profile in bidding_profiles(inputs)
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -97,8 +97,8 @@ function multihour_min_activation_level!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

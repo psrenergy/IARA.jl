@@ -22,8 +22,8 @@ Collection representing the bidding groups in the system.
     bid_type::Vector{BiddingGroup_BidType.T} = []
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
-    simple_bid_max_segments::Vector{Int} = []
-    multihour_bid_max_profiles::Vector{Int} = []
+    independent_bid_max_segments::Vector{Int} = []
+    profile_bid_max_profiles::Vector{Int} = []
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
     quantity_offer_file::String = ""
@@ -53,8 +53,9 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
     bidding_group.label = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
     bidding_group.bid_type = PSRI.get_parms(inputs.db, "BiddingGroup", "bid_type") .|> BiddingGroup_BidType.T
     bidding_group.asset_owner_index = PSRI.get_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
-    bidding_group.simple_bid_max_segments = PSRI.get_parms(inputs.db, "BiddingGroup", "simple_bid_max_segments")
-    bidding_group.multihour_bid_max_profiles = PSRI.get_parms(inputs.db, "BiddingGroup", "multihour_bid_max_profiles")
+    bidding_group.independent_bid_max_segments =
+        PSRI.get_parms(inputs.db, "BiddingGroup", "independent_bid_max_segments")
+    bidding_group.profile_bid_max_profiles = PSRI.get_parms(inputs.db, "BiddingGroup", "profile_bid_max_profiles")
 
     # Load vectors
     bidding_group.risk_factor = PSRI.get_vectors(inputs.db, "BiddingGroup", "risk_factor")
@@ -91,11 +92,11 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(bidding_group::BiddingGroup, db::DatabaseSQLite, stage_date_time::DateTime)
+    update_time_series_from_db!(bidding_group::BiddingGroup, db::DatabaseSQLite, period_date_time::DateTime)
 
 Update the BiddingGroup time series from the database.
 """
-function update_time_series_from_db!(bidding_group::BiddingGroup, db::DatabaseSQLite, stage_date_time::DateTime)
+function update_time_series_from_db!(bidding_group::BiddingGroup, db::DatabaseSQLite, period_date_time::DateTime)
     return nothing
 end
 
@@ -106,12 +107,12 @@ Add a BiddingGroup to the database.
 
 Required arguments:
 
-  - `label::String`: label of the Thermal Plant.
+  - `label::String`: label of the Thermal Unit.
   - `bid_type::BiddingGroup_BidType.T`: [`IARA.BiddingGroup_BidType`](@ref) of the bidding group.
     - _Default_ is `BiddingGroup_BidType.MARKUP_HEURISTIC`
-  - `simple_bid_max_segments::Int`: maximum number of segments for the simple bid.
+  - `independent_bid_max_segments::Int`: maximum number of segments for the independent bid.
     - _Default_ is `0`
-  - `multihour_bid_max_profiles::Int`: maximum number of profiles for the multihour bid.
+  - `profile_bid_max_profiles::Int`: maximum number of profiles for the profile bid.
     - _Default_ is `0`
   - `assetowner_id::String`: Label of the AssetOwner to which the bidding group belongs (only if the AssetOwner is already in the database).
   - `risk_factor::Vector{Float64}`: risk factor of the bidding group.
@@ -225,30 +226,24 @@ end
 # ---------------------------------------------------------------------
 
 function maximum_multihour_profiles(inputs::AbstractInputs, idx)
-    return inputs.collections.bidding_group.multihour_bid_max_profiles[idx]
+    return inputs.collections.bidding_group.profile_bid_max_profiles[idx]
 end
 
 function maximum_bid_segments(inputs::AbstractInputs, idx)
-    if run_mode(inputs) == Configurations_RunMode.HEURISTIC_BID
-        # TODO: implement this for the heuristic bid, use as part of bidding_segments(inputs)
-        error(
-            "To query the maximum number of segments in the HEURISTIC_BID run mode, use `length(bidding_segments(inputs))`.",
-        )
-    end
     if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
         return length(bidding_segments(inputs))
     else
-        return inputs.collections.bidding_group.simple_bid_max_segments[idx]
+        return inputs.collections.bidding_group.independent_bid_max_segments[idx]
     end
 end
 
 markup_heuristic_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.MARKUP_HEURISTIC
 optimize_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.OPTIMIZE
-has_multihour_bids(bg::BiddingGroup, i::Int) = bg.multihour_bid_max_profiles[i] > 0
-has_simple_bids(bg::BiddingGroup, i::Int) = bg.simple_bid_max_segments[i] > 0
+has_profile_bids(bg::BiddingGroup, i::Int) = bg.profile_bid_max_profiles[i] > 0
+has_independent_bids(bg::BiddingGroup, i::Int) = bg.independent_bid_max_segments[i] > 0
 
 index_among_multihour(inputs::AbstractInputs, idx::Int) =
-    findfirst(isequal(idx), index_of_elements(inputs, BiddingGroup; filters = [has_multihour_bids]))
+    findfirst(isequal(idx), index_of_elements(inputs, BiddingGroup; filters = [has_profile_bids]))
 
 """
 maximum_bidding_segments(inputs)
@@ -268,53 +263,52 @@ function bidding_segments(inputs::AbstractInputs)
             [maximum_bid_segments(inputs, bg) for bg in index_of_elements(inputs, BiddingGroup)]
         maximum_bid_segment = maximum(maximum_bid_segments_all_bgs)
         return collect(1:maximum_bid_segment)
-    elseif run_mode(inputs) == Configurations_RunMode.HEURISTIC_BID ||
-           (run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs))
+    elseif run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
         # TODO We have the same code in bids.jl
         # This has to be rewritten into smaller functions and explained in the documentation
         # of the Guess bid idea
         bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
-        hydro_plants = index_of_elements(inputs, HydroPlant; filters = [is_existing])
-        thermal_plants = index_of_elements(inputs, ThermalPlant; filters = [is_existing])
-        renewable_plants = index_of_elements(inputs, RenewablePlant; filters = [is_existing])
+        hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
+        thermal_units = index_of_elements(inputs, ThermalUnit; filters = [is_existing])
+        renewable_units = index_of_elements(inputs, RenewableUnit; filters = [is_existing])
 
         number_of_bidding_groups = length(bidding_group_indexes)
         number_of_buses = number_of_elements(inputs, Bus)
 
         bidding_group_number_of_risk_factors = zeros(Int, number_of_bidding_groups)
-        bidding_group_hydro_plants = [Int[] for _ in 1:number_of_bidding_groups]
-        bidding_group_thermal_plants = [Int[] for _ in 1:number_of_bidding_groups]
-        bidding_group_renewable_plants = [Int[] for _ in 1:number_of_bidding_groups]
+        bidding_group_hydro_units = [Int[] for _ in 1:number_of_bidding_groups]
+        bidding_group_thermal_units = [Int[] for _ in 1:number_of_bidding_groups]
+        bidding_group_renewable_units = [Int[] for _ in 1:number_of_bidding_groups]
 
         for bg in bidding_group_indexes
             bidding_group_number_of_risk_factors[bg] = length(bidding_group_risk_factor(inputs, bg))
-            bidding_group_hydro_plants[bg] = findall(isequal(bg), hydro_plant_bidding_group_index(inputs))
-            bidding_group_thermal_plants[bg] = findall(isequal(bg), thermal_plant_bidding_group_index(inputs))
-            bidding_group_renewable_plants[bg] = findall(isequal(bg), renewable_plant_bidding_group_index(inputs))
+            bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
+            bidding_group_thermal_units[bg] = findall(isequal(bg), thermal_unit_bidding_group_index(inputs))
+            bidding_group_renewable_units[bg] = findall(isequal(bg), renewable_unit_bidding_group_index(inputs))
         end
 
-        number_of_hydro_plants_per_bidding_group_and_bus = zeros(Int, number_of_bidding_groups, number_of_buses)
-        number_of_thermal_plants_per_bidding_group_and_bus = zeros(Int, number_of_bidding_groups, number_of_buses)
-        number_of_renewable_plants_per_bidding_group_and_bus = zeros(Int, number_of_bidding_groups, number_of_buses)
+        number_of_hydro_units_per_bidding_group_and_bus = zeros(Int, number_of_bidding_groups, number_of_buses)
+        number_of_thermal_units_per_bidding_group_and_bus = zeros(Int, number_of_bidding_groups, number_of_buses)
+        number_of_renewable_units_per_bidding_group_and_bus = zeros(Int, number_of_bidding_groups, number_of_buses)
 
         for bg in bidding_group_indexes
-            for h in bidding_group_hydro_plants[bg]
-                bus = hydro_plant_bus_index(inputs, h)
-                number_of_hydro_plants_per_bidding_group_and_bus[bg, bus] += 1
+            for h in bidding_group_hydro_units[bg]
+                bus = hydro_unit_bus_index(inputs, h)
+                number_of_hydro_units_per_bidding_group_and_bus[bg, bus] += 1
             end
-            for t in bidding_group_thermal_plants[bg]
-                bus = thermal_plant_bus_index(inputs, t)
-                number_of_thermal_plants_per_bidding_group_and_bus[bg, bus] += 1
+            for t in bidding_group_thermal_units[bg]
+                bus = thermal_unit_bus_index(inputs, t)
+                number_of_thermal_units_per_bidding_group_and_bus[bg, bus] += 1
             end
-            for r in bidding_group_renewable_plants[bg]
-                bus = renewable_plant_bus_index(inputs, r)
-                number_of_renewable_plants_per_bidding_group_and_bus[bg, bus] += 1
+            for r in bidding_group_renewable_units[bg]
+                bus = renewable_unit_bus_index(inputs, r)
+                number_of_renewable_units_per_bidding_group_and_bus[bg, bus] += 1
             end
         end
 
         number_of_plants_per_bidding_group_and_bus =
-            number_of_hydro_plants_per_bidding_group_and_bus .+
-            number_of_thermal_plants_per_bidding_group_and_bus .+ number_of_renewable_plants_per_bidding_group_and_bus
+            number_of_hydro_units_per_bidding_group_and_bus .+
+            number_of_thermal_units_per_bidding_group_and_bus .+ number_of_renewable_units_per_bidding_group_and_bus
 
         maximum_number_of_plants_per_bidding_group =
             dropdims(maximum(number_of_plants_per_bidding_group_and_bus; dims = 2); dims = 2)
@@ -347,8 +341,6 @@ function bidding_profiles(inputs::AbstractInputs)
             [maximum_multihour_profiles(inputs, bg) for bg in index_of_elements(inputs, BiddingGroup)]
         maximum_bid_profile = maximum(maximum_bid_profiles_all_bgs)
         return collect(1:maximum_bid_profile)
-    elseif run_mode(inputs) == Configurations_RunMode.HEURISTIC_BID
-        error("Querying the `bidding_profiles` does not make sense in Run mode $(run_mode(inputs)).")
     elseif run_mode(inputs) in [Configurations_RunMode.STRATEGIC_BID, Configurations_RunMode.PRICE_TAKER_BID]
         return [1]
     else

@@ -12,7 +12,7 @@ db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db; hydro_spillage_cost = 1e-3)
 
-# Add second gauging station and hydro plant
+# Add second gauging station and hydro unit
 IARA.add_gauging_station!(db;
     label = "gs_2",
     historical_inflow = DataFrame(;
@@ -20,11 +20,11 @@ IARA.add_gauging_station!(db;
         historical_inflow = reverse(historical_inflow_values) .+ historical_inflow_values,
     ),
 )
-IARA.add_hydro_plant!(db;
+IARA.add_hydro_unit!(db;
     label = "hyd_2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.HydroPlant_Existence.EXISTS)],
+        existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
         production_factor = [0.5],
         min_generation = [0.0],
         max_generation = [3.5],
@@ -62,10 +62,10 @@ demand[1, 1, 3, 1] += 0.2171 * MW_to_GWh
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["dem_1"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "GWh",
 )

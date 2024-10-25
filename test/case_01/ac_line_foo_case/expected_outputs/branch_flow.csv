@@ -1,4 +1,4 @@
-stage,scenario,block,ac_1,ac_2
+period,scenario,subperiod,ac_1,ac_2
 1,1,1,-5.5,10.0
 1,1,2,-5.5,10.0
 1,2,1,-5.5,10.0

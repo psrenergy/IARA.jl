@@ -10,10 +10,10 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_hydro_plant!(
+IARA.update_hydro_unit!(
     db,
     "hyd_2";
-    operation_type = IARA.HydroPlant_OperationType.RUN_OF_RIVER,
+    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
 )
 
 IARA.close_study!(db)

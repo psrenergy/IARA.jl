@@ -16,33 +16,33 @@ function hydro_volume!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
-    hydro_plants_with_reservoir =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, operates_with_reservoir])
-    hydro_blks = hydro_blocks(inputs)
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    hydro_units_with_reservoir =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_with_reservoir])
+    hydro_blks = hydro_subperiods(inputs)
 
     @variable(
         model.jump_model,
-        hydro_volume[b in hydro_blks, h in hydro_plants],
-        lower_bound = hydro_plant_min_volume(inputs, h),
-        upper_bound = hydro_plant_max_volume(inputs, h),
+        hydro_volume[b in hydro_blks, h in hydro_units],
+        lower_bound = hydro_unit_min_volume(inputs, h),
+        upper_bound = hydro_unit_max_volume(inputs, h),
     )
 
     if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
         @variable(
             model.jump_model,
-            hydro_volume_state[h in hydro_plants_with_reservoir],
+            hydro_volume_state[h in hydro_units_with_reservoir],
             SDDP.State,
-            initial_value = hydro_plant_initial_volume(inputs, h),
-            lower_bound = hydro_plant_min_volume(inputs, h),
-            upper_bound = hydro_plant_max_volume(inputs, h),
+            initial_value = hydro_unit_initial_volume(inputs, h),
+            lower_bound = hydro_unit_min_volume(inputs, h),
+            upper_bound = hydro_unit_max_volume(inputs, h),
         )
     elseif clearing_has_volume_variables(inputs, run_time_options)
         placeholder_scenario = 1
-        previous_volume = hydro_volume_from_previous_stage(inputs, model.stage, placeholder_scenario)
+        previous_volume = hydro_volume_from_previous_period(inputs, model.period, placeholder_scenario)
         @variable(
             model.jump_model,
-            hydro_previous_stage_volume[h in hydro_plants_with_reservoir]
+            hydro_previous_period_volume[h in hydro_units_with_reservoir]
             in
             MOI.Parameter(previous_volume[h])
         )
@@ -67,20 +67,20 @@ function hydro_volume!(
         return nothing
     end
 
-    hydro_plants_with_reservoir =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, operates_with_reservoir])
+    hydro_units_with_reservoir =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_with_reservoir])
 
     # Model parameters
-    hydro_previous_stage_volume = get_model_object(model, :hydro_previous_stage_volume)
+    hydro_previous_period_volume = get_model_object(model, :hydro_previous_period_volume)
 
-    # Data from previous stage
-    previous_volume = hydro_volume_from_previous_stage(inputs, model.stage, scenario)
+    # Data from previous period
+    previous_volume = hydro_volume_from_previous_period(inputs, model.period, scenario)
 
-    for h in hydro_plants_with_reservoir
+    for h in hydro_units_with_reservoir
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            hydro_previous_stage_volume[h],
+            hydro_previous_period_volume[h],
             previous_volume[h],
         )
     end
@@ -93,7 +93,7 @@ function hydro_volume!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options)
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(outputs, :hydro_volume)
     if run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
@@ -105,9 +105,9 @@ function hydro_volume!(
         outputs;
         inputs,
         output_name = "hydro_initial_volume",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "hm3",
-        labels = hydro_plant_label(inputs)[hydro_plants],
+        labels = hydro_unit_label(inputs)[hydro_units],
         run_time_options,
     )
 
@@ -122,30 +122,30 @@ function hydro_volume!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options)
-    existing_hydro_plants =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
+    existing_hydro_units =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = hydro_plants,
-        elements_to_write = existing_hydro_plants,
+        elements_in_output_file = hydro_units,
+        elements_to_write = existing_hydro_units,
     )
 
     hydro_volume = simulation_results.data[:hydro_volume]
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "hydro_initial_volume",
-        hydro_volume.data[1:end-1, :]; # we filter the last block because we don`t write it to a file. This last block is auxiliary to the model.
-        stage,
+        hydro_volume.data[1:end-1, :]; # we filter the last subperiod because we don`t write it to a file. This last subperiod is auxiliary to the model.
+        period,
         scenario,
         subscenario,
         indices_of_elements_in_output,

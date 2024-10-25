@@ -1,4 +1,4 @@
-stage,scenario,block,bid_segment,bg_1 - bus_1
+period,scenario,subperiod,bid_segment,bg_1 - bus_1
 1,1,1,1,25000.0
 1,1,1,2,25000.0
 1,1,2,1,25000.0

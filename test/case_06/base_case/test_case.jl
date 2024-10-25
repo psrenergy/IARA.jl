@@ -31,7 +31,7 @@ if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
     Main.compare_outputs(PATH;
-        test_only_block_sum = ["dc_flow"])
+        test_only_subperiod_sum = ["dc_flow"])
 end
 
 end

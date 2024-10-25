@@ -1,6 +1,6 @@
 # Strategic Bid Problem
 
-This problem is defined at stage $t$ and scenario $\omega$ for an asset owner $i$.
+This problem is defined at period $t$ and scenario $\omega$ for an asset owner $i$.
 
 ## Sets
 
@@ -34,7 +34,7 @@ Lists new variables, not present in the centralized operation or price taker sub
 
 ## Subproblem Constraints
 
-The following constraints are defined for a subproblem at stage $t$ and scenario $\omega$ for an asset owner $i$.
+The following constraints are defined for a subproblem at period $t$ and scenario $\omega$ for an asset owner $i$.
 
 ### Revenue Curve: convex hull representation
 
@@ -93,7 +93,7 @@ The remaining constraints are copied from the price taker problem.
 
 ### Hydro Balance
 
-#### Intra-stage balance
+#### Intra-period balance
 
 ```math
     v_{j, \tau+1} = v_{j, \tau}
@@ -103,7 +103,7 @@ The remaining constraints are copied from the price taker problem.
     \quad \forall j \in J^H_i, \tau \in B(t)
 ```
 
-#### Inter-stage balance
+#### Inter-period balance
 
 ```math
     v^{S_{in}}_j = v_{j, 1}
@@ -122,16 +122,16 @@ The remaining constraints are copied from the price taker problem.
     \quad \forall j \in J^R_i, \tau \in B(t)
 ```
 
-### Battery Balance
+### Battery Unit Balance
 
-#### Intra-stage balance
+#### Intra-period balance
 
 ```math
     s^b_{j, \tau+1} = s^b_{j, \tau} - g^B_{j, \tau}
     \quad \forall j \in J^B_i, \tau \in B(t)
 ```
 
-#### Inter-stage balance
+#### Inter-period balance
 
 ```math
     s^{B_{in}}_j = s^b_{j, 1}
@@ -174,7 +174,7 @@ The remaining constraints are copied from the price taker problem.
     \forall j \in J^R_i
 ```
 
-### Battery bounds
+### Battery Unit bounds
 
 ```math
     -G^B_j \leq g^B_{j, \tau} \leq G^B_j, \quad

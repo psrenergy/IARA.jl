@@ -8,34 +8,36 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function water_to_energy_factors(inputs::AbstractInputs, hydro_plants_indices::Vector{Int})
-    water_to_energy_factors = [NaN for h in 1:maximum(index_of_elements(inputs, HydroPlant))]
+function water_to_energy_factors(inputs::AbstractInputs, hydro_units_indices::Vector{Int})
+    # Converts hm3 to MWh
+    water_to_energy_factors = [NaN for h in 1:maximum(index_of_elements(inputs, HydroUnit))]
     ready_for_calculations_indices = [
-        h for h in hydro_plants_indices if
-        is_null(hydro_plant_turbine_to(inputs, h)) || !(hydro_plant_turbine_to(inputs, h) in hydro_plants_indices)
+        h for h in hydro_units_indices if
+        is_null(hydro_unit_turbine_to(inputs, h)) || !(hydro_unit_turbine_to(inputs, h) in hydro_units_indices)
     ]
     while !isempty(ready_for_calculations_indices)
         h = popfirst!(ready_for_calculations_indices)
-        h_downstream = hydro_plant_turbine_to(inputs, h)
-        water_to_energy_factors[h] = if is_null(h_downstream) || !(h_downstream in hydro_plants_indices)
-            hydro_plant_production_factor(inputs, h)
+        h_downstream = hydro_unit_turbine_to(inputs, h)
+        water_to_energy_factors[h] = if is_null(h_downstream) || !(h_downstream in hydro_units_indices)
+            hydro_unit_production_factor(inputs, h) / m3_per_second_to_hm3_per_hour()
         else
-            hydro_plant_production_factor(inputs, h) + water_to_energy_factors[h_downstream]
+            hydro_unit_production_factor(inputs, h) / m3_per_second_to_hm3_per_hour() +
+            water_to_energy_factors[h_downstream]
         end
-        hydro_plants_now_ready =
-            [h_upstream for h_upstream in hydro_plants_indices if hydro_plant_turbine_to(inputs, h_upstream) == h]
-        append!(ready_for_calculations_indices, hydro_plants_now_ready)
+        hydro_units_now_ready =
+            [h_upstream for h_upstream in hydro_units_indices if hydro_unit_turbine_to(inputs, h_upstream) == h]
+        append!(ready_for_calculations_indices, hydro_units_now_ready)
     end
-    @assert all((!isnan).(water_to_energy_factors[hydro_plants_indices]))
+    @assert all((!isnan).(water_to_energy_factors[hydro_units_indices]))
     return water_to_energy_factors
 end
 
-function order_to_spill_excess_of_inflow(inputs::AbstractInputs, hydro_plants_indices::Vector{Int})
-    remaining_indices = copy(hydro_plants_indices)
+function order_to_spill_excess_of_inflow(inputs::AbstractInputs, hydro_units_indices::Vector{Int})
+    remaining_indices = copy(hydro_units_indices)
     ordered_indices = []
     while !isempty(remaining_indices)
         ready_for_calculations_indices =
-            [h for h in remaining_indices if !(h in hydro_plant_spill_to(inputs)[remaining_indices])]
+            [h for h in remaining_indices if !(h in hydro_unit_spill_to(inputs)[remaining_indices])]
         append!(ordered_indices, ready_for_calculations_indices)
         remaining_indices = setdiff(remaining_indices, ready_for_calculations_indices)
     end
@@ -48,48 +50,47 @@ function additional_energy_from_inflows(
     inflow_as_volume::Vector{Float64},
     volume::Vector{Float64},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant)
+    hydro_units = index_of_elements(inputs, HydroUnit)
     for h in virtual_reservoir_order_to_spill_excess_of_inflow(inputs, vr)
         inflow_excess =
-            max(inflow_as_volume[h] - (volume[h] - hydro_plant_min_volume(inputs, h)), 0)
+            max(inflow_as_volume[h] - (volume[h] - hydro_unit_min_volume(inputs, h)), 0)
         inflow_as_volume[h] -= inflow_excess
-        h_downstream = hydro_plant_spill_to(inputs, h)
+        h_downstream = hydro_unit_spill_to(inputs, h)
         if !is_null(h_downstream) && (h_downstream in virtual_reservoir_order_to_spill_excess_of_inflow(inputs, vr))
             inflow_as_volume[h_downstream] += inflow_excess
         end
     end
     additional_energy =
-        sum(inflow_as_volume[h] * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] for h in hydro_plants)
+        sum(inflow_as_volume[h] * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] for h in hydro_units)
     return additional_energy
 end
 
-# TODO: There should have an input parameter for waveguide, and this is the default value
-function fill_waveguide_points!(inputs::AbstractInputs, vr::Int)
-    hydro_plants = virtual_reservoir_hydro_plant_indices(inputs, vr)
-    waveguide_points = zeros(length(index_of_elements(inputs, HydroPlant)), 2)
+function fill_waveguide_points_by_uniform_volume_percentage!(inputs::AbstractInputs, vr::Int)
+    hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
+    waveguide_points = zeros(length(index_of_elements(inputs, HydroUnit)), 2)
     fill!(waveguide_points, NaN)
 
-    for h in hydro_plants
-        waveguide_points[h, 1] = hydro_plant_min_volume(inputs, h)
-        waveguide_points[h, 2] = hydro_plant_max_volume(inputs, h)
+    for h in hydro_units
+        waveguide_points[h, 1] = hydro_unit_min_volume(inputs, h)
+        waveguide_points[h, 2] = hydro_unit_max_volume(inputs, h)
     end
     inputs.collections.virtual_reservoir.waveguide_points[vr] = waveguide_points
-    @assert all((!isnan).(waveguide_points[hydro_plants, :]))
-    @assert all(isnan.(waveguide_points[setdiff(1:end, hydro_plants), :]))
+    @assert all((!isnan).(waveguide_points[hydro_units, :]))
+    @assert all(isnan.(waveguide_points[setdiff(1:end, hydro_units), :]))
     return nothing
 end
 
 function fill_water_to_energy_factors!(inputs::AbstractInputs, vr::Int)
-    hydro_plants = virtual_reservoir_hydro_plant_indices(inputs, vr)
-    inputs.collections.virtual_reservoir.water_to_energy_factors[vr] .= water_to_energy_factors(inputs, hydro_plants)
+    hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
+    inputs.collections.virtual_reservoir.water_to_energy_factors[vr] .= water_to_energy_factors(inputs, hydro_units)
     return nothing
 end
 
 function fill_initial_energy_stock!(inputs::AbstractInputs, vr::Int)
-    hydro_plants = virtual_reservoir_hydro_plant_indices(inputs, vr)
+    hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
     total_energy_stock = sum(
-        hydro_plant_initial_volume(inputs, h) * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] /
-        m3_per_second_to_hm3_per_hour() for h in hydro_plants
+        hydro_unit_initial_volume(inputs, h) * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] for
+        h in hydro_units
     )
     inputs.collections.virtual_reservoir.initial_energy_stock[vr] =
         [NaN for ao in 1:length(index_of_elements(inputs, AssetOwner))]
@@ -116,8 +117,8 @@ function fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs::Abst
     end
 
     # VR
-    virtual_reservoir_hydro_plants = virtual_reservoir_hydro_plant_indices(inputs)
-    number_of_hydro_plants_per_virtual_reservoir = length.(virtual_reservoir_hydro_plants)
+    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
+    number_of_hydro_units_per_virtual_reservoir = length.(virtual_reservoir_hydro_units)
 
     # Offer segments
     number_of_offer_segments_per_asset_owner_and_virtual_reservoir =
@@ -125,7 +126,7 @@ function fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs::Abst
     for vr in virtual_reservoir_indices
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_offer_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
-                asset_owner_number_of_risk_factors[ao] * number_of_hydro_plants_per_virtual_reservoir[vr]
+                asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
         end
     end
     maximum_number_of_offer_segments = maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir)
@@ -137,50 +138,53 @@ end
 function post_process_virtual_reservoirs!(
     inputs::AbstractInputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
+    simulation_results::SimulationResultsFromPeriodScenario,
     outputs::Outputs,
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant)
+    hydro_units = index_of_elements(inputs, HydroUnit)
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
     hydro_volume = simulation_results.data[:hydro_volume]
     virtual_reservoir_generation = simulation_results.data[:virtual_reservoir_generation]
 
-    volume_at_beginning_of_stage = hydro_volume_from_previous_stage(inputs, stage, scenario)
-    energy_stock_at_beginning_of_stage =
-        virtual_reservoir_energy_stock_from_previous_stage(inputs, stage, scenario)
+    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, period, scenario)
+    energy_stock_at_beginning_of_period =
+        virtual_reservoir_energy_stock_from_previous_period(inputs, period, scenario)
 
     inflow_series = time_series_inflow(inputs, run_time_options, 1)
     inflow_as_volume = [
         sum(
-            inflow_series[hydro_plant_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
-            block_duration_in_hours(inputs, b) for b in blocks(inputs)
-        ) for h in hydro_plants
+            inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
+            subperiod_duration_in_hours(inputs, b) for b in subperiods(inputs)
+        ) for h in hydro_units
     ]
 
     virtual_reservoir_post_processed_energy_stock =
         [zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr))) for vr in virtual_reservoirs]
     for vr in virtual_reservoirs
-        energy_arrival = additional_energy_from_inflows(inputs, vr, inflow_as_volume, volume_at_beginning_of_stage)
+        energy_arrival = additional_energy_from_inflows(inputs, vr, inflow_as_volume, volume_at_beginning_of_period)
         pre_processed_energy_stock = zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr)))
 
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             pre_processed_energy_stock[ao] =
-                energy_stock_at_beginning_of_stage[vr][ao] +
+                energy_stock_at_beginning_of_period[vr][ao] +
                 energy_arrival * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao) -
                 sum(virtual_reservoir_generation[vr, ao, :]) # sum over bid_segment dimension
         end
         total_actual_energy_stock = sum(
-            hydro_volume[end, h] * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] /
-            m3_per_second_to_hm3_per_hour() for h in virtual_reservoir_hydro_plant_indices(inputs, vr)
+            hydro_volume[end, h] * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] for
+            h in virtual_reservoir_hydro_unit_indices(inputs, vr)
         )
         if sum(pre_processed_energy_stock) == 0
             if total_actual_energy_stock == 0
                 virtual_reservoir_post_processed_energy_stock[vr] .= 0.0
             else
-                error("The total actual energy stock is not zero, but the pre-processed energy stock is zero.")
+                @warn("The total actual energy stock is not zero, but the pre-processed energy stock is zero.")
+                virtual_reservoir_post_processed_energy_stock[vr] =
+                    virtual_reservoir_asset_owners_inflow_allocation(inputs, vr) *
+                    total_actual_energy_stock
             end
         else
             correction_factor = total_actual_energy_stock / sum(pre_processed_energy_stock)
@@ -195,22 +199,98 @@ function post_process_virtual_reservoirs!(
 end
 
 function fill_order_to_spill_excess_of_inflow!(inputs::AbstractInputs, vr::Int)
-    hydro_plants = virtual_reservoir_hydro_plant_indices(inputs, vr)
+    hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
     inputs.collections.virtual_reservoir.order_to_spill_excess_of_inflow[vr] .=
-        order_to_spill_excess_of_inflow(inputs, hydro_plants)
+        order_to_spill_excess_of_inflow(inputs, hydro_units)
     return nothing
 end
 
-function virtual_reservoir_energy_stock_from_previous_stage(inputs::AbstractInputs, stage::Int, scenario::Int)
-    if stage == 1
+function virtual_reservoir_energy_stock_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
+    if period == 1
         return inputs.collections.virtual_reservoir.initial_energy_stock
     else
         return read_serialized_clearing_variable(
             inputs,
             RunTime_ClearingProcedure.EX_POST_PHYSICAL,
             :virtual_reservoir_post_processed_energy_stock;
-            stage = stage - 1,
+            period = period - 1,
             scenario = scenario,
         )
     end
 end
+
+function fill_waveguide_points!(inputs::AbstractInputs, vr::Int)
+    if virtual_reservoir_waveguide_source(inputs) == Configurations_VirtualReservoirWaveguideSource.USER_PROVIDED
+        fill_waveguide_points_provided_by_user!(inputs, vr)
+    elseif virtual_reservoir_waveguide_source(inputs) ==
+           Configurations_VirtualReservoirWaveguideSource.UNIFORM_VOLUME_PERCENTAGE
+        fill_waveguide_points_by_uniform_volume_percentage!(inputs, vr)
+    else
+        error("Waveguide source $(virtual_reservoir_waveguide_source(inputs)) not implemented.")
+    end
+end
+
+function fill_waveguide_points_provided_by_user!(inputs::AbstractInputs, vr::Int)
+    hydro_units_idx = virtual_reservoir_hydro_unit_indices(inputs, vr)
+    virtual_reservoir_waveguide_points = vcat(
+        [hydro_unit_waveguide_volume(inputs, h)' for h in hydro_units_idx]...,
+    )
+    inputs.collections.virtual_reservoir.waveguide_points[vr] = virtual_reservoir_waveguide_points
+    return nothing
+end
+
+function read_waveguide_points_from_file_to_db(inputs::AbstractInputs, db_temp)
+    must_read_files = check_waveguide_files(inputs)
+    if must_read_files
+        for vr in index_of_elements(inputs, VirtualReservoir)
+            hydro_units_idx = virtual_reservoir_hydro_unit_indices(inputs, vr)
+            hydro_units_label = hydro_unit_label(inputs)[hydro_units_idx]
+
+            df = CSV.read(virtual_reservoir_waveguide_filename(inputs, vr), DataFrame)
+            names_df = names(df)
+            @assert all(names_df .== hydro_units_label)
+
+            for h in hydro_units_label
+                data = df[!, h]
+                @assert all(isa.(data, Float64)) && !any(isnan.(data))
+                update_hydro_unit_vectors!(db_temp, h; waveguide_volume = data)
+            end
+        end
+    end
+    return nothing
+end
+
+function check_waveguide_files(inputs::AbstractInputs)
+    each_file_exists = true
+    for vr in index_of_elements(inputs, VirtualReservoir)
+        if !isfile(virtual_reservoir_waveguide_filename(inputs, vr))
+            each_file_exists = false
+            break
+        end
+    end
+    if !each_file_exists
+        generate_waveguide_template_files(inputs)
+    end
+    return each_file_exists
+end
+
+function generate_waveguide_template_files(inputs::AbstractInputs)
+    for vr in index_of_elements(inputs, VirtualReservoir)
+        hydro_units_idx = virtual_reservoir_hydro_unit_indices(inputs, vr)
+        hydro_units_label = hydro_unit_label(inputs)[hydro_units_idx]
+
+        waveguide_points =
+            zeros(virtual_reservoir_number_of_waveguide_points_for_file_template(inputs, vr), length(hydro_units_idx))
+
+        df = DataFrame(waveguide_points, hydro_units_label)
+        CSV.write(virtual_reservoir_waveguide_filename(inputs, vr), df)
+    end
+
+    inputs.caches.templates_for_waveguide_files_have_been_generated = true
+    return nothing
+end
+
+virtual_reservoir_waveguide_filename(inputs::AbstractInputs, vr::Int) =
+    "$(path_case(inputs))/waveguide_points_$(virtual_reservoir_label(inputs, vr)).csv"
+
+virtual_reservoir_waveguide_filename(path_case::String, vr::String) = "$(path_case)/waveguide_points_$vr.csv"

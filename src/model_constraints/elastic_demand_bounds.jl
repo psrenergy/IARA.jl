@@ -16,7 +16,7 @@ function elastic_demand_bounds!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    elastic_demands = index_of_elements(inputs, Demand; filters = [is_existing, is_elastic])
+    elastic_demands = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
 
     # Model Variables
     attended_elastic_demand = get_model_object(model, :attended_elastic_demand)
@@ -28,10 +28,10 @@ function elastic_demand_bounds!(
     @constraint(
         model.jump_model,
         attended_elastic_demand_upper_bound[
-            block in blocks(inputs),
+            subperiod in subperiods(inputs),
             d in elastic_demands,
         ],
-        attended_elastic_demand[block, d] * MW_to_GW() <= demand[block, d],
+        attended_elastic_demand[subperiod, d] * MW_to_GW() <= demand[subperiod, d],
     )
 
     return nothing
@@ -61,8 +61,8 @@ function elastic_demand_bounds!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

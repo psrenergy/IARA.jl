@@ -12,7 +12,7 @@ using IARA
 
 # In the last [tutorial](build_base_case.md), we built a simple case with the following characteristics:
 
-# | **Stages** | **Blocks** | **Scenarios** | **Block duration (hours)** | **Yearly discount rate** |
+# | **Periods** | **Subperiods** | **Scenarios** | **Subperiod duration (hours)** | **Yearly discount rate** |
 # |:----------:|:----------:|:-------------:|:--------------------------:|:------------------------:|
 # |      2     |      1     |       4       |             24             |            10%           |
 

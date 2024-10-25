@@ -16,7 +16,7 @@ function virtual_reservoir_volume_distance_to_waveguide!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    hydro_volume = get_model_object(model, :hydro_volume) # [b in hydro_blocks, h in hydro_plants]
+    hydro_volume = get_model_object(model, :hydro_volume) # [b in hydro_subperiods, h in hydro_units]
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
     @variable(
         model.jump_model,
@@ -25,16 +25,13 @@ function virtual_reservoir_volume_distance_to_waveguide!(
         upper_bound = 1,
     )
 
-    @expression(
+    @variable(
         model.jump_model,
         hydro_volume_distance_to_waveguide[
             vr in virtual_reservoirs,
-            h in virtual_reservoir_hydro_plant_indices(inputs, vr),
+            h in virtual_reservoir_hydro_unit_indices(inputs, vr),
         ],
-        hydro_volume[end, h] - sum(
-            waveguide_convex_combination_factor[vr, p] * virtual_reservoir_waveguide_points(inputs, vr)[h, p]
-            for p in 1:number_of_waveguide_points(inputs, vr)
-        )
+        lower_bound = 0.0,
     )
 
     # Objective function
@@ -71,8 +68,8 @@ function virtual_reservoir_volume_distance_to_waveguide!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

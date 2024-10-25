@@ -44,7 +44,7 @@ abstract type WriteOutput <: ProblemAction end
     jump_model::JuMP.Model
     obj_exp::Union{JuMP.AffExpr, JuMP.QuadExpr} = zero(JuMP.AffExpr)
     # The QuadExpr type is necessary because of POI, with products between variables and POI.parameters (treated as variables at first)
-    stage::Int
+    period::Int
 end
 
 @kwdef mutable struct ProblemModel
@@ -62,14 +62,14 @@ end
 function build_subproblem_model(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    stage::Int;
+    period::Int;
     jump_model = JuMP.Model(),
 )
-    sp_model = SubproblemModel(; jump_model = jump_model, stage = stage)
+    sp_model = SubproblemModel(; jump_model = jump_model, period = period)
     model_action(sp_model, inputs, run_time_options, SubproblemBuild)
 
     obj_weight = if linear_policy_graph(inputs)
-        (1.0 - stage_discount_rate(inputs))^(stage - 1)
+        (1.0 - period_discount_rate(inputs))^(period - 1)
     else
         1.0
     end
@@ -81,7 +81,8 @@ end
 function model_action(args...)
     inputs = locate_inputs_in_args(args...)
 
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
+    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION ||
+       run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION
         centralized_operation_model_action(args...)
     elseif run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID
         price_taker_bid_model_action(args...)
@@ -116,33 +117,33 @@ function centralized_operation_model_action(args...)
 
     # Model variables
     # ---------------
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_generation!(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
         thermal_generation!(args...)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_generation!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_generation!(args...)
-        battery_storage!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_generation!(args...)
+        battery_unit_storage!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action)
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action)
         demand!(args...)
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
             elastic_demand!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
             flexible_demand!(args...)
         end
     end
@@ -159,38 +160,38 @@ function centralized_operation_model_action(args...)
     # Model constraints
     # -----------------
     load_balance!(args...)
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_min_outflow])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_min_outflow])
             hydro_minimum_outflow!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_generation_bound_by_commitment!(args...)
         end
         if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
             parp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_generation_bound_by_commitment!(args...)
             thermal_startup_and_shutdown!(args...)
             thermal_min_max_up_down_time!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_ramp_constraints])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_ramp_constraints])
             thermal_ramp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_balance!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_balance!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_balance!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
         elastic_demand_bounds!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
         flexible_demand_shift_bounds!(args...)
         flexible_demand_window_maximum_curtailment!(args...)
         flexible_demand_window_sum!(args...)
@@ -210,57 +211,57 @@ function price_taker_bid_model_action(args...)
     # Model variables
     # ---------------
     bidding_group_energy_offer!(args...)
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_generation!(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_min_outflow])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_min_outflow])
             hydro_minimum_outflow!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
         thermal_generation!(args...)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_generation!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_generation!(args...)
-        battery_storage!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_generation!(args...)
+        battery_unit_storage!(args...)
     end
 
     # Model constraints
     # -----------------
     bidding_group_balance!(args...)
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_generation_bound_by_commitment!(args...)
         end
         if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
             parp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_generation_bound_by_commitment!(args...)
             thermal_startup_and_shutdown!(args...)
             thermal_min_max_up_down_time!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_ramp_constraints])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_ramp_constraints])
             thermal_ramp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_balance!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_balance!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_balance!(args...)
     end
 
@@ -276,58 +277,58 @@ function strategic_bid_model_action(args...)
     # ---------------
     bidding_group_energy_offer!(args...)
     convex_hull_coefficients!(args...)
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_generation!(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_min_outflow])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_min_outflow])
             hydro_minimum_outflow!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
         thermal_generation!(args...)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_generation!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_generation!(args...)
-        battery_storage!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_generation!(args...)
+        battery_unit_storage!(args...)
     end
 
     # Model constraints
     # -----------------
     bidding_group_balance!(args...)
     revenue_convex_combination!(args...)
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_generation_bound_by_commitment!(args...)
         end
         if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
             parp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_generation_bound_by_commitment!(args...)
             thermal_startup_and_shutdown!(args...)
             thermal_min_max_up_down_time!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_ramp_constraints])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_ramp_constraints])
             thermal_ramp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_balance!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_balance!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_balance!(args...)
     end
 
@@ -360,14 +361,14 @@ function hybrid_market_clearing_model_action(args...)
     # Model variables
     # ---------------
 
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_generation!(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
         if any_valid_elements(
             inputs,
             run_time_options,
-            HydroPlant,
+            HydroUnit,
             action;
             filters = [has_commitment, is_associated_with_some_virtual_reservoir],
         )
@@ -380,12 +381,12 @@ function hybrid_market_clearing_model_action(args...)
         end
     end
 
-    if any_valid_elements(inputs, run_time_options, Demand, action)
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action)
         demand!(args...)
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
             elastic_demand!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
             flexible_demand!(args...)
         end
     end
@@ -399,25 +400,25 @@ function hybrid_market_clearing_model_action(args...)
         end
     end
 
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
         thermal_generation!(args...)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_generation!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_generation!(args...)
-        battery_storage!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_generation!(args...)
+        battery_unit_storage!(args...)
     end
 
     if any_valid_elements(inputs, run_time_options, BiddingGroup, action)
         bidding_group_generation!(args...)
     end
 
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_multihour_bids])
+    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
         bidding_group_multihour_energy_offer!(args...)
         if has_any_multihour_complex_input_files(inputs)
             multihour_min_activation_level!(args...)
@@ -431,10 +432,10 @@ function hybrid_market_clearing_model_action(args...)
     end
 
     load_balance!(args...)
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
         elastic_demand_bounds!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
         flexible_demand_shift_bounds!(args...)
         flexible_demand_window_maximum_curtailment!(args...)
         flexible_demand_window_sum!(args...)
@@ -442,7 +443,7 @@ function hybrid_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, Branch, action; filters = [is_ac])
         kirchhoffs_voltage_law!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_multihour_bids])
+    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
         bidding_group_multihour_generation_bound_by_offer!(args...)
         if has_any_multihour_complex_input_files(inputs)
             bidding_group_multihour_complementary_profile!(args...)
@@ -451,7 +452,7 @@ function hybrid_market_clearing_model_action(args...)
         end
     end
 
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
         if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
             parp!(args...)
@@ -461,7 +462,7 @@ function hybrid_market_clearing_model_action(args...)
             if any_valid_elements(
                 inputs,
                 run_time_options,
-                HydroPlant,
+                HydroUnit,
                 action;
                 filters = [has_commitment, is_associated_with_some_virtual_reservoir],
             )
@@ -470,7 +471,7 @@ function hybrid_market_clearing_model_action(args...)
             if any_valid_elements(
                 inputs,
                 run_time_options,
-                HydroPlant,
+                HydroUnit,
                 action;
                 filters = [has_min_outflow, is_associated_with_some_virtual_reservoir],
             )
@@ -479,24 +480,25 @@ function hybrid_market_clearing_model_action(args...)
             virtual_reservoir_volume_balance!(args...)
             virtual_reservoir_generation_bounds!(args...)
             waveguide_convex_combination_sum!(args...)
+            waveguide_distance_bounds!(args...)
         end
     end
 
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_generation_bound_by_commitment!(args...)
             thermal_startup_and_shutdown!(args...)
             thermal_min_max_up_down_time!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_ramp_constraints])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_ramp_constraints])
             thermal_ramp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_balance!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_balance!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_balance!(args...)
     end
 
     link_offers_and_generation!(args...)
@@ -511,33 +513,33 @@ function cost_based_market_clearing_model_action(args...)
 
     # Model variables
     # ---------------
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_generation!(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
         thermal_generation!(args...)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_commitment!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_generation!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_generation!(args...)
-        battery_storage!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_generation!(args...)
+        battery_unit_storage!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action)
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action)
         demand!(args...)
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
             elastic_demand!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
             flexible_demand!(args...)
         end
     end
@@ -554,38 +556,38 @@ function cost_based_market_clearing_model_action(args...)
     # Model constraints
     # -----------------
     load_balance!(args...)
-    if any_valid_elements(inputs, run_time_options, HydroPlant, action)
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_min_outflow])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_min_outflow])
             hydro_minimum_outflow!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, HydroPlant, action; filters = [has_commitment])
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_generation_bound_by_commitment!(args...)
         end
         if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
             parp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, ThermalPlant, action)
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_commitment])
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action)
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_commitment])
             thermal_generation_bound_by_commitment!(args...)
             thermal_startup_and_shutdown!(args...)
             thermal_min_max_up_down_time!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, ThermalPlant, action; filters = [has_ramp_constraints])
+        if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_ramp_constraints])
             thermal_ramp!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, Battery, action)
-        battery_balance!(args...)
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action)
+        battery_unit_balance!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, RenewablePlant, action)
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action)
         renewable_balance!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
         elastic_demand_bounds!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
         flexible_demand_shift_bounds!(args...)
         flexible_demand_window_maximum_curtailment!(args...)
         flexible_demand_window_sum!(args...)
@@ -608,12 +610,12 @@ function bid_based_market_clearing_model_action(args...)
         bidding_group_generation!(args...)
     end
 
-    if any_valid_elements(inputs, run_time_options, Demand, action)
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action)
         demand!(args...)
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
             elastic_demand!(args...)
         end
-        if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+        if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
             flexible_demand!(args...)
         end
     end
@@ -626,7 +628,7 @@ function bid_based_market_clearing_model_action(args...)
             bus_voltage_angle!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_multihour_bids])
+    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
         bidding_group_multihour_energy_offer!(args...)
         if has_any_multihour_complex_input_files(inputs)
             multihour_min_activation_level!(args...)
@@ -640,10 +642,10 @@ function bid_based_market_clearing_model_action(args...)
     end
 
     load_balance!(args...)
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_elastic])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])
         elastic_demand_bounds!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Demand, action; filters = [is_flexible])
+    if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_flexible])
         flexible_demand_shift_bounds!(args...)
         flexible_demand_window_maximum_curtailment!(args...)
         flexible_demand_window_sum!(args...)
@@ -651,7 +653,7 @@ function bid_based_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, Branch, action; filters = [is_ac])
         kirchhoffs_voltage_law!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_multihour_bids])
+    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
         bidding_group_multihour_generation_bound_by_offer!(args...)
         if has_any_multihour_complex_input_files(inputs)
             bidding_group_multihour_complementary_profile!(args...)

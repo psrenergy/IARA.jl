@@ -1,4 +1,4 @@
-stage,scenario,block,hydro_1,hydro_2
+period,scenario,subperiod,hydro_1,hydro_2
 1,1,1,0.0,0.0
 1,1,2,0.0,0.0
 1,1,3,0.0,0.0

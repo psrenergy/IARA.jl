@@ -17,7 +17,7 @@ function hydro_minimum_outflow!(
     ::Type{SubproblemBuild},
 )
     minimum_outflow_indexes =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, has_min_outflow])
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, has_min_outflow])
 
     # Model Variables
     hydro_turbining = get_model_object(model, :hydro_turbining)
@@ -28,11 +28,11 @@ function hydro_minimum_outflow!(
     @constraint(
         model.jump_model,
         hydro_minimum_outflow[
-            b in blocks(inputs),
+            b in subperiods(inputs),
             h in minimum_outflow_indexes,
         ],
         hydro_spillage[b, h] + hydro_turbining[b, h] + hydro_minimum_outflow_slack[b, h] >=
-        hydro_plant_min_outflow(inputs, h) * m3_per_second_to_hm3_per_hour() * block_duration_in_hours(inputs, b)
+        hydro_unit_min_outflow(inputs, h) * m3_per_second_to_hm3_per_hour() * subperiod_duration_in_hours(inputs, b)
     )
 
     return nothing
@@ -62,8 +62,8 @@ function hydro_minimum_outflow!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

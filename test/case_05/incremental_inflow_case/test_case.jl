@@ -32,7 +32,7 @@ if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
     Main.compare_outputs(PATH;
-        test_only_block_sum = [
+        test_only_subperiod_sum = [
             "attended_demand",
             "dc_flow",
             "deficit",
@@ -40,7 +40,7 @@ else
             "hydro_turbining",
             "thermal_generation",
         ],
-        test_only_first_block = ["hydro_initial_volume"],
+        test_only_first_subperiod = ["hydro_initial_volume"],
     )
 end
 

@@ -39,12 +39,12 @@ function plot_data(
     trace_mode::String = "markers",
     file_path::String,
     initial_date::DateTime,
-    stage_type::Configurations_StageType.T,
+    period_type::Configurations_PeriodType.T,
     kwargs...,
 ) where {N}
     traces_x, trace_names_x = reshape_time_series!(PlotTimeSeriesAll, data_x, [agent_x], dimensions; kwargs...)
     traces_y, trace_names_y = reshape_time_series!(PlotTimeSeriesAll, data_y, [agent_y], dimensions; kwargs...)
-    number_of_stages = size(traces_x, 2)
+    number_of_periods = size(traces_x, 2)
     number_of_traces = size(traces_x, 1)
 
     configs = Vector{Config}()
@@ -102,14 +102,14 @@ function plot_data(
     trace_mode::String = "markers",
     file_path::String,
     initial_date::DateTime,
-    stage_type::Configurations_StageType.T,
+    period_type::Configurations_PeriodType.T,
     kwargs...,
 ) where {N}
     traces_x, _, trace_names_x, _ =
         reshape_time_series!(PlotTimeSeriesMean, data_x, [agent_x], dimensions; kwargs...)
     traces_y, _, trace_names_y, _ = reshape_time_series!(PlotTimeSeriesMean, data_y, [agent_y], dimensions; kwargs...)
 
-    number_of_stages = size(traces_x, 2)
+    number_of_periods = size(traces_x, 2)
     number_of_traces = size(traces_x, 1)
 
     configs = Vector{Config}()

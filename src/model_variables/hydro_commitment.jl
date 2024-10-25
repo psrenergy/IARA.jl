@@ -16,14 +16,14 @@ function hydro_commitment!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    commitment_hydro_plants =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, has_commitment])
+    commitment_hydro_units =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, has_commitment])
 
     @variable(
         model.jump_model,
         hydro_commitment[
-            b in blocks(inputs),
-            h in commitment_hydro_plants,
+            b in subperiods(inputs),
+            h in commitment_hydro_units,
         ],
         binary = true,
     )
@@ -52,7 +52,7 @@ function hydro_commitment!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    hydro_plants_with_commitment = index_of_elements(inputs, HydroPlant; run_time_options, filters = [has_commitment])
+    hydro_units_with_commitment = index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_commitment])
 
     if run_time_options.clearing_model_procedure != RunTime_ClearingProcedure.EX_POST_COMMERCIAL
         add_symbol_to_query_from_subproblem_result!(outputs, [:hydro_commitment])
@@ -66,9 +66,9 @@ function hydro_commitment!(
         outputs;
         inputs,
         output_name = "hydro_commitment",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "-",
-        labels = hydro_plant_label(inputs)[hydro_plants_with_commitment],
+        labels = hydro_unit_label(inputs)[hydro_units_with_commitment],
         run_time_options,
     )
     return nothing
@@ -78,30 +78,30 @@ function hydro_commitment!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    hydro_plants_with_commitment = index_of_elements(inputs, HydroPlant; run_time_options, filters = [has_commitment])
-    existing_hydro_plants_with_commitment =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, has_commitment])
+    hydro_units_with_commitment = index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_commitment])
+    existing_hydro_units_with_commitment =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, has_commitment])
 
     hydro_commitment = simulation_results.data[:hydro_commitment]
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = hydro_plants_with_commitment,
-        elements_to_write = existing_hydro_plants_with_commitment,
+        elements_in_output_file = hydro_units_with_commitment,
+        elements_to_write = existing_hydro_units_with_commitment,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "hydro_commitment",
         hydro_commitment.data;
-        stage,
+        period,
         scenario,
         subscenario,
         indices_of_elements_in_output,

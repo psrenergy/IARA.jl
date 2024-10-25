@@ -16,8 +16,8 @@ function bidding_group_multihour_minimum_activation!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    multihour_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_multihour_bids])
+    profile_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
 
     # Model variables
     linear_combination_bid_segments_multihour = get_model_object(model, :linear_combination_bid_segments_multihour)
@@ -31,7 +31,7 @@ function bidding_group_multihour_minimum_activation!(
     @constraint(
         model.jump_model,
         multihour_min_activation_level_ctr_down[
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             profile in 1:maximum_multihour_profiles(inputs, bg),
         ],
         minimum_activation_level_multihour_indicator[bg, profile] * minimum_activation_level_multihour[bg, profile] <=
@@ -41,7 +41,7 @@ function bidding_group_multihour_minimum_activation!(
     @constraint(
         model.jump_model,
         multihour_min_activation_level_ctr_up[
-            bg in multihour_bidding_groups,
+            bg in profile_bidding_groups,
             profile in 1:maximum_multihour_profiles(inputs, bg),
         ],
         minimum_activation_level_multihour_indicator[bg, profile] >=
@@ -75,8 +75,8 @@ function bidding_group_multihour_minimum_activation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

@@ -16,25 +16,27 @@ function hydro_balance!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    if hydro_balance_block_resolution(inputs) == Configurations_HydroBalanceBlockResolution.AGGREGATED_BLOCKS
-        hydro_balance_aggregated_blocks(model, inputs, run_time_options)
-    elseif hydro_balance_block_resolution(inputs) == Configurations_HydroBalanceBlockResolution.CHRONOLOGICAL_BLOCKS
-        hydro_balance_chronological_blocks(model, inputs, run_time_options)
+    if hydro_balance_subperiod_resolution(inputs) ==
+       Configurations_HydroBalanceSubperiodResolution.AGGREGATED_SUBPERIODS
+        hydro_balance_aggregated_subperiods(model, inputs, run_time_options)
+    elseif hydro_balance_subperiod_resolution(inputs) ==
+           Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
+        hydro_balance_chronological_subperiods(model, inputs, run_time_options)
     else
-        error("Hydro balance block resolution $(hydro_balance_block_resolution(inputs)) not implemented.")
+        error("Hydro balance subperiod resolution $(hydro_balance_subperiod_resolution(inputs)) not implemented.")
     end
 
     return nothing
 end
 
-function hydro_balance_aggregated_blocks(
+function hydro_balance_aggregated_subperiods(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
-    existing_hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
-    hydro_plants_operating_with_reservoir =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, operates_with_reservoir])
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    hydro_units_operating_with_reservoir =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_with_reservoir])
 
     # Model Variables
     hydro_turbining = get_model_object(model, :hydro_turbining)
@@ -43,12 +45,12 @@ function hydro_balance_aggregated_blocks(
     inflow_slack = get_model_object(model, :inflow_slack)
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
-    # from the serialized results of the previous stage
+    # from the serialized results of the previous period
     hydro_volume_state = if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
         get_model_object(model, :hydro_volume_state)
     end
-    hydro_previous_stage_volume = if clearing_has_volume_variables(inputs, run_time_options)
-        get_model_object(model, :hydro_previous_stage_volume)
+    hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
+        get_model_object(model, :hydro_previous_period_volume)
     end
 
     # Model parameters
@@ -57,15 +59,15 @@ function hydro_balance_aggregated_blocks(
     @constraint(
         model.jump_model,
         hydro_balance[
-            h in existing_hydro_plants,
+            h in existing_hydro_units,
         ],
-        if operates_with_reservoir(inputs.collections.hydro_plant, h)
+        if operates_with_reservoir(inputs.collections.hydro_unit, h)
             hydro_volume[2, h]
         else
             0.0
         end
         ==
-        if operates_with_reservoir(inputs.collections.hydro_plant, h)
+        if operates_with_reservoir(inputs.collections.hydro_unit, h)
             hydro_volume[1, h]
         else
             0.0
@@ -79,56 +81,56 @@ function hydro_balance_aggregated_blocks(
             +
             sum(
                 hydro_turbining[b, h_upstream] for
-                h_upstream in index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing]) if
-                hydro_plant_turbine_to(inputs, h_upstream) == h
+                h_upstream in index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing]) if
+                hydro_unit_turbine_to(inputs, h_upstream) == h
             )
             +
             sum(
                 hydro_spillage[b, h_upstream] for
-                h_upstream in index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing]) if
-                hydro_plant_spill_to(inputs, h_upstream) == h
+                h_upstream in index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing]) if
+                hydro_unit_spill_to(inputs, h_upstream) == h
             )
             +
             inflow_slack[b, h]
             +
             inflow[b, h]
-            for b in blocks(inputs)
+            for b in subperiods(inputs)
         )
     )
 
     if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
         @constraint(
             model.jump_model,
-            hydro_state_in[h in hydro_plants_operating_with_reservoir],
+            hydro_state_in[h in hydro_units_operating_with_reservoir],
             hydro_volume_state[h].in == hydro_volume[1, h]
         )
 
         @constraint(
             model.jump_model,
-            hydro_state_out[h in hydro_plants_operating_with_reservoir],
+            hydro_state_out[h in hydro_units_operating_with_reservoir],
             hydro_volume_state[h].out == hydro_volume[2, h]
         )
     elseif clearing_has_volume_variables(inputs, run_time_options)
         @constraint(
             model.jump_model,
-            hydro_initial_state[h in hydro_plants_operating_with_reservoir],
-            hydro_volume[1, h] == hydro_previous_stage_volume[h]
+            hydro_initial_state[h in hydro_units_operating_with_reservoir],
+            hydro_volume[1, h] == hydro_previous_period_volume[h]
         )
     end
 
     return nothing
 end
 
-function hydro_balance_chronological_blocks(
+function hydro_balance_chronological_subperiods(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
-    existing_hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
-    hydro_plants_operating_with_reservoir =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, operates_with_reservoir])
-    hydro_plants_operating_as_run_of_river =
-        index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing, operates_as_run_of_river])
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    hydro_units_operating_with_reservoir =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_with_reservoir])
+    hydro_units_operating_as_run_of_river =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_as_run_of_river])
 
     # Model Variables
     hydro_turbining = get_model_object(model, :hydro_turbining)
@@ -137,12 +139,12 @@ function hydro_balance_chronological_blocks(
     inflow_slack = get_model_object(model, :inflow_slack)
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
-    # from the serialized results of the previous stage
+    # from the serialized results of the previous period
     hydro_volume_state = if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
         get_model_object(model, :hydro_volume_state)
     end
-    hydro_previous_stage_volume = if clearing_has_volume_variables(inputs, run_time_options)
-        get_model_object(model, :hydro_previous_stage_volume)
+    hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
+        get_model_object(model, :hydro_previous_period_volume)
     end
 
     # Model parameters
@@ -153,8 +155,8 @@ function hydro_balance_chronological_blocks(
     @constraint(
         model.jump_model,
         hydro_balance[
-            b in blocks(inputs),
-            h in existing_hydro_plants,
+            b in subperiods(inputs),
+            h in existing_hydro_units,
         ],
         hydro_volume[b+1, h]
         ==
@@ -166,14 +168,14 @@ function hydro_balance_chronological_blocks(
         +
         sum(
             hydro_turbining[b, h_upstream] for
-            h_upstream in existing_hydro_plants if
-            hydro_plant_turbine_to(inputs, h_upstream) == h
+            h_upstream in existing_hydro_units if
+            hydro_unit_turbine_to(inputs, h_upstream) == h
         )
         +
         sum(
             hydro_spillage[b, h_upstream] for
-            h_upstream in existing_hydro_plants if
-            hydro_plant_spill_to(inputs, h_upstream) == h
+            h_upstream in existing_hydro_units if
+            hydro_unit_spill_to(inputs, h_upstream) == h
         )
         +
         inflow_slack[b, h]
@@ -184,26 +186,26 @@ function hydro_balance_chronological_blocks(
     if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
         @constraint(
             model.jump_model,
-            hydro_state_in[h in hydro_plants_operating_with_reservoir],
+            hydro_state_in[h in hydro_units_operating_with_reservoir],
             hydro_volume_state[h].in == hydro_volume[1, h]
         )
 
         @constraint(
             model.jump_model,
-            hydro_state_out[h in hydro_plants_operating_with_reservoir],
+            hydro_state_out[h in hydro_units_operating_with_reservoir],
             hydro_volume_state[h].out == hydro_volume[end, h]
         )
     elseif clearing_has_volume_variables(inputs, run_time_options)
         @constraint(
             model.jump_model,
-            hydro_initial_state[h in hydro_plants_operating_with_reservoir],
-            hydro_volume[1, h] == hydro_previous_stage_volume[h]
+            hydro_initial_state[h in hydro_units_operating_with_reservoir],
+            hydro_volume[1, h] == hydro_previous_period_volume[h]
         )
     end
 
     @constraint(
         model.jump_model,
-        hydro_plants_run_of_river_vivf[h in hydro_plants_operating_as_run_of_river],
+        hydro_units_run_of_river_vivf[h in hydro_units_operating_as_run_of_river],
         hydro_volume[1, h] == hydro_volume[end, h]
     )
 
@@ -227,7 +229,7 @@ function hydro_balance!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    hydros = index_of_elements(inputs, HydroPlant; run_time_options)
+    hydros = index_of_elements(inputs, HydroUnit; run_time_options)
 
     # The names water_marginal_cost and hydro_opportunity_cost are different
     # because the first is the constraint dual 
@@ -244,9 +246,9 @@ function hydro_balance!(
         outputs;
         inputs,
         output_name = "hydro_opportunity_cost",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "\$/MWh",
-        labels = hydro_plant_label(inputs)[hydros],
+        labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
 
@@ -257,60 +259,62 @@ function hydro_balance!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options)
-    existing_hydro_plants = index_of_elements(inputs, HydroPlant; run_time_options, filters = [is_existing])
-    number_of_existing_hydro_plants = length(existing_hydro_plants)
+    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    number_of_existing_hydro_units = length(existing_hydro_units)
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = hydro_plants,
-        elements_to_write = existing_hydro_plants,
+        elements_in_output_file = hydro_units,
+        elements_to_write = existing_hydro_units,
     )
 
     water_marginal_cost = simulation_results.data[:water_marginal_cost] * (-1)
-    hydro_opportunity_cost = zeros(number_of_blocks(inputs), number_of_existing_hydro_plants)
+    hydro_opportunity_cost = zeros(number_of_subperiods(inputs), number_of_existing_hydro_units)
 
-    for (idx, h) in enumerate(existing_hydro_plants)
-        if hydro_plant_production_factor(inputs, h) == 0
+    for (idx, h) in enumerate(existing_hydro_units)
+        if hydro_unit_production_factor(inputs, h) == 0
             continue
         end
         marginal_cost_to_opportunity_cost =
-            m3_per_second_to_hm3_per_hour() / hydro_plant_production_factor(inputs, h) / money_to_thousand_money()
-        if hydro_balance_block_resolution(inputs) == Configurations_HydroBalanceBlockResolution.CHRONOLOGICAL_BLOCKS
-            for blk in blocks(inputs)
+            m3_per_second_to_hm3_per_hour() / hydro_unit_production_factor(inputs, h) / money_to_thousand_money()
+        if hydro_balance_subperiod_resolution(inputs) ==
+           Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
+            for blk in subperiods(inputs)
                 hydro_opportunity_cost[blk, idx] = water_marginal_cost[blk, h] * marginal_cost_to_opportunity_cost
-                downstream_idx = hydro_plant_turbine_to(inputs, h)
-                if !is_null(downstream_idx) && downstream_idx in existing_hydro_plants
+                downstream_idx = hydro_unit_turbine_to(inputs, h)
+                if !is_null(downstream_idx) && downstream_idx in existing_hydro_units
                     hydro_opportunity_cost[blk, idx] -=
                         water_marginal_cost[blk, downstream_idx] * marginal_cost_to_opportunity_cost
                 end
             end
-        elseif hydro_balance_block_resolution(inputs) == Configurations_HydroBalanceBlockResolution.AGGREGATED_BLOCKS
-            for blk in blocks(inputs)
+        elseif hydro_balance_subperiod_resolution(inputs) ==
+               Configurations_HydroBalanceSubperiodResolution.AGGREGATED_SUBPERIODS
+            for blk in subperiods(inputs)
                 hydro_opportunity_cost[blk, idx] = water_marginal_cost[h] * marginal_cost_to_opportunity_cost
-                downstream_idx = hydro_plant_turbine_to(inputs, h)
-                if !is_null(downstream_idx) && downstream_idx in existing_hydro_plants
+                downstream_idx = hydro_unit_turbine_to(inputs, h)
+                if !is_null(downstream_idx) && downstream_idx in existing_hydro_units
                     hydro_opportunity_cost[blk, idx] -=
                         water_marginal_cost[downstream_idx] * marginal_cost_to_opportunity_cost
                 end
             end
         else
-            error("Hydro balance block resolution $(hydro_balance_block_resolution(inputs)) not implemented.")
+            error("Hydro balance subperiod resolution $(hydro_balance_subperiod_resolution(inputs)) not implemented.")
         end
     end
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "hydro_opportunity_cost",
         hydro_opportunity_cost;
-        stage,
+        period,
         scenario,
         subscenario,
         indices_of_elements_in_output,

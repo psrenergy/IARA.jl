@@ -1,4 +1,4 @@
-stage,scenario,block,hyd_1,hyd_2
+period,scenario,subperiod,hyd_1,hyd_2
 1,1,1,1.087713,0.824575
 1,1,2,1.087713,0.824575
 1,2,1,1.788288,1.423424

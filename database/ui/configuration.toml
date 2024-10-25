@@ -41,8 +41,8 @@ hide = true
 
 [[attribute]]
 id = "stage_type"
-label.en = "Stage Type"
-tooltip.en = "Stage type"
+label.en = "Period Type"
+tooltip.en = "Period type"
 type = "enum"
 enum = "conf_stage_type"
 hide = true

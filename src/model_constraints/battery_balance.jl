@@ -8,44 +8,45 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function battery_balance! end
+function battery_unit_balance! end
 
-function battery_balance!(
+function battery_unit_balance!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    batteries = index_of_elements(inputs, Battery; run_time_options, filters = [is_existing])
+    battery_units = index_of_elements(inputs, BatteryUnit; run_time_options, filters = [is_existing])
 
     # Model variables
-    battery_generation = get_model_object(model, :battery_generation)
-    battery_storage = get_model_object(model, :battery_storage)
-    battery_storage_state = get_model_object(model, :battery_storage_state)
+    battery_unit_generation = get_model_object(model, :battery_unit_generation)
+    battery_unit_storage = get_model_object(model, :battery_unit_storage)
+    battery_unit_storage_state = get_model_object(model, :battery_unit_storage_state)
 
     # Constraints
     @constraint(
         model.jump_model,
-        battery_balance[block in blocks(inputs), bat in batteries],
-        battery_storage[block+1, bat] == battery_storage[block, bat] - battery_generation[block, bat]
+        battery_unit_balance[subperiod in subperiods(inputs), bat in battery_units],
+        battery_unit_storage[subperiod+1, bat] ==
+        battery_unit_storage[subperiod, bat] - battery_unit_generation[subperiod, bat]
     )
 
     @constraint(
         model.jump_model,
-        battery_state_in[bat in batteries],
-        battery_storage_state[bat].in == battery_storage[1, bat]
+        battery_unit_state_in[bat in battery_units],
+        battery_unit_storage_state[bat].in == battery_unit_storage[1, bat]
     )
 
     @constraint(
         model.jump_model,
-        battery_state_out[bat in batteries],
-        battery_storage_state[bat].out == battery_storage[end, bat]
+        battery_unit_state_out[bat in battery_units],
+        battery_unit_storage_state[bat].out == battery_unit_storage[end, bat]
     )
 
     return nothing
 end
 
-function battery_balance!(
+function battery_unit_balance!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -56,7 +57,7 @@ function battery_balance!(
     return nothing
 end
 
-function battery_balance!(
+function battery_unit_balance!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -65,12 +66,12 @@ function battery_balance!(
     return nothing
 end
 
-function battery_balance!(
+function battery_unit_balance!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

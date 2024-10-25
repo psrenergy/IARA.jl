@@ -1,6 +1,6 @@
 # Market Clearing Problem
 
-This problem is defined at stage $t$ and scenario $\omega$.
+This problem is defined at period $t$ and scenario $\omega$.
 
 ## Sets
 
@@ -10,7 +10,7 @@ Lists new sets, not present in the centralized operation or price taker subprobl
 - ``K^M(i)``: Set of multi-hour profiles for the asset owner $i$.
 - ``\mathcal{K}_m(i)``: Complementary grouping $m$ for the asset owner $i$.
 - ``J^{VR}``: Set of virtual reservoirs.
-- ``J^H_{VR}(r)``: Set of hydro plants associated with virtual reservoir $r$.
+- ``J^H_{VR}(r)``: Set of hydro units associated with virtual reservoir $r$.
 - ``I_{VR}(r)``: Set of asset owners associated with virtual reservoir $r$.
 - ``K^{VR}(r, i)``: Set of segment offers at virtual reservoir $r$ for the asset owner $i$.
 - ``P^{WG}(r)``: Set of waveguide points for virtual reservoir $r$. 

@@ -1,4 +1,4 @@
-stage,scenario,block,bus_1,bus_2
+period,scenario,subperiod,bus_1,bus_2
 1,1,1,13.981616,13.981616
 1,1,2,13.981616,13.981616
 1,2,1,14.020673,14.020673

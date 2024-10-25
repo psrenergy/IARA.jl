@@ -16,22 +16,22 @@ function thermal_generation!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    thermal_plants =
-        index_of_elements(inputs, ThermalPlant; run_time_options = run_time_options, filters = [is_existing])
+    thermal_units =
+        index_of_elements(inputs, ThermalUnit; run_time_options = run_time_options, filters = [is_existing])
     # generation in MWh, max generation in MW
     @variable(
         model.jump_model,
-        thermal_generation[b in blocks(inputs), t in thermal_plants],
+        thermal_generation[b in subperiods(inputs), t in thermal_units],
         lower_bound = 0.0,
-        upper_bound = thermal_plant_max_generation(inputs, t) * block_duration_in_hours(inputs, b),
+        upper_bound = thermal_unit_max_generation(inputs, t) * subperiod_duration_in_hours(inputs, b),
     )
 
     @expression(
         model.jump_model,
         thermal_total_om_cost,
         money_to_thousand_money() * sum(
-            thermal_generation[b, t] * thermal_plant_om_cost(inputs, t)
-            for b in blocks(inputs), t in thermal_plants
+            thermal_generation[b, t] * thermal_unit_om_cost(inputs, t)
+            for b in subperiods(inputs), t in thermal_units
         ),
     ) # k$
 
@@ -69,7 +69,7 @@ function thermal_generation!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    thermals = index_of_elements(inputs, ThermalPlant; run_time_options)
+    thermals = index_of_elements(inputs, ThermalUnit; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(outputs, :thermal_generation)
 
@@ -78,9 +78,9 @@ function thermal_generation!(
         outputs;
         inputs,
         output_name = "thermal_generation",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = thermal_plant_label(inputs)[thermals],
+        labels = thermal_unit_label(inputs)[thermals],
         run_time_options,
     )
     return nothing
@@ -90,29 +90,29 @@ function thermal_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    thermal_plants = index_of_elements(inputs, ThermalPlant; run_time_options)
-    existing_thermal_plants = index_of_elements(inputs, ThermalPlant; run_time_options, filters = [is_existing])
+    thermal_units = index_of_elements(inputs, ThermalUnit; run_time_options)
+    existing_thermal_units = index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing])
 
     thermal_generation = simulation_results.data[:thermal_generation]
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = thermal_plants,
-        elements_to_write = existing_thermal_plants,
+        elements_in_output_file = thermal_units,
+        elements_to_write = existing_thermal_units,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "thermal_generation",
         thermal_generation.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),

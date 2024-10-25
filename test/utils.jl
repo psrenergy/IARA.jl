@@ -26,8 +26,8 @@ end
 
 function compare_outputs(
     case_path::String;
-    test_only_block_sum::Vector{String} = String[],
-    test_only_first_block::Vector{String} = String[],
+    test_only_subperiod_sum::Vector{String} = String[],
+    test_only_first_subperiod::Vector{String} = String[],
     skipped_outputs::Vector{String} = ["load_marginal_cost", "hydro_opportunity_cost", "generation"],
 )
     outputs_folder = joinpath(case_path, "outputs")
@@ -59,47 +59,48 @@ function compare_outputs(
             dimension_size = output_reader.metadata.dimension_size
 
             # Compare the outputs
-            if output in test_only_block_sum
-                if dimension_names == [:stage, :scenario, :block]
-                    for stage in 1:dimension_size[1], scenario in 1:dimension_size[2]
-                        sum_in_blocks_calculated_output = 0.0
-                        sum_in_blocks_expected_output = 0.0
-                        for block in 1:dimension_size[3]
-                            output_data = Quiver.goto!(output_reader; stage, scenario, block)
-                            expected_output_data = Quiver.goto!(expected_output_reader; stage, scenario, block)
-                            sum_in_blocks_calculated_output += sum(output_data)
-                            sum_in_blocks_expected_output += sum(expected_output_data)
+            if output in test_only_subperiod_sum
+                if dimension_names == [:period, :scenario, :subperiod]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2]
+                        sum_in_subperiods_calculated_output = 0.0
+                        sum_in_subperiods_expected_output = 0.0
+                        for subperiod in 1:dimension_size[3]
+                            output_data = Quiver.goto!(output_reader; period, scenario, subperiod)
+                            expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, subperiod)
+                            sum_in_subperiods_calculated_output += sum(output_data)
+                            sum_in_subperiods_expected_output += sum(expected_output_data)
                         end
-                        @test sum_in_blocks_calculated_output ≈ sum_in_blocks_expected_output atol = 1e-6 rtol =
+                        @test sum_in_subperiods_calculated_output ≈ sum_in_subperiods_expected_output atol = 1e-6 rtol =
                             1e-4
                     end
                 else
                     @warn("Comparison not implementend. Could not compare the output $output")
                 end
-            elseif output in test_only_first_block
-                if dimension_names == [:stage, :scenario, :block]
-                    for stage in 1:dimension_size[1], scenario in 1:dimension_size[2], block in 1:1
-                        output_data = Quiver.goto!(output_reader; stage, scenario, block)
-                        expected_output_data = Quiver.goto!(expected_output_reader; stage, scenario, block)
+            elseif output in test_only_first_subperiod
+                if dimension_names == [:period, :scenario, :subperiod]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2], subperiod in 1:1
+                        output_data = Quiver.goto!(output_reader; period, scenario, subperiod)
+                        expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, subperiod)
                         @test output_data ≈ expected_output_data atol = 1e-6 rtol = 1e-4
                     end
                 else
                     @warn("Comparison not implementend. Could not compare the output $output")
                 end
             else # compare every entry
-                if dimension_names == [:stage, :scenario, :block]
-                    for stage in 1:dimension_size[1], scenario in 1:dimension_size[2], block in 1:dimension_size[3]
-                        output_data = Quiver.goto!(output_reader; stage, scenario, block)
-                        expected_output_data = Quiver.goto!(expected_output_reader; stage, scenario, block)
+                if dimension_names == [:period, :scenario, :subperiod]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2], subperiod in 1:dimension_size[3]
+                        output_data = Quiver.goto!(output_reader; period, scenario, subperiod)
+                        expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, subperiod)
                         @test output_data ≈ expected_output_data atol = 1e-6 rtol = 1e-4
                     end
-                elseif dimension_names == [:stage, :scenario, :block, :bid_segment]
-                    for stage in 1:dimension_size[1], scenario in 1:dimension_size[2], block in 1:dimension_size[3],
+                elseif dimension_names == [:period, :scenario, :subperiod, :bid_segment]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2],
+                        subperiod in 1:dimension_size[3],
                         bid_segment in 1:dimension_size[4]
 
-                        output_data = Quiver.goto!(output_reader; stage, scenario, block, bid_segment)
+                        output_data = Quiver.goto!(output_reader; period, scenario, subperiod, bid_segment)
                         expected_output_data =
-                            Quiver.goto!(expected_output_reader; stage, scenario, block, bid_segment)
+                            Quiver.goto!(expected_output_reader; period, scenario, subperiod, bid_segment)
                         @test output_data ≈ expected_output_data atol = 1e-6 rtol = 1e-4
                     end
                 else

@@ -2,14 +2,14 @@
 
 ## Sets
 
-- ``J^T``: Set of thermal plants.
-- ``J^{TC}``: Set of commitment thermal plants.
-- ``J^H``: Set of hydro plants.
-- ``J^{HC}``: Set of commitment hydro plants.
-- ``J^{HR}``: Set of hydro plants that operate with a reservoir.
-- ``J^{HRR}``: Set of hydro plants that operate with as run-of-the-river.
-- ``J^R``: Set of renewable plants.
-- ``J^B``: Set of batteries.
+- ``J^T``: Set of thermal units.
+- ``J^{TC}``: Set of commitment thermal units.
+- ``J^H``: Set of hydro units.
+- ``J^{HC}``: Set of commitment hydro units.
+- ``J^{HR}``: Set of hydro units that operate with a reservoir.
+- ``J^{HRR}``: Set of hydro units that operate with as run-of-the-river.
+- ``J^R``: Set of renewable units.
+- ``J^B``: Set of battery units.
 - ``J^D``: Set of demands.
 - ``J^{DI}``: Set of inelastic demands.
 - ``J^{DE}``: Set of elastic demands. $J^{DE} \cap J^{DI} = \emptyset$.
@@ -17,11 +17,11 @@
 - ``L``: Set of transmission lines.
 - ``N``: Set of network nodes (a.k.a. buses).
 - ``N^{-ref}``: Set of network nodes, except for the angle reference node.
-- ``B(t)``: Set of subperiods in stage $t$.
+- ``B(t)``: Set of subperiods in period $t$.
 - ``L^{in}(n)``: Set of lines entering node $n$.
 - ``L^{out}(n)``: Set of lines exiting node $n$.
-- ``J^H_U(j)``: Set of hydro plants that turbine water to hydro plant $j$.
-- ``J^H_Z(j)``: Set of hydro plants that spill water to hydro plant $j$.
+- ``J^H_U(j)``: Set of hydro units that turbine water to hydro unit $j$.
+- ``J^H_Z(j)``: Set of hydro units that spill water to hydro unit $j$.
 - ``L^{DC}``: Set of DC lines. $L^{DC} \subseteq L$.
 - ``L^{AC}``: Set of branches. $L^{AC} = L \setminus L^{DC}$.
 - ``d(\tau)``: Duration in hours of subperiod $\tau$.
@@ -31,46 +31,46 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 ## Parameters
 
-### Hydro Plants
+### Hydro Units
 
-- ``V_j``: Maximum volume of water (hm<sup>3</sup>) in the reservoir of hydro plant $j$.
-- ``U_j``: Maximum amount of water (m<sup>3</sup>/s) that can be turbined from the hydro plant $j$.
-- ``\rho_j``: Turbine efficiency (MW/m<sup>3</sup>/s) of hydro plant $j$.
-- ``a_{j, \tau}``: Inflow of water (hm<sup>3</sup>) into the reservoir of hydro plant $j$ at the start of subperiod $\tau$.
-- ``O_j``: Minimum outflow of water (m<sup>3</sup>/s) from the reservoir of hydro plant $j$.
+- ``V_j``: Maximum volume of water (hm<sup>3</sup>) in the reservoir of hydro unit $j$.
+- ``U_j``: Maximum amount of water (m<sup>3</sup>/s) that can be turbined from the hydro unit $j$.
+- ``\rho_j``: Turbine efficiency (MW/m<sup>3</sup>/s) of hydro unit $j$.
+- ``a_{j, \tau}``: Inflow of water (hm<sup>3</sup>) into the reservoir of hydro unit $j$ at the start of subperiod $\tau$.
+- ``O_j``: Minimum outflow of water (m<sup>3</sup>/s) from the reservoir of hydro unit $j$.
 - ``C^\eta``: Cost (\$/hm<sup>3</sup>) of minimum outflow violation.
-- ``C^z_j``: Cost (\$/hm<sup>3</sup>) of spilling water from hydro plant $j$.
-- ``\overline{G}^H_j``: Maximum generation (MW) of hydro plant $j$.
-- ``\underline{G}^H_j``: Minimum generation (MW) of hydro plant $j$.
+- ``C^z_j``: Cost (\$/hm<sup>3</sup>) of spilling water from hydro unit $j$.
+- ``\overline{G}^H_j``: Maximum generation (MW) of hydro unit $j$.
+- ``\underline{G}^H_j``: Minimum generation (MW) of hydro unit $j$.
 
-### Thermal Plants
+### Thermal Units
 
-- ``\overline{G}^T_j``: Maximum generation (MW) of thermal plant $j$.
-- ``\underline{G}^T_j``: Minimum generation (MW) of thermal plant $j$.
-- ``C^T_j``: Cost of generation (\$/MWh) of thermal plant $j$.
-- ``C^{T_{up}}_j``: Cost of startup (\$) of thermal plant $j$.
-- ``C^{T_{down}}_j``: Cost of shutdown (\$) of thermal plant $j$.
-- ``x^T_{j, 0}``: Commitment of thermal plant $j$ at the start of the stage.
-- ``\Delta^{up}_j``: Ramp-up limit (MW/min) of thermal plant $j$.
-- ``\Delta^{down}_j``: Ramp-down limit (MW/min) of thermal plant $j$.
-- ``g^T_{j, 0}``: Generation (MW) of thermal plant $j$ at the start of the stage.
-- ``UT^{max}_j``: Maximum uptime of thermal plant $j$, measured in amount of subperiods.
-- ``UT^{min}_j``: Minimum uptime (h) of thermal plant $j$, measured in amount of subperiods.
-- ``DT^{min}_j``: Minimum downtime (h) of thermal plant $j$, measured in amount of subperiods.
-- ``t^{up}_{j,0}``: Uptime of thermal plant $j$ at the start of the stage, measured in amount of subperiods.
-- ``t^{down}_{j,0}``: Downtime (h) of thermal plant $j$ at the start of the stage, measured in amount of subperiods.
+- ``\overline{G}^T_j``: Maximum generation (MW) of thermal unit $j$.
+- ``\underline{G}^T_j``: Minimum generation (MW) of thermal unit $j$.
+- ``C^T_j``: Cost of generation (\$/MWh) of thermal unit $j$.
+- ``C^{T_{up}}_j``: Cost of startup (\$) of thermal unit $j$.
+- ``C^{T_{down}}_j``: Cost of shutdown (\$) of thermal unit $j$.
+- ``x^T_{j, 0}``: Commitment of thermal unit $j$ at the start of the period.
+- ``\Delta^{up}_j``: Ramp-up limit (MW/min) of thermal unit $j$.
+- ``\Delta^{down}_j``: Ramp-down limit (MW/min) of thermal unit $j$.
+- ``g^T_{j, 0}``: Generation (MW) of thermal unit $j$ at the start of the period.
+- ``UT^{max}_j``: Maximum uptime of thermal unit $j$, measured in amount of subperiods.
+- ``UT^{min}_j``: Minimum uptime (h) of thermal unit $j$, measured in amount of subperiods.
+- ``DT^{min}_j``: Minimum downtime (h) of thermal unit $j$, measured in amount of subperiods.
+- ``t^{up}_{j,0}``: Uptime of thermal unit $j$ at the start of the period, measured in amount of subperiods.
+- ``t^{down}_{j,0}``: Downtime (h) of thermal unit $j$ at the start of the period, measured in amount of subperiods.
 
-### Renewable Plants
+### Renewable Units
 
-- ``G^R_j``: Maximum generation (MW) of renewable plant $j$.
-- ``G^R_{j, \tau}(\omega)``: Realized generation (p.u., as a fraction of the maximum generation) of renewable plant $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^R_j``: Cost of curtailment (\$/MWh) of renewable plant $j$.
+- ``G^R_j``: Maximum generation (MW) of renewable unit $j$.
+- ``G^R_{j, \tau}(\omega)``: Realized generation (p.u., as a fraction of the maximum generation) of renewable unit $j$ during subperiod $\tau$ and scenario $\omega$.
+- ``C^R_j``: Cost of curtailment (\$/MWh) of renewable unit $j$.
 
-### Batteries
+### Battery Units
 
-- ``G^B_j``: Maximum generation (MW) of battery $j$.
-- ``\overline{s}^B_j``: Maximum state (MWh) of charge of battery $j$.
-- ``\underline{s}^B_j``: Minimum state (MWh) of charge of battery $j$.
+- ``G^B_j``: Maximum generation (MW) of battery unit $j$.
+- ``\overline{s}^B_j``: Maximum state (MWh) of charge of battery unit $j$.
+- ``\underline{s}^B_j``: Minimum state (MWh) of charge of battery unit $j$.
 
 ### Demands
 
@@ -78,7 +78,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``C^\delta``: Cost of demand deficit (\$/MWh).
 - ``C^{\delta^F}_{j, \tau}``: Cost demand curtailment (\$/MWh) of demand $j$ during subperiod $\tau$.
 - ``P_{j, \tau}(\omega)``: Maximum price (\$/MWh) of elastic demand $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``W_{j, t}``: Window of demand $j$ at stage $t$, if $j \in J^{DF}$.
+- ``W_{j, t}``: Window of demand $j$ at period $t$, if $j \in J^{DF}$.
 - ``B(j, t, w)``: Set of subperiods in window $w$.  
 <!-- TODO: Maybe this should be in "Sets"? -->
 - ``\underline{d}^F_j``: Maximum fraction of flexible demand $j$ to be under attended at some subperiod.
@@ -103,36 +103,36 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 ## Variables
 
-### Hydro Plants
+### Hydro Units
 
-- ``g^H_{j, \tau}``: Generation (MWh) of hydro plant $j$ during subperiod $\tau$.
+- ``g^H_{j, \tau}``: Generation (MWh) of hydro unit $j$ during subperiod $\tau$.
 - ``v_{j, \tau}``: Volume of water (hm<sup>3</sup>) in the reservoir at the start of subperiod $\tau$.
 - ``u_{j, \tau}``: Turbined water (hm<sup>3</sup>) from the reservoir during subperiod $\tau$.
 - ``z_{j, \tau}``: Spilled water (hm<sup>3</sup>) from the reservoir during subperiod $\tau$.
-- ``v^{S_{in}}_j``: Volume of water (hm<sup>3</sup>) in the reservoir at the start of the stage.
-- ``v^{S_{out}}_j``: Volume of water (hm<sup>3</sup>) in the reservoir at the end of the stage.
+- ``v^{S_{in}}_j``: Volume of water (hm<sup>3</sup>) in the reservoir at the start of the period.
+- ``v^{S_{out}}_j``: Volume of water (hm<sup>3</sup>) in the reservoir at the end of the period.
 - ``\eta_{j, \tau}``: Hydro minimum outflow violation (hm<sup>3</sup>) during subperiod $\tau$.
-- ``x^H_{j, \tau}``: Commitment of hydro plant $j$ during subperiod $\tau$.
+- ``x^H_{j, \tau}``: Commitment of hydro unit $j$ during subperiod $\tau$.
 
-### Thermal Plants
+### Thermal Units
 
-- ``g^T_{j, \tau}``: Generation (MWh) of thermal plant $j$ during subperiod $\tau$.
-- ``x^T_{j, \tau}``: Commitment of thermal plant $j$ during subperiod $\tau$.
-- ``y^T_{j, \tau}``: Startup of thermal plant $j$ during subperiod $\tau$.
-- ``w^T_{j, \tau}``: Shutdown of thermal plant $j$ during subperiod $\tau$.
+- ``g^T_{j, \tau}``: Generation (MWh) of thermal unit $j$ during subperiod $\tau$.
+- ``x^T_{j, \tau}``: Commitment of thermal unit $j$ during subperiod $\tau$.
+- ``y^T_{j, \tau}``: Startup of thermal unit $j$ during subperiod $\tau$.
+- ``w^T_{j, \tau}``: Shutdown of thermal unit $j$ during subperiod $\tau$.
 
-### Renewable Plants
+### Renewable Units
 
-- ``g^R_{j, \tau}``: Generation (MWh) of renewable plant $j$ during subperiod $\tau$.
-- ``z^r_{j, \tau}``: Spilled generation (MWh) of renewable plant $j$ during subperiod $\tau$.
+- ``g^R_{j, \tau}``: Generation (MWh) of renewable unit $j$ during subperiod $\tau$.
+- ``z^r_{j, \tau}``: Spilled generation (MWh) of renewable unit $j$ during subperiod $\tau$.
 
 
-### Batteries
+### Battery Units
 
-- ``s^B_{j, \tau}``: State of charge (MWh) of battery $j$ at the start of subperiod $\tau$.
-- ``g^B_{j, \tau}``: Generation (MWh) of battery $j$ at the end of subperiod $\tau$.
-- ``s^{B_{in}}_j``: State of charge (MWh) of battery $j$ at the start of the stage.
-- ``s^{B_{out}}_j``: State of charge (MWh) of battery $j$ at the end of the stage.
+- ``s^B_{j, \tau}``: State of charge (MWh) of battery unit $j$ at the start of subperiod $\tau$.
+- ``g^B_{j, \tau}``: Generation (MWh) of battery unit $j$ at the end of subperiod $\tau$.
+- ``s^{B_{in}}_j``: State of charge (MWh) of battery unit $j$ at the start of the period.
+- ``s^{B_{out}}_j``: State of charge (MWh) of battery unit $j$ at the end of the period.
 
 ### Demands
 
@@ -151,7 +151,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 ## Subproblem Constraints
 
-The following constraints are defined for a subproblem at stage $t$ and scenario $\omega$.
+The following constraints are defined for a subproblem at period $t$ and scenario $\omega$.
 
 ### Demand Balance
 
@@ -197,7 +197,7 @@ The following constraints are defined for a subproblem at stage $t$ and scenario
 
 ### Hydro Balance
 
-#### Intra-stage balance
+#### Intra-period balance
 
 ```math
     v_{j, \tau+1} = v_{j, \tau} - u_{j, \tau} - z_{j, \tau}
@@ -206,7 +206,7 @@ The following constraints are defined for a subproblem at stage $t$ and scenario
     \quad \forall j \in J^H, \tau \in B(t)
 ```
 
-#### Inter-stage balance
+#### Inter-period balance
 
 ```math
     v^{S_{in}}_j = v_{j, 1}
@@ -218,7 +218,7 @@ The following constraints are defined for a subproblem at stage $t$ and scenario
     \quad \forall j \in J^H
 ```
 
-#### Initial and final volume of run of river hydro plants
+#### Initial and final volume of run of river hydro units
 
 ```math
     v_{j, 1} = v_{j, |B(t)| + 1}
@@ -290,7 +290,7 @@ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the followi
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
-$I^{up}$ and $I^{down}$ indicates if the plant started/stopped in the previous stage AND has yet to reach the minimum uptime/downtime.
+$I^{up}$ and $I^{down}$ indicates if the plant started/stopped in the previous period AND has yet to reach the minimum uptime/downtime.
 
 With these terms, the following constraints are defined:
 
@@ -320,7 +320,7 @@ Based on the initial condition $t^{up}_{j,0}$, the following term is defined:
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
-Indicating for each subperiod $\tau$, how many of the previous $UT^{max}_j + 1$ subperiods the plant has been active, considering only subperiods in the previous stage.
+Indicating for each subperiod $\tau$, how many of the previous $UT^{max}_j + 1$ subperiods the plant has been active, considering only subperiods in the previous period.
 
 With this term, the following constraint is defined:
 
@@ -329,7 +329,7 @@ With this term, the following constraint is defined:
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
-The constraint states that the sum of the number of active subperiods in the previous $UT^{max}_j$ subperiods must be less than or equal to $UT^{max}_j$. The summation represents the commitments in the current stage, while the term $T^{up}_{j, \tau}$ represents the commitments in the previous stage.
+The constraint states that the sum of the number of active subperiods in the previous $UT^{max}_j$ subperiods must be less than or equal to $UT^{max}_j$. The summation represents the commitments in the current period, while the term $T^{up}_{j, \tau}$ represents the commitments in the previous period.
 
 ### Renewable Balance
 
@@ -338,16 +338,16 @@ The constraint states that the sum of the number of active subperiods in the pre
     \quad \forall j \in J^R, \tau \in B(t)
 ```
 
-### Battery Balance
+### Battery Unit Balance
 
-#### Intra-stage balance
+#### Intra-period balance
 
 ```math
     s^B_{j, \tau+1} = s^B_{j, \tau} - g^B_{j, \tau}
     \quad \forall j \in J^B, \tau \in B(t)
 ```
 
-#### Inter-stage balance
+#### Inter-period balance
 
 ```math
     s^{B_{in}}_j = s^B_{j, 1}
@@ -418,7 +418,7 @@ When considering the compact version of the power flow, the following constraint
     \forall j \in J^R
 ```
 
-### Battery bounds
+### Battery Unit bounds
 
 ```math
     -G^B_j \cdot d(\tau) \leq g^B_{j, \tau} \leq G^B_j \cdot d(\tau), \quad

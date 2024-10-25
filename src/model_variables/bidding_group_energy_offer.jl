@@ -19,7 +19,7 @@ function bidding_group_energy_offer!(
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
     bid_segments = bidding_segments(inputs)
-    blks = blocks(inputs)
+    blks = subperiods(inputs)
 
     # Variables
     @variable(
@@ -67,7 +67,7 @@ function bidding_group_energy_offer!(
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
     buses = index_of_elements(inputs, Bus)
     bid_segments = bidding_segments(inputs)
-    blks = blocks(inputs)
+    blks = subperiods(inputs)
 
     if run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
         return nothing
@@ -113,7 +113,7 @@ function bidding_group_energy_offer!(
         outputs;
         inputs,
         output_name = "bidding_group_energy_offer",
-        dimensions = ["stage", "scenario", "block", "bid_segment"],
+        dimensions = ["period", "scenario", "subperiod", "bid_segment"],
         unit = "GWh",
         labels,
         run_time_options,
@@ -125,8 +125,8 @@ function bidding_group_energy_offer!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
@@ -137,7 +137,7 @@ function bidding_group_energy_offer!(
         run_time_options,
         "bidding_group_energy_offer",
         simulation_results.data[:bidding_group_energy_offer].data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),

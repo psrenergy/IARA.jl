@@ -18,22 +18,22 @@ Configurations for the problem.
 """
 @kwdef mutable struct Configurations <: AbstractCollection
     path_case::String = ""
-    number_of_stages::Int = 0
+    number_of_periods::Int = 0
     number_of_scenarios::Int = 0
-    number_of_blocks::Int = 0
+    number_of_subperiods::Int = 0
     number_of_nodes::Int = 0
     number_of_subscenarios::Int = 0
     iteration_limit::Int = 0
     initial_date_time::DateTime = DateTime(0)
-    stage_type::Configurations_StageType.T = Configurations_StageType.MONTHLY
-    block_duration_in_hours::Vector{Float64} = []
+    period_type::Configurations_PeriodType.T = Configurations_PeriodType.MONTHLY
+    subperiod_duration_in_hours::Vector{Float64} = []
     run_mode::Configurations_RunMode.T = Configurations_RunMode.CENTRALIZED_OPERATION
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
-    hydro_balance_block_resolution::Configurations_HydroBalanceBlockResolution.T =
-        Configurations_HydroBalanceBlockResolution.CHRONOLOGICAL_BLOCKS
+    hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
+        Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     use_binary_variables::Configurations_BinaryVariableUsage.T = Configurations_BinaryVariableUsage.USE
-    loop_blocks_for_thermal_constraints::Configurations_ConsiderBlocksLoopForThermalConstraints.T =
-        Configurations_ConsiderBlocksLoopForThermalConstraints.DO_NOT_CONSIDER
+    loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
+        Configurations_ConsiderSubperiodsLoopForThermalConstraints.DO_NOT_CONSIDER
     yearly_discount_rate::Float64 = 0.0
     yearly_duration_in_hours::Float64 = 0.0
     aggregate_buses_for_strategic_bidding::Configurations_BusesAggregationForStrategicBidding.T =
@@ -73,8 +73,19 @@ Configurations for the problem.
         Configurations_MakeWholePayments.CONSTRAINED_ON_AND_OFF_INSTANT
     price_cap::Configurations_PriceCap.T = Configurations_PriceCap.REPRESENT
     number_of_virtual_reservoir_bidding_segments::Int = 0
+    number_of_bid_segments_for_file_template::Int = 0
+    number_of_bid_segments_for_virtual_reservoir_file_template::Int = 0
+    number_of_profiles_for_file_template::Int = 0
+    number_of_complementary_groups_for_file_template::Int = 0
     hour_block_map_file::String = ""
+    virtual_reservoir_waveguide_source::Configurations_VirtualReservoirWaveguideSource.T =
+        Configurations_VirtualReservoirWaveguideSource.UNIFORM_VOLUME_PERCENTAGE
+    waveguide_user_provided_source::Configurations_WaveguideUserProvidedSource.T =
+        Configurations_WaveguideUserProvidedSource.CSV_FILE
+    hour_subperiod_map_file::String = ""
     fcf_cuts_file::String = ""
+    spot_price_floor::Float64 = 0.0
+    spot_price_cap::Float64 = 0.0
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -93,12 +104,12 @@ Initialize the Configurations collection from the database.
 """
 function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.path_case = path_case(inputs.db)
-    configurations.number_of_stages =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_stages")[1]
+    configurations.number_of_periods =
+        PSRI.get_parms(inputs.db, "Configuration", "number_of_periods")[1]
     configurations.number_of_scenarios =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_scenarios")[1]
-    configurations.number_of_blocks =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_blocks")[1]
+    configurations.number_of_subperiods =
+        PSRI.get_parms(inputs.db, "Configuration", "number_of_subperiods")[1]
     configurations.number_of_nodes =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_nodes")[1]
     configurations.number_of_subscenarios =
@@ -109,24 +120,24 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "initial_date_time")[1],
         "yyyy-mm-ddTHH:MM:SS",
     )
-    configurations.stage_type =
-        PSRI.get_parms(inputs.db, "Configuration", "stage_type")[1] |> Configurations_StageType.T
+    configurations.period_type =
+        PSRI.get_parms(inputs.db, "Configuration", "period_type")[1] |> Configurations_PeriodType.T
     configurations.run_mode =
         PSRI.get_parms(inputs.db, "Configuration", "run_mode")[1] |> Configurations_RunMode.T
     configurations.policy_graph_type =
         PSRI.get_parms(inputs.db, "Configuration", "policy_graph_type")[1] |> Configurations_PolicyGraphType.T
-    configurations.hydro_balance_block_resolution =
-        PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_block_resolution")[1] |>
-        Configurations_HydroBalanceBlockResolution.T
+    configurations.hydro_balance_subperiod_resolution =
+        PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_subperiod_resolution")[1] |>
+        Configurations_HydroBalanceSubperiodResolution.T
     configurations.use_binary_variables =
         PSRI.get_parms(inputs.db, "Configuration", "use_binary_variables")[1] |> Configurations_BinaryVariableUsage.T
-    loop_blocks_for_thermal_constraints =
-        PSRI.get_parms(inputs.db, "Configuration", "loop_blocks_for_thermal_constraints")[1]
-    configurations.loop_blocks_for_thermal_constraints =
-        if is_null(loop_blocks_for_thermal_constraints)
-            Configurations_ConsiderBlocksLoopForThermalConstraints.DO_NOT_CONSIDER
+    loop_subperiods_for_thermal_constraints =
+        PSRI.get_parms(inputs.db, "Configuration", "loop_subperiods_for_thermal_constraints")[1]
+    configurations.loop_subperiods_for_thermal_constraints =
+        if is_null(loop_subperiods_for_thermal_constraints)
+            Configurations_ConsiderSubperiodsLoopForThermalConstraints.DO_NOT_CONSIDER
         else
-            loop_blocks_for_thermal_constraints |> Configurations_ConsiderBlocksLoopForThermalConstraints.T
+            loop_subperiods_for_thermal_constraints |> Configurations_ConsiderSubperiodsLoopForThermalConstraints.T
         end
     aggregate_buses_for_strategic_bidding =
         PSRI.get_parms(inputs.db, "Configuration", "aggregate_buses_for_strategic_bidding")[1]
@@ -166,6 +177,20 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "hydro_spillage_cost")[1]
     configurations.number_of_virtual_reservoir_bidding_segments =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_virtual_reservoir_bidding_segments")[1]
+    configurations.number_of_bid_segments_for_file_template =
+        PSRI.get_parms(inputs.db, "Configuration", "number_of_bid_segments_for_file_template")[1]
+    configurations.number_of_bid_segments_for_virtual_reservoir_file_template =
+        PSRI.get_parms(inputs.db, "Configuration", "number_of_bid_segments_for_virtual_reservoir_file_template")[1]
+    configurations.number_of_profiles_for_file_template =
+        PSRI.get_parms(inputs.db, "Configuration", "number_of_profiles_for_file_template")[1]
+    configurations.number_of_complementary_groups_for_file_template =
+        PSRI.get_parms(inputs.db, "Configuration", "number_of_complementary_groups_for_file_template")[1]
+    configurations.virtual_reservoir_waveguide_source =
+        PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_waveguide_source")[1] |>
+        Configurations_VirtualReservoirWaveguideSource.T
+    configurations.waveguide_user_provided_source =
+        PSRI.get_parms(inputs.db, "Configuration", "waveguide_user_provided_source")[1] |>
+        Configurations_WaveguideUserProvidedSource.T
 
     configurations.clearing_model_type_ex_ante_physical =
         PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_ante_physical")[1] |>
@@ -203,12 +228,16 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_commercial_source")[1] |>
         RunTime_ClearingProcedure.T
 
+    configurations.spot_price_floor = PSRI.get_parms(inputs.db, "Configuration", "spot_price_floor")[1]
+    configurations.spot_price_cap = PSRI.get_parms(inputs.db, "Configuration", "spot_price_cap")[1]
+
     # Load vectors
-    configurations.block_duration_in_hours = PSRI.get_vectors(inputs.db, "Configuration", "block_duration_in_hours")[1]
+    configurations.subperiod_duration_in_hours =
+        PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
 
     # Load time series files
-    configurations.hour_block_map_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "hour_block_map")
+    configurations.hour_subperiod_map_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "hour_subperiod_map")
     configurations.fcf_cuts_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "fcf_cuts")
 
@@ -248,14 +277,14 @@ function update_configuration!(db::DatabaseSQLite; kwargs...)
 end
 
 """
-    update_time_series_from_db!(configurations::Configurations, db::DatabaseSQLite, stage_date_time::DateTime)
+    update_time_series_from_db!(configurations::Configurations, db::DatabaseSQLite, period_date_time::DateTime)
 
 Update the Configuration collection time series from the database.
 """
 function update_time_series_from_db!(
     configurations::Configurations,
     db::DatabaseSQLite,
-    stage_date_time::DateTime,
+    period_date_time::DateTime,
 )
     return nothing
 end
@@ -267,16 +296,16 @@ Validate the Configurations' parameters. Return the number of errors found.
 """
 function validate(configurations::Configurations)
     num_errors = 0
-    if configurations.number_of_stages <= 0
-        @error("Number of stages must be positive.")
+    if configurations.number_of_periods <= 0
+        @error("Number of periods must be positive.")
         num_errors += 1
     end
     if configurations.number_of_scenarios <= 0
         @error("Number of scenarios must be positive.")
         num_errors += 1
     end
-    if configurations.number_of_blocks <= 0
-        @error("Number of blocks must be positive.")
+    if configurations.number_of_subperiods <= 0
+        @error("Number of subperiods must be positive.")
         num_errors += 1
     end
     if configurations.run_mode == Configurations_RunMode.MARKET_CLEARING
@@ -301,12 +330,12 @@ function validate(configurations::Configurations)
             num_errors += 1
         end
     end
-    if length(configurations.block_duration_in_hours) != configurations.number_of_blocks
-        @error("Block duration in hours must have the same length as the number of blocks.")
+    if length(configurations.subperiod_duration_in_hours) != configurations.number_of_subperiods
+        @error("Subperiod duration in hours must have the same length as the number of subperiods.")
         num_errors += 1
     end
     if configurations.demand_deficit_cost < 0
-        @error("Demand deficit cost must be non-negative.")
+        @error("Demand Unit deficit cost must be non-negative.")
         num_errors += 1
     end
     if configurations.hydro_minimum_outflow_violation_cost < 0
@@ -332,6 +361,22 @@ function validate(configurations::Configurations)
     if !is_null(configurations.number_of_virtual_reservoir_bidding_segments) &&
        configurations.number_of_virtual_reservoir_bidding_segments <= 0
         @error("Number of virtual reservoir bidding segments must be positive.")
+        num_errors += 1
+    end
+    if configurations.number_of_bid_segments_for_file_template < 0
+        @error("Number of bidding segments for the time series file template must be non-negative.")
+        num_errors += 1
+    end
+    if configurations.number_of_bid_segments_for_virtual_reservoir_file_template < 0
+        @error("Number of bidding segments for the virtual reservoir time series file template must be non-negative.")
+        num_errors += 1
+    end
+    if configurations.number_of_profiles_for_file_template < 0
+        @error("Number of profiles for the time series file template must be non-negative.")
+        num_errors += 1
+    end
+    if configurations.number_of_complementary_groups_for_file_template < 0
+        @error("Number of complementary groups for the time series file template must be non-negative.")
         num_errors += 1
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
@@ -397,6 +442,19 @@ function validate(configurations::Configurations)
         @error("Ex-post commercial clearing model cannot have fixed integer variables from itself")
         num_errors += 1
     end
+    if !is_null(configurations.spot_price_floor) && configurations.spot_price_floor < 0
+        @error("Spot price floor must be non-negative.")
+        num_errors += 1
+    end
+    if !is_null(configurations.spot_price_cap) && configurations.spot_price_cap < 0
+        @error("Spot price cap must be non-negative.")
+        num_errors += 1
+    end
+    if !is_null(configurations.spot_price_cap) && !is_null(configurations.spot_price_floor) &&
+       configurations.spot_price_cap <= configurations.spot_price_floor
+        @error("Spot price cap must be greater than the spot price floor.")
+        num_errors += 1
+    end
     return num_errors
 end
 
@@ -421,11 +479,11 @@ function validate_relations(inputs::AbstractInputs, configurations::Configuratio
 end
 
 function iara_log(configurations::Configurations)
-    println("   Number of stages: $(configurations.number_of_stages)")
+    println("   Number of periods: $(configurations.number_of_periods)")
     println("   Number of scenarios: $(configurations.number_of_scenarios)")
-    println("   Number of blocks: $(configurations.number_of_blocks)")
+    println("   Number of subperiods: $(configurations.number_of_subperiods)")
     println("   Run mode: $(configurations.run_mode)")
-    println("   Stage frequency: $(configurations.stage_type)")
+    println("   Period frequency: $(configurations.period_type)")
 
     return nothing
 end
@@ -450,17 +508,17 @@ path_parp(inputs::AbstractInputs) = joinpath(path_case(inputs), "parp")
 path_parp(db::DatabaseSQLite) = joinpath(path_case(db), "parp")
 
 """
-    number_of_stages(inputs)
+    number_of_periods(inputs)
 
-Return the number of stages in the problem.
+Return the number of periods in the problem.
 """
-number_of_stages(inputs::AbstractInputs) = inputs.collections.configurations.number_of_stages
+number_of_periods(inputs::AbstractInputs) = inputs.collections.configurations.number_of_periods
 """
-    stages(inputs)
+    periods(inputs)
 
-Return all problem stages.
+Return all problem periods.
 """
-stages(inputs::AbstractInputs) = collect(1:number_of_stages(inputs))
+periods(inputs::AbstractInputs) = collect(1:number_of_periods(inputs))
 
 """
     number_of_scenarios(inputs)
@@ -477,18 +535,18 @@ Return all problem scenarios.
 scenarios(inputs::AbstractInputs) = collect(1:number_of_scenarios(inputs))
 
 """
-    number_of_blocks(inputs)
+    number_of_subperiods(inputs)
 
-Return the number of blocks in the problem.
+Return the number of subperiods in the problem.
 """
-number_of_blocks(inputs::AbstractInputs) = inputs.collections.configurations.number_of_blocks
+number_of_subperiods(inputs::AbstractInputs) = inputs.collections.configurations.number_of_subperiods
 
 """
-    blocks(inputs)
+    subperiods(inputs)
 
-Return all problem blocks.
+Return all problem subperiods.
 """
-blocks(inputs::AbstractInputs) = collect(1:number_of_blocks(inputs))
+subperiods(inputs::AbstractInputs) = collect(1:number_of_subperiods(inputs))
 
 """
     number_of_nodes(inputs)
@@ -545,39 +603,39 @@ Return the initial date of the problem.
 initial_date_time(inputs::AbstractInputs) = inputs.collections.configurations.initial_date_time
 
 """
-    stage_type(inputs)
+    period_type(inputs)
 
-Return the stage type.
+Return the period type.
 """
-stage_type(inputs::AbstractInputs) = inputs.collections.configurations.stage_type
+period_type(inputs::AbstractInputs) = inputs.collections.configurations.period_type
 
 """
-    stages_per_year(inputs)
+    periods_per_year(inputs)
 
-Return the number of stages per year.
+Return the number of periods per year.
 """
-function stages_per_year(inputs::AbstractInputs)
-    if stage_type(inputs) == Configurations_StageType.MONTHLY
+function periods_per_year(inputs::AbstractInputs)
+    if period_type(inputs) == Configurations_PeriodType.MONTHLY
         return 12
     else
-        error("Stage type $(stage_type(inputs)) not implemented.")
+        error("Period type $(period_type(inputs)) not implemented.")
     end
 end
 
 """
-    block_duration_in_hours(inputs)
+    subperiod_duration_in_hours(inputs)
 
-Return the block duration in hours for all blocks.
+Return the subperiod duration in hours for all subperiods.
 """
-block_duration_in_hours(inputs::AbstractInputs) = inputs.collections.configurations.block_duration_in_hours
+subperiod_duration_in_hours(inputs::AbstractInputs) = inputs.collections.configurations.subperiod_duration_in_hours
 
 """
-    block_duration_in_hours(inputs, block::Int)
+    subperiod_duration_in_hours(inputs, subperiod::Int)
 
-Return the block duration in hours for a given block.
+Return the subperiod duration in hours for a given subperiod.
 """
-block_duration_in_hours(inputs::AbstractInputs, block::Int) =
-    inputs.collections.configurations.block_duration_in_hours[block]
+subperiod_duration_in_hours(inputs::AbstractInputs, subperiod::Int) =
+    inputs.collections.configurations.subperiod_duration_in_hours[subperiod]
 
 """
     run_mode(inputs)
@@ -603,13 +661,13 @@ use_binary_variables(inputs::AbstractInputs) =
     inputs.collections.configurations.use_binary_variables == Configurations_BinaryVariableUsage.USE
 
 """
-    loop_blocks_for_thermal_constraints(inputs)
+    loop_subperiods_for_thermal_constraints(inputs)
 
-Return whether blocks should be looped for thermal constraints.
+Return whether subperiods should be looped for thermal constraints.
 """
-loop_blocks_for_thermal_constraints(inputs::AbstractInputs) =
-    inputs.collections.configurations.loop_blocks_for_thermal_constraints ==
-    Configurations_ConsiderBlocksLoopForThermalConstraints.CONSIDER
+loop_subperiods_for_thermal_constraints(inputs::AbstractInputs) =
+    inputs.collections.configurations.loop_subperiods_for_thermal_constraints ==
+    Configurations_ConsiderSubperiodsLoopForThermalConstraints.CONSIDER
 
 """
     yearly_discount_rate(inputs)
@@ -619,12 +677,12 @@ Return the yearly discount rate.
 yearly_discount_rate(inputs::AbstractInputs) = inputs.collections.configurations.yearly_discount_rate
 
 """
-    stage_discount_rate(inputs)
+    period_discount_rate(inputs)
 
-Return the discount rate per stage.
+Return the discount rate per period.
 """
-function stage_discount_rate(inputs::AbstractInputs)
-    return 1 - ((1 - yearly_discount_rate(inputs))^(1 / stages_per_year(inputs)))
+function period_discount_rate(inputs::AbstractInputs)
+    return 1 - ((1 - yearly_discount_rate(inputs))^(1 / periods_per_year(inputs)))
 end
 
 """
@@ -824,7 +882,7 @@ demand_deficit_cost(inputs::AbstractInputs) = inputs.collections.configurations.
 """
     hydro_minimum_outflow_violation_cost(inputs)
 
-Return the cost of violating the minimum outflow in hydro plants.
+Return the cost of violating the minimum outflow in hydro units.
 """
 hydro_minimum_outflow_violation_cost(inputs::AbstractInputs) =
     inputs.collections.configurations.hydro_minimum_outflow_violation_cost
@@ -832,23 +890,23 @@ hydro_minimum_outflow_violation_cost(inputs::AbstractInputs) =
 """
     hydro_spillage_cost(inputs)
 
-Return the cost of spilling water in hydro plants.
+Return the cost of spilling water in hydro units.
 """
 hydro_spillage_cost(inputs::AbstractInputs) = inputs.collections.configurations.hydro_spillage_cost
 
 """
-    hour_block_map_file(inputs)
+    hour_subperiod_map_file(inputs)
 
-Return the file with the hour to block map.
+Return the file with the hour to subperiod map.
 """
-hour_block_map_file(inputs::AbstractInputs) = inputs.collections.configurations.hour_block_map_file
+hour_subperiod_map_file(inputs::AbstractInputs) = inputs.collections.configurations.hour_subperiod_map_file
 
 """
-    has_hour_block_map(inputs)
+    has_hour_subperiod_map(inputs)
 
-Return whether the hour to block map file is defined.
+Return whether the hour to subperiod map file is defined.
 """
-has_hour_block_map(inputs::AbstractInputs) = hour_block_map_file(inputs) != ""
+has_hour_subperiod_map(inputs::AbstractInputs) = hour_subperiod_map_file(inputs) != ""
 
 """
     fcf_cuts_file(inputs)
@@ -865,10 +923,10 @@ Return whether the FCF cuts file is defined.
 has_fcf_cuts_to_read(inputs::AbstractInputs) = fcf_cuts_file(inputs) != ""
 
 """
-    hydro_balance_block_resolution(inputs)
+    hydro_balance_subperiod_resolution(inputs)
 """
-hydro_balance_block_resolution(inputs::AbstractInputs) =
-    inputs.collections.configurations.hydro_balance_block_resolution
+hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
+    inputs.collections.configurations.hydro_balance_subperiod_resolution
 
 """
     number_of_virtual_reservoir_bidding_segments(inputs)
@@ -877,3 +935,50 @@ Return the number of bidding segments for virtual reservoirs.
 """
 number_of_virtual_reservoir_bidding_segments(inputs) =
     inputs.collections.configurations.number_of_virtual_reservoir_bidding_segments
+
+"""
+    number_of_bid_segments_for_file_template(inputs)
+
+Return the number of bidding segments for the time series file template.
+"""
+number_of_bid_segments_for_file_template(inputs) =
+    inputs.collections.configurations.number_of_bid_segments_for_file_template
+
+"""
+    number_of_bid_segments_for_virtual_reservoir_file_template(inputs)
+
+Return the number of bidding segments for the virtual reservoir time series file template.
+"""
+number_of_bid_segments_for_virtual_reservoir_file_template(inputs) =
+    inputs.collections.configurations.number_of_bid_segments_for_virtual_reservoir_file_template
+
+"""
+    number_of_profiles_for_file_template(inputs)
+
+Return the number of profiles for the time series file template.
+"""
+number_of_profiles_for_file_template(inputs) =
+    inputs.collections.configurations.number_of_profiles_for_file_template
+
+"""
+    number_of_complementary_groups_for_file_template(inputs)
+
+Return the number of complementary groups for the time series file template.
+"""
+number_of_complementary_groups_for_file_template(inputs) =
+    inputs.collections.configurations.number_of_complementary_groups_for_file_template
+"""
+    virtual_reservoir_waveguide_source(inputs)
+
+Return the source of the waveguide points for virtual reservoirs.
+"""
+virtual_reservoir_waveguide_source(inputs) =
+    inputs.collections.configurations.virtual_reservoir_waveguide_source
+
+"""
+    waveguide_user_provided_source(inputs)
+
+Return the source of the user-provided waveguide points.
+"""
+waveguide_user_provided_source(inputs) =
+    inputs.collections.configurations.waveguide_user_provided_source

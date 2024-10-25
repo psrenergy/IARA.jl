@@ -22,14 +22,14 @@ IARA.main([PATH, "--plot-results=false"])
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
-    # Because of the flexibility, the demand can be attended in any block of each window, and it causes 
+    # Because of the flexibility, the demand can be attended in any subperiod of each window, and it causes 
     # the attended_demand and thermal_generation to be degenerate within a window. Also, the total deficit 
-    # and curtailment of a window can be distributed among its blocks in different ways, causing also the 
+    # and curtailment of a window can be distributed among its subperiods in different ways, causing also the 
     # deficit and demand_curtailment to be degenerate within a window. Therefore, we test only the sum of 
-    # these outputs within each stage and scenario, aggregating the blocks.
+    # these outputs within each period and scenario, aggregating the subperiods.
     Main.compare_outputs(
         PATH;
-        test_only_block_sum = [
+        test_only_subperiod_sum = [
             "deficit",
             "demand_curtailment",
             "attended_demand",

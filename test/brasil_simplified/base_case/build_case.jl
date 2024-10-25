@@ -13,20 +13,20 @@ using DataFrames
 
 # Case dimensions
 # ---------------
-number_of_stages = 12
+number_of_periods = 12
 number_of_scenarios = 10
-number_of_blocks = 24
-block_duration_in_hours = 30.0
+number_of_subperiods = 24
+subperiod_duration_in_hours = 30.0
 
 # Create the database
 # -------------------
 db = IARA.create_study!(PATH;
-    number_of_stages = number_of_stages,
+    number_of_periods = number_of_periods,
     number_of_scenarios = number_of_scenarios,
-    number_of_blocks = number_of_blocks,
-    number_of_nodes = number_of_stages,
+    number_of_subperiods = number_of_subperiods,
+    number_of_nodes = number_of_periods,
     initial_date_time = "2020-01-01T00:00:00",
-    block_duration_in_hours = [block_duration_in_hours for _ in 1:number_of_blocks],
+    subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
     policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC,
     yearly_discount_rate = 0.09,
     yearly_duration_in_hours = 8760.0,
@@ -50,46 +50,46 @@ for bus in 1:number_of_buses
     IARA.add_bus!(db; label = bus_labels[bus], zone_id = "zone_1")
 end
 
-# Hydro plants
+# Hydro units
 # --------------------
-# One hydro plant per bus (except for Imperatriz), named after the bus
-number_of_hydro_plants = 4
+# One hydro unit per bus (except for Imperatriz), named after the bus
+number_of_hydro_units = 4
 # Maximum generation in [MW]
-hydro_plant_maximum_generation = [63.1259, 18.1833, 13.7623, 10.6056]
+hydro_unit_maximum_generation = [63.1259, 18.1833, 13.7623, 10.6056]
 # Initial volume in [hm^3]
-hydro_plant_initial_volume = [213.909, 21.150, 46.293, 18.977]
+hydro_unit_initial_volume = [213.909, 21.150, 46.293, 18.977]
 # Maximum volume in [hm^3]
-hydro_plant_max_volume = [722.583, 70.6219, 186.502, 45.8816]
-@assert length(hydro_plant_maximum_generation) == number_of_hydro_plants
-@assert length(hydro_plant_initial_volume) == number_of_hydro_plants
-@assert length(hydro_plant_max_volume) == number_of_hydro_plants
+hydro_unit_max_volume = [722.583, 70.6219, 186.502, 45.8816]
+@assert length(hydro_unit_maximum_generation) == number_of_hydro_units
+@assert length(hydro_unit_initial_volume) == number_of_hydro_units
+@assert length(hydro_unit_max_volume) == number_of_hydro_units
 
-for h in 1:number_of_hydro_plants
-    IARA.add_hydro_plant!(db;
+for h in 1:number_of_hydro_units
+    IARA.add_hydro_unit!(db;
         label = "hyd_$(bus_labels[h])",
         parameters = DataFrame(;
             date_time = [DateTime(0)],
-            existing = [Int(IARA.HydroPlant_Existence.EXISTS)],
+            existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
             min_generation = [0.0],
-            max_generation = [hydro_plant_maximum_generation[h]],
+            max_generation = [hydro_unit_maximum_generation[h]],
             production_factor = [1.0],
-            max_turbining = [hydro_plant_maximum_generation[h]],
+            max_turbining = [hydro_unit_maximum_generation[h]],
             min_volume = [0.0],
-            max_volume = [hydro_plant_max_volume[h]],
+            max_volume = [hydro_unit_max_volume[h]],
             min_outflow = [0.0],
             om_cost = [0.0],
         ),
-        initial_volume = hydro_plant_initial_volume[h],
+        initial_volume = hydro_unit_initial_volume[h],
         bus_id = h,
     )
 end
 
-# Thermal plants
+# Thermal units
 # --------------------
 # SE
-se_number_of_thermal_plants = 43
+se_number_of_thermal_units = 43
 # Maximum generation in [MW]
-se_thermal_plant_maximum_generation = [
+se_thermal_unit_maximum_generation = [
     0.91323,
     1.8765,
     0.05004,
@@ -135,7 +135,7 @@ se_thermal_plant_maximum_generation = [
     0.07506,
 ]
 # Minimum generation in [MW]
-se_thermal_plant_minimum_generation = [
+se_thermal_unit_minimum_generation = [
     0.7228,
     1.5012,
     0,
@@ -181,7 +181,7 @@ se_thermal_plant_minimum_generation = [
     0,
 ]
 # O&M cost in [$/MWh]
-se_thermal_plant_om_cost = [
+se_thermal_unit_om_cost = [
     21.49,
     18.96,
     937,
@@ -226,14 +226,14 @@ se_thermal_plant_om_cost = [
     197.85,
     733.54,
 ]
-@assert length(se_thermal_plant_maximum_generation) == se_number_of_thermal_plants
-@assert length(se_thermal_plant_minimum_generation) == se_number_of_thermal_plants
-@assert length(se_thermal_plant_om_cost) == se_number_of_thermal_plants
+@assert length(se_thermal_unit_maximum_generation) == se_number_of_thermal_units
+@assert length(se_thermal_unit_minimum_generation) == se_number_of_thermal_units
+@assert length(se_thermal_unit_om_cost) == se_number_of_thermal_units
 
 # S
-s_number_of_thermal_plants = 17
+s_number_of_thermal_units = 17
 # Maximum generation in [MW]
-s_thermal_plant_maximum_generation = [
+s_thermal_unit_maximum_generation = [
     0.09174,
     0.67415,
     0.67415,
@@ -253,10 +253,10 @@ s_thermal_plant_maximum_generation = [
     0.8896,
 ]
 # Minimum generation in [MW]
-s_thermal_plant_minimum_generation =
+s_thermal_unit_minimum_generation =
     [0, 0, 0, 0.2919, 0, 0.03753, 0, 0.013288, 0.03475, 0.110449, 0.205081, 0.316948, 0, 0.069027, 0.14595, 0.00695, 0]
 # O&M cost in [$/MWh]
-s_thermal_plant_om_cost = [
+s_thermal_unit_om_cost = [
     564.57,
     219,
     219,
@@ -275,14 +275,14 @@ s_thermal_plant_om_cost = [
     248.31,
     141.18,
 ]
-@assert length(s_thermal_plant_maximum_generation) == s_number_of_thermal_plants
-@assert length(s_thermal_plant_minimum_generation) == s_number_of_thermal_plants
-@assert length(s_thermal_plant_om_cost) == s_number_of_thermal_plants
+@assert length(s_thermal_unit_maximum_generation) == s_number_of_thermal_units
+@assert length(s_thermal_unit_minimum_generation) == s_number_of_thermal_units
+@assert length(s_thermal_unit_om_cost) == s_number_of_thermal_units
 
 # NE
-ne_number_of_thermal_plants = 33
+ne_number_of_thermal_units = 33
 # Maximum generation in [MW]
-ne_thermal_plant_maximum_generation = [
+ne_thermal_unit_maximum_generation = [
     0.01807,
     0.01529,
     0.04448,
@@ -318,7 +318,7 @@ ne_thermal_plant_maximum_generation = [
     0.44897,
 ]
 # Minimum generation in [MW]
-ne_thermal_plant_minimum_generation = [
+ne_thermal_unit_minimum_generation = [
     0,
     0,
     0,
@@ -354,7 +354,7 @@ ne_thermal_plant_minimum_generation = [
     0,
 ]
 # O&M cost in [$/MWh]
-ne_thermal_plant_om_cost = [
+ne_thermal_unit_om_cost = [
     464.64,
     464.64,
     455.13,
@@ -389,50 +389,50 @@ ne_thermal_plant_om_cost = [
     70.16,
     287.83,
 ]
-@assert length(ne_thermal_plant_maximum_generation) == ne_number_of_thermal_plants
-@assert length(ne_thermal_plant_minimum_generation) == ne_number_of_thermal_plants
-@assert length(ne_thermal_plant_om_cost) == ne_number_of_thermal_plants
+@assert length(ne_thermal_unit_maximum_generation) == ne_number_of_thermal_units
+@assert length(ne_thermal_unit_minimum_generation) == ne_number_of_thermal_units
+@assert length(ne_thermal_unit_om_cost) == ne_number_of_thermal_units
 
 # N
-n_number_of_thermal_plants = 2
+n_number_of_thermal_units = 2
 # Maximum generation in [MW]
-n_thermal_plant_maximum_generation = [0.23074, 0.23074]
+n_thermal_unit_maximum_generation = [0.23074, 0.23074]
 # Minimum generation in [MW]
-n_thermal_plant_minimum_generation = [0, 0]
+n_thermal_unit_minimum_generation = [0, 0]
 # O&M cost in [$/MWh]
-n_thermal_plant_om_cost = [329.56, 329.56]
-@assert length(n_thermal_plant_maximum_generation) == n_number_of_thermal_plants
-@assert length(n_thermal_plant_minimum_generation) == n_number_of_thermal_plants
-@assert length(n_thermal_plant_om_cost) == n_number_of_thermal_plants
+n_thermal_unit_om_cost = [329.56, 329.56]
+@assert length(n_thermal_unit_maximum_generation) == n_number_of_thermal_units
+@assert length(n_thermal_unit_minimum_generation) == n_number_of_thermal_units
+@assert length(n_thermal_unit_om_cost) == n_number_of_thermal_units
 
 # All plants
-number_of_thermal_plants =
-    [se_number_of_thermal_plants, s_number_of_thermal_plants, ne_number_of_thermal_plants, n_number_of_thermal_plants]
-thermal_plant_maximum_generation = [
-    se_thermal_plant_maximum_generation,
-    s_thermal_plant_maximum_generation,
-    ne_thermal_plant_maximum_generation,
-    n_thermal_plant_maximum_generation,
+number_of_thermal_units =
+    [se_number_of_thermal_units, s_number_of_thermal_units, ne_number_of_thermal_units, n_number_of_thermal_units]
+thermal_unit_maximum_generation = [
+    se_thermal_unit_maximum_generation,
+    s_thermal_unit_maximum_generation,
+    ne_thermal_unit_maximum_generation,
+    n_thermal_unit_maximum_generation,
 ]
-thermal_plant_minimum_generation = [
-    se_thermal_plant_minimum_generation,
-    s_thermal_plant_minimum_generation,
-    ne_thermal_plant_minimum_generation,
-    n_thermal_plant_minimum_generation,
+thermal_unit_minimum_generation = [
+    se_thermal_unit_minimum_generation,
+    s_thermal_unit_minimum_generation,
+    ne_thermal_unit_minimum_generation,
+    n_thermal_unit_minimum_generation,
 ]
-thermal_plant_om_cost =
-    [se_thermal_plant_om_cost, s_thermal_plant_om_cost, ne_thermal_plant_om_cost, n_thermal_plant_om_cost]
-for (bus_idx, bus_number_of_thermal_plants) in enumerate(number_of_thermal_plants)
-    for t in 1:bus_number_of_thermal_plants
-        IARA.add_thermal_plant!(db;
+thermal_unit_om_cost =
+    [se_thermal_unit_om_cost, s_thermal_unit_om_cost, ne_thermal_unit_om_cost, n_thermal_unit_om_cost]
+for (bus_idx, bus_number_of_thermal_units) in enumerate(number_of_thermal_units)
+    for t in 1:bus_number_of_thermal_units
+        IARA.add_thermal_unit!(db;
             label = "ter_" * bus_labels[bus_idx] * "_$t",
             parameters = DataFrame(;
                 date_time = [DateTime(0)],
-                existing = [Int(IARA.ThermalPlant_Existence.EXISTS)],
+                existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
                 startup_cost = [0.0],
-                min_generation = [thermal_plant_minimum_generation[bus_idx][t]],
-                max_generation = [thermal_plant_maximum_generation[bus_idx][t]],
-                om_cost = [thermal_plant_om_cost[bus_idx][t]],
+                min_generation = [thermal_unit_minimum_generation[bus_idx][t]],
+                max_generation = [thermal_unit_maximum_generation[bus_idx][t]],
+                om_cost = [thermal_unit_om_cost[bus_idx][t]],
             ),
             has_commitment = 0,
             max_ramp_up = 0.0,
@@ -443,7 +443,7 @@ for (bus_idx, bus_number_of_thermal_plants) in enumerate(number_of_thermal_plant
             max_startups = 0,
             max_shutdowns = 0,
             shutdown_cost = 0.0,
-            commitment_initial_condition = IARA.ThermalPlant_CommitmentInitialCondition.OFF,
+            commitment_initial_condition = IARA.ThermalUnit_CommitmentInitialCondition.OFF,
             generation_initial_condition = 0.0,
             uptime_initial_condition = 0.0,
             downtime_initial_condition = 0.0,
@@ -456,12 +456,12 @@ end
 # --------------------
 # One demand per bus, named after the bus
 for (bus_idx, label) in enumerate(bus_labels)
-    IARA.add_demand!(db;
+    IARA.add_demand_unit!(db;
         label = "dem_$label",
-        demand_type = IARA.Demand_DemandType.INELASTIC,
+        demand_unit_type = IARA.Demand_Unit_DemandType.INELASTIC,
         parameters = DataFrame(;
             date_time = [DateTime(0)],
-            existing = [Int(IARA.Demand_Existence.EXISTS)],
+            existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
         ),
         max_shift_up = 0.0,
         max_shift_down = 0.0,
@@ -4549,13 +4549,13 @@ inflow_scenarios = [
     ],
 ]
 # Build the inflow matrix
-inflow = zeros(number_of_hydro_plants, number_of_blocks, number_of_scenarios, number_of_stages)
-for plant in 1:number_of_hydro_plants
-    for block in 1:number_of_blocks
+inflow = zeros(number_of_hydro_units, number_of_subperiods, number_of_scenarios, number_of_periods)
+for plant in 1:number_of_hydro_units
+    for subperiod in 1:number_of_subperiods
         for scenario in 1:number_of_scenarios
-            for stage in 1:number_of_stages
-                inflow[plant, block, scenario, stage] =
-                    inflow_scenarios[plant][stage][scenario] / (number_of_blocks * block_duration_in_hours)
+            for period in 1:number_of_periods
+                inflow[plant, subperiod, scenario, period] =
+                    inflow_scenarios[plant][period][scenario] / (number_of_subperiods * subperiod_duration_in_hours)
             end
         end
     end
@@ -4564,16 +4564,16 @@ end
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
-    dimensions = ["stage", "scenario", "block"],
-    labels = ["hyd_$(bus_labels[h])_gauging_station" for h in 1:number_of_hydro_plants],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    dimensions = ["period", "scenario", "subperiod"],
+    labels = ["hyd_$(bus_labels[h])_gauging_station" for h in 1:number_of_hydro_units],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "m3/s",
 )
 IARA.link_time_series_to_file(
     db,
-    "HydroPlant";
+    "HydroUnit";
     inflow = "inflow",
 )
 
@@ -4588,26 +4588,26 @@ n_monthly_demand = [9.038, 9.117, 9.036, 9.106, 9.229, 9.262, 9.204, 9.406, 9.50
 im_monthly_demand = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 monthly_demands = [se_monthly_demand, s_monthly_demand, ne_monthly_demand, n_monthly_demand, im_monthly_demand]
 # Build the demand matrix
-demand = zeros(number_of_buses, number_of_blocks, number_of_scenarios, number_of_stages)
-for stage in 1:number_of_stages
+demand = zeros(number_of_buses, number_of_subperiods, number_of_scenarios, number_of_periods)
+for period in 1:number_of_periods
     for bus in 1:number_of_buses
-        demand[bus, :, :, stage] .= monthly_demands[bus][stage]
+        demand[bus, :, :, period] .= monthly_demands[bus][period]
     end
 end
 # Write to file
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["dem_$label" for label in bus_labels],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "GWh",
 )
 IARA.link_time_series_to_file(
     db,
-    "Demand";
+    "DemandUnit";
     demand = "demand",
 )
 

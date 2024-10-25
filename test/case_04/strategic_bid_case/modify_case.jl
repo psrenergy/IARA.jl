@@ -30,24 +30,24 @@ IARA.add_asset_owner!(db;
 IARA.add_bidding_group!(db;
     label = "bg_3",
     assetowner_id = "asset_owner_3",
-    simple_bid_max_segments = 1,
+    independent_bid_max_segments = 1,
 )
 number_of_bidding_groups += 1
 
-IARA.add_demand!(db;
+IARA.add_demand_unit!(db;
     label = "dem_2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Demand_Existence.EXISTS)],
+        existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",
 )
 
-IARA.add_thermal_plant!(db;
+IARA.add_thermal_unit!(db;
     label = "ter_sb_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = Int(IARA.ThermalPlant_Existence.EXISTS),
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
         om_cost = 75.0 / 1e3,
@@ -57,11 +57,11 @@ IARA.add_thermal_plant!(db;
     biddinggroup_id = "bg_1",
 )
 
-IARA.add_thermal_plant!(db;
+IARA.add_thermal_unit!(db;
     label = "ter_sb_2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = Int(IARA.ThermalPlant_Existence.EXISTS),
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
         om_cost = 85.0 / 1e3,
@@ -71,11 +71,11 @@ IARA.add_thermal_plant!(db;
     biddinggroup_id = "bg_1",
 )
 
-IARA.add_thermal_plant!(db;
+IARA.add_thermal_unit!(db;
     label = "ter_sb_3",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = Int(IARA.ThermalPlant_Existence.EXISTS),
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
         om_cost = 95.0 / 1e3,
@@ -85,11 +85,11 @@ IARA.add_thermal_plant!(db;
     biddinggroup_id = "bg_2",
 )
 
-IARA.add_thermal_plant!(db;
+IARA.add_thermal_unit!(db;
     label = "ter_sb_4",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = Int(IARA.ThermalPlant_Existence.EXISTS),
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
         om_cost = 105.0 / 1e3,
@@ -102,14 +102,14 @@ IARA.add_thermal_plant!(db;
 # Create and link CSV files
 # -------------------------
 # Demand
-new_demand = zeros(2, number_of_blocks, number_of_scenarios, number_of_stages) .+ 9.9 * MW_to_GWh
+new_demand = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 9.9 * MW_to_GWh
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     new_demand;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["dem_1", "dem_2"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "GWh",
 )
@@ -120,23 +120,23 @@ new_quantity_offer =
         number_of_bidding_groups,
         number_of_buses,
         maximum_number_of_bidding_segments,
-        number_of_blocks,
+        number_of_subperiods,
         number_of_scenarios,
-        number_of_stages,
+        number_of_periods,
     )
 new_quantity_offer[1:(number_of_bidding_groups-1), :, :, :, :, :] .= quantity_offer
 new_quantity_offer[number_of_bidding_groups, :, :, :, :, :] .= quantity_offer[1, :, :, :, :, :]
 IARA.write_bids_time_series_file(
     joinpath(PATH, "quantity_offer"),
     new_quantity_offer;
-    dimensions = ["stage", "scenario", "block", "bid_segment"],
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2", "bg_3"],
     labels_buses = ["bus_1", "bus_2"],
-    time_dimension = "stage",
+    time_dimension = "period",
     dimension_size = [
-        number_of_stages,
+        number_of_periods,
         number_of_scenarios,
-        number_of_blocks,
+        number_of_subperiods,
         maximum_number_of_bidding_segments,
     ],
     initial_date = "2020-01-01T00:00:00",
@@ -148,23 +148,23 @@ new_price_offer =
         number_of_bidding_groups,
         number_of_buses,
         maximum_number_of_bidding_segments,
-        number_of_blocks,
+        number_of_subperiods,
         number_of_scenarios,
-        number_of_stages,
+        number_of_periods,
     )
 new_price_offer[1:(number_of_bidding_groups-1), :, :, :, :, :] .= price_offer
 new_price_offer[number_of_bidding_groups, :, :, :, :, :] .= price_offer[1, :, :, :, :, :]
 IARA.write_bids_time_series_file(
     joinpath(PATH, "price_offer"),
     new_price_offer;
-    dimensions = ["stage", "scenario", "block", "bid_segment"],
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2", "bg_3"],
     labels_buses = ["bus_1", "bus_2"],
-    time_dimension = "stage",
+    time_dimension = "period",
     dimension_size = [
-        number_of_stages,
+        number_of_periods,
         number_of_scenarios,
-        number_of_blocks,
+        number_of_subperiods,
         maximum_number_of_bidding_segments,
     ],
     initial_date = "2020-01-01T00:00:00",

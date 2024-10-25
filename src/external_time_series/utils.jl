@@ -155,3 +155,61 @@ function get_maximum_value_of_time_series(file_path::String)
     Quiver.close!(reader)
     return max_value
 end
+
+function bidding_group_file_labels(inputs)
+    labels = String[]
+    for bg in bidding_group_label(inputs)
+        for bus in bus_label(inputs)
+            push!(labels, "$bg - $bus")
+        end
+    end
+    return labels
+end
+
+function virtual_reservoir_file_labels(inputs)
+    labels = String[]
+    for vr in index_of_elements(inputs, VirtualReservoir)
+        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+            push!(labels, "$(virtual_reservoir_label(inputs, vr)) - $(asset_owner_label(inputs, ao))")
+        end
+    end
+    return labels
+end
+
+function create_empty_time_series_if_necessary(
+    filename::AbstractString,
+    impl::Type{<:Quiver.Implementation};
+    dimensions::Vector{String},
+    labels::Vector{String},
+    time_dimension::String,
+    dimension_size::Vector{Int},
+    initial_date::Union{String, DateTime} = "",
+    unit::String = "",
+    digits::Int = 6,
+)
+    file_created = 0
+    filename_with_extensions =
+        Quiver.add_extension_to_file(filename, Quiver.file_extension(impl))
+    if isfile(filename_with_extensions)
+        return file_created
+    end
+
+    @assert all(dimension_size .> 0)
+
+    @warn("Creating empty time series file at $(filename).")
+    file_created = 1
+    data = zeros(Float64, length(labels), reverse(dimension_size)...)
+    Quiver.array_to_file(
+        filename,
+        data,
+        impl;
+        dimensions,
+        labels,
+        time_dimension,
+        dimension_size,
+        initial_date,
+        unit,
+        digits,
+    )
+    return file_created
+end

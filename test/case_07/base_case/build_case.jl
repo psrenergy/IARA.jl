@@ -13,14 +13,14 @@ using DataFrames
 
 # Case dimensions
 # ---------------
-number_of_stages = 3
+number_of_periods = 3
 number_of_scenarios = 2
-number_of_blocks = 4
+number_of_subperiods = 4
 maximum_number_of_bidding_segments = 1
-block_duration_in_hours = 1000.0 / number_of_blocks
+subperiod_duration_in_hours = 1000.0 / number_of_subperiods
 
 # Conversion factors
-MW_to_GWh = block_duration_in_hours * 1e-3
+MW_to_GWh = subperiod_duration_in_hours * 1e-3
 m3_per_second_to_hm3_per_hour = 3600.0 / 1e6
 
 # Create the database
@@ -30,11 +30,11 @@ GC.gc()
 GC.gc()
 
 db = IARA.create_study!(PATH;
-    number_of_stages = number_of_stages,
+    number_of_periods = number_of_periods,
     number_of_scenarios = number_of_scenarios,
-    number_of_blocks = number_of_blocks,
+    number_of_subperiods = number_of_subperiods,
     initial_date_time = "2020",
-    block_duration_in_hours = [block_duration_in_hours for _ in 1:number_of_blocks],
+    subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     yearly_discount_rate = 0.0,
     yearly_duration_in_hours = 8760.0,
@@ -57,13 +57,13 @@ IARA.add_zone!(db; label = "zone_1")
 
 IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 
-IARA.add_hydro_plant!(db;
+IARA.add_hydro_unit!(db;
     label = "hydro_1",
     initial_volume = 900.0,
     bus_id = "bus_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = Int(IARA.HydroPlant_Existence.EXISTS),
+        existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 1000.0 * m3_per_second_to_hm3_per_hour,
         max_generation = 400.0,
         min_volume = 0.0,
@@ -74,13 +74,13 @@ IARA.add_hydro_plant!(db;
     ),
 )
 
-IARA.add_hydro_plant!(db;
+IARA.add_hydro_unit!(db;
     label = "hydro_2",
     initial_volume = 0.0,
     bus_id = "bus_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = Int(IARA.HydroPlant_Existence.EXISTS),
+        existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 1000.0 * m3_per_second_to_hm3_per_hour,
         max_generation = 700.0,
         max_turbining = 700.0 / m3_per_second_to_hm3_per_hour,
@@ -110,75 +110,75 @@ IARA.add_virtual_reservoir!(db;
     label = "reservoir_1",
     assetowner_id = ["asset_owner_1", "asset_owner_2"],
     inflow_allocation = [0.5, 0.5],
-    hydroplant_id = ["hydro_1", "hydro_2"],
+    hydrounit_id = ["hydro_1", "hydro_2"],
 )
 
-IARA.add_demand!(db;
+IARA.add_demand_unit!(db;
     label = "dem_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Demand_Existence.EXISTS)],
+        existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
     ),
     bus_id = "bus_1",
 )
 
-demand = zeros(1, number_of_blocks, number_of_scenarios, number_of_stages)
+demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods)
 demand[1, :, 1, :] .= 150.0
 demand[1, :, 2, :] .= 200.0
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["dem_1"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020",
     unit = "GWh",
 )
 
 IARA.link_time_series_to_file(
     db,
-    "Demand";
+    "DemandUnit";
     demand = "demand",
 )
 
-inflow = zeros(2, number_of_blocks, number_of_scenarios, number_of_stages)
+inflow = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["hydro_1_gauging_station", "hydro_2_gauging_station"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020",
     unit = "m3/s",
 )
 
 IARA.link_time_series_to_file(
     db,
-    "HydroPlant";
+    "HydroUnit";
     inflow = "inflow",
 )
 
 # Write hydro timeseries that usually come from a CENTRALIZED_OPERATION run.
 # values were chosen to match an execution of this case with the run_mode changed to CENTRALIZED_OPERATION
-hydro_generation = zeros(2, number_of_blocks, number_of_scenarios, number_of_stages)
+hydro_generation = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
 hydro_generation .= 75.0
 hydro_generation[1, 4, 1, 1:2] .= 25.0
 hydro_generation[2, 1:3, 1, 1:2] .= 25.0
 hydro_generation[2, :, 1, 3] .= 25.0
 
-hydro_opportunity_cost = zeros(2, number_of_blocks, number_of_scenarios, number_of_stages)
+hydro_opportunity_cost = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
 hydro_opportunity_cost[1, :, :, :] .= 0.3
 hydro_opportunity_cost[2, :, :, :] .= 0.6
 
 IARA.write_timeseries_file(
     joinpath(PATH, "hydro_generation"),
     hydro_generation;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["hydro_1", "hydro_2"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "GWh",
 )
@@ -186,10 +186,10 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "hydro_opportunity_cost"),
     hydro_opportunity_cost;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["hydro_1", "hydro_2"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "\$/MWh",
 )

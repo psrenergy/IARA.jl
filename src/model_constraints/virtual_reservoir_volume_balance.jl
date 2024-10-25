@@ -29,9 +29,9 @@ function virtual_reservoir_volume_balance!(
         model.jump_model,
         virtual_reservoir_generation_balance[vr in virtual_reservoirs],
         sum(
-            (hydro_turbining[b, h] + hydro_spillage[b, h]) * hydro_plant_production_factor(inputs, h) /
+            (hydro_turbining[b, h] + hydro_spillage[b, h]) * hydro_unit_production_factor(inputs, h) /
             m3_per_second_to_hm3_per_hour()
-            for b in blocks(inputs), h in virtual_reservoir_hydro_plant_indices(inputs, vr)
+            for b in subperiods(inputs), h in virtual_reservoir_hydro_unit_indices(inputs, vr)
         ) == sum(
             virtual_reservoir_generation[vr, ao, seg] for ao in virtual_reservoir_asset_owner_indices(inputs, vr),
             seg in 1:number_of_segments
@@ -65,8 +65,8 @@ function virtual_reservoir_volume_balance!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

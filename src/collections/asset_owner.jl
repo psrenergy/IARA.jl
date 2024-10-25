@@ -23,7 +23,7 @@ Collection representing the asset owners in the problem.
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
     # The convex revenue cache has information for a single asset owner at a time
-    # Array dimensions are [bus, block]
+    # Array dimensions are [bus, subperiod]
     # Vector dimension is the number of points in the convex hull
     # Point is a struct with (x, y) coordinates
     revenue_convex_hull::Array{Vector{Point}, 2} = Array{Vector{Point}, 2}(undef, 0, 0)
@@ -103,11 +103,11 @@ function update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
 end
 
 """
-    update_time_series_from_db!(asset_owner::AssetOwner, db::DatabaseSQLite, stage_date_time::DateTime)
+    update_time_series_from_db!(asset_owner::AssetOwner, db::DatabaseSQLite, period_date_time::DateTime)
 
 Update the AssetOwner collection time series from the database.
 """
-function update_time_series_from_db!(asset_owner::AssetOwner, db::DatabaseSQLite, stage_date_time::DateTime)
+function update_time_series_from_db!(asset_owner::AssetOwner, db::DatabaseSQLite, period_date_time::DateTime)
     return nothing
 end
 
@@ -172,10 +172,10 @@ is_price_taker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.
 is_price_maker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
 
 """
-    asset_owner_revenue_convex_hull_point(inputs, bus::Int, block::Int, point_idx::Int)
+    asset_owner_revenue_convex_hull_point(inputs, bus::Int, subperiod::Int, point_idx::Int)
 
-Return a point in the revenue convex hull cache at a given bus and block.
+Return a point in the revenue convex hull cache at a given bus and subperiod.
 """
-function asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, block::Int, point_idx::Int)
-    return inputs.collections.asset_owner.revenue_convex_hull[bus, block][point_idx]
+function asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, subperiod::Int, point_idx::Int)
+    return inputs.collections.asset_owner.revenue_convex_hull[bus, subperiod][point_idx]
 end

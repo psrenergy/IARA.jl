@@ -58,8 +58,8 @@ pages = [
             "tutorial/run_base_case.md",
         ],
         "Case 2" => [
-            "tutorial/build_hydroplant_base_case.md",
-            "tutorial/run_hydroplant_base_case.md",
+            "tutorial/build_hydrounit_base_case.md",
+            "tutorial/run_hydrounit_base_case.md",
         ],
         "Case 3" => [
             "tutorial/build_multi_hour_base_case.md",
@@ -75,6 +75,9 @@ pages = [
         ],
         "Case 6" => [
             "tutorial/build_modifications_case.md",
+        ],
+        "Custom Plots" => [
+            "tutorial/plots_tutorial.md",
         ],
     ],
     "Use Guides" => "use_guides.md",

@@ -59,5 +59,5 @@ The model offers three main options for pricing paradigms in terms of timing:
 
 - **Dual Settlement**: Explore dual settlement (versus ex post only, or Brazil's ex ante only model).
 - **Price Cap and Price Floor**:
-- **Pre-Offer Validation Stage**: 
+- **Pre-Offer Validation Period**: 
 - **De-Networked Price Formation**: 

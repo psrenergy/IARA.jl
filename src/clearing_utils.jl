@@ -61,7 +61,7 @@ function fix_discrete_variables_from_previous_problem!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     model::JuMP.Model,
-    stage::Int,
+    period::Int,
     scen::Int,
 )
     relax_integrality(model)
@@ -70,7 +70,7 @@ function fix_discrete_variables_from_previous_problem!(
             inputs,
             clearing_integer_variables_source(inputs, run_time_options),
             symbol;
-            stage = stage,
+            period = period,
             scenario = scen,
         )
         fix.(
@@ -87,8 +87,8 @@ function serialize_clearing_variables(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario;
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario;
+    period::Int,
     scenario::Int,
 )
     temp_path = joinpath(path_case(inputs), "temp")
@@ -96,7 +96,7 @@ function serialize_clearing_variables(
         mkdir(temp_path)
     end
     serialized_file_name =
-        joinpath(temp_path, "$(run_time_options.clearing_model_procedure)_stage_$(stage)_scenario_$(scenario).json")
+        joinpath(temp_path, "$(run_time_options.clearing_model_procedure)_period_$(period)_scenario_$(scenario).json")
 
     data_to_serialize = Dict{Symbol, Any}()
     for symbol in outputs.list_of_symbols_to_serialize
@@ -111,7 +111,7 @@ function serialize_heuristic_bids(
     inputs::Inputs,
     quantity_offer::Array{Float64, 4},
     price_offer::Array{Float64, 4};
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     temp_path = joinpath(path_case(inputs), "temp")
@@ -119,7 +119,7 @@ function serialize_heuristic_bids(
         mkdir(temp_path)
     end
     serialized_file_name =
-        joinpath(temp_path, "heuristic_bids_stage_$(stage)_scenario_$(scenario).json")
+        joinpath(temp_path, "heuristic_bids_period_$(period)_scenario_$(scenario).json")
 
     data_to_serialize = Dict{Symbol, Any}()
     data_to_serialize[:quantity_offer] = quantity_offer
@@ -133,7 +133,7 @@ function serialize_virtual_reservoir_heuristic_bids(
     inputs::Inputs,
     quantity_offer::Array{Float64, 3},
     price_offer::Array{Float64, 3};
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     temp_path = joinpath(path_case(inputs), "temp")
@@ -141,7 +141,7 @@ function serialize_virtual_reservoir_heuristic_bids(
         mkdir(temp_path)
     end
     serialized_file_name =
-        joinpath(temp_path, "virtual_reservoir_heuristic_bids_stage_$(stage)_scenario_$(scenario).json")
+        joinpath(temp_path, "virtual_reservoir_heuristic_bids_period_$(period)_scenario_$(scenario).json")
 
     data_to_serialize = Dict{Symbol, Any}()
     data_to_serialize[:quantity_offer] = quantity_offer
@@ -155,12 +155,12 @@ function read_serialized_clearing_variable(
     inputs::Inputs,
     clearing_model_procedure::RunTime_ClearingProcedure.T,
     symbol_to_read::Symbol;
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     temp_path = joinpath(path_case(inputs), "temp")
     serialized_file_name =
-        joinpath(temp_path, "$(clearing_model_procedure)_stage_$(stage)_scenario_$(scenario).json")
+        joinpath(temp_path, "$(clearing_model_procedure)_period_$(period)_scenario_$(scenario).json")
 
     data = Serialization.deserialize(serialized_file_name)
 
@@ -169,12 +169,12 @@ end
 
 function read_serialized_heuristic_bids(
     inputs::Inputs;
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     temp_path = joinpath(path_case(inputs), "temp")
     serialized_file_name =
-        joinpath(temp_path, "heuristic_bids_stage_$(stage)_scenario_$(scenario).json")
+        joinpath(temp_path, "heuristic_bids_period_$(period)_scenario_$(scenario).json")
 
     data = Serialization.deserialize(serialized_file_name)
 
@@ -183,12 +183,12 @@ end
 
 function read_serialized_virtual_reservoir_heuristic_bids(
     inputs::Inputs;
-    stage::Int,
+    period::Int,
     scenario::Int,
 )
     temp_path = joinpath(path_case(inputs), "temp")
     serialized_file_name =
-        joinpath(temp_path, "virtual_reservoir_heuristic_bids_stage_$(stage)_scenario_$(scenario).json")
+        joinpath(temp_path, "virtual_reservoir_heuristic_bids_period_$(period)_scenario_$(scenario).json")
 
     data = Serialization.deserialize(serialized_file_name)
 

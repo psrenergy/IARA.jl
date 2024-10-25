@@ -23,7 +23,7 @@ IARA.add_branch!(db;
     bus_to = "bus_3",
 )
 
-# Avoid degeneracy among blocks
+# Avoid degeneracy among subperiods
 renewable_generation[1, 1, 1, 1] -= 2.0 / 4.0
 renewable_generation[1, 1, 2, 1] -= 1.0 / 4.0
 renewable_generation[1, 1, 1, 2] -= 2.0 / 4.0
@@ -34,10 +34,10 @@ renewable_generation[1, 2, 2, 3] -= 1.0 / 4.0
 IARA.write_timeseries_file(
     joinpath(PATH, "renewable_generation"),
     renewable_generation;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["gnd_1"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01",
     unit = "p.u.",
 )

@@ -17,20 +17,21 @@ function bidding_group_generation!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    simple_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_simple_bids])
-    blks = blocks(inputs)
+    independent_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
+    blks = subperiods(inputs)
 
     # Time series
     placeholder_scenario = 1
-    quantity_offer_series = time_series_quantity_offer(inputs, model.stage, placeholder_scenario)
-    price_offer_series = time_series_price_offer(inputs, model.stage, placeholder_scenario)
+    quantity_offer_series = time_series_quantity_offer(inputs, model.period, placeholder_scenario)
+    price_offer_series = time_series_price_offer(inputs, model.period, placeholder_scenario)
 
     # Parameters
     @variable(
         model.jump_model,
         bidding_group_quantity_offer[
             blk in blks,
-            bg in simple_bidding_groups,
+            bg in independent_bidding_groups,
             bds in 1:maximum_bid_segments(inputs, bg),
             bus in buses,
         ]
@@ -41,7 +42,7 @@ function bidding_group_generation!(
         model.jump_model,
         bidding_group_price_offer[
             blk in blks,
-            bg in simple_bidding_groups,
+            bg in independent_bidding_groups,
             bds in 1:maximum_bid_segments(inputs, bg),
             bus in buses,
         ]
@@ -54,7 +55,7 @@ function bidding_group_generation!(
         model.jump_model,
         bidding_group_generation[
             blk in blks,
-            bg in simple_bidding_groups,
+            bg in independent_bidding_groups,
             bds in 1:maximum_bid_segments(inputs, bg),
             bus in buses,
         ],
@@ -64,7 +65,7 @@ function bidding_group_generation!(
         model.jump_model,
         linear_combination_bid_segments[
             blk in blks,
-            bg in simple_bidding_groups,
+            bg in independent_bidding_groups,
             bds in 1:maximum_bid_segments(inputs, bg),
             bus in buses,
         ],
@@ -77,7 +78,7 @@ function bidding_group_generation!(
         model.jump_model,
         accepted_offers_cost[
             blk in blks,
-            bg in simple_bidding_groups,
+            bg in independent_bidding_groups,
             bds in 1:maximum_bid_segments(inputs, bg),
             bus in buses,
         ],
@@ -98,19 +99,19 @@ function bidding_group_generation!(
     ::Type{SubproblemUpdate},
 )
     buses = index_of_elements(inputs, Bus)
-    simple_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_simple_bids])
-    blks = blocks(inputs)
+    independent_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
+    blks = subperiods(inputs)
 
     # Model parameters
     bidding_group_quantity_offer = get_model_object(model, :bidding_group_quantity_offer)
     bidding_group_price_offer = get_model_object(model, :bidding_group_price_offer)
 
     # Time series
-    quantity_offer_series = time_series_quantity_offer(inputs, model.stage, scenario)
-    price_offer_series = time_series_price_offer(inputs, model.stage, scenario)
+    quantity_offer_series = time_series_quantity_offer(inputs, model.period, scenario)
+    price_offer_series = time_series_price_offer(inputs, model.period, scenario)
 
-    for blk in blks, bg in simple_bidding_groups, bds in 1:maximum_bid_segments(inputs, bg), bus in buses
+    for blk in blks, bg in independent_bidding_groups, bds in 1:maximum_bid_segments(inputs, bg), bus in buses
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -144,7 +145,7 @@ function bidding_group_generation!(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_simple_bids],
+        filters_to_apply_in_first_collection = [has_independent_bids],
     )
 
     initialize!(
@@ -152,7 +153,7 @@ function bidding_group_generation!(
         outputs;
         inputs,
         output_name = "bidding_group_generation",
-        dimensions = ["stage", "scenario", "block", "bid_segment"],
+        dimensions = ["period", "scenario", "subperiod", "bid_segment"],
         unit = "GWh",
         labels,
         run_time_options,
@@ -165,8 +166,8 @@ function bidding_group_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
@@ -177,12 +178,12 @@ function bidding_group_generation!(
         run_time_options,
         "bidding_group_generation",
         simulation_results.data[:bidding_group_generation].data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
-        has_multihour_bids = false,
-        filters = [has_simple_bids],
+        has_profile_bids = false,
+        filters = [has_independent_bids],
     )
 
     return nothing

@@ -53,14 +53,12 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     end
 
     labels_to_read = String[]
-    for vr in virtual_reservoirs_to_read
-        for ao in asset_owners_to_read
-            vr_index =
-                findfirst(i -> virtual_reservoir_label(inputs, i) == vr, index_of_elements(inputs, VirtualReservoir))
-            # Is this being done the best way? 
-            ao_index = findfirst(i -> asset_owner_label(inputs, i) == ao, index_of_elements(inputs, AssetOwner))
-            if ao_index in virtual_reservoir_asset_owner_indices(inputs, vr_index)
-                push!(labels_to_read, "$vr - $ao")
+    for vr in index_of_elements(inputs, VirtualReservoir)
+        if virtual_reservoir_label(inputs, vr) in virtual_reservoirs_to_read
+            for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+                if asset_owner_label(inputs, ao) in asset_owners_to_read
+                    push!(labels_to_read, "$(virtual_reservoir_label(inputs, vr)) - $(asset_owner_label(inputs, ao))")
+                end
             end
         end
     end
@@ -91,7 +89,7 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     # Initialize dynamic time series
     ts.data = read_virtual_reservoir_bids_view_from_external_file(
         inputs, ts.reader;
-        stage = 1, scenario = 1, data_type = eltype(ts.data),
+        period = 1, scenario = 1, data_type = eltype(ts.data),
     )
 
     return num_errors
@@ -100,7 +98,7 @@ end
 function read_virtual_reservoir_bids_view_from_external_file(
     inputs,
     reader::Quiver.Reader{Quiver.binary};
-    stage::Int,
+    period::Int,
     scenario::Int,
     data_type::Type,
 )
@@ -116,7 +114,7 @@ function read_virtual_reservoir_bids_view_from_external_file(
     )
 
     for bs in bid_segments
-        Quiver.goto!(reader; stage, scenario, bid_segment = bs)
+        Quiver.goto!(reader; period, scenario, bid_segment = bs)
         pair_index = 0
         # vr and ao are in a bad performance order, but it is convenient for maping pairs the correct way.
         for vr in virtual_reservoirs
@@ -149,11 +147,11 @@ function write_virtual_reservoir_bids_time_series_file(
     # 2 - asset owner
     # 3 - bid segment
     # 4 - scenario
-    # 5 - stage
+    # 5 - period
     # Pairs of virtual reservoirs and asset owners that are not in the map should be filled with 0.0.
     # Pairs that are in the map should have positive values for at least one occurrence.
 
-    num_virtual_reservoirs, num_asset_owners, num_bid_segments, num_scenarios, num_stages = size(data)
+    num_virtual_reservoirs, num_asset_owners, num_bid_segments, num_scenarios, num_periods = size(data)
     @assert num_virtual_reservoirs == length(labels_virtual_reservoirs)
     @assert num_asset_owners == length(labels_asset_owners)
     number_of_pairs = 0
@@ -168,14 +166,14 @@ function write_virtual_reservoir_bids_time_series_file(
                 number_of_pairs += 1
                 if iszero(data[vr, ao, :, :, :])
                     @error(
-                        "Asset owner $(labels_asset_owners[ao]) is in the map for virtual reservoir $(labels_virtual_reservoirs[vr]), but the data is zero for all bid segment, scenario and stage.",
+                        "Asset owner $(labels_asset_owners[ao]) is in the map for virtual reservoir $(labels_virtual_reservoirs[vr]), but the data is zero for all bid segment, scenario and period.",
                     )
                 end
             else
-                for bs in 1:num_bid_segments, scenario in 1:num_scenarios, stage in 1:num_stages
-                    if !iszero(data[vr, ao, bs, scenario, stage])
+                for bs in 1:num_bid_segments, scenario in 1:num_scenarios, period in 1:num_periods
+                    if !iszero(data[vr, ao, bs, scenario, period])
                         @error(
-                            "Asset owner $(labels_asset_owners[ao]) is not in the map for virtual reservoir $(labels_virtual_reservoirs[vr]), but the data is positive for bid segment $(bs), scenario $(scenario) and stage $(stage).",
+                            "Asset owner $(labels_asset_owners[ao]) is not in the map for virtual reservoir $(labels_virtual_reservoirs[vr]), but the data is positive for bid segment $(bs), scenario $(scenario) and period $(period).",
                         )
                     end
                 end
@@ -183,8 +181,8 @@ function write_virtual_reservoir_bids_time_series_file(
         end
     end
 
-    treated_array = zeros(T, number_of_pairs, num_bid_segments, num_scenarios, num_stages)
-    for stage in 1:num_stages
+    treated_array = zeros(T, number_of_pairs, num_bid_segments, num_scenarios, num_periods)
+    for period in 1:num_periods
         for scenario in 1:num_scenarios
             for bs in 1:num_bid_segments
                 pair_index = 0
@@ -194,8 +192,8 @@ function write_virtual_reservoir_bids_time_series_file(
                         if labels_asset_owners[ao] in
                            virtual_reservoirs_to_asset_owners_map[labels_virtual_reservoirs[vr]]
                             pair_index += 1
-                            treated_array[pair_index, bs, scenario, stage] =
-                                data[vr, ao, bs, scenario, stage]
+                            treated_array[pair_index, bs, scenario, period] =
+                                data[vr, ao, bs, scenario, period]
                         end
                     end
                 end

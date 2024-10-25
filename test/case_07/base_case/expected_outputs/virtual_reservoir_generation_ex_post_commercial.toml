@@ -1,8 +1,8 @@
 version = 1
-dimensions = ["stage", "scenario", "subscenario", "bid_segment"]
+dimensions = ["period", "scenario", "subscenario", "bid_segment"]
 dimension_size = [3, 2, 1, 4]
 initial_date = "2020-01-01 00:00:00"
-time_dimension = "stage"
+time_dimension = "period"
 frequency = "monthly"
 unit = "GWh"
 labels = ["reservoir_1 - asset_owner_1", "reservoir_1 - asset_owner_2"]

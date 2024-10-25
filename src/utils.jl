@@ -51,34 +51,34 @@ function per_minute_to_per_hour()
     return 60
 end
 
-function date_time_from_stage(inputs::Inputs, stage::Int)
-    if stage_type(inputs) == Configurations_StageType.MONTHLY
-        return initial_date_time(inputs) + Dates.Month(stage - 1)
+function date_time_from_period(inputs::Inputs, period::Int)
+    if period_type(inputs) == Configurations_PeriodType.MONTHLY
+        return initial_date_time(inputs) + Dates.Month(period - 1)
     else
-        error("Stage type $(stage_type(inputs)) not supported.")
+        error("Period type $(period_type(inputs)) not supported.")
     end
 end
 
-function stage_from_date_time(
+function period_from_date_time(
     inputs::Inputs,
     date_time::DateTime;
     initial_date_time::DateTime = initial_date_time(inputs),
 )
-    if stage_type(inputs) == Configurations_StageType.MONTHLY
+    if period_type(inputs) == Configurations_PeriodType.MONTHLY
         year_difference = Dates.year(date_time) - Dates.year(initial_date_time)
         month_difference = Dates.month(date_time) - Dates.month(initial_date_time)
         return 12 * year_difference + month_difference + 1
     else
-        error("Stage type $(stage_type(inputs)) not supported.")
+        error("Period type $(period_type(inputs)) not supported.")
     end
 end
 
-function stage_index_in_year(inputs::Inputs, stage::Int)
-    date_time = date_time_from_stage(inputs, stage)
-    if stage_type(inputs) == Configurations_StageType.MONTHLY
+function period_index_in_year(inputs::Inputs, period::Int)
+    date_time = date_time_from_period(inputs, period)
+    if period_type(inputs) == Configurations_PeriodType.MONTHLY
         return Dates.month(date_time)
     else
-        error("Stage type $(stage_type(inputs)) not supported.")
+        error("Period type $(period_type(inputs)) not supported.")
     end
 end
 
@@ -86,17 +86,17 @@ function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
     if run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID
         max_price = get_max_price(inputs)
         max_generation = 0.0
-        for h in index_of_elements(inputs, HydroPlant; run_time_options)
-            max_generation += hydro_plant_max_generation(inputs, h)
+        for h in index_of_elements(inputs, HydroUnit; run_time_options)
+            max_generation += hydro_unit_max_generation(inputs, h)
         end
-        for t in index_of_elements(inputs, ThermalPlant; run_time_options)
-            max_generation += thermal_plant_max_generation(inputs, t)
+        for t in index_of_elements(inputs, ThermalUnit; run_time_options)
+            max_generation += thermal_unit_max_generation(inputs, t)
         end
-        for r in index_of_elements(inputs, RenewablePlant; run_time_options)
-            max_generation += renewable_plant_max_generation(inputs, r)
+        for r in index_of_elements(inputs, RenewableUnit; run_time_options)
+            max_generation += renewable_unit_max_generation(inputs, r)
         end
         lower_bound =
-            -max_price * max_generation * sum(block_duration_in_hours(inputs))
+            -max_price * max_generation * sum(subperiod_duration_in_hours(inputs))
         return lower_bound
     elseif run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
         @warn "Strategic Bid lower bound not implemented."
@@ -111,17 +111,17 @@ function get_max_price(inputs::Inputs)
     return get_maximum_value_of_time_series(spot_price_file)
 end
 
-function block_aggregation_type(unit::String)
+function subperiod_aggregation_type(unit::String)
     aggregate_by_sum = ["MWh", "GWh", "\$"]
     aggregate_by_average = ["m3/s", "m³/s", "MW", "p.u.", "\$/MWh"]
     aggregate_by_last_value = ["hm3", "hm³"]
 
     if unit in aggregate_by_sum
-        return Configurations_BlockAggregationType.SUM
+        return Configurations_SubperiodAggregationType.SUM
     elseif unit in aggregate_by_average
-        return Configurations_BlockAggregationType.AVERAGE
+        return Configurations_SubperiodAggregationType.AVERAGE
     elseif unit in aggregate_by_last_value
-        return Configurations_BlockAggregationType.LAST_VALUE
+        return Configurations_SubperiodAggregationType.LAST_VALUE
     else
         error("Unexpected unit $unit.")
     end

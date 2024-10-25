@@ -14,12 +14,12 @@ IARA.update_configuration!(db;
     hydro_spillage_cost = 1e-3,
 )
 
-IARA.add_hydro_plant!(
+IARA.add_hydro_unit!(
     db;
     label = "hyd_2",
     parameters = DataFrame(;
         date_time = [DateTime(0), DateTime("2020-03-01T00:00:00")],
-        existing = [Int(IARA.HydroPlant_Existence.DOES_NOT_EXIST), Int(IARA.HydroPlant_Existence.EXISTS)],
+        existing = [Int(IARA.HydroUnit_Existence.DOES_NOT_EXIST), Int(IARA.HydroUnit_Existence.EXISTS)],
         min_volume = [0.0, missing],
         max_generation = [3.5, missing],
         production_factor = [1.5, missing],
@@ -27,7 +27,7 @@ IARA.add_hydro_plant!(
         max_volume = [0.1, missing],
         om_cost = [0.0, missing],
     ),
-    operation_type = IARA.HydroPlant_OperationType.RUN_OF_RIVER,
+    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
     initial_volume = 0.01,
     bus_id = "bus_2",
 )
@@ -44,16 +44,16 @@ IARA.set_hydro_spill_to!(
     "hyd_2",
 )
 
-new_inflow = zeros(2, number_of_blocks, number_of_scenarios, number_of_stages)
+new_inflow = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
 new_inflow[1, :, :, :] .= inflow[1, :, :, :]
 
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     new_inflow;
-    dimensions = ["stage", "scenario", "block"],
+    dimensions = ["period", "scenario", "subperiod"],
     labels = ["hyd_1_gauging_station", "hyd_2_gauging_station"],
-    time_dimension = "stage",
-    dimension_size = [number_of_stages, number_of_scenarios, number_of_blocks],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "m3/s",
 )

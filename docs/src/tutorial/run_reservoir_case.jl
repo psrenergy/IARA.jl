@@ -12,10 +12,10 @@ using IARA
 
 # ## Case recap
 
-# In the [previous section](build_reservoir_case.md), we have built a case containing a virtual reservoir with two hydro plants and two asset owners. Now, we will run this case in the `MARKET_CLEARING` mode.
+# In the [previous section](build_reservoir_case.md), we have built a case containing a virtual reservoir with two hydro units and two asset owners. Now, we will run this case in the `MARKET_CLEARING` mode.
 # Now we will run this case using the `MARKET_CLEARING` mode.
 
-# As we have Hydro Plants in this case, we need the hydro generation and hydro opportunity cost time series files. We can automatically generate them by running the case with the `CENTRALIZED_OPERATION` mode.
+# As we have Hydro Units in this case, we need the hydro generation and hydro opportunity cost time series files. We can automatically generate them by running the case with the `CENTRALIZED_OPERATION` mode.
 # We will be doing this before running the case in the `MARKET_CLEARING` mode.
 
 # Let's create a folder to store the output of the `MARKET_CLEARING` mode and define the path to the original case.
@@ -117,13 +117,13 @@ IARA.main([PATH_EXECUTION])
 # <iframe src="case_5_execution\\outputs\\plots\\virtual_reservoir_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
-# Also, the volume from the first Hydro plant starts at 100 hm³, and as the energy decreases, the volume decreases as well. The second Hydro plant starts with 0 hm³ and increases over time
+# Also, the volume from the first hydro unit starts at 100 hm³, and as the energy decreases, the volume decreases as well. The second Hydro unit starts with 0 hm³ and increases over time
 
 # ```@raw html
 # <iframe src="case_5_execution\\outputs\\plots\\hydro_initial_volume_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
-# Finally, as the second hydro plant has a higher O&M cost, it is only dispatched when the energy from the first hydro plant is not enough to meet the demand.
+# Finally, as the second hydro unit has a higher O&M cost, it is only dispatched when the energy from the first hydro unit is not enough to meet the demand.
 
 # ```@raw html
 # <iframe src="case_5_execution\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe>

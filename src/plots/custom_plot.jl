@@ -46,16 +46,40 @@ end
 
 function _get_adjusted_date_time(
     initial_date::DateTime,
-    stage_type::Configurations_StageType.T,
-    stage::Union{Int, UnitRange},
+    period_type::Configurations_PeriodType.T,
+    period::Union{Int, UnitRange},
 )
-    if stage_type == Configurations_StageType.MONTHLY
-        if stage isa Int
-            return initial_date + Dates.Month(stage - 1)
+    if period_type == Configurations_PeriodType.MONTHLY
+        if period isa Int
+            return initial_date + Dates.Month(period - 1)
         else
-            return initial_date + Dates.Month(first(stage) - 1)
+            return initial_date + Dates.Month(first(period) - 1)
         end
     end
+end
+
+function _compare_axis(axis_a::Config, axis_b::Config)
+    if haskey(axis_a, :ticktext) && haskey(axis_b, :ticktext)
+        if axis_a["ticktext"] != axis_b["ticktext"]
+            return false
+        end
+    end
+    if haskey(axis_a, :tickvals) && haskey(axis_b, :tickvals)
+        if axis_a["tickvals"] != axis_b["tickvals"]
+            return false
+        end
+    end
+    if haskey(axis_a, :tickmode) && haskey(axis_b, :tickmode)
+        if axis_a["tickmode"] != axis_b["tickmode"]
+            return false
+        end
+    end
+    if haskey(axis_a, :title) && haskey(axis_b, :title)
+        if axis_a["title"] != axis_b["title"]
+            return false
+        end
+    end
+    return true
 end
 
 """
@@ -72,7 +96,7 @@ Example:
 
 ```julia
 path = "path/to/file.csv"
-IARA.custom_plot(path, PlotTimeSeriesMean; block = 1:10, agents=["hydro"])
+IARA.custom_plot(path, PlotTimeSeriesMean; subperiod = 1:10, agents=["hydro"])
 ```
 """
 function custom_plot(
@@ -99,14 +123,14 @@ function custom_plot(
 
     data_to_plot = _filter_time_series(data, metadata, agents; kwargs...)
 
-    stage_type = if metadata.frequency == "monthly" || metadata.frequency == "month"
-        Configurations_StageType.MONTHLY
+    period_type = if metadata.frequency == "monthly" || metadata.frequency == "month"
+        Configurations_PeriodType.MONTHLY
     end
 
-    queried_stage = get(kwargs, :stage, nothing)
+    queried_period = get(kwargs, :period, nothing)
 
-    initial_date = if !isnothing(queried_stage)
-        _get_adjusted_date_time(DateTime(metadata.initial_date), stage_type, queried_stage)
+    initial_date = if !isnothing(queried_period)
+        _get_adjusted_date_time(DateTime(metadata.initial_date), period_type, queried_period)
     else
         DateTime(metadata.initial_date)
     end
@@ -120,7 +144,7 @@ function custom_plot(
         unit = metadata.unit,
         file_path = "",
         initial_date = initial_date,
-        stage_type = stage_type,
+        period_type = period_type,
         kwargs...,
     )
 end
@@ -199,16 +223,16 @@ function custom_plot(
     filtered_data_1 = _filter_time_series(data_1, metadata_1, [agent_x]; kwargs...)
     filtered_data_2 = _filter_time_series(data_2, metadata_2, [agent_y]; kwargs...)
 
-    stage_type = if metadata_1.frequency == "month" || metadata_1.frequency == "monthly"
-        Configurations_StageType.MONTHLY
+    period_type = if metadata_1.frequency == "month" || metadata_1.frequency == "monthly"
+        Configurations_PeriodType.MONTHLY
     end
 
-    queried_stage = get(kwargs, :stage, nothing)
+    queried_period = get(kwargs, :period, nothing)
 
-    initial_date = if !isnothing(queried_stage)
-        _get_adjusted_date_time(DateTime(metadata.initial_date), stage_type, queried_stage)
+    initial_date = if !isnothing(queried_period)
+        _get_adjusted_date_time(DateTime(metadata_1.initial_date), period_type, queried_period)
     else
-        DateTime(metadata.initial_date)
+        DateTime(metadata_1.initial_date)
     end
 
     return plot_data(
@@ -223,7 +247,7 @@ function custom_plot(
         unit_y = metadata_2.unit,
         file_path = "",
         initial_date = initial_date,
-        stage_type = stage_type,
+        period_type = period_type,
         x_label = x_label,
         y_label = y_label,
         flip_x = flip_x,
@@ -231,4 +255,102 @@ function custom_plot(
         trace_mode = trace_mode,
         kwargs...,
     )
+end
+
+"""
+    IARA.custom_plot(plot_a::Plot, plot_b::Plot; title::String = "Plot")
+
+Create a customized plot from two plots.
+
+- It requires a vector of plots that you have already created with `IARA.custom_plot`.
+- The x-axis of the two plots must be the same.
+
+Example:
+
+```julia
+path_1 = "path/to/file.csv"
+path_2 = "path/to/another_file.csv"
+
+
+plot_1 = IARA.custom_plot(path_1, IARA.PlotTimeSeriesMean; subperiod = 1:10, agents=["hydro"])
+plot_2 = IARA.custom_plot(path_2, IARA.PlotTimeSeriesMean; subperiod = 1:10, agents=["thermal"])
+
+IARA.custom_plot(plot_1, plot_2; title = "Custom Plot")
+```
+"""
+function custom_plot(
+    plot_a::Plot,
+    plot_b::Plot;
+    title::Union{String, Nothing} = nothing,
+    identifier_a::String = "_(1)",
+    identifier_b::String = "_(2)",
+)
+    different_y_axis = false
+    configs = Vector{Config}()
+
+    if isnothing(title)
+        title = plot_a.layout.title * " || " * plot_b.layout.title
+    end
+
+    main_config = Config(;
+        title = title,
+        margin = Dict("l" => 60, "r" => 60, "t" => 60, "b" => 60),
+    )
+
+    if _compare_axis(plot_a.layout.xaxis, plot_b.layout.xaxis)
+        main_config.xaxis = plot_a.layout.xaxis
+    else
+        error("The x-axis of the two plots must be the same")
+    end
+    if _compare_axis(plot_a.layout.yaxis, plot_b.layout.yaxis)
+        main_config.yaxis = plot_a.layout.yaxis
+    else
+        main_config[:yaxis] = plot_a.layout.yaxis
+
+        main_config[:yaxis2] = plot_b.layout.yaxis
+        main_config[:yaxis2][:overlaying] = "y"
+        main_config[:yaxis2][:side] = "right"
+        main_config[:yaxis2][:tickfont] = Dict("color" => "#1f77b4")
+        main_config[:yaxis2][:titlefont] = Dict("color" => "#1f77b4")
+
+        different_y_axis = true
+    end
+
+    for config in plot_a.data
+        new_config = Config()
+        for key in keys(config)
+            if key == :name
+                if typeof(config.name) == String
+                    new_config[:name] = config.name * identifier_a
+                end
+            elseif key == :legendgroup
+                new_config[:legendgroup] = config.legendgroup * identifier_a
+            else
+                new_config[key] = config[key]
+            end
+        end
+        push!(configs, new_config)
+    end
+    for config in plot_b.data
+        new_config = Config()
+        for key in keys(config)
+            if key == :name
+                if typeof(config.name) == String
+                    new_config[:name] = config.name * identifier_b
+                end
+            elseif key == :legendgroup
+                new_config[:legendgroup] = config.legendgroup * identifier_b
+            else
+                new_config[key] = config[key]
+            end
+        end
+        if different_y_axis
+            new_config[:yaxis] = "y2"
+        end
+        push!(configs, new_config)
+    end
+
+    main_config[:legend] = Dict("x" => 1.06, "y" => 1)
+
+    return Plot(configs, main_config)
 end

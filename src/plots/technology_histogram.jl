@@ -11,7 +11,7 @@
 """
     PlotTechnologyHistogram
 
-Type for plotting a histogram where the observations are the total of generation for a technology, considering all scenarios, stages and blocks.
+Type for plotting a histogram where the observations are the total of generation for a technology, considering all scenarios, periods and subperiods.
 """
 abstract type PlotTechnologyHistogram <: PlotType end
 
@@ -26,16 +26,16 @@ function plot_data(
     kwargs...,
 ) where {N}
 
-    # observations are each scenario - block for plant i
-    num_stages = size(data, 4)
+    # observations are each scenario - subperiod for plant i
+    num_periods = size(data, 4)
     num_scenarios = size(data, 3)
-    num_blocks = size(data, 2)
+    num_subperiods = size(data, 2)
 
     data_to_plot = Vector{Float64}()
     for scenario in 1:num_scenarios
-        for block in 1:num_blocks
-            for stage in 1:num_stages
-                push!(data_to_plot, sum(data[:, block, scenario, stage]))
+        for subperiod in 1:num_subperiods
+            for period in 1:num_periods
+                push!(data_to_plot, sum(data[:, subperiod, scenario, period]))
             end
         end
     end
@@ -46,7 +46,7 @@ function plot_data(
     )
 
     main_configuration = Config(;
-        title = title * " - Scenario - Block",
+        title = title * " - Scenario - Subperiod",
         xaxis = Dict("title" => unit),
         yaxis = Dict("title" => "Frequency"),
     )

@@ -17,9 +17,9 @@ function thermal_startup_and_shutdown!(
     ::Type{SubproblemBuild},
 )
     commitment_indexes =
-        index_of_elements(inputs, ThermalPlant; run_time_options, filters = [is_existing, has_commitment])
-    max_startup_indexes = [t for t in commitment_indexes if !is_null(thermal_plant_max_startups(inputs, t))]
-    max_shutdown_indexes = [t for t in commitment_indexes if !is_null(thermal_plant_max_shutdowns(inputs, t))]
+        index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
+    max_startup_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_max_startups(inputs, t))]
+    max_shutdown_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_max_shutdowns(inputs, t))]
 
     # Model Variables
     thermal_commitment = get_model_object(model, :thermal_commitment)
@@ -30,7 +30,7 @@ function thermal_startup_and_shutdown!(
     @constraint(
         model.jump_model,
         thermal_startup_and_shutdown[
-            b in 2:number_of_blocks(inputs),
+            b in 2:number_of_subperiods(inputs),
             t in commitment_indexes,
         ],
         thermal_startup[b, t] - thermal_shutdown[b, t] ==
@@ -39,7 +39,7 @@ function thermal_startup_and_shutdown!(
     @constraint(
         model.jump_model,
         thermal_commitment_is_on[
-            b in 2:number_of_blocks(inputs),
+            b in 2:number_of_subperiods(inputs),
             t in commitment_indexes,
         ],
         thermal_startup[b, t] + thermal_shutdown[b, t] <=
@@ -48,7 +48,7 @@ function thermal_startup_and_shutdown!(
     @constraint(
         model.jump_model,
         thermal_commitment_is_off[
-            b in 2:number_of_blocks(inputs),
+            b in 2:number_of_subperiods(inputs),
             t in commitment_indexes,
         ],
         thermal_startup[b, t] + thermal_shutdown[b, t] +
@@ -58,16 +58,16 @@ function thermal_startup_and_shutdown!(
     )
 
     # Startup and shutdown initial conditions
-    if model.stage == 1
+    if model.period == 1
         initial_condition_indexes =
-            [t for t in commitment_indexes if has_commitment_initial_condition(inputs.collections.thermal_plant, t)]
+            [t for t in commitment_indexes if has_commitment_initial_condition(inputs.collections.thermal_unit, t)]
         @constraint(
             model.jump_model,
             thermal_startup_and_shutdown_initial[
                 t in initial_condition_indexes
             ],
             thermal_startup[1, t] - thermal_shutdown[1, t] ==
-            thermal_commitment[1, t] - Int(thermal_plant_commitment_initial_condition(inputs, t))
+            thermal_commitment[1, t] - Int(thermal_unit_commitment_initial_condition(inputs, t))
         )
         @constraint(
             model.jump_model,
@@ -75,7 +75,7 @@ function thermal_startup_and_shutdown!(
                 t in initial_condition_indexes
             ],
             thermal_startup[1, t] + thermal_shutdown[1, t] <=
-            thermal_commitment[1, t] + Int(thermal_plant_commitment_initial_condition(inputs, t))
+            thermal_commitment[1, t] + Int(thermal_unit_commitment_initial_condition(inputs, t))
         )
         @constraint(
             model.jump_model,
@@ -83,19 +83,19 @@ function thermal_startup_and_shutdown!(
                 t in initial_condition_indexes
             ],
             thermal_startup[1, t] + thermal_shutdown[1, t] +
-            thermal_commitment[1, t] + Int(thermal_plant_commitment_initial_condition(inputs, t))
+            thermal_commitment[1, t] + Int(thermal_unit_commitment_initial_condition(inputs, t))
             <=
             2
         )
     end
 
-    # Connect first block to last block
-    if loop_blocks_for_thermal_constraints(inputs)
+    # Connect first subperiod to last subperiod
+    if loop_subperiods_for_thermal_constraints(inputs)
         thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
         thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
         @constraint(
             model.jump_model,
-            thermal_startup_and_shutdown_last_block[
+            thermal_startup_and_shutdown_last_subperiod[
                 t in commitment_indexes
             ],
             thermal_startup_loop[t] - thermal_shutdown_loop[t] ==
@@ -103,7 +103,7 @@ function thermal_startup_and_shutdown!(
         )
         @constraint(
             model.jump_model,
-            thermal_commitment_is_on_last_block[
+            thermal_commitment_is_on_last_subperiod[
                 t in commitment_indexes
             ],
             thermal_startup_loop[t] + thermal_shutdown_loop[t] <=
@@ -111,7 +111,7 @@ function thermal_startup_and_shutdown!(
         )
         @constraint(
             model.jump_model,
-            thermal_commitment_is_off_last_block[
+            thermal_commitment_is_off_last_subperiod[
                 t in commitment_indexes
             ],
             thermal_startup_loop[t] + thermal_shutdown_loop[t] +
@@ -125,16 +125,16 @@ function thermal_startup_and_shutdown!(
     @constraint(
         model.jump_model,
         thermal_max_startups[t in max_startup_indexes],
-        sum(thermal_startup[b, t] for b in blocks(inputs))
+        sum(thermal_startup[b, t] for b in subperiods(inputs))
         <=
-        thermal_plant_max_startups(inputs, t)
+        thermal_unit_max_startups(inputs, t)
     )
     @constraint(
         model.jump_model,
         thermal_max_shutdowns[t in max_shutdown_indexes],
-        sum(thermal_shutdown[b, t] for b in blocks(inputs))
+        sum(thermal_shutdown[b, t] for b in subperiods(inputs))
         <=
-        thermal_plant_max_shutdowns(inputs, t)
+        thermal_unit_max_shutdowns(inputs, t)
     )
 
     return nothing
@@ -164,8 +164,8 @@ function thermal_startup_and_shutdown!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

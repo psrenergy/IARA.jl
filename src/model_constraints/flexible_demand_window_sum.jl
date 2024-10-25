@@ -16,7 +16,7 @@ function flexible_demand_window_sum!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    flexible_demands = index_of_elements(inputs, Demand; filters = [is_existing, is_flexible])
+    flexible_demands = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_flexible])
 
     # Model Variables
     attended_flexible_demand = get_model_object(model, :attended_flexible_demand)
@@ -35,11 +35,11 @@ function flexible_demand_window_sum!(
         ],
         sum(
             attended_flexible_demand[b, d] + demand_curtailment[b, d] + deficit[b, d]
-            for b in blocks_in_flexible_demand_window(inputs, d, w)
+            for b in subperiods_in_flexible_demand_window(inputs, d, w)
         ) * MW_to_GW() ==
         sum(
             demand[b, d]
-            for b in blocks_in_flexible_demand_window(inputs, d, w)
+            for b in subperiods_in_flexible_demand_window(inputs, d, w)
         )
     )
 
@@ -70,8 +70,8 @@ function flexible_demand_window_sum!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

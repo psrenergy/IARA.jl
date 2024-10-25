@@ -26,7 +26,7 @@ function kirchhoffs_voltage_law!(
     @constraint(
         model.jump_model,
         kirchhoffs_voltage_law[
-            b in blocks(inputs),
+            b in subperiods(inputs),
             l in ac_branches,
         ],
         -1 / branch_reactance(inputs, l) *
@@ -62,8 +62,8 @@ function kirchhoffs_voltage_law!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

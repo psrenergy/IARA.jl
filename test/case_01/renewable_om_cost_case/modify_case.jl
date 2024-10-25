@@ -10,7 +10,7 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_renewable_plant_time_series!(db,
+IARA.update_renewable_unit_time_series!(db,
     "gnd_1";
     om_cost = 10.0,
 )

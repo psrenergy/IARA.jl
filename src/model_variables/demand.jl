@@ -16,7 +16,7 @@ function demand!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    demands = index_of_elements(inputs, Demand; filters = [is_existing])
+    demands = index_of_elements(inputs, DemandUnit; filters = [is_existing])
 
     # Time series
     demand_series = time_series_demand(inputs)
@@ -24,14 +24,14 @@ function demand!(
     # Variables
     @variable(
         model.jump_model,
-        deficit[b in blocks(inputs), d in demands],
+        deficit[b in subperiods(inputs), d in demands],
         lower_bound = 0.0,
     ) # MWh
 
     # Parameters
     @variable(
         model.jump_model,
-        demand[b in blocks(inputs), d in demands]
+        demand[b in subperiods(inputs), d in demands]
         in
         MOI.Parameter(demand_series[d, b])
     ) # GWh
@@ -41,7 +41,7 @@ function demand!(
         model.obj_exp +
         money_to_thousand_money() * sum(
             deficit[b, d] * demand_deficit_cost(inputs)
-            for b in blocks(inputs), d in demands
+            for b in subperiods(inputs), d in demands
         ),
     )
 
@@ -56,7 +56,7 @@ function demand!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    demands = index_of_elements(inputs, Demand; filters = [is_existing])
+    demands = index_of_elements(inputs, DemandUnit; filters = [is_existing])
 
     # Model parameters
     demand = get_model_object(model, :demand)
@@ -64,7 +64,7 @@ function demand!(
     # Time series
     demand_series = time_series_demand(inputs, run_time_options, subscenario)
 
-    for b in blocks(inputs), d in demands
+    for b in subperiods(inputs), d in demands
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -82,7 +82,7 @@ function demand!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    demands = index_of_elements(inputs, Demand; run_time_options)
+    demands = index_of_elements(inputs, DemandUnit; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(outputs, [:deficit, :demand])
 
@@ -91,9 +91,9 @@ function demand!(
         outputs;
         inputs,
         output_name = "deficit",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = demand_label(inputs)[demands],
+        labels = demand_unit_label(inputs)[demands],
         run_time_options,
     )
 
@@ -102,9 +102,9 @@ function demand!(
         outputs;
         inputs,
         output_name = "demand",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "GWh",
-        labels = demand_label(inputs)[demands],
+        labels = demand_unit_label(inputs)[demands],
         run_time_options,
     )
 
@@ -115,14 +115,14 @@ function demand!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    demands = index_of_elements(inputs, Demand; run_time_options, filters = [is_existing])
-    existing_demands = index_of_elements(inputs, Demand; run_time_options, filters = [is_existing])
+    demands = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing])
+    existing_demands = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing])
 
     deficit = simulation_results.data[:deficit]
     demand = simulation_results.data[:demand]
@@ -132,26 +132,26 @@ function demand!(
         elements_to_write = existing_demands,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "deficit",
         deficit.data;
-        stage,
+        period,
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "demand",
         demand.data;
-        stage,
+        period,
         scenario,
         subscenario,
         indices_of_elements_in_output,

@@ -13,15 +13,15 @@
 
 Some time series can come in two flavours:
 
-1 - Ex-Ante (DA) time series: These are time series that are available before the stages of operation. They are used to make decisions for the next stage.
-2 - Ex-Post (RT) time series: These are time series that are available on the stage of operation. They are used to make decisions for the current stage.
+1 - Ex-Ante (DA) time series: These are time series that are available before the periods of operation. They are used to make decisions for the next period.
+2 - Ex-Post (RT) time series: These are time series that are available on the period of operation. They are used to make decisions for the current period.
 
 In some use cases it is necessary to have both time series available. This view is used to store both time series in a single object.
 If the Ex-Post (RT) time series is nit available it will default to use the Ex-Ante (DA) time series.
 
 Besides the conceptual idea about the time of availability of the data there is one concrete difference between the two time series:
 The Ex-Post (RT) time series always have one dimension more than the Ex-Ante (DA) time series. This extra dimension is called `subscenario`.
-For a given stage and scenario that the model made a decision we can use multiple new scenarios of the Ex-Post (RT) time series. This is the `subscenario` dimension.
+For a given period and scenario that the model made a decision we can use multiple new scenarios of the Ex-Post (RT) time series. This is the `subscenario` dimension.
 """
 @kwdef mutable struct ExAnteAndExPostTimeSeriesView{T, N, M} <: ViewFromExternalFile
     ex_ante::TimeSeriesView{T, N} = TimeSeriesView{T, N}()
@@ -83,7 +83,7 @@ function initialize_da_and_rt_time_series_view_from_external_files!(
             expected_unit = expected_unit,
             labels_to_read = labels_to_read,
         )
-        # subscenario dimension should always be after stage and scenario
+        # subscenario dimension should always be after period and scenario
         @assert ts.ex_post.reader.metadata.dimensions[3] == :subscenario
     else
         num_errors += initialize_time_series_view_from_external_file(

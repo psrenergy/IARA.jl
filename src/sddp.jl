@@ -11,7 +11,7 @@
 function build_model(
     inputs::Inputs,
     run_time_options::RunTimeOptions;
-    current_stage::Union{Nothing, Int} = nothing,
+    current_period::Union{Nothing, Int} = nothing,
 )
     optimizer = optimizer_with_attributes(
         () -> POI.Optimizer(HiGHS.Optimizer()),
@@ -19,12 +19,12 @@ function build_model(
     )
 
     policy_graph = SDDP.PolicyGraph(
-        build_graph(inputs; current_stage);
+        build_graph(inputs; current_period);
         sense = :Min,
         lower_bound = get_lower_bound(inputs, run_time_options),
         optimizer = optimizer,
     ) do subproblem, t
-        update_time_series_views_from_external_files!(inputs; stage = t, scenario = 1)
+        update_time_series_views_from_external_files!(inputs; period = t, scenario = 1)
         update_time_series_from_db!(inputs, t)
         sp_model = build_subproblem_model(
             inputs,
@@ -39,7 +39,7 @@ function build_model(
         end
 
         SDDP.parameterize(sp_model.jump_model, scenario_combinations) do (scenario, subscenario)
-            update_time_series_views_from_external_files!(inputs; stage = t, scenario)
+            update_time_series_views_from_external_files!(inputs; period = t, scenario)
             update_time_series_from_db!(inputs, t)
             model_action(sp_model, inputs, run_time_options, scenario, subscenario, SubproblemUpdate)
             set_custom_hook(policy_graph[t], inputs, run_time_options, t, scenario)
@@ -70,9 +70,9 @@ function simulate(
     inputs::Inputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions;
-    current_stage::Union{Nothing, Int} = nothing,
+    current_period::Union{Nothing, Int} = nothing,
 )
-    simulation_scheme = build_simulation_scheme(inputs, run_time_options; current_stage)
+    simulation_scheme = build_simulation_scheme(inputs, run_time_options; current_period)
 
     simulations = SDDP.simulate(
         # The trained model to simulate.
@@ -91,7 +91,7 @@ end
 function build_simulation_scheme(
     inputs::Inputs,
     run_time_options::RunTimeOptions;
-    current_stage::Union{Nothing, Int} = nothing,
+    current_period::Union{Nothing, Int} = nothing,
 )
     simulation_scheme =
         Array{Array{Tuple{Int, Tuple{Int, Int}}, 1}, 1}(
@@ -100,21 +100,21 @@ function build_simulation_scheme(
         )
 
     scheme_index = 0
-    if current_stage !== nothing
+    if current_period !== nothing
         for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
             scheme_index += 1
-            simulation_scheme[scheme_index] = [(current_stage, (scenario, subscenario))]
+            simulation_scheme[scheme_index] = [(current_period, (scenario, subscenario))]
         end
     elseif linear_policy_graph(inputs)
         for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
             scheme_index += 1
-            simulation_scheme[scheme_index] = [(t, (scenario, subscenario)) for t in 1:number_of_stages(inputs)]
+            simulation_scheme[scheme_index] = [(t, (scenario, subscenario)) for t in 1:number_of_periods(inputs)]
         end
     else
         for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
             scheme_index += 1
             simulation_scheme[scheme_index] =
-                [(mod1(t, number_of_nodes(inputs)), (scenario, subscenario)) for t in 1:number_of_stages(inputs)]
+                [(mod1(t, number_of_nodes(inputs)), (scenario, subscenario)) for t in 1:number_of_periods(inputs)]
         end
     end
 
@@ -124,43 +124,49 @@ end
 function read_cuts_to_model!(
     model::ProblemModel,
     inputs::Inputs;
-    current_stage::Union{Nothing, Int} = nothing,
+    current_period::Union{Nothing, Int} = nothing,
 )
     if !has_fcf_cuts_to_read(inputs)
         error("Attempted to read FCF cuts but no file was provided.")
     end
 
-    # When current_stage is provided, we read the cuts for that stage only
-    if current_stage !== nothing
+    # Check if the file exists in the case or output directory
+    fcf_cuts_path_case = joinpath(path_case(inputs), fcf_cuts_file(inputs))
+    fcf_cuts_path_output = joinpath(output_path(inputs), fcf_cuts_file(inputs))
+    fcf_cuts_path = isfile(fcf_cuts_path_case) ? fcf_cuts_path_case : fcf_cuts_path_output
+
+    # When current_period is provided, we read the cuts for that period only
+    if current_period !== nothing
         @nospecialize(function node_name_parser(::Type{Int}, name::String)
             node = parse(Int, name)
-            if node != current_stage
+            if node != current_period
                 return nothing
             else
                 return node
             end
         end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_file(inputs); node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser)
         return model
     end
 
-    # Otherwise, for linear policy graphs, we read the cuts for all stages
+    # Otherwise, for linear policy graphs, we read the cuts for all periods
     if linear_policy_graph(inputs)
-        @nospecialize(function node_name_parser(::Type{Int}, name::String)
+        function node_name_parser(::Type{Int}, name::String)
             return parse(Int, name)
-        end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_file(inputs); node_name_parser)
+        end
+
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser)
         return model
     end
 
     # If we got here, we need to read all nodes for cyclic policy graphs
-    number_of_years_in_simulation = ceil(number_of_stages(inputs) / number_of_nodes(inputs))
+    number_of_years_in_simulation = ceil(number_of_periods(inputs) / number_of_nodes(inputs))
     for year in 1:number_of_years_in_simulation
         policy_node_to_simulation_node = (year - 1) * number_of_nodes(inputs)
         @nospecialize(function node_name_parser(::Type{Int}, name::String)
             return parse(Int, name) + policy_node_to_simulation_node
         end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_file(inputs); node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser)
     end
 
     return model

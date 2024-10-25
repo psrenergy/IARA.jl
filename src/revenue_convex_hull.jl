@@ -16,13 +16,13 @@ end
 function pricemaker_revenue(
     quantity_offers::Vector{Float64},
     price_offers::Vector{Float64},
-    demand::Float64,
+    demand_unit::Float64,
     deficit_cost::Float64;
     contracts_quantity::Vector{Float64} = Float64[],
     contracts_price::Vector{Float64} = Float64[],
 )
-    # Add deficit thermal plant to cover demand
-    append!(quantity_offers, demand)
+    # Add deficit thermal unit to cover demand
+    append!(quantity_offers, demand_unit)
     append!(price_offers, deficit_cost)
     # Calculate revenue
     has_contracts = length(contracts_quantity) > 0 && sum(contracts_quantity) > 0.0
@@ -35,13 +35,13 @@ function pricemaker_revenue(
     end
     points = Point[]
     N = length(duals)
-    @assert sums[end] > demand
+    @assert sums[end] > demand_unit
     i = 0
     first = true
     for e in Iterators.reverse(sums)
-        offer_energy = demand - e
+        offer_energy = demand_unit - e
         if offer_energy > 0
-            # because sum(quantity_offers) > demand, sums[end] > demand
+            # because sum(quantity_offers) > demand_unit, sums[end] > demand_unit
             # hence i == 0 will never reach here
             if has_contracts
                 if first
@@ -71,15 +71,18 @@ function pricemaker_revenue(
             push!(points, Point(0.0, fixed_contract_revenue - total_contracted_quantity * duals[i]))
             first = false
         end
-        push!(points, Point(demand, fixed_contract_revenue - total_contracted_quantity * duals[i] + demand * duals[i]))
-        push!(points, Point(demand, fixed_contract_revenue))
+        push!(
+            points,
+            Point(demand_unit, fixed_contract_revenue - total_contracted_quantity * duals[i] + demand_unit * duals[i]),
+        )
+        push!(points, Point(demand_unit, fixed_contract_revenue))
     else
         if first
             push!(points, Point(0.0, 0.0))
             first = false
         end
-        push!(points, Point(demand, demand * duals[i]))
-        push!(points, Point(demand, 0.0))
+        push!(points, Point(demand_unit, demand_unit * duals[i]))
+        push!(points, Point(demand_unit, 0.0))
     end
     return points
 end
@@ -105,17 +108,18 @@ end
 
 function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
     buses = index_of_elements(inputs, Bus)
-    demands = index_of_elements(inputs, Demand; filters = [is_existing])
+    demands = index_of_elements(inputs, DemandUnit; filters = [is_existing])
     bidding_groups = index_of_elements(inputs, BiddingGroup)
-    blks = blocks(inputs)
+    blks = subperiods(inputs)
     quantity_offers_ts = time_series_quantity_offer(inputs)
     price_offers_ts = time_series_price_offer(inputs)
     demand_ts = time_series_demand(inputs)
 
     if aggregate_buses_for_strategic_bidding(inputs)
-        inputs.collections.asset_owner.revenue_convex_hull = Array{Vector{Point}, 2}(undef, 1, number_of_blocks(inputs))
+        inputs.collections.asset_owner.revenue_convex_hull =
+            Array{Vector{Point}, 2}(undef, 1, number_of_subperiods(inputs))
         for blk in blks
-            # Get data for current block
+            # Get data for current subperiod
             # The maximum number of segments is hard-coded to 1
             quantity_offers =
                 [
@@ -148,9 +152,9 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
         num_buses = number_of_elements(inputs, Bus)
 
         inputs.collections.asset_owner.revenue_convex_hull =
-            Array{Vector{Point}, 2}(undef, num_buses, number_of_blocks(inputs))
+            Array{Vector{Point}, 2}(undef, num_buses, number_of_subperiods(inputs))
         for blk in blks, bus in buses
-            # Get data for current bus and block
+            # Get data for current bus and subperiod
             # The maximum number of segments is hard-coded to 1
             quantity_offers = [
                 quantity_offers_ts[bg, bus, 1, blk]
@@ -168,7 +172,7 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
             demand =
                 sum(
                     demand_ts[d, blk]
-                    for d in demands if demand_bus_index(inputs, d) == bus;
+                    for d in demands if demand_unit_bus_index(inputs, d) == bus;
                     init = 0.0,
                 ) / MW_to_GW()
             # Update revenue convex hull cache

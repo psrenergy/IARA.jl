@@ -22,9 +22,9 @@ function virtual_reservoir_generation!(
     # Time series
     placeholder_scenario = 1
     virtual_reservoir_quantity_offer_series =
-        time_series_virtual_reservoir_quantity_offer(inputs, model.stage, placeholder_scenario)
+        time_series_virtual_reservoir_quantity_offer(inputs, model.period, placeholder_scenario)
     virtual_reservoir_price_offer_series =
-        time_series_virtual_reservoir_price_offer(inputs, model.stage, placeholder_scenario)
+        time_series_virtual_reservoir_price_offer(inputs, model.period, placeholder_scenario)
 
     # Parameters
     @variable(
@@ -92,8 +92,8 @@ function virtual_reservoir_generation!(
 
     # Time series
     virtual_reservoir_quantity_offer_series =
-        time_series_virtual_reservoir_quantity_offer(inputs, model.stage, scenario)
-    virtual_reservoir_price_offer_series = time_series_virtual_reservoir_price_offer(inputs, model.stage, scenario)
+        time_series_virtual_reservoir_quantity_offer(inputs, model.period, scenario)
+    virtual_reservoir_price_offer_series = time_series_virtual_reservoir_price_offer(inputs, model.period, scenario)
 
     for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:number_of_segments
         MOI.set(
@@ -125,7 +125,7 @@ function virtual_reservoir_generation!(
         outputs;
         inputs,
         output_name = "virtual_reservoir_generation",
-        dimensions = ["stage", "scenario", "bid_segment"],
+        dimensions = ["period", "scenario", "bid_segment"],
         unit = "GWh",
         labels = labels_for_output_by_pair_of_agents(
             inputs,
@@ -143,8 +143,8 @@ function virtual_reservoir_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
@@ -157,7 +157,7 @@ function virtual_reservoir_generation!(
         inputs.collections.virtual_reservoir,
         inputs.collections.asset_owner;
         index_getter = virtual_reservoir_asset_owner_indices,
-        output_varies_per_block = false,
+        output_varies_per_subperiod = false,
     )
 
     output = outputs.outputs["virtual_reservoir_generation"*run_time_file_suffixes(run_time_options)]
@@ -166,7 +166,7 @@ function virtual_reservoir_generation!(
             Quiver.write!(
                 output.writer,
                 round_output(treated_virtual_reservoir_generation[:, bid_segment] * MW_to_GW());
-                stage, scenario, subscenario, bid_segment,
+                period, scenario, subscenario, bid_segment,
             )
         end
     else
@@ -174,7 +174,7 @@ function virtual_reservoir_generation!(
             Quiver.write!(
                 output.writer,
                 round_output(treated_virtual_reservoir_generation[:, bid_segment] * MW_to_GW());
-                stage, scenario, bid_segment,
+                period, scenario, bid_segment,
             )
         end
     end

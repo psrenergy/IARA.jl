@@ -17,12 +17,12 @@ function thermal_commitment!(
     ::Type{SubproblemBuild},
 )
     commitment_indexes =
-        index_of_elements(inputs, ThermalPlant; run_time_options, filters = [is_existing, has_commitment])
+        index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
 
     @variable(
         model.jump_model,
         thermal_commitment[
-            b in blocks(inputs),
+            b in subperiods(inputs),
             t in commitment_indexes,
         ],
         binary = true,
@@ -34,20 +34,20 @@ function thermal_commitment!(
 
     @variable(
         model.jump_model,
-        thermal_startup[b in blocks(inputs), t in commitment_indexes],
+        thermal_startup[b in subperiods(inputs), t in commitment_indexes],
         lower_bound = 0.0,
         upper_bound = 1.0,
     )
 
     @variable(
         model.jump_model,
-        thermal_shutdown[b in blocks(inputs), t in commitment_indexes],
+        thermal_shutdown[b in subperiods(inputs), t in commitment_indexes],
         lower_bound = 0.0,
         upper_bound = 1.0,
     )
 
-    if loop_blocks_for_thermal_constraints(inputs)
-        # Add fictitious startup and shutdown variables to connect the last block to the first block
+    if loop_subperiods_for_thermal_constraints(inputs)
+        # Add fictitious startup and shutdown variables to connect the last subperiod to the first subperiod
         @variable(
             model.jump_model,
             thermal_startup_loop[t in commitment_indexes],
@@ -64,14 +64,14 @@ function thermal_commitment!(
 
     @expression(
         model.jump_model,
-        thermal_startup_cost[b in blocks(inputs), t in commitment_indexes],
-        thermal_startup[b, t] * thermal_plant_startup_cost(inputs, t),
+        thermal_startup_cost[b in subperiods(inputs), t in commitment_indexes],
+        thermal_startup[b, t] * thermal_unit_startup_cost(inputs, t),
     )
 
     @expression(
         model.jump_model,
-        thermal_shutdown_cost[b in blocks(inputs), t in commitment_indexes],
-        thermal_shutdown[b, t] * thermal_plant_shutdown_cost(inputs, t),
+        thermal_shutdown_cost[b in subperiods(inputs), t in commitment_indexes],
+        thermal_shutdown[b, t] * thermal_unit_shutdown_cost(inputs, t),
     )
 
     model.obj_exp +=
@@ -97,9 +97,9 @@ function thermal_commitment!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    thermal_plants_with_commitment = index_of_elements(
+    thermal_units_with_commitment = index_of_elements(
         inputs,
-        ThermalPlant;
+        ThermalUnit;
         run_time_options,
         filters = [has_commitment],
     )
@@ -116,9 +116,9 @@ function thermal_commitment!(
         outputs;
         inputs,
         output_name = "thermal_commitment",
-        dimensions = ["stage", "scenario", "block"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "-",
-        labels = thermal_plant_label(inputs)[thermal_plants_with_commitment],
+        labels = thermal_unit_label(inputs)[thermal_units_with_commitment],
         run_time_options,
     )
     return nothing
@@ -128,21 +128,21 @@ function thermal_commitment!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    thermal_plants_with_commitment = index_of_elements(
+    thermal_units_with_commitment = index_of_elements(
         inputs,
-        ThermalPlant;
+        ThermalUnit;
         run_time_options,
         filters = [has_commitment],
     )
-    existing_thermal_plants_with_commitment = index_of_elements(
+    existing_thermal_units_with_commitment = index_of_elements(
         inputs,
-        ThermalPlant;
+        ThermalUnit;
         run_time_options,
         filters = [is_existing, has_commitment],
     )
@@ -150,17 +150,17 @@ function thermal_commitment!(
     thermal_commitment = simulation_results.data[:thermal_commitment]
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = thermal_plants_with_commitment,
-        elements_to_write = existing_thermal_plants_with_commitment,
+        elements_in_output_file = thermal_units_with_commitment,
+        elements_to_write = existing_thermal_units_with_commitment,
     )
 
-    write_output_per_block!(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
         "thermal_commitment",
         thermal_commitment.data;
-        stage,
+        period,
         scenario,
         subscenario,
         indices_of_elements_in_output,

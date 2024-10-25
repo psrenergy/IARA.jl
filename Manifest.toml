@@ -607,7 +607,9 @@ version = "2.11.0"
 
 [[deps.Quiver]]
 deps = ["CSV", "DataFrames", "Dates", "OrderedCollections", "TOML", "Tables"]
-git-tree-sha1 = "80f3fd68a0aaf385cf06e4085e655f2d0461b48b"
+git-tree-sha1 = "3b6667ab05ffbc252f7dde49e55268dc4a1ab9dd"
+repo-rev = "master"
+repo-url = "https://github.com/psrenergy/Quiver.jl.git"
 uuid = "cdbb3f72-2527-4dbd-9d0e-93533a5519ac"
 version = "0.1.6"
 weakdeps = ["PSRClassesInterface"]

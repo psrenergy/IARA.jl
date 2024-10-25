@@ -19,20 +19,20 @@ function reserve_fulfillment!(
     reserves = index_of_elements(inputs, Reserve)
     equality_reserves = index_of_elements(inputs, Reserve; filters = [is_equality])
     inequality_reserves = index_of_elements(inputs, Reserve; filters = [is_equality])
-    any_reserves_associated_with_thermal_plants = any_elements(inputs, Reserve; filters = [has_thermal_plant])
-    any_reserves_associated_with_hydro_plants = any_elements(inputs, Reserve; filters = [has_hydro_plant])
-    any_reserves_associated_with_batteries = any_elements(inputs, Reserve; filters = [has_battery])
+    any_reserves_associated_with_thermal_units = any_elements(inputs, Reserve; filters = [has_thermal_unit])
+    any_reserves_associated_with_hydro_units = any_elements(inputs, Reserve; filters = [has_hydro_unit])
+    any_reserves_associated_with_battery_units = any_elements(inputs, Reserve; filters = [has_battery_unit])
 
     # Model Variables
     reserve_violation = get_model_object(model, :reserve_violation)
-    reserve_generation_in_thermal_plant = if any_reserves_associated_with_thermal_plants
-        get_model_object(model, :reserve_generation_in_thermal_plant)
+    reserve_generation_in_thermal_unit = if any_reserves_associated_with_thermal_units
+        get_model_object(model, :reserve_generation_in_thermal_unit)
     end
-    reserve_generation_in_hydro_plant = if any_reserves_associated_with_hydro_plants
-        get_model_object(model, :reserve_generation_in_hydro_plant)
+    reserve_generation_in_hydro_unit = if any_reserves_associated_with_hydro_units
+        get_model_object(model, :reserve_generation_in_hydro_unit)
     end
-    reserve_generation_in_battery = if any_reserves_associated_with_batteries
-        get_model_object(model, :reserve_generation_in_battery)
+    reserve_generation_in_battery_unit = if any_reserves_associated_with_battery_units
+        get_model_object(model, :reserve_generation_in_battery_unit)
     end
 
     # Model parameters
@@ -42,53 +42,55 @@ function reserve_fulfillment!(
     @constraint(
         model.jump_model,
         reserve_equality_fulfillment[
-            block in blocks(inputs),
+            subperiod in subperiods(inputs),
             r in equality_reserves,
         ],
         reserve_angular_coefficient(inputs, r) * (
             sum(
-                reserve_generation_in_thermal_plant[block, r, j]
-                for j in reserve_thermal_plant_indices(inputs, r);
+                reserve_generation_in_thermal_unit[subperiod, r, j]
+                for j in reserve_thermal_unit_indices(inputs, r);
                 init = 0.0,
             ) +
             sum(
-                reserve_generation_in_hydro_plant[block, r, j]
-                for j in reserve_hydro_plant_indices(inputs, r);
+                reserve_generation_in_hydro_unit[subperiod, r, j]
+                for j in reserve_hydro_unit_indices(inputs, r);
                 init = 0.0,
             ) +
             sum(
-                reserve_generation_in_battery[block, r, j]
-                for j in reserve_battery_indices(inputs, r);
+                reserve_generation_in_battery_unit[subperiod, r, j]
+                for j in reserve_battery_unit_indices(inputs, r);
                 init = 0.0,
             )
         ) + reserve_linear_coefficient(inputs, r) ==
-        reserve_requirement[block, r] * block_duration_in_hours(inputs, block) - reserve_violation[block, r]
+        reserve_requirement[subperiod, r] * subperiod_duration_in_hours(inputs, subperiod) -
+        reserve_violation[subperiod, r]
     )
 
     @constraint(
         model.jump_model,
         reserve_inequality_fulfillment[
-            block in blocks(inputs),
+            subperiod in subperiods(inputs),
             r in inequality_reserves,
         ],
         reserve_angular_coefficient(inputs, r) * (
             sum(
-                reserve_generation_in_thermal_plant[block, r, j]
-                for j in reserve_thermal_plant_indices(inputs, r);
+                reserve_generation_in_thermal_unit[subperiod, r, j]
+                for j in reserve_thermal_unit_indices(inputs, r);
                 init = 0.0,
             ) +
             sum(
-                reserve_generation_in_hydro_plant[block, r, j]
-                for j in reserve_hydro_plant_indices(inputs, r);
+                reserve_generation_in_hydro_unit[subperiod, r, j]
+                for j in reserve_hydro_unit_indices(inputs, r);
                 init = 0.0,
             ) +
             sum(
-                reserve_generation_in_battery[block, r, j]
-                for j in reserve_battery_indices(inputs, r);
+                reserve_generation_in_battery_unit[subperiod, r, j]
+                for j in reserve_battery_unit_indices(inputs, r);
                 init = 0.0,
             )
         ) + reserve_linear_coefficient(inputs, r) >=
-        reserve_requirement[block, r] * block_duration_in_hours(inputs, block) - reserve_violation[block, r]
+        reserve_requirement[subperiod, r] * subperiod_duration_in_hours(inputs, subperiod) -
+        reserve_violation[subperiod, r]
     )
 
     return nothing
@@ -118,8 +120,8 @@ function reserve_fulfillment!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

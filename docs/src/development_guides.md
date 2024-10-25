@@ -32,7 +32,7 @@ After adding the new field developers should initialize it in the [`IARA.initial
 
 ## How to add a new mathematical model element
 
-Mathematical model elements are the building blocks of the different possible optimization problems. They are defined in the `src/model_variables` or `src/model_constraints` folders. To add a new mathematical model element, developers should create a new file in the respective folder and define at least the following functions:
+Mathematical model elements are the building subperiods of the different possible optimization problems. They are defined in the `src/model_variables` or `src/model_constraints` folders. To add a new mathematical model element, developers should create a new file in the respective folder and define at least the following functions:
 
 ```julia
 my_new_model_element!(
@@ -62,8 +62,8 @@ my_new_model_element!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    simulation_results::SimulationResultsFromStageScenario,
-    stage::Int,
+    simulation_results::SimulationResultsFromPeriodScenario,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{WriteOutput},

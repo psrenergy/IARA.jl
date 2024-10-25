@@ -21,18 +21,18 @@ function agent_quantile_in_scenarios(
     agent_names::Vector{String};
     kwargs...,
 )
-    num_stages = size(data, 3)
+    num_periods = size(data, 3)
     num_agents = size(data, 1)
 
-    reshaped_data = Array{Float64, 2}(undef, 3 * num_agents, num_stages)
+    reshaped_data = Array{Float64, 2}(undef, 3 * num_agents, num_periods)
     for agent in 1:num_agents
         p10_idx = agent
         p50_idx = num_agents + agent
         p90_idx = 2 * num_agents + agent
         all_agent_indexes = [p10_idx, p50_idx, p90_idx]
-        for stage in 1:num_stages
-            reshaped_data[all_agent_indexes, stage] =
-                quantile(data[agent, :, stage], [0.1, 0.5, 0.9])
+        for period in 1:num_periods
+            reshaped_data[all_agent_indexes, period] =
+                quantile(data[agent, :, period], [0.1, 0.5, 0.9])
         end
     end
     return reshaped_data, agent_names
@@ -56,19 +56,19 @@ function reshape_time_series!(
     dimensions::Vector{String};
     kwargs...,
 )
-    if !("block" in dimensions) && ("bid_segment" in dimensions)
+    if !("subperiod" in dimensions) && ("bid_segment" in dimensions)
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
         time_series, agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
         return time_series, agent_names
-    elseif ("block" in dimensions) && !("bid_segment" in dimensions)
-        time_series = merge_stage_block(data)
+    elseif ("subperiod" in dimensions) && !("bid_segment" in dimensions)
+        time_series = merge_period_subperiod(data)
         time_series, agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
         return time_series, agent_names
     else
         error(
-            "A time series output with 4 dimensions should have either 'bid_segment' or 'block' as a dimension.",
+            "A time series output with 4 dimensions should have either 'bid_segment' or 'subperiod' as a dimension.",
         )
     end
 end
@@ -82,18 +82,18 @@ function reshape_time_series!(
 )
     if !("subscenario" in dimensions)
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
-        time_series = merge_stage_block(time_series)
+        time_series = merge_period_subperiod(time_series)
         time_series, agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
         return time_series, agent_names
     elseif !("bid_segment" in dimensions)
-        time_series = merge_stage_block(data)
+        time_series = merge_period_subperiod(data)
         time_series, modified_scenario_names =
             merge_scenario_subscenario(time_series, agent_names; kwargs...)
         time_series, modified_agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
         return time_series, modified_agent_names
-    elseif !("block" in dimensions)
+    elseif !("subperiod" in dimensions)
         time_series, modified_names = merge_segment_agent(data, agent_names; kwargs...)
         time_series, modified_scenario_names =
             merge_scenario_subscenario(time_series, modified_names; kwargs...)
@@ -115,7 +115,7 @@ function reshape_time_series!(
     kwargs...,
 )
     time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
-    time_series = merge_stage_block(time_series)
+    time_series = merge_period_subperiod(time_series)
     time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
     time_series, modified_agent_names =
         agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
@@ -131,16 +131,16 @@ function plot_data(
     unit::String = "",
     file_path::String,
     initial_date::DateTime,
-    stage_type::Configurations_StageType.T,
+    period_type::Configurations_PeriodType.T,
     kwargs...,
 ) where {N}
     traces, trace_names = reshape_time_series!(PlotTimeSeriesQuantiles, data, agent_names, dimensions; kwargs...)
-    number_of_stages = size(traces, 2)
+    number_of_periods = size(traces, 2)
     number_of_agents = length(trace_names)
 
-    initial_number_of_stages = size(data, N)
-    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_stages, initial_date, stage_type)
-    plot_type = ifelse(number_of_stages == 1, "bar", "line")
+    initial_number_of_periods = size(data, N)
+    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type)
+    plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
     configs = Vector{Config}()
 
@@ -151,7 +151,7 @@ function plot_data(
         p90_idx = 2 * number_of_agents + agent
         push!(configs,
             Config(;
-                x = vcat(1:number_of_stages, number_of_stages:-1:1),
+                x = vcat(1:number_of_periods, number_of_periods:-1:1),
                 y = vcat(traces[p10_idx, :], reverse(traces[p90_idx, :])),
                 name = trace_names[agent] * " (P10 - P90)",
                 fill = "toself",
@@ -164,7 +164,7 @@ function plot_data(
             ))
         push!(configs,
             Config(;
-                x = 1:number_of_stages,
+                x = 1:number_of_periods,
                 y = traces[p50_idx, :],
                 name = trace_names[agent] * " (P50)",
                 line = Dict("color" => get_plot_color(agent)),
@@ -177,7 +177,7 @@ function plot_data(
     main_configuration = Config(;
         title = title,
         xaxis = Dict(
-            "title" => "Stage",
+            "title" => "Period",
             "tickmode" => "array",
             "tickvals" => [i for i in eachindex(plot_ticks)],
             "ticktext" => plot_ticks,

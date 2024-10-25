@@ -18,18 +18,18 @@ minimum_activation_level_multihour =
         number_of_bidding_groups,
         maximum_number_of_bidding_segments,
         number_of_scenarios,
-        number_of_stages,
+        number_of_periods,
     )
 
 minimum_activation_level_multihour[2, :, :, :] .= 0.0
 IARA.write_timeseries_file(
     joinpath(PATH, "minimum_activation_level_multihour"),
     minimum_activation_level_multihour;
-    dimensions = ["stage", "scenario", "profile"],
+    dimensions = ["period", "scenario", "profile"],
     labels = ["bg_1", "bg_2"],
-    time_dimension = "stage",
+    time_dimension = "period",
     dimension_size = [
-        number_of_stages,
+        number_of_periods,
         number_of_scenarios,
         maximum_number_of_bidding_profiles,
     ],
@@ -41,18 +41,18 @@ parent_profile_multihour =
     zeros(
         number_of_bidding_groups,
         maximum_number_of_bidding_segments,
-        number_of_stages,
+        number_of_periods,
     )
 
 parent_profile_multihour[2, 2, :] .= 1
 IARA.write_timeseries_file(
     joinpath(PATH, "parent_profile_multihour"),
     parent_profile_multihour;
-    dimensions = ["stage", "profile"],
+    dimensions = ["period", "profile"],
     labels = ["bg_1", "bg_2"],
-    time_dimension = "stage",
+    time_dimension = "period",
     dimension_size = [
-        number_of_stages,
+        number_of_periods,
         maximum_number_of_bidding_profiles,
     ],
     initial_date = "2020-01-01T00:00:00",
@@ -65,17 +65,17 @@ complementary_grouping_multihour =
         number_of_bidding_groups,
         number_of_complementary_groups,
         maximum_number_of_bidding_profiles,
-        number_of_stages,
+        number_of_periods,
     )
 
 IARA.write_timeseries_file(
     joinpath(PATH, "complementary_grouping_multihour"),
     complementary_grouping_multihour;
-    dimensions = ["stage", "profile", "complementary_group"],
+    dimensions = ["period", "profile", "complementary_group"],
     labels = ["bg_1", "bg_2"],
-    time_dimension = "stage",
+    time_dimension = "period",
     dimension_size = [
-        number_of_stages,
+        number_of_periods,
         maximum_number_of_bidding_profiles,
         number_of_complementary_groups,
     ],

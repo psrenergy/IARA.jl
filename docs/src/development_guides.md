@@ -76,7 +76,7 @@ Each one of these functions performs an action that is specific to the phase of 
  * [`IARA.InitializeOutput`](@ref).
  * [`IARA.WriteOutput`](@ref).
 
-After defining the new model element, developers should add the varags function of the new model element to the respective optimization problem action function defined in the `src/mathematical_model.jl` file.
+After defining the new model element, developers should add the varargs function of the new model element to the respective optimization problem action function defined in the `src/mathematical_model.jl` file.
  
 ## How to add a new post-processing function
 
@@ -86,7 +86,7 @@ All post-processing functions are defined in the `src/post_processing` folder. T
 
 All plots are defined in the `src/plots` folder. To add a new plot, developers should add a new [`IARA.PlotConfig`](@ref) in the [`IARA.build_plots`](@ref) function. 
 
-If a developer wants to implement a new plot type, they should create a new file in the `src/plots` folder and define the new plot type. The new plot type should be a concrete subtype of the [`IARA.PlotType`](@ref) abstracion and should implement the [`IARA.plot_data`](@ref) function for the corresponding new plot type.
+If a developer wants to implement a new plot type, they should create a new file in the `src/plots` folder and define the new plot type. The new plot type should be a concrete subtype of the [`IARA.PlotType`](@ref) abstraction and should implement the [`IARA.plot_data`](@ref) function for the corresponding new plot type.
 
 example:
 

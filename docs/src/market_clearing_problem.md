@@ -111,7 +111,7 @@ Multi-hour Bids
     q^M_{i, n, \tau, k} = \lambda^M_{i, k} Q^M_{i, n, \tau, k}(\omega) \quad \forall i \in I, n \in N, \tau \in B(t), k \in K^M(i) \\
 ```
 
-### Complemetarity Constraints
+### Complementarity Constraints
 
 ```math
     \sum_{k \in K}{\lambda^M_{i, k}} \leq 1 \quad \forall K \in \mathcal{K}_m(i), i \in I, m \in M \\

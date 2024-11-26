@@ -111,20 +111,23 @@ pages = [
 makedocs(;
     modules = [IARA],
     doctest = false,
-    # clean = true,
+    clean = true,
     format = Documenter.HTML(;
         mathengine = Documenter.MathJax2(),
-        prettyurls = false,
+        prettyurls = true,
         edit_link = nothing,
         footer = nothing,
         disable_git = true,
-        repolink = nothing,
-        size_threshold_ignore = [
-            "api_reference.md",
-            "tutorial\\plots_tutorial.md",
-        ],
+        # Disabling the size thresholds is not a good practice but 
+        # it is necessary in the current state of the documentation
+
+        # Setting it to nothing will write every example block
+        example_size_threshold = nothing,
+        # Setting it to nothing will ignore the size threshold
+        size_threshold = nothing,
     ),
-    sitename = "IARA",
+    sitename = "IARA.jl",
+    authors = "psrenergy",
     warnonly = true,
     pages = pages,
 )

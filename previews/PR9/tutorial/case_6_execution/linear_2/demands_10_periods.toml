@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subperiod"]
+dimension_size = [10, 1, 1]
+initial_date = "2000-01-01 00:00:00"
+time_dimension = "period"
+frequency = "month"
+unit = "GWh"
+labels = ["Demand1"]

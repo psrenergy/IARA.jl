@@ -72,12 +72,15 @@ function update_time_series_from_db!(
     period_date_time::DateTime,
 )
     renewable_unit.existing =
-        PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "RenewableUnit",
-            "existing";
-            date_time = period_date_time,
-        ) .|> RenewableUnit_Existence.T
+        convert_to_enum.(
+            PSRDatabaseSQLite.read_time_series_row(
+                db,
+                "RenewableUnit",
+                "existing";
+                date_time = period_date_time,
+            ),
+            RenewableUnit_Existence.T,
+        )
     renewable_unit.max_generation = PSRDatabaseSQLite.read_time_series_row(
         db,
         "RenewableUnit",
@@ -109,7 +112,7 @@ Required arguments:
   - `label::String`: Renewable Unit label
   - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
   - `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-    - _Required if_ [`IARA.Configurations_RunMode`](@ref) _is not set to_ `CENTRALIZED_OPERATION`
+    - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
   - `bus_id::String`: Bus label (only if the bus is already in the database)
 
 Optional arguments:
@@ -128,6 +131,23 @@ Required columns:
   - `max_generation::Vector{Float64}`: Maximum generation of the renewable unit. `[MWh]`
   - `om_cost::Vector{Float64}`: O&M cost of the renewable unit. `[\$/MWh]`
   - `curtailment_cost::Vector{Float64}`: Curtailment cost of the renewable unit. `[\$/MWh]`
+
+Example:
+```julia
+IARA.add_renewable_unit!(
+    db;
+    label = "Solar1",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [1],
+        max_generation = [80.0],
+        om_cost = [0.0],
+        curtailment_cost = [100.0],
+    ),
+    biddinggroup_id = "Price Taker",
+    bus_id = "Island",
+)
+```
 """
 function add_renewable_unit!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "RenewableUnit"; kwargs...)
@@ -138,8 +158,12 @@ end
     update_renewable_unit_time_series!(db::DatabaseSQLite, label::String; date_time::DateTime = DateTime(0), kwargs...)
 
 Update time series attributes for the Renewable Unit named 'label' in the database.
-"""
 
+Example:
+```julia
+IARA.update_renewable_unit_time_series!(db, "gnd_1"; max_generation = 4.5)
+```
+"""
 function update_renewable_unit_time_series!(
     db::DatabaseSQLite,
     label::String;
@@ -239,11 +263,11 @@ function validate(renewable_unit::RenewableUnit)
 end
 
 """
-    validate_relations(inputs, renewable_unit::RenewableUnit)
+    advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableUnit)
 
-Validate the Renewable Units' references. Return the number of errors found.
+Validate the Renewable Units' context within the inputs. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, renewable_unit::RenewableUnit)
+function advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableUnit)
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
 

@@ -12,8 +12,6 @@
     main(args::Vector{String})
 
 Main function to run the IARA application.
-
-It requires a vector containing the path for the case and it it may contain the flag `--write-lp` to write the subproblems to LP files.
 """
 function main(args::Vector{String})
     print_banner()
@@ -21,53 +19,121 @@ function main(args::Vector{String})
     # Parse commandline arguments
     args = Args(args)
 
+    return main(args)
+end
+
+function main(args::Args)
+
     # Initialize dlls and other possible defaults
-    initialize()
+    initialize(args)
 
     inputs = load_inputs(args)
-    if inputs.caches.templates_for_time_series_files_have_been_generated
-        @info("Templates for time series files have been generated. Please fill them and run the application again.")
-    end
-    if inputs.caches.templates_for_waveguide_files_have_been_generated
-        @info("Templates for waveguide files have been generated. Please fill them and run the application again.")
-    end
-    if inputs.caches.templates_for_time_series_files_have_been_generated ||
-       inputs.caches.templates_for_waveguide_files_have_been_generated
-        return nothing
-    end
-    initialize_output_dir(inputs)
 
     try
+        validate(inputs)
         run_algorithms(inputs)
         post_processing(inputs)
-        if args.plot_results
-            build_plots(inputs)
-        end
     finally
         clean_up(inputs)
     end
     return nothing
 end
 
+# entry points for the different run modes
+
+const ARGS_KEYWORDS = """
+keywords:
+
+- `outputs_path::String`. Path to the outputs. default = joinpath(path, "outputs")
+- `plot_outputs::Bool`. Plot all outputs after the run. default = true
+- `write_lp::Bool`. Write the LP files. default = false
+"""
+
+"""
+    train_min_cost(path::String; kwargs...)
+
+Train the model to minimize the total cost of the system.
+
+$ARGS_KEYWORDS
+"""
+function train_min_cost(path::String; kwargs...)
+    args = Args(path, RunMode.TRAIN_MIN_COST; kwargs...)
+    return main(args)
+end
+
+"""
+    price_taker_bid(path::String; kwargs...)
+
+Run the model with the price taker bid strategy.
+
+$ARGS_KEYWORDS
+"""
+function price_taker_bid(path::String; kwargs...)
+    args = Args(path, RunMode.PRICE_TAKER_BID; kwargs...)
+    return main(args)
+end
+
+"""
+    strategic_bid(path::String; kwargs...)
+
+Run the model with the strategic bid strategy.
+
+$ARGS_KEYWORDS
+"""
+function strategic_bid(path::String; kwargs...)
+    args = Args(path, RunMode.STRATEGIC_BID; kwargs...)
+    return main(args)
+end
+
+"""
+    market_clearing(path::String; kwargs...)
+
+Run the model with the market clearing strategy.
+
+$ARGS_KEYWORDS
+"""
+function market_clearing(path::String; kwargs...)
+    args = Args(path, RunMode.MARKET_CLEARING; kwargs...)
+    return main(args)
+end
+
+"""
+    min_cost(path::String; kwargs...)
+
+Run the model with the minimum cost strategy.
+
+$ARGS_KEYWORDS
+"""
+function min_cost(path::String; kwargs...)
+    args = Args(path, RunMode.MIN_COST; kwargs...)
+    return main(args)
+end
+
+"""
+    run_algorithms(inputs)
+
+Run the algorithms according to the run mode.
+"""
 function run_algorithms(inputs)
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
+    log_inputs(inputs)
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
         run_time_options = RunTimeOptions()
         train_model_and_run_simulation(inputs, run_time_options)
-    elseif run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID
+    elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID
         price_taker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_price_taker])
         for asset_owner_index in price_taker_asset_owners
             run_time_options = RunTimeOptions(; asset_owner_index)
             train_model_and_run_simulation(inputs, run_time_options)
         end
-    elseif run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
+    elseif run_mode(inputs) == RunMode.STRATEGIC_BID
         price_maker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_price_maker])
         for asset_owner_index in price_maker_asset_owners
             run_time_options = RunTimeOptions(; asset_owner_index)
             train_model_and_run_simulation(inputs, run_time_options)
         end
-    elseif run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    elseif run_mode(inputs) == RunMode.MARKET_CLEARING
         simulate_all_periods_and_scenarios_of_market_clearing(inputs)
-    elseif run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION
+    elseif run_mode(inputs) == RunMode.MIN_COST
         run_time_options = RunTimeOptions()
         load_cuts_and_run_simulation(inputs, run_time_options)
     else
@@ -76,6 +142,11 @@ function run_algorithms(inputs)
     return nothing
 end
 
+"""
+    train_model_and_run_simulation(inputs::Inputs, run_time_options::RunTimeOptions)
+
+Train the model and run the simulation.
+"""
 function train_model_and_run_simulation(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -91,6 +162,11 @@ function train_model_and_run_simulation(
     return nothing
 end
 
+"""
+    load_cuts_and_run_simulation(inputs::Inputs, run_time_options::RunTimeOptions)
+
+Load the cuts and run the simulation.
+"""
 function load_cuts_and_run_simulation(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -106,6 +182,16 @@ function load_cuts_and_run_simulation(
     return nothing
 end
 
+"""
+    simulate_all_periods_and_scenarios_of_trained_model(
+        model::ProblemModel,
+        inputs::Inputs,
+        outputs::Outputs,
+        run_time_options::RunTimeOptions,
+    )
+
+Simulate all periods and scenarios of a trained model.
+"""
 function simulate_all_periods_and_scenarios_of_trained_model(
     model::ProblemModel,
     inputs::Inputs,
@@ -146,6 +232,11 @@ function simulate_all_periods_and_scenarios_of_trained_model(
     return nothing
 end
 
+"""
+    simulate_all_periods_and_scenarios_of_market_clearing(inputs::Inputs)
+
+Simulate all periods and scenarios of the market clearing.
+"""
 function simulate_all_periods_and_scenarios_of_market_clearing(
     inputs::Inputs,
 )
@@ -159,7 +250,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
     try
         for period in 1:number_of_periods(inputs)
-            println("Running clearing for period: $period")
+            Log.info("Running clearing for period: $period")
             # Update the time series in the database to the current period
             update_time_series_from_db!(inputs, period)
 
@@ -219,13 +310,27 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     return nothing
 end
 
+"""
+    run_clearing_simulation(
+        inputs::Inputs,
+        outputs::Outputs,
+        run_time_options::RunTimeOptions,
+        period::Int,
+    )
+
+Run the clearing simulation.
+"""
 function run_clearing_simulation(
     inputs::Inputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
     period::Int,
 )
-    println("   Running simulation $(run_time_options.clearing_model_procedure)")
+    if skip_clearing_procedure(inputs, run_time_options)
+        return nothing
+    end
+
+    Log.info("   Running simulation $(run_time_options.clearing_model_procedure)")
     model = build_model(inputs, run_time_options; current_period = period)
 
     if use_fcf_in_clearing(inputs)
@@ -298,8 +403,8 @@ function print_banner()
      _| |_ / ____ \| | \ \  / ____ \ 
     |_____/_/    \_\_|  \_\/_/    \_\
     """
-    println(banner)
-    @info("IARA - version: $PKG_VERSION")
+    Log.info(banner)
+    Log.info("IARA - version: $PKG_VERSION")
     return nothing
 end
 
@@ -308,5 +413,6 @@ function clean_up(inputs)
     close_all_external_files_time_series_readers!(inputs)
     PSRBridge.finalize!(inputs)
     delete_temp_files(inputs)
+    finalize_logger()
     return nothing
 end

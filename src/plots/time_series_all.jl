@@ -125,6 +125,11 @@ function reshape_time_series!(
     return time_series, modified_agent_names
 end
 
+"""
+    plot_data(::Type{PlotTimeSeriesAll}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, period_type::Configurations_PeriodType.T, kwargs...)
+
+Create a time series plot with all scenarios.
+"""
 function plot_data(
     ::Type{PlotTimeSeriesAll},
     data::Array{Float32, N},
@@ -142,7 +147,7 @@ function plot_data(
     number_of_traces = size(traces, 1)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type; kwargs...)
+    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type; kwargs...)
 
     plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
@@ -156,7 +161,7 @@ function plot_data(
                 x = 1:number_of_periods,
                 y = traces[trace, :],
                 name = trace_names[trace],
-                line = Dict("color" => get_plot_color(trace)),
+                line = Dict("color" => _get_plot_color(trace)),
                 type = plot_type,
                 text = hover_ticks,
                 hovertemplate = "%{y} $unit<br>%{text}",

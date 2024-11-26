@@ -44,6 +44,11 @@ function initialize_bids_view_from_external_file!(
     # convert time series if needed
     num_errors += convert_time_series_file_to_binary(file_path)
 
+    # When the file does not exist we must exit this function early
+    if num_errors > 0
+        return num_errors
+    end
+
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
     file_path = if isfile(file_path * ".quiv")
@@ -84,24 +89,44 @@ function initialize_bids_view_from_external_file!(
         num_errors += 1
     end
 
+    # Allocate the array of correct size based on the dimension sizes of extra dimensions
+    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    buses = index_of_elements(inputs, Bus)
+    bid_segments = bidding_segments(inputs)
+    segments_or_profile = bid_segments
+    if has_profile_bids
+        bid_profiles = bidding_profiles(inputs)
+        segments_or_profile = bid_profiles
+    end
+    blks = subperiods(inputs)
+
+    ts.data = zeros(
+        T,
+        length(bidding_groups),
+        length(buses),
+        length(segments_or_profile),
+        length(blks),
+    )
+
     # Initialize dynamic time series
-    ts.data = read_bids_view_from_external_file(
-        inputs, ts.reader;
-        period = 1, scenario = 1, data_type = eltype(ts.data),
+    read_bids_view_from_external_file!(
+        inputs,
+        ts;
+        period = 1,
+        scenario = 1,
         has_profile_bids,
     )
 
     return num_errors
 end
 
-function read_bids_view_from_external_file(
+function read_bids_view_from_external_file!(
     inputs,
-    reader::Quiver.Reader{Quiver.binary};
+    ts::BidsView{T};
     period::Int,
     scenario::Int,
-    data_type::Type,
     has_profile_bids::Bool = false,
-)
+) where {T}
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
     bid_segments = bidding_segments(inputs)
@@ -113,34 +138,26 @@ function read_bids_view_from_external_file(
     blks = subperiods(inputs)
     num_buses = length(buses)
 
-    data = zeros(
-        data_type,
-        length(bidding_groups),
-        length(buses),
-        length(segments_or_profile),
-        length(blks),
-    )
-
     for blk in blks
         # TODO: Generic form?
         if has_profile_bids
             for prf in bid_profiles
-                Quiver.goto!(reader; period, scenario, subperiod = blk, profile = prf)
+                Quiver.goto!(ts.reader; period, scenario, subperiod = blk, profile = prf)
                 for bg in bidding_groups, bus in buses
-                    data[bg, bus, prf, blk] = reader.data[(bg-1)*(num_buses)+bus]
+                    ts.data[bg, bus, prf, blk] = ts.reader.data[(bg-1)*(num_buses)+bus]
                 end
             end
         else
             for bds in bid_segments
-                Quiver.goto!(reader; period, scenario, subperiod = blk, bid_segment = bds)
+                Quiver.goto!(ts.reader; period, scenario, subperiod = blk, bid_segment = bds)
                 for bg in bidding_groups, bus in buses
-                    data[bg, bus, bds, blk] = reader.data[(bg-1)*(num_buses)+bus]
+                    ts.data[bg, bus, bds, blk] = ts.reader.data[(bg-1)*(num_buses)+bus]
                 end
             end
         end
     end
 
-    return data
+    return nothing
 end
 
 function write_bids_time_series_file(

@@ -15,7 +15,7 @@ initialize!(my_new_collection::MyNewCollection, inputs::AbstractInputs)
 add_my_new_collection!(db::DatabaseSQLite; kwargs...)
 update_my_new_collection!(db::DatabaseSQLite, label::String; kwargs...)
 validate(my_new_collection::MyNewCollection, inputs::AbstractInputs)
-validate_relations(my_new_collection::MyNewCollection, inputs::AbstractInputs)
+advanced_validations(my_new_collection::MyNewCollection, inputs::AbstractInputs)
 ```
 
 The last step is to add the new collection to the [`IARA.Collections`](@ref) type.

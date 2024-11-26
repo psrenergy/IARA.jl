@@ -15,7 +15,7 @@ finally
     end
 end
 
-IARA.main([PATH, "--plot-results=false", "--write-lp"])
+IARA.market_clearing(PATH; plot_outputs = false, write_lp = true)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

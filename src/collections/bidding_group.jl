@@ -28,11 +28,11 @@ Collection representing the bidding groups in the system.
     asset_owner_index::Vector{Int} = []
     quantity_offer_file::String = ""
     price_offer_file::String = ""
-    quantity_offer_multihour_file::String = ""
-    price_offer_multihour_file::String = ""
-    parent_profile_multihour_file::String = ""
-    complementary_grouping_multihour_file::String = ""
-    minimum_activation_level_multihour_file::String = ""
+    quantity_offer_profile_file::String = ""
+    price_offer_profile_file::String = ""
+    parent_profile_file::String = ""
+    complementary_grouping_profile_file::String = ""
+    minimum_activation_level_profile_file::String = ""
 end
 
 # ---------------------------------------------------------------------
@@ -40,7 +40,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(bidding_group::BiddingGroup, inputs)
+    initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 
 Initialize the BiddingGroup collection from the database.
 """
@@ -51,7 +51,11 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
     end
 
     bidding_group.label = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
-    bidding_group.bid_type = PSRI.get_parms(inputs.db, "BiddingGroup", "bid_type") .|> BiddingGroup_BidType.T
+    bidding_group.bid_type =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "BiddingGroup", "bid_type"),
+            BiddingGroup_BidType.T,
+        )
     bidding_group.asset_owner_index = PSRI.get_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
     bidding_group.independent_bid_max_segments =
         PSRI.get_parms(inputs.db, "BiddingGroup", "independent_bid_max_segments")
@@ -75,16 +79,16 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_offer")
     bidding_group.price_offer_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_offer")
-    bidding_group.quantity_offer_multihour_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_offer_multihour")
-    bidding_group.price_offer_multihour_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_offer_multihour")
-    bidding_group.parent_profile_multihour_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "parent_profile_multihour")
-    bidding_group.complementary_grouping_multihour_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_multihour")
-    bidding_group.minimum_activation_level_multihour_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_multihour")
+    bidding_group.quantity_offer_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_offer_profile")
+    bidding_group.price_offer_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_offer_profile")
+    bidding_group.parent_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "parent_profile")
+    bidding_group.complementary_grouping_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
+    bidding_group.minimum_activation_level_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
 
     update_time_series_from_db!(bidding_group, inputs.db, initial_date_time(inputs))
 
@@ -117,6 +121,19 @@ Required arguments:
   - `assetowner_id::String`: Label of the AssetOwner to which the bidding group belongs (only if the AssetOwner is already in the database).
   - `risk_factor::Vector{Float64}`: risk factor of the bidding group.
   - `segment_fraction::Vector{Float64}`: fraction of the segment.	
+
+
+Example:
+```julia
+IARA.add_bidding_group!(
+    db;
+    label = "bg_1",
+    assetowner_id = "asset_owner_1",
+    risk_factor = [0.5],
+    segment_fraction = [1.0],
+    independent_bid_max_segments = 2,
+)
+```	
 """
 function add_bidding_group!(db::DatabaseSQLite; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
@@ -150,6 +167,17 @@ end
     update_bidding_group_relation!(db::DatabaseSQLite, bidding_group_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the BiddingGroup named 'label' in the database.
+
+Example:
+```julia
+IARA.update_bidding_group_relation!(
+    db,
+    "bg_1";
+    collection = "AssetOwner",
+    relation_type = "id",
+    related_label = "asset_owner_2",
+)
+```
 """
 function update_bidding_group_relation!(
     db::DatabaseSQLite,
@@ -190,24 +218,30 @@ function validate(bidding_group::BiddingGroup)
             continue
         end
         if any(is_null.(bidding_group.segment_fraction[i]))
-            @error "Segment fraction vector has both null and non-null values for Bidding group $(bidding_group.label[i])."
+            @error(
+                "Segment fraction vector has both null and non-null values for Bidding group $(bidding_group.label[i])."
+            )
         end
         if any(bidding_group.segment_fraction[i] .< 0)
-            @error "Segment fraction values must be non-negative. Bidding group $(bidding_group.label[i]) has segment fractions $(bidding_group.segment_fraction[i])."
+            @error(
+                "Segment fraction values must be non-negative. Bidding group $(bidding_group.label[i]) has segment fractions $(bidding_group.segment_fraction[i])."
+            )
         end
         if sum(bidding_group.segment_fraction[i]) != 1.0
-            @error "Segment fractions must sum to 1. Bidding group $(bidding_group.label[i]) has segment fractions $(bidding_group.segment_fraction[i])."
+            @error(
+                "Segment fractions must sum to 1. Bidding group $(bidding_group.label[i]) has segment fractions $(bidding_group.segment_fraction[i])."
+            )
         end
     end
     return num_errors
 end
 
 """
-    validate_relations(inputs, bidding_group::BiddingGroup)
+    advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGroup)
 
-Validate the BiddingGroup's references. Return the number of errors found.
+Validate the BiddingGroup's context within the inputs. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, bidding_group::BiddingGroup)
+function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGroup)
     asset_owners = index_of_elements(inputs, AssetOwner)
     num_errors = 0
     for i in 1:length(bidding_group)
@@ -225,45 +259,83 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
-function maximum_multihour_profiles(inputs::AbstractInputs, idx)
+"""
+    maximum_profiles(inputs::AbstractInputs, idx)
+
+Return the maximum number of profiles for the bidding group.
+"""
+function maximum_profiles(inputs::AbstractInputs, idx)
     return inputs.collections.bidding_group.profile_bid_max_profiles[idx]
 end
 
+"""
+    maximum_bid_segments(inputs::AbstractInputs, idx)
+
+Return the maximum number of segments for the bidding group.
+"""
 function maximum_bid_segments(inputs::AbstractInputs, idx)
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
+    if run_mode(inputs) == RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
         return length(bidding_segments(inputs))
     else
         return inputs.collections.bidding_group.independent_bid_max_segments[idx]
     end
 end
 
+"""
+    markup_heuristic_bids(bg::BiddingGroup, i::Int)
+
+Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.MARKUP_HEURISTIC` bids.
+"""
 markup_heuristic_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.MARKUP_HEURISTIC
+
+"""
+    optimize_bids(bg::BiddingGroup, i::Int)
+
+Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.OPTIMIZE` bids.
+"""
 optimize_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.OPTIMIZE
+
+"""
+    has_profile_bids(bg::BiddingGroup, i::Int)
+
+Check if the bidding group at index 'i' has profile bids.
+"""
 has_profile_bids(bg::BiddingGroup, i::Int) = bg.profile_bid_max_profiles[i] > 0
+
+"""
+    has_independent_bids(bg::BiddingGroup, i::Int)
+
+Check if the bidding group at index 'i' has independent bids.
+"""
 has_independent_bids(bg::BiddingGroup, i::Int) = bg.independent_bid_max_segments[i] > 0
 
-index_among_multihour(inputs::AbstractInputs, idx::Int) =
+"""
+    index_among_profile(inputs::AbstractInputs, idx::Int)
+
+Return the index of the bidding group among the profile bids.
+"""
+index_among_profile(inputs::AbstractInputs, idx::Int) =
     findfirst(isequal(idx), index_of_elements(inputs, BiddingGroup; filters = [has_profile_bids]))
 
 """
-maximum_bidding_segments(inputs)
+maximum_bidding_segments(inputs::AbstractInputs)
 
 Return the maximum number of bidding segments.
 """
 maximum_number_of_bidding_segments(inputs::AbstractInputs) = bidding_segments(inputs)[end]
 
 """
-    bidding_segments(inputs)
+    bidding_segments(inputs::AbstractInputs)
 
 Return all bidding segments.
 """
 function bidding_segments(inputs::AbstractInputs)
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && read_bids_from_file(inputs)
+    if run_mode(inputs) == RunMode.MARKET_CLEARING && read_bids_from_file(inputs)
         maximum_bid_segments_all_bgs =
             [maximum_bid_segments(inputs, bg) for bg in index_of_elements(inputs, BiddingGroup)]
         maximum_bid_segment = maximum(maximum_bid_segments_all_bgs)
         return collect(1:maximum_bid_segment)
-    elseif run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
+    elseif run_mode(inputs) == RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
         # TODO We have the same code in bids.jl
         # This has to be rewritten into smaller functions and explained in the documentation
         # of the Guess bid idea
@@ -316,7 +388,7 @@ function bidding_segments(inputs::AbstractInputs)
         number_of_offer_segments = bidding_group_number_of_risk_factors .* maximum_number_of_plants_per_bidding_group
         maximum_number_of_offer_segments = maximum(number_of_offer_segments; init = 0)
         return collect(1:maximum_number_of_offer_segments)
-    elseif run_mode(inputs) in [Configurations_RunMode.STRATEGIC_BID, Configurations_RunMode.PRICE_TAKER_BID]
+    elseif run_mode(inputs) in [RunMode.STRATEGIC_BID, RunMode.PRICE_TAKER_BID]
         return [1]
     else
         error("Querying the `bidding_segments` does not make sense in Run mode $(run_mode(inputs)).")
@@ -324,32 +396,37 @@ function bidding_segments(inputs::AbstractInputs)
 end
 
 """
-    maximum_bidding_profiles(inputs)
+    maximum_bidding_profiles(inputs::AbstractInputs)
 
 Return the maximum number of bidding profiles.
 """
 maximum_number_of_bidding_profiles(inputs::AbstractInputs) = bidding_profiles(inputs)[end]
 
 """
-    bidding_profiles(inputs)
+    bidding_profiles(inputs::AbstractInputs)
 
 Return all bidding profiles.
 """
 function bidding_profiles(inputs::AbstractInputs)
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == RunMode.MARKET_CLEARING
         maximum_bid_profiles_all_bgs =
-            [maximum_multihour_profiles(inputs, bg) for bg in index_of_elements(inputs, BiddingGroup)]
+            [maximum_profiles(inputs, bg) for bg in index_of_elements(inputs, BiddingGroup)]
         maximum_bid_profile = maximum(maximum_bid_profiles_all_bgs)
         return collect(1:maximum_bid_profile)
-    elseif run_mode(inputs) in [Configurations_RunMode.STRATEGIC_BID, Configurations_RunMode.PRICE_TAKER_BID]
+    elseif run_mode(inputs) in [RunMode.STRATEGIC_BID, RunMode.PRICE_TAKER_BID]
         return [1]
     else
         error("Querying the `bidding_profile` does not make sense in Run mode $(run_mode(inputs)).")
     end
 end
 
-function has_any_multihour_complex_input_files(inputs::AbstractInputs)
-    return bidding_group_parent_profile_multihour_file(inputs) != "" &&
-           bidding_group_complementary_grouping_multihour_file(inputs) != "" &&
-           bidding_group_minimum_activation_level_multihour_file(inputs) != ""
+"""
+    has_any_profile_complex_input_files(inputs::AbstractInputs)
+    
+Return true if the bidding group has any profile complex input files.
+"""
+function has_any_profile_complex_input_files(inputs::AbstractInputs)
+    return bidding_group_parent_profile_file(inputs) != "" &&
+           bidding_group_complementary_grouping_profile_file(inputs) != "" &&
+           bidding_group_minimum_activation_level_profile_file(inputs) != ""
 end

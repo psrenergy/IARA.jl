@@ -15,6 +15,11 @@ Type for plotting a histogram where the observations are the total of generation
 """
 abstract type PlotTechnologyHistogram <: PlotType end
 
+"""
+    plot_data(::Type{PlotTechnologyHistogram}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, kwargs...)
+
+Create a histogram plot for the total of generation for a technology, considering all scenarios, periods and subperiods.
+"""
 function plot_data(
     ::Type{PlotTechnologyHistogram},
     data::Array{Float32, N},

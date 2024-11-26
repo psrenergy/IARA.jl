@@ -34,7 +34,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(branch::Branch, inputs)
+    initialize!(branch::Branch, inputs::AbstractInputs)
 
 Initialize the Branch collection from the database.
 """
@@ -45,7 +45,11 @@ function initialize!(branch::Branch, inputs::AbstractInputs)
     end
 
     branch.label = PSRI.get_parms(inputs.db, "Branch", "label")
-    branch.line_model = PSRI.get_parms(inputs.db, "Branch", "line_model") .|> Branch_LineModel.T
+    branch.line_model =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "Branch", "line_model"),
+            Branch_LineModel.T,
+        )
     branch.bus_to = PSRI.get_map(inputs.db, "Branch", "Bus", "to")
     branch.bus_from = PSRI.get_map(inputs.db, "Branch", "Bus", "from")
 
@@ -61,12 +65,15 @@ Update the Branch collection time series from the database.
 """
 function update_time_series_from_db!(branch::Branch, db::DatabaseSQLite, period_date_time::DateTime)
     branch.existing =
-        PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "Branch",
-            "existing";
-            date_time = period_date_time,
-        ) .|> Branch_Existence.T
+        convert_to_enum.(
+            PSRDatabaseSQLite.read_time_series_row(
+                db,
+                "Branch",
+                "existing";
+                date_time = period_date_time,
+            ),
+            Branch_Existence.T,
+        )
     branch.capacity = PSRDatabaseSQLite.read_time_series_row(
         db,
         "Branch",
@@ -112,6 +119,21 @@ Required columns:
   - `reactance::Vector{Float64}`: Branch reactance `[p.u.]`
     - _Ignored if_ [`IARA.Branch_LineModel`](@ref) _is set to_ `DC`
 
+
+Example:
+```julia
+IARA.add_branch!(db;
+    label = "ac_3",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [Int(IARA.Branch_Existence.EXISTS)],
+        capacity = [15.0],
+        reactance = [0.4],
+    ),
+    bus_from = "bus_2",
+    bus_to = "bus_3",
+)
+```
 """
 function add_branch!(db::DatabaseSQLite; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
@@ -195,11 +217,11 @@ function validate(branch::Branch)
 end
 
 """
-    validate_relations(branch::Branch, inputs)
+    advanced_validations(inputs::AbstractInputs, branch::Branch)
 
-Validate the references in the Branch collection.
+Validate the Branch within the inputs context. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, branch::Branch)
+function advanced_validations(inputs::AbstractInputs, branch::Branch)
     buses = index_of_elements(inputs, Bus)
 
     num_errors = 0
@@ -220,11 +242,22 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
+"""
+    is_dc(b::Branch, i::Int)
+
+Check if the Branch at index 'i' is modeled as a DC Line.
+"""
 is_dc(b::Branch, i::Int) = b.line_model[i] == Branch_LineModel.DC
+
+"""
+    is_ac(b::Branch, i::Int)
+
+Check if the Branch at index 'i' is modeled as an AC Line.
+"""
 is_ac(b::Branch, i::Int) = b.line_model[i] == Branch_LineModel.AC
 
 """
-    is_branch_modeled_as_dc_line(inputs, idx::Int)
+    is_branch_modeled_as_dc_line(inputs::AbstractInputs, idx::Int)
 
 Check if the Branch at index 'idx' is modeled as a DC Line.
 """
@@ -232,7 +265,7 @@ is_branch_modeled_as_dc_line(inputs::AbstractInputs, idx::Int) =
     inputs.collections.branch.line_model[idx] == Branch_LineModel.DC
 
 """
-    some_branch_does_not_have_dc_flag(inputs)
+    some_branch_does_not_have_dc_flag(inputs::AbstractInputs)
 
 Check if not all Branches are modeled as DC Lines.
 """

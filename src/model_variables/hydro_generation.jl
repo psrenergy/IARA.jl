@@ -10,6 +10,11 @@
 
 function hydro_generation! end
 
+"""
+    hydro_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the hydro generation variables to the model.
+"""
 function hydro_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -79,7 +84,7 @@ function hydro_generation!(
     )
 
     # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
-    if run_mode(inputs) == IARA.Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == IARA.RunMode.MARKET_CLEARING
         model.obj_exp += money_to_thousand_money() * sum(hydro_om_cost_expression) / 1e3
     else
         model.obj_exp += money_to_thousand_money() * sum(hydro_om_cost_expression)
@@ -99,6 +104,17 @@ function hydro_generation!(
     return nothing
 end
 
+"""
+    hydro_generation!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output files to store results for hydro 
+- turbining
+- spillage
+- generation
+- spillage penalty
+- minimum outflow slack
+- minimum outflow violation cost expression
+"""
 function hydro_generation!(
     outputs::Outputs,
     inputs::Inputs,
@@ -202,6 +218,17 @@ function hydro_generation!(
     return nothing
 end
 
+"""
+    hydro_generation!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the results for hydro
+- turbining
+- spillage
+- generation
+- spillage penalty
+- minimum outflow slack
+- minimum outflow violation cost expression
+"""
 function hydro_generation!(
     outputs::Outputs,
     inputs::Inputs,

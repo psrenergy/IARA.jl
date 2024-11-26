@@ -28,7 +28,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(bus::Bus, inputs)
+    initialize!(bus::Bus, inputs::AbstractInputs)
 
 Initialize the Bus collection from the database.
 """
@@ -46,11 +46,6 @@ function initialize!(bus::Bus, inputs::AbstractInputs)
     return nothing
 end
 
-"""
-    update_time_series_from_db!(bus::Bus, db::DatabaseSQLite, period_date_time::DateTime)
-
-Update the Bus collection time series from the database.
-"""
 function update_time_series_from_db!(bus::Bus, db::DatabaseSQLite, period_date_time::DateTime)
     return nothing
 end
@@ -67,6 +62,14 @@ Required arguments:
 Optional arguments:
 
   - `zone_id::String`: Zone label (only if the zone is already in the database)
+
+Example:
+```julia
+IARA.add_bus!(db;
+    label = "bus_1",
+    zone_id = "zone_1",
+)
+```
 """
 function add_bus!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "Bus"; kwargs...)
@@ -134,11 +137,11 @@ function validate(bus::Bus)
 end
 
 """
-    validate_relations(bus::Bus, inputs)
+    advanced_validations(inputs::AbstractInputs, bus::Bus)
 
-Validate the references in the bus collection.
+Validate the Bus within the inputs context. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, bus::Bus)
+function advanced_validations(inputs::AbstractInputs, bus::Bus)
     num_errors = 0
     for i in 1:length(bus)
         if !(bus.zone_id_index[i] in index_of_elements(inputs, Zone))

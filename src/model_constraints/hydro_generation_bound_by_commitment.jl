@@ -10,6 +10,11 @@
 
 function hydro_generation_bound_by_commitment! end
 
+"""
+    hydro_generation_bound_by_commitment!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the hydro generation bound by commitment constraints to the model.
+"""
 function hydro_generation_bound_by_commitment!(
     model::SubproblemModel,
     inputs::Inputs,

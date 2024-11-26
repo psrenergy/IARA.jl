@@ -19,7 +19,6 @@ const PATH = @__DIR__
 db = nothing
 try
     include("../base_case/build_case.jl")
-    include("../hydro_cascading_case/modify_case.jl")
     include("modify_case.jl")
 finally
     if db !== nothing
@@ -27,7 +26,7 @@ finally
     end
 end
 
-IARA.main([PATH, "--plot-results=false"])
+IARA.train_min_cost(PATH; plot_outputs = false)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

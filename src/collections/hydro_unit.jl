@@ -53,7 +53,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(hydro_unit::HydroUnit, inputs)
+    initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
 
 Initialize the Hydro Unit collection from the database.
 """
@@ -66,11 +66,20 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
     hydro_unit.label = PSRI.get_parms(inputs.db, "HydroUnit", "label")
     hydro_unit.initial_volume = PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume")
     hydro_unit.initial_volume_type =
-        PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_type") .|> HydroUnit_InitialVolumeType.T
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_type"),
+            HydroUnit_InitialVolumeType.T,
+        )
     hydro_unit.operation_type =
-        PSRI.get_parms(inputs.db, "HydroUnit", "operation_type") .|> HydroUnit_OperationType.T
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "HydroUnit", "operation_type"),
+            HydroUnit_OperationType.T,
+        )
     hydro_unit.has_commitment =
-        PSRI.get_parms(inputs.db, "HydroUnit", "has_commitment") .|> HydroUnit_HasCommitment.T
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "HydroUnit", "has_commitment"),
+            HydroUnit_HasCommitment.T,
+        )
     hydro_unit.bus_index = PSRI.get_map(inputs.db, "HydroUnit", "Bus", "id")
     hydro_unit.bidding_group_index = PSRI.get_map(inputs.db, "HydroUnit", "BiddingGroup", "id")
     hydro_unit.gauging_station_index = PSRI.get_map(inputs.db, "HydroUnit", "GaugingStation", "id")
@@ -107,12 +116,15 @@ function update_time_series_from_db!(
     period_date_time::DateTime,
 )
     hydro_unit.existing =
-        PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "existing";
-            date_time = period_date_time,
-        ) .|> HydroUnit_Existence.T
+        convert_to_enum.(
+            PSRDatabaseSQLite.read_time_series_row(
+                db,
+                "HydroUnit",
+                "existing";
+                date_time = period_date_time,
+            ),
+            HydroUnit_Existence.T,
+        )
     hydro_unit.production_factor = PSRDatabaseSQLite.read_time_series_row(
         db,
         "HydroUnit",
@@ -177,7 +189,7 @@ Required arguments:
   - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
   - `gaugingstation_id::String`: Gauging station of the hydro unit (only if the gauging station already exists).
   - `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-    - _Required if_ [`IARA.Configurations_RunMode`](@ref) _is not set to_ `CENTRALIZED_OPERATION`
+    - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
   - `operation_type::HydroUnit_OperationType.T`: Operation type of the Hydro Unit ([`IARA.HydroUnit_OperationType`](@ref)).
 
 Optional arguments:
@@ -213,6 +225,29 @@ Optional columns:
   - `min_outflow::Vector{Float64}`: Minimum outflow of the Hydro Unit `[hm³/s]`
   - `om_cost::Vector{Float64}`: Operation and maintenance cost of the hydro unit `[\$/MWh]`
 
+
+Example:
+```julia
+IARA.add_hydro_unit!(db;
+    label = "Hydro1",
+    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [IARA.HydroUnit_Existence.EXISTS], # 1 = true
+        production_factor = [1.0], # MW/m³/s
+        max_generation = [100.0], # MW
+        max_turbining = [100.0], # m³/s
+        min_volume = [0.0], # hm³
+        max_volume = [0.0], # hm³
+        min_outflow = [0.0], # m³/s
+        om_cost = [0.0], # \$/MWh
+    ),
+    initial_volume = 0.0, # hm³
+    gaugingstation_id = "gauging_station",
+    biddinggroup_id = "Hydro Owner",
+    bus_id = "Island",
+)
+```
 """
 function add_hydro_unit!(db::DatabaseSQLite; kwargs...)
     if !haskey(kwargs, :gaugingstation_id)
@@ -231,6 +266,15 @@ end
     update_hydro_unit!(db::DatabaseSQLite, label::String; kwargs...)
 
 Update the Hydro Unit named 'label' in the database.
+
+Example:
+```julia
+IARA.update_hydro_unit!(
+    db,
+    "hyd_1";
+    initial_volume = 1000.0
+)
+```
 """
 function update_hydro_unit!(
     db::DatabaseSQLite,
@@ -250,6 +294,11 @@ function update_hydro_unit!(
     return db
 end
 
+"""
+    update_hydro_unit_vectors!(db::DatabaseSQLite, label::String; kwargs...)
+
+Update the vectors of the Hydro Unit named 'label' in the database.
+"""
 function update_hydro_unit_vectors!(
     db::DatabaseSQLite,
     label::String;
@@ -286,6 +335,15 @@ Arguments:
   - `collection::String`: Collection name that the Hydro Unit is related to
   - `relation_type::String`: Relation type
   - `related_label::String`: Label of the element that the Hydro Unit is related to
+
+Example:
+```julia
+IARA.update_hydro_unit_relation!(db, "hyd_1";
+    collection = "BiddingGroup",
+    relation_type = "id",
+    related_label = "bg_1",
+)
+```
 """
 function update_hydro_unit_relation!(
     db::DatabaseSQLite,
@@ -305,6 +363,36 @@ function update_hydro_unit_relation!(
     return db
 end
 
+"""
+    update_hydro_unit_time_series_parameter!(
+        db::DatabaseSQLite, 
+        label::String, 
+        attribute::String, 
+        value; 
+        dimensions...
+    )
+
+Update a Hydro Unit time series parameter in the database for a given dimension value
+
+Arguments:
+
+  - `db::PSRClassesInterface.DatabaseSQLite`: Database
+  - `label::String`: Hydro Unit label
+  - `attribute::String`: Attribute name
+  - `value`: Value to be updated
+  - `dimensions...`: Dimension values
+
+Example:
+```julia
+IARA.update_hydro_unit_time_series_parameter!(
+    db,
+    "hyd_1",
+    "max_volume",
+    30.0;
+    date_time = DateTime(0), # dimension value
+)
+```
+"""
 function update_hydro_unit_time_series_parameter!(
     db::DatabaseSQLite,
     label::String,
@@ -327,8 +415,12 @@ end
     set_hydro_turbine_to!(db::DatabaseSQLite, hydro_unit_from::String, hydro_unit_to::String)
 
 Link two Hydro Units by setting the downstream turbining Hydro Unit.
-"""
 
+Example:
+```julia
+IARA.set_hydro_turbine_to!(db, "hydro_1", "hydro_2")
+```
+"""
 function set_hydro_turbine_to!(
     db::DatabaseSQLite,
     hydro_unit_from::String,
@@ -349,6 +441,11 @@ end
     set_hydro_spill_to!(db::DatabaseSQLite, hydro_unit_from::String, hydro_unit_to::String)
 
 Link two Hydro Units by setting the downstream spillage Hydro Unit.
+
+Example:
+```julia
+IARA.set_hydro_spill_to!(db, "hydro_1", "hydro_2")
+```
 """
 function set_hydro_spill_to!(
     db::DatabaseSQLite,
@@ -484,12 +581,12 @@ function validate(hydro_unit::HydroUnit)
 end
 
 """
-    validate_relations(inputs, hydro_unit::HydroUnit)
+    advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
 
-Validate the Hydro Units' references. Return the number of errors found.
+Validate the Hydro Units' context within the inputs. Return the number of errors found.
 """
 # TODO: add validation to bidding_group or virtual_reservoir not nullity
-function validate_relations(inputs::AbstractInputs, hydro_unit::HydroUnit)
+function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     gauging_stations = index_of_elements(inputs, GaugingStation)
@@ -538,7 +635,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    hydro_unit_max_generation(inputs, idx::Int)
+    hydro_unit_max_generation(inputs::AbstractInputs, idx::Int)
 
 Get the maximum generation for the Hydro Unit at index 'idx'.
 """
@@ -550,7 +647,7 @@ hydro_unit_max_generation(inputs::AbstractInputs, idx::Int) =
     end
 
 """
-    hydro_unit_downstream_cumulative_production_factor(inputs, idx::Int)
+    hydro_unit_downstream_cumulative_production_factor(inputs::AbstractInputs, idx::Int)
 
 Get the sum of production factors for the Hydro Unit at index 'idx' and all plants downstream from it.
 """
@@ -579,7 +676,7 @@ function hydro_unit_max_available_turbining(inputs::AbstractInputs, idx::Int)
 end
 
 """
-    hydro_unit_initial_volume(inputs, idx::Int)
+    hydro_unit_initial_volume(inputs::AbstractInputs, idx::Int)
 
 Get the initial volume for the Hydro Unit at index 'idx'.
 """
@@ -622,29 +719,65 @@ function fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inpu
 end
 
 """
-    hydro_unit_generation_file(inputs)
+    hydro_unit_generation_file(inputs::AbstractInputs)
 
 Return the hydro generation time series file for all hydro units.
 """
 hydro_unit_generation_file(inputs::AbstractInputs) = "hydro_generation"
 
 """
-    hydro_unit_opportunity_cost_file(inputs)
+    hydro_unit_opportunity_cost_file(inputs::AbstractInputs)
 
 Return the hydro opportunity cost time series file for all hydro units.
 """
 hydro_unit_opportunity_cost_file(inputs::AbstractInputs) = "hydro_opportunity_cost"
 
+"""
+    has_min_outflow(hydro_unit::HydroUnit, idx::Int) 
+
+Check if the Hydro Unit at index 'idx' has a minimum outflow.
+"""
 has_min_outflow(hydro_unit::HydroUnit, idx::Int) = hydro_unit.min_outflow[idx] > 0
+
+"""
+    has_commitment(hydro_unit::HydroUnit, idx::Int)
+
+Check if the Hydro Unit at index 'idx' has commitment.
+"""
 has_commitment(hydro_unit::HydroUnit, idx::Int) =
     hydro_unit.has_commitment[idx] == HydroUnit_HasCommitment.HAS_COMMITMENT
+
+"""
+    operates_with_reservoir(hydro_unit::HydroUnit, idx::Int)
+
+Check if the Hydro Unit at index 'idx' operates with reservoir.
+"""
 operates_with_reservoir(hydro_unit::HydroUnit, idx::Int) =
     hydro_unit.operation_type[idx] == HydroUnit_OperationType.RESERVOIR
+
+"""
+    operates_as_run_of_river(hydro_unit::HydroUnit, idx::Int)
+
+Check if the Hydro Unit at index 'idx' operates as run of river.
+"""
 operates_as_run_of_river(hydro_unit::HydroUnit, idx::Int) =
     hydro_unit.operation_type[idx] == HydroUnit_OperationType.RUN_OF_RIVER
+
+"""
+    is_associated_with_some_virtual_reservoir(hydro_unit::HydroUnit, idx::Int)
+
+Check if the Hydro Unit at index 'idx' is associated with some virtual reservoir.
+"""
 is_associated_with_some_virtual_reservoir(hydro_unit::HydroUnit, idx::Int) =
     hydro_unit.is_associated_with_some_virtual_reservoir[idx]
 
+"""
+    hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
+
+Get the hydro volume from the previous period.
+
+If the period is the first one, the initial volume is returned. Otherwise, it is read from the serialized results of the previous stage.
+"""
 function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
     if period == 1
         return inputs.collections.hydro_unit.initial_volume

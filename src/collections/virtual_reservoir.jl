@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    VirtualReservoir
+
+Collection representing the virtual reservoir.
+"""
 @collection @kwdef mutable struct VirtualReservoir <: AbstractCollection
     label::Vector{String} = []
     hydro_unit_indices::Vector{Vector{Int}} = []
@@ -24,6 +29,11 @@
     maximum_number_of_virtual_reservoir_bidding_segments::Int = 0
 end
 
+"""
+    initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs)
+
+Initialize the VirtualReservoir collection from the database.
+"""
 function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs)
     num_virtual_reservoirs = PSRI.max_elements(inputs.db, "VirtualReservoir")
     if num_virtual_reservoirs == 0
@@ -57,49 +67,67 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     return nothing
 end
 
+"""
+    validate(virtual_reservoir::VirtualReservoir)
+
+Validate the VirtualReservoir's parameters. Return the number of errors found.
+"""
 function validate(virtual_reservoir::VirtualReservoir)
     num_errors = 0
     for i in 1:length(virtual_reservoir)
         virtual_reservoir_label = virtual_reservoir.label[i]
         if length(virtual_reservoir.hydro_unit_indices[i]) == 0
-            @error "Virtual reservoir $(virtual_reservoir_label) must be associated with at least one hydro unit."
+            @error("Virtual reservoir $(virtual_reservoir_label) must be associated with at least one hydro unit.")
             num_errors += 1
         end
         for j in 1:length(virtual_reservoir.hydro_unit_indices[i])
             if is_null(virtual_reservoir.hydro_unit_indices[i][j])
-                @error "Hydro unit reference for virtual reservoir $(virtual_reservoir_label) must be fulfilled."
+                @error("Hydro unit reference for virtual reservoir $(virtual_reservoir_label) must be fulfilled.")
                 num_errors += 1
             end
         end
         if length(virtual_reservoir.asset_owner_indices[i]) == 0
-            @error "Virtual reservoir $(virtual_reservoir_label) must have at least one asset owner."
+            @error("Virtual reservoir $(virtual_reservoir_label) must have at least one asset owner.")
             num_errors += 1
         end
         for j in 1:length(virtual_reservoir.asset_owner_indices[i])
             if is_null(virtual_reservoir.asset_owners_inflow_allocation[i][j])
-                @error "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be defined."
+                @error(
+                    "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be defined."
+                )
                 num_errors += 1
             end
             if virtual_reservoir.asset_owners_inflow_allocation[i][j] <= 0 ||
                virtual_reservoir.asset_owners_inflow_allocation[i][j] > 1
-                @error "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than zero and less than or equal to one."
+                @error(
+                    "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than zero and less than or equal to one."
+                )
                 num_errors += 1
             end
         end
         if sum(virtual_reservoir.asset_owners_inflow_allocation[i]) != 1
-            @error "Sum of inflow allocation for virtual reservoir $(virtual_reservoir_label) must be equal to one. Found $(sum(virtual_reservoir.asset_owners_inflow_allocation[i]))."
+            @error(
+                "Sum of inflow allocation for virtual reservoir $(virtual_reservoir_label) must be equal to one. Found $(sum(virtual_reservoir.asset_owners_inflow_allocation[i]))."
+            )
             num_errors += 1
         end
         if !is_null(virtual_reservoir.number_of_waveguide_points_for_file_template[i]) &&
            virtual_reservoir.number_of_waveguide_points_for_file_template[i] <= 0
-            @error "Number of waveguide points for file template for virtual reservoir $(virtual_reservoir_label) must be greater than zero."
+            @error(
+                "Number of waveguide points for file template for virtual reservoir $(virtual_reservoir_label) must be greater than zero."
+            )
             num_errors += 1
         end
     end
     return num_errors
 end
 
-function validate_relations(inputs::AbstractInputs, virtual_reservoir::VirtualReservoir)
+"""
+    advanced_validations(inputs::AbstractInputs, virtual_reservoir::VirtualReservoir)
+
+Validate the VirtualReservoir within the inputs context. Return the number of errors found.
+"""
+function advanced_validations(inputs::AbstractInputs, virtual_reservoir::VirtualReservoir)
     num_errors = 0
     if length(virtual_reservoir) == 0
         return 0
@@ -110,10 +138,12 @@ function validate_relations(inputs::AbstractInputs, virtual_reservoir::VirtualRe
         virtual_reservoirs_including_hydro_unit =
             findall(vr -> h in virtual_reservoir.hydro_unit_indices[vr], 1:length(virtual_reservoir))
         if length(virtual_reservoirs_including_hydro_unit) > 1
-            @error "Hydro unit $(hydro_unit_label) is associated with the following virtual reservoirs: $(virtual_reservoir_label[virtual_reservoirs_including_hydro_unit]). It must be associated with only one virtual reservoir."
+            @error(
+                "Hydro unit $(hydro_unit_label) is associated with the following virtual reservoirs: $(virtual_reservoir_label[virtual_reservoirs_including_hydro_unit]). It must be associated with only one virtual reservoir."
+            )
             num_errors += 1
         elseif length(virtual_reservoirs_including_hydro_unit) == 0
-            @warn "Hydro unit $(hydro_unit_label) is not associated with any virtual reservoir."
+            @warn("Hydro unit $(hydro_unit_label) is not associated with any virtual reservoir.")
         end
     end
     return num_errors
@@ -132,11 +162,44 @@ function update_time_series_from_db!(
     return nothing
 end
 
+"""
+    add_virtual_reservoir!(db::DatabaseSQLite; kwargs...)
+
+Add a VirtualReservoir to the database.
+
+Required arguments:
+
+- `label::String`: Label of the VirtualReservoir.
+- `quantity_offer::String`: File name of the quantity offer time series.
+- `price_offer::String`: File name of the price offer time series.
+- `inflow_allocation::Vector{Float64}`: Inflow allocation for each asset owner.
+- `hydroplant_id::Vector{Int}`: Hydro plant indices that compose the VirtualReservoir.
+
+Example:
+```julia
+IARA.add_virtual_reservoir!(db;
+    label = "reservoir_1",
+    assetowner_id = ["asset_owner_1", "asset_owner_2"],
+    inflow_allocation = [0.4, 0.6],
+    hydrounit_id = ["hydro_1", "hydro_2"],
+)
+```
+"""
 function add_virtual_reservoir!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "VirtualReservoir"; kwargs...)
     return nothing
 end
 
+"""
+    update_virtual_reservoir!(db::DatabaseSQLite, label::String; kwargs...)
+
+Update the VirtualReservoir named 'label' in the database.
+
+Example:
+```julia
+IARA.update_virtual_reservoir!(db, "virtual_reservoir_1"; number_of_waveguide_points_for_file_template = 3)
+```
+"""
 function update_virtual_reservoir!(
     db::DatabaseSQLite,
     label::String;
@@ -154,17 +217,32 @@ function update_virtual_reservoir!(
     return db
 end
 
+"""
+    number_of_waveguide_points(inputs::AbstractInputs, vr::Int)
+
+Return the number of waveguide points for the VirtualReservoir `vr`.
+"""
 number_of_waveguide_points(inputs::AbstractInputs, vr::Int) =
     size(inputs.collections.virtual_reservoir.waveguide_points[vr], 2)
 
+"""
+    virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs, vr::Int, ao::Int)
+
+Return the inflow allocation of the asset owner `ao` in the VirtualReservoir `vr`.
+"""
 function virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs, vr::Int, ao::Int)
     @assert ao in virtual_reservoir_asset_owner_indices(inputs, vr)
     ao_index_among_asset_owners = findfirst(inputs.collections.virtual_reservoir.asset_owner_indices[vr] .== ao)
     return inputs.collections.virtual_reservoir.asset_owners_inflow_allocation[vr][ao_index_among_asset_owners]
 end
 
+"""
+    maximum_number_of_virtual_reservoir_bidding_segments(inputs::AbstractInputs)
+
+Return the maximum number of virtual reservoir bidding segments.
+"""
 maximum_number_of_virtual_reservoir_bidding_segments(inputs::AbstractInputs) =
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
+    if run_mode(inputs) == RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
         inputs.collections.virtual_reservoir.maximum_number_of_virtual_reservoir_bidding_segments
     else
         inputs.collections.configurations.number_of_virtual_reservoir_bidding_segments

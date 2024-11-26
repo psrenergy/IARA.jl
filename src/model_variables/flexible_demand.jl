@@ -10,6 +10,11 @@
 
 function flexible_demand! end
 
+"""
+    flexible_demand!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the flexible demand variables to the model.
+"""
 function flexible_demand!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -59,6 +64,11 @@ function flexible_demand!(
     return nothing
 end
 
+"""
+    flexible_demand!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the attended flexible demand and demand curtailment variables' values.
+"""
 function flexible_demand!(
     outputs::Outputs,
     inputs::Inputs,
@@ -93,6 +103,11 @@ function flexible_demand!(
     return nothing
 end
 
+"""
+    flexible_demand!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the attended flexible demand and demand curtailment variables' values to the output file.
+"""
 function flexible_demand!(
     outputs::Outputs,
     inputs::Inputs,

@@ -15,6 +15,11 @@ Type for a time series plot with the mean of scenarios with all agents stacked.
 """
 abstract type PlotTimeSeriesStackedMean <: PlotType end
 
+"""
+    agent_mean_and_sd_in_scenarios(::Type{PlotTimeSeriesStackedMean}, data::Array{Float64, 3}, agent_names::Vector{String}; kwargs...)
+
+Calculate the mean and standard deviation of the data across scenarios.
+"""
 function agent_mean_and_sd_in_scenarios(
     ::Type{PlotTimeSeriesStackedMean},
     data::Array{Float64, 3},
@@ -118,6 +123,11 @@ function reshape_time_series!(
     return time_series, standard_dev, modified_agent_names, num_scenarios
 end
 
+"""
+    plot_data(::Type{PlotTimeSeriesStackedMean}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, period_type::Configurations_PeriodType.T, kwargs...)
+
+Create a time series plot with the mean of scenarios with all agents stacked.
+"""
 function plot_data(
     ::Type{PlotTimeSeriesStackedMean},
     data::Array{Float32, N},
@@ -137,7 +147,7 @@ function plot_data(
     number_of_traces = size(traces, 1)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type)
+    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type)
 
     plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
@@ -152,7 +162,7 @@ function plot_data(
                 y = traces[trace, :],
                 name = trace_names[trace],
                 legendgroup = trace_names[trace],
-                line = Dict("color" => get_plot_color(trace)),
+                line = Dict("color" => _get_plot_color(trace)),
                 type = plot_type,
                 mode = "lines+markers",
                 text = hover_ticks,

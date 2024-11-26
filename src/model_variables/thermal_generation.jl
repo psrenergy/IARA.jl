@@ -10,6 +10,11 @@
 
 function thermal_generation! end
 
+"""
+    thermal_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the thermal unit generation variables to the model.
+"""
 function thermal_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -36,7 +41,7 @@ function thermal_generation!(
     ) # k$
 
     # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
-    if run_mode(inputs) == IARA.Configurations_RunMode.MARKET_CLEARING &&
+    if run_mode(inputs) == IARA.RunMode.MARKET_CLEARING &&
        clearing_model_type(inputs, run_time_options) != IARA.Configurations_ClearingModelType.COST_BASED
         model.obj_exp = @expression(
             model.jump_model,
@@ -63,6 +68,11 @@ function thermal_generation!(
     return nothing
 end
 
+"""
+    thermal_generation!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the thermal unit generation variables' values.
+"""
 function thermal_generation!(
     outputs::Outputs,
     inputs::Inputs,
@@ -86,6 +96,11 @@ function thermal_generation!(
     return nothing
 end
 
+"""
+    thermal_generation!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the thermal unit generation variables' values to the output file.
+"""
 function thermal_generation!(
     outputs::Outputs,
     inputs::Inputs,

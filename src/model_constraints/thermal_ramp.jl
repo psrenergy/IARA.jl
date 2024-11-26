@@ -10,6 +10,11 @@
 
 function thermal_ramp! end
 
+"""
+    thermal_ramp!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the thermal unit ramp constraints to the model.
+"""
 function thermal_ramp!(
     model::SubproblemModel,
     inputs::Inputs,

@@ -10,6 +10,16 @@
 
 function flexible_demand_shift_bounds! end
 
+"""
+    flexible_demand_shift_bounds!(
+        model,
+        inputs,
+        run_time_options,
+        ::Type{SubproblemBuild},
+    )
+
+Add the flexible demand shift bounds constraints to the model.
+"""
 function flexible_demand_shift_bounds!(
     model::SubproblemModel,
     inputs::Inputs,

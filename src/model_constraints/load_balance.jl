@@ -10,6 +10,11 @@
 
 function load_balance! end
 
+"""
+    load_balance!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the load balance constraints to the model.
+"""
 function load_balance!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -47,8 +52,8 @@ function load_balance!(
     end
 
     # Generation expression
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION ||
-       run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION ||
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+       run_mode(inputs) == RunMode.MIN_COST ||
        clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.COST_BASED
         hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
         thermal_units = index_of_elements(inputs, ThermalUnit; filters = [is_existing])
@@ -92,7 +97,7 @@ function load_balance!(
                 init = 0.0,
             )
         )
-    elseif run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    elseif run_mode(inputs) == RunMode.MARKET_CLEARING
         independent_bidding_groups =
             index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
         hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
@@ -100,8 +105,8 @@ function load_balance!(
             index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
 
         # Market Clearing Variables
-        bidding_group_generation_multihour = if any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
-            get_model_object(model, :bidding_group_generation_multihour)
+        bidding_group_generation_profile = if any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
+            get_model_object(model, :bidding_group_generation_profile)
         end
         bidding_group_generation = if any_elements(inputs, BiddingGroup; filters = [has_independent_bids])
             get_model_object(model, :bidding_group_generation)
@@ -120,8 +125,8 @@ function load_balance!(
                 init = 0.0,
             ) +
             sum(
-                bidding_group_generation_multihour[blk, bg, prf, bus] for
-                bg in profile_bidding_groups, prf in 1:maximum_multihour_profiles(inputs, bg);
+                bidding_group_generation_profile[blk, bg, prf, bus] for
+                bg in profile_bidding_groups, prf in 1:maximum_profiles(inputs, bg);
                 init = 0.0,
             ) +
             sum(
@@ -205,6 +210,12 @@ function load_balance!(
     return nothing
 end
 
+"""
+    load_balance!(outputs, inputs, run_time_options, ::Type{InitializeOutput})
+
+Initialize the output files for:
+- `load_marginal_cost`
+"""
 function load_balance!(
     outputs::Outputs,
     inputs::Inputs,
@@ -231,6 +242,12 @@ function load_balance!(
     return nothing
 end
 
+"""
+    load_balance!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput}) 
+
+
+Write the load marginal cost output.
+"""
 function load_balance!(
     outputs::Outputs,
     inputs::Inputs,

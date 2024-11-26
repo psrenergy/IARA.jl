@@ -53,6 +53,11 @@ Add a zone to the database.
 Required arguments:
 
   - `label::String`: Zone label
+
+Example:
+```julia
+IARA.add_zone!(db; label = "Island Zone")
+```
 """
 function add_zone!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "Zone"; kwargs...)
@@ -92,11 +97,11 @@ function validate(zone::Zone)
 end
 
 """
-    validate_relations(zone::Zone, inputs)
+    advanced_validations(inputs::AbstractInputs, zone::Zone)
 
-Validate the references in the zone collection.
+Validate the Zone within the inputs context. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, zone::Zone)
+function advanced_validations(inputs::AbstractInputs, zone::Zone)
     num_errors = 0
     return num_errors
 end

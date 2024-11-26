@@ -88,7 +88,7 @@ function convert_time_series_file_to_binary(file_path::String)
 
     if isfile(binary_file)
         if isfile(csv_file)
-            @error "Both CSV and binary files found for $file_path. Please remove one of them."
+            @error("Both CSV and binary files found for $file_path. Please remove one of them.")
             num_errors += 1
         else
             nothing
@@ -101,7 +101,7 @@ function convert_time_series_file_to_binary(file_path::String)
             end
             Quiver.convert(file_path, Quiver.csv, Quiver.binary; destination_directory = temp_path)
         else
-            @error "No CSV or binary file found for $file_path."
+            @error("No CSV or binary file found for $file_path.")
             num_errors += 1
         end
     end
@@ -188,10 +188,13 @@ function create_empty_time_series_if_necessary(
     digits::Int = 6,
 )
     file_created = 0
-    filename_with_extensions =
-        Quiver.add_extension_to_file(filename, Quiver.file_extension(impl))
-    if isfile(filename_with_extensions)
-        return file_created
+    quiver_impls = Quiver.implementations()
+    for quiver_impl in quiver_impls
+        filename_with_extensions =
+            Quiver.add_extension_to_file(filename, Quiver.file_extension(quiver_impl))
+        if isfile(filename_with_extensions)
+            return file_created
+        end
     end
 
     @assert all(dimension_size .> 0)

@@ -10,6 +10,11 @@
 
 function demand! end
 
+"""
+    demand!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the demand variables to the model.
+"""
 function demand!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -48,6 +53,11 @@ function demand!(
     return nothing
 end
 
+"""
+    demand!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
+
+Updates the demand variables in the model.
+"""
 function demand!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -76,6 +86,11 @@ function demand!(
     return nothing
 end
 
+"""
+    demand!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the demand and deficit variables' values.
+"""
 function demand!(
     outputs::Outputs,
     inputs::Inputs,
@@ -111,6 +126,11 @@ function demand!(
     return nothing
 end
 
+"""
+    demand!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the demand and deficit variables' values to the output file.
+"""
 function demand!(
     outputs::Outputs,
     inputs::Inputs,

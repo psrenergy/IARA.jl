@@ -10,6 +10,11 @@
 
 function convex_hull_coefficients! end
 
+"""
+    convex_hull_coefficients!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the convex hull coefficients variables to the model.
+"""
 function convex_hull_coefficients!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -81,6 +86,11 @@ function convex_hull_coefficients!(
     return nothing
 end
 
+"""
+    convex_hull_coefficients!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemUpdate})
+
+Updates the objective function coefficients for the convex hull coefficients variables.
+"""
 function convex_hull_coefficients!(
     model::SubproblemModel,
     inputs::Inputs,

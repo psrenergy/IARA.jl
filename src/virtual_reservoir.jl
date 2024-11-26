@@ -239,57 +239,6 @@ function fill_waveguide_points_provided_by_user!(inputs::AbstractInputs, vr::Int
     return nothing
 end
 
-function read_waveguide_points_from_file_to_db(inputs::AbstractInputs, db_temp)
-    must_read_files = check_waveguide_files(inputs)
-    if must_read_files
-        for vr in index_of_elements(inputs, VirtualReservoir)
-            hydro_units_idx = virtual_reservoir_hydro_unit_indices(inputs, vr)
-            hydro_units_label = hydro_unit_label(inputs)[hydro_units_idx]
-
-            df = CSV.read(virtual_reservoir_waveguide_filename(inputs, vr), DataFrame)
-            names_df = names(df)
-            @assert all(names_df .== hydro_units_label)
-
-            for h in hydro_units_label
-                data = df[!, h]
-                @assert all(isa.(data, Float64)) && !any(isnan.(data))
-                update_hydro_unit_vectors!(db_temp, h; waveguide_volume = data)
-            end
-        end
-    end
-    return nothing
-end
-
-function check_waveguide_files(inputs::AbstractInputs)
-    each_file_exists = true
-    for vr in index_of_elements(inputs, VirtualReservoir)
-        if !isfile(virtual_reservoir_waveguide_filename(inputs, vr))
-            each_file_exists = false
-            break
-        end
-    end
-    if !each_file_exists
-        generate_waveguide_template_files(inputs)
-    end
-    return each_file_exists
-end
-
-function generate_waveguide_template_files(inputs::AbstractInputs)
-    for vr in index_of_elements(inputs, VirtualReservoir)
-        hydro_units_idx = virtual_reservoir_hydro_unit_indices(inputs, vr)
-        hydro_units_label = hydro_unit_label(inputs)[hydro_units_idx]
-
-        waveguide_points =
-            zeros(virtual_reservoir_number_of_waveguide_points_for_file_template(inputs, vr), length(hydro_units_idx))
-
-        df = DataFrame(waveguide_points, hydro_units_label)
-        CSV.write(virtual_reservoir_waveguide_filename(inputs, vr), df)
-    end
-
-    inputs.caches.templates_for_waveguide_files_have_been_generated = true
-    return nothing
-end
-
 virtual_reservoir_waveguide_filename(inputs::AbstractInputs, vr::Int) =
     "$(path_case(inputs))/waveguide_points_$(virtual_reservoir_label(inputs, vr)).csv"
 

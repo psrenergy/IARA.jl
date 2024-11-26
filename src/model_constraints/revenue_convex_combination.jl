@@ -10,6 +10,11 @@
 
 function revenue_convex_combination! end
 
+"""
+    revenue_convex_combination!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the revenue convex combination constraints to the model.
+"""
 function revenue_convex_combination!(
     model::SubproblemModel,
     inputs::Inputs,

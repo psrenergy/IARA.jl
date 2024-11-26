@@ -42,6 +42,11 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     # convert time series if needed
     num_errors += convert_time_series_file_to_binary(file_path)
 
+    # When the file does not exist we must exit this function early
+    if num_errors > 0
+        return num_errors
+    end
+
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
     file_path = if isfile(file_path * ".quiv")
@@ -86,10 +91,23 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
         num_errors += 1
     end
 
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    asset_owners = index_of_elements(inputs, AssetOwner)
+    bid_segments = number_of_virtual_reservoir_bidding_segments(inputs)
+
+    ts.data = zeros(
+        T,
+        length(virtual_reservoirs),
+        length(asset_owners),
+        length(bid_segments),
+    )
+
     # Initialize dynamic time series
-    ts.data = read_virtual_reservoir_bids_view_from_external_file(
-        inputs, ts.reader;
-        period = 1, scenario = 1, data_type = eltype(ts.data),
+    read_virtual_reservoir_bids_view_from_external_file!(
+        inputs,
+        ts.reader;
+        period = 1,
+        scenario = 1,
     )
 
     return num_errors
@@ -97,36 +115,27 @@ end
 
 function read_virtual_reservoir_bids_view_from_external_file(
     inputs,
-    reader::Quiver.Reader{Quiver.binary};
+    ts::VirtualReservoirBidsView{T};
     period::Int,
     scenario::Int,
-    data_type::Type,
-)
+) where {T}
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    asset_owners = index_of_elements(inputs, AssetOwner)
     bid_segments = number_of_virtual_reservoir_bidding_segments(inputs)
 
-    data = zeros(
-        data_type,
-        length(virtual_reservoirs),
-        length(asset_owners),
-        length(bid_segments),
-    )
-
     for bs in bid_segments
-        Quiver.goto!(reader; period, scenario, bid_segment = bs)
+        Quiver.goto!(ts.reader; period, scenario, bid_segment = bs)
         pair_index = 0
         # vr and ao are in a bad performance order, but it is convenient for maping pairs the correct way.
         for vr in virtual_reservoirs
             for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                 pair_index += 1
-                data[vr, ao, bs] = reader.data[pair_index]
+                ts.data[vr, ao, bs] = reader.data[pair_index]
             end
         end
         @assert pair_index == sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
     end
 
-    return data
+    return nothing
 end
 
 function write_virtual_reservoir_bids_time_series_file(

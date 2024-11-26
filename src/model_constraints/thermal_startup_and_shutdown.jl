@@ -10,6 +10,11 @@
 
 function thermal_startup_and_shutdown! end
 
+"""
+    thermal_startup_and_shutdown!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the thermal unit startup and shutdown constraints to the model.
+"""
 function thermal_startup_and_shutdown!(
     model::SubproblemModel,
     inputs::Inputs,

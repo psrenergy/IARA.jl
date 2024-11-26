@@ -45,14 +45,18 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
     end
 
     asset_owner.label = PSRI.get_parms(inputs.db, "AssetOwner", "label")
-    asset_owner.price_type = PSRI.get_parms(inputs.db, "AssetOwner", "price_type") .|> AssetOwner_PriceType.T
+    asset_owner.price_type =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "AssetOwner", "price_type"),
+            AssetOwner_PriceType.T,
+        )
 
     # Load vectors
     asset_owner.risk_factor = PSRI.get_vectors(inputs.db, "AssetOwner", "risk_factor")
     asset_owner.segment_fraction = PSRI.get_vectors(inputs.db, "AssetOwner", "segment_fraction")
 
     # TODO: pass this to a post process, maybe fill_caches!
-    # The reason is that it being empty is useful for validate_relations 
+    # The reason is that it being empty is useful for advanced_validations 
     for i in 1:num_asset_owners
         if isempty(asset_owner.segment_fraction[i])
             asset_owner.segment_fraction[i] = [1.0]
@@ -75,7 +79,17 @@ Required arguments:
   - `price_type::AssetOwner_PriceType.T`: Asset owner price type ([`AssetOwner_PriceType`](@ref))
     - _Default set to_ `AssetOwner_PriceType.PRICE_TAKER`
   - `risk_factor::Vector{Float64}`: risk factor of the asset owner.
-  - `segment_fraction::Vector{Float64}`: fraction of the segment.	
+  - `segment_fraction::Vector{Float64}`: fraction of the segment.
+  
+Example:
+
+```julia
+IARA.add_asset_owner!(
+    db;
+    label = "AssetOwner1",
+    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+)
+```
 """
 function add_asset_owner!(db::DatabaseSQLite; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
@@ -87,6 +101,15 @@ end
     update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
 
 Update the AssetOwner named 'label' in the database.
+
+Example:
+```julia
+IARA.update_asset_owner!(
+    db,
+    "AssetOwner1";
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER
+)
+```
 """
 function update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
@@ -102,11 +125,6 @@ function update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
     return db
 end
 
-"""
-    update_time_series_from_db!(asset_owner::AssetOwner, db::DatabaseSQLite, period_date_time::DateTime)
-
-Update the AssetOwner collection time series from the database.
-"""
 function update_time_series_from_db!(asset_owner::AssetOwner, db::DatabaseSQLite, period_date_time::DateTime)
     return nothing
 end
@@ -128,24 +146,28 @@ function validate(asset_owner::AssetOwner)
             continue
         end
         if any(is_null.(asset_owner.segment_fraction[i]))
-            @error "Segment fraction vector has both null and non-null values for Asset owner $(asset_owner.label[i])."
+            @error("Segment fraction vector has both null and non-null values for Asset owner $(asset_owner.label[i]).")
         end
         if any(asset_owner.segment_fraction[i] .< 0)
-            @error "Segment fraction values must be non-negative. Asset owner $(asset_owner.label[i]) has segment fractions $(asset_owner.segment_fraction[i])."
+            @error(
+                "Segment fraction values must be non-negative. Asset owner $(asset_owner.label[i]) has segment fractions $(asset_owner.segment_fraction[i])."
+            )
         end
         if sum(asset_owner.segment_fraction[i]) != 1.0
-            @error "Segment fractions must sum to 1. Asset owner $(asset_owner.label[i]) has segment fractions $(asset_owner.segment_fraction[i])."
+            @error(
+                "Segment fractions must sum to 1. Asset owner $(asset_owner.label[i]) has segment fractions $(asset_owner.segment_fraction[i])."
+            )
         end
     end
     return num_errors
 end
 
 """
-    validate_relations(asset_owner::AssetOwner, inputs)
+    advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
 
-Validate the references in the asset owner collection.
+Validate the AssetOwner within the inputs context. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, asset_owner::AssetOwner)
+function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
     num_errors = 0
     # TODO: Are these checks necessary for every run mode?
     all_virtual_reservoir_asset_owner_indices = hcat(
@@ -158,7 +180,9 @@ function validate_relations(inputs::AbstractInputs, asset_owner::AssetOwner)
         # end
         if i in all_virtual_reservoir_asset_owner_indices && isempty(asset_owner.segment_fraction[i])
             num_errors += 1
-            @error "Asset owner $(asset_owner.label[i]) is associated to a virtual reservoir, but has no segment fractions defined."
+            @error(
+                "Asset owner $(asset_owner.label[i]) is associated to a virtual reservoir, but has no segment fractions defined."
+            )
         end
     end
     return num_errors
@@ -172,7 +196,7 @@ is_price_taker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.
 is_price_maker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
 
 """
-    asset_owner_revenue_convex_hull_point(inputs, bus::Int, subperiod::Int, point_idx::Int)
+    asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, subperiod::Int, point_idx::Int)
 
 Return a point in the revenue convex hull cache at a given bus and subperiod.
 """

@@ -25,7 +25,8 @@ db = IARA.create_study!(PATH;
     number_of_subperiods = number_of_subperiods,
     initial_date_time = "2024-01-01",
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
-    yearly_discount_rate = 0.1,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
+    cycle_discount_rate = 0.1,
     demand_deficit_cost = 0.5,
 )
 
@@ -35,10 +36,10 @@ IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 IARA.add_demand_unit!(
     db;
     label = "flex_dem_1",
-    demand_unit_type = IARA.Demand_Unit_DemandType.FLEXIBLE,
+    demand_unit_type = IARA.DemandUnit_DemandType.FLEXIBLE,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
+        existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     max_shift_up = 1.0,
     max_shift_down = 1.0,

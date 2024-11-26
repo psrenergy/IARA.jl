@@ -10,6 +10,11 @@
 
 function elastic_demand! end
 
+"""
+    elastic_demand!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the elastic demand variables to the model.
+"""
 function elastic_demand!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -55,6 +60,11 @@ function elastic_demand!(
     return nothing
 end
 
+"""
+    elastic_demand!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
+
+Updates the elastic demand variables in the model.
+"""
 function elastic_demand!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -83,6 +93,11 @@ function elastic_demand!(
     return nothing
 end
 
+"""
+    elastic_demand!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the attended elastic demand.
+"""
 function elastic_demand!(
     outputs::Outputs,
     inputs::Inputs,
@@ -106,6 +121,11 @@ function elastic_demand!(
     return nothing
 end
 
+"""
+    elastic_demand!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the attended elastic demand to the output file.
+"""
 function elastic_demand!(
     outputs::Outputs,
     inputs::Inputs,

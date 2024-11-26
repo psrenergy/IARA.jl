@@ -10,6 +10,11 @@
 
 function kirchhoffs_voltage_law! end
 
+"""
+    kirchhoffs_voltage_law!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the Kirchhoff's Voltage Law constraints to the model.
+"""
 function kirchhoffs_voltage_law!(
     model::SubproblemModel,
     inputs::Inputs,

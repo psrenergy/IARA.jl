@@ -10,6 +10,43 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
+new_subperiod_duration = 30.0
+
+IARA.update_configuration!(db;
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    cycle_discount_rate = 0.05,
+    cycle_duration_in_hours = 180.0,
+    number_of_nodes = number_of_periods,
+    subperiod_duration_in_hours = [new_subperiod_duration for _ in 1:number_of_subperiods],
+)
+
+IARA.update_hydro_unit!(
+    db,
+    "hyd_1";
+    initial_volume = 12.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours),
+)
+
+IARA.update_hydro_unit_time_series_parameter!(
+    db,
+    "hyd_1",
+    "max_volume",
+    30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours);
+    date_time = DateTime(0),
+)
+
+demand = demand * new_subperiod_duration / subperiod_duration_in_hours
+
+IARA.write_timeseries_file(
+    joinpath(PATH, "demand"),
+    demand;
+    dimensions = ["period", "scenario", "subperiod"],
+    labels = ["dem_1"],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
+    initial_date = "2020-01-01T00:00:00",
+    unit = "GWh",
+)
+
 # This case is built on top of the cyclic graph case
 
 number_of_years_to_simulate = 3
@@ -25,11 +62,13 @@ IARA.update_hydro_unit!(
     initial_volume = 12.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours) *
                      number_of_years_to_simulate,
 )
+
 IARA.update_hydro_unit_time_series_parameter!(
     db,
     "hyd_1",
     "max_volume",
-    30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours) * number_of_years_to_simulate;
+    30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours) *
+    number_of_years_to_simulate;
     date_time = DateTime(0),
 )
 

@@ -60,7 +60,10 @@ function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
 
     thermal_unit.label = PSRI.get_parms(inputs.db, "ThermalUnit", "label")
     thermal_unit.has_commitment =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "has_commitment") .|> ThermalUnit_HasCommitment.T
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "ThermalUnit", "has_commitment"),
+            ThermalUnit_HasCommitment.T,
+        )
     thermal_unit.max_ramp_up = PSRI.get_parms(inputs.db, "ThermalUnit", "max_ramp_up")
     thermal_unit.max_ramp_down = PSRI.get_parms(inputs.db, "ThermalUnit", "max_ramp_down")
     thermal_unit.min_uptime = PSRI.get_parms(inputs.db, "ThermalUnit", "min_uptime")
@@ -70,8 +73,10 @@ function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
     thermal_unit.max_shutdowns = PSRI.get_parms(inputs.db, "ThermalUnit", "max_shutdowns")
     thermal_unit.shutdown_cost = PSRI.get_parms(inputs.db, "ThermalUnit", "shutdown_cost")
     thermal_unit.commitment_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "commitment_initial_condition") .|>
-        ThermalUnit_CommitmentInitialCondition.T
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "ThermalUnit", "commitment_initial_condition"),
+            ThermalUnit_CommitmentInitialCondition.T,
+        )
     thermal_unit.generation_initial_condition =
         PSRI.get_parms(inputs.db, "ThermalUnit", "generation_initial_condition")
     thermal_unit.uptime_initial_condition =
@@ -97,12 +102,15 @@ function update_time_series_from_db!(
     period_date_time::DateTime,
 )
     thermal_unit.existing =
-        PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "existing";
-            date_time = period_date_time,
-        ) .|> ThermalUnit_Existence.T
+        convert_to_enum.(
+            PSRDatabaseSQLite.read_time_series_row(
+                db,
+                "ThermalUnit",
+                "existing";
+                date_time = period_date_time,
+            ),
+            ThermalUnit_Existence.T,
+        )
     thermal_unit.min_generation = PSRDatabaseSQLite.read_time_series_row(
         db,
         "ThermalUnit",
@@ -146,7 +154,7 @@ Required arguments:
   - `bus_id::String`: Bus label for the thermal unit (only if the Bus already exists)
   - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
   - `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-    - _Required if_ [`IARA.Configurations_RunMode`](@ref) _is not set to_ `CENTRALIZED_OPERATION`
+    - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
 
     
 Optional arguments:
@@ -179,6 +187,22 @@ Required columns:
 Optional columns:
   - `min_generation::Vector{Float64}`: minimum generation `[MWh]`
     - _Ignored if_ `has_commitment` _is set to_ `0`
+
+Example:
+```julia
+IARA.add_thermal_unit!(
+    db;
+    label = "Thermal1",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [1],
+        max_generation = [20.0],
+        om_cost = [10.0],
+    ),
+    biddinggroup_id = "Thermal Owner",
+    bus_id = "Island",
+)
+```
 """
 function add_thermal_unit!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "ThermalUnit"; kwargs...)
@@ -365,11 +389,11 @@ function validate(thermal_unit::ThermalUnit)
 end
 
 """
-    validate_relations(inputs, thermal_unit::ThermalUnit)
+    advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
 
-Validate the references of the Thermal Unit collection. Return the number of errors found.
+Validate the Thermal Unit within the inputs context. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
+function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
 
@@ -405,11 +429,26 @@ thermal_unit_min_generation(inputs::AbstractInputs, idx::Int) =
     is_null(inputs.collections.thermal_unit.min_generation[idx]) ? 0.0 :
     inputs.collections.thermal_unit.min_generation[idx]
 
+"""
+    has_commitment(thermal_unit::ThermalUnit, idx::Int)
+
+Check if the Thermal Unit at index 'idx' has commitment.
+"""
 has_commitment(thermal_unit::ThermalUnit, idx::Int) =
     thermal_unit.has_commitment[idx] == ThermalUnit_HasCommitment.HAS_COMMITMENT
 
+"""
+    has_ramp_constraints(thermal_unit::ThermalUnit, idx::Int)
+
+Check if the Thermal Unit at index 'idx' has ramp constraints.
+"""
 has_ramp_constraints(thermal_unit::ThermalUnit, idx::Int) =
     !is_null(thermal_unit.max_ramp_up[idx]) || !is_null(thermal_unit.max_ramp_down[idx])
 
+"""
+    has_commitment_initial_condition(thermal_unit::ThermalUnit, idx::Int)
+
+Check if the Thermal Unit at index 'idx' has commitment initial condition.
+"""
 has_commitment_initial_condition(thermal_unit::ThermalUnit, idx::Int) =
     thermal_unit.commitment_initial_condition[idx] != ThermalUnit_CommitmentInitialCondition.UNDEFINED

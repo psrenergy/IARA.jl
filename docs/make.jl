@@ -21,7 +21,31 @@ using DataFrames
 using IARA
 
 tutorial_dir = joinpath(@__DIR__, "src", "tutorial")
-for file in readdir(tutorial_dir)
+
+# List of each tutorial file
+tutorial_files = [
+    "first_execution.jl",
+    "case_01_build_base_case.jl",
+    "case_01_run_base_case.jl",
+    "case_02_build_hydrounit_base_case.jl",
+    "case_02_run_hydrounit_base_case.jl",
+    "case_03_build_profile_base_case.jl",
+    "case_03_run_profile_base_case.jl",
+    "case_04_build_multi_min_activation.jl",
+    "case_04_run_multi_min_activation.jl",
+    "case_05_build_reservoir_case.jl",
+    "case_05_run_reservoir_case.jl",
+    "case_06_build_policy_graph.jl",
+    "case_06_run_policy_graph.jl",
+    "case_07_modifications_case.jl",
+    "plots_tutorial.jl",
+]
+if isempty(tutorial_files)
+    tutorial_paths = readdir(tutorial_dir)
+else
+    tutorial_paths = [joinpath(tutorial_dir, file) for file in tutorial_files]
+end
+for file in tutorial_paths
     if occursin(".jl", file)
         Literate.markdown(
             joinpath(tutorial_dir, "$file"),
@@ -38,52 +62,48 @@ DocMeta.setdocmeta!(
 )
 
 pages = [
-    "Home" => "index.md",
-    "Conceptual" => [
-        "Overview" => "conceptual_overview.md",
-        "Formulation" => [
-            "Centralized Operation Problem" => "centralized_operation_problem.md",
-            "Price Taker Problem" => "price_taker_problem.md",
-            "Strategic Bid Problem" => "strategic_bid_problem.md",
-            "Market Clearing Problem" => [
+    "About IARA" => "index.md",
+    "Getting started" => [
+        "My first execution" => "tutorial/first_execution.md",
+    ],
+    "Conceptual overview" => [
+        "Key features of IARA" => "key_features.md",
+        "The market clearing structure" => "clearing_process.md",
+        "Hydro reservoirs, cascades and virtual reservoirs" => "hydro_challenges.md",
+        "Formulations" => [
+            "Conceptual formulations" => "conceptual_formulation.md",
+            "Centralized operation problem" => "centralized_operation_problem.md",
+            "Price taker problem" => "price_taker_problem.md",
+            "Strategic bid problem" => "strategic_bid_problem.md",
+            "Market clearing problem" => [
                 "market_clearing_problem.md",
                 "clearing_procedure.md",
             ],
         ],
     ],
-    "Tutorial" => [
-        "Index" => "tutorial_index.md",
-        "Case 1" => [
-            "tutorial/build_base_case.md",
-            "tutorial/run_base_case.md",
+    "Use guides and tutorials" => [
+        "Building a case from scratch" => [
+            "Introduction" => "build_a_case_from_scratch.md",
+            "Case creation example" => "tutorial/case_01_build_base_case.md",
         ],
-        "Case 2" => [
-            "tutorial/build_hydrounit_base_case.md",
-            "tutorial/run_hydrounit_base_case.md",
+        "Manipulating bid data" => [
+            "Introduction" => "bidding_formats.md",
+            "Profile bids example" => "tutorial/case_03_build_profile_base_case.md",
+            "Minimum activation bids example" => "tutorial/case_04_build_multi_min_activation.md",
+            "Virtual reservoir example" => "tutorial/case_05_build_reservoir_case.md",
         ],
-        "Case 3" => [
-            "tutorial/build_multi_hour_base_case.md",
-            "tutorial/run_multi_hour_base_case.md",
-        ],
-        "Case 4" => [
-            "tutorial/build_multi_min_activation.md",
-            "tutorial/run_multi_min_activation.md",
-        ],
-        "Case 5" => [
-            "tutorial/build_reservoir_case.md",
-            "tutorial/run_reservoir_case.md",
-        ],
-        "Case 6" => [
-            "tutorial/build_modifications_case.md",
+        "Structuring the policy graph" => [
+            "Introduction" => "intro_policy_graph.md",
+            "Policy graphs example: building" => "tutorial/case_06_build_policy_graph.md",
+            "Policy graphs example: running" => "tutorial/case_06_run_policy_graph.md",
         ],
         "Custom Plots" => [
             "tutorial/plots_tutorial.md",
         ],
     ],
-    "Use Guides" => "use_guides.md",
-    "Developer Docs" => [
-        "Contributing" => "contributing.md",
-        "Development guides" => "development_guides.md",
+    "Contributing" => [
+        "How to contribute" => "contributing.md",
+        "Developer guides" => "development_guides.md",
     ],
     "API Reference" => "api_reference.md",
 ]
@@ -91,20 +111,23 @@ pages = [
 makedocs(;
     modules = [IARA],
     doctest = false,
-    # clean = true,
+    clean = true,
     format = Documenter.HTML(;
         mathengine = Documenter.MathJax2(),
-        prettyurls = false,
+        prettyurls = true,
         edit_link = nothing,
         footer = nothing,
         disable_git = true,
-        repolink = nothing,
-        size_threshold_ignore = [
-            "api_reference.md",
-            "tutorial\\plots_tutorial.md",
-        ],
+        # Disabling the size thresholds is not a good practice but 
+        # it is necessary in the current state of the documentation
+
+        # Setting it to nothing will write every example block
+        example_size_threshold = nothing,
+        # Setting it to nothing will ignore the size threshold
+        size_threshold = nothing,
     ),
-    sitename = "IARA",
+    sitename = "IARA.jl",
+    authors = "psrenergy",
     warnonly = true,
     pages = pages,
 )
@@ -115,3 +138,8 @@ for file in readdir(tutorial_dir)
         rm(joinpath(tutorial_dir, file))
     end
 end
+
+deploydocs(;
+    repo = "github.com/psrenergy/IARA.jl.git",
+    push_preview = true,
+)

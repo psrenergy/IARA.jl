@@ -10,6 +10,11 @@
 
 abstract type AbstractOutput end
 
+"""
+    Outputs 
+
+Struct to store parameters related to the outputs of the optimization problem.
+"""
 @kwdef mutable struct Outputs
     list_of_symbols_to_query_from_subproblem::Vector{Symbol} = Symbol[]
     list_of_symbols_to_serialize::Vector{Symbol} = Symbol[]
@@ -17,8 +22,17 @@ abstract type AbstractOutput end
     outputs::Dict{String, AbstractOutput} = Dict{String, AbstractOutput}()
 end
 
+"""
+    output_path(inputs::Inputs)
+
+Return the path to the outputs directory.
+"""
 function output_path(inputs::Inputs)
-    return joinpath(path_case(inputs), "outputs")
+    return output_path(inputs.args)
+end
+
+function output_path(args::Args)
+    return args.outputs_path
 end
 
 function Base.getindex(outputs::Outputs, output::String)
@@ -76,15 +90,21 @@ function add_custom_recorder_to_query_from_subproblem_result!(
     return nothing
 end
 
+"""
+    initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
+
+Initialize the outputs struct.
+"""
 function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
     outputs = Outputs()
     model_action(outputs, inputs, run_time_options, InitializeOutput)
     return outputs
 end
 
-function initialize_output_dir(inputs)
-    rm(output_path(inputs); force = true, recursive = true)
-    mkdir(output_path(inputs))
+function initialize_output_dir(args::Args)
+    if !isdir(args.outputs_path)
+        mkdir(args.outputs_path)
+    end
     return nothing
 end
 
@@ -179,7 +199,7 @@ function initialize!(
 
     output_name *= run_time_file_suffixes(run_time_options)
 
-    file = joinpath(inputs.args.path, "outputs", output_name)
+    file = joinpath(output_path(inputs), output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
 
     writer = Quiver.Writer{output_type}(

@@ -11,10 +11,6 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_configuration!(db;
-    run_mode = IARA.Configurations_RunMode.PRICE_TAKER_BID,
-)
-
 IARA.add_asset_owner!(db;
     label = "asset_owner_1",
     price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,

@@ -13,10 +13,10 @@ db = IARA.load_study(PATH; read_only = false)
 # Add a elastic demand
 IARA.add_demand_unit!(db;
     label = "dem_2",
-    demand_unit_type = IARA.Demand_Unit_DemandType.ELASTIC,
+    demand_unit_type = IARA.DemandUnit_DemandType.ELASTIC,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
+        existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",
 )

@@ -19,7 +19,7 @@ Collection representing the battery unit in the system.
 """
 @collection @kwdef mutable struct BatteryUnit <: AbstractCollection
     label::Vector{String} = []
-    existing::Vector{Battery_Unit_Existence.T} = []
+    existing::Vector{BatteryUnit_Existence.T} = []
     initial_storage::Vector{Float64} = []
     min_storage::Vector{Float64} = []
     max_storage::Vector{Float64} = []
@@ -36,7 +36,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(battery_unit::BatteryUnit, inputs)
+    initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
 
 Initialize the Battery Unit collection from the database.
 """
@@ -63,12 +63,15 @@ Update the Battery Unit time series from the database.
 """
 function update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLite, period_date_time::DateTime)
     battery_unit.existing =
-        PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "BatteryUnit",
-            "existing";
-            date_time = period_date_time,
-        ) .|> Battery_Unit_Existence.T
+        convert_to_enum.(
+            PSRDatabaseSQLite.read_time_series_row(
+                db,
+                "BatteryUnit",
+                "existing";
+                date_time = period_date_time,
+            ),
+            BatteryUnit_Existence.T,
+        )
     battery_unit.min_storage = PSRDatabaseSQLite.read_time_series_row(
         db,
         "BatteryUnit",
@@ -108,7 +111,7 @@ Required arguments:
 - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
 - `bus_id::String`: Bus label (only if the bus is already in the database)
 - `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-  - _Required if_ [`IARA.Configurations_RunMode`](@ref) _is not set to_ `CENTRALIZED_OPERATION`
+  - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
 
 Optional arguments:
 - `initial_storage::Float64`: Initial storage `[MWh]`
@@ -128,6 +131,22 @@ Required columns:
   - `max_capacity::Vector{Float64}`: Maximum capacity `[MWh]`
   - `om_cost::Vector{Float64}`: O&M cost `[\$/MWh]`
 
+Example:
+```julia
+IARA.add_battery_unit!(db;
+    label = "bat_1",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [Int(IARA.BatteryUnit_Existence.EXISTS)],
+        min_storage = [0.0],
+        max_storage = [10.0] * 1e3,
+        max_capacity = [0.5],
+        om_cost = [1.0],
+    ),
+    initial_storage = 0.0,
+    bus_id = "bus_2",
+)
+```
 """
 function add_battery_unit!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "BatteryUnit"; kwargs...)
@@ -138,6 +157,15 @@ end
     update_battery_unit!(db::DatabaseSQLite, label::String; kwargs...)
 
 Update the Battery Unit named 'label' in the database.
+
+Example:
+```julia
+IARA.update_battery_unit!(
+    db,
+    "BatteryUnit1";
+    initial_storage = 0.0,
+)
+```
 """
 function update_battery_unit!(
     db::DatabaseSQLite,
@@ -232,11 +260,11 @@ function validate(battery_unit::BatteryUnit)
 end
 
 """
-    validate_relations(inputs, battery_unit::BatteryUnit)
+    advanced_validations(inputs::AbstractInputs, battery_unit::BatteryUnit)
 
-Validate the Battery's references. Return the number of errors found.
+Validate the Battery's context within the inputs. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, battery_unit::BatteryUnit)
+function advanced_validations(inputs::AbstractInputs, battery_unit::BatteryUnit)
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
 

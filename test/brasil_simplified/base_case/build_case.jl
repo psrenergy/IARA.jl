@@ -27,9 +27,9 @@ db = IARA.create_study!(PATH;
     number_of_nodes = number_of_periods,
     initial_date_time = "2020-01-01T00:00:00",
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC,
-    yearly_discount_rate = 0.09,
-    yearly_duration_in_hours = 8760.0,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    cycle_discount_rate = 0.09,
+    cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 2000.0,
 )
 
@@ -458,10 +458,10 @@ end
 for (bus_idx, label) in enumerate(bus_labels)
     IARA.add_demand_unit!(db;
         label = "dem_$label",
-        demand_unit_type = IARA.Demand_Unit_DemandType.INELASTIC,
+        demand_unit_type = IARA.DemandUnit_DemandType.INELASTIC,
         parameters = DataFrame(;
             date_time = [DateTime(0)],
-            existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
+            existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
         ),
         max_shift_up = 0.0,
         max_shift_down = 0.0,

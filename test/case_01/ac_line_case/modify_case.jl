@@ -10,6 +10,40 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
+# Change the DC line to an AC line
+
+IARA.delete_element!(db, "DCLine", "dc_1")
+
+IARA.add_branch!(db;
+    label = "ac_1",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [Int(IARA.Branch_Existence.EXISTS)],
+        capacity = [5.5],
+        reactance = [0.5],
+    ),
+    bus_from = "bus_1",
+    bus_to = "bus_2",
+)
+
+# Move the demand to a new bus
+
+IARA.add_bus!(db; label = "bus_3", zone_id = "zone_1")
+
+IARA.add_branch!(db;
+    label = "ac_2",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [Int(IARA.Branch_Existence.EXISTS)],
+        capacity = [10.0],
+        reactance = [0.2],
+    ),
+    bus_from = "bus_1",
+    bus_to = "bus_3",
+)
+
+IARA.update_demand_relation!(db, "dem_1"; collection = "Bus", relation_type = "id", related_label = "bus_3")
+
 # Add a branch closing a loop
 IARA.add_branch!(db;
     label = "ac_3",

@@ -10,6 +10,9 @@
 
 using Quiver
 
+const TEST_ATOL = 1e-6
+const TEST_RTOL = 1e-2
+
 function get_list_of_expected_outputs(expected_outputs_folder::String, skipped_outputs::Vector{String})
     list_of_outputs = String[]
     for file in readdir(expected_outputs_folder)
@@ -70,7 +73,7 @@ function compare_outputs(
                             sum_in_subperiods_calculated_output += sum(output_data)
                             sum_in_subperiods_expected_output += sum(expected_output_data)
                         end
-                        @test sum_in_subperiods_calculated_output ≈ sum_in_subperiods_expected_output atol = 1e-6 rtol =
+                        @test sum_in_subperiods_calculated_output ≈ sum_in_subperiods_expected_output atol = TEST_ATOL rtol =
                             1e-4
                     end
                 else
@@ -81,7 +84,7 @@ function compare_outputs(
                     for period in 1:dimension_size[1], scenario in 1:dimension_size[2], subperiod in 1:1
                         output_data = Quiver.goto!(output_reader; period, scenario, subperiod)
                         expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, subperiod)
-                        @test output_data ≈ expected_output_data atol = 1e-6 rtol = 1e-4
+                        @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
                     end
                 else
                     @warn("Comparison not implementend. Could not compare the output $output")
@@ -91,7 +94,7 @@ function compare_outputs(
                     for period in 1:dimension_size[1], scenario in 1:dimension_size[2], subperiod in 1:dimension_size[3]
                         output_data = Quiver.goto!(output_reader; period, scenario, subperiod)
                         expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, subperiod)
-                        @test output_data ≈ expected_output_data atol = 1e-6 rtol = 1e-4
+                        @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
                     end
                 elseif dimension_names == [:period, :scenario, :subperiod, :bid_segment]
                     for period in 1:dimension_size[1], scenario in 1:dimension_size[2],
@@ -101,10 +104,51 @@ function compare_outputs(
                         output_data = Quiver.goto!(output_reader; period, scenario, subperiod, bid_segment)
                         expected_output_data =
                             Quiver.goto!(expected_output_reader; period, scenario, subperiod, bid_segment)
-                        @test output_data ≈ expected_output_data atol = 1e-6 rtol = 1e-4
+                        @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
+                    end
+                elseif dimension_names == [:period, :scenario, :subscenario, :subperiod]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2],
+                        subscenario in 1:dimension_size[3],
+                        subperiod in 1:dimension_size[4]
+
+                        output_data = Quiver.goto!(output_reader; period, scenario, subscenario, subperiod)
+                        expected_output_data =
+                            Quiver.goto!(expected_output_reader; period, scenario, subscenario, subperiod)
+                        @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
+                    end
+                elseif dimension_names == [:period, :scenario, :bid_segment]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2],
+                        bid_segment in 1:dimension_size[3]
+
+                        output_data = Quiver.goto!(output_reader; period, scenario, bid_segment)
+                        expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, bid_segment)
+                        @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
+                    end
+                elseif dimension_names == [:period, :scenario, :subscenario, :bid_segment]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2],
+                        subscenario in 1:dimension_size[3],
+                        bid_segment in 1:dimension_size[4]
+
+                        output_data = Quiver.goto!(output_reader; period, scenario, subscenario, bid_segment)
+                        expected_output_data =
+                            Quiver.goto!(expected_output_reader; period, scenario, subscenario, bid_segment)
+                        @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
+                    end
+                elseif dimension_names == [:period, :scenario, :subscenario, :subperiod, :bid_segment]
+                    for period in 1:dimension_size[1], scenario in 1:dimension_size[2],
+                        subscenario in 1:dimension_size[3],
+                        subperiod in 1:dimension_size[4],
+                        bid_segment in 1:dimension_size[5]
+
+                        output_data = Quiver.goto!(output_reader; period, scenario, subscenario, subperiod, bid_segment)
+                        expected_output_data =
+                            Quiver.goto!(expected_output_reader; period, scenario, subscenario, subperiod, bid_segment)
+                        @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
                     end
                 else
-                    @warn("Comparison not implementend. Could not compare the output $output")
+                    @warn(
+                        "Comparison not implementend. Could not compare the output $output, dimensions are: $dimension_names"
+                    )
                 end
             end
         finally

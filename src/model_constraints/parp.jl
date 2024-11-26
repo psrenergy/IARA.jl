@@ -10,6 +10,11 @@
 
 function parp! end
 
+"""
+    parp!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the PAR(p) constraints to the model.
+"""
 function parp!(
     model::SubproblemModel,
     inputs::Inputs,

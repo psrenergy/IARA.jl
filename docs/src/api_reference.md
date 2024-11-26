@@ -3,11 +3,11 @@
 ```@docs
 IARA.Configurations_PolicyGraphType  
 IARA.Configurations_InflowSource  
-IARA.Configurations_RunMode  
+IARA.RunMode  
 IARA.Configurations_PeriodType  
 IARA.Configurations_SubperiodAggregationType  
 IARA.HydroUnit_InitialVolumeType  
-IARA.Demand_DemandType  
+IARA.DemandUnit_DemandType  
 IARA.Branch_LineModel  
 IARA.AssetOwner_PriceType  
 IARA.HydroUnit_OperationType  
@@ -24,10 +24,10 @@ IARA.Configurations_PriceCap
 IARA.Configurations_BinaryVariableUsage  
 IARA.Configurations_ConsiderSubperiodsLoopForThermalConstraints  
 IARA.Configurations_BusesAggregationForStrategicBidding  
-IARA.Battery_Unit_Existence  
+IARA.BatteryUnit_Existence  
 IARA.Branch_Existence  
 IARA.DCLine_Existence  
-IARA.Demand_Existence  
+IARA.DemandUnit_Existence  
 IARA.HydroUnit_Existence  
 IARA.RenewableUnit_Existence  
 IARA.ThermalUnit_Existence  

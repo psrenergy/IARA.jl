@@ -18,7 +18,7 @@ const PATH = @__DIR__
 include("../base_case/build_base_case.jl")
 include("build_min_activation.jl")
 
-IARA.main([PATH])
+IARA.market_clearing(PATH; plot_outputs = false)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

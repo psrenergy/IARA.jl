@@ -10,6 +10,11 @@
 
 function hydro_inflow! end
 
+"""
+    hydro_inflow!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the hydro inflow variables to the model.
+"""
 function hydro_inflow!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -119,6 +124,11 @@ function hydro_inflow!(
     return nothing
 end
 
+"""
+    hydro_inflow!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
+
+Updates the hydro inflow variables in the model.
+"""
 function hydro_inflow!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -165,6 +175,13 @@ function hydro_inflow!(
     return nothing
 end
 
+"""
+    hydro_inflow!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output files for
+- inflow    
+- inflow_slack
+"""
 function hydro_inflow!(
     outputs::Outputs,
     inputs::Inputs,
@@ -200,6 +217,11 @@ function hydro_inflow!(
     return nothing
 end
 
+"""
+    hydro_inflow!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})    
+
+Write the inflow and inflow_slack values to the output file.
+"""
 function hydro_inflow!(
     outputs::Outputs,
     inputs::Inputs,

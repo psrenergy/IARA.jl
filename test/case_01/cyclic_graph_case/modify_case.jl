@@ -13,8 +13,9 @@ db = IARA.load_study(PATH; read_only = false)
 new_subperiod_duration = 30.0
 
 IARA.update_configuration!(db;
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC,
-    yearly_discount_rate = 0.05,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    cycle_discount_rate = 0.05,
+    cycle_duration_in_hours = 180.0,
     number_of_nodes = number_of_periods,
     subperiod_duration_in_hours = [new_subperiod_duration for _ in 1:number_of_subperiods],
 )

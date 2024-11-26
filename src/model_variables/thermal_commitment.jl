@@ -10,6 +10,11 @@
 
 function thermal_commitment! end
 
+"""
+    thermal_commitment!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the thermal unit commitment variables to the model.
+"""
 function thermal_commitment!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -91,6 +96,11 @@ function thermal_commitment!(
     return nothing
 end
 
+"""
+    thermal_commitment!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the thermal unit commitment variables' values.
+"""
 function thermal_commitment!(
     outputs::Outputs,
     inputs::Inputs,
@@ -124,6 +134,11 @@ function thermal_commitment!(
     return nothing
 end
 
+"""
+    thermal_commitment!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the thermal unit commitment variables' values to the output file.
+"""
 function thermal_commitment!(
     outputs::Outputs,
     inputs::Inputs,

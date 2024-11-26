@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    generate_inflow_scenarios(inputs::Inputs)
+
+Generate inflow scenarios for the optimization problem.
+"""
 function generate_inflow_scenarios(inputs::Inputs)
     if read_inflow_from_file(inputs)
         return nothing
@@ -49,6 +54,18 @@ function generate_inflow_scenarios(inputs::Inputs)
     return nothing
 end
 
+"""
+    write_parp_outputs(
+        inputs::Inputs,
+        inflow::Array{Float64, 3},
+        noise::Array{Float64, 3},
+        parp_coefficients::Array{Float64, 3},
+        inflow_period_average::Array{Float64, 2},
+        inflow_period_std_dev::Array{Float64, 2},
+    )
+
+Write PAR(p) outputs to files.
+"""
 function write_parp_outputs(inputs::Inputs,
     inflow::Array{Float64, 3},
     noise::Array{Float64, 3},
@@ -112,6 +129,11 @@ function write_parp_outputs(inputs::Inputs,
     return nothing
 end
 
+"""
+    calculate_incremental_inflow(inputs::Inputs, total_inflow::Vector{Vector{Float64}})
+
+Calculate incremental inflow from total inflow.
+"""
 function calculate_incremental_inflow(inputs::Inputs, total_inflow::Vector{Vector{Float64}})
     incremental_inflow = deepcopy(total_inflow)
     gauging_stations = index_of_elements(inputs, GaugingStation)

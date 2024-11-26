@@ -10,6 +10,11 @@
 
 function battery_unit_storage! end
 
+"""
+    battery_unit_storage!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the battery unit storage variables to the model.
+"""
 function battery_unit_storage!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -59,6 +64,11 @@ function battery_unit_storage!(
     return nothing
 end
 
+"""
+    battery_unit_storage!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the battery unit storage variables' values.
+"""
 function battery_unit_storage!(
     outputs::Outputs,
     inputs::Inputs,
@@ -82,6 +92,11 @@ function battery_unit_storage!(
     return nothing
 end
 
+"""
+    battery_unit_storage!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the battery unit storage variables' values to the output.
+"""
 function battery_unit_storage!(
     outputs::Outputs,
     inputs::Inputs,

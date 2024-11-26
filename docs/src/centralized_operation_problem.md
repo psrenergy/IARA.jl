@@ -275,7 +275,7 @@ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the followi
 ```math
     I^{up}_{j, \tau} =
     \begin{cases}
-        1 & \text{if } t^{up}_{j, 0} + \tau \leq UT^{min}_j \\
+        1 & \text{if } t = 1 \text{ and } t^{up}_{j, 0} + \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)} < UT^{min}_j \\
         0 & \text{otherwise}
     \end{cases}
     \quad \forall j \in J^{TC}, \tau \in B(t)
@@ -284,52 +284,63 @@ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the followi
 ```math
     I^{down}_{j, \tau} =
     \begin{cases}
-        1 & \text{if } t^{down}_{j, 0} + \tau \leq DT^{min}_j \\
+        1 & \text{if } t = 1 \text{ and } t^{down}_{j, 0} + \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)}  < DT^{min}_j \\
         0 & \text{otherwise}
     \end{cases}
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
-
 $I^{up}$ and $I^{down}$ indicates if the plant started/stopped in the previous period AND has yet to reach the minimum uptime/downtime.
+Also, the following auxiliar terms are defined:
+
+```math
+    \Gamma^{UT^{min}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) < UT^{min}_j } \right\}
+```
+```math
+    \Gamma^{DT^{min}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) < DT^{min}_j } \right\}
+```
 
 With these terms, the following constraints are defined:
 
 ```math
-    \left(\sum_{\gamma=\tau - UT^{min}_j + 1}^{\tau}{y^T_{j, \gamma}}\right) + I^{up}_{j, \tau} \leq x^T_{j, \tau}
+    \left(\sum_{\gamma = \Gamma^{UT^{min}}_{j, \tau}}^{\tau}{y^T_{j, \gamma}}\right) + I^{up}_{j, \tau} \leq x^T_{j, \tau} , 
+    \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
 ```math
-    \left(\sum_{\gamma=\tau - DT^{min}_j + 1}^{\tau}{w^T_{j, \gamma}}\right) + I^{down}_{j, \tau} \leq 1 - x^T_{j, \tau}
+    \left(\sum_{\gamma= \Gamma^{DT^{min}}_{j, \tau}}^{\tau}{w^T_{j, \gamma}}\right) + I^{down}_{j, \tau} \leq 1 - x^T_{j, \tau}, 
+    \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
-For the uptime, the constraint states that if the plant started in the last $UT^{min}_j$ subperiods or if the indicator $I^{up}_{j, \tau}$ is active, then the plant must remain active.
+For the uptime, the constraint states that if the plant started in the last $UT^{min}_j$ hours or if the indicator $I^{up}_{j, \tau}$ is active, then the plant must remain active.
 The same logic applies to the downtime.
 
 ### Thermal Maximum Uptime
 
-Based on the initial condition $t^{up}_{j,0}$, the following term is defined:
+Based on the initial condition $t^{up}_{j,0}$ and the $UT^{max}$ parameter, the following terms are defined:
 
 ```math
     T^{up}_{j, \tau} =
     \begin{cases}
-        t^{up}_{j, 0}     & \text{if } \tau \leq UT^{max}_j - t^{up}_{j, 0} + 1 \\
-        UT^{max}_j - \tau & \text{if } \tau > UT^{max}_j - t^{up}_{j, 0} + 1
-        \text{ and } \tau \leq UT^{max}_j + 1                                   \\
+        t^{up}_{j, 0}     & \text{if } t^{up}_{j, 0} + \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)} \leq UT^{max}_j \\
+        UT^{max}_j - \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)} & \text{if } \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)} \leq UT^{max}_j               \\
         0                 & \text{otherwise}
-    \end{cases}\\
+    \end{cases}
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
-
-Indicating for each subperiod $\tau$, how many of the previous $UT^{max}_j + 1$ subperiods the plant has been active, considering only subperiods in the previous period.
-
-With this term, the following constraint is defined:
 
 ```math
-    \left(\sum_{\gamma=1}^{UT^{max}_j}{x^T_{j, \tau - \gamma + 1}}\right) + T^{up}_{j, \tau} \leq UT^{max}_j
+     \Gamma^{UT^{max}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) \leq UT^{max}_j } \right\}
+```
+For a time window of $UT^{max}_j$ hours before the beginning of subperiod $\tau$, the term $T^{up}_{j, \tau}$ represents the amount of hours that the plant has been active in the period before. The term $\Gamma^{UT^{max}}_{j, \tau}$ indicates the first subperiod in the current period that is within the time window of $UT^{max}_j$ hours before the current subperiod $\tau$. 
+
+With these terms, the following constraint is defined:
+
+```math
+    \left(\sum_{\gamma=\Gamma^{UT^{max}}_{j, \tau}}^{\tau}{d(\tau) \cdot x^T_{j, \gamma}}\right) + T^{up}_{j, \tau} \leq UT^{max}_j
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
+The constraint states that the amount of time that the plant has been active in the last $UT^{max}_j$ hours plus the time that the plant is active in the current subperiod must be less than or equal to $UT^{max}_j$.
 
-The constraint states that the sum of the number of active subperiods in the previous $UT^{max}_j$ subperiods must be less than or equal to $UT^{max}_j$. The summation represents the commitments in the current period, while the term $T^{up}_{j, \tau}$ represents the commitments in the previous period.
 
 ### Renewable Balance
 

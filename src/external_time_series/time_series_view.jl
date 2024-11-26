@@ -15,7 +15,11 @@ Collection representing the time series data read from external files in chunks.
 """
 @kwdef mutable struct TimeSeriesView{T, N} <: ViewFromExternalFile
     reader::Union{Quiver.Reader{Quiver.binary}, Nothing} = nothing
+    # Data that is mapped from the exact dimensions of the file, eg period, scenario, hour
+    exact_dimensions_data::Array{T, N} = Array{T, N}(undef, zeros(Int, N)...)
+    # Data that will be used in the model and could be aggregated at some point
     data::Array{T, N} = Array{T, N}(undef, zeros(Int, N)...)
+    dimensions::Vector{Symbol} = Symbol[]
 end
 
 function Base.getindex(time_series::TimeSeriesView{T, N}, inds...) where {T, N}
@@ -37,6 +41,11 @@ function initialize_time_series_view_from_external_file(
 
     # convert time series if needed
     num_errors += convert_time_series_file_to_binary(file_path)
+
+    # When the file does not exist we must exit this function early
+    if num_errors > 0
+        return num_errors
+    end
 
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
@@ -71,68 +80,308 @@ function initialize_time_series_view_from_external_file(
         num_errors += 1
     end
 
+    ts.dimensions = ts.reader.metadata.dimensions
+
+    # Allocate the array of correct size based on the dimension sizes of extra dimensions
+    dimension_names = reverse(ts.reader.metadata.dimensions)
+    dimension_sizes = reverse(ts.reader.metadata.dimension_size)
+    period_dimension_index = findfirst(isequal(:period), dimension_names)
+    if period_dimension_index !== nothing
+        deleteat!(dimension_sizes, period_dimension_index)
+    end
+    scenario_dimension_index = findfirst(isequal(:scenario), dimension_names)
+    if scenario_dimension_index !== nothing
+        deleteat!(dimension_sizes, scenario_dimension_index)
+    end
+
+    ts.exact_dimensions_data = zeros(
+        T,
+        length(ts.reader.labels_to_read),
+        dimension_sizes...,
+    )
+
     # Initialize dynamic time series
-    ts.data = read_time_series_view_from_external_file(
-        inputs, ts.reader;
-        period = 1, scenario = 1, data_type = eltype(ts.data),
+    read_time_series_view_from_external_file!(
+        inputs,
+        ts;
+        period = 1,
+        scenario = 1,
     )
 
     return num_errors
 end
 
-function read_time_series_view_from_external_file(
+function read_time_series_view_from_external_file!(
     inputs,
-    reader::Quiver.Reader{Quiver.binary};
+    ts::TimeSeriesView{T, N};
     period::Int,
     scenario::Int,
-    data_type::Type,
-)
-    # TODO check if this function is good enough
-    # Some ideas could be to create enumerables of types of variations and have a specific function 
-    # for each one of them. This does not seem as a too bad idea.
-
-    # Check if file has period and scenario dimensions
-    period_scenario_kwargs = OrderedDict()
-    dimension_names = reverse(reader.metadata.dimensions)
-    dimension_sizes = reverse(reader.metadata.dimension_size)
-    period_dimension_index = findfirst(isequal(:period), dimension_names)
-    if period_dimension_index !== nothing
-        date_time_to_read = date_time_from_period(inputs, period)
-        file_period = period_from_date_time(inputs, date_time_to_read; initial_date_time = reader.metadata.initial_date)
-        period_scenario_kwargs[:period] = file_period
-        deleteat!(dimension_names, period_dimension_index)
-        deleteat!(dimension_sizes, period_dimension_index)
+) where {T, N}
+    # Here we must have one function for each variation of dimensions
+    if ts.dimensions == [:period, :scenario, :subperiod]
+        read_period_scenario_subperiod!(
+            inputs,
+            ts,
+            period,
+            scenario,
+        )
+    elseif ts.dimensions == [:period, :scenario, :hour]
+        read_period_scenario_hour!(
+            inputs,
+            ts,
+            period,
+            scenario,
+        )
+    elseif ts.dimensions == [:period, :scenario, :subscenario, :subperiod]
+        read_period_scenario_subscenario_subperiod!(
+            inputs,
+            ts,
+            period,
+            scenario,
+        )
+    elseif ts.dimensions == [:period, :scenario, :profile]
+        read_period_scenario_profile!(
+            inputs,
+            ts,
+            period,
+            scenario,
+        )
+    elseif ts.dimensions == [:period, :subperiod]
+        read_period_subperiod!(
+            inputs,
+            ts,
+            period,
+        )
+    elseif ts.dimensions == [:period, :profile]
+        read_period_profile!(
+            inputs,
+            ts,
+            period,
+        )
+    elseif ts.dimensions == [:period, :profile, :complementary_group]
+        read_period_profile_complementary_group!(
+            inputs,
+            ts,
+            period,
+        )
+    elseif ts.dimensions == [:period, :scenario]
+        read_period_scenario!(
+            inputs,
+            ts,
+            period,
+            scenario,
+        )
+    elseif ts.dimensions == [:period, :lag]
+        read_period_lag!(
+            inputs,
+            ts,
+            period,
+        )
+    elseif ts.dimensions == [:inflow_period]
+        read_inflow_period!(
+            inputs,
+            ts,
+        )
+    else
+        error("Time series with dimensions $(ts.dimensions) not supported.")
     end
-    scenario_dimension_index = findfirst(isequal(:scenario), dimension_names)
-    if scenario_dimension_index !== nothing
-        period_scenario_kwargs[:scenario] = scenario
-        deleteat!(dimension_names, scenario_dimension_index)
-        deleteat!(dimension_sizes, scenario_dimension_index)
-    end
+    return nothing
+end
 
-    # Read data
-    # TODO we could read it directly in to the dynamic time series
-    # instead of initializing an array and then copying it.
-    # We could also make a new version of this fucntion that receives the vector it is 
-    # going to fill as an argument.
-    data = zeros(
-        data_type,
-        length(reader.labels_to_read),
-        dimension_sizes...,
+function read_period_scenario_subperiod!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+    scenario::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
     )
-    for dims in Iterators.product([1:size for size in dimension_sizes]...)
-        dim_kwargs = OrderedDict(Symbol.(dimension_names) .=> dims)
-        Quiver.goto!(reader; period_scenario_kwargs..., dim_kwargs...)
-        data[:, dims...] = reader.data
+    # Loop in subperiods
+    for subperiod in 1:ts.reader.metadata.dimension_size[3]
+        Quiver.goto!(ts.reader; period = file_period, scenario, subperiod)
+        ts.exact_dimensions_data[:, subperiod] = ts.reader.data
     end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
 
-    if :hour in dimension_names
-        if !has_hour_subperiod_map(inputs)
-            error("File $(reader.filename) has hourly data but an hour-subperiod map was not defined.")
-        end
-        hour_dimension_index = findfirst(isequal(:hour), dimension_names) + 1 # add one due to agent dimension
-        data = apply_hour_subperiod_map(inputs, data, reader.metadata.unit, hour_dimension_index)
+function read_period_scenario_hour!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+    scenario::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    # Loop in hours
+    for hour in 1:ts.reader.metadata.dimension_size[3]
+        Quiver.goto!(ts.reader; period = file_period, scenario, hour)
+        ts.exact_dimensions_data[:, hour] = ts.reader.data
     end
+    if !has_hour_subperiod_map(inputs)
+        error("File $(reader.filename) has hourly data but an hour-subperiod map was not defined.")
+    end
+    hour_dimension_index = 2
+    ts.data = apply_hour_subperiod_map(inputs, ts.exact_dimensions_data, ts.reader.metadata.unit, hour_dimension_index)
+    return nothing
+end
 
-    return data
+function read_period_scenario_subscenario_subperiod!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+    scenario::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    # Loop in subperiods
+    for subperiod in 1:ts.reader.metadata.dimension_size[4],
+        subscenario in 1:ts.reader.metadata.dimension_size[3]
+
+        Quiver.goto!(ts.reader; period = file_period, scenario, subscenario, subperiod)
+        ts.exact_dimensions_data[:, subperiod, subscenario] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period_scenario_profile!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+    scenario::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    for profile in 1:ts.reader.metadata.dimension_size[3]
+        Quiver.goto!(ts.reader; period = file_period, scenario, profile)
+        ts.exact_dimensions_data[:, profile] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period_subperiod!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    # Loop in subperiods
+    for subperiod in 1:ts.reader.metadata.dimension_size[2]
+        Quiver.goto!(ts.reader; period = file_period, subperiod)
+        ts.exact_dimensions_data[:, subperiod] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period_profile!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    for profile in 1:ts.reader.metadata.dimension_size[2]
+        Quiver.goto!(ts.reader; period = file_period, profile)
+        ts.exact_dimensions_data[:, profile] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period_profile_complementary_group!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    for complementary_group in 1:ts.reader.metadata.dimension_size[3],
+        profile in 1:ts.reader.metadata.dimension_size[2]
+
+        Quiver.goto!(ts.reader; period = file_period, profile, complementary_group)
+        ts.exact_dimensions_data[:, complementary_group, profile] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period_scenario!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+    scenario::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    Quiver.goto!(ts.reader; period = file_period, scenario)
+    ts.exact_dimensions_data = ts.reader.data
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period_lag!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    for lag in 1:ts.reader.metadata.dimension_size[2]
+        Quiver.goto!(ts.reader; period = file_period, lag)
+        ts.exact_dimensions_data[:, lag] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_inflow_period!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+) where {T, N}
+    for inflow_period in 1:ts.reader.metadata.dimension_size[1]
+        Quiver.goto!(ts.reader; inflow_period)
+        ts.exact_dimensions_data[:, inflow_period] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
 end

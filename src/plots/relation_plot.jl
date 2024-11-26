@@ -22,6 +22,30 @@ Type for plotting the relation between two agents in average across scenarios.
 """
 abstract type PlotRelationMean <: RelationPlotType end
 
+"""
+    plot_data(
+        ::Type{PlotRelationAll}, 
+        data_x::Array{Float32, N}, 
+        data_y::Array{Float32, N}, 
+        agent_x::String, 
+        agent_y::String, 
+        dimensions::Vector{String}; 
+        title::String, 
+        x_label::String, 
+        y_label::String, 
+        unit_x::String, 
+        unit_y::String, 
+        flip_x::Bool, 
+        flip_y::Bool, 
+        trace_mode::String, 
+        file_path::String, 
+        initial_date::DateTime, 
+        period_type::Configurations_PeriodType.T, 
+        kwargs...
+    ) where {N}
+
+Plot the relation between two data series for all scenarios.
+"""
 function plot_data(
     ::Type{PlotRelationAll},
     data_x::Array{Float32, N},
@@ -57,7 +81,7 @@ function plot_data(
                 x = traces_x[trace, :],
                 y = traces_y[trace, :],
                 name = trace_names_x[trace],
-                line = Dict("color" => get_plot_color(trace)),
+                line = Dict("color" => _get_plot_color(trace)),
                 mode = trace_mode,
                 # text = hover_ticks,
                 hovertemplate = "$x_label %{x} $unit_x <br>$y_label %{y} $unit_y",
@@ -85,6 +109,30 @@ function plot_data(
     return
 end
 
+"""
+    plot_data(
+    ::Type{PlotRelationMean},
+    data_x::Array{Float32, N},
+    data_y::Array{Float32, N},
+    agent_x::String,
+    agent_y::String,
+    dimensions::Vector{String};
+    title::String,
+    x_label::String,
+    y_label::String,
+    unit_x::String,
+    unit_y::String,
+    flip_x::Bool,
+    flip_y::Bool,
+    trace_mode::String,
+    file_path::String,
+    initial_date::DateTime,
+    period_type::Configurations_PeriodType.T,
+    kwargs...,
+) where {N}
+
+Plot the relation between two data series in average across scenarios.
+"""
 function plot_data(
     ::Type{PlotRelationMean},
     data_x::Array{Float32, N},
@@ -122,7 +170,7 @@ function plot_data(
                 x = traces_x[trace, :],
                 y = traces_y[trace, :],
                 name = trace_names_x[trace],
-                line = Dict("color" => get_plot_color(trace)),
+                line = Dict("color" => _get_plot_color(trace)),
                 mode = trace_mode,
                 hovertemplate = "$x_label %{x} $unit_x <br>$y_label %{y} $unit_y",
             ))

@@ -17,7 +17,7 @@ const PATH = @__DIR__
 
 include("build_case.jl")
 
-IARA.main([PATH, "--plot-results=false"])
+IARA.train_min_cost(PATH; plot_outputs = false)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

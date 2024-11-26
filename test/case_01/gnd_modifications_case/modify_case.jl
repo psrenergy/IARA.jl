@@ -8,10 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-db = nothing
-GC.gc()
-GC.gc()
-
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.delete_element!(db,

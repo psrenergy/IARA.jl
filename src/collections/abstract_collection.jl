@@ -8,6 +8,17 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    get_collection(inputs::Inputs, collection::Type{<:AbstractCollection})
+
+Returns a `IARA.Collection` of the specified type from the inputs.
+
+Example:
+
+```julia
+IARA.get_collection(inputs, IARA.BiddingGroup)
+```
+"""
 function get_collection(inputs, collection::Type{<:AbstractCollection})
     for fieldname in fieldnames(Collections)
         c = getfield(inputs.collections, fieldname)
@@ -21,9 +32,8 @@ end
 function index_of_elements(
     inputs,
     collection::Type{<:AbstractCollection};
-    run_time_options::RunTimeOptions = RunTimeOptions(),
-    @nospecialize(filters::Vector{<:Function} = Function[])
-)::Vector{Int}
+    run_time_options::RunTimeOptions = RunTimeOptions(), @nospecialize(filters::Vector{<:Function} = Function[]),
+)
     c = get_collection(inputs, collection)
     element_indexes = Int[]
     if length(c) == 0
@@ -77,7 +87,7 @@ function number_of_elements(
     collection::Type{<:AbstractCollection};
     run_time_options::RunTimeOptions = RunTimeOptions(),
     @nospecialize(filters::Vector{<:Function} = Function[])
-)::Int
+)
     return length(index_of_elements(inputs, collection; run_time_options, filters))
 end
 
@@ -86,16 +96,16 @@ function any_elements(
     collection::Type{<:AbstractCollection};
     run_time_options::RunTimeOptions = RunTimeOptions(),
     @nospecialize(filters::Vector{<:Function} = Function[])
-)::Bool
+)
     return !isempty(index_of_elements(inputs, collection; run_time_options, filters))
 end
 
 function is_existing(@nospecialize(c), i::Int)
-    return c.existing[i] |> Int == 1
+    return Int(c.existing[i]) == 1
 end
 
 function iara_log(@nospecialize(collection::C)) where {C <: AbstractCollection}
     if length(collection) != 0
-        println("   $(nameof(C)): $(length(collection)) element(s)")
+        Log.info("   $(nameof(C)): $(length(collection)) element(s)")
     end
 end

@@ -6,25 +6,17 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  build-docs-windows:
-    name: Build Docs on Windows
-    runs-on: self-hosted
+  build:
+    runs-on: ubuntu-latest
     steps:
-      - name: Initialize instance
-        run: |
-          Remove-Item -Path '${{ github.workspace }}\*' -Force -Recurse
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
         with:
-          fetch-depth: 0
-
-      - name: Build docs
-        run: |
-          .\docs\docs.bat
-
-      - name: Archive documentation build
-        uses: actions/upload-artifact@v4
-        with:
-          name: Documentation
-          path: docs/build
-          retention-days: 14
+          # Julia version to build documentation
+          version: '1.10'
+      - name: Install dependencies
+        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+      - name: Build and deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
+        run: julia --project=docs/ docs/make.jl

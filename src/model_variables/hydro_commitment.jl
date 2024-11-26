@@ -10,6 +10,11 @@
 
 function hydro_commitment! end
 
+"""
+    hydro_commitment!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the hydro unit commitment variables to the model.
+"""
 function hydro_commitment!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -46,6 +51,11 @@ function hydro_commitment!(
     return nothing
 end
 
+"""
+    hydro_commitment!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize output file to store the hydro unit commitment variables' values.
+"""
 function hydro_commitment!(
     outputs::Outputs,
     inputs::Inputs,
@@ -74,6 +84,11 @@ function hydro_commitment!(
     return nothing
 end
 
+"""
+    hydro_commitment!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the hydro unit commitment variables' values to the output file.
+"""
 function hydro_commitment!(
     outputs::Outputs,
     inputs::Inputs,

@@ -1,15 +1,13 @@
 # IARA.jl
 
-This model is open-source software for analyzing cost-based and bid-based electric markets.
+IARA is open-source software for analyzing electricity market design choices and price formation schemes and their consequences for agents' strategies for participating in these markets.
 
-## Funding
+## Funding 
 
-The code development was funded by the project:
+The code development was funded by the project [**Meta II Formação de Preço**](https://www.meta2formacaodepreco.com.br/), "A study about short-term electric energy price formation: an analysis of the Brazilian market".
 
-[`META II FORMAÇÃO DE PREÇO - Estudo sobre a formação de preço de energia elétrica de curto prazo: uma análise do mercado brasileiro`](https://www.meta2formacaodepreco.com.br/)
+This project was funded with resources from [The World Bank](https://www.worldbank.org/) made viable by initiative of the Brazilian [Ministry of Mines and Energy](https://www.gov.br/mme/pt-br).
 
-(META II PRICE FORMATION - A study about short-term electric energy price formation: an analysis of the Brazilian market).
-Funded with resources from the World Bank, under the supervision of
-[CCEE (Câmara de comercialização de Energia Elétrica)](https://www.ccee.org.br/),
-the Brazilian electric energy market operator.
-The execution of the project and the development were led by [PSR](https://www.psr-inc.com/en/).
+Execution of the project was carried out under the leadership and supervision of the Brazilian electricity market operator [CCEE](https://www.ccee.org.br/), with activities and development being led by [PSR](https://www.psr-inc.com/en/).
+
+We express our thanks to all [collaborators](https://www.meta2formacaodepreco.com.br/colaboracoes) that have contributed to the project and software development.

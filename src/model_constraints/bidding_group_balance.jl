@@ -10,6 +10,11 @@
 
 function bidding_group_balance! end
 
+"""
+    bidding_group_balance!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the bidding group balance constraints to the model.
+"""
 function bidding_group_balance!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -98,6 +103,12 @@ function bidding_group_balance!(
     return nothing
 end
 
+"""
+    bidding_group_balance!(outputs, inputs, run_time_options, ::Type{InitializeOutput})
+
+Initialize the output files for:
+- `bidding_group_price_offer`
+"""
 function bidding_group_balance!(
     outputs::Outputs,
     inputs::Inputs,
@@ -132,6 +143,12 @@ function bidding_group_balance!(
     return nothing
 end
 
+"""
+    bidding_group_balance!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the bidding group results for:
+- `bidding_group_price_offer`
+"""
 function bidding_group_balance!(
     outputs::Outputs,
     inputs::Inputs,

@@ -8,15 +8,47 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+available_values_list(enum_type) = vcat(instances(enum_type)...)
+function string_of_available_values(enum_type)
+    values_list = available_values_list(enum_type)
+    str = ""
+    for (i, value) in enumerate(values_list)
+        str *= "  - $(value) : $(Int(value))"
+        if i != length(values_list)
+            str *= "\n"
+        end
+    end
+    return str
+end
+function convert_to_enum(value::Int, enum_type)
+#! format: off
+    try
+        return enum_type(value)
+    catch e
+        if isa(e, ArgumentError)
+            @error(
+                """
+                Invalid value for enum type $enum_type: $value. The available values are: 
+				$(string_of_available_values(enum_type))
+                """
+            )
+        end
+        rethrow()
+    end
+#! format: on
+end
+
 """
     Configurations_PolicyGraphType
 
-  - `CYCLIC`: Cyclic policy graph (0)
+  - `CYCLIC_WITH_FIXED_ROOT`: Cyclic policy graph starting at node 1 (0)
   - `LINEAR`: Linear policy graph (1)
+  - `CYCLIC_WITH_DISTRIBUTED_ROOT`: Cyclic policy graph with equal chance of starting at any node (2)
 """
 @enumx Configurations_PolicyGraphType begin
-    CYCLIC = 0
+    CYCLIC_WITH_FIXED_ROOT = 0
     LINEAR = 1
+    CYCLIC_WITH_DISTRIBUTED_ROOT = 2
 end
 
 """
@@ -31,20 +63,51 @@ end
 end
 
 """
-    Configurations_RunMode
+    RunMode
 
-  - `CENTRALIZED_OPERATION`: Centralized operation (0)
+  - `TRAIN_MIN_COST`: Centralized operation (0)
   - `PRICE_TAKER_BID`: Price taker bid (1)
   - `STRATEGIC_BID`: Strategic bid (2)
   - `MARKET_CLEARING`: Market clearing (3)
-  - `CENTRALIZED_OPERATION_SIMULATION`: Centralized operation simulation (4)
+  - `MIN_COST`: Centralized operation simulation (4)
 """
-@enumx Configurations_RunMode begin
-    CENTRALIZED_OPERATION = 0
+@enumx RunMode begin
+    TRAIN_MIN_COST = 0
     PRICE_TAKER_BID = 1
     STRATEGIC_BID = 2
     MARKET_CLEARING = 3
-    CENTRALIZED_OPERATION_SIMULATION = 4
+    MIN_COST = 4
+end
+
+const AVAILABLE_RUN_MODES_MESSAGE = """
+    The available run modes are:
+    - train-min-cost
+    - min-cost
+    - price-taker-bid
+    - strategic-bid
+    - market-clearing
+    """
+
+function parse_run_mode(run_mode::Union{String, Nothing})
+    if run_mode == "train-min-cost"
+        return RunMode.TRAIN_MIN_COST
+    elseif run_mode == "price-taker-bid"
+        return RunMode.PRICE_TAKER_BID
+    elseif run_mode == "strategic-bid"
+        return RunMode.STRATEGIC_BID
+    elseif run_mode == "market-clearing"
+        return RunMode.MARKET_CLEARING
+    elseif run_mode == "min-cost"
+        return RunMode.MIN_COST
+    else
+        error(
+            """
+            Run mode not implemented: \"$run_mode\".
+
+            $AVAILABLE_RUN_MODES_MESSAGE
+            """,
+        )
+    end
 end
 
 """
@@ -122,13 +185,13 @@ end
 """
     Configurations_ClearingModelType
 
-  - `NOT_DEFINED`: Not defined (-1)
+  - `SKIP`: Skip (-1)
   - `COST_BASED`: Cost based (0)
   - `BID_BASED`: Bid based (1)
   - `HYBRID`: Hybrid (2)
 """
 @enumx Configurations_ClearingModelType begin
-    NOT_DEFINED = -1
+    SKIP = -1
     COST_BASED = 0
     BID_BASED = 1
     HYBRID = 2
@@ -240,13 +303,13 @@ end
 end
 
 """
-    Demand_Unit_DemandType
+    DemandUnit_DemandType
 
   - `INELASTIC`: Inelastic demand (0)
   - `ELASTIC`: Elastic demand (1)
   - `FLEXIBLE`: Flexible demand (2)
 """
-@enumx Demand_Unit_DemandType begin
+@enumx DemandUnit_DemandType begin
     INELASTIC = 0
     ELASTIC = 1
     FLEXIBLE = 2
@@ -301,12 +364,12 @@ end
 end
 
 """
-  Battery_Unit_Existence
+  BatteryUnit_Existence
 
   - `EXISTS`: Battery Unit exists (1)
   - `DOES_NOT_EXIST`: Battery Unit does not exist (0)
 """
-@enumx Battery_Unit_Existence begin
+@enumx BatteryUnit_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end
@@ -334,12 +397,12 @@ end
 end
 
 """
-  Demand_Unit_Existence
+  DemandUnit_Existence
 
   - `EXISTS`: Demand exists (1)
   - `DOES_NOT_EXIST`: Demand does not exist (0)
 """
-@enumx Demand_Unit_Existence begin
+@enumx DemandUnit_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end
@@ -431,4 +494,9 @@ end
 @enumx Configurations_WaveguideUserProvidedSource begin
     CSV_FILE = 0
     EXISTING_DATA = 1
+end
+
+@enumx Configurations_ReservoirsPhysicalVirtualCorrespondenceType begin
+    BY_VOLUME = 1
+    BY_GENERATION = 2
 end

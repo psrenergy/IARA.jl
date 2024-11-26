@@ -8,9 +8,14 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothing)
+
+Builds a graph based on the inputs.
+"""
 function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothing)
     # For the market clearing problem type, we simulate each period individually
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == RunMode.MARKET_CLEARING
         if isnothing(current_period)
             error("current_period must be provided for the MARKET_CLEARING run mode")
         end
@@ -33,10 +38,21 @@ function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothi
     end
 
     # Get edge probabilities
-    p = edge_probability(inputs)
+    prob_end = node_termination_probability(inputs)
+    prob_repeat = node_repetition_probability(inputs)
 
-    # Add edges
-    SDDP.add_edge(graph, 0 => 1, 1.0)
+    # Edges from root
+    if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT
+        SDDP.add_edge(graph, 0 => 1, 1.0)
+    elseif policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_DISTRIBUTED_ROOT
+        for node in nodes(inputs)
+            SDDP.add_edge(graph, 0 => node, 1.0 / number_of_nodes(inputs))
+        end
+    else
+        error("Policy graph type $(policy_graph_type(inputs)) not supported.")
+    end
+
+    # Other edges
     for node in nodes(inputs)
         if node == number_of_nodes(inputs)
             next_node = 1
@@ -44,9 +60,16 @@ function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothi
             next_node = node + 1
         end
 
+        # Edge to self
+        SDDP.add_edge(graph,
+            node => node,
+            (1 - prob_end) * prob_repeat[node],
+        )
+
+        # Edge to next node
         SDDP.add_edge(graph,
             node => next_node,
-            p,
+            (1 - prob_end) * (1 - prob_repeat[node]),
         )
     end
 
@@ -57,9 +80,24 @@ function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothi
     return graph
 end
 
-function edge_probability(inputs::Inputs)
-    # This implies that the cyclic graph represents exactly one year
-    yearly_probability = 1 / (1 + yearly_discount_rate(inputs))
-    node_probability = yearly_probability^(1 / number_of_nodes(inputs))
-    return node_probability
+"""
+    node_termination_probability(inputs::Inputs)
+
+Returns the probability that the problem finishes after solving a node's subproblem.
+"""
+function node_termination_probability(inputs::Inputs)
+    subproblem_duration_in_hours = sum(subperiod_duration_in_hours(inputs))
+    cycle_non_termination_probability = 1 / (1 + cycle_discount_rate(inputs))
+    node_non_termination_probability =
+        cycle_non_termination_probability^(subproblem_duration_in_hours / cycle_duration_in_hours(inputs))
+    return 1 - node_non_termination_probability
+end
+
+"""
+    node_repetition_probability(inputs::Inputs)
+
+Returns the probability that the problem repeats a node after solving it's subproblem.
+"""
+function node_repetition_probability(inputs::Inputs)
+    return 1 .- (1 ./ expected_number_of_repeats_per_node(inputs))
 end

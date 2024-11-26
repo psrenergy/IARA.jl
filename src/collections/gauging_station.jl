@@ -30,7 +30,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(gauging_station::GaugingStation, inputs)
+    initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
 
 Initialize the GaugingStation collection from the database.
 """
@@ -69,11 +69,6 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
     return nothing
 end
 
-"""
-    update_time_series_from_db!(gauging_station::GaugingStation, db::DatabaseSQLite, period_date_time::DateTime)
-
-Update the GaugingStation collection time series from the database.
-"""
 function update_time_series_from_db!(
     gauging_station::GaugingStation,
     db::DatabaseSQLite,
@@ -108,7 +103,12 @@ Required columns
   - `historical_inflow::Vector{Float64}`: Historical inflow data. `[hm³/s]`
     - _Mandatory if_ `Configuration.inflow_source` _is set to_ `SIMULATE_WITH_PARP`
 
-
+Example:
+```julia
+IARA.add_gauging_station!(db;
+    label = "gauging_station",
+)
+```
 """
 function add_gauging_station!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "GaugingStation"; kwargs...)
@@ -171,11 +171,11 @@ function validate(gauging_station::GaugingStation)
 end
 
 """
-    validate_relations(gauging_station::GaugingStation, inputs)
+    advanced_validations(inputs::AbstractInputs, gauging_station::GaugingStation)
 
-Validate the references in the gauging station collection.
+Validate the GaugingStation within the inputs context. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, gauging_station::GaugingStation)
+function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingStation)
     num_errors = 0
     return num_errors
 end
@@ -197,21 +197,21 @@ function normalized_initial_inflow(inputs, period_idx::Integer, h::Integer, tau:
 end
 
 """
-    gauging_station_inflow_file(inputs)
+    gauging_station_inflow_file(inputs::AbstractInputs)
 
 Return the inflow time series file for all gauging stations.
 """
 gauging_station_inflow_file(inputs::AbstractInputs) = "inflow"
 
 """
-    gauging_station_inflow_noise_file(inputs)
+    gauging_station_inflow_noise_file(inputs::AbstractInputs)
 
 Return the inflow noise time series file for all gauging stations.
 """
 gauging_station_inflow_noise_file(inputs::AbstractInputs) = "inflow_noise"
 
 """
-    gauging_station_parp_coefficients_file(inputs)
+    gauging_station_parp_coefficients_file(inputs::AbstractInputs)
 
 Return the PAR(p) coefficients time series file for all gauging stations.
 """
@@ -219,7 +219,7 @@ gauging_station_parp_coefficients_file(inputs::AbstractInputs) = "parp_coefficie
 gauging_station_parp_coefficients_file() = "parp_coefficients"
 
 """
-    gauging_station_inflow_period_average_file(inputs)
+    gauging_station_inflow_period_average_file(inputs::AbstractInputs)
 
 Return the period average inflow time series file for all gauging stations.
 """
@@ -227,7 +227,7 @@ gauging_station_inflow_period_average_file(inputs::AbstractInputs) = "inflow_per
 gauging_station_inflow_period_average_file() = "inflow_period_average"
 
 """
-    gauging_station_inflow_period_std_dev_file(inputs)
+    gauging_station_inflow_period_std_dev_file(inputs::AbstractInputs)
 
 Return the period standard deviation inflow time series file for all gauging stations.
 """

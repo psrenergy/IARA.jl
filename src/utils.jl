@@ -83,7 +83,7 @@ function period_index_in_year(inputs::Inputs, period::Int)
 end
 
 function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
-    if run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID
+    if run_mode(inputs) == RunMode.PRICE_TAKER_BID
         max_price = get_max_price(inputs)
         max_generation = 0.0
         for h in index_of_elements(inputs, HydroUnit; run_time_options)
@@ -98,7 +98,7 @@ function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
         lower_bound =
             -max_price * max_generation * sum(subperiod_duration_in_hours(inputs))
         return lower_bound
-    elseif run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
+    elseif run_mode(inputs) == RunMode.STRATEGIC_BID
         @warn "Strategic Bid lower bound not implemented."
         return 0.0
     else
@@ -148,10 +148,10 @@ function build_sql_typed_kwargs(kwargs)
 end
 
 function use_binary_variables(inputs, run_time_options)
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
         return inputs.collections.configurations.use_binary_variables == Configurations_BinaryVariableUsage.USE
-    elseif run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID ||
-           run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
+    elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
+           run_mode(inputs) == RunMode.STRATEGIC_BID
         return run_time_options.use_binary_variables == Configurations_BinaryVariableUsage.USE
     end
 end

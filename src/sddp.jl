@@ -41,8 +41,15 @@ function build_model(
         SDDP.parameterize(sp_model.jump_model, scenario_combinations) do (scenario, subscenario)
             update_time_series_views_from_external_files!(inputs; period = t, scenario)
             update_time_series_from_db!(inputs, t)
-            model_action(sp_model, inputs, run_time_options, scenario, subscenario, SubproblemUpdate)
-            set_custom_hook(policy_graph[t], inputs, run_time_options, t, scenario)
+            model_action(
+                sp_model,
+                inputs,
+                run_time_options,
+                scenario,
+                subscenario,
+                SubproblemUpdate,
+            )
+            set_custom_hook(policy_graph[t], inputs, run_time_options, t, scenario, subscenario)
             return
         end
     end
@@ -58,6 +65,7 @@ function train_model!(model::ProblemModel, inputs::Inputs)
         stopping_rules = [SDDP.SimulationStoppingRule()],
         time_limit = 300.0,
         iteration_limit = iteration_limit(inputs),
+        log_file = joinpath(output_path(inputs), "sddp.log"),
     )
 
     SDDP.write_cuts_to_file(model.policy_graph, joinpath(output_path(inputs), "cuts.json"))

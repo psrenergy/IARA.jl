@@ -11,7 +11,7 @@ Pkg.activate("../../..") #hide
 Pkg.instantiate() #hide
 using IARA
 ; #hide
-1
+
 # We also need to define a directory to store the case.
 case_path = joinpath(@__DIR__, "data", "case_1")
 

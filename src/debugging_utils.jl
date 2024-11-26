@@ -14,7 +14,7 @@
         inputs::Inputs,
         t::Integer,
         scen::Integer,
-        asset_owner_index::Integer,
+        subscenario::Integer,
     )
 
 Set hooks to write lps to the file if user asks to write lps or if the model is infeasible.
@@ -26,8 +26,9 @@ function set_custom_hook(
     run_time_options::RunTimeOptions,
     t::Integer,
     scen::Integer,
+    subscenario::Integer,
 )
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == RunMode.MARKET_CLEARING
         function fix_integer_variables_from_previous_problem_hook(model::JuMP.Model)
             fix_discrete_variables_from_previous_problem!(inputs, run_time_options, model, t, scen)
             optimize!(model; ignore_optimize_hook = true)
@@ -49,7 +50,7 @@ function set_custom_hook(
     end
 
     if inputs.args.write_lp
-        filename = lp_filename(inputs, run_time_options, t, scen)
+        filename = lp_filename(inputs, run_time_options, t, scen, subscenario)
         function write_lp_hook(model)
             optimize!(model; ignore_optimize_hook = true)
             optimizer = JuMP.backend(model).optimizer.model.optimizer
@@ -63,7 +64,7 @@ function set_custom_hook(
         end
 
         if JuMP.solver_name(node.subproblem) != "Parametric Optimizer with HiGHS attached"
-            SDDP.write_subproblem_to_file(node, filename * ".lp")
+            SDDP.write_subproblem_to_file(node, filename)
         end
     else
         function treat_infeasibilities(model)
@@ -71,21 +72,21 @@ function set_custom_hook(
             status = JuMP.termination_status(model)
             if status == MOI.INFEASIBLE
                 optimizer = JuMP.backend(model).optimizer.model.optimizer
-                filename = lp_filename(inputs, run_time_options, t, scen)
+                filename = lp_filename(inputs, run_time_options, t, scen, subscenario)
 
                 # We make this statement because when using ParametricOptInterface the 
                 # written might not pass all parameters to the file.
                 # Writing directly from the lower leve API will ensure that exactly the 
                 # model being solved is written.
                 _pass_names_to_solver(optimizer)
-                HiGHS.Highs_writeModel(optimizer.inner, filename * ".lp")
+                HiGHS.Highs_writeModel(optimizer.inner, filename)
             end
             return nothing
         end
     end
 
     function all_optimize_hooks(model)
-        if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+        if run_mode(inputs) == RunMode.MARKET_CLEARING
             if clearing_has_fixed_binary_variables(inputs, run_time_options)
                 fix_integer_variables_hook(model)
             elseif clearing_has_fixed_binary_variables_from_previous_problem(inputs, run_time_options)
@@ -111,12 +112,26 @@ function set_custom_hook(
     return
 end
 
-function lp_filename(inputs::Inputs, run_time_options::RunTimeOptions, t::Integer, scen::Integer)
-    if run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID ||
-       run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
+"""
+    lp_filename(inputs::Inputs, run_time_options::RunTimeOptions, t::Integer, scen::Integer, subscenario::Integer)
+
+Return the filename to write the lp file.
+"""
+function lp_filename(inputs::Inputs, run_time_options::RunTimeOptions, t::Integer, scen::Integer, subscenario::Integer)
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
+        return joinpath(path_case(inputs), "t$(t)_s$(scen)_train_min_cost.lp")
+    elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
+           run_mode(inputs) == RunMode.STRATEGIC_BID
         return joinpath(path_case(inputs), "t$(t)_s$(scen)_a$(run_time_options.asset_owner_index).lp")
-    else
-        return joinpath(path_case(inputs), "$(run_time_options.clearing_model_procedure)_t$(t)_s$(scen).lp")
+    else # Clearing
+        if is_ex_post_problem(run_time_options)
+            return joinpath(
+                path_case(inputs),
+                "$(run_time_options.clearing_model_procedure)_t$(t)_s$(scen)_ss$(subscenario).lp",
+            )
+        else
+            return joinpath(path_case(inputs), "$(run_time_options.clearing_model_procedure)_t$(t)_s$(scen).lp")
+        end
     end
 end
 

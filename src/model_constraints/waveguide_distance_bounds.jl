@@ -10,6 +10,11 @@
 
 function waveguide_distance_bounds! end
 
+"""
+    waveguide_distance_bounds!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the waveguide distance bounds constraints to the model.
+"""
 function waveguide_distance_bounds!(
     model::SubproblemModel,
     inputs::Inputs,

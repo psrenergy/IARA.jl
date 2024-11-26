@@ -10,6 +10,16 @@
 
 function elastic_demand_bounds! end
 
+"""
+    elastic_demand_bounds!(
+        model,
+        inputs,
+        run_time_options,
+        ::Type{SubproblemBuild},
+    )
+
+Add the elastic demand bounds constraints to the model.
+"""
 function elastic_demand_bounds!(
     model::SubproblemModel,
     inputs::Inputs,

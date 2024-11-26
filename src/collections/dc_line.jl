@@ -33,7 +33,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(dc_line::DCLine, inputs)
+    initialize!(dc_line::DCLine, inputs::AbstractInputs)
 
 Initialize the DC Line collection from the database.
 """
@@ -59,12 +59,15 @@ Update the DC Line collection time series from the database.
 """
 function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, period_date_time::DateTime)
     dc_line.existing =
-        PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "DCLine",
-            "existing";
-            date_time = period_date_time,
-        ) .|> DCLine_Existence.T
+        convert_to_enum.(
+            PSRDatabaseSQLite.read_time_series_row(
+                db,
+                "DCLine",
+                "existing";
+                date_time = period_date_time,
+            ),
+            DCLine_Existence.T,
+        )
     dc_line.capacity_to = PSRDatabaseSQLite.read_time_series_row(
         db,
         "DCLine",
@@ -108,6 +111,20 @@ Required columns:
   - `capacity_to::Vector{Float64}`: Maximum power flow in the 'to' direction `[MWh]`
   - `capacity_from::Vector{Float64}`: Maximum power flow in the 'from' direction `[MWh]`
 
+Example:
+```julia
+IARA.add_dc_line!(db;
+    label = "dc_1",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [Int(IARA.DCLine_Existence.EXISTS)],
+        capacity_to = [5.5],
+        capacity_from = [5.5],
+    ),
+    bus_from = "bus_1",
+    bus_to = "bus_2",
+)
+```
 """
 function add_dc_line!(db::DatabaseSQLite; kwargs...)
     PSRI.create_element!(db, "DCLine"; kwargs...)
@@ -212,11 +229,11 @@ function validate(dc_line::DCLine)
 end
 
 """
-    validate_relations(dc_line::DCLine, inputs)
+    advanced_validations(inputs::AbstractInputs, dc_line::DCLine)
 
-Validate the references in the DC Line collection.
+Validate the DCLine within the inputs context. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, dc_line::DCLine)
+function advanced_validations(inputs::AbstractInputs, dc_line::DCLine)
     buses = index_of_elements(inputs, Bus)
 
     num_errors = 0

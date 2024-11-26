@@ -10,6 +10,11 @@
 
 function virtual_reservoir_volume_distance_to_waveguide! end
 
+"""
+    virtual_reservoir_volume_distance_to_waveguide!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the virtual reservoir volume distance to waveguide constraints to the model.
+"""
 function virtual_reservoir_volume_distance_to_waveguide!(
     model::SubproblemModel,
     inputs::Inputs,

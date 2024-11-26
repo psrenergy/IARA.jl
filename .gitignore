@@ -29,6 +29,8 @@ docs/latex/main.*
 # committed for packages, but should be committed for applications that require a static
 # environment.
 # Manifest.toml
+format/Manifest.toml
+revise/Manifest.toml
 
 # Nunca commitar o executavel
 PSRExample

@@ -19,8 +19,8 @@ DemandUnit collection definition.
 """
 @collection @kwdef mutable struct DemandUnit <: AbstractCollection
     label::Vector{String} = []
-    demand_unit_type::Vector{Demand_Unit_DemandType.T} = []
-    existing::Vector{Demand_Unit_Existence.T} = []
+    demand_unit_type::Vector{DemandUnit_DemandType.T} = []
+    existing::Vector{DemandUnit_Existence.T} = []
     max_shift_up::Vector{Float64} = []
     max_shift_down::Vector{Float64} = []
     curtailment_cost::Vector{Float64} = []
@@ -41,7 +41,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    initialize!(demand_unit::DemandUnit, inputs)
+    initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
 
 Initialize the Demand collection from the database.
 """
@@ -53,7 +53,10 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
 
     demand_unit.label = PSRI.get_parms(inputs.db, "DemandUnit", "label")
     demand_unit.demand_unit_type =
-        PSRI.get_parms(inputs.db, "DemandUnit", "demand_unit_type") .|> Demand_Unit_DemandType.T
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "DemandUnit", "demand_unit_type"),
+            DemandUnit_DemandType.T,
+        )
     demand_unit.max_shift_up = PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_up")
     demand_unit.max_shift_down = PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_down")
     demand_unit.curtailment_cost = PSRI.get_parms(inputs.db, "DemandUnit", "curtailment_cost")
@@ -78,13 +81,15 @@ Update the Demand collection time series from the database.
 """
 function update_time_series_from_db!(demand_unit::DemandUnit, db::DatabaseSQLite, period_date_time::DateTime)
     demand_unit.existing =
-        PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "DemandUnit",
-            "existing";
-            date_time = period_date_time,
-        ) .|> Demand_Unit_Existence.T
-
+        convert_to_enum.(
+            PSRDatabaseSQLite.read_time_series_row(
+                db,
+                "DemandUnit",
+                "existing";
+                date_time = period_date_time,
+            ),
+            DemandUnit_Existence.T,
+        )
     return nothing
 end
 
@@ -96,8 +101,8 @@ Add a Demand to the database.
 Required arguments:
 
   - `label::String`: Demand label
-  - `demand_unit_type::Demand_Unit_DemandType.T`: Demand type ([`IARA.Demand_Unit_DemandType`](@ref))
-    - _Default set to_ `Demand_Unit_DemandType.INELASTIC`
+  - `demand_unit_type::DemandUnit_DemandType.T`: Demand type ([`IARA.DemandUnit_DemandType`](@ref))
+    - _Default set to_ `DemandUnit_DemandType.INELASTIC`
   - `bus_id::String`: Bus label (only if the Bus already exists).
   - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
 
@@ -119,7 +124,17 @@ Required columns:
   - `date_time::Vector{DateTime}`: date and time of the time series data.
   - `existing::Vector{Int}`: Whether the demand is existing or not (0 -> not existing, 1 -> existing)
 
-
+Example:
+```julia
+IARA.add_demand_unit!(db;
+    label = "Demand1",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [1],
+    ),
+    bus_id = "Island",
+)
+``` 
 """
 function add_demand_unit!(db::DatabaseSQLite; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
@@ -144,6 +159,17 @@ end
     update_demand_relation!(db::DatabaseSQLite, demand_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Demand named 'label' in the database.
+
+Example:
+```julia
+IARA.update_demand_relation!(
+    db, 
+    "dem_1"; 
+    collection = "Bus", 
+    relation_type = "id", 
+    related_label = "bus_3"
+)
+```
 """
 function update_demand_relation!(
     db::DatabaseSQLite,
@@ -191,7 +217,7 @@ function validate(demand_unit::DemandUnit)
             @error("Demand Unit $(demand_unit.label[i]) Max Curtailment must be non-negative.")
             num_errors += 1
         end
-        if demand_unit.demand_unit_type[i] == Demand_Unit_DemandType.FLEXIBLE
+        if demand_unit.demand_unit_type[i] == DemandUnit_DemandType.FLEXIBLE
             if is_null(demand_unit.max_shift_up[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Shift Up must be defined for flexible demands."
@@ -242,11 +268,11 @@ function validate(demand_unit::DemandUnit)
 end
 
 """
-    validate_relations(inputs, demand_unit::DemandUnit)
+    advanced_validations(inputs::AbstractInputs, demand_unit::DemandUnit)
 
-Validate the Demand's references. Return the number of errors found.
+Validate the Demand's context within the inputs. Return the number of errors found.
 """
-function validate_relations(inputs::AbstractInputs, demand_unit::DemandUnit)
+function advanced_validations(inputs::AbstractInputs, demand_unit::DemandUnit)
     buses = index_of_elements(inputs, Bus)
 
     num_errors = 0
@@ -264,7 +290,7 @@ end
 # ---------------------------------------------------------------------
 
 """
-    elastic_demand_labels(inputs)
+    elastic_demand_labels(inputs::AbstractInputs)
 
 Return the labels of elastic Demands.
 """
@@ -272,7 +298,7 @@ elastic_demand_labels(inputs::AbstractInputs) =
     [demand_unit_label(inputs, d) for d in index_of_elements(inputs, DemandUnit; filters = [is_elastic])]
 
 """
-    flexible_demand_labels(inputs)
+    flexible_demand_labels(inputs::AbstractInputs)
 
 Return the labels of flexible Demands.
 """
@@ -280,7 +306,7 @@ flexible_demand_labels(inputs::AbstractInputs) =
     [demand_unit_label(inputs, d) for d in index_of_elements(inputs, DemandUnit; filters = [is_flexible])]
 
 """
-    index_among_elastic_demands(inputs, idx::Int)
+    index_among_elastic_demands(inputs::AbstractInputs, idx::Int)
 
 Return the index of the Demand in position 'idx' among the elastic Demands.
 """
@@ -288,7 +314,7 @@ index_among_elastic_demands(inputs::AbstractInputs, idx::Int) =
     findfirst(isequal(idx), index_of_elements(inputs, DemandUnit; filters = [is_elastic]))
 
 """
-    number_of_flexible_demand_windows(inputs, idx::Int)
+    number_of_flexible_demand_windows(inputs::AbstractInputs, idx::Int)
 
 Return the number of windows for the flexible Demand in position 'idx'.
 """
@@ -296,13 +322,30 @@ number_of_flexible_demand_windows(inputs::AbstractInputs, idx::Int) =
     inputs.collections.demand_unit._number_of_flexible_demand_windows[idx]
 
 """
-    subperiods_in_flexible_demand_window(inputs, idx::Int, w::Int)
+    subperiods_in_flexible_demand_window(inputs::AbstractInputs, idx::Int, w::Int)
 
 Return the set of subperiods in the window 'w' of the flexible Demand in position 'idx'.
 """
 subperiods_in_flexible_demand_window(inputs::AbstractInputs, idx::Int, w::Int) =
     inputs.collections.demand_unit._subperiods_in_flexible_demand_window[idx][w]
 
-is_elastic(d::DemandUnit, i::Int) = d.demand_unit_type[i] == Demand_Unit_DemandType.ELASTIC
-is_flexible(d::DemandUnit, i::Int) = d.demand_unit_type[i] == Demand_Unit_DemandType.FLEXIBLE
-is_inelastic(d::DemandUnit, i::Int) = d.demand_unit_type[i] == Demand_Unit_DemandType.INELASTIC
+"""
+    is_elastic(d::DemandUnit, i::Int)
+
+Return true if the Demand in position 'i' is `IARA.DemandUnit_DemandType.ELASTIC`.
+"""
+is_elastic(d::DemandUnit, i::Int) = d.demand_unit_type[i] == DemandUnit_DemandType.ELASTIC
+
+"""
+    is_flexible(d::DemandUnit, i::Int) 
+
+Return true if the Demand in position 'i' is `IARA.DemandUnit_DemandType.FLEXIBLE`.
+"""
+is_flexible(d::DemandUnit, i::Int) = d.demand_unit_type[i] == DemandUnit_DemandType.FLEXIBLE
+
+"""
+    is_inelastic(d::DemandUnit, i::Int)
+
+Return true if the Demand in position 'i' is `IARA.DemandUnit_DemandType.INELASTIC`.
+"""
+is_inelastic(d::DemandUnit, i::Int) = d.demand_unit_type[i] == DemandUnit_DemandType.INELASTIC

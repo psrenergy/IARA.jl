@@ -19,6 +19,42 @@ ALTER TABLE Configuration ADD number_of_bid_segments_for_file_template INTEGER D
 ALTER TABLE Configuration ADD number_of_bid_segments_for_virtual_reservoir_file_template INTEGER DEFAULT 0;
 ALTER TABLE Configuration ADD number_of_profiles_for_file_template INTEGER DEFAULT 0;
 ALTER TABLE Configuration ADD number_of_complementary_groups_for_file_template INTEGER DEFAULT 0;
+ALTER TABLE Configuration ADD COLUMN reservoirs_physical_virtual_correspondence_type INTEGER DEFAULT 1;
+ALTER TABLE Configuration ADD COLUMN virtual_reservoir_waveguide_source INTEGER DEFAULT 1;
+ALTER TABLE Configuration ADD COLUMN waveguide_user_provided_source INTEGER DEFAULT 0;
+ALTER TABLE Configuration DROP COLUMN run_mode;
+
+CREATE TABLE Configuration_vector_expected_number_of_repeats_per_node (
+    id INTEGER, 
+    vector_index INTEGER NOT NULL,
+    expected_number_of_repeats_per_node INTEGER,
+    FOREIGN KEY(id) REFERENCES Configuration(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    PRIMARY KEY (id, vector_index)
+) STRICT;
+
+ALTER TABLE Configuration ADD COLUMN temp_number_of_stages INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE Configuration ADD COLUMN temp_number_of_scenarios INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE Configuration ADD COLUMN temp_number_of_blocks INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE Configuration ADD COLUMN temp_demand_deficit_cost REAL NOT NULL DEFAULT 1000000.0;
+ALTER TABLE Configuration ADD COLUMN temp_policy_graph_type INTEGER NOT NULL DEFAULT 0;
+
+UPDATE Configuration SET temp_number_of_stages = number_of_stages;
+UPDATE Configuration SET temp_number_of_scenarios = number_of_scenarios;
+UPDATE Configuration SET temp_number_of_blocks = number_of_blocks;
+UPDATE Configuration SET temp_demand_deficit_cost = demand_deficit_cost;
+UPDATE Configuration SET temp_policy_graph_type = policy_graph_type;
+
+ALTER TABLE Configuration DROP COLUMN number_of_stages;
+ALTER TABLE Configuration DROP COLUMN number_of_scenarios;
+ALTER TABLE Configuration DROP COLUMN number_of_blocks;
+ALTER TABLE Configuration DROP COLUMN demand_deficit_cost;
+ALTER TABLE Configuration DROP COLUMN policy_graph_type;
+
+ALTER TABLE Configuration RENAME COLUMN temp_number_of_stages TO number_of_stages;
+ALTER TABLE Configuration RENAME COLUMN temp_number_of_scenarios TO number_of_scenarios;
+ALTER TABLE Configuration RENAME COLUMN temp_number_of_blocks TO number_of_blocks;
+ALTER TABLE Configuration RENAME COLUMN temp_demand_deficit_cost TO demand_deficit_cost;
+ALTER TABLE Configuration RENAME COLUMN temp_policy_graph_type TO policy_graph_type;
 
 ALTER TABLE ThermalPlant 
 ADD COLUMN temp_commitment_initial_condition INTEGER NOT NULL DEFAULT 2;
@@ -31,9 +67,6 @@ DROP COLUMN commitment_initial_condition;
 
 ALTER TABLE ThermalPlant
 RENAME COLUMN temp_commitment_initial_condition TO commitment_initial_condition;
-
-ALTER TABLE Configuration ADD COLUMN virtual_reservoir_waveguide_source INTEGER DEFAULT 1;
-ALTER TABLE Configuration ADD COLUMN waveguide_user_provided_source INTEGER DEFAULT 0;
 
 ALTER TABLE VirtualReservoir ADD COLUMN number_of_waveguide_points_for_file_template INTEGER;
 
@@ -55,10 +88,12 @@ DROP TABLE Reserve_vector_battery;
 
 ALTER TABLE Configuration RENAME COLUMN number_of_stages TO number_of_periods;
 ALTER TABLE Configuration RENAME COLUMN stage_type TO period_type;
-
 ALTER TABLE Configuration RENAME COLUMN number_of_blocks TO number_of_subperiods;
 ALTER TABLE Configuration RENAME COLUMN hydro_balance_block_resolution TO hydro_balance_subperiod_resolution;
 ALTER TABLE Configuration RENAME COLUMN loop_blocks_for_thermal_constraints TO loop_subperiods_for_thermal_constraints;
+ALTER TABLE Configuration RENAME COLUMN yearly_duration_in_hours TO cycle_duration_in_hours;
+ALTER TABLE Configuration RENAME COLUMN yearly_discount_rate TO cycle_discount_rate;
+
 ALTER TABLE Configuration_vector_block_duration RENAME TO Configuration_vector_subperiod_duration;
 ALTER TABLE Configuration_vector_subperiod_duration RENAME COLUMN block_duration_in_hours TO subperiod_duration_in_hours;
 ALTER TABLE Configuration_time_series_files RENAME COLUMN hour_block_map TO hour_subperiod_map;
@@ -66,6 +101,12 @@ ALTER TABLE Configuration_time_series_files RENAME COLUMN hour_block_map TO hour
 
 ALTER TABLE BiddingGroup RENAME COLUMN simple_bid_max_segments TO independent_bid_max_segments;
 ALTER TABLE BiddingGroup RENAME COLUMN multihour_bid_max_profiles TO profile_bid_max_profiles;
+
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN quantity_offer_multihour TO quantity_offer_profile;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN price_offer_multihour TO price_offer_profile;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN parent_profile_multihour TO parent_profile;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN complementary_grouping_multihour TO complementary_grouping_profile;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN minimum_activation_level_multihour TO minimum_activation_level_profile;
 
 ALTER TABLE ThermalPlant RENAME TO ThermalUnit;
 ALTER TABLE ThermalPlant_time_series_parameters RENAME TO ThermalUnit_time_series_parameters;

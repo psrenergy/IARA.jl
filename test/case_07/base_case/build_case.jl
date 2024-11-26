@@ -25,9 +25,6 @@ m3_per_second_to_hm3_per_hour = 3600.0 / 1e6
 
 # Create the database
 # -------------------
-db = nothing
-GC.gc()
-GC.gc()
 
 db = IARA.create_study!(PATH;
     number_of_periods = number_of_periods,
@@ -36,10 +33,9 @@ db = IARA.create_study!(PATH;
     initial_date_time = "2020",
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
-    yearly_discount_rate = 0.0,
-    yearly_duration_in_hours = 8760.0,
+    cycle_discount_rate = 0.0,
+    cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
-    run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
     hydro_minimum_outflow_violation_cost = 600.0,
     number_of_virtual_reservoir_bidding_segments = maximum_number_of_bidding_segments,
     clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
@@ -48,6 +44,7 @@ db = IARA.create_study!(PATH;
     clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
     clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
     clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    reservoirs_physical_virtual_correspondence_type = IARA.Configurations_ReservoirsPhysicalVirtualCorrespondenceType.BY_GENERATION,
 )
 
 # Add collection elements
@@ -117,7 +114,7 @@ IARA.add_demand_unit!(db;
     label = "dem_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
+        existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_1",
 )
@@ -160,8 +157,8 @@ IARA.link_time_series_to_file(
     inflow = "inflow",
 )
 
-# Write hydro timeseries that usually come from a CENTRALIZED_OPERATION run.
-# values were chosen to match an execution of this case with the run_mode changed to CENTRALIZED_OPERATION
+# Write hydro timeseries that usually come from a TRAIN_MIN_COST run.
+# values were chosen to match an execution of this case with the run_mode changed to TRAIN_MIN_COST
 hydro_generation = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
 hydro_generation .= 75.0
 hydro_generation[1, 4, 1, 1:2] .= 25.0

@@ -10,6 +10,11 @@
 
 function bidding_group_generation! end
 
+"""
+    bidding_group_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the bidding group generation variables to the model.
+"""
 function bidding_group_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -90,6 +95,11 @@ function bidding_group_generation!(
     return nothing
 end
 
+"""
+    bidding_group_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
+
+Updates the objective function coefficients for the bidding group generation variables.
+"""
 function bidding_group_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -128,6 +138,11 @@ function bidding_group_generation!(
     return nothing
 end
 
+"""
+    bidding_group_generation!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the bidding group generation variable values.
+"""
 function bidding_group_generation!(
     outputs::Outputs,
     inputs::Inputs,
@@ -162,6 +177,11 @@ function bidding_group_generation!(
     return nothing
 end
 
+"""
+    bidding_group_generation!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the bidding group generation variable values to the output.
+"""
 function bidding_group_generation!(
     outputs::Outputs,
     inputs::Inputs,

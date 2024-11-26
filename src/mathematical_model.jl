@@ -51,14 +51,35 @@ end
     policy_graph::SDDP.PolicyGraph
 end
 
+"""
+    get_model_object(sp_model::SubproblemModel, object_name::Symbol)    
+
+Retrieve an object (variable, constraint or expression) from the `sp_model`'s JuMP model 
+using the provided `object_name`. This allows flexible access to model components by name.
+"""
 function get_model_object(sp_model::SubproblemModel, object_name::Symbol)
     return sp_model.jump_model[object_name]
 end
 
+"""
+    constraint_dual_recorder(constraint_name::Symbol)
+
+Return a function that retrieves the dual value of a constraint with the provided name.
+"""
 function constraint_dual_recorder(constraint_name::Symbol)
     return (sp_model -> JuMP.dual.(sp_model[constraint_name]))
 end
 
+"""
+    build_subproblem_model(
+        inputs::Inputs,
+        run_time_options::RunTimeOptions,
+        period::Int;
+        jump_model = JuMP.Model(),
+    )
+
+Build the subproblem model for the given period.
+"""
 function build_subproblem_model(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -66,7 +87,7 @@ function build_subproblem_model(
     jump_model = JuMP.Model(),
 )
     sp_model = SubproblemModel(; jump_model = jump_model, period = period)
-    model_action(sp_model, inputs, run_time_options, SubproblemBuild)
+    model_action(sp_model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, SubproblemBuild)
 
     obj_weight = if linear_policy_graph(inputs)
         (1.0 - period_discount_rate(inputs))^(period - 1)
@@ -78,23 +99,39 @@ function build_subproblem_model(
     return sp_model
 end
 
+"""
+    model_action(args...)
+
+Dispatch the model action based on the run mode and the action type.
+"""
 function model_action(args...)
     inputs = locate_inputs_in_args(args...)
 
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION ||
-       run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION
-        centralized_operation_model_action(args...)
-    elseif run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+       run_mode(inputs) == RunMode.MIN_COST
+        train_min_cost_model_action(args...)
+    elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID
         price_taker_bid_model_action(args...)
-    elseif run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
+    elseif run_mode(inputs) == RunMode.STRATEGIC_BID
         strategic_bid_model_action(args...)
-    elseif run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    elseif run_mode(inputs) == RunMode.MARKET_CLEARING
         market_clearing_model_action(args...)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
     end
 end
 
+"""
+    any_valid_elements(
+        inputs::Inputs,
+        run_time_options::RunTimeOptions,
+        collection::Type{<:AbstractCollection},
+        action::Type{<:AbstractAction};
+        filters::Vector{<:Function} = Function[]
+    )
+
+Check if there are any valid elements in the collection for the given action.
+"""
 function any_valid_elements(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -110,7 +147,12 @@ function any_valid_elements(
     end
 end
 
-function centralized_operation_model_action(args...)
+"""
+    train_min_cost_model_action(args...)
+
+Min cost model action.
+"""
+function train_min_cost_model_action(args...)
     inputs = locate_inputs_in_args(args...)
     action = locate_action_in_args(args...)
     run_time_options = locate_run_time_options_in_args(args...)
@@ -203,6 +245,11 @@ function centralized_operation_model_action(args...)
     return nothing
 end
 
+"""
+    price_taker_bid_model_action(args...)
+
+Price taker bid model action.
+"""
 function price_taker_bid_model_action(args...)
     inputs = locate_inputs_in_args(args...)
     action = locate_action_in_args(args...)
@@ -268,6 +315,11 @@ function price_taker_bid_model_action(args...)
     return nothing
 end
 
+"""
+    strategic_bid_model_action(args...)
+
+Strategic bid model action.
+"""
 function strategic_bid_model_action(args...)
     inputs = locate_inputs_in_args(args...)
     action = locate_action_in_args(args...)
@@ -335,6 +387,11 @@ function strategic_bid_model_action(args...)
     return nothing
 end
 
+"""
+    market_clearing_model_action(args...)
+
+Market clearing model action.
+"""
 function market_clearing_model_action(args...)
     inputs = locate_inputs_in_args(args...)
     action = locate_action_in_args(args...)
@@ -346,8 +403,10 @@ function market_clearing_model_action(args...)
         cost_based_market_clearing_model_action(args...)
     elseif clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.BID_BASED
         bid_based_market_clearing_model_action(args...)
+    elseif clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.SKIP
+        nothing
     else
-        error("Clearing model $(clearing_model(inputs)) not implemented")
+        error("Clearing model type $(clearing_model_type(inputs)) not implemented")
     end
 
     return nothing
@@ -419,9 +478,9 @@ function hybrid_market_clearing_model_action(args...)
     end
 
     if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
-        bidding_group_multihour_energy_offer!(args...)
-        if has_any_multihour_complex_input_files(inputs)
-            multihour_min_activation_level!(args...)
+        bidding_group_profile_energy_offer!(args...)
+        if has_any_profile_complex_input_files(inputs)
+            profile_min_activation_level!(args...)
         end
     end
 
@@ -444,11 +503,11 @@ function hybrid_market_clearing_model_action(args...)
         kirchhoffs_voltage_law!(args...)
     end
     if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
-        bidding_group_multihour_generation_bound_by_offer!(args...)
-        if has_any_multihour_complex_input_files(inputs)
-            bidding_group_multihour_complementary_profile!(args...)
-            bidding_group_multihour_minimum_activation!(args...)
-            bidding_group_multihour_precedence!(args...)
+        bidding_group_profile_generation_bound_by_offer!(args...)
+        if has_any_profile_complex_input_files(inputs)
+            bidding_group_profile_complementary_profile!(args...)
+            bidding_group_profile_minimum_activation!(args...)
+            bidding_group_profile_precedence!(args...)
         end
     end
 
@@ -477,7 +536,12 @@ function hybrid_market_clearing_model_action(args...)
             )
                 hydro_minimum_outflow!(args...)
             end
-            virtual_reservoir_volume_balance!(args...)
+            if reservoirs_physical_virtual_correspondence_type(inputs) ==
+               Configurations_ReservoirsPhysicalVirtualCorrespondenceType.BY_VOLUME
+                virtual_reservoir_correspondence_by_volume!(args...)
+            else
+                virtual_reservoir_correspondence_by_generation!(args...)
+            end
             virtual_reservoir_generation_bounds!(args...)
             waveguide_convex_combination_sum!(args...)
             waveguide_distance_bounds!(args...)
@@ -506,6 +570,11 @@ function hybrid_market_clearing_model_action(args...)
     return nothing
 end
 
+"""
+    cost_based_market_clearing_model_action(args...)
+
+Cost based market clearing model action.
+"""
 function cost_based_market_clearing_model_action(args...)
     inputs = locate_inputs_in_args(args...)
     action = locate_action_in_args(args...)
@@ -599,6 +668,11 @@ function cost_based_market_clearing_model_action(args...)
     return nothing
 end
 
+"""
+    bid_based_market_clearing_model_action(args...)
+
+Bid based market clearing model action.
+"""
 function bid_based_market_clearing_model_action(args...)
     inputs = locate_inputs_in_args(args...)
     action = locate_action_in_args(args...)
@@ -629,9 +703,9 @@ function bid_based_market_clearing_model_action(args...)
         end
     end
     if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
-        bidding_group_multihour_energy_offer!(args...)
-        if has_any_multihour_complex_input_files(inputs)
-            multihour_min_activation_level!(args...)
+        bidding_group_profile_energy_offer!(args...)
+        if has_any_profile_complex_input_files(inputs)
+            profile_min_activation_level!(args...)
         end
     end
 
@@ -654,11 +728,11 @@ function bid_based_market_clearing_model_action(args...)
         kirchhoffs_voltage_law!(args...)
     end
     if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
-        bidding_group_multihour_generation_bound_by_offer!(args...)
-        if has_any_multihour_complex_input_files(inputs)
-            bidding_group_multihour_complementary_profile!(args...)
-            bidding_group_multihour_minimum_activation!(args...)
-            bidding_group_multihour_precedence!(args...)
+        bidding_group_profile_generation_bound_by_offer!(args...)
+        if has_any_profile_complex_input_files(inputs)
+            bidding_group_profile_complementary_profile!(args...)
+            bidding_group_profile_minimum_activation!(args...)
+            bidding_group_profile_precedence!(args...)
         end
     end
 

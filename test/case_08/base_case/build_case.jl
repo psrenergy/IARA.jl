@@ -25,9 +25,6 @@ MW_to_GWh = subperiod_duration_in_hours * 1e-3
 
 # Create the database
 # -------------------
-db = nothing
-GC.gc()
-GC.gc()
 
 db = IARA.create_study!(PATH;
     number_of_periods = number_of_periods,
@@ -37,11 +34,15 @@ db = IARA.create_study!(PATH;
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     demand_deficit_cost = 500.0,
-    yearly_discount_rate = 0.1,
-    run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
+    cycle_discount_rate = 0.1,
     clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
+    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
+    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
     clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
     number_of_virtual_reservoir_bidding_segments = 1,
+    reservoirs_physical_virtual_correspondence_type = IARA.Configurations_ReservoirsPhysicalVirtualCorrespondenceType.BY_GENERATION,
 )
 
 # Add collection elements
@@ -86,7 +87,7 @@ IARA.add_demand_unit!(db;
     bus_id = "bus_1",
     parameters = DataFrame(;
         date_time = DateTime(0),
-        existing = Int(IARA.Demand_Unit_Existence.EXISTS),
+        existing = Int(IARA.DemandUnit_Existence.EXISTS),
     ),
 )
 
@@ -126,8 +127,8 @@ IARA.write_timeseries_file(
 )
 IARA.link_time_series_to_file(db, "HydroUnit"; inflow = "inflow")
 
-# Write hydro timeseries that usually come from a CENTRALIZED_OPERATION run.
-# values were chosen to match an execution of this case with the run_mode changed to CENTRALIZED_OPERATION
+# Write hydro timeseries that usually come from a TRAIN_MIN_COST run.
+# values were chosen to match an execution of this case with the run_mode changed to TRAIN_MIN_COST
 
 hydro_generation = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
 hydro_generation[:, :, :, 1:2] .= 2.5 * MW_to_GWh

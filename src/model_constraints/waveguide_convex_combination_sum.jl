@@ -10,6 +10,11 @@
 
 function waveguide_convex_combination_sum! end
 
+"""
+    waveguide_convex_combination_sum!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the waveguide convex combination sum constraints to the model.
+"""
 function waveguide_convex_combination_sum!(
     model::SubproblemModel,
     inputs::Inputs,

@@ -15,6 +15,21 @@ Type for plotting a histogram where the observations are the total of generation
 """
 abstract type PlotTechnologyHistogramPeriodSubperiod <: PlotType end
 
+"""
+    plot_data(
+        ::Type{PlotTechnologyHistogramPeriodSubperiod},
+        data::Array{Float32, N},
+        agent_names::Vector{String},
+        dimensions::Vector{String};
+        title::String,
+        unit::String,
+        file_path::String,
+        kwargs...,
+    ) where {N}
+
+
+Plots a histogram where the observations are the total of generation for a technology at subperiod i, period j, considering all scenarios.
+"""
 function plot_data(
     ::Type{PlotTechnologyHistogramPeriodSubperiod},
     data::Array{Float32, N},

@@ -37,10 +37,4 @@ IARA.write_timeseries_file(
     unit = "GWh",
 )
 
-IARA.link_time_series_to_file(
-    db,
-    "DemandUnit";
-    demand = "demand_ex_ante",
-)
-
 IARA.close_study!(db)

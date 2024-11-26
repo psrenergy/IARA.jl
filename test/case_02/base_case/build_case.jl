@@ -33,8 +33,8 @@ db = IARA.create_study!(PATH;
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     use_binary_variables = IARA.Configurations_BinaryVariableUsage.USE,
-    yearly_discount_rate = 0.0,
-    yearly_duration_in_hours = 8760.0,
+    cycle_discount_rate = 0.0,
+    cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 0.5,
 )
 
@@ -108,10 +108,10 @@ IARA.add_thermal_unit!(db;
 
 IARA.add_demand_unit!(db;
     label = "dem_1",
-    demand_unit_type = IARA.Demand_Unit_DemandType.INELASTIC,
+    demand_unit_type = IARA.DemandUnit_DemandType.INELASTIC,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
+        existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     max_shift_up = 0.0,
     max_shift_down = 0.0,

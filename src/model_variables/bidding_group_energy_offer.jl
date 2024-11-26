@@ -10,6 +10,11 @@
 
 function bidding_group_energy_offer! end
 
+"""
+    bidding_group_energy_offer!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild}) 
+
+Add the bidding group energy offer variables to the model.
+"""
 function bidding_group_energy_offer!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -32,7 +37,7 @@ function bidding_group_energy_offer!(
         ],
     )
 
-    if run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
+    if run_mode(inputs) == RunMode.STRATEGIC_BID
         return nothing
     end
 
@@ -56,6 +61,11 @@ function bidding_group_energy_offer!(
     return nothing
 end
 
+"""
+    bidding_group_energy_offer!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemUpdate})
+
+Updates the objective function coefficients for the bidding group energy offer variables.
+"""
 function bidding_group_energy_offer!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -69,7 +79,7 @@ function bidding_group_energy_offer!(
     bid_segments = bidding_segments(inputs)
     blks = subperiods(inputs)
 
-    if run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID
+    if run_mode(inputs) == RunMode.STRATEGIC_BID
         return nothing
     end
 
@@ -89,6 +99,11 @@ function bidding_group_energy_offer!(
     return nothing
 end
 
+"""
+    bidding_group_energy_offer!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the bidding group energy offer variable values.
+"""
 function bidding_group_energy_offer!(
     outputs::Outputs,
     inputs::Inputs,
@@ -121,6 +136,11 @@ function bidding_group_energy_offer!(
     return nothing
 end
 
+"""
+    bidding_group_energy_offer!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the bidding group energy offer variable values to the output.
+"""
 function bidding_group_energy_offer!(
     outputs::Outputs,
     inputs::Inputs,

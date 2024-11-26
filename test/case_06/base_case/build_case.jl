@@ -22,9 +22,6 @@ MW_to_GWh = subperiod_duration_in_hours * 1e-3
 
 # Create the database
 # -------------------
-db = nothing
-GC.gc()
-GC.gc()
 
 db = IARA.create_study!(PATH;
     number_of_periods = number_of_periods,
@@ -33,10 +30,9 @@ db = IARA.create_study!(PATH;
     initial_date_time = "2020-01-01T00:00:00",
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
-    yearly_discount_rate = 0.0,
-    yearly_duration_in_hours = 8760.0,
+    cycle_discount_rate = 0.0,
+    cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
-    run_mode = IARA.Configurations_RunMode.MARKET_CLEARING,
     clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
     clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
     clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
@@ -104,7 +100,7 @@ IARA.add_demand_unit!(db;
     label = "dem_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Demand_Unit_Existence.EXISTS)],
+        existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_1",
 )

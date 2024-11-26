@@ -10,6 +10,11 @@
 
 function dc_flow! end
 
+"""
+    dc_flow!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the DC flow variables to the model.
+"""
 function dc_flow!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -38,6 +43,11 @@ function dc_flow!(
     return nothing
 end
 
+"""
+    dc_flow!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize output file to store the DC flow variables' values.
+"""
 function dc_flow!(
     outputs::Outputs,
     inputs::Inputs,
@@ -61,6 +71,11 @@ function dc_flow!(
     return nothing
 end
 
+"""
+    dc_flow!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the DC flow variables' values to the output file.
+"""
 function dc_flow!(
     outputs::Outputs,
     inputs::Inputs,

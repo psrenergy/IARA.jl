@@ -9,27 +9,36 @@
 #############################################################################
 
 """
-    post_processing(inputs)
+    post_processing(inputs::Inputs)
 
 Run post-processing routines.
 """
 function post_processing(inputs)
-    println("Running post-processing routines")
+    Log.info("Running post-processing routines")
     gather_outputs_separated_by_asset_owners(inputs)
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
         post_processing_generation(inputs)
     end
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == RunMode.MARKET_CLEARING
         create_bidding_group_generation_files(inputs)
         post_processing_bidding_group_revenue(inputs)
+        post_processing_bidding_group_total_revenue(inputs)
+    end
+    if inputs.args.plot_outputs
+        build_plots(inputs)
     end
     return nothing
 end
 
+"""
+    read_timeseries_file_in_outputs(filename::String, inputs::Inputs)
+
+Read a timeseries file in the outputs directory.
+"""
 function read_timeseries_file_in_outputs(filename, inputs)
-    output_path = joinpath(path_case(inputs), "outputs")
-    filepath_csv = joinpath(output_path, filename * ".csv")
-    filepath_quiv = joinpath(output_path, filename * ".quiv")
+    output_dir = output_path(inputs)
+    filepath_csv = joinpath(output_dir, filename * ".csv")
+    filepath_quiv = joinpath(output_dir, filename * ".quiv")
     filepath = isfile(filepath_quiv) ? filepath_quiv : filepath_csv
     return read_timeseries_file(filepath)
 end

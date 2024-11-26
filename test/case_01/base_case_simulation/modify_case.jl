@@ -17,11 +17,7 @@ PATH_BASE_CASE = joinpath(PATH, "..", "base_case")
 path_base_case_cuts = joinpath(PATH_BASE_CASE, "outputs", "cuts.json")
 path_cuts = joinpath(PATH, "cuts.json")
 
-cp(path_base_case_cuts, path_cuts)
-
-IARA.update_configuration!(db;
-    run_mode = IARA.Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION,
-)
+cp(path_base_case_cuts, path_cuts; force = true)
 
 IARA.link_time_series_to_file(
     db,

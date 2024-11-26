@@ -10,6 +10,16 @@
 
 function hydro_balance! end
 
+"""
+    hydro_balance!(
+        model,
+        inputs,
+        run_time_options,
+        ::Type{SubproblemBuild},
+    )
+
+Add the hydro balance constraints to the model.
+"""
 function hydro_balance!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -29,6 +39,15 @@ function hydro_balance!(
     return nothing
 end
 
+"""
+    hydro_balance_aggregated_subperiods(
+        model,
+        inputs,
+        run_time_options,
+    )
+
+Add the hydro balance constraints to the model for the aggregated subperiods resolution.
+"""
 function hydro_balance_aggregated_subperiods(
     model::SubproblemModel,
     inputs::Inputs,
@@ -46,7 +65,7 @@ function hydro_balance_aggregated_subperiods(
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
     # from the serialized results of the previous period
-    hydro_volume_state = if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    hydro_volume_state = if run_mode(inputs) != RunMode.MARKET_CLEARING
         get_model_object(model, :hydro_volume_state)
     end
     hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
@@ -98,7 +117,7 @@ function hydro_balance_aggregated_subperiods(
         )
     )
 
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         @constraint(
             model.jump_model,
             hydro_state_in[h in hydro_units_operating_with_reservoir],
@@ -121,6 +140,15 @@ function hydro_balance_aggregated_subperiods(
     return nothing
 end
 
+"""
+    hydro_balance_chronological_subperiods(
+        model,
+        inputs,
+        run_time_options,
+    )
+
+Add the hydro balance constraints to the model for the chronological subperiods resolution.
+"""
 function hydro_balance_chronological_subperiods(
     model::SubproblemModel,
     inputs::Inputs,
@@ -140,7 +168,7 @@ function hydro_balance_chronological_subperiods(
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
     # from the serialized results of the previous period
-    hydro_volume_state = if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    hydro_volume_state = if run_mode(inputs) != RunMode.MARKET_CLEARING
         get_model_object(model, :hydro_volume_state)
     end
     hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
@@ -183,7 +211,7 @@ function hydro_balance_chronological_subperiods(
         inflow[b, h]
     )
 
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         @constraint(
             model.jump_model,
             hydro_state_in[h in hydro_units_operating_with_reservoir],
@@ -223,6 +251,17 @@ function hydro_balance!(
     return nothing
 end
 
+"""
+    hydro_balance!(
+        outputs,
+        inputs,
+        run_time_options,
+        ::Type{InitializeOutput},
+    )
+
+Initialize the output file for:
+- `hydro_opportunity_cost`
+"""
 function hydro_balance!(
     outputs::Outputs,
     inputs::Inputs,
@@ -255,6 +294,20 @@ function hydro_balance!(
     return nothing
 end
 
+"""
+    hydro_balance!(
+        outputs,
+        inputs,
+        run_time_options,
+        simulation_results,
+        period,
+        scenario,
+        subscenario,
+        ::Type{WriteOutput},
+    )
+
+Write the hydro opportunity cost to the output file.
+"""
 function hydro_balance!(
     outputs::Outputs,
     inputs::Inputs,

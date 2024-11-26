@@ -14,8 +14,7 @@
 """
     Collections
 
-Collection of all input collections.
-
+Struct of all input collections.
 """
 @kwdef mutable struct Collections <: AbstractCollections
     configurations::Configurations = Configurations()
@@ -34,17 +33,16 @@ Collection of all input collections.
     virtual_reservoir::VirtualReservoir = VirtualReservoir()
 end
 
-@kwdef mutable struct Caches
-    templates_for_time_series_files_have_been_generated::Bool = false
-    templates_for_waveguide_files_have_been_generated::Bool = false
-end
+"""
+    Inputs
 
+Struct of all input data.
+"""
 @kwdef mutable struct Inputs <: AbstractInputs
     db::DatabaseSQLite
     args::Args
     time_series::TimeSeriesViewsFromExternalFiles = TimeSeriesViewsFromExternalFiles()
     collections::Collections = Collections()
-    caches::Caches = Caches()
 end
 
 """
@@ -67,24 +65,26 @@ end
 Required arguments:
 
   - `PATH::String`: the path where the study will be created
+  - `cycle_discount_rate::Float64`: the cycle discount rate
+  - `subperiod_duration_in_hours::Vector{Float64}`: subperiod duration in hours (one entry for each subperiod)
+Conditionally required arguments:
+
+  - `number_of_nodes::Int`: the number of nodes in the study. Required for cyclic policy graphs.
+  - `expected_number_of_repeats_per_node::Vector{Int}`: expected number of repeats per node (one entry for each node). Required for cyclic policy graphs.
+Optional arguments:
+
   - `number_of_periods::Int`: the number of periods in the study
   - `number_of_scenarios::Int`: the number of scenarios in the study
   - `number_of_subperiods::Int`: the number of subperiods in the study
   - `demand_deficit_cost::Float64`: the cost of demand deficit in `R\$\\MWh`
-  - `yearly_discount_rate::Float64`: the yearly discount rate
-  - `subperiod_duration_in_hours::Vector{Float64}`: subperiod duration in hours (one entry for each subperiod)
-Optional arguments:
-
   - `period_type::Int`: the type of the period
-  - `subperiod_duration_in_hours::Vector{Float64}`: the duration of each subperiod in hours
   - `loop_subperiods_for_thermal_constraints::Int`
-  - `number_of_nodes::Int`: the number of nodes in the study
   - `iteration_limit::Int`: the maximum number of iterations of SDDP algorithm
   - `initial_date_time::Dates.DateTime`: the initial `Dates.DateTime` of the study
   - `run_mode::Int`
   - `policy_graph_type::Configurations_PolicyGraphType`: the the policy graph, of type [`IARA.Configurations_PolicyGraphType`](@ref)
   - `use_binary_variables::Int`: whether to use binary variables
-  - `yearly_duration_in_hours::Float64`: the duration of a year in hours
+  - `cycle_duration_in_hours::Float64`: the duration of a cycle in the policy graph, in hours
   - `hydro_minimum_outflow_violation_cost::Float64`: the cost of hydro minimum outflow violation in `[\$/m³/s]`
   - `hydro_spillage_cost::Float64`: the cost of hydro spillage in `[\$/hm³]`
   - `aggregate_buses_for_strategic_bidding::Int`: whether to aggregate buses for strategic bidding (0 or 1)
@@ -142,8 +142,6 @@ end
 Initialize the inputs from the database.
 """
 function load_inputs(args::Args)
-    println("Loading inputs from $(args.path)")
-
     db = load_study(args.path)
     inputs = Inputs(; db, args)
 
@@ -151,41 +149,51 @@ function load_inputs(args::Args)
 
     # Initialize or allocate all fields from collections
     initialize!(inputs)
-    close_study!(inputs.db)
-    db_temp = load_study(args.path; read_only = false)
-    read_files_to_database!(inputs, db_temp)
-    close_study!(db_temp)
-    inputs.db = load_study(args.path)
 
     fill_caches!(inputs)
-
-    log_inputs(inputs)
 
     return inputs
 end
 
-function read_files_to_database!(inputs::Inputs, db_temp::DatabaseSQLite)
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       virtual_reservoir_waveguide_source(inputs) == Configurations_VirtualReservoirWaveguideSource.USER_PROVIDED &&
-       waveguide_user_provided_source(inputs) == Configurations_WaveguideUserProvidedSource.CSV_FILE
-        read_waveguide_points_from_file_to_db(inputs, db_temp)
-        load_new_attributes_from_db!(inputs, db_temp)
+"""
+    summarize(path::String; run_mode::String = "market-clearing")
+
+Summarize the case based on the `run_mode` passed.
+
+$AVAILABLE_RUN_MODES_MESSAGE
+"""
+function summarize(path::String; run_mode::String = "market-clearing")
+    args = Args(path, parse_run_mode(run_mode))
+    initialize(args)
+    inputs = load_inputs(args)
+    try
+        log_inputs(inputs)
+    finally
+        clean_up(inputs)
     end
     return nothing
 end
 
+"""
+    load_new_attributes_from_db!(inputs::Inputs, db_temp::DatabaseSQLite)   
+
+Load new attributes from the database.
+"""
 function load_new_attributes_from_db!(inputs::Inputs, db_temp)
     load_new_attributes_from_db!(inputs.collections.hydro_unit, db_temp)
     return nothing
 end
 
+"""
+    initialize!(inputs::Inputs)
+
+Initialize the inputs.
+"""
 function initialize!(inputs::Inputs)
     # Initialize all collections
     for fieldname in fieldnames(Collections)
         initialize!(getfield(inputs.collections, fieldname), inputs)
     end
-
-    validate(inputs)
 
     # Fit PAR(p) and generate scenarios
     if !read_inflow_from_file(inputs)
@@ -218,17 +226,41 @@ function update_time_series_from_db!(inputs::Inputs, period::Int)
 end
 
 """
-    validate(inputs::Inputs)    
+    validate(path::String; run_mode::String = "market-clearing")
+
+Validate the case based on the `run_mode` passed.
+
+$AVAILABLE_RUN_MODES_MESSAGE
+"""
+function validate(path::String; run_mode::String = "market-clearing")
+    args = Args(path, parse_run_mode(run_mode))
+    inputs = load_inputs(args)
+    try
+        validate(inputs)
+    finally
+        clean_up(inputs)
+    end
+    return true
+end
+
+"""
+    validate(inputs)    
 
 validate that the inputs are consistent through all periods.
 """
 function validate(inputs)
     num_errors = 0
 
+    # Configurations is only validated once
+    num_errors += validate(inputs.collections.configurations)
+
     for period in periods(inputs)
         num_errors_in_period = 0
         update_time_series_from_db!(inputs, period)
         for fieldname in fieldnames(Collections)
+            if fieldname == :configurations
+                continue
+            end
             num_errors_in_period += validate(getfield(inputs.collections, fieldname))
         end
         if num_errors_in_period > 0
@@ -244,35 +276,37 @@ function validate(inputs)
     update_time_series_from_db!(inputs, 1)
 
     # Validate relations 
-    num_errors += validate_relations(inputs)
+    num_errors += advanced_validations(inputs)
 
     if num_errors > 0
-        error("Input collections have $(num_errors) validation errors.")
+        error("There are $(num_errors) validation errors in the input collections.")
     end
+
     return nothing
 end
 
 """
-    validate_relations(inputs)
+    advanced_validations(inputs::Inputs)
 
 Validate the problem inputs' relations.
 """
-function validate_relations(inputs::Inputs)
+function advanced_validations(inputs::Inputs)
     num_errors = 0
 
     for fieldname in fieldnames(Collections)
-        num_errors += validate_relations(inputs, getfield(inputs.collections, fieldname))
+        num_errors += advanced_validations(inputs, getfield(inputs.collections, fieldname))
     end
 
     return num_errors
 end
 
 function log_inputs(inputs::Inputs)
-    println("")
-    println("Case configurations")
+    Log.info("")
+    Log.info("Execution options")
+    iara_log(inputs.args)
     iara_log(inputs.collections.configurations)
-    println("")
-    println("Loaded collections")
+    Log.info("")
+    Log.info("Collections")
     for fieldname in fieldnames(Collections)
         if fieldname == :configurations
             continue
@@ -280,10 +314,17 @@ function log_inputs(inputs::Inputs)
         collection = getfield(inputs.collections, fieldname)
         iara_log(collection)
     end
-    println("")
-    println("Time Series from external files")
+    Log.info("")
+    Log.info("Time Series from external files")
     iara_log(inputs.time_series)
-    println("")
+    Log.info("")
+    Log.info("Cuts file:")
+    if has_fcf_cuts_to_read(inputs)
+        Log.info("  $(fcf_cuts_file(inputs))")
+    else
+        Log.info("   No cuts file")
+    end
+    Log.info("")
     return nothing
 end
 
@@ -294,7 +335,7 @@ Store pre-calculated values for the collections.
 """
 
 function fill_caches!(inputs::Inputs)
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING &&
+    if run_mode(inputs) == RunMode.MARKET_CLEARING &&
        clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs)
     end
@@ -324,7 +365,7 @@ Return the path to the case.
 path_case(db::DatabaseSQLite) = dirname(PSRDatabaseSQLite.database_path(db))
 
 """
-    buses_represented_for_strategic_bidding(inputs)
+    buses_represented_for_strategic_bidding(inputs::Inputs)
 
 If the 'aggregate_buses_for_strategic_bidding' attribute is set to AGGREGATE, return [1].
 Otherwise, return the index of all Buses.
@@ -338,7 +379,7 @@ function buses_represented_for_strategic_bidding(inputs)
 end
 
 """
-    time_series_inflow(inputs)
+    time_series_inflow(inputs::Inputs)
 
 Return the inflow time series.
 """
@@ -350,7 +391,7 @@ function time_series_inflow(inputs)
 end
 
 """
-    time_series_inflow(inputs, run_time_options, subscenario::Int)
+    time_series_inflow(inputs::Inputs, run_time_options::RunTimeOptions, subscenario::Int)
 
 Return the inflow time series for the given subscenario.
 """
@@ -363,14 +404,14 @@ function time_series_inflow(inputs, run_time_options, subscenario::Int)
 end
 
 """
-    time_series_demand(inputs)
+    time_series_demand(inputs::Inputs)
 
 Return the demand time series.
 """
 time_series_demand(inputs) = inputs.time_series.demand_unit
 
 """
-    time_series_demand(inputs, run_time_options, subscenario::Int)
+    time_series_demand(inputs::Inputs, run_time_options::RunTimeOptions, subscenario::Int)
 
 Return the demand time series for the given subscenario.
 """
@@ -383,14 +424,14 @@ function time_series_demand(inputs, run_time_options, subscenario::Int)
 end
 
 """
-    time_series_renewable_generation(inputs)
+    time_series_renewable_generation(inputs::Inputs)
 
 Return the renewable generation time series.
 """
 time_series_renewable_generation(inputs) = inputs.time_series.renewable_generation
 
 """
-    time_series_renewable_generation(inputs, run_time_options, subscenario::Int)
+    time_series_renewable_generation(inputs::Inputs, run_time_options::RunTimeOptions, subscenario::Int)
 
 Return the renewable generation time series for the given subscenario.
 """
@@ -403,42 +444,47 @@ function time_series_renewable_generation(inputs, run_time_options, subscenario:
 end
 
 """
-    time_series_spot_price(inputs)
+    time_series_spot_price(inputs::Inputs)
 
 Return the spot price time series.
 """
 function time_series_spot_price(inputs)
-    if run_mode(inputs) != Configurations_RunMode.PRICE_TAKER_BID
+    if run_mode(inputs) != RunMode.PRICE_TAKER_BID
         error("Spot price time series is only available for PriceTakerBid run mode.")
     end
     return inputs.time_series.spot_price
 end
 
 """
-    time_series_quantity_offer(inputs)
+    time_series_quantity_offer(inputs::Inputs)
 
 Return the quantity offer time series.
 """
 function time_series_quantity_offer(inputs)
-    if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
+    if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
             "This function is only available for STRATEGIC_BID run mode. To access the quantity offer time series in MARKET_CLEARING run mode, use 'time_series_quantity_offer(inputs, period, scenario)'.",
         )
     end
 
-    if run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID && size(inputs.time_series.quantity_offer)[3] > 1
+    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.quantity_offer)[3] > 1
         error("Quantity offer time series is not available for StrategicBid run mode with multiple segments.")
     end
 
     return inputs.time_series.quantity_offer
 end
 
+"""
+    time_series_quantity_offer(inputs::Inputs, period::Int, scenario::Int)
+
+Return the quantity offer time series for the given period and scenario.
+"""
 function time_series_quantity_offer(
     inputs,
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the quantity offer time series in STRATEGIC_BID run mode, use 'time_series_quantity_offer(inputs)'.",
         )
@@ -455,29 +501,34 @@ function time_series_quantity_offer(
 end
 
 """
-    time_series_price_offer(inputs)
+    time_series_price_offer(inputs::Inputs)
 
 Return the price offer time series.
 """
 function time_series_price_offer(inputs)
-    if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
+    if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
             "This function is only available for STRATEGIC_BID run mode. To access the price offer time series in MARKET_CLEARING run mode, use 'time_series_price_offer(inputs, period, scenario)'.",
         )
     end
 
-    if run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID && size(inputs.time_series.price_offer)[3] > 1
+    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.price_offer)[3] > 1
         error("Price offer time series is not available for StrategicBid run mode with multiple segments.")
     end
     return inputs.time_series.price_offer
 end
 
+"""
+    time_series_price_offer(inputs, period::Int, scenario::Int)
+
+Return the price offer time series for the given period and scenario.
+"""
 function time_series_price_offer(
     inputs,
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the price offer time series in STRATEGIC_BID run mode, use 'time_series_price_offer(inputs)'.",
         )
@@ -494,72 +545,72 @@ function time_series_price_offer(
 end
 
 """
-    time_series_quantity_offer_multihour(inputs)
+    time_series_quantity_offer_profile(inputs::Inputs)
 
-Return the quantity offer multihour time series.
+Return the quantity offer profile time series.
 """
-function time_series_quantity_offer_multihour(inputs)
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
-        error("Quantity offer multihour time series is only available for MarketClearing run mode.")
+function time_series_quantity_offer_profile(inputs)
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
+        error("Quantity offer profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.quantity_offer_multihour
+    return inputs.time_series.quantity_offer_profile
 end
 
 """
-    time_series_price_offer_multihour(inputs)
+    time_series_price_offer_profile(inputs::Inputs)
 
-Return the price offer multihour time series.
+Return the price offer profile time series.
 """
-function time_series_price_offer_multihour(inputs)
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
-        error("Price offer multihour time series is only available for MarketClearing run mode.")
+function time_series_price_offer_profile(inputs)
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
+        error("Price offer profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.price_offer_multihour
+    return inputs.time_series.price_offer_profile
 end
 
 """
-    time_series_parent_profile_multihour(inputs)
+    time_series_parent_profile(inputs::Inputs)
 
-Return the parent profile multihour time series.
+Return the parent profile profile time series.
 """
-function time_series_parent_profile_multihour(inputs)
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
-        error("Parent profile multihour time series is only available for MarketClearing run mode.")
+function time_series_parent_profile(inputs)
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
+        error("Parent profile profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.parent_profile_multihour
+    return inputs.time_series.parent_profile
 end
 
 """
-    time_series_complementary_grouping_multihour(inputs)
+    time_series_complementary_grouping_profile(inputs::Inputs)
 
-Return the complementary grouping multihour time series.
+Return the complementary grouping profile time series.
 """
-function time_series_complementary_grouping_multihour(inputs)
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
-        error("Complementary grouping multihour time series is only available for MarketClearing run mode.")
+function time_series_complementary_grouping_profile(inputs)
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
+        error("Complementary grouping profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.complementary_grouping_multihour
+    return inputs.time_series.complementary_grouping_profile
 end
 
 """
-    time_series_minimum_activation_level_multihour(inputs)
+    time_series_minimum_activation_level_profile(inputs::Inputs)
 
-Return the minimum activation level multihour time series.
+Return the minimum activation level profile time series.
 """
 
-function time_series_minimum_activation_level_multihour(inputs)
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
-        error("Minimum activation level multihour time series is only available for MarketClearing run mode.")
+function time_series_minimum_activation_level_profile(inputs)
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
+        error("Minimum activation level profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.minimum_activation_level_multihour
+    return inputs.time_series.minimum_activation_level_profile
 end
 """
-    time_series_virtual_reservoir_quantity_offer(inputs)
+    time_series_virtual_reservoir_quantity_offer(inputs::Inputs)
 
 Return the virtual reservoir quantity offer time series.
 """
 function time_series_virtual_reservoir_quantity_offer(inputs)
-    if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
+    if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
             "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir quantity offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs, period, scenario)'.",
         )
@@ -567,12 +618,17 @@ function time_series_virtual_reservoir_quantity_offer(inputs)
     return inputs.time_series.virtual_reservoir_quantity_offer
 end
 
+"""
+    time_series_virtual_reservoir_quantity_offer(inputs, period::Int, scenario::Int)
+
+Return the virtual reservoir quantity offer time series for the given period and scenario.
+"""
 function time_series_virtual_reservoir_quantity_offer(
     inputs,
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir quantity offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs)'.",
         )
@@ -595,7 +651,7 @@ end
 Return the virtual reservoir price offer time series.
 """
 function time_series_virtual_reservoir_price_offer(inputs)
-    if run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
+    if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
             "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir price offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_price_offer(inputs, period, scenario)'.",
         )
@@ -603,12 +659,17 @@ function time_series_virtual_reservoir_price_offer(inputs)
     return inputs.time_series.virtual_reservoir_price_offer
 end
 
+"""
+    time_series_virtual_reservoir_price_offer(inputs, period::Int, scenario::Int)
+
+Return the virtual reservoir price offer time series for the given period and scenario.
+"""
 function time_series_virtual_reservoir_price_offer(
     inputs,
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir price offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_price_offer(inputs)'.",
         )

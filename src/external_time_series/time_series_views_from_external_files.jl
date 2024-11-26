@@ -52,20 +52,20 @@ in chunks.
     price_offer::BidsView{Float64} = BidsView{Float64}()
 
     # BiddingGroups x buses x segments x subperiods
-    quantity_offer_multihour = BidsView{Float64}()
+    quantity_offer_profile = BidsView{Float64}()
 
     # BiddingGroups x profile
     # On profile bids, the price offer is the same for all subperiods and all buses
-    price_offer_multihour::TimeSeriesView{Float64, 2} =
+    price_offer_profile::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
     # BiddingGroups x profile
-    parent_profile_multihour::TimeSeriesView{Float64, 2} =
+    parent_profile::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
     # BiddingGroups x profile
-    complementary_grouping_multihour::TimeSeriesView{Float64, 3} =
+    complementary_grouping_profile::TimeSeriesView{Float64, 3} =
         TimeSeriesView{Float64, 3}()
     # BiddingGroups x profile
-    minimum_activation_level_multihour::TimeSeriesView{Float64, 2} =
+    minimum_activation_level_profile::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
 
     # VirtualReservoirs x AssetOwners x segments
@@ -81,7 +81,6 @@ data from the files and stores it in the `inputs` struct.
 """
 function initialize_time_series_from_external_files(inputs)
     num_errors = 0
-    num_created_files = 0
 
     # Hour subperiod map
     if has_hour_subperiod_map(inputs)
@@ -91,16 +90,6 @@ function initialize_time_series_from_external_files(inputs)
     # Inflow
     if any_elements(inputs, HydroUnit)
         if read_inflow_from_file(inputs)
-            num_created_files += create_empty_time_series_if_necessary(
-                joinpath(path_case(inputs), hydro_unit_inflow_file(inputs)),
-                Quiver.csv;
-                dimensions = ["period", "scenario", "subperiod"],
-                labels = gauging_station_label(inputs),
-                time_dimension = "period",
-                dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-                initial_date = initial_date_time(inputs),
-                unit = "m3/s",
-            )
             num_errors += initialize_da_and_rt_time_series_view_from_external_files!(
                 inputs.time_series.inflow,
                 inputs,
@@ -144,33 +133,12 @@ function initialize_time_series_from_external_files(inputs)
 
     # Hydro generation
     if must_read_hydro_unit_data_for_markup_wizard(inputs)
-        num_created_files += create_empty_time_series_if_necessary(
-            joinpath(path_case(inputs), hydro_unit_generation_file(inputs)),
-            Quiver.csv;
-            dimensions = ["period", "scenario", "subperiod"],
-            labels = hydro_unit_label(inputs),
-            time_dimension = "period",
-            dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-            initial_date = initial_date_time(inputs),
-            unit = "GWh",
-        )
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.hydro_generation,
             inputs,
             joinpath(path_case(inputs), hydro_unit_generation_file(inputs));
             expected_unit = "GWh",
             labels_to_read = hydro_unit_label(inputs),
-        )
-
-        num_created_files += create_empty_time_series_if_necessary(
-            joinpath(path_case(inputs), hydro_unit_opportunity_cost_file(inputs)),
-            Quiver.csv;
-            dimensions = ["period", "scenario", "subperiod"],
-            labels = hydro_unit_label(inputs),
-            time_dimension = "period",
-            dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-            initial_date = initial_date_time(inputs),
-            unit = "\$/MWh",
         )
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.hydro_opportunity_cost,
@@ -183,16 +151,6 @@ function initialize_time_series_from_external_files(inputs)
 
     # Demand
     if any_elements(inputs, DemandUnit) > 0
-        num_created_files += create_empty_time_series_if_necessary(
-            joinpath(path_case(inputs), demand_unit_demand_file(inputs)),
-            Quiver.csv;
-            dimensions = ["period", "scenario", "subperiod"],
-            labels = demand_unit_label(inputs),
-            time_dimension = "period",
-            dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-            initial_date = initial_date_time(inputs),
-            unit = "GWh",
-        )
         num_errors += initialize_da_and_rt_time_series_view_from_external_files!(
             inputs.time_series.demand_unit,
             inputs,
@@ -204,16 +162,6 @@ function initialize_time_series_from_external_files(inputs)
 
     # Renewable generation
     if any_elements(inputs, RenewableUnit)
-        num_created_files += create_empty_time_series_if_necessary(
-            joinpath(path_case(inputs), renewable_unit_generation_file(inputs)),
-            Quiver.csv;
-            dimensions = ["period", "scenario", "subperiod"],
-            labels = renewable_unit_label(inputs),
-            time_dimension = "period",
-            dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-            initial_date = initial_date_time(inputs),
-            unit = "p.u.",
-        )
         num_errors += initialize_da_and_rt_time_series_view_from_external_files!(
             inputs.time_series.renewable_generation,
             inputs,
@@ -225,16 +173,6 @@ function initialize_time_series_from_external_files(inputs)
 
     # Flexible demand
     if any_elements(inputs, DemandUnit; filters = [is_flexible])
-        num_created_files += create_empty_time_series_if_necessary(
-            joinpath(path_case(inputs), demand_unit_window_file(inputs)),
-            Quiver.csv;
-            dimensions = ["period", "subperiod"],
-            labels = flexible_demand_labels(inputs),
-            time_dimension = "period",
-            dimension_size = [number_of_periods(inputs), number_of_subperiods(inputs)],
-            initial_date = initial_date_time(inputs),
-            unit = "-",
-        )
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.demand_window,
             inputs,
@@ -246,17 +184,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Spot price
-    if run_mode(inputs) == Configurations_RunMode.PRICE_TAKER_BID
-        num_created_files += create_empty_time_series_if_necessary(
-            joinpath(path_case(inputs), "load_marginal_cost"),
-            Quiver.csv;
-            dimensions = ["period", "scenario", "subperiod"],
-            labels = bus_label(inputs),
-            time_dimension = "period",
-            dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-            initial_date = initial_date_time(inputs),
-            unit = raw"$/MWh",
-        )
+    if run_mode(inputs) == RunMode.PRICE_TAKER_BID
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.spot_price,
             inputs,
@@ -267,350 +195,117 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Offers
-    if run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID ||
+    if run_mode(inputs) == RunMode.STRATEGIC_BID ||
        (
-        run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING && any_elements(inputs, BiddingGroup) &&
+        run_mode(inputs) == RunMode.MARKET_CLEARING && any_elements(inputs, BiddingGroup) &&
         read_bids_from_file(inputs)
     )
         file = joinpath(path_case(inputs), bidding_group_quantity_offer_file(inputs))
-        try
-            num_created_files += create_empty_time_series_if_necessary(
-                file,
-                Quiver.csv;
-                dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-                labels = bidding_group_file_labels(inputs),
-                time_dimension = "period",
-                dimension_size = [
-                    number_of_periods(inputs),
-                    number_of_scenarios(inputs),
-                    number_of_subperiods(inputs),
-                    number_of_bid_segments_for_file_template(inputs),
-                ],
-                initial_date = initial_date_time(inputs),
-                unit = "MWh",
-            )
-            num_errors += initialize_bids_view_from_external_file!(
-                inputs.time_series.quantity_offer,
-                inputs,
-                file;
-                expected_unit = "MWh",
-                bidding_groups_to_read = bidding_group_label(inputs),
-                buses_to_read = bus_label(inputs),
-            )
-        catch e
-            if number_of_bid_segments_for_file_template(inputs) == 0 && e isa AssertionError
-                @error(
-                    "The number of bid segments for the file template is zero and the file $file doesn't exist. Add a valid number of segments or add the file $file to the case directory."
-                )
-                num_errors += 1
-            else
-                rethrow(e)
-            end
-        end
+        num_errors += initialize_bids_view_from_external_file!(
+            inputs.time_series.quantity_offer,
+            inputs,
+            file;
+            expected_unit = "MWh",
+            bidding_groups_to_read = bidding_group_label(inputs),
+            buses_to_read = bus_label(inputs),
+        )
 
         file = joinpath(path_case(inputs), bidding_group_price_offer_file(inputs))
-        try
-            num_created_files += create_empty_time_series_if_necessary(
-                file,
-                Quiver.csv;
-                dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-                labels = bidding_group_file_labels(inputs),
-                time_dimension = "period",
-                dimension_size = [
-                    number_of_periods(inputs),
-                    number_of_scenarios(inputs),
-                    number_of_subperiods(inputs),
-                    number_of_bid_segments_for_file_template(inputs),
-                ],
-                initial_date = initial_date_time(inputs),
-                unit = raw"$/MWh",
-            )
-            num_errors += initialize_bids_view_from_external_file!(
-                inputs.time_series.price_offer,
-                inputs,
-                file;
-                expected_unit = raw"$/MWh",
-                bidding_groups_to_read = bidding_group_label(inputs),
-                buses_to_read = bus_label(inputs),
-            )
-        catch e
-            if number_of_bid_segments_for_file_template(inputs) == 0 && e isa AssertionError
-                @error(
-                    "The number of bid segments for the file template is zero and the file $file doesn't exist. Add a valid number of segments or add the file $file to the case directory."
-                )
-                num_errors += 1
-            else
-                rethrow(e)
-            end
-        end
+        num_errors += initialize_bids_view_from_external_file!(
+            inputs.time_series.price_offer,
+            inputs,
+            file;
+            expected_unit = raw"$/MWh",
+            bidding_groups_to_read = bidding_group_label(inputs),
+            buses_to_read = bus_label(inputs),
+        )
     end
 
-    # Multihour offers
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING &&
+    # profile offers
+    if run_mode(inputs) == RunMode.MARKET_CLEARING &&
        any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
-        bidding_group_labels_multihour =
+        bidding_group_labels_profile =
             index_of_elements(inputs, BiddingGroup; filters = [has_profile_bids])
-        labels_multihour = bidding_group_label(inputs)[bidding_group_labels_multihour]
+        labels_profile = bidding_group_label(inputs)[bidding_group_labels_profile]
 
-        file = joinpath(path_case(inputs), bidding_group_quantity_offer_multihour_file(inputs))
-        try
-            num_created_files += create_empty_time_series_if_necessary(
-                file,
-                Quiver.csv;
-                dimensions = ["period", "scenario", "subperiod", "profile"],
-                labels = bidding_group_file_labels(inputs),
-                time_dimension = "period",
-                dimension_size = [
-                    number_of_periods(inputs),
-                    number_of_scenarios(inputs),
-                    number_of_subperiods(inputs),
-                    number_of_profiles_for_file_template(inputs),
-                ],
-                initial_date = initial_date_time(inputs),
-                unit = "MWh",
-            )
-            num_errors += initialize_bids_view_from_external_file!(
-                inputs.time_series.quantity_offer_multihour,
-                inputs,
-                file;
-                expected_unit = "MWh",
-                bidding_groups_to_read = bidding_group_label(inputs),
-                buses_to_read = bus_label(inputs),
-                has_profile_bids = true,
-            )
-        catch e
-            if number_of_profiles_for_file_template(inputs) == 0 && e isa AssertionError
-                @error(
-                    "The number of profiles for the file template is zero and the file $file doesn't exist. Add a valid number of profiles or add the file $file to the case directory."
-                )
-                num_errors += 1
-            else
-                rethrow(e)
-            end
-        end
+        file = joinpath(path_case(inputs), bidding_group_quantity_offer_profile_file(inputs))
+        num_errors += initialize_bids_view_from_external_file!(
+            inputs.time_series.quantity_offer_profile,
+            inputs,
+            file;
+            expected_unit = "MWh",
+            bidding_groups_to_read = bidding_group_label(inputs),
+            buses_to_read = bus_label(inputs),
+            has_profile_bids = true,
+        )
 
-        file = joinpath(path_case(inputs), bidding_group_price_offer_multihour_file(inputs))
-        try
-            num_created_files += create_empty_time_series_if_necessary(
-                file,
-                Quiver.csv;
-                dimensions = ["period", "scenario", "profile"],
-                labels = bidding_group_label(inputs),
-                time_dimension = "period",
-                dimension_size = [
-                    number_of_periods(inputs),
-                    number_of_scenarios(inputs),
-                    number_of_profiles_for_file_template(inputs),
-                ],
-                initial_date = initial_date_time(inputs),
-                unit = raw"$/MWh",
-            )
+        file = joinpath(path_case(inputs), bidding_group_price_offer_profile_file(inputs))
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.price_offer_profile,
+            inputs,
+            file;
+            expected_unit = raw"$/MWh",
+            labels_to_read = bidding_group_label(inputs),
+        )
+
+        if has_any_profile_complex_input_files(inputs)
+            file = joinpath(path_case(inputs), bidding_group_parent_profile_file(inputs))
             num_errors += initialize_time_series_view_from_external_file(
-                inputs.time_series.price_offer_multihour,
+                inputs.time_series.parent_profile,
                 inputs,
                 file;
-                expected_unit = raw"$/MWh",
-                labels_to_read = bidding_group_label(inputs),
+                expected_unit = "-",
+                labels_to_read = labels_profile,
             )
-        catch e
-            if number_of_profiles_for_file_template(inputs) == 0 && e isa AssertionError
-                @error(
-                    "The number of profiles for the file template is zero and the file $file doesn't exist. Add a valid number of profiles or add the file $file to the case directory."
-                )
-                num_errors += 1
-            else
-                rethrow(e)
-            end
-        end
 
-        if has_any_multihour_complex_input_files(inputs)
-            file = joinpath(path_case(inputs), bidding_group_parent_profile_multihour_file(inputs))
-            try
-                num_created_files += create_empty_time_series_if_necessary(
-                    file,
-                    Quiver.csv;
-                    dimensions = ["period", "profile"],
-                    labels = labels_multihour,
-                    time_dimension = "period",
-                    dimension_size = [number_of_periods(inputs), number_of_profiles_for_file_template(inputs)],
-                    initial_date = initial_date_time(inputs),
-                    unit = "-",
-                )
-                num_errors += initialize_time_series_view_from_external_file(
-                    inputs.time_series.parent_profile_multihour,
-                    inputs,
-                    file;
-                    expected_unit = "-",
-                    labels_to_read = labels_multihour,
-                )
-            catch e
-                if number_of_profiles_for_file_template(inputs) == 0 && e isa AssertionError
-                    @error(
-                        "The number of profiles for the file template is zero and the file $file doesn't exist. Add a valid number of profiles or add the file $file to the case directory."
-                    )
-                    num_errors += 1
-                else
-                    rethrow(e)
-                end
-            end
+            file = joinpath(path_case(inputs), bidding_group_complementary_grouping_profile_file(inputs))
 
-            file = joinpath(path_case(inputs), bidding_group_complementary_grouping_multihour_file(inputs))
-            try
-                num_created_files += create_empty_time_series_if_necessary(
-                    file,
-                    Quiver.csv;
-                    dimensions = ["period", "profile", "complementary_group"],
-                    labels = labels_multihour,
-                    time_dimension = "period",
-                    dimension_size = [
-                        number_of_periods(inputs),
-                        maximum_number_of_bidding_profiles(inputs),
-                        number_of_complementary_groups_for_file_template(inputs),
-                    ],
-                    initial_date = initial_date_time(inputs),
-                    unit = "-",
-                )
-                num_errors += initialize_time_series_view_from_external_file(
-                    inputs.time_series.complementary_grouping_multihour,
-                    inputs,
-                    file;
-                    expected_unit = "-",
-                    labels_to_read = labels_multihour,
-                )
-            catch e
-                if number_of_complementary_groups_for_file_template(inputs) == 0 && e isa AssertionError
-                    @error(
-                        "The number of complementary groups for the file template is zero and the file $file doesn't exist. Add a valid number of complementary groups or add the file $file to the case directory."
-                    )
-                    num_errors += 1
-                else
-                    rethrow(e)
-                end
-            end
+            num_errors += initialize_time_series_view_from_external_file(
+                inputs.time_series.complementary_grouping_profile,
+                inputs,
+                file;
+                expected_unit = "-",
+                labels_to_read = labels_profile,
+            )
 
-            file = joinpath(path_case(inputs), bidding_group_minimum_activation_level_multihour_file(inputs))
-            try
-                num_created_files += create_empty_time_series_if_necessary(
-                    file,
-                    Quiver.csv;
-                    dimensions = ["period", "scenario", "profile"],
-                    labels = labels_multihour,
-                    time_dimension = "period",
-                    dimension_size = [
-                        number_of_periods(inputs),
-                        number_of_scenarios(inputs),
-                        number_of_profiles_for_file_template(inputs),
-                    ],
-                    initial_date = initial_date_time(inputs),
-                    unit = "-",
-                )
-                num_errors += initialize_time_series_view_from_external_file(
-                    inputs.time_series.minimum_activation_level_multihour,
-                    inputs,
-                    file;
-                    expected_unit = "-",
-                    labels_to_read = labels_multihour,
-                )
-            catch e
-                if number_of_profiles_for_file_template(inputs) == 0 && e isa AssertionError
-                    @error(
-                        "The number of profiles for the file template is zero and the file $file doesn't exist. Add a valid number of profiles or add the file $file to the case directory."
-                    )
-                    num_errors += 1
-                else
-                    rethrow(e)
-                end
-            end
+            file = joinpath(path_case(inputs), bidding_group_minimum_activation_level_profile_file(inputs))
+            num_errors += initialize_time_series_view_from_external_file(
+                inputs.time_series.minimum_activation_level_profile,
+                inputs,
+                file;
+                expected_unit = "-",
+                labels_to_read = labels_profile,
+            )
         end
     end
     # Virtual reservoir offers
     if (
-           run_mode(inputs) == Configurations_RunMode.STRATEGIC_BID ||
-           run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+           run_mode(inputs) == RunMode.STRATEGIC_BID ||
+           run_mode(inputs) == RunMode.MARKET_CLEARING
        ) && any_elements(inputs, VirtualReservoir) && read_bids_from_file(inputs)
         file = joinpath(path_case(inputs), virtual_reservoir_quantity_offer_file(inputs))
-        try
-            num_created_files += create_empty_time_series_if_necessary(
-                file,
-                Quiver.csv;
-                dimensions = ["period", "scenario", "bid_segment"],
-                labels = virtual_reservoir_file_labels(inputs),
-                time_dimension = "period",
-                dimension_size = [
-                    number_of_periods(inputs),
-                    number_of_scenarios(inputs),
-                    number_of_bid_segments_for_virtual_reservoir_file_template(inputs),
-                ],
-                initial_date = initial_date_time(inputs),
-                unit = "MWh",
-            )
-            num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
-                inputs.time_series.virtual_reservoir_quantity_offer,
-                inputs,
-                file;
-                expected_unit = "MWh",
-                virtual_reservoirs_to_read = virtual_reservoir_label(inputs),
-                asset_owners_to_read = asset_owner_label(inputs),
-            )
-        catch e
-            if number_of_bid_segments_for_virtual_reservoir_file_template(inputs) == 0 && e isa AssertionError
-                @error(
-                    "The number of bid segments for the virtual reservoir file template is zero and the file $file doesn't exist. Add a valid number of segments or add the file $file to the case directory."
-                )
-                num_errors += 1
-            else
-                rethrow(e)
-            end
-        end
+        num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
+            inputs.time_series.virtual_reservoir_quantity_offer,
+            inputs,
+            file;
+            expected_unit = "MWh",
+            virtual_reservoirs_to_read = virtual_reservoir_label(inputs),
+            asset_owners_to_read = asset_owner_label(inputs),
+        )
 
         file = joinpath(path_case(inputs), virtual_reservoir_price_offer_file(inputs))
-        try
-            num_created_files += create_empty_time_series_if_necessary(
-                file,
-                Quiver.csv;
-                dimensions = ["period", "scenario", "bid_segment"],
-                labels = virtual_reservoir_file_labels(inputs),
-                time_dimension = "period",
-                dimension_size = [
-                    number_of_periods(inputs),
-                    number_of_scenarios(inputs),
-                    number_of_bid_segments_for_virtual_reservoir_file_template(inputs),
-                ],
-                initial_date = initial_date_time(inputs),
-                unit = raw"$/MWh",
-            )
-            num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
-                inputs.time_series.virtual_reservoir_price_offer,
-                inputs,
-                file;
-                expected_unit = raw"$/MWh",
-                virtual_reservoirs_to_read = virtual_reservoir_label(inputs),
-                asset_owners_to_read = asset_owner_label(inputs),
-            )
-        catch e
-            if number_of_bid_segments_for_virtual_reservoir_file_template(inputs) == 0 && e isa AssertionError
-                @error(
-                    "The number of bid segments for the virtual reservoir file template is zero and the file $file doesn't exist. Add a valid number of segments or add the file $file to the case directory."
-                )
-                num_errors += 1
-            else
-                rethrow(e)
-            end
-        end
+        num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
+            inputs.time_series.virtual_reservoir_price_offer,
+            inputs,
+            file;
+            expected_unit = raw"$/MWh",
+            virtual_reservoirs_to_read = virtual_reservoir_label(inputs),
+            asset_owners_to_read = asset_owner_label(inputs),
+        )
     end
 
     # Elastic demand price
     if any_elements(inputs, DemandUnit; filters = [is_elastic])
-        num_created_files += create_empty_time_series_if_necessary(
-            joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs)),
-            Quiver.csv;
-            dimensions = ["period", "scenario", "subperiod"],
-            labels = elastic_demand_labels(inputs),
-            time_dimension = "period",
-            dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-            initial_date = initial_date_time(inputs),
-            unit = raw"$/MWh",
-        )
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.elastic_demand_price,
             inputs,
@@ -619,8 +314,6 @@ function initialize_time_series_from_external_files(inputs)
             labels_to_read = elastic_demand_labels(inputs),
         )
     end
-
-    inputs.caches.templates_for_time_series_files_have_been_generated = num_created_files > 0
 
     if num_errors > 0
         error("There were $num_errors errors in the time series files.")
@@ -641,54 +334,49 @@ function update_time_series_views_from_external_files!(
     for field in fieldnames(TimeSeriesViewsFromExternalFiles)
         ts = getfield(time_series, field)
         if isa(ts, TimeSeriesView) && ts.reader !== nothing
-            ts.data = read_time_series_view_from_external_file(
+            read_time_series_view_from_external_file!(
                 inputs,
-                ts.reader;
-                period = period,
-                scenario = scenario,
-                data_type = eltype(ts.data), # TODO is this really neeeded?
+                ts;
+                period,
+                scenario,
             )
         end
         if isa(ts, HourSubperiodMapping) && ts.reader !== nothing
             update_hour_subperiod_mapping!(inputs; period = period_index_in_year(inputs, period))
         end
         if isa(ts, BidsView) && ts.reader !== nothing
-            has_profile_bids = field == :quantity_offer_multihour
-            ts.data = read_bids_view_from_external_file(
+            has_profile_bids = field == :quantity_offer_profile
+            read_bids_view_from_external_file!(
                 inputs,
-                ts.reader;
-                period = period,
-                scenario = scenario,
-                data_type = eltype(ts.data),
+                ts;
+                period,
+                scenario,
                 has_profile_bids,
             )
         end
         if isa(ts, VirtualReservoirBidsView) && ts.reader !== nothing
-            ts.data = read_virtual_reservoir_bids_view_from_external_file(
+            read_virtual_reservoir_bids_view_from_external_file!(
                 inputs,
-                ts.reader;
-                period = period,
-                scenario = scenario,
-                data_type = eltype(ts.data),
+                ts;
+                period,
+                scenario,
             )
         end
         if isa(ts, ExAnteAndExPostTimeSeriesView)
             if has_ex_ante_time_series(ts)
-                ts.ex_ante.data = read_time_series_view_from_external_file(
+                read_time_series_view_from_external_file!(
                     inputs,
-                    ts.ex_ante.reader;
-                    period = period,
-                    scenario = scenario,
-                    data_type = eltype(ts.ex_ante.data),
+                    ts.ex_ante;
+                    period,
+                    scenario,
                 )
             end
             if has_ex_post_time_series(ts)
-                ts.ex_post.data = read_time_series_view_from_external_file(
+                read_time_series_view_from_external_file!(
                     inputs,
-                    ts.ex_post.reader;
-                    period = period,
-                    scenario = scenario,
-                    data_type = eltype(ts.ex_post.data),
+                    ts.ex_post;
+                    period,
+                    scenario,
                 )
             end
         end
@@ -712,7 +400,7 @@ function iara_log(ts::TimeSeriesViewsFromExternalFiles)
     for field in fieldnames(TimeSeriesViewsFromExternalFiles)
         ts_field = getfield(ts, field)
         if !isempty(ts_field)
-            println("   $(field)")
+            Log.info("   $(field)")
         end
     end
 end

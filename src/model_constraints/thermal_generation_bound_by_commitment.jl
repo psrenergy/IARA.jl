@@ -10,6 +10,11 @@
 
 function thermal_generation_bound_by_commitment! end
 
+"""
+    thermal_generation_bound_by_commitment!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the thermal unit generation bound by commitment constraints to the model.
+"""
 function thermal_generation_bound_by_commitment!(
     model::SubproblemModel,
     inputs::Inputs,

@@ -25,7 +25,7 @@ finally
     end
 end
 
-IARA.main([PATH, "--plot-results=false"])
+IARA.train_min_cost(PATH; plot_outputs = false)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

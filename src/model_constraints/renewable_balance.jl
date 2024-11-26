@@ -10,6 +10,11 @@
 
 function renewable_balance! end
 
+"""
+    renewable_balance!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})    
+
+Add the renewable unit balance constraints to the model.
+"""
 function renewable_balance!(
     model::SubproblemModel,
     inputs::Inputs,

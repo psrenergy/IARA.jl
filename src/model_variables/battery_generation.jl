@@ -10,6 +10,11 @@
 
 function battery_unit_generation! end
 
+"""
+    battery_unit_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the battery unit generation variables to the model.
+"""
 function battery_unit_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -39,6 +44,11 @@ function battery_unit_generation!(
     return nothing
 end
 
+"""
+    battery_unit_generation!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the battery unit generation variables' values.
+"""
 function battery_unit_generation!(
     outputs::Outputs,
     inputs::Inputs,
@@ -63,6 +73,11 @@ function battery_unit_generation!(
     return nothing
 end
 
+"""
+    battery_unit_generation!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the battery unit generation variables' values to the output.
+"""
 function battery_unit_generation!(
     outputs::Outputs,
     inputs::Inputs,

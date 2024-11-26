@@ -12,7 +12,6 @@ db = IARA.load_study(PATH; read_only = false)
 
 # Update base case elements
 IARA.update_configuration!(db;
-    run_mode = IARA.Configurations_RunMode.STRATEGIC_BID,
     aggregate_buses_for_strategic_bidding = IARA.Configurations_BusesAggregationForStrategicBidding.AGGREGATE,
 )
 IARA.update_asset_owner!(db, "asset_owner_1";
@@ -42,7 +41,7 @@ IARA.add_thermal_unit!(db;
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
-        om_cost = 75.0 / 1e3,
+        om_cost = 75.0,
     ),
     has_commitment = 0,
     bus_id = "bus_1",
@@ -56,7 +55,7 @@ IARA.add_thermal_unit!(db;
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
-        om_cost = 85.0 / 1e3,
+        om_cost = 85.0,
     ),
     has_commitment = 0,
     bus_id = "bus_2",
@@ -70,7 +69,7 @@ IARA.add_thermal_unit!(db;
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
-        om_cost = 95.0 / 1e3,
+        om_cost = 95.0,
     ),
     has_commitment = 0,
     bus_id = "bus_1",
@@ -84,7 +83,7 @@ IARA.add_thermal_unit!(db;
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
-        om_cost = 60.0 / 1e3,
+        om_cost = 60.0,
     ),
     has_commitment = 0,
     bus_id = "bus_2",

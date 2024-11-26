@@ -10,6 +10,11 @@
 
 function virtual_reservoir_generation! end
 
+"""
+    virtual_reservoir_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the virtual reservoir generation variables to the model.
+"""
 function virtual_reservoir_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -75,6 +80,11 @@ function virtual_reservoir_generation!(
     return nothing
 end
 
+"""
+    virtual_reservoir_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
+
+Update the virtual reservoir generation variables in the model.
+"""
 function virtual_reservoir_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -112,6 +122,11 @@ function virtual_reservoir_generation!(
     return nothing
 end
 
+"""
+    virtual_reservoir_generation!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Add symbols to serialize and query the virtual reservoir generation variables and initialize the output file for virtual reservoir generation.
+"""
 function virtual_reservoir_generation!(
     outputs::Outputs,
     inputs::Inputs,
@@ -139,6 +154,11 @@ function virtual_reservoir_generation!(
     return nothing
 end
 
+"""
+    virtual_reservoir_generation!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the virtual reservoir generation variables' values to the output file.
+"""
 function virtual_reservoir_generation!(
     outputs::Outputs,
     inputs::Inputs,

@@ -10,6 +10,11 @@
 
 function branch_flow! end
 
+"""
+    branch_flow!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the branch flow variables to the model.
+"""
 function branch_flow!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -39,6 +44,11 @@ function branch_flow!(
     return nothing
 end
 
+"""
+    branch_flow!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the branch flow variables' values.
+"""
 function branch_flow!(
     outputs::Outputs,
     inputs::Inputs,
@@ -62,6 +72,11 @@ function branch_flow!(
     return nothing
 end
 
+"""
+    branch_flow!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the branch flow variables' values to the output file.
+"""
 function branch_flow!(
     outputs::Outputs,
     inputs::Inputs,

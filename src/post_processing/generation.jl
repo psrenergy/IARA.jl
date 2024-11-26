@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    post_processing_generation(inputs::Inputs)
+
+Run post-processing routines for generation.
+"""
 function post_processing_generation(inputs::Inputs)
     generation = zeros(
         5,
@@ -36,7 +41,7 @@ function post_processing_generation(inputs::Inputs)
     generation[5, :, :, :] = sum(deficit; dims = 1)
 
     write_timeseries_file(
-        joinpath(path_case(inputs), "outputs", "generation"),
+        joinpath(output_path(inputs), "generation"),
         generation;
         dimensions = ["period", "scenario", "subperiod"],
         labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"],

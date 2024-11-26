@@ -10,6 +10,11 @@
 
 function hydro_minimum_outflow! end
 
+"""
+    hydro_minimum_outflow!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the hydro minimum outflow constraints to the model.
+"""
 function hydro_minimum_outflow!(
     model::SubproblemModel,
     inputs::Inputs,

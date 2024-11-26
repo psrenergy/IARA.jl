@@ -17,84 +17,126 @@ function _get_bus_index(bg_bus_combination::String, bus_labels::Vector{String})
     return nothing
 end
 
-_check_floor(price::Real, floor::Real) = max(price, floor)
-_check_cap(price::Real, cap::Real) = min(price, cap)
+_check_floor(price::Real, floor::Real) = !is_null(floor) ? max(price, floor) : price
+_check_cap(price::Real, cap::Real) = !is_null(cap) ? min(price, cap) : price
 
-function _get_revenue(
-    bidding_group_generation::Array{<:Real, 5},
-    bidding_group_meta::Quiver.Metadata,
-    load_marginal_cost::Array{<:Real, 4},
-    load_marginal_cost_meta::Quiver.Metadata,
-    spot_price_cap::Union{Nothing, Real},
-    spot_price_floor::Union{Nothing, Real},
+function _write_revenue_ex_ante(
+    writer::Quiver.Writer{Quiver.csv},
+    generation_reader::Quiver.Reader{Quiver.csv},
+    spot_reader::Quiver.Reader{Quiver.csv},
+    spot_price_cap::Real,
+    spot_price_floor::Real,
+    is_profile::Bool,
 )
     # used for ex_ante_commercial, ex_ante_physical
 
-    revenue = copy(bidding_group_generation)
+    num_periods, num_scenarios, num_subperiods, num_bid_segments = generation_reader.metadata.dimension_size
+    num_bidding_groups = length(generation_reader.metadata.labels)
 
-    num_bidding_groups, num_bid_segments, num_subperiods, num_scenarios, num_periods = size(revenue)
+    dim_name = is_profile ? :profile : :bid_segment
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            for subperiod in 1:num_subperiods
+                Quiver.goto!(spot_reader; period, scenario, subperiod = subperiod)
+                sum_generation = zeros(num_bidding_groups)
+                for bid_segment in 1:num_bid_segments
+                    Quiver.goto!(
+                        generation_reader;
+                        period,
+                        scenario,
+                        subperiod = subperiod,
+                        Symbol(dim_name) => bid_segment,
+                    )
+                    sum_generation .+= generation_reader.data
+                end
 
-    for stg in 1:num_periods
-        for sce in 1:num_scenarios
-            for blk in 1:num_subperiods
-                for bs in 1:num_bid_segments
-                    for bg in 1:num_bidding_groups
-                        bus_i = _get_bus_index(bidding_group_meta.labels[bg], load_marginal_cost_meta.labels)
+                for bg in 1:num_bidding_groups
+                    bus_i = _get_bus_index(generation_reader.metadata.labels[bg], spot_reader.metadata.labels)
 
-                        raw_revenue = revenue[bg, bs, blk, sce, stg] * load_marginal_cost[bus_i, blk, sce, stg] * 1000.0 # GWh to MWh
-                        raw_revenue =
-                            !is_null(spot_price_floor) ? _check_floor(raw_revenue, spot_price_floor) : raw_revenue
-                        raw_revenue = !is_null(spot_price_cap) ? _check_cap(raw_revenue, spot_price_cap) : raw_revenue
-                        revenue[bg, bs, blk, sce, stg] = raw_revenue
-                    end
+                    raw_load_marginal_cost = _check_floor(spot_reader.data[bus_i], spot_price_floor)
+                    raw_load_marginal_cost = _check_cap(raw_load_marginal_cost, spot_price_cap)
+
+                    Quiver.write!(
+                        writer,
+                        sum_generation .* raw_load_marginal_cost / MW_to_GW(); # GWh to MWh
+                        period,
+                        scenario,
+                        subperiod = subperiod,
+                    )
                 end
             end
         end
     end
-    return revenue
+    Quiver.close!(writer)
+    Quiver.close!(generation_reader)
+    Quiver.close!(spot_reader)
+    return
 end
 
-function _get_revenue(
-    bidding_group_generation::Array{<:Real, 6},
-    bidding_group_meta::Quiver.Metadata,
-    load_marginal_cost::Array{<:Real, 5},
-    load_marginal_cost_meta::Quiver.Metadata,
-    spot_price_cap::Union{Nothing, Real},
-    spot_price_floor::Union{Nothing, Real},
+function _write_revenue_ex_post(
+    writer::Quiver.Writer{Quiver.csv},
+    generation_reader::Quiver.Reader{Quiver.csv},
+    spot_reader::Quiver.Reader{Quiver.csv},
+    spot_price_cap::Real,
+    spot_price_floor::Real,
+    is_profile::Bool,
 )
     # used for ex_post_commercial, ex_post_physical
 
-    revenue = copy(bidding_group_generation)
+    num_periods, num_scenarios, num_subscenarios, num_subperiods, num_bid_segments =
+        generation_reader.metadata.dimension_size
+    num_bidding_groups = length(generation_reader.metadata.labels)
 
-    num_bidding_groups, num_bid_segments, num_subperiods, num_subscenarios, num_scenarios, num_periods = size(revenue)
-    num_buses = size(load_marginal_cost, 1)
+    dim_name = is_profile ? :profile : :bid_segment
 
-    for stg in 1:num_periods
-        for sce in 1:num_scenarios
-            for sub in 1:num_subscenarios
-                for blk in 1:num_subperiods
-                    for bs in 1:num_bid_segments
-                        for bg in 1:num_bidding_groups
-                            bus_i = _get_bus_index(bidding_group_meta.labels[bg], load_marginal_cost_meta.labels)
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            for subscenario in 1:num_subscenarios
+                for subperiod in 1:num_subperiods
+                    Quiver.goto!(spot_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
+                    sum_generation = zeros(num_bidding_groups)
+                    for bid_segment in 1:num_bid_segments
+                        Quiver.goto!(
+                            generation_reader;
+                            period,
+                            scenario,
+                            subscenario = subscenario,
+                            subperiod = subperiod,
+                            Symbol(dim_name) => bid_segment,
+                        )
+                        sum_generation .+= generation_reader.data
+                    end
 
-                            raw_revenue =
-                                revenue[bg, bs, blk, sub, sce, stg] * load_marginal_cost[bus_i, blk, sub, sce, stg] *
-                                1000.0 # GWh to MWh
+                    for bg in 1:num_bidding_groups
+                        bus_i = _get_bus_index(generation_reader.metadata.labels[bg], spot_reader.metadata.labels)
 
-                            raw_revenue =
-                                !is_null(spot_price_floor) ? _check_floor(raw_revenue, spot_price_floor) : raw_revenue
-                            raw_revenue =
-                                !is_null(spot_price_cap) ? _check_cap(raw_revenue, spot_price_cap) : raw_revenue
-                            revenue[bg, bs, blk, sub, sce, stg] = raw_revenue
-                        end
+                        raw_load_marginal_cost = _check_floor(spot_reader.data[bus_i], spot_price_floor)
+                        raw_load_marginal_cost = _check_cap(raw_load_marginal_cost, spot_price_cap)
+
+                        Quiver.write!(
+                            writer,
+                            sum_generation .* raw_load_marginal_cost / MW_to_GW(); # GWh to MWh
+                            period,
+                            scenario,
+                            subscenario,
+                            subperiod = subperiod,
+                        )
                     end
                 end
             end
         end
     end
-    return revenue
+    Quiver.close!(writer)
+    Quiver.close!(generation_reader)
+    Quiver.close!(spot_reader)
+    return
 end
 
+"""
+    post_processing_bidding_group_revenue(inputs::Inputs)
+
+Post-process the bidding group revenue data, based on the generation data and the marginal cost data.
+"""
 function post_processing_bidding_group_revenue(inputs::Inputs)
     outputs_dir = output_path(inputs)
 
@@ -106,38 +148,398 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
     for file in bidding_group_generation_files
         is_cost_based = occursin(r"_cost_based", file)
 
-        m = match(r"^bidding_group_generation(?:_multihour){0,1}(_ex_[a-z]+_[a-z]+)(?:_cost_based){0,1}\.csv$", file)
-        file_type = m[1]
+        m = match(r"^bidding_group_generation(_profile){0,1}(_ex_[a-z]+_[a-z]+)(?:_cost_based){0,1}\.csv$", file)
+        file_type = m[2]
+        is_profile = !isnothing(m[1])
 
         load_marginal_cost_file = filter(x -> startswith(x, "load_marginal_cost$file_type.csv"), readdir(outputs_dir))
         if isempty(load_marginal_cost_file)
             return
         end
 
-        generation_data, generation_metadata = read_timeseries_file(joinpath(outputs_dir, file))
-        load_marginal_cost_data, load_marginal_cost_metadata =
-            read_timeseries_file(joinpath(outputs_dir, load_marginal_cost_file[1]))
+        generation_reader = Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, split(file, ".")[1]))
+        spot_reader = Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, split(load_marginal_cost_file[1], ".")[1]))
 
-        revenue = _get_revenue(
-            generation_data,
-            generation_metadata,
-            load_marginal_cost_data,
-            load_marginal_cost_metadata,
-            spot_price_cap,
-            spot_price_floor,
-        )
+        time_series_path = "bidding_group_revenue"
+        if isnothing(m[1])
+            time_series_path *= file_type
+        else
+            time_series_path *= m[1] * file_type
+        end
+        if is_cost_based
+            time_series_path *= "_cost_based"
+        end
 
-        time_series_path =
-            is_cost_based ? "bidding_group_revenue$(file_type)_cost_based" : "bidding_group_revenue$(file_type)"
-        write_timeseries_file(
-            joinpath(outputs_dir, time_series_path),
-            revenue;
-            dimensions = String.(generation_metadata.dimensions),
-            labels = generation_metadata.labels,
+        # The revenue is summed over all bid segments / profiles, so we drop the last dimension
+        writer = Quiver.Writer{Quiver.csv}(
+            joinpath(outputs_dir, time_series_path);
+            dimensions = String.(generation_reader.metadata.dimensions[1:end-1]),
+            labels = generation_reader.metadata.labels,
             time_dimension = "period",
-            dimension_size = generation_metadata.dimension_size,
-            initial_date = generation_metadata.initial_date,
+            dimension_size = generation_reader.metadata.dimension_size[1:end-1],
+            initial_date = generation_reader.metadata.initial_date,
             unit = "\$",
         )
+
+        if startswith(file_type, "_ex_post")
+            _write_revenue_ex_post(
+                writer,
+                generation_reader,
+                spot_reader,
+                spot_price_cap,
+                spot_price_floor,
+                is_profile,
+            )
+        else
+            _write_revenue_ex_ante(
+                writer,
+                generation_reader,
+                spot_reader,
+                spot_price_cap,
+                spot_price_floor,
+                is_profile,
+            )
+        end
     end
+end
+
+function _average_ex_post_revenue_over_subscenarios(
+    temp_writer::Quiver.Writer{Quiver.csv},
+    ex_post_reader::Quiver.Reader{Quiver.csv},
+)
+    num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
+
+    num_bidding_groups = length(ex_post_reader.metadata.labels)
+
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            summed_vals = zeros(num_subperiods, num_bidding_groups)
+            for subscenario in 1:num_subscenarios
+                for subperiod in 1:num_subperiods
+                    Quiver.goto!(
+                        ex_post_reader;
+                        period,
+                        scenario,
+                        subscenario = subscenario,
+                        subperiod = subperiod,
+                    )
+                    summed_vals[subperiod, :] += ex_post_reader.data
+                end
+            end
+            for subperiod in 1:num_subperiods
+                # Average over subscenarios
+                Quiver.write!(
+                    temp_writer,
+                    summed_vals[subperiod, :] ./ num_subscenarios;
+                    period,
+                    scenario,
+                    subperiod = subperiod,
+                )
+            end
+        end
+    end
+    Quiver.close!(temp_writer)
+    return Quiver.close!(ex_post_reader)
+end
+
+function _sum_independent_profile_ex_ante(
+    temp_writer::Quiver.Writer{Quiver.csv},
+    independent_reader::Quiver.Reader{Quiver.csv},
+    profile_reader::Quiver.Reader{Quiver.csv},
+)
+    num_periods, num_scenarios, num_subperiods = independent_reader.metadata.dimension_size
+    num_bidding_groups = length(independent_reader.metadata.labels)
+
+    merged_labels = unique(vcat(independent_reader.metadata.labels, profile_reader.metadata.labels))
+
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            for subperiod in 1:num_subperiods
+                Quiver.goto!(
+                    profile_reader;
+                    period = period,
+                    scenario = scenario,
+                    subperiod = subperiod,
+                )
+                Quiver.goto!(
+                    independent_reader;
+                    period = period,
+                    scenario = scenario,
+                    subperiod = subperiod,
+                )
+
+                bg_indices_independent = Dict{Int, Float64}()
+                bg_indices_profile = Dict{Int, Float64}()
+
+                for bg_i in eachindex(merged_labels)
+                    bg_label = merged_labels[bg_i]
+                    if bg_label in independent_reader.metadata.labels
+                        bg_indices_independent[bg_i] =
+                            independent_reader.data[findfirst(x -> x == bg_label, independent_reader.metadata.labels)]
+                    end
+                    if bg_label in profile_reader.metadata.labels
+                        bg_indices_profile[bg_i] =
+                            profile_reader.data[findfirst(x -> x == bg_label, profile_reader.metadata.labels)]
+                    end
+                end
+
+                summed_vals = zeros(num_bidding_groups)
+                for bg_i in eachindex(merged_labels)
+                    summed_vals[bg_i] += get(bg_indices_independent, bg_i, 0) + get(bg_indices_profile, bg_i, 0)
+                end
+
+                Quiver.write!(temp_writer, summed_vals; period, scenario, subperiod = subperiod)
+            end
+        end
+    end
+    Quiver.close!(temp_writer)
+    Quiver.close!(independent_reader)
+    Quiver.close!(profile_reader)
+    return
+end
+
+function _sum_independent_profile_ex_post(
+    temp_writer::Quiver.Writer{Quiver.csv},
+    independent_reader::Quiver.Reader{Quiver.csv},
+    profile_reader::Quiver.Reader{Quiver.csv},
+)
+    num_periods, num_scenarios, num_subscenarios, num_subperiods = independent_reader.metadata.dimension_size
+    num_bidding_groups = length(independent_reader.metadata.labels)
+
+    merged_labels = unique(vcat(independent_reader.metadata.labels, profile_reader.metadata.labels))
+
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            for subscenario in 1:num_subscenarios
+                for subperiod in 1:num_subperiods
+                    Quiver.goto!(
+                        profile_reader;
+                        period = period,
+                        scenario = scenario,
+                        subscenario = subscenario,
+                        subperiod = subperiod,
+                    )
+                    Quiver.goto!(
+                        independent_reader;
+                        period = period,
+                        scenario = scenario,
+                        subscenario = subscenario,
+                        subperiod = subperiod,
+                    )
+
+                    bg_indices_independent = Dict{Int, Float64}()
+                    bg_indices_profile = Dict{Int, Float64}()
+
+                    for bg_i in eachindex(merged_labels)
+                        bg_label = merged_labels[bg_i]
+                        if bg_label in independent_reader.metadata.labels
+                            bg_indices_independent[bg_i] =
+                                independent_reader.data[findfirst(
+                                    x -> x == bg_label,
+                                    independent_reader.metadata.labels,
+                                )]
+                        end
+                        if bg_label in profile_reader.metadata.labels
+                            bg_indices_profile[bg_i] =
+                                profile_reader.data[findfirst(x -> x == bg_label, profile_reader.metadata.labels)]
+                        end
+                    end
+
+                    summed_vals = zeros(num_bidding_groups)
+                    for bg_i in eachindex(merged_labels)
+                        summed_vals[bg_i] += get(bg_indices_independent, bg_i, 0) + get(bg_indices_profile, bg_i, 0)
+                    end
+
+                    Quiver.write!(
+                        temp_writer,
+                        summed_vals;
+                        period,
+                        scenario,
+                        subscenario = subscenario,
+                        subperiod = subperiod,
+                    )
+                end
+            end
+        end
+    end
+    Quiver.close!(temp_writer)
+    Quiver.close!(independent_reader)
+    Quiver.close!(profile_reader)
+    return
+end
+
+function _sum_total_revenue(
+    total_revenue_writer::Quiver.Writer{Quiver.csv},
+    ex_ante_reader::Quiver.Reader{Quiver.csv},
+    ex_post_reader::Quiver.Reader{Quiver.csv},
+)
+    num_periods, num_scenarios, num_subperiods = ex_ante_reader.metadata.dimension_size
+
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            for subperiod in 1:num_subperiods
+                Quiver.goto!(ex_ante_reader; period, scenario, subperiod = subperiod)
+                Quiver.goto!(ex_post_reader; period, scenario, subperiod = subperiod)
+
+                total_revenue = ex_ante_reader.data .+ ex_post_reader.data
+
+                Quiver.write!(total_revenue_writer, total_revenue; period, scenario, subperiod = subperiod)
+            end
+        end
+    end
+    Quiver.close!(total_revenue_writer)
+    Quiver.close!(ex_ante_reader)
+    Quiver.close!(ex_post_reader)
+    return
+end
+
+function _bidding_group_total_revenue(inputs::Inputs, type::String)
+    outputs_dir = output_path(inputs)
+
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+
+    is_profile =
+        length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(outputs_dir))) > 0
+
+    is_cost_based =
+        length(filter(x -> occursin(r"bidding_group_revenue_.*_cost_based\.csv", x), readdir(outputs_dir))) > 0
+
+    # STEP 0 (optional): Merging profile and independent bid
+
+    if is_profile
+        revenue_ex_ante_reader = if !is_cost_based
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)"))
+        else
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)_cost_based"))
+        end
+        revenue_ex_post_reader = if !is_cost_based
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)"))
+        else
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)_cost_based"))
+        end
+
+        revenue_ex_ante_profile_reader =
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)"))
+        revenue_ex_post_profile_reader =
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)"))
+
+        merged_labels =
+            unique(vcat(revenue_ex_ante_reader.metadata.labels, revenue_ex_ante_profile_reader.metadata.labels))
+        temp_revenue_ex_ante_writer = Quiver.Writer{Quiver.csv}(
+            joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_$(type)_sum");
+            dimensions = String.(revenue_ex_ante_reader.metadata.dimensions),
+            labels = merged_labels,
+            time_dimension = String(revenue_ex_ante_reader.metadata.time_dimension),
+            dimension_size = revenue_ex_ante_reader.metadata.dimension_size,
+            initial_date = revenue_ex_ante_reader.metadata.initial_date,
+            unit = revenue_ex_ante_reader.metadata.unit,
+        )
+
+        temp_revenue_ex_post_writer = Quiver.Writer{Quiver.csv}(
+            joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_sum");
+            dimensions = String.(revenue_ex_post_reader.metadata.dimensions),
+            labels = merged_labels,
+            time_dimension = String(revenue_ex_post_reader.metadata.time_dimension),
+            dimension_size = revenue_ex_post_reader.metadata.dimension_size,
+            initial_date = revenue_ex_post_reader.metadata.initial_date,
+            unit = revenue_ex_post_reader.metadata.unit,
+        )
+
+        _sum_independent_profile_ex_ante(
+            temp_revenue_ex_ante_writer,
+            revenue_ex_ante_reader,
+            revenue_ex_ante_profile_reader,
+        )
+        _sum_independent_profile_ex_post(
+            temp_revenue_ex_post_writer,
+            revenue_ex_post_reader,
+            revenue_ex_post_profile_reader,
+        )
+    end
+
+    # STEP 1: Averaging ex_post over subscenarios
+
+    revenue_ex_post_reader = if !is_cost_based
+        if is_profile
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_sum"))
+        else
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)"))
+        end
+    else
+        if is_profile
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_sum"))
+        else
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)_cost_based"))
+        end
+    end
+
+    initial_dimension_sizes = copy(revenue_ex_post_reader.metadata.dimension_size)
+    revenue_ex_post_average_writer = Quiver.Writer{Quiver.csv}(
+        joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_average");
+        dimensions = ["period", "scenario", "subperiod"],
+        labels = revenue_ex_post_reader.metadata.labels,
+        time_dimension = String(revenue_ex_post_reader.metadata.time_dimension),
+        dimension_size = deleteat!(initial_dimension_sizes, 3), # remove subscenario
+        initial_date = revenue_ex_post_reader.metadata.initial_date,
+        unit = revenue_ex_post_reader.metadata.unit,
+    )
+
+    _average_ex_post_revenue_over_subscenarios(
+        revenue_ex_post_average_writer,
+        revenue_ex_post_reader,
+    )
+
+    # STEP 2: Summing ex_ante and ex_post (ex_ante + mean(ex_post))
+
+    revenue_ex_ante_reader = if !is_cost_based
+        if is_profile
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_$(type)_sum"))
+        else
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)"))
+        end
+    else
+        if is_profile
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_$(type)_sum"))
+        else
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)_cost_based"))
+        end
+    end
+
+    revenue_ex_post_reader =
+        Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_average"))
+
+    total_revenue_writer = Quiver.Writer{Quiver.csv}(
+        joinpath(outputs_dir, "bidding_group_total_revenue_$(type)");
+        dimensions = String.(revenue_ex_ante_reader.metadata.dimensions),
+        labels = revenue_ex_ante_reader.metadata.labels,
+        time_dimension = String(revenue_ex_ante_reader.metadata.time_dimension),
+        dimension_size = revenue_ex_ante_reader.metadata.dimension_size,
+        initial_date = revenue_ex_ante_reader.metadata.initial_date,
+        unit = revenue_ex_ante_reader.metadata.unit,
+    )
+
+    _sum_total_revenue(
+        total_revenue_writer,
+        revenue_ex_ante_reader,
+        revenue_ex_post_reader,
+    )
+
+    # STEP 3: Removing temporary files
+
+    rm(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_average"); force = true)
+
+    return
+end
+
+function post_processing_bidding_group_total_revenue(inputs::Inputs)
+    outputs_dir = output_path(inputs)
+
+    if !isfile(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_commercial.csv"))
+        return
+    end
+
+    return _bidding_group_total_revenue(inputs, "commercial")
 end

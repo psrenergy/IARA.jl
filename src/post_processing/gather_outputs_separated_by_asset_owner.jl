@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    gather_outputs_separated_by_asset_owners(inputs::Inputs)
+
+Gather outputs separated by asset owners.
+"""
 function gather_outputs_separated_by_asset_owners(inputs::Inputs)
     outputs_dir = output_path(inputs)
     # Query all files that end with _asset_owner_1, _asset_owner_2, etc.
@@ -26,7 +31,7 @@ function gather_outputs_separated_by_asset_owners(inputs::Inputs)
 
     for (output_group, files) in files_of_output_group
         gathered_file = joinpath(outputs_dir, output_group)
-        impl = get_implementation_of_a_list_of_files(files)
+        impl = _get_implementation_of_a_list_of_files(files)
         separated_files = [joinpath(outputs_dir, file) for file in files]
         # Filter the separaed files by the header
         toml_of_separated_files = filter(x -> occursin(r"\.toml", x), separated_files)
@@ -45,7 +50,7 @@ function gather_outputs_separated_by_asset_owners(inputs::Inputs)
     return nothing
 end
 
-function get_implementation_of_a_list_of_files(files::Vector{String})
+function _get_implementation_of_a_list_of_files(files::Vector{String})
     # This assumes that all files have the same extension
     for file in files
         if occursin(r"\.csv", file)

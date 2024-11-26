@@ -10,6 +10,11 @@
 
 function virtual_reservoir_energy_stock! end
 
+"""
+    virtual_reservoir_energy_stock!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the virtual reservoir energy stock variables to the model.
+"""
 function virtual_reservoir_energy_stock!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -32,6 +37,11 @@ function virtual_reservoir_energy_stock!(
     return nothing
 end
 
+"""
+    virtual_reservoir_energy_stock!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
+
+Update the virtual reservoir energy stock variables in the model.
+"""
 function virtual_reservoir_energy_stock!(
     model::SubproblemModel,
     inputs::Inputs,

@@ -44,6 +44,9 @@ function _write_ex_ante_file(inputs::Inputs, extension::String)
     num_buses = PSRI.max_elements(inputs.db, "Bus")
 
     ex_ante_files = filter(x -> endswith(x, "_generation_ex_ante_$(extension).csv"), readdir(outputs_dir))
+    if isempty(ex_ante_files)
+        return
+    end
     bidding_group_ex_ante = nothing
     initial_date_time = nothing
     unit = nothing
@@ -117,6 +120,9 @@ function _write_ex_post_file(inputs::Inputs, extension::String)
     num_buses = PSRI.max_elements(inputs.db, "Bus")
 
     ex_post_files = filter(x -> endswith(x, "_generation_ex_post_$(extension).csv"), readdir(outputs_dir))
+    if isempty(ex_post_files)
+        return
+    end
     bidding_group_ex_post = nothing
     initial_date_time = nothing
     unit = nothing
@@ -192,6 +198,11 @@ function _write_ex_post_file(inputs::Inputs, extension::String)
     return
 end
 
+"""
+    create_bidding_group_generation_files(inputs::Inputs)
+
+Create the bidding group generation files for ex-ante and ex-post data (physical and commercial).
+"""
 function create_bidding_group_generation_files(inputs::Inputs)
     outputs_dir = output_path(inputs)
 

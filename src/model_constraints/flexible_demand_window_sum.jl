@@ -10,6 +10,16 @@
 
 function flexible_demand_window_sum! end
 
+"""
+    flexible_demand_window_sum!(
+        model,
+        inputs,
+        run_time_options,
+        ::Type{SubproblemBuild},
+    )
+
+Add the flexible demand window sum constraints to the model.
+"""
 function flexible_demand_window_sum!(
     model::SubproblemModel,
     inputs::Inputs,

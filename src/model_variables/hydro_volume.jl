@@ -10,6 +10,11 @@
 
 function hydro_volume! end
 
+"""
+    hydro_volume!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the hydro volume variables to the model.
+"""
 function hydro_volume!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -28,7 +33,7 @@ function hydro_volume!(
         upper_bound = hydro_unit_max_volume(inputs, h),
     )
 
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         @variable(
             model.jump_model,
             hydro_volume_state[h in hydro_units_with_reservoir],
@@ -51,6 +56,11 @@ function hydro_volume!(
     return nothing
 end
 
+"""
+    hydro_volume!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
+
+Updates the hydro volume variables in the model.
+"""
 function hydro_volume!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -59,7 +69,7 @@ function hydro_volume!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    if run_mode(inputs) != Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) != RunMode.MARKET_CLEARING
         return nothing
     end
 
@@ -87,6 +97,13 @@ function hydro_volume!(
     return nothing
 end
 
+"""
+    hydro_volume!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output files for
+- hydro_initial_volume
+- hydro_final_volume
+"""
 function hydro_volume!(
     outputs::Outputs,
     inputs::Inputs,
@@ -99,6 +116,17 @@ function hydro_volume!(
     if run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
         add_symbol_to_serialize!(outputs, :hydro_volume)
     end
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "hydro_final_volume",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "hm3",
+        labels = hydro_unit_label(inputs)[hydro_units],
+        run_time_options,
+    )
 
     initialize!(
         QuiverOutput,
@@ -118,6 +146,11 @@ function hydro_volume!(
     return nothing
 end
 
+"""
+    hydro_volume!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the hydro final and initial volume values to the output file.
+"""
 function hydro_volume!(
     outputs::Outputs,
     inputs::Inputs,
@@ -145,6 +178,18 @@ function hydro_volume!(
         run_time_options,
         "hydro_initial_volume",
         hydro_volume.data[1:end-1, :]; # we filter the last subperiod because we don`t write it to a file. This last subperiod is auxiliary to the model.
+        period,
+        scenario,
+        subscenario,
+        indices_of_elements_in_output,
+    )
+
+    write_output_per_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "hydro_final_volume",
+        hydro_volume.data[2:end, :];
         period,
         scenario,
         subscenario,

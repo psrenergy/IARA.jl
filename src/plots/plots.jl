@@ -23,14 +23,53 @@ Abstract type for a plot type.
 abstract type RelationPlotType <: PlotType end
 
 """
-    plot_data
+    plot_data(::Type{<:PlotType}, data::Array{Float64, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
 
-Concrete implementation on how to plot a specific plot type.
+Plot the data for a specific plot type.
 """
 function plot_data end
 
+"""
+    merge_scenario_agent(::Type{<:PlotType}, data::Array{Float64, N}, agent_names::Vector{String}, scenario_names::Union{Vector{String}, Nothing}; kwargs...) where {N}
+
+Reduce the dimension of the data array by merging the scenario and agent dimensions.
+"""
 function merge_scenario_agent end
-_save_plot(plot_reference, file) = PlotlyLight.save(plot_reference, file)
+
+"""
+    merge_period_subperiod(data::Array{T, N}) where {T <: Real, N}
+
+Reduce the dimension of the data array by merging the period and subperiod dimensions.
+"""
+function merge_period_subperiod end
+
+"""
+    merge_segment_agent(data::Array{Float32, N}, agent_names::Vector{String}; kwargs...) where {N}
+
+Reduce the dimension of the data array by merging the segment and agent dimensions.
+"""
+function merge_segment_agent end
+
+"""
+    merge_scenario_subscenario_agent(data::Array{Float32, N}, agent_names::Vector{String}; kwargs...) where {N}
+
+Reduce the dimension of the data array by merging the scenario, subscenario, and agent dimensions.
+"""
+function merge_scenario_subscenario_agent end
+
+"""
+    merge_scenario_subscenario(data::Array{Float32, N}, agent_names::Vector{String}; kwargs...) where {N}
+
+Reduce the dimension of the data array by merging the scenario and subscenario dimensions.
+"""
+function merge_scenario_subscenario end
+
+"""
+    reshape_time_series!(::Type{<:PlotType}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
+
+Reduce the dimension of the data array by merging the dimensions, according to the plot type.
+"""
+function reshape_time_series! end
 
 """
     PlotConfig
@@ -54,18 +93,20 @@ function PlotConfig(
     return PlotConfig(title, filename, plot_types, initial_date_time(inputs), period_type(inputs))
 end
 
+_save_plot(plot_reference, file) = PlotlyLight.save(plot_reference, file)
+
 function _snake_to_regular(snake_str::String)
     words = split(snake_str, '_')
     capitalized_words = map(uppercasefirst, words)
     return join(capitalized_words, " ")
 end
 
-function set_plot_defaults()
+function _set_plot_defaults()
     PlotlyLight.template!("plotly_white")
     return nothing
 end
 
-function get_plot_color(index::Int; transparent::Bool = false)
+function _get_plot_color(index::Int; transparent::Bool = false)
     colors = [
         "rgb(31, 119, 180)",
         "rgb(255, 127, 14)",
@@ -89,7 +130,7 @@ function get_plot_color(index::Int; transparent::Bool = false)
     return color
 end
 
-function get_plot_ticks(
+function _get_plot_ticks(
     data::Array{Float64, 2},
     num_periods::Int,
     initial_date_time::DateTime,
@@ -343,6 +384,11 @@ function merge_scenario_subscenario(
     return reshaped_data, modified_scenario_names
 end
 
+"""
+    build_plot_output(inputs::Inputs, plots_path::String, outputs_path::String, plot_config::PlotConfig)
+
+Build the plot output for a specific plot configuration.
+"""
 function build_plot_output(
     inputs::Inputs,
     plots_path::String,
@@ -385,7 +431,7 @@ Build plots for the outputs of the model.
 function build_plots(
     inputs::Inputs,
 )
-    println("Building plots")
+    Log.info("Building plots")
     plots_path = joinpath(output_path(inputs), "plots")
     if !isdir(plots_path)
         mkdir(plots_path)
@@ -398,6 +444,22 @@ function build_plots(
         plot_config_hydro_volume = PlotConfig(
             "Hydro Initial Volume",
             "hydro_initial_volume",
+            [
+                PlotTimeSeriesMean,
+                PlotTimeSeriesAll,
+                PlotTimeSeriesQuantiles,
+                PlotTechnologyHistogram,
+                PlotTechnologyHistogramPeriod,
+                PlotTechnologyHistogramSubperiod,
+                PlotTechnologyHistogramPeriodSubperiod,
+            ],
+            inputs,
+        )
+        push!(plot_configs, plot_config_hydro_volume)
+
+        plot_config_hydro_volume = PlotConfig(
+            "Hydro Final Volume",
+            "hydro_final_volume",
             [
                 PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
@@ -536,8 +598,8 @@ function build_plots(
     end
 
     if number_of_elements(inputs, DCLine) > 0 &&
-       run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID &&
-       run_mode(inputs) != Configurations_RunMode.PRICE_TAKER_BID
+       run_mode(inputs) != RunMode.STRATEGIC_BID &&
+       run_mode(inputs) != RunMode.PRICE_TAKER_BID
         # DC Line Flow
         plot_config_dc_flow = PlotConfig(
             "DC Line Flow",
@@ -548,8 +610,8 @@ function build_plots(
         push!(plot_configs, plot_config_dc_flow)
     end
 
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION ||
-       run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION_SIMULATION
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+       run_mode(inputs) == RunMode.MIN_COST
         # Deficit
         plot_config_deficit = PlotConfig(
             "Deficit",
@@ -579,7 +641,7 @@ function build_plots(
     end
 
     if !use_binary_variables(inputs) &&
-       run_mode(inputs) != Configurations_RunMode.STRATEGIC_BID
+       run_mode(inputs) != RunMode.STRATEGIC_BID
         # Load Marginal Cost
         plot_config_load_marginal_cost = PlotConfig(
             "Load Marginal Cost",
@@ -590,7 +652,7 @@ function build_plots(
         push!(plot_configs, plot_config_load_marginal_cost)
     end
 
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == RunMode.MARKET_CLEARING
         # Energy offer
         plot_config_energy = PlotConfig(
             "Energy Offer per Bidding Group",
@@ -610,7 +672,7 @@ function build_plots(
         push!(plot_configs, plot_config_price)
     end
 
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == RunMode.MARKET_CLEARING
         for file in readdir(output_path(inputs))
             if occursin(".csv", file)
                 final_file_name = _snake_to_regular(String(split(file, ".")[1]))

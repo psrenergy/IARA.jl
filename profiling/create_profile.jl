@@ -16,9 +16,13 @@ import Pkg
 root_path = dirname(@__DIR__)
 Pkg.activate(root_path)
 using IARA
+using Test
 
-include("../test/case_01/gnd_modifications_case/test_gnd_modifications_case.jl")
-IARA.main([Main.TestCase01GNDModificationsCase.PATH])
-IARA.main([Main.TestCase01GNDModificationsCase.PATH])
-@profile IARA.main([Main.TestCase01GNDModificationsCase.PATH])
+include("../test/utils.jl")
+include("../test/case_01/big_simulation_case/test_case.jl")
+IARA.main([Main.TestCase01BigSimulationCase.PATH, "--run-mode=train-min-cost"])
+IARA.main([Main.TestCase01BigSimulationCase.PATH, "--run-mode=train-min-cost"])
+Profile.clear()
+@profile IARA.main([Main.TestCase01BigSimulationCase.PATH, "--run-mode=train-min-cost"])
+@profile Main.compare_outputs(Main.TestCase01BigSimulationCase.PATH)
 pprof()

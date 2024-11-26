@@ -15,6 +15,11 @@ Type for a time series plot with P10, P50, and P90 quantiles of scenarios.
 """
 abstract type PlotTimeSeriesQuantiles <: PlotType end
 
+"""
+    agent_quantile_in_scenarios(::Type{PlotTimeSeriesQuantiles}, data::Array{Float64, 3}, agent_names::Vector{String}; kwargs...)
+
+Calculate the P10, P50, and P90 quantiles of the data across scenarios.
+"""
 function agent_quantile_in_scenarios(
     ::Type{PlotTimeSeriesQuantiles},
     data::Array{Float64, 3},
@@ -122,6 +127,11 @@ function reshape_time_series!(
     return time_series, modified_agent_names
 end
 
+"""
+    plot_data(::Type{PlotTimeSeriesQuantiles}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, period_type::Configurations_PeriodType.T, kwargs...)
+
+Create a time series plot with P10, P50, and P90 quantiles of scenarios.
+"""
 function plot_data(
     ::Type{PlotTimeSeriesQuantiles},
     data::Array{Float32, N},
@@ -139,7 +149,7 @@ function plot_data(
     number_of_agents = length(trace_names)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type)
+    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type)
     plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
     configs = Vector{Config}()
@@ -156,7 +166,7 @@ function plot_data(
                 name = trace_names[agent] * " (P10 - P90)",
                 fill = "toself",
                 line = Dict("color" => "transparent"),
-                fillcolor = get_plot_color(agent; transparent = true),
+                fillcolor = _get_plot_color(agent; transparent = true),
                 type = plot_type,
                 text = hover_ticks,
                 hovertemplate = "%{y} $unit",
@@ -167,7 +177,7 @@ function plot_data(
                 x = 1:number_of_periods,
                 y = traces[p50_idx, :],
                 name = trace_names[agent] * " (P50)",
-                line = Dict("color" => get_plot_color(agent)),
+                line = Dict("color" => _get_plot_color(agent)),
                 type = plot_type,
                 text = hover_ticks,
                 hovertemplate = "%{y} $unit<br>%{text}",

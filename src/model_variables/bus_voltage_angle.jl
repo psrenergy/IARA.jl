@@ -10,6 +10,11 @@
 
 function bus_voltage_angle! end
 
+"""
+    bus_voltage_angle!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the bus voltage angle variables to the model.
+"""
 function bus_voltage_angle!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -37,6 +42,11 @@ function bus_voltage_angle!(
     return nothing
 end
 
+"""
+    bus_voltage_angle!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output file to store the bus voltage angle variables' values.
+    """
 function bus_voltage_angle!(
     outputs::Outputs,
     inputs::Inputs,
@@ -60,6 +70,11 @@ function bus_voltage_angle!(
     return nothing
 end
 
+"""
+    bus_voltage_angle!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the bus voltage angle variables' values to the output file.
+    """
 function bus_voltage_angle!(
     outputs::Outputs,
     inputs::Inputs,

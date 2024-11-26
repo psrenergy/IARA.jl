@@ -9,6 +9,12 @@
 #############################################################################
 
 function link_offers_and_generation! end
+
+"""
+    link_offers_and_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the link between offers and generation constraints to the model.
+"""
 function link_offers_and_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -41,7 +47,7 @@ function link_offers_and_generation!(
     profile_bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
     if any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
-        bidding_group_generation_multihour = get_model_object(model, :bidding_group_generation_multihour)
+        bidding_group_generation_profile = get_model_object(model, :bidding_group_generation_profile)
     end
     if any_elements(inputs, BiddingGroup; filters = [has_independent_bids])
         bidding_group_generation = get_model_object(model, :bidding_group_generation)
@@ -56,8 +62,8 @@ function link_offers_and_generation!(
             init = 0.0,
         ) +
         sum(
-            bidding_group_generation_multihour[blk, bg, prf, bus] for
-            prf in 1:maximum_multihour_profiles(inputs, bg)
+            bidding_group_generation_profile[blk, bg, prf, bus] for
+            prf in 1:maximum_profiles(inputs, bg)
             if bg in profile_bidding_groups;
             init = 0.0,
         ) ==

@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    initialize_heuristic_bids_outputs(inputs::Inputs, outputs::Outputs, run_time_options::RunTimeOptions)
+
+Initialize the output files for bidding group energy and price offers.
+"""
 function initialize_heuristic_bids_outputs(
     inputs::Inputs,
     outputs::Outputs,
@@ -46,6 +51,16 @@ function initialize_heuristic_bids_outputs(
     return nothing
 end
 
+"""
+    markup_offers_for_period_scenario(
+        inputs::Inputs, outputs::Outputs, 
+        run_time_options::RunTimeOptions, 
+        period::Int, 
+        scenario::Int
+    )
+
+Generate heuristic bids for the bidding groups and write them to the output files.
+"""
 function markup_offers_for_period_scenario(
     inputs::Inputs,
     outputs::Outputs,
@@ -58,7 +73,7 @@ function markup_offers_for_period_scenario(
     number_of_buses = number_of_elements(inputs, Bus)
 
     available_energy_per_hydro_unit =
-        if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING &&
+        if run_mode(inputs) == RunMode.MARKET_CLEARING &&
            clearing_hydro_representation(inputs) ==
            Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             hydro_available_energy(inputs, period, scenario)
@@ -183,7 +198,7 @@ function markup_offers_for_period_scenario(
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
     )
 
-    if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == RunMode.MARKET_CLEARING
         serialize_heuristic_bids(
             inputs,
             quantity_offers,
@@ -196,6 +211,16 @@ function markup_offers_for_period_scenario(
     return nothing
 end
 
+"""
+    build_thermal_offers(
+        inputs::Inputs, 
+        bg_index::Int, 
+        thermal_unit_indexes::Vector{Int}, 
+        number_of_risk_factors::Int
+    )
+
+Build the quantity and price offers for thermal units associated with a bidding group.
+"""
 function build_thermal_offers(
     inputs::Inputs,
     bg_index::Int,
@@ -240,6 +265,16 @@ function build_thermal_offers(
     return quantity_offers, price_offers
 end
 
+"""
+    build_renewable_offers(
+        inputs::Inputs, 
+        bg_index::Int, 
+        renewable_unit_indexes::Vector{Int}, 
+        number_of_risk_factors::Int
+    )
+
+Build the quantity and price offers for renewable units associated with a bidding group.
+"""
 function build_renewable_offers(
     inputs::Inputs,
     bg_index::Int,
@@ -286,6 +321,17 @@ function build_renewable_offers(
     return quantity_offers, price_offers
 end
 
+"""
+    build_hydro_offers(
+        inputs::Inputs, 
+        bg_index::Int, 
+        hydro_unit_indexes::Vector{Int}, 
+        number_of_risk_factors::Int, 
+        available_energy::Union{Vector{Float64}, Nothing}
+    )
+
+Build the quantity and price offers for hydro units associated with a bidding group.
+"""
 function build_hydro_offers(
     inputs::Inputs,
     bg_index::Int,
@@ -337,6 +383,15 @@ function build_hydro_offers(
     return quantity_offers, price_offers
 end
 
+"""
+    hydro_available_energy(
+        inputs::Inputs, 
+        period::Int, 
+        scenario::Int
+    )
+
+Calculate the available energy for each hydro unit in a given period and scenario.
+"""
 function hydro_available_energy(
     inputs::Inputs,
     period::Int,
@@ -369,14 +424,31 @@ function hydro_available_energy(
     return available_energy
 end
 
+"""
+    must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
+
+This function returns true when the following conditions are met:
+1. The run mode is not TRAIN_MIN_COST
+2. There is at least one bidding group with markup_heuristic_bids = true
+3. There is at least one hydro unit that is associated with a bidding group with markup_heuristic_bids = true
+"""
 function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
-    # This function returns true when the following conditions are met:
-    # 1. The run mode is not CENTRALIZED_OPERATION
-    # 2. There is at least one bidding group with markup_heuristic_bids = true
-    # 3. There is at least one hydro unit that is associated with a bidding group with markup_heuristic_bids = true
-    if run_mode(inputs) == Configurations_RunMode.CENTRALIZED_OPERATION
+    # Run mode
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
         return false
     end
+    # Model type
+    no_file_model_types = [
+        Configurations_ClearingModelType.SKIP,
+        Configurations_ClearingModelType.COST_BASED,
+    ]
+    if clearing_model_type_ex_ante_physical(inputs) in no_file_model_types &&
+       clearing_model_type_ex_ante_commercial(inputs) in no_file_model_types &&
+       clearing_model_type_ex_post_physical(inputs) in no_file_model_types &&
+       clearing_model_type_ex_post_commercial(inputs) in no_file_model_types
+        return false
+    end
+    # Hydro representation
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         return true
     elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
@@ -390,9 +462,15 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
             end
         end
     end
+
     return false
 end
 
+"""
+    initialize_virtual_reservoir_bids_outputs(inputs::Inputs, outputs::Outputs, run_time_options::RunTimeOptions)
+
+Initialize the output files for virtual reservoir energy and price offers.
+"""
 function initialize_virtual_reservoir_bids_outputs(
     inputs::Inputs,
     outputs::Outputs,
@@ -431,6 +509,17 @@ function initialize_virtual_reservoir_bids_outputs(
     return nothing
 end
 
+"""
+    virtual_reservoir_markup_offers_for_period_scenario(
+        inputs::Inputs, 
+        outputs::Outputs, 
+        run_time_options::RunTimeOptions, 
+        period::Int, 
+        scenario::Int
+    )
+
+Generate heuristic bids for the virtual reservoirs and write them to the output files.
+"""
 function virtual_reservoir_markup_offers_for_period_scenario(
     inputs::Inputs,
     outputs::Outputs,
@@ -456,7 +545,7 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
 
     # Hydro 
-    available_energy_per_hydro_unit = if run_mode(inputs) == Configurations_RunMode.MARKET_CLEARING
+    available_energy_per_hydro_unit = if run_mode(inputs) == RunMode.MARKET_CLEARING
         hydro_available_energy(inputs, period, scenario)
     end
 

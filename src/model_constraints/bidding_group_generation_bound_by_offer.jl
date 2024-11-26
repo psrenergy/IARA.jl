@@ -10,6 +10,16 @@
 
 function bidding_group_generation_bound_by_offer! end
 
+"""
+    bidding_group_generation_bound_by_offer!(
+        model,
+        inputs,
+        run_time_options,
+        ::Type{SubproblemBuild},
+    )
+
+Add the bidding group generation bound by offer constraints to the model.
+"""
 function bidding_group_generation_bound_by_offer!(
     model::SubproblemModel,
     inputs::Inputs,

@@ -18,4 +18,4 @@ This will install the package and its dependencies. You can then use the package
 using IARA
 ```
 
-To get started on IARA, you can refer to the tutorials listed in the [Tutorial Index](tutorial_index.md) section.
+Now, let's [get started](tutorial/first_execution.md) on IARA.

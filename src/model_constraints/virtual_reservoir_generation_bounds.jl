@@ -10,6 +10,11 @@
 
 function virtual_reservoir_generation_bounds! end
 
+"""
+    virtual_reservoir_generation_bounds!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the virtual reservoir generation bounds constraints to the model.
+"""
 function virtual_reservoir_generation_bounds!(
     model::SubproblemModel,
     inputs::Inputs,

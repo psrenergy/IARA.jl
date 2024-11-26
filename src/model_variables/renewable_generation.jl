@@ -10,6 +10,11 @@
 
 function renewable_generation! end
 
+"""
+    renewable_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+
+Add the renewable unit generation variables to the model.
+"""
 function renewable_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -67,7 +72,7 @@ function renewable_generation!(
     )
 
     # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
-    if run_mode(inputs) == IARA.Configurations_RunMode.MARKET_CLEARING
+    if run_mode(inputs) == IARA.RunMode.MARKET_CLEARING
         model.obj_exp += renewable_total_om_cost / 1e3
     else
         model.obj_exp += renewable_total_om_cost
@@ -76,6 +81,11 @@ function renewable_generation!(
     return nothing
 end
 
+"""
+    renewable_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemUpdate})
+
+Updates the renewable generation variables in the model.
+"""
 function renewable_generation!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -104,6 +114,13 @@ function renewable_generation!(
     return nothing
 end
 
+"""
+    renewable_generation!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+
+Initialize the output files for
+- renewable generation
+- renewable curtailment
+"""
 function renewable_generation!(
     outputs::Outputs,
     inputs::Inputs,
@@ -136,6 +153,11 @@ function renewable_generation!(
     return nothing
 end
 
+"""
+    renewable_generation!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+
+Write the renewable generation and curtailment variables' values to the output.
+"""
 function renewable_generation!(
     outputs::Outputs,
     inputs::Inputs,

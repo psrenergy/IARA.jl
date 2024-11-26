@@ -11,34 +11,39 @@
 module IARA
 
 using ArgParse
-using JuMP
-using HiGHS
-using PSRClassesInterface
-using DataFrames
 using CSV
-using SDDP
-using Serialization
-using Quiver
+using DataFrames
 using Dates
-using PSRBridge
-using PlotlyLight
 using EnumX
-using ParametricOptInterface
-using PAR
+using HiGHS
+using JuMP
+using LoggingPolyglot
 using OrderedCollections
+using ParametricOptInterface
+using PeriodicAutoregressive
+using PlotlyLight
+using PSRBridge
+using PSRClassesInterface
+using Quiver
+using Serialization
+using SDDP
 
 using Libdl
 using LinearAlgebra
+using Logging
 using Random
 using Statistics
 
+const Log = LoggingPolyglot
 const PSRI = PSRClassesInterface
 const PSRDatabaseSQLite = PSRI.PSRDatabaseSQLite
 const DatabaseSQLite = PSRI.PSRDatabaseSQLite.DatabaseSQLite
 const POI = ParametricOptInterface
 
-function initialize()
-    set_plot_defaults()
+function initialize(args)
+    _set_plot_defaults()
+    initialize_output_dir(args)
+    initialize_logger(args)
     return nothing
 end
 
@@ -65,6 +70,7 @@ include("collections/virtual_reservoir.jl")
 include("collections/zone.jl")
 
 include("args.jl")
+include("logs.jl")
 
 include("external_time_series/abstractions.jl")
 include("external_time_series/utils.jl")
@@ -106,5 +112,7 @@ include("main.jl")
 include.(readdir(joinpath(@__DIR__, "model_variables"); join = true))
 include.(readdir(joinpath(@__DIR__, "model_constraints"); join = true))
 include.(readdir(joinpath(@__DIR__, "post_processing"); join = true))
+
+include("example_cases_builder.jl")
 
 end # module

@@ -14,7 +14,7 @@ IARA.add_battery_unit!(db;
     label = "bat_1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
-        existing = [Int(IARA.Battery_Unit_Existence.EXISTS)],
+        existing = [Int(IARA.BatteryUnit_Existence.EXISTS)],
         min_storage = [0.0],
         max_storage = [10.0] * 1e3,
         max_capacity = [0.5],

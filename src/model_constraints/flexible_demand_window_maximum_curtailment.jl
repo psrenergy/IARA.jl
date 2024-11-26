@@ -10,6 +10,16 @@
 
 function flexible_demand_window_maximum_curtailment! end
 
+"""
+    flexible_demand_window_maximum_curtailment!(
+        model,
+        inputs,
+        run_time_options,
+        ::Type{SubproblemBuild},
+    )
+
+Add the flexible demand window maximum curtailment constraints to the model.
+"""
 function flexible_demand_window_maximum_curtailment!(
     model::SubproblemModel,
     inputs::Inputs,

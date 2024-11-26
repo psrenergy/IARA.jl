@@ -1,17 +1,20 @@
+<picture>
+  <img alt="IARA.jl logo." src="https://psrenergy.github.io/IARA.jl/dev/assets/iara-logo.png">
+</picture>
+
+---
+
 # IARA.jl
 
-[build-img]: https://github.com/psrenergy/IARA.jl/actions/workflows/ci.yml/badge.svg?branch=main
-[build-url]: https://github.com/psrenergy/IARA.jl/actions?query=workflow%3ACI
-
-[codecov-img]: https://codecov.io/gh/psrenergy/IARA.jl/coverage.svg?branch=main
-[codecov-url]: https://codecov.io/gh/psrenergy/IARA.jl?branch=main
+[build-img]: https://github.com/psrenergy/IARA.jl/actions/workflows/test.yml/badge.svg
+[build-url]: https://github.com/psrenergy/IARA.jl/actions/workflows/test.yml
 
 [docs-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-url]: https://psrenergy.github.io/IARA.jl/dev/
 
-| **Build Status** | **Coverage** | **Documentation** |
-|:-----------------:|:-----------------:|:-----------------:|
-| [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![][docs-img]][docs-url] |
+| **Build Status** | **Documentation** |
+|:-----------------:|:-----------------:|
+| [![Build Status][build-img]][build-url] | [![][docs-img]][docs-url] |
 
 IARA is open-source software for analyzing electricity market design choices and price formation schemes and their consequences for agents' strategies for participating in these markets.
 

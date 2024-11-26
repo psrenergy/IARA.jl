@@ -14,6 +14,8 @@ Pkg.instantiate()
 using Documenter
 using Literate
 
+ENV["JULIA_DEBUG"] = "Documenter"
+
 Pkg.activate(dirname(@__DIR__))
 Pkg.instantiate()
 using Dates
@@ -57,7 +59,7 @@ end
 DocMeta.setdocmeta!(
     IARA,
     :DocTestSetup,
-    :(using IARA);
+    :(using IARA, Dates, DataFrames);
     recursive = true,
 )
 

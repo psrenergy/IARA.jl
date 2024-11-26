@@ -1,9 +1,7 @@
 # # Plotting
 # > The data for this case is available in the folder [`data/plot`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/plot)
 # We'll start by importing the necessary packages.
-import Pkg #hide
-Pkg.activate("../../..") #hide
-Pkg.instantiate() #hide
+
 using IARA
 ; #hide
 # From other tutorials, we have seen that `IARA.jl` automatically generates some plots for the case results.

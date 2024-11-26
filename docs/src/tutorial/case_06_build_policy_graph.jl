@@ -11,9 +11,7 @@
 # - Analyze the results to determine how the optimal solution changes depending on the policy graph type and the number of periods.
 
 # We'll start by importing the necessary packages.
-import Pkg #hide
-Pkg.activate("../../..") #hide
-Pkg.instantiate() #hide
+
 using Dates
 using DataFrames
 using IARA

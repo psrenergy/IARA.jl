@@ -1,7 +1,5 @@
 # # My first execution
 
-# > The data for this case is available in the folder [`data/boto_base_01`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/boto_base_01)
-
 # In this tutorial, we will load an example case, analyze its input data, execute the model and assess the results obtained.
 # This case contains some basic elements that can help understand some of the functionalities of the IARA package.
 

@@ -36,7 +36,7 @@ path01_first_execution = joinpath(case_path, "output01_first_execution")
 
 # Then, the execution can be carried out using the [`IARA.market_clearing`](@ref) function, indicating the case path and the output path defined, as follows:
 
-IARA.market_clearing(case_path, output_path = path01_first_execution)
+IARA.market_clearing(case_path; output_path = path01_first_execution)
 
 # `MARKET_CLEARING` executions are also explored further in this documentation, in a dedicated pages.
 
@@ -61,7 +61,7 @@ IARA.market_clearing(case_path, output_path = path01_first_execution)
 # (this example case comprises 2 nodes) in each period/subperiod - illustrating the average and upper/lower quantiles of the scenarios represented.
 
 # ```@raw html
-# <img src="assets/output1_CMgDem.png"></img>
+# <img src="./assets/output1_CMgDem.png"></img>
 # ```
 
 # Specific pages of this tutorial are dedicated to exploring in detail the outputs and dashboards of the IARA model.

@@ -1,6 +1,6 @@
 # # My first execution
 
-# In this tutorial, we will load an example case, analyze its input data, execute the model and assess the results obtained.
+# In this tutorial, we will create and load an example case, analyze its input data, execute the model and assess the results obtained.
 # This case contains some basic elements that can help understand some of the functionalities of the IARA package.
 
 # ## First steps
@@ -9,15 +9,15 @@
 using IARA
 ; #hide
 
-# In addition, we also need to define a directory to store the case and indicate the name of the example case we wish to load (which will be done next).
+# In addition, we also need to select an existing directory to store the case and indicate the name of the example case we wish to create (which will be done next).
 case_path = joinpath(@__DIR__, "data", "ExampleCase_FirstExecution")
 case_name = "boto_base_01"
 
-# To load the example case, we can use the function [`ExampleCases.build_example_case`](@ref), indicating the path in which the files must be stored (defined above),
-# as well as the name of the example case to be loaded (defined above).
+# To create the example case, we can use the function [`ExampleCases.build_example_case`](@ref), indicating the path in which the files must be stored, `case_path`,
+# as well as the name of the example case `case_name`.
 IARA.ExampleCases.build_example_case(case_path, case_name)
 
-# Besides loading existing cases, it is also possible to build and/or edit a case's physical data, manipulating its input data - this is shown in detail further in 
+# It is also possible to build and/or edit a case's physical data, manipulating its input data - this is shown in detail further in 
 # the present documentation. For now, let's stick to this example case as it is defined.
 
 # ## Analyzing input data
@@ -61,7 +61,7 @@ IARA.market_clearing(case_path, output_path = path01_first_execution)
 # (this example case comprises 2 nodes) in each period/subperiod - illustrating the average and upper/lower quantiles of the scenarios represented.
 
 # ```@raw html
-# <img src="..\\assets\\output1_CMgDem.png"></img>
+# <img src="assets/output1_CMgDem.png"></img>
 # ```
 
 # Specific pages of this tutorial are dedicated to exploring in detail the outputs and dashboards of the IARA model.

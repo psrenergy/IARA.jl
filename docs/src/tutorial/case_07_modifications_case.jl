@@ -8,7 +8,7 @@
 
 # If we take a look at the documentation for the constructor functions such as [`IARA.add_demand_unit!`](@ref), [`IARA.add_thermal_unit!`](@ref), and [`IARA.add_hydro_unit!`](@ref), we can see that they all have a parameter called `parameters`.
 
-# These `parameters` are inputed as `DataFrames` and need to have at least one row, which we can call the registry of the element.
+# These `parameters` are inputted as `DataFrames` and need to have at least one row, which we can call the registry of the element.
 # This registry is used to define the initial state of the element, and it can be modified in time by adding more rows to the `parameters` DataFrame.
 
 # In this tutorial we will present a very simple example of how to use modifications parameters.

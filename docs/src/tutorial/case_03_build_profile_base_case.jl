@@ -101,7 +101,7 @@ IARA.link_time_series_to_file(
 
 # ## Asset Owners and Bidding Groups
 
-# For this case, we will be demonstrating de differences of a multi-hour bid offer and an independent bid offer.
+# For this case, we will be demonstrating the differences of a multi-hour bid offer and an independent bid offer.
 # Thus, we will create two Bidding Groups, one for each type of bid, and link them to the same Asset Owner.
 
 # We can add an Asset Owner with the function [`IARA.add_asset_owner!`](@ref).

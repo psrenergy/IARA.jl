@@ -21,8 +21,8 @@ To obtain $J^V(n, \tau)$, a preprocessing step is required, where the inputs are
 
 Lists new or modified parameters, not present in the centralized operation or price taker subproblems.
 
-- ``E^R_{v, n, \tau}(\omega)``: Revenue of vertice $v \in J^V(n, \tau)$.
-- ``E^Q_{v, n, \tau}(\omega)``: Quantity of vertice $v \in J^V(n, \tau)$.
+- ``E^R_{v, n, \tau}(\omega)``: Revenue of vertex $v \in J^V(n, \tau)$.
+- ``E^Q_{v, n, \tau}(\omega)``: Quantity of vertex $v \in J^V(n, \tau)$.
 - ``P_{i, n, \tau}(\omega)``: Price offer of asset owner $i$ on network node $n$ during subperiod $\tau$ and scenario $\omega$.
 - ``Q_{i, n, \tau}(\omega)``: Quantity offer of asset owner $i$ on network node $n$ during subperiod $\tau$ and scenario $\omega$.
 
@@ -30,7 +30,7 @@ Lists new or modified parameters, not present in the centralized operation or pr
 
 Lists new variables, not present in the centralized operation or price taker subproblems.
 
-- ``\lambda_{v, n, \tau}``: Convex combination coefficients for vertice $v \in J^V(n, \tau)$.
+- ``\lambda_{v, n, \tau}``: Convex combination coefficients for vertex $v \in J^V(n, \tau)$.
 
 ## Subproblem Constraints
 

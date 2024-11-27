@@ -103,9 +103,9 @@ IARA.add_gauging_station!(db;
 
 # For this example, we will add a Hydro Unit with the following characteristics
 
-# | **Type**        | **Name**  |        **Owner**        | **Maximum Generation (MW)** |
-# |:--------------:|:----------:|:-----------------------:|:----------------------------:|
-# |   Run of river |  Hydro1   |     Hydro Owner        |              80              |  
+# | **Type**       | **Name**  |        **Owner**        | **Maximum Generation (MW)** |
+# |:--------------:|:---------:|:-----------------------:|:---------------------------:|
+# |   Run of river |  Hydro1   |     Hydro Owner         |             100             |
 
 #md # !!! note "Note"  
 #md #     A Run of river Hydro Unit does not have a reservoir

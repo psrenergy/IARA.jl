@@ -25,9 +25,7 @@
 # ## Creating the case
 
 # We'll start by importing the necessary packages.
-import Pkg #hide
-Pkg.activate("../../..") #hide
-Pkg.instantiate() #hide
+
 using Dates
 using DataFrames
 using IARA

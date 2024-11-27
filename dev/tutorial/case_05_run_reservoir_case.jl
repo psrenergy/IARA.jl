@@ -2,9 +2,6 @@
 
 # > The data for this case is available in the folder [`data/case_5`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_5)
 
-import Pkg #hide
-Pkg.activate("../../..") #hide
-Pkg.instantiate() #hide
 using Dates
 using DataFrames
 using IARA

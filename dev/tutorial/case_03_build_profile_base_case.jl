@@ -26,9 +26,7 @@
 # And for the bids we will set the maximum number of bidding segments and profiles to 1.
 
 # We'll start by importing the necessary packages.
-import Pkg #hide
-Pkg.activate("../../..") #hide
-Pkg.instantiate() #hide
+
 using Dates
 using Quiver
 using DataFrames

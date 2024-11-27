@@ -6,9 +6,7 @@
 # us understand some of the functionalities of the IARA package.
 
 # We'll start by importing the necessary packages.
-import Pkg #hide
-Pkg.activate("../../..") #hide
-Pkg.instantiate() #hide
+
 using Dates
 using DataFrames
 using IARA

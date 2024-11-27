@@ -23,9 +23,7 @@
 # This will make the first unit more competitive and it will start operating again.
 
 # We'll start by importing the necessary packages.
-import Pkg #hide
-Pkg.activate("../../..") #hide
-Pkg.instantiate() #hide
+
 using Dates
 using DataFrames
 using IARA

@@ -7,14 +7,14 @@ This problem is defined at period $t$ and scenario $\omega$ for an asset owner $
 Lists new or modified sets, not present in the centralized operation or price taker subproblems.
 
 - ``I``: Set of asset owners.
-- ``J^V(n, \tau)``: Set of vertices in the convex hull of the hypograph of the asset owner's revenue curve. One curve is defined for each network node $n$ and subperiod $\tau$.
+- ``J^V(n, \tau)``: Set of vertexs in the convex hull of the hypograph of the asset owner's revenue curve. One curve is defined for each network node $n$ and subperiod $\tau$.
 
 ### The revenue curve
 
 To obtain $J^V(n, \tau)$, a preprocessing step is required, where the inputs are:
 
-- The other asset owners' offers $(P_{i, n, \tau}(\omega), Q_{i, n, \tau}(\omega)) \forall j \in I | j \neq i$.
-- The demand $D_{j, \tau, \omega} \forall j \in J^D(n)$.
+- The other asset owners' offers $(P_{j, n, \tau}(\omega), Q_{j, n, \tau}(\omega)) \forall j \in I | j \neq i, \tau \in B(t)$.
+- The demand $D_{j, \tau, \omega} \forall j \in J^D(n), \tau \in B(t)$.
 - The deficit cost $C_\delta$.
 
 ## Parameters
@@ -23,8 +23,8 @@ Lists new or modified parameters, not present in the centralized operation or pr
 
 - ``E^R_{v, n, \tau}(\omega)``: Revenue of vertex $v \in J^V(n, \tau)$.
 - ``E^Q_{v, n, \tau}(\omega)``: Quantity of vertex $v \in J^V(n, \tau)$.
-- ``P_{i, n, \tau}(\omega)``: Price offer of asset owner $i$ on network node $n$ during subperiod $\tau$ and scenario $\omega$.
-- ``Q_{i, n, \tau}(\omega)``: Quantity offer of asset owner $i$ on network node $n$ during subperiod $\tau$ and scenario $\omega$.
+- ``P_{j, n, \tau}(\omega)``: Price offer of asset owner $j$ on network node $n$ during subperiod $\tau$ and scenario $\omega$.
+- ``Q_{j, n, \tau}(\omega)``: Quantity offer of asset owner $j$ on network node $n$ during subperiod $\tau$ and scenario $\omega$.
 
 ## Variables
 
@@ -38,7 +38,7 @@ The following constraints are defined for a subproblem at period $t$ and scenari
 
 ### Revenue Curve: convex hull representation
 
-A configuration parameter named ``aggregate buses for strategic bidding'' is defined to aggregate the other asset owners' offers $(P_{i, n, \tau}(\omega), Q_{i, n, \tau}(\omega))$ and the demand into a single bus to calculate the revenue curve. The equations below are presented for both the aggregated and non-aggregated cases. When the parameter is set to $true$, the following elements lose their bus dimension:
+A configuration parameter named ``aggregate buses for strategic bidding`` is defined to aggregate the other asset owners' offers $(P_{j, n, \tau}(\omega), Q_{j, n, \tau}(\omega))$ and the demand into a single bus to calculate the revenue curve. The equations below are presented for both the aggregated and non-aggregated cases. When the parameter is set to $true$, the following elements lose their bus dimension:
 
 - The parameters $E^R_{v, n, \tau}(\omega)$ and $E^Q_{v, n, \tau}(\omega)$
 - The set $J^V(n, \tau)$
@@ -118,7 +118,7 @@ The remaining constraints are copied from the price taker problem.
 ### Renewable Balance
 
 ```math
-    g^R_{j, \tau} + y^r_{j, \tau} = G^R_{j, \tau}(\omega)
+    g^R_{j, \tau} + z^r_{j, \tau} = G^R_{j, \tau}(\omega)
     \quad \forall j \in J^R_i, \tau \in B(t)
 ```
 
@@ -162,23 +162,23 @@ The remaining constraints are copied from the price taker problem.
 
 ### Thermal Bounds
 ```math
-    0 \leq g^T_{j, \tau} \leq G^T_j, \quad
+    \underline{G}^T_j\cdot d(\tau) \leq g^T_{j, \tau} \leq \overline{G}^T_j\cdot d(\tau), \quad
     \forall j \in J^T_i, \tau \in B(t)
 ```
 
 ### Renewable bounds
 
 ```math
-    0 \leq g^R_{j, \tau} \leq G^R_j, \quad
-    0 \leq y^r_{j, \tau} \leq G^R_j, \quad
-    \forall j \in J^R_i
+    0 \leq g^R_{j, \tau}, \quad
+    0 \leq z^r_{j, \tau}, \quad
+    \forall j \in J^R_i, \tau \in B(t)
 ```
 
 ### Battery Unit bounds
 
 ```math
-    -G^B_j \leq g^B_{j, \tau} \leq G^B_j, \quad
-    0 \leq s^b_{j, \tau} \leq S^B_j, \quad
+    -G^B_j \cdot d(\tau) \leq g^B_{j, \tau} \leq G^B_j \cdot d(\tau), \quad
+    \underline{s}^B_j \leq s^B_{j, \tau} \leq \overline{s}^B_j, \quad
     \forall j \in J^B_i, \tau \in B(t)
 ```
 
@@ -193,7 +193,7 @@ The objective function is similar to the price taker problem, but replaces the e
     \sum_{v \in J^V(n, \tau)}{\lambda_{v, n, \tau} E^R_{v, n, \tau}(\omega)}
     \right)}
     + \sum_{j \in J^T_i}{C^T_j g^T_{j, \tau}}
-    + \sum_{j \in J^R_i}{C^R_j y^r_{j, \tau}}
+    + \sum_{j \in J^R_i}{C^R_j z^r_{j, \tau}}
     \right)}
     }
 ```
@@ -205,7 +205,7 @@ When aggregating buses to calculate the revenue curve, the objective function be
     \sum_{\tau \in B(t)}{\left(
     - \sum_{v \in J^V(\tau)}{\lambda_{v, \tau} E^R_{v, \tau}(\omega)}
     + \sum_{j \in J^T_i}{C^T_j g^T_{j, \tau}}
-    + \sum_{j \in J^R_i}{C^R_j y^r_{j, \tau}}
+    + \sum_{j \in J^R_i}{C^R_j z^r_{j, \tau}}
     \right)}
     }
 ```

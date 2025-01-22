@@ -24,13 +24,11 @@ IARA.add_bidding_group!(db;
     label = "bg_1",
     assetowner_id = "asset_owner_1",
     bid_type = IARA.BiddingGroup_BidType.OPTIMIZE,
-    independent_bid_max_segments = 1,
 )
 IARA.add_bidding_group!(db;
     label = "bg_2",
     assetowner_id = "asset_owner_2",
     bid_type = IARA.BiddingGroup_BidType.OPTIMIZE,
-    independent_bid_max_segments = 1,
 )
 
 IARA.update_hydro_unit_relation!(db, "hyd_1";
@@ -58,7 +56,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     new_inflow;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hyd_1_gauging_station"],
+    labels = ["hyd_1"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",

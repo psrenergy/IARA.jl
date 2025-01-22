@@ -15,7 +15,6 @@ maximum_number_of_bidding_profiles = 2
 IARA.add_bidding_group!(db;
     label = "bg_2",
     assetowner_id = "asset_owner_1",
-    profile_bid_max_profiles = 2,
 )
 
 # ## Plants
@@ -150,9 +149,10 @@ IARA.add_demand_unit!(db;
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",
+    max_demand = max_demand,
 )
 
-demand = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 1 * MW_to_GWh
+demand = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 1 / max_demand
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -161,7 +161,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.write_timeseries_file(
@@ -188,7 +188,7 @@ IARA.link_time_series_to_file(
 
 IARA.update_configuration!(
     db;
-    use_binary_variables = 1,
+    integer_variable_representation_mincost_type = 0,
 )
 
 minimum_activation_level_profile =

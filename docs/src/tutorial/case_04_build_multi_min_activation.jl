@@ -10,16 +10,16 @@ using DataFrames
 using IARA
 ; #hide
 
-# In this tutorial, we will start with the [Case 3](build_profile_base_case.md) elements and create a case with a minimum activation level for a Bidding Group.
+# In this tutorial, we will start with the [Case 3](case_03_build_profile_base_case.md) elements and create a case with a minimum activation level for a Bidding Group.
 
 # ## Original Case Recap
 
-# In the original case we had two Bidding Groups, one with a multi-hour bid and the other with an independent bid.
-# Running the `MARKET_CLEARING` mode, we analyzed the effect of the multi-hour bid in the market.
+# In the original case we had two Bidding Groups, one with a profile bid and the other with an independent bid.
+# Running the `MARKET_CLEARING` mode, we analyzed the effect of the profile bid in the market.
 
 # ### Changes for this tutorial
 
-# In this tutorial, we will add a minimum activation level for the Bidding Group with the multi-hour bid.
+# In this tutorial, we will add a minimum activation level for the Bidding Group with the profile bid.
 
 # ## Loading case
 
@@ -46,7 +46,7 @@ db = IARA.load_study(PATH_MIN_ACTIVATION; read_only = false);
 
 # ## Minimum Activation Level Time series
 
-# In the [`data/case_4`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_4) folder, we have a time series files for the minimum activation level for the Bidding Group with the multi-hour bid.
+# In the [`data/case_4`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_4) folder, we have a time series files for the minimum activation level for the Bidding Group with the profile bid.
 # Let's take a quick look at the file and load it into the database.
 
 IARA.time_series_dataframe(

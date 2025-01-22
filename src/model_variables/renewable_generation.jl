@@ -24,7 +24,8 @@ function renewable_generation!(
     existing_renewables = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
 
     # Time series
-    renewable_generation_series = time_series_renewable_generation(inputs)
+    subscenario = 1 # placeholder as time-series data is replaced in SubproblemUpdate functions
+    renewable_generation_series = time_series_renewable_generation(inputs, run_time_options; subscenario)
 
     # Variables
     @variable(
@@ -71,9 +72,9 @@ function renewable_generation!(
         ),
     )
 
-    # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
-    if run_mode(inputs) == IARA.RunMode.MARKET_CLEARING
-        model.obj_exp += renewable_total_om_cost / 1e3
+    # Generation costs are used as a penalty in the clearing problem
+    if is_market_clearing(inputs)
+        model.obj_exp += renewable_total_om_cost * market_clearing_tiebreaker_weight(inputs)
     else
         model.obj_exp += renewable_total_om_cost
     end
@@ -100,7 +101,7 @@ function renewable_generation!(
     renewable_generation_scenario = get_model_object(model, :renewable_generation_scenario)
 
     # Time Series
-    renewable_generation_series = time_series_renewable_generation(inputs, run_time_options, subscenario)
+    renewable_generation_series = time_series_renewable_generation(inputs, run_time_options; subscenario)
 
     for b in subperiods(inputs), r in existing_renewables
         MOI.set(

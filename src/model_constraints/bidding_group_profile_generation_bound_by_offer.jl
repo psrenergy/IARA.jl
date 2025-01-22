@@ -28,7 +28,7 @@ function bidding_group_profile_generation_bound_by_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     # Define the bidding groups
-    profile_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    bidding_groups = index_of_elements(inputs, BiddingGroup)
     blks = subperiods(inputs)
 
     # Model variables
@@ -38,13 +38,15 @@ function bidding_group_profile_generation_bound_by_offer!(
     # Model parameters
     bidding_group_quantity_offer_profile = get_model_object(model, :bidding_group_quantity_offer_profile)
 
+    valid_profiles = get_maximum_valid_profiles(inputs)
+
     # Model constraints
     @constraint(
         model.jump_model,
         bidding_group_profile_generation_bound_by_offer_profile[
             blk in blks,
-            bg in profile_bidding_groups,
-            prf in 1:maximum_profiles(inputs, bg),
+            bg in bidding_groups,
+            prf in 1:valid_profiles[bg],
             bus in buses,
         ],
         bidding_group_generation_profile[blk, bg, prf, bus] ==

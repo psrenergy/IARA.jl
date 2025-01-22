@@ -26,7 +26,7 @@ Collection representing the virtual reservoir.
     waveguide_points::Vector{Matrix{Float64}} = []
     water_to_energy_factors::Vector{Vector{Float64}} = []
     order_to_spill_excess_of_inflow::Vector{Vector{Int}} = []
-    maximum_number_of_virtual_reservoir_bidding_segments::Int = 0
+    _maximum_number_of_virtual_reservoir_bidding_segments::Vector{Int} = Int[]
 end
 
 """
@@ -186,7 +186,8 @@ IARA.add_virtual_reservoir!(db;
 ```
 """
 function add_virtual_reservoir!(db::DatabaseSQLite; kwargs...)
-    PSRI.create_element!(db, "VirtualReservoir"; kwargs...)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    PSRI.create_element!(db, "VirtualReservoir"; sql_typed_kwargs...)
     return nothing
 end
 
@@ -205,7 +206,8 @@ function update_virtual_reservoir!(
     label::String;
     kwargs...,
 )
-    for (attribute, value) in kwargs
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
             db,
             "VirtualReservoir",
@@ -242,8 +244,13 @@ end
 Return the maximum number of virtual reservoir bidding segments.
 """
 maximum_number_of_virtual_reservoir_bidding_segments(inputs::AbstractInputs) =
-    if run_mode(inputs) == RunMode.MARKET_CLEARING && generate_heuristic_bids_for_clearing(inputs)
-        inputs.collections.virtual_reservoir.maximum_number_of_virtual_reservoir_bidding_segments
-    else
-        inputs.collections.configurations.number_of_virtual_reservoir_bidding_segments
-    end
+    maximum(inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments; init = 0)
+
+"""
+    get_maximum_valid_virtual_reservoir_segments(inputs::AbstractInputs)
+
+    Return the maximum number of valid virtual reservoir segments.
+"""
+function get_maximum_valid_virtual_reservoir_segments(inputs::AbstractInputs)
+    return inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments
+end

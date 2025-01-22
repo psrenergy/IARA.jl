@@ -27,6 +27,8 @@ tutorial_dir = joinpath(@__DIR__, "src", "tutorial")
 # List of each tutorial file
 tutorial_files = [
     "first_execution.jl",
+    "case_building.jl",
+    "clearing_executions.jl",
     "case_01_build_base_case.jl",
     "case_01_run_base_case.jl",
     "case_02_build_hydrounit_base_case.jl",
@@ -67,20 +69,19 @@ pages = [
     "About IARA" => "index.md",
     "Getting started" => [
         "My first execution" => "tutorial/first_execution.md",
+        "Editing physical data" => "tutorial/case_building.md",
+        "Editing clearing options" => "tutorial/clearing_executions.md",
     ],
     "Conceptual overview" => [
         "Key features of IARA" => "key_features.md",
-        "The market clearing structure" => "clearing_process.md",
+        "The market clearing structure" => "clearing_procedure.md",
         "Hydro reservoirs, cascades and virtual reservoirs" => "hydro_challenges.md",
         "Formulations" => [
             "Conceptual formulations" => "conceptual_formulation.md",
             "Centralized operation problem" => "centralized_operation_problem.md",
             "Price taker problem" => "price_taker_problem.md",
             "Strategic bid problem" => "strategic_bid_problem.md",
-            "Market clearing problem" => [
-                "market_clearing_problem.md",
-                "clearing_procedure.md",
-            ],
+            "Market clearing problem" => "market_clearing_problem.md",
         ],
     ],
     "Use guides and tutorials" => [
@@ -115,8 +116,9 @@ makedocs(;
     doctest = false,
     clean = true,
     format = Documenter.HTML(;
+        assets = ["assets/favicon.ico"],
         mathengine = Documenter.MathJax2(),
-        prettyurls = true,
+        prettyurls = false,
         edit_link = nothing,
         footer = nothing,
         disable_git = true,
@@ -130,8 +132,9 @@ makedocs(;
     ),
     sitename = "IARA.jl",
     authors = "psrenergy",
-    warnonly = true,
+    warnonly = false,
     pages = pages,
+    remotes = nothing,
 )
 
 # Remove the tutorial files from the docs
@@ -141,7 +144,7 @@ for file in readdir(tutorial_dir)
     end
 end
 
-deploydocs(;
-    repo = "github.com/psrenergy/IARA.jl.git",
-    push_preview = true,
-)
+# deploydocs(;
+#     repo = "github.com/psrenergy/IARA.jl.git",
+#     push_preview = true,
+# )

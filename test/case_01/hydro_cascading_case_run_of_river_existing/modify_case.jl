@@ -51,7 +51,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     new_inflow;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hyd_1_gauging_station", "hyd_2_gauging_station"],
+    labels = ["hyd_1", "hyd_2"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",

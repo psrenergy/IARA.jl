@@ -22,7 +22,7 @@ function virtual_reservoir_generation!(
     ::Type{SubproblemBuild},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    number_of_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
     # Time series
     placeholder_scenario = 1
@@ -37,7 +37,7 @@ function virtual_reservoir_generation!(
         virtual_reservoir_quantity_offer[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:number_of_segments,
+            seg in 1:valid_segments[vr],
         ]
         in
         MOI.Parameter(virtual_reservoir_quantity_offer_series[vr, ao, seg])
@@ -47,7 +47,7 @@ function virtual_reservoir_generation!(
         virtual_reservoir_price_offer[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:number_of_segments,
+            seg in 1:valid_segments[vr],
         ]
         in
         MOI.Parameter(virtual_reservoir_price_offer_series[vr, ao, seg])
@@ -59,7 +59,7 @@ function virtual_reservoir_generation!(
         virtual_reservoir_generation[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:number_of_segments,
+            seg in 1:valid_segments[vr],
         ],
         lower_bound = 0.0,
     ) # MWh
@@ -70,7 +70,7 @@ function virtual_reservoir_generation!(
         accepted_virtual_reservoir_offers_cost[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:number_of_segments,
+            seg in 1:valid_segments[vr],
         ],
         virtual_reservoir_generation[vr, ao, seg] * virtual_reservoir_price_offer[vr, ao, seg],
     )
@@ -94,7 +94,7 @@ function virtual_reservoir_generation!(
     ::Type{SubproblemUpdate},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    number_of_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
     # Model parameters
     virtual_reservoir_quantity_offer = get_model_object(model, :virtual_reservoir_quantity_offer)
@@ -105,7 +105,7 @@ function virtual_reservoir_generation!(
         time_series_virtual_reservoir_quantity_offer(inputs, model.period, scenario)
     virtual_reservoir_price_offer_series = time_series_virtual_reservoir_price_offer(inputs, model.period, scenario)
 
-    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:number_of_segments
+    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:valid_segments[vr]
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -180,7 +180,7 @@ function virtual_reservoir_generation!(
         output_varies_per_subperiod = false,
     )
 
-    output = outputs.outputs["virtual_reservoir_generation"*run_time_file_suffixes(run_time_options)]
+    output = outputs.outputs["virtual_reservoir_generation"*run_time_file_suffixes(inputs, run_time_options)]
     if is_ex_post_problem(run_time_options)
         for bid_segment in 1:number_of_segments
             Quiver.write!(

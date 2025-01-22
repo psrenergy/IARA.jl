@@ -60,7 +60,8 @@ IARA.add_zone!(db; label = "Island Zone")
 ```
 """
 function add_zone!(db::DatabaseSQLite; kwargs...)
-    PSRI.create_element!(db, "Zone"; kwargs...)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    PSRI.create_element!(db, "Zone"; sql_typed_kwargs...)
     return nothing
 end
 
@@ -74,7 +75,8 @@ function update_zone!(
     label::String;
     kwargs...,
 )
-    for (attribute, value) in kwargs
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
             db,
             "Zone",

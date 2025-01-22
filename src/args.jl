@@ -11,19 +11,30 @@
 mutable struct Args
     path::String
     outputs_path::String
+    delete_output_folder_before_execution::Bool
     run_mode::RunMode.T
     write_lp::Bool
     plot_outputs::Bool
+    # period is only used in the SINGLE_PERIOD_MARKET_CLEARING run mode
+    # its value should be -1 in all other cases
+    period::Int
 end
 
 function Args(args::Vector{String})
     parsed_args = parse_commandline(args)
+    run_mode = parse_run_mode(parsed_args["run-mode"])
+    period = parsed_args["period"]::Int
+    if run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING && period <= 0
+        error("The period argument must be greater than zero.")
+    end
     return Args(
         parsed_args["path"],
         parsed_args["output-path"],
-        parse_run_mode(parsed_args["run-mode"]),
+        parsed_args["delete-output-folder-before-execution"],
+        run_mode,
         parsed_args["write-lp"],
         parsed_args["plot-results"],
+        period,
     )
 end
 
@@ -31,15 +42,19 @@ function Args(
     path::String,
     run_mode::RunMode.T;
     output_path::String = joinpath(path, "outputs"),
+    delete_output_folder_before_execution::Bool = false,
     write_lp::Bool = false,
     plot_outputs::Bool = true,
+    period::Int = -1,
 )
     return Args(
         path,
         output_path,
+        delete_output_folder_before_execution,
         run_mode,
         write_lp,
         plot_outputs,
+        period,
     )
 end
 
@@ -70,10 +85,14 @@ function parse_commandline(args)
         help = "path to the case inputs"
         arg_type = String
         default = pwd()
-        "--output-path", "-o"
+        "--output-path"
         help = "path to the output directory"
         arg_type = String
         default = ""
+        "--delete-output-folder-before-execution"
+        help = "delete the output folder before execution"
+        arg_type = Bool
+        default = false
         "--run-mode"
         help = "run mode"
         arg_type = String
@@ -81,10 +100,14 @@ function parse_commandline(args)
         "--write-lp"
         help = "write subproblems to LP files"
         action = :store_true
-        "--plot-results", "-o"
+        "--plot-results"
         help = "plot results"
         arg_type = Bool
         default = true
+        "--period"
+        help = "period for SINGLE_PERIOD_MARKET_CLEARING run mode"
+        arg_type = Int
+        default = -1
     end
     #! format: on
     # dump args into dict

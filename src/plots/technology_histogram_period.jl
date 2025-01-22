@@ -16,13 +16,13 @@ Type for plotting a histogram where the observations are the total of generation
 abstract type PlotTechnologyHistogramPeriod <: PlotType end
 
 """
-    plot_data(::Type{PlotTechnologyHistogramPeriod}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, kwargs...)
+    plot_data(::Type{PlotTechnologyHistogramPeriod}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, kwargs...)
 
 Create a histogram plot for the total of generation for a technology at period i, considering all scenarios and subperiods.
 """
 function plot_data(
     ::Type{PlotTechnologyHistogramPeriod},
-    data::Array{Float32, N},
+    data::Array{<:AbstractFloat, N},
     agent_names::Vector{String},
     dimensions::Vector{String};
     title::String = "",
@@ -36,9 +36,9 @@ function plot_data(
     num_scenarios = size(data, 3)
     num_subperiods = size(data, 2)
 
-    data_to_plot = Vector{Vector{Float64}}()
+    data_to_plot = Vector{Vector{AbstractFloat}}()
     for period in 1:num_periods
-        data_for_period = Vector{Float64}()
+        data_for_period = Vector{AbstractFloat}()
         for scenario in 1:num_scenarios
             for subperiod in 1:num_subperiods
                 push!(data_for_period, sum(data[:, subperiod, scenario, period]))

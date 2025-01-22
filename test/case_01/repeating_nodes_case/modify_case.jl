@@ -11,7 +11,7 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_DISTRIBUTED_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT,
     expected_number_of_repeats_per_node = [2 for _ in 1:number_of_periods],
 )
 

@@ -32,7 +32,6 @@ cycle_discount_rate = 1 / (expected_repeats - 1)
 ; #hide
 
 ## Let's define a few conversion factors that we will use later.
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 m3_per_second_to_hm3_per_hour = 3600.0 / 1e6
 ; #hide
 
@@ -47,6 +46,9 @@ db = IARA.create_study!(PATH_CASE;
     cycle_discount_rate = cycle_discount_rate,
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     demand_deficit_cost = 3000.0,
+    cycle_duration_in_hours = 48.0,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 );
 
 # ## Zone and Bus
@@ -63,6 +65,7 @@ IARA.add_demand_unit!(db;
         existing = [1],
     ),
     bus_id = "Bus1",
+    max_demand = 3.6,
 )
 
 # ## Physical Elements
@@ -146,13 +149,13 @@ IARA.time_series_dataframe(joinpath(PATH_CASE, "inflow.csv"))
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demands",
+    demand_ex_ante = "demands",
 )
 
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow",
+    inflow_ex_ante = "inflow",
 )
 ;
 

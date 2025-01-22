@@ -27,10 +27,13 @@ db = IARA.create_study!(PATH;
     number_of_nodes = number_of_periods,
     initial_date_time = "2020-01-01T00:00:00",
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
     cycle_discount_rate = 0.09,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 2000.0,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 
 # =====================================================
@@ -454,6 +457,23 @@ end
 
 # Demand
 # --------------------
+# Data
+# Monthly demand in MW
+se_monthly_demand = [63.215, 64.738, 65.464, 64.485, 63.364, 63.008, 63.162, 64.096, 64.356, 64.654, 63.938, 62.825]
+s_monthly_demand = [16.239, 16.574, 16.674, 15.942, 15.479, 15.481, 15.354, 15.349, 15.162, 15.299, 15.494, 15.690]
+ne_monthly_demand = [15.015, 14.838, 14.899, 14.707, 14.429, 14.068, 14.107, 14.406, 14.826, 15.186, 15.283, 15.158]
+n_monthly_demand = [9.038, 9.117, 9.036, 9.106, 9.229, 9.262, 9.204, 9.406, 9.504, 9.465, 9.543, 9.307]
+im_monthly_demand = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+monthly_demands = [se_monthly_demand, s_monthly_demand, ne_monthly_demand, n_monthly_demand, im_monthly_demand]
+max_demand = maximum(se_monthly_demand)
+# Build the demand matrix
+demand = zeros(number_of_buses, number_of_subperiods, number_of_scenarios, number_of_periods)
+for period in 1:number_of_periods
+    for bus in 1:number_of_buses
+        demand[bus, :, :, period] .= monthly_demands[bus][period] / max_demand
+    end
+end
+
 # One demand per bus, named after the bus
 for (bus_idx, label) in enumerate(bus_labels)
     IARA.add_demand_unit!(db;
@@ -468,6 +488,7 @@ for (bus_idx, label) in enumerate(bus_labels)
         curtailment_cost = 0.0,
         max_curtailment = 0.0,
         bus_id = bus_idx,
+        max_demand = max_demand,
     )
 end
 
@@ -4565,7 +4586,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hyd_$(bus_labels[h])_gauging_station" for h in 1:number_of_hydro_units],
+    labels = ["hyd_$(bus_labels[h])" for h in 1:number_of_hydro_units],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
@@ -4574,26 +4595,12 @@ IARA.write_timeseries_file(
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow",
+    inflow_ex_ante = "inflow",
 )
 
 # Demand
 # --------------------
-# Data
-# Monthly demand in MW
-se_monthly_demand = [63.215, 64.738, 65.464, 64.485, 63.364, 63.008, 63.162, 64.096, 64.356, 64.654, 63.938, 62.825]
-s_monthly_demand = [16.239, 16.574, 16.674, 15.942, 15.479, 15.481, 15.354, 15.349, 15.162, 15.299, 15.494, 15.690]
-ne_monthly_demand = [15.015, 14.838, 14.899, 14.707, 14.429, 14.068, 14.107, 14.406, 14.826, 15.186, 15.283, 15.158]
-n_monthly_demand = [9.038, 9.117, 9.036, 9.106, 9.229, 9.262, 9.204, 9.406, 9.504, 9.465, 9.543, 9.307]
-im_monthly_demand = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-monthly_demands = [se_monthly_demand, s_monthly_demand, ne_monthly_demand, n_monthly_demand, im_monthly_demand]
-# Build the demand matrix
-demand = zeros(number_of_buses, number_of_subperiods, number_of_scenarios, number_of_periods)
-for period in 1:number_of_periods
-    for bus in 1:number_of_buses
-        demand[bus, :, :, period] .= monthly_demands[bus][period]
-    end
-end
+
 # Write to file
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
@@ -4603,12 +4610,12 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 IARA.close_study!(db)

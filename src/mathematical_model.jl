@@ -114,7 +114,7 @@ function model_action(args...)
         price_taker_bid_model_action(args...)
     elseif run_mode(inputs) == RunMode.STRATEGIC_BID
         strategic_bid_model_action(args...)
-    elseif run_mode(inputs) == RunMode.MARKET_CLEARING
+    elseif is_market_clearing(inputs)
         market_clearing_model_action(args...)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
@@ -397,16 +397,16 @@ function market_clearing_model_action(args...)
     action = locate_action_in_args(args...)
     run_time_options = locate_run_time_options_in_args(args...)
 
-    if clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.HYBRID
+    if construction_type(inputs, run_time_options) == Configurations_ConstructionType.HYBRID
         hybrid_market_clearing_model_action(args...)
-    elseif clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.COST_BASED
+    elseif construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
         cost_based_market_clearing_model_action(args...)
-    elseif clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.BID_BASED
+    elseif construction_type(inputs, run_time_options) == Configurations_ConstructionType.BID_BASED
         bid_based_market_clearing_model_action(args...)
-    elseif clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.SKIP
+    elseif construction_type(inputs, run_time_options) == Configurations_ConstructionType.SKIP
         nothing
     else
-        error("Clearing model type $(clearing_model_type(inputs)) not implemented")
+        error("Clearing model type $(construction_type(inputs)) not implemented")
     end
 
     return nothing
@@ -473,20 +473,20 @@ function hybrid_market_clearing_model_action(args...)
         battery_unit_storage!(args...)
     end
 
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action)
+    if has_any_simple_bids(inputs)
         bidding_group_generation!(args...)
     end
 
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
+    if has_any_profile_bids(inputs)
         bidding_group_profile_energy_offer!(args...)
-        if has_any_profile_complex_input_files(inputs)
+        if has_any_profile_complex_bids(inputs)
             profile_min_activation_level!(args...)
         end
     end
 
     # Model constraints
     # -----------------
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action)
+    if has_any_simple_bids(inputs)
         bidding_group_generation_bound_by_offer!(args...)
     end
 
@@ -502,9 +502,9 @@ function hybrid_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, Branch, action; filters = [is_ac])
         kirchhoffs_voltage_law!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
+    if has_any_profile_bids(inputs)
         bidding_group_profile_generation_bound_by_offer!(args...)
-        if has_any_profile_complex_input_files(inputs)
+        if has_any_profile_complex_bids(inputs)
             bidding_group_profile_complementary_profile!(args...)
             bidding_group_profile_minimum_activation!(args...)
             bidding_group_profile_precedence!(args...)
@@ -536,10 +536,11 @@ function hybrid_market_clearing_model_action(args...)
             )
                 hydro_minimum_outflow!(args...)
             end
-            if reservoirs_physical_virtual_correspondence_type(inputs) ==
-               Configurations_ReservoirsPhysicalVirtualCorrespondenceType.BY_VOLUME
+            if virtual_reservoir_correspondence_type(inputs) ==
+               Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
                 virtual_reservoir_correspondence_by_volume!(args...)
-            else
+            elseif virtual_reservoir_correspondence_type(inputs) ==
+                   Configurations_VirtualReservoirCorrespondenceType.DELTA_CORRESPONDENCE_CONSTRAINT
                 virtual_reservoir_correspondence_by_generation!(args...)
             end
             virtual_reservoir_generation_bounds!(args...)
@@ -680,7 +681,7 @@ function bid_based_market_clearing_model_action(args...)
 
     # Model variables
     # ---------------
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action)
+    if has_any_simple_bids(inputs)
         bidding_group_generation!(args...)
     end
 
@@ -702,16 +703,16 @@ function bid_based_market_clearing_model_action(args...)
             bus_voltage_angle!(args...)
         end
     end
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
+    if has_any_profile_bids(inputs)
         bidding_group_profile_energy_offer!(args...)
-        if has_any_profile_complex_input_files(inputs)
+        if has_any_profile_complex_bids(inputs)
             profile_min_activation_level!(args...)
         end
     end
 
     # Model constraints
     # -----------------
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action)
+    if has_any_simple_bids(inputs)
         bidding_group_generation_bound_by_offer!(args...)
     end
 
@@ -727,9 +728,9 @@ function bid_based_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, Branch, action; filters = [is_ac])
         kirchhoffs_voltage_law!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, BiddingGroup, action; filters = [has_profile_bids])
+    if has_any_profile_bids(inputs)
         bidding_group_profile_generation_bound_by_offer!(args...)
-        if has_any_profile_complex_input_files(inputs)
+        if has_any_profile_complex_bids(inputs)
             bidding_group_profile_complementary_profile!(args...)
             bidding_group_profile_minimum_activation!(args...)
             bidding_group_profile_precedence!(args...)

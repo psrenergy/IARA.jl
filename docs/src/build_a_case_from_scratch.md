@@ -1,6 +1,6 @@
 # Introduction: Building a case from scratch
 
-The best way to learn is by doing - we ecourage you to explore the tutorial for the [construction of a simple case](tutorial/build_base_case.md). This page explains conceptually the step by step process that is followed in each of these examples in order to build each of the [key components](key_features.md#iara's-physical-system-data) of a IARA database, which should be applicable to any type of case.
+The best way to learn is by doing - we encourage you to explore the tutorial for the [construction of a simple case](tutorial/case_01_build_base_case.md). This page explains conceptually the step by step process that is followed in each of these examples in order to build each of the [key components](key_features.md#iara's-physical-system-data) of a IARA database, which should be applicable to any type of case.
 
 ## Building the temporal structure
 
@@ -8,10 +8,10 @@ Given that [intertemporality is a key component](hydro_challenges.md) of realist
 
 Policy graph parameters are usually passed directly when calling the `create_study!` function, with the following key parameters being related to policy graph construction. Please refer to [IARA's standard nomenclature](key_features.md#glossary) for further explanations on the jargon used (e.g. subperiods, seasons, cycles, etc.):
 
-- `number_of_subperiods` is an integer that indicates how many subperiods are included when simulating each period, using. Note that a "period" represents a block of decisions made at once (e.g. looking at an entire day, week, month, etc.) and a "subperiod" corresponds to subdivisions within that period for simulation and optimization purposes (e.g. broken down into days, hourly intervals, 15-minute intervals, etc.)
+- `number_of_subperiods` is an integer that indicates how many subperiods are included when simulating each period. Note that a "period" represents a block of decisions made at once (e.g. looking at an entire day, week, month, etc.) and a "subperiod" corresponds to subdivisions within that period for simulation and optimization purposes (e.g. broken down into days, hourly intervals, 15-minute intervals, etc.)
 - `subperiod_duration_in_hours` is a vector that indicates the length of each subperiod - therefore, the length of this vector corresponds to the number of subperiods represented. The duration of each "representative subproblem" will be equal to the sum of the elements in the `subperiod_duration_in_hours`. Each season's representative subproblem will have the same duration.
 - `expected_number_of_repeats_per_node` is a vector that indicates, for each season, how many times the "representative subproblem" is expected to repeat in order to constitute the total length of the season. This must be a number greater than or equal to one (but can be fractional), and the expected duration of the season as a whole is equal to the product of all three parameters: the `subperiod_duration_in_hours`, the  `number_of_subperiods`, and the `expected_number_of_repeats_per_node`.
-- `cycle_duration_in_hours` is a real number that can be used either to validate the total duration of the cycle (calculated from adding up the expected duration as a whole of each season as described above) or to introduce an adjustment multiplier. Note that in the cycle represents one year, this parameter should always be equal to 8760 hours, but it is useful to have the flexibility to change this definition.
+- `cycle_duration_in_hours` is a real number that can be used either to validate the total duration of the cycle (calculated from adding up the expected duration as a whole of each season as described above) or to introduce an adjustment multiplier. Note that if the cycle represents one year, this parameter should always be equal to 8760 hours, but it is useful to have the flexibility to change this definition.
 - `cycle_discount_rate` is a real number that describes how much future periods are discounted relative to the present, expressed as a discrete one-time discount after the entire duration of a cycle (which is a common way to express this parameter in economic applications). In practice, IARA will distribute this yearly discount rate as a discount that is applied after each season's representative subproblem (based on the corresponding duration), in such a way that the cumulative effect over the course of a period with length equal to `cycle_duration_in_hours` is equivalent to applying the `cycle_discount_rate`.
 - `policy_graph_type` is an enumeration parameter that allows for different [policy graph representation paradigms](intro_policy_graph.md). IARA's default representation is a "cyclic" policy graph.
 
@@ -19,7 +19,7 @@ When calling the `create_study!` function, it is also possible to define additio
 
 - `number_of_periods` represents how many subproblems (representative of each season) will be modeled sequentially in the execution
 - `number_of_scenarios` represents how many subproblems (representative of each season) will be modeled in parallel (i.e. representing independent trajectories) in the execution
-- `number_of_subscenarios` represents how many "openings" of each trajectory (represented by the "scenarios") will be modeled, with an impact on the [structure of subproblems to be modeled](clearing_process.md)
+- `number_of_subscenarios` represents how many "openings" of each trajectory (represented by the "scenarios") will be modeled, with an impact on the [structure of subproblems to be modeled](clearing_procedure.md)
 
 Note that the output of the `create_study!` function is a database object, `db`. In all subsequent steps for creating the database, the `db` object is the first parameter that ought to be passed for most functions (marked by a `!` as the last character of the function signature).
 

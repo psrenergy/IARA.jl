@@ -8,35 +8,40 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-"""
-    main(args::Vector{String})
+const COMPILED = Ref{Bool}(false)
 
-Main function to run the IARA application.
-"""
-function main(args::Vector{String})
-    print_banner()
-
-    # Parse commandline arguments
-    args = Args(args)
-
-    return main(args)
+function is_compiled()::Bool
+    return COMPILED[]
 end
 
 function main(args::Args)
-
-    # Initialize dlls and other possible defaults
     initialize(args)
 
     inputs = load_inputs(args)
 
     try
-        validate(inputs)
         run_algorithms(inputs)
         post_processing(inputs)
     finally
         clean_up(inputs)
     end
     return nothing
+end
+
+function main(args::Vector{String})
+    print_banner()
+    args = Args(args)
+    return main(args)
+end
+
+function julia_main()::Cint
+    COMPILED[] = true
+    try
+        main(ARGS)
+    catch
+        return 1
+    end
+    return 0
 end
 
 # entry points for the different run modes
@@ -110,6 +115,26 @@ function min_cost(path::String; kwargs...)
 end
 
 """
+    single_period_market_clearing(path::String; kwargs...)
+
+Run the model with the single period market clearing strategy.
+"""
+function single_period_market_clearing(path::String; kwargs...)
+    args = Args(path, RunMode.SINGLE_PERIOD_MARKET_CLEARING; kwargs...)
+    return main(args)
+end
+
+"""
+    single_period_heuristic_bid(path::String; kwargs...)
+
+Generate heuristic bids for a single period.
+"""
+function single_period_heuristic_bid(path::String; kwargs...)
+    args = Args(path, RunMode.SINGLE_PERIOD_HEURISTIC_BID; kwargs...)
+    return main(args)
+end
+
+"""
     run_algorithms(inputs)
 
 Run the algorithms according to the run mode.
@@ -136,6 +161,10 @@ function run_algorithms(inputs)
     elseif run_mode(inputs) == RunMode.MIN_COST
         run_time_options = RunTimeOptions()
         load_cuts_and_run_simulation(inputs, run_time_options)
+    elseif run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+        simulate_all_scenarios_of_single_period_market_clearing(inputs)
+    elseif run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+        single_period_heuristic_bid(inputs)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
     end
@@ -240,6 +269,17 @@ Simulate all periods and scenarios of the market clearing.
 function simulate_all_periods_and_scenarios_of_market_clearing(
     inputs::Inputs,
 )
+    # Update the number of offer segments for the heuristic bids
+    if generate_heuristic_bids_for_clearing(inputs)
+        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+
+        number_of_profiles, number_of_complementary_grouping_profiles =
+            maximum_number_of_profiles_for_heuristic_bids(inputs)
+        update_number_of_bid_profiles!(inputs, number_of_profiles)
+        update_number_of_complementary_grouping!(inputs, number_of_complementary_grouping_profiles)
+    end
+
     # Initialize the outputs
     heuristic_bids_outputs,
     ex_ante_physical_outputs,
@@ -261,13 +301,24 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                     # Update the time series in the external files to the current period and scenario
                     update_time_series_views_from_external_files!(inputs; period, scenario)
                     if any_elements(inputs, BiddingGroup)
-                        markup_offers_for_period_scenario(
-                            inputs,
-                            heuristic_bids_outputs,
-                            run_time_options,
-                            period,
-                            scenario,
-                        )
+                        if has_any_simple_bids(inputs)
+                            markup_offers_for_period_scenario(
+                                inputs,
+                                heuristic_bids_outputs,
+                                run_time_options,
+                                period,
+                                scenario,
+                            )
+                        end
+                        if has_any_profile_bids(inputs)
+                            markup_offers_profile_for_period_scenario(
+                                inputs,
+                                heuristic_bids_outputs,
+                                run_time_options,
+                                period,
+                                scenario,
+                            )
+                        end
                     end
                     if clearing_hydro_representation(inputs) ==
                        Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
@@ -283,20 +334,103 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             end
 
             # Clearing problems
-            run_time_options = RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_ANTE_PHYSICAL)
+            run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
             run_clearing_simulation(inputs, ex_ante_physical_outputs, run_time_options, period)
 
             run_time_options =
-                RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_ANTE_COMMERCIAL)
+                RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
             run_clearing_simulation(inputs, ex_ante_commercial_outputs, run_time_options, period)
 
-            run_time_options = RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_POST_PHYSICAL)
+            run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
             run_clearing_simulation(inputs, ex_post_physical_outputs, run_time_options, period)
 
             run_time_options =
-                RunTimeOptions(; clearing_model_procedure = RunTime_ClearingProcedure.EX_POST_COMMERCIAL)
+                RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
             run_clearing_simulation(inputs, ex_post_commercial_outputs, run_time_options, period)
         end
+    finally
+        finalize_clearing_outputs!(
+            heuristic_bids_outputs,
+            ex_ante_physical_outputs,
+            ex_ante_commercial_outputs,
+            ex_post_physical_outputs,
+            ex_post_commercial_outputs,
+        )
+    end
+
+    return nothing
+end
+
+"""
+    simulate_all_scenarios_of_single_period_market_clearing(inputs::Inputs)
+
+Simulate all periods and scenarios of the market clearing.
+"""
+function simulate_all_scenarios_of_single_period_market_clearing(
+    inputs::Inputs,
+)
+    # Update the number of offer segments for the heuristic bids
+    if generate_heuristic_bids_for_clearing(inputs)
+        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+    end
+
+    # Initialize the outputs
+    heuristic_bids_outputs,
+    ex_ante_physical_outputs,
+    ex_ante_commercial_outputs,
+    ex_post_physical_outputs,
+    ex_post_commercial_outputs =
+        build_clearing_outputs(inputs)
+
+    try
+        period = inputs.args.period
+        Log.info("Running clearing for period: $period")
+        # Update the time series in the database to the current period
+        update_time_series_from_db!(inputs, period)
+
+        # Heuristic bids
+        if generate_heuristic_bids_for_clearing(inputs)
+            run_time_options = RunTimeOptions()
+            for scenario in 1:number_of_scenarios(inputs)
+                # Update the time series in the external files to the current period and scenario
+                update_time_series_views_from_external_files!(inputs; period, scenario)
+                if any_elements(inputs, BiddingGroup)
+                    markup_offers_for_period_scenario(
+                        inputs,
+                        heuristic_bids_outputs,
+                        run_time_options,
+                        period,
+                        scenario,
+                    )
+                end
+                if clearing_hydro_representation(inputs) ==
+                   Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                    virtual_reservoir_markup_offers_for_period_scenario(
+                        inputs,
+                        heuristic_bids_outputs,
+                        run_time_options,
+                        period,
+                        scenario,
+                    )
+                end
+            end
+        end
+
+        # Clearing problems
+        run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+        run_clearing_simulation(inputs, ex_ante_physical_outputs, run_time_options, period)
+
+        run_time_options =
+            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+        run_clearing_simulation(inputs, ex_ante_commercial_outputs, run_time_options, period)
+
+        run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+        run_clearing_simulation(inputs, ex_post_physical_outputs, run_time_options, period)
+
+        run_time_options =
+            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+        run_clearing_simulation(inputs, ex_post_commercial_outputs, run_time_options, period)
     finally
         finalize_clearing_outputs!(
             heuristic_bids_outputs,
@@ -326,11 +460,11 @@ function run_clearing_simulation(
     run_time_options::RunTimeOptions,
     period::Int,
 )
-    if skip_clearing_procedure(inputs, run_time_options)
+    if skip_clearing_subproblem(inputs, run_time_options)
         return nothing
     end
 
-    Log.info("   Running simulation $(run_time_options.clearing_model_procedure)")
+    Log.info("   Running simulation $(run_time_options.clearing_model_subproblem)")
     model = build_model(inputs, run_time_options; current_period = period)
 
     if use_fcf_in_clearing(inputs)
@@ -355,7 +489,7 @@ function run_clearing_simulation(
                 )
 
             if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-               run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
+               run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
                 post_process_virtual_reservoirs!(
                     inputs,
                     run_time_options,
@@ -389,6 +523,73 @@ function run_clearing_simulation(
                 )
             end
         end
+    end
+
+    return nothing
+end
+
+"""
+    single_period_heuristic_bid(inputs::Inputs)
+
+Generate heuristic bids for a single period.
+"""
+function single_period_heuristic_bid(
+    inputs::Inputs,
+)
+    run_time_options = RunTimeOptions()
+
+    # Update the number of offer segments for the heuristic bids
+    maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
+    update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+
+    # Initialize the outputs
+    heuristic_bids_outputs = Outputs()
+    if any_elements(inputs, BiddingGroup)
+        initialize_heuristic_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
+    end
+    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        initialize_virtual_reservoir_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
+    end
+
+    try
+        period = inputs.args.period
+        Log.info("Building heuristic bids for period: $period")
+        # Update the time series in the database to the current period
+        update_time_series_from_db!(inputs, period)
+
+        # Heuristic bids
+        for scenario in 1:number_of_scenarios(inputs)
+            # Update the time series in the external files to the current period and scenario
+            update_time_series_views_from_external_files!(inputs; period, scenario)
+            if any_elements(inputs, BiddingGroup)
+                markup_offers_for_period_scenario(
+                    inputs,
+                    heuristic_bids_outputs,
+                    run_time_options,
+                    period,
+                    scenario,
+                )
+            end
+            if clearing_hydro_representation(inputs) ==
+               Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                virtual_reservoir_markup_offers_for_period_scenario(
+                    inputs,
+                    heuristic_bids_outputs,
+                    run_time_options,
+                    period,
+                    scenario,
+                )
+            end
+        end
+    finally
+        finalize_outputs!(heuristic_bids_outputs)
+    end
+
+    if any_elements(inputs, BiddingGroup)
+        generate_individual_bids_files(inputs)
+    end
+    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        generate_individual_virtual_reservoir_bids_files(inputs)
     end
 
     return nothing

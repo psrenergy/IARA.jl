@@ -77,11 +77,13 @@ db = IARA.create_study!(PATH_BASE_CASE;
     number_of_scenarios = number_of_scenarios,
     number_of_subperiods = number_of_subperiods,
     subperiod_duration_in_hours = subperiod_duration_in_hours,
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
     number_of_nodes = number_of_periods,
     cycle_discount_rate = cycle_discount_rate,
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 3000.0,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 );
 
 # ## Spatial Units
@@ -151,15 +153,12 @@ IARA.add_asset_owner!(
 
 # We can add a Bidding Group to the database using the method [`IARA.add_bidding_group!`](@ref).
 
-# In the `independent_bid_max_segments` we need to set the maximum number of segments that the Bidding Group can have. For this case, we will set it to the number of units that each owner has.
-
 IARA.add_bidding_group!(
     db;
     label = "Thermal Owner",
     assetowner_id = "Thermal Owner",
     risk_factor = [0.5],
     segment_fraction = [1.0],
-    independent_bid_max_segments = 2, # number of units
 )
 IARA.add_bidding_group!(
     db;
@@ -167,7 +166,6 @@ IARA.add_bidding_group!(
     assetowner_id = "Price Taker",
     risk_factor = [0.5],
     segment_fraction = [1.0],
-    independent_bid_max_segments = 5, # number of units
 )
 
 # ## Physical Elements
@@ -190,6 +188,7 @@ IARA.add_demand_unit!(db;
         existing = [1],
     ),
     bus_id = "Island",
+    max_demand = 1.8,
 )
 
 IARA.add_demand_unit!(db;
@@ -199,6 +198,7 @@ IARA.add_demand_unit!(db;
         existing = [1],
     ),
     bus_id = "Island",
+    max_demand = 0.72,
 )
 
 IARA.add_demand_unit!(db;
@@ -208,6 +208,7 @@ IARA.add_demand_unit!(db;
         existing = [1],
     ),
     bus_id = "Island",
+    max_demand = 0.36,
 )
 
 # ### Generation Units
@@ -215,14 +216,14 @@ IARA.add_demand_unit!(db;
 # Our case will have a mix of renewable and thermal units. In the table below, we can see some characteristics of each unit.
 
 # | **Technology** | **Name** |        **Owner**        | **Maximum Generation (MW)** | **Cost (\$/MWh)** |
-# |:--------------:|:--------:|:-----------------------:|:----------------------------:|:----------------:|
-# |    Renewable   |  Solar1  |     Price Taker         |              80              |                  |
-# |     Thermal    | Thermal1 |     Thermal Owner       |              20              |         10       |
-# |     Thermal    | Thermal2 |     Price Taker         |              20              |         30       |
-# |     Thermal    | Thermal3 |     Thermal Owner       |              20              |        100       |
-# |     Thermal    | Thermal4 |     Price Taker         |              20              |        300       |
-# |     Thermal    | Thermal5 |     Price Taker         |              50              |        1000      |
-# |     Thermal    | Thermal6 |     Price Taker         |              50              |        3000      |
+# |:--------------:|:--------:|:-----------------------:|:---------------------------:|:-----------------:|
+# |    Renewable   |  Solar1  |     Price Taker         |              80             |                   |
+# |     Thermal    | Thermal1 |     Thermal Owner       |              20             |         10        |
+# |     Thermal    | Thermal2 |     Price Taker         |              20             |         30        |
+# |     Thermal    | Thermal3 |     Thermal Owner       |              20             |        100        |
+# |     Thermal    | Thermal4 |     Price Taker         |              20             |        300        |
+# |     Thermal    | Thermal5 |     Price Taker         |              50             |        1000       |
+# |     Thermal    | Thermal6 |     Price Taker         |              50             |        3000       |
 
 # ### Renewable Units
 
@@ -352,13 +353,13 @@ IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "solar_generation.csv"))
 IARA.link_time_series_to_file(
     db,
     "RenewableUnit";
-    generation = "solar_generation",
+    generation_ex_ante = "solar_generation",
 )
 
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demands",
+    demand_ex_ante = "demands",
 )
 
 # ## Closing the database

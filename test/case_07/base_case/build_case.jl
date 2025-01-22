@@ -20,7 +20,6 @@ maximum_number_of_bidding_segments = 1
 subperiod_duration_in_hours = 1000.0 / number_of_subperiods
 
 # Conversion factors
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 m3_per_second_to_hm3_per_hour = 3600.0 / 1e6
 
 # Create the database
@@ -37,14 +36,16 @@ db = IARA.create_study!(PATH;
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
     hydro_minimum_outflow_violation_cost = 600.0,
-    number_of_virtual_reservoir_bidding_segments = maximum_number_of_bidding_segments,
     clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
-    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
-    reservoirs_physical_virtual_correspondence_type = IARA.Configurations_ReservoirsPhysicalVirtualCorrespondenceType.BY_GENERATION,
+    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    virtual_reservoir_correspondence_type = IARA.Configurations_VirtualReservoirCorrespondenceType.DELTA_CORRESPONDENCE_CONSTRAINT,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 
 # Add collection elements
@@ -110,6 +111,13 @@ IARA.add_virtual_reservoir!(db;
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 
+demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods)
+demand[1, :, 1, :] .= 150.0
+demand[1, :, 2, :] .= 200.0
+max_demand = 200.0
+demand ./= max_demand
+demand .*= (1000 / subperiod_duration_in_hours)
+
 IARA.add_demand_unit!(db;
     label = "dem_1",
     parameters = DataFrame(;
@@ -117,11 +125,9 @@ IARA.add_demand_unit!(db;
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_1",
+    max_demand = max_demand,
 )
 
-demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods)
-demand[1, :, 1, :] .= 150.0
-demand[1, :, 2, :] .= 200.0
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -130,13 +136,13 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 inflow = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
@@ -144,7 +150,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hydro_1_gauging_station", "hydro_2_gauging_station"],
+    labels = ["hydro_1", "hydro_2"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020",
@@ -154,7 +160,7 @@ IARA.write_timeseries_file(
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow",
+    inflow_ex_ante = "inflow",
 )
 
 # Write hydro timeseries that usually come from a TRAIN_MIN_COST run.

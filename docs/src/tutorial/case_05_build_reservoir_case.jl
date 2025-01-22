@@ -36,14 +36,12 @@ using IARA
 number_of_periods = 3
 number_of_scenarios = 1
 number_of_subperiods = 4
-maximum_number_of_bidding_segments = 1
 subperiod_duration_in_hours = 1000.0 / number_of_subperiods
 cycle_duration_in_hours =
     subperiod_duration_in_hours * number_of_subperiods * number_of_periods
 ; #hide
 
 # Let's define a few conversion factors that we will use later.
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 m3_per_second_to_hm3_per_hour = 3600.0 / 1e6
 ; #hide
 
@@ -64,9 +62,10 @@ db = IARA.create_study!(PATH_CASE;
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 500.0,
     hydro_minimum_outflow_violation_cost = 600.0,
-    number_of_virtual_reservoir_bidding_segments = maximum_number_of_bidding_segments,
     clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
-    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
+    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 ; #hide
 
@@ -161,6 +160,7 @@ IARA.add_demand_unit!(db;
         existing = [1],
     ),
     bus_id = "bus_1",
+    max_demand = 5.0,
 )
 
 # ## Time Series
@@ -181,7 +181,7 @@ IARA.time_series_dataframe(
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 # To simplify our case, we are setting the inflow to zero, so we are only working with the initial volume of the first Hydro Unit.
@@ -195,7 +195,7 @@ IARA.time_series_dataframe(
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow",
+    inflow_ex_ante = "inflow",
 )
 
 # ## Closing the study

@@ -66,7 +66,7 @@ function revenue_convex_combination!(
                 bidding_group_energy_offer[blk, bg, bds, bus] for
                 bus in buses,
                 bg in bidding_groups,
-                bds in 1:maximum_bid_segments(inputs, bg)
+                bds in bid_segments
             ),
         )
     else
@@ -85,7 +85,7 @@ function revenue_convex_combination!(
             sum(
                 bidding_group_energy_offer[blk, bg, bds, bus] for
                 bg in bidding_groups,
-                bds in 1:maximum_bid_segments(inputs, bg)
+                bds in bid_segments
             ),
         )
     end

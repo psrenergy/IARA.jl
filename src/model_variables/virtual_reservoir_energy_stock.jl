@@ -52,7 +52,7 @@ function virtual_reservoir_energy_stock!(
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
     hydro_units = index_of_elements(inputs, HydroUnit)
-    inflow_series = time_series_inflow(inputs, run_time_options, subscenario)
+    inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
     inflow_as_volume = [
         sum(
             inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *

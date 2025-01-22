@@ -9,7 +9,7 @@ using IARA
 
 # ## Case recap
 
-# In the [previous section](case_03_build_profile_base_case.md), we have built a case containing two Bidding Groups, where one of them has a multi-hour bid.
+# In the [previous section](case_03_build_profile_base_case.md), we have built a case containing two Bidding Groups, where one of them has a profile bid.
 # Now we will run this case using the `MARKET_CLEARING` mode.
 
 # Let's create a folder to store the output of the `MARKET_CLEARING` mode and define the path to the original case.
@@ -30,10 +30,10 @@ db = IARA.load_study(PATH_EXECUTION; read_only = false)
 
 IARA.update_configuration!(
     db;
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
 )
 
 IARA.close_study!(db)
@@ -41,7 +41,10 @@ IARA.close_study!(db)
 
 # Now we are able to run the case with [`IARA.market_clearing`](@ref).
 
-IARA.market_clearing(PATH_EXECUTION)
+IARA.market_clearing(
+    PATH_EXECUTION;
+    delete_output_folder_before_execution = true,
+)
 
 # ### Analyzing the results
 

@@ -35,6 +35,7 @@ function initialize_time_series_view_from_external_file(
     inputs,
     file_path::AbstractString;
     expected_unit::String = "",
+    possible_expected_dimensions::Vector{Vector{Symbol}} = Vector{Vector{Symbol}}(),
     labels_to_read::Vector{String} = String[],
 ) where {T, N}
     num_errors = 0
@@ -81,6 +82,24 @@ function initialize_time_series_view_from_external_file(
     end
 
     ts.dimensions = ts.reader.metadata.dimensions
+    # Validate if the dimensions are as expected
+    if !isempty(possible_expected_dimensions)
+        # Iterate through all possible dimensions and check if the time series
+        # is defined in one of them.
+        dimension_is_valid = false
+        for possible_dimensions in possible_expected_dimensions
+            if ts.dimensions == possible_dimensions
+                dimension_is_valid = true
+                break
+            end
+        end
+        if !dimension_is_valid
+            @error(
+                "Time series file $(file_path) has dimensions $(ts.dimensions). This is different from the possible dimensions of this file $possible_expected_dimensions.",
+            )
+            num_errors += 1
+        end
+    end
 
     # Allocate the array of correct size based on the dimension sizes of extra dimensions
     dimension_names = reverse(ts.reader.metadata.dimensions)

@@ -24,29 +24,37 @@ function demand!(
     demands = index_of_elements(inputs, DemandUnit; filters = [is_existing])
 
     # Time series
-    demand_series = time_series_demand(inputs)
+    subscenario = 1 # placeholder as time-series data is replaced in SubproblemUpdate functions
+    demand_ts = time_series_demand(inputs, run_time_options; subscenario)
 
     # Variables
     @variable(
         model.jump_model,
-        deficit[b in subperiods(inputs), d in demands],
+        deficit[blk in subperiods(inputs), d in demands],
         lower_bound = 0.0,
     ) # MWh
 
     # Parameters
     @variable(
         model.jump_model,
-        demand[b in subperiods(inputs), d in demands]
+        demand[blk in subperiods(inputs), d in demands]
         in
-        MOI.Parameter(demand_series[d, b])
+        MOI.Parameter(
+            demand_mw_to_gwh(
+                inputs,
+                demand_ts[d, blk],
+                d,
+                blk,
+            ),
+        )
     ) # GWh
 
     model.obj_exp = @expression(
         model.jump_model,
         model.obj_exp +
         money_to_thousand_money() * sum(
-            deficit[b, d] * demand_deficit_cost(inputs)
-            for b in subperiods(inputs), d in demands
+            deficit[blk, d] * demand_deficit_cost(inputs)
+            for blk in subperiods(inputs), d in demands
         ),
     )
 
@@ -72,14 +80,19 @@ function demand!(
     demand = get_model_object(model, :demand)
 
     # Time series
-    demand_series = time_series_demand(inputs, run_time_options, subscenario)
+    demand_ts = time_series_demand(inputs, run_time_options; subscenario)
 
-    for b in subperiods(inputs), d in demands
+    for blk in subperiods(inputs), d in demands
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            demand[b, d],
-            demand_series[d, b],
+            demand[blk, d],
+            demand_mw_to_gwh(
+                inputs,
+                demand_ts[d, blk],
+                d,
+                blk,
+            ),
         )
     end
 

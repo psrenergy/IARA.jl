@@ -70,5 +70,6 @@ test/*/*/*.toml
 test/*/*/parp/*.toml
 test/*/*/parp/*.csv
 docs/src/tutorial/*.md
+test_iara_interface_call
 
 temp_repo_mirror/

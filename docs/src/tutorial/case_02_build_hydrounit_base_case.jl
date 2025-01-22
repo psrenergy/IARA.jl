@@ -7,7 +7,7 @@ using DataFrames
 using IARA
 ; #hide
 
-# In this tutorial we will start with the [Case 1](build_base_case.md) elements and build a run of river Hydro Unit.
+# In this tutorial we will start with the [Case 1](case_01_build_base_case.md) elements and build a run of river Hydro Unit.
 # This Hydro Unit will be linked to a new Bidding Group `Hydro Owner Group`, which belongs to the `Hydro Owner` owner.
 
 # Before we start, let's recap some information about the original case.
@@ -64,6 +64,7 @@ db = IARA.load_study(PATH_HYDRO; read_only = false);
 IARA.update_configuration!(
     db;
     number_of_scenarios = 12,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 ; #hide
 
@@ -86,7 +87,6 @@ IARA.add_bidding_group!(
     assetowner_id = "Hydro Owner",
     risk_factor = [0.2],
     segment_fraction = [1.0],
-    independent_bid_max_segments = 1, # number of units
 )
 
 # ## Physical Elements
@@ -166,19 +166,19 @@ IARA.time_series_dataframe(joinpath(PATH_HYDRO, "inflow.csv"))
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demands",
+    demand_ex_ante = "demands",
 )
 
 IARA.link_time_series_to_file(
     db,
     "RenewableUnit";
-    generation = "solar_generation",
+    generation_ex_ante = "solar_generation",
 )
 
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow",
+    inflow_ex_ante = "inflow",
 )
 
 # ## Closing the database

@@ -17,7 +17,7 @@ abstract type PlotTimeSeriesAll <: PlotType end
 
 function merge_scenario_agent(
     ::Type{PlotTimeSeriesAll},
-    data::Array{Float64, 3},
+    data::Array{<:AbstractFloat, 3},
     agent_names::Vector{String},
     scenario_names::Union{Vector{String}, Nothing} = nothing;
     kwargs...,
@@ -28,7 +28,7 @@ function merge_scenario_agent(
 
     queried_scenarios = get(kwargs, :scenario, nothing)
 
-    reshaped_data = Array{Float64, 2}(undef, num_scenarios * num_agents, num_periods)
+    reshaped_data = Array{AbstractFloat, 2}(undef, num_scenarios * num_agents, num_periods)
     modified_names = Vector{String}(undef, num_scenarios * num_agents)
     i = 1
     for agent in 1:num_agents
@@ -48,7 +48,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesAll},
-    data::Array{Float32, 3},
+    data::Array{<:AbstractFloat, 3},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -59,16 +59,16 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesAll},
-    data::Array{Float32, 4},
+    data::Array{<:AbstractFloat, 4},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
 )
-    if !("subperiod" in dimensions) && ("bid_segment" in dimensions)
+    if !("subperiod" in dimensions) && (("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
         time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
-    elseif ("subperiod" in dimensions) && !("bid_segment" in dimensions)
+    elseif ("subperiod" in dimensions) && !(("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series = merge_period_subperiod(data)
         time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
@@ -81,7 +81,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesAll},
-    data::Array{Float32, 5},
+    data::Array{<:AbstractFloat, 5},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -91,7 +91,7 @@ function reshape_time_series!(
         time_series = merge_period_subperiod(time_series)
         time_series, agent_names = merge_scenario_agent(PlotTimeSeriesAll, time_series, agent_names; kwargs...)
         return time_series, agent_names
-    elseif !("bid_segment" in dimensions)
+    elseif !(("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series = merge_period_subperiod(data)
         time_series, modified_scenario_names = merge_scenario_subscenario(time_series, agent_names; kwargs...)
         time_series, modified_agent_names =
@@ -112,7 +112,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesAll},
-    data::Array{Float32, 6},
+    data::Array{<:AbstractFloat, 6},
     agent_names::Vector{String},
     dimensions::Vector{String},
     kwargs...,
@@ -126,20 +126,20 @@ function reshape_time_series!(
 end
 
 """
-    plot_data(::Type{PlotTimeSeriesAll}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, period_type::Configurations_PeriodType.T, kwargs...)
+    plot_data(::Type{PlotTimeSeriesAll}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, time_series_step::Configurations_TimeSeriesStep.T, kwargs...)
 
 Create a time series plot with all scenarios.
 """
 function plot_data(
     ::Type{PlotTimeSeriesAll},
-    data::Array{Float32, N},
+    data::Array{<:AbstractFloat, N},
     agent_names::Vector{String},
     dimensions::Vector{String};
     title::String = "",
     unit::String = "",
     file_path::String,
     initial_date::DateTime,
-    period_type::Configurations_PeriodType.T,
+    time_series_step::Configurations_TimeSeriesStep.T,
     kwargs...,
 ) where {N}
     traces, trace_names = reshape_time_series!(PlotTimeSeriesAll, data, agent_names, dimensions; kwargs...)
@@ -147,7 +147,8 @@ function plot_data(
     number_of_traces = size(traces, 1)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type; kwargs...)
+    plot_ticks, hover_ticks =
+        _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; kwargs...)
 
     plot_type = ifelse(number_of_periods == 1, "bar", "line")
 

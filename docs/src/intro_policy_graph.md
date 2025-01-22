@@ -1,6 +1,6 @@
 # Introduction: Policy graph
 
-The best way to learn is by doing - we ecourage you to explore the tutorial for [building](tutorial/build_policy_graph.md) and [running](tutorial/run_policy_graph.md) a database with a more complex policy graph structure.
+The best way to learn is by doing - we ecourage you to explore the tutorial for [building](tutorial/case_06_build_policy_graph.md) and [running](tutorial/case_06_run_policy_graph.md) a database with a more complex policy graph structure.
 
 ## The temporal structure and a visual representation of cyclicality
 

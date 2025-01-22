@@ -11,7 +11,7 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    use_binary_variables = IARA.Configurations_BinaryVariableUsage.USE,
+    integer_variable_representation_mincost_type = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
 )
 
 IARA.add_thermal_unit!(db;
@@ -50,7 +50,7 @@ IARA.add_thermal_unit!(db;
     bus_id = "bus_1",
 )
 
-demand[:, 1, end, :] .+= 5.0 * MW_to_GWh
+demand[:, 1, end, :] .+= 5.0 / max_demand
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -59,7 +59,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 inflow[:, :, 3, end] .+= 0.5
@@ -67,7 +67,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hyd_1_gauging_station"],
+    labels = ["hyd_1"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",

@@ -15,7 +15,7 @@ Builds a graph based on the inputs.
 """
 function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothing)
     # For the market clearing problem type, we simulate each period individually
-    if run_mode(inputs) == RunMode.MARKET_CLEARING
+    if is_market_clearing(inputs)
         if isnothing(current_period)
             error("current_period must be provided for the MARKET_CLEARING run mode")
         end
@@ -42,9 +42,9 @@ function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothi
     prob_repeat = node_repetition_probability(inputs)
 
     # Edges from root
-    if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT
+    if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT
         SDDP.add_edge(graph, 0 => 1, 1.0)
-    elseif policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_DISTRIBUTED_ROOT
+    elseif policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT
         for node in nodes(inputs)
             SDDP.add_edge(graph, 0 => node, 1.0 / number_of_nodes(inputs))
         end

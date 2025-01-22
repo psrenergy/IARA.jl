@@ -127,7 +127,8 @@ IARA.add_dc_line!(db;
 ```
 """
 function add_dc_line!(db::DatabaseSQLite; kwargs...)
-    PSRI.create_element!(db, "DCLine"; kwargs...)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    PSRI.create_element!(db, "DCLine"; sql_typed_kwargs...)
     return nothing
 end
 
@@ -141,7 +142,8 @@ function update_dc_line!(
     label::String;
     kwargs...,
 )
-    for (attribute, value) in kwargs
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
             db,
             "DCLine",

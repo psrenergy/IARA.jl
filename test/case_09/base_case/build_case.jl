@@ -24,15 +24,18 @@ db = IARA.create_study!(PATH;
     number_of_nodes = 2,
     expected_number_of_repeats_per_node = [3, 3],
     subperiod_duration_in_hours = [8.0, 8.0, 8.0],
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
     cycle_discount_rate = 0.25,
     cycle_duration_in_hours = 144.0,
     demand_deficit_cost = 100000.0,
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.SKIP,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.SKIP,
-    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.COST_BASED,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.SKIP,
-    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.COST_BASED,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
+    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
 );
 
 try
@@ -107,7 +110,7 @@ try
             max_generation = [10.0],
             max_turbining = [80.0],
             min_volume = [0.0],
-            max_volume = [0.0],
+            max_volume = [20.0],
             om_cost = [0.0],
         ),
         initial_volume = 0.0,
@@ -174,7 +177,7 @@ try
             "bg" => "SelfproducerA_01",
             "bus" => "Eastern",
             "cap" => 25.0,
-            "price" => 30.0,
+            "price" => 50.0,
         ),
         Dict(
             "name" => "Thermal 3",
@@ -188,21 +191,21 @@ try
             "bg" => "PortfolioA_01",
             "bus" => "Eastern",
             "cap" => 25.0,
-            "price" => 300.0,
+            "price" => 200.0,
         ),
         Dict(
             "name" => "Thermal 5",
-            "bg" => "ThermalA_01",
-            "bus" => "Eastern",
+            "bg" => "PricetakerA_01",
+            "bus" => "Western",
             "cap" => 50.0,
-            "price" => 1000.0,
+            "price" => 300.0,
         ),
         Dict(
             "name" => "Thermal 6",
-            "bg" => "ThermalA_01",
-            "bus" => "Eastern",
+            "bg" => "PricetakerA_01",
+            "bus" => "Western",
             "cap" => 50.0,
-            "price" => 3000.0,
+            "price" => 500.0,
         ),
     ]
 
@@ -216,6 +219,7 @@ try
             label = d["name"],
             parameters = aux,
             bus_id = d["bus"],
+            max_demand = d["cap"],
         )
     end
 
@@ -241,7 +245,7 @@ try
 
     r_labels = ["Solar"]
     d_labels = ["Demand 1", "Demand 2", "Demand 3"]
-    h_labels = ["Hydro Upstream_gauging_station", "Hydro Downstream_gauging_station"]
+    h_labels = ["Hydro Upstream", "Hydro Downstream"]
 
     n_agents_r = size(r_labels, 1)
     n_agents_d = size(d_labels, 1)
@@ -258,7 +262,6 @@ try
     ex_post_r = zeros(n_agents_r, number_of_subperiods, number_of_subscenarios, 1, number_of_periods)
     ex_post_d = zeros(n_agents_d, number_of_subperiods, number_of_subscenarios, 1, number_of_periods)
 
-    d_gwh_multiplier = 0.008
     r_pu_multiplier = 1 / 80.0
     h_exante_summer = [140.0, 60.0, 10.0]
 
@@ -275,10 +278,10 @@ try
     aux = Dict("h_winter" => 10.0, "d2" => 32.0, "d3" => 15.0)
 
     ex_ante_h[2, :, :, :] .= 0.0
-    ex_ante_d[2, :, :, :] .= aux["d2"] * d_gwh_multiplier
-    ex_ante_d[3, :, :, :] .= aux["d3"] * d_gwh_multiplier
-    ex_post_d[2, :, :, :, :] .= aux["d2"] * d_gwh_multiplier
-    ex_post_d[3, :, :, :, :] .= aux["d3"] * d_gwh_multiplier
+    ex_ante_d[2, :, :, :] .= aux["d2"] / demands[2]["cap"]
+    ex_ante_d[3, :, :, :] .= aux["d3"] / demands[3]["cap"]
+    ex_post_d[2, :, :, :, :] .= aux["d2"] / demands[2]["cap"]
+    ex_post_d[3, :, :, :, :] .= aux["d3"] / demands[3]["cap"]
 
     is_summer = [true, false, false, false, true, true]
 
@@ -287,11 +290,11 @@ try
         for i_stage in 1:number_of_periods
             if is_summer[i_stage]
                 ex_ante_r[1, :, 1, i_stage] = r_exante_summer[:] * r_pu_multiplier
-                ex_ante_d[1, :, 1, i_stage] = d_exante_summer[:] * d_gwh_multiplier
+                ex_ante_d[1, :, 1, i_stage] = d_exante_summer[:] / demands[1]["cap"]
                 ex_ante_h[1, :, i_h, i_stage] = [h_exante_summer[i_h] for i in 1:number_of_subperiods]
             else
                 ex_ante_r[1, :, 1, i_stage] = r_exante_winter[:] * r_pu_multiplier
-                ex_ante_d[1, :, 1, i_stage] = d_exante_winter[:] * d_gwh_multiplier
+                ex_ante_d[1, :, 1, i_stage] = d_exante_winter[:] / demands[1]["cap"]
                 ex_ante_h[1, :, i_h, i_stage] = [aux["h_winter"] for i in 1:number_of_subperiods]
             end
         end
@@ -306,10 +309,12 @@ try
                 for i_stage in 1:number_of_periods
                     if is_summer[i_stage]
                         ex_post_r[1, :, i_subscenario, 1, i_stage] = r_expost_summer[i_r, :] * r_pu_multiplier
-                        ex_post_d[1, :, i_subscenario, 1, i_stage] = d_expost_summer[i_d, :] * d_gwh_multiplier
+                        ex_post_d[1, :, i_subscenario, 1, i_stage] =
+                            d_expost_summer[i_d, :] / demands[1]["cap"]
                     else
                         ex_post_r[1, :, i_subscenario, 1, i_stage] = r_expost_winter[i_r, :] * r_pu_multiplier
-                        ex_post_d[1, :, i_subscenario, 1, i_stage] = d_expost_winter[i_d, :] * d_gwh_multiplier
+                        ex_post_d[1, :, i_subscenario, 1, i_stage] =
+                            d_expost_winter[i_d, :] / demands[1]["cap"]
                     end
                 end
             end
@@ -335,7 +340,7 @@ try
         time_dimension = "period",
         dimension_size = [number_of_periods, 1, number_of_subperiods], #NOTE: renewable and demand don't vary per scenario, only per subscenario
         initial_date = "2020-01-01T00:00:00",
-        unit = "GWh",
+        unit = "p.u.",
     )
 
     IARA.write_timeseries_file(
@@ -368,25 +373,27 @@ try
         time_dimension = "period",
         dimension_size = [number_of_periods, 1, number_of_subscenarios, number_of_subperiods], #NOTE: renewable and demand don't vary per scenario, only per subscenario
         initial_date = "2020-01-01T00:00:00",
-        unit = "GWh",
+        unit = "p.u.",
     )
 
     IARA.link_time_series_to_file(
         db,
         "RenewableUnit";
-        generation = "r",
+        generation_ex_ante = "r_ex_ante",
+        generation_ex_post = "r_ex_post",
     )
 
     IARA.link_time_series_to_file(
         db,
         "DemandUnit";
-        demand = "d",
+        demand_ex_ante = "d_ex_ante",
+        demand_ex_post = "d_ex_post",
     )
 
     IARA.link_time_series_to_file(
         db,
         "HydroUnit";
-        inflow = "h",
+        inflow_ex_ante = "h",
     )
 
 finally

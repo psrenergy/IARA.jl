@@ -23,49 +23,49 @@ Abstract type for a plot type.
 abstract type RelationPlotType <: PlotType end
 
 """
-    plot_data(::Type{<:PlotType}, data::Array{Float64, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
+    plot_data(::Type{<:PlotType}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
 
 Plot the data for a specific plot type.
 """
 function plot_data end
 
 """
-    merge_scenario_agent(::Type{<:PlotType}, data::Array{Float64, N}, agent_names::Vector{String}, scenario_names::Union{Vector{String}, Nothing}; kwargs...) where {N}
+    merge_scenario_agent(::Type{<:PlotType}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, scenario_names::Union{Vector{String}, Nothing}; kwargs...) where {N}
 
 Reduce the dimension of the data array by merging the scenario and agent dimensions.
 """
 function merge_scenario_agent end
 
 """
-    merge_period_subperiod(data::Array{T, N}) where {T <: Real, N}
+    merge_period_subperiod(data::Array{T, N}) where {T <: AbstractFloat, N}
 
 Reduce the dimension of the data array by merging the period and subperiod dimensions.
 """
 function merge_period_subperiod end
 
 """
-    merge_segment_agent(data::Array{Float32, N}, agent_names::Vector{String}; kwargs...) where {N}
+    merge_segment_agent(data::Array{<:AbstractFloat, N}, agent_names::Vector{String}; kwargs...) where {N}
 
 Reduce the dimension of the data array by merging the segment and agent dimensions.
 """
 function merge_segment_agent end
 
 """
-    merge_scenario_subscenario_agent(data::Array{Float32, N}, agent_names::Vector{String}; kwargs...) where {N}
+    merge_scenario_subscenario_agent(data::Array{<:AbstractFloat, N}, agent_names::Vector{String}; kwargs...) where {N}
 
 Reduce the dimension of the data array by merging the scenario, subscenario, and agent dimensions.
 """
 function merge_scenario_subscenario_agent end
 
 """
-    merge_scenario_subscenario(data::Array{Float32, N}, agent_names::Vector{String}; kwargs...) where {N}
+    merge_scenario_subscenario(data::Array{<:AbstractFloat, N}, agent_names::Vector{String}; kwargs...) where {N}
 
 Reduce the dimension of the data array by merging the scenario and subscenario dimensions.
 """
 function merge_scenario_subscenario end
 
 """
-    reshape_time_series!(::Type{<:PlotType}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
+    reshape_time_series!(::Type{<:PlotType}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
 
 Reduce the dimension of the data array by merging the dimensions, according to the plot type.
 """
@@ -81,7 +81,7 @@ mutable struct PlotConfig
     filename::String
     plot_types::Array{DataType, 1}
     initial_date_time::DateTime
-    period_type::Configurations_PeriodType.T
+    time_series_step::Configurations_TimeSeriesStep.T
 end
 
 function PlotConfig(
@@ -90,7 +90,7 @@ function PlotConfig(
     plot_types::Array{DataType, 1},
     inputs::Inputs,
 )
-    return PlotConfig(title, filename, plot_types, initial_date_time(inputs), period_type(inputs))
+    return PlotConfig(title, filename, plot_types, initial_date_time(inputs), time_series_step(inputs))
 end
 
 _save_plot(plot_reference, file) = PlotlyLight.save(plot_reference, file)
@@ -131,10 +131,10 @@ function _get_plot_color(index::Int; transparent::Bool = false)
 end
 
 function _get_plot_ticks(
-    data::Array{Float64, 2},
+    data::Array{<:AbstractFloat, 2},
     num_periods::Int,
     initial_date_time::DateTime,
-    period_type::Configurations_PeriodType.T;
+    time_series_step::Configurations_TimeSeriesStep.T;
     kwargs...,
 )
     queried_subperiods = get(kwargs, :subperiod, nothing)
@@ -147,7 +147,7 @@ function _get_plot_ticks(
     plot_ticks = Vector{String}()
     hover_ticks = Vector{String}()
 
-    if period_type == Configurations_PeriodType.MONTHLY
+    if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         if num_subperiods == 0
             for i in 0:num_periods-1
                 push!(plot_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
@@ -177,18 +177,18 @@ function _get_plot_ticks(
             return plot_ticks, hover_ticks
         end
     else
-        error("Period type not implemented.")
+        error("Time series step not implemented.")
     end
 end
 
-function merge_period_subperiod(data::Array{T, 4}) where {T <: Real}
+function merge_period_subperiod(data::Array{<:AbstractFloat, 4})
     num_periods = size(data, 4)
     num_scenarios = size(data, 3)
     num_subperiods = size(data, 2)
     num_agents = size(data, 1)
 
     reshaped_data =
-        Array{Float64, 3}(undef, num_agents, num_scenarios, num_periods * num_subperiods)
+        Array{AbstractFloat, 3}(undef, num_agents, num_scenarios, num_periods * num_subperiods)
     i = 1
     for period in 1:num_periods
         for subperiod in 1:num_subperiods
@@ -200,7 +200,7 @@ function merge_period_subperiod(data::Array{T, 4}) where {T <: Real}
     return reshaped_data
 end
 
-function merge_period_subperiod(data::Array{T, 5}) where {T <: Real}
+function merge_period_subperiod(data::Array{<:AbstractFloat, 5})
     num_periods = size(data, 5)
     num_scenarios = size(data, 4)
     num_subscenarios = size(data, 3)
@@ -208,7 +208,7 @@ function merge_period_subperiod(data::Array{T, 5}) where {T <: Real}
     num_agents = size(data, 1)
 
     reshaped_data =
-        Array{Float64, 4}(undef, num_agents, num_subscenarios, num_scenarios, num_periods * num_subperiods)
+        Array{AbstractFloat, 4}(undef, num_agents, num_subscenarios, num_scenarios, num_periods * num_subperiods)
     i = 1
     for period in 1:num_periods
         for subperiod in 1:num_subperiods
@@ -220,7 +220,7 @@ function merge_period_subperiod(data::Array{T, 5}) where {T <: Real}
     return reshaped_data
 end
 
-function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String}; kwargs...)
+function merge_segment_agent(data::Array{<:AbstractFloat, 4}, agent_names::Vector{String}; kwargs...)
     num_segments = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
@@ -228,7 +228,7 @@ function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String
 
     queried_segments = get(kwargs, :segment, nothing)
 
-    reshaped_data = Array{Float64, 3}(undef, num_agents * num_segments, num_scenarios, num_periods)
+    reshaped_data = Array{AbstractFloat, 3}(undef, num_agents * num_segments, num_scenarios, num_periods)
     modified_names = Vector{String}(undef, num_agents * num_segments)
 
     for period in 1:num_periods
@@ -248,7 +248,7 @@ function merge_segment_agent(data::Array{Float32, 4}, agent_names::Vector{String
     return reshaped_data, modified_names
 end
 
-function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String}; kwargs...)
+function merge_segment_agent(data::Array{<:AbstractFloat, 5}, agent_names::Vector{String}; kwargs...)
     num_segments = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 4)
@@ -257,7 +257,8 @@ function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String
 
     queried_segments = get(kwargs, :segment, nothing)
 
-    reshaped_data = Array{Float64, 4}(undef, num_agents * num_segments, num_subperiods, num_scenarios, num_periods)
+    reshaped_data =
+        Array{AbstractFloat, 4}(undef, num_agents * num_segments, num_subperiods, num_scenarios, num_periods)
     modified_names = Vector{String}(undef, num_agents * num_segments)
 
     for period in 1:num_periods
@@ -279,7 +280,7 @@ function merge_segment_agent(data::Array{Float32, 5}, agent_names::Vector{String
     return reshaped_data, modified_names
 end
 
-function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String}; kwargs...)
+function merge_segment_agent(data::Array{<:AbstractFloat, 6}, agent_names::Vector{String}; kwargs...)
     num_agents = size(data, 1)
     num_segments = size(data, 2)
     num_scenarios = size(data, 5)
@@ -290,7 +291,7 @@ function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String
     queried_segments = get(kwargs, :segment, nothing)
 
     reshaped_data =
-        Array{Float64, 5}(
+        Array{AbstractFloat, 5}(
             undef,
             num_agents * num_segments,
             num_subperiods,
@@ -320,7 +321,7 @@ function merge_segment_agent(data::Array{Float32, 6}, agent_names::Vector{String
     return reshaped_data, modified_names
 end
 
-function merge_scenario_subscenario_agent(data::Array{Float32, 4}, agent_names::Vector{String}; kwargs...)
+function merge_scenario_subscenario_agent(data::Array{<:AbstractFloat, 4}, agent_names::Vector{String}; kwargs...)
     num_subscenarios = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
@@ -329,7 +330,7 @@ function merge_scenario_subscenario_agent(data::Array{Float32, 4}, agent_names::
     queried_scenarios = get(kwargs, :scenario, nothing)
     queried_subscenarios = get(kwargs, :subscenario, nothing)
 
-    reshaped_data = Array{Float64, 2}(undef, num_agents * num_scenarios * num_subscenarios, num_periodsubperiod)
+    reshaped_data = Array{AbstractFloat, 2}(undef, num_agents * num_scenarios * num_subscenarios, num_periodsubperiod)
     modified_names = Vector{String}(undef, num_agents * num_scenarios * num_subscenarios)
 
     for periodsubperiod in 1:num_periodsubperiod
@@ -357,7 +358,7 @@ function merge_scenario_subscenario(
     data::Array{T, 4},
     agent_names::Vector{String};
     kwargs...,
-) where {T <: Real}
+) where {T <: AbstractFloat}
     num_subscenarios = size(data, 2)
     num_agents = size(data, 1)
     num_scenarios = size(data, 3)
@@ -366,7 +367,7 @@ function merge_scenario_subscenario(
     queried_scenarios = get(kwargs, :scenario, nothing)
     queried_subscenarios = get(kwargs, :subscenario, nothing)
 
-    reshaped_data = Array{Float64, 3}(undef, num_agents, num_scenarios * num_subscenarios, num_periodsubperiod)
+    reshaped_data = Array{AbstractFloat, 3}(undef, num_agents, num_scenarios * num_subscenarios, num_periodsubperiod)
     modified_scenario_names = Vector{String}(undef, num_scenarios * num_subscenarios)
 
     for scenario in 1:num_scenarios
@@ -416,7 +417,7 @@ function build_plot_output(
             unit = unit,
             file_path = joinpath(plots_path, plot_config.filename),
             initial_date = plot_config.initial_date_time,
-            period_type = plot_config.period_type,
+            time_series_step = plot_config.time_series_step,
         )
     end
 
@@ -652,7 +653,7 @@ function build_plots(
         push!(plot_configs, plot_config_load_marginal_cost)
     end
 
-    if run_mode(inputs) == RunMode.MARKET_CLEARING
+    if is_market_clearing(inputs)
         # Energy offer
         plot_config_energy = PlotConfig(
             "Energy Offer per Bidding Group",
@@ -672,7 +673,7 @@ function build_plots(
         push!(plot_configs, plot_config_price)
     end
 
-    if run_mode(inputs) == RunMode.MARKET_CLEARING
+    if is_market_clearing(inputs)
         for file in readdir(output_path(inputs))
             if occursin(".csv", file)
                 final_file_name = _snake_to_regular(String(split(file, ".")[1]))
@@ -686,7 +687,7 @@ function build_plots(
                     split(file, ".")[1],
                     [PlotTimeSeriesQuantiles, PlotTimeSeriesMean, PlotTimeSeriesAll],
                     initial_date_time(inputs),
-                    period_type(inputs),
+                    time_series_step(inputs),
                 )
                 push!(plot_configs, plot_config_clearing)
             end

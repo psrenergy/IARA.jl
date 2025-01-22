@@ -41,25 +41,14 @@ end
 """
     Configurations_PolicyGraphType
 
-  - `CYCLIC_WITH_FIXED_ROOT`: Cyclic policy graph starting at node 1 (0)
+  - `CYCLIC_WITH_NULL_ROOT`: Cyclic policy graph starting at node 1 (0)
   - `LINEAR`: Linear policy graph (1)
-  - `CYCLIC_WITH_DISTRIBUTED_ROOT`: Cyclic policy graph with equal chance of starting at any node (2)
+  - `CYCLIC_WITH_SEASON_ROOT`: Cyclic policy graph with equal chance of starting at any node (2)
 """
 @enumx Configurations_PolicyGraphType begin
-    CYCLIC_WITH_FIXED_ROOT = 0
+    CYCLIC_WITH_NULL_ROOT = 0
     LINEAR = 1
-    CYCLIC_WITH_DISTRIBUTED_ROOT = 2
-end
-
-"""
-    Configurations_InflowSource
-
-  - `SIMULATE_WITH_PARP`: Simulate inflow with PAR(p) (0)
-  - `READ_FROM_FILE`: Read inflow from file (1)
-"""
-@enumx Configurations_InflowSource begin
-    SIMULATE_WITH_PARP = 0
-    READ_FROM_FILE = 1
+    CYCLIC_WITH_SEASON_ROOT = 2
 end
 
 """
@@ -70,6 +59,7 @@ end
   - `STRATEGIC_BID`: Strategic bid (2)
   - `MARKET_CLEARING`: Market clearing (3)
   - `MIN_COST`: Centralized operation simulation (4)
+  - `SINGLE_PERIOD_MARKET_CLEARING`: Single period market clearing (5)
 """
 @enumx RunMode begin
     TRAIN_MIN_COST = 0
@@ -77,6 +67,8 @@ end
     STRATEGIC_BID = 2
     MARKET_CLEARING = 3
     MIN_COST = 4
+    SINGLE_PERIOD_MARKET_CLEARING = 5
+    SINGLE_PERIOD_HEURISTIC_BID = 6
 end
 
 const AVAILABLE_RUN_MODES_MESSAGE = """
@@ -86,6 +78,8 @@ const AVAILABLE_RUN_MODES_MESSAGE = """
     - price-taker-bid
     - strategic-bid
     - market-clearing
+    - single-period-market-clearing
+    - single-period-heuristic-bid
     """
 
 function parse_run_mode(run_mode::Union{String, Nothing})
@@ -99,6 +93,10 @@ function parse_run_mode(run_mode::Union{String, Nothing})
         return RunMode.MARKET_CLEARING
     elseif run_mode == "min-cost"
         return RunMode.MIN_COST
+    elseif run_mode == "single-period-market-clearing"
+        return RunMode.SINGLE_PERIOD_MARKET_CLEARING
+    elseif run_mode == "single-period-heuristic-bid"
+        return RunMode.SINGLE_PERIOD_HEURISTIC_BID
     else
         error(
             """
@@ -111,12 +109,12 @@ function parse_run_mode(run_mode::Union{String, Nothing})
 end
 
 """
-    Configurations_PeriodType
+    Configurations_TimeSeriesStep
 
-  - `MONTHLY`: Monthly period (0)
+  - `ONE_MONTH_PER_PERIOD`: Monthly period (0)
 """
-@enumx Configurations_PeriodType begin
-    MONTHLY = 0
+@enumx Configurations_TimeSeriesStep begin
+    ONE_MONTH_PER_PERIOD = 0
 end
 
 @enumx Configurations_HydroBalanceSubperiodResolution begin
@@ -125,36 +123,36 @@ end
 end
 
 # TODO review this implementation in favour of something more generic
-function period_type_string(period_type::Configurations_PeriodType.T)
-    if period_type == Configurations_PeriodType.MONTHLY
+function period_type_string(time_series_step::Configurations_TimeSeriesStep.T)
+    if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return "monthly"
     else
-        error("Period type not implemented")
+        error("Time series step not implemented")
     end
 end
 
 """
-    Configurations_SubperiodAggregationType
+    Configurations_VariableAggregationType
 
   - `SUM`: Sum (0)
   - `AVERAGE`: Average (1)
   - `LAST_VALUE`: Last value (2)
 """
-@enumx Configurations_SubperiodAggregationType begin
+@enumx Configurations_VariableAggregationType begin
     SUM = 0
     AVERAGE = 1
     LAST_VALUE = 2
 end
 
 """
-  Configurations_ClearingBidSource
+  Configurations_BidDataSource
 
   - `READ_FROM_FILE`: Read from file (0)
-  - `HEURISTIC_BIDS`: Run the heuristic bids module concurrently with clearing, one period at a time (1)
+  - `PRICETAKER_HEURISTICS`: Run the heuristic bids module concurrently with clearing, one period at a time (1)
 """
-@enumx Configurations_ClearingBidSource begin
+@enumx Configurations_BidDataSource begin
     READ_FROM_FILE = 0
-    HEURISTIC_BIDS = 1
+    PRICETAKER_HEURISTICS = 1
 end
 
 """
@@ -170,27 +168,27 @@ end
 end
 
 """
-    Configurations_ClearingIntegerVariables
+    Configurations_IntegerVariableRepresentation
 
-  - `FIXED`: Fixed (0)
-  - `FIXED_FROM_PREVIOUS_STEP`: Fixed from previous step (1)
-  - `LINEARIZED`: Linearize (2)
+  - `CALCULATE_NORMALLY`: Fixed (0)
+  - `FROM_EX_ANTE_PHYSICAL`: Fixed from previous step (1)
+  - `LINEARIZE`: Linearize (2)
 """
-@enumx Configurations_ClearingIntegerVariables begin
-    FIXED = 0
-    FIXED_FROM_PREVIOUS_STEP = 1
-    LINEARIZED = 2
+@enumx Configurations_IntegerVariableRepresentation begin
+    CALCULATE_NORMALLY = 0
+    FROM_EX_ANTE_PHYSICAL = 1
+    LINEARIZE = 2
 end
 
 """
-    Configurations_ClearingModelType
+    Configurations_ConstructionType
 
   - `SKIP`: Skip (-1)
   - `COST_BASED`: Cost based (0)
   - `BID_BASED`: Bid based (1)
   - `HYBRID`: Hybrid (2)
 """
-@enumx Configurations_ClearingModelType begin
+@enumx Configurations_ConstructionType begin
     SKIP = -1
     COST_BASED = 0
     BID_BASED = 1
@@ -198,16 +196,18 @@ end
 end
 
 """
-    Configurations_ClearingNetworkRepresentation
+    Configurations_UncertaintyScenariosFiles
 
-  - `NODAL_NODAL`: Nodal-nodal (0)
-  - `ZONAL_ZONAL`: Zonal-zonal (1)
-  - `NODAL_ZONAL`: Nodal-zonal (2)
+  - `NONE`: None (0)
+  - `ONLY_EX_ANTE`: Only ex-ante (1)
+  - `ONLY_EX_POST`: Only ex-post (2)
+  - `EX_ANTE_AND_EX_POST`: Ex-ante and ex-post (3)
 """
-@enumx Configurations_ClearingNetworkRepresentation begin
-    NODAL_NODAL = 0
-    ZONAL_ZONAL = 1
-    NODAL_ZONAL = 2
+@enumx Configurations_UncertaintyScenariosFiles begin
+    NONE = 0
+    ONLY_EX_ANTE = 1
+    ONLY_EX_POST = 2
+    EX_ANTE_AND_EX_POST = 3
 end
 
 """
@@ -226,36 +226,27 @@ end
 """
     Configurations_MakeWholePayments
 
-  - `CONSTRAINED_ON_AND_OFF_INSTANT`: Constrained on and off instant (0)
-  - `CONSTRAINED_ON_INSTANT`: Constrained on instant (1)
-  - `CONSTRAINED_ON_DAILY_AGGREGATE`: Constrained on daily aggregate (2)
+  - `CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD`: Constrained on and off per subperiod (0)
+  - `CONSTRAINED_ON_PER_SUBPERIOD`: Constrained on per subperiod (1)
+  - `CONSTRAINED_ON_PERIOD_AGGREGATE`: Constrained on daily aggregate (2)
+  - `IGNORE`: Ignore (3)
 """
 @enumx Configurations_MakeWholePayments begin
-    CONSTRAINED_ON_AND_OFF_INSTANT = 0
-    CONSTRAINED_ON_INSTANT = 1
-    CONSTRAINED_ON_DAILY_AGGREGATE = 2
+    CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD = 0
+    CONSTRAINED_ON_PER_SUBPERIOD = 1
+    CONSTRAINED_ON_PERIOD_AGGREGATE = 2
+    IGNORE = 3
 end
 
 """
-    Configurations_PriceCap
+    Configurations_PriceLimits
 
   - `REPRESENT`: Represent (0)
   - `IGNORE`: Ignore (1)
 """
-@enumx Configurations_PriceCap begin
+@enumx Configurations_PriceLimits begin
     REPRESENT = 0
     IGNORE = 1
-end
-
-"""
-  Configurations_BinaryVariableUsage
-
-  - `USE`: Use binary variables (1)
-  - `DO_NOT_USE`: Do not use binary variables (0)
-"""
-@enumx Configurations_BinaryVariableUsage begin
-    USE = 1
-    DO_NOT_USE = 0
 end
 
 """
@@ -349,14 +340,14 @@ end
 end
 
 """
-    RunTime_ClearingProcedure
+    RunTime_ClearingSubproblem
 
   - `EX_ANTE_PHYSICAL`: Ex-Ante physical (0)
   - `EX_ANTE_COMMERCIAL`: Ex-Ante commercial (1)
   - `EX_POST_PHYSICAL`: Ex-Post physical (2)
   - `EX_POST_COMMERCIAL`: Ex-Post commercial (3)
 """
-@enumx RunTime_ClearingProcedure begin
+@enumx RunTime_ClearingSubproblem begin
     EX_ANTE_PHYSICAL = 0
     EX_ANTE_COMMERCIAL = 1
     EX_POST_PHYSICAL = 2
@@ -475,28 +466,29 @@ end
 end
 
 """
-  Configurations_VirtualReservoirWaveguideSource
+  Configurations_VRCurveguideDataSource
 
-  - `USER_PROVIDED`: User provided (0)
-  - `UNIFORM_VOLUME_PERCENTAGE`: Uniform volume percentage (1)
+  - `READ_FROM_FILE`: User provided (0)
+  - `UNIFORM_ACROSS_RESERVOIRS`: Uniform volume percentage (1)
 """
-@enumx Configurations_VirtualReservoirWaveguideSource begin
-    USER_PROVIDED = 0
-    UNIFORM_VOLUME_PERCENTAGE = 1
+@enumx Configurations_VRCurveguideDataSource begin
+    READ_FROM_FILE = 0
+    UNIFORM_ACROSS_RESERVOIRS = 1
 end
 
 """
-  Configurations_WaveguideUserProvidedSource
+  Configurations_VRCurveguideDataFormat
 
   - `CSV_FILE`: CSV file (0)
-  - `EXISTING_DATA`: Existing data (1)
+  - `FORMATTED_DATA`: Existing data (1)
 """
-@enumx Configurations_WaveguideUserProvidedSource begin
+@enumx Configurations_VRCurveguideDataFormat begin
     CSV_FILE = 0
-    EXISTING_DATA = 1
+    FORMATTED_DATA = 1
 end
 
-@enumx Configurations_ReservoirsPhysicalVirtualCorrespondenceType begin
-    BY_VOLUME = 1
-    BY_GENERATION = 2
+@enumx Configurations_VirtualReservoirCorrespondenceType begin
+    IGNORE = 0
+    STANDARD_CORRESPONDENCE_CONSTRAINT = 1
+    DELTA_CORRESPONDENCE_CONSTRAINT = 2
 end

@@ -51,12 +51,13 @@ db = IARA.create_study!(PATH_MODIFICATIONS_CASE;
     number_of_scenarios = number_of_scenarios,
     number_of_subperiods = number_of_subperiods,
     subperiod_duration_in_hours = subperiod_duration_in_hours,
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
     number_of_nodes = number_of_periods,
     cycle_discount_rate = cycle_discount_rate,
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 3000.0,
     initial_date_time = "2020-01-01",
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 );
 
 # ## Zone and Bus
@@ -73,6 +74,7 @@ IARA.add_demand_unit!(db;
         existing = [1],
     ),
     bus_id = "bus_1",
+    max_demand = 1.0,
 )
 
 # ## Thermal Units
@@ -117,7 +119,7 @@ IARA.time_series_dataframe(joinpath(PATH_MODIFICATIONS_CASE, "demand.csv"))
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 ; #hide
 

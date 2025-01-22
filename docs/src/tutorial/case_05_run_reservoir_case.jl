@@ -33,7 +33,10 @@ cp(PATH_ORIGINAL, PATH_EXECUTION; force = true);
 
 # Now we are able to run the case with [`IARA.train_min_cost`](@ref).
 
-IARA.train_min_cost(PATH_EXECUTION)
+IARA.train_min_cost(
+    PATH_EXECUTION;
+    delete_output_folder_before_execution = true,
+)
 
 # After that, we have to move the hydro generation and hydro opportunity cost time series files to the `case_5_execution` folder.
 
@@ -68,11 +71,11 @@ db = IARA.load_study(PATH_EXECUTION; read_only = false);
 
 IARA.update_configuration!(
     db;
-    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
 )
 
 IARA.close_study!(db)
@@ -80,7 +83,10 @@ IARA.close_study!(db)
 
 # Finally, we are ready to run the case.
 
-IARA.market_clearing(PATH_EXECUTION)
+IARA.market_clearing(
+    PATH_EXECUTION;
+    delete_output_folder_before_execution = true,
+)
 
 # ### Analyzing the results
 

@@ -60,7 +60,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     seasonal_inflow;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hyd_$(bus_labels[h])_gauging_station" for h in 1:number_of_hydro_units],
+    labels = ["hyd_$(bus_labels[h])" for h in 1:number_of_hydro_units],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
@@ -76,7 +76,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.close_study!(db)

@@ -22,7 +22,6 @@ subperiod_duration_in_hours = 1.0
 # Conversion constants
 # --------------------
 m3_per_second_to_hm3 = (3600 / 1e6) * subperiod_duration_in_hours
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 
 # Create the database
 # -------------------
@@ -38,7 +37,9 @@ db = IARA.create_study!(PATH;
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 0.5,
     hydro_spillage_cost = 1e-3,
-    inflow_source = IARA.Configurations_InflowSource.SIMULATE_WITH_PARP,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.NONE,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 
 # Add collection elements
@@ -224,6 +225,8 @@ IARA.add_thermal_unit!(db;
     bus_id = "bus_1",
 )
 
+max_demand = 10.0
+
 IARA.add_demand_unit!(db;
     label = "dem_1",
     demand_unit_type = IARA.DemandUnit_DemandType.INELASTIC,
@@ -236,6 +239,7 @@ IARA.add_demand_unit!(db;
     curtailment_cost = 0.0,
     max_curtailment = 0.0,
     bus_id = "bus_1",
+    max_demand = max_demand,
 )
 
 IARA.add_dc_line!(db;
@@ -269,7 +273,7 @@ IARA.write_timeseries_file(
     unit = "p.u.",
 )
 
-demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 10 * MW_to_GWh
+demand = ones(1, number_of_subperiods, number_of_scenarios, number_of_periods)
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -278,19 +282,19 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.link_time_series_to_file(
     db,
     "RenewableUnit";
-    generation = "renewable_generation",
+    generation_ex_ante = "renewable_generation",
 )
 
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 IARA.close_study!(db)

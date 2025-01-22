@@ -25,9 +25,11 @@ DemandUnit collection definition.
     max_shift_down::Vector{Float64} = []
     curtailment_cost::Vector{Float64} = []
     max_curtailment::Vector{Float64} = []
+    max_demand::Vector{Float64} = []
     # index of the bus to which the thermal unit belongs in the collection Bus
     bus_index::Vector{Int} = []
-    demand_file::String = ""
+    demand_ex_ante_file::String = ""
+    demand_ex_post_file::String = ""
     elastic_demand_price_file::String = ""
     window_file::String = ""
     # cache
@@ -62,8 +64,10 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
     demand_unit.curtailment_cost = PSRI.get_parms(inputs.db, "DemandUnit", "curtailment_cost")
     demand_unit.max_curtailment = PSRI.get_parms(inputs.db, "DemandUnit", "max_curtailment")
     demand_unit.bus_index = PSRI.get_map(inputs.db, "DemandUnit", "Bus", "id")
+    demand_unit.max_demand = PSRI.get_parms(inputs.db, "DemandUnit", "max_demand")
 
-    demand_unit.demand_file = PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand")
+    demand_unit.demand_ex_ante_file = PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand_ex_ante")
+    demand_unit.demand_ex_post_file = PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand_ex_post")
     demand_unit.elastic_demand_price_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "elastic_demand_price")
     demand_unit.window_file =
@@ -112,6 +116,7 @@ Optional arguments:
   - `max_shift_down::Float64`: Maximum shift down `[MWh]`
   - `curtailment_cost::Float64`: Curtailment cost `[\$/MWh]`
   - `max_curtailment::Float64`: Maximum curtailment `[MWh]`
+  - `max_demand::Float64`: Maximum demand `[MW]`
   
 --- 
 
@@ -217,6 +222,10 @@ function validate(demand_unit::DemandUnit)
             @error("Demand Unit $(demand_unit.label[i]) Max Curtailment must be non-negative.")
             num_errors += 1
         end
+        if demand_unit.max_demand[i] < 0
+            @error("Demand Unit $(demand_unit.label[i]) Max Demand must be non-negative.")
+            num_errors += 1
+        end
         if demand_unit.demand_unit_type[i] == DemandUnit_DemandType.FLEXIBLE
             if is_null(demand_unit.max_shift_up[i])
                 @error(
@@ -281,6 +290,28 @@ function advanced_validations(inputs::AbstractInputs, demand_unit::DemandUnit)
             @error("Demand Unit $(demand_unit.label[i]) Bus ID $(demand_unit.bus_index[i]) not found.")
             num_errors += 1
         end
+    end
+    if read_ex_ante_demand_file(inputs) && demand_unit.demand_ex_ante_file == "" && length(demand_unit) > 0
+        @error(
+            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but no ex_ante demand file was linked."
+        )
+        num_errors += 1
+    end
+    if read_ex_post_demand_file(inputs) && demand_unit.demand_ex_post_file == "" && length(demand_unit) > 0
+        @error(
+            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but no ex_post demand file was linked."
+        )
+        num_errors += 1
+    end
+    if !read_ex_ante_demand_file(inputs) && demand_unit.demand_ex_ante_file != "" && length(demand_unit) > 0
+        @warn(
+            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but an ex_ante demand file was linked.
+            This file will be ignored.")
+    end
+    if !read_ex_post_demand_file(inputs) && demand_unit.demand_ex_post_file != "" && length(demand_unit) > 0
+        @warn(
+            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but an ex_post demand file was linked.
+            This file will be ignored.")
     end
     return num_errors
 end
@@ -349,3 +380,13 @@ is_flexible(d::DemandUnit, i::Int) = d.demand_unit_type[i] == DemandUnit_DemandT
 Return true if the Demand in position 'i' is `IARA.DemandUnit_DemandType.INELASTIC`.
 """
 is_inelastic(d::DemandUnit, i::Int) = d.demand_unit_type[i] == DemandUnit_DemandType.INELASTIC
+
+function demand_mw_to_gwh(
+    inputs::AbstractInputs,
+    demand_ts::Float64,
+    demand_index::Int,
+    subperiod::Int,
+)
+    return demand_ts * demand_unit_max_demand(inputs, demand_index) * subperiod_duration_in_hours(inputs, subperiod) *
+           MW_to_GW()
+end

@@ -91,22 +91,25 @@ db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false);
 #hide
 
 # In order to run the case in `Market Clearing`, we need to set the run mode and the clearing bid source (where the bid quantity and price offers will come from).
-# For this example we will be using the `HEURISTIC_BIDS` as the clearing bid source. This setting will automatically generate bids for each Bidding Group.
+# For this example we will be using the `PRICETAKER_HEURISTICS` as the clearing bid source. This setting will automatically generate bids for each Bidding Group.
 # We can set these two parameters in the configurations, with [`IARA.update_configuration!`](@ref).
 
 IARA.update_configuration!(
     db;
-    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
 )
 IARA.close_study!(db)
 
 # Now we are able to run the case with [`IARA.market_clearing`](@ref).
 
-IARA.market_clearing(PATH_MARKET_CLEARING)
+IARA.market_clearing(
+    PATH_MARKET_CLEARING;
+    delete_output_folder_before_execution = true,
+)
 
 # Let's take a look into some of the plots generated automatically.
 

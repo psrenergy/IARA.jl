@@ -32,7 +32,7 @@ function bidding_group_energy_offer!(
         bidding_group_energy_offer[
             blk in blks,
             bg in bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bds in bid_segments,
             bus in buses,
         ],
     )
@@ -50,13 +50,21 @@ function bidding_group_energy_offer!(
         bidding_group_revenue[
             blk in blks,
             bg in bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bds in bid_segments,
             bus in buses,
         ],
         -bidding_group_energy_offer[blk, bg, bds, bus] * spot_price_series[bus, blk],
     )
 
-    model.obj_exp += sum(bidding_group_revenue; init = 0) * money_to_thousand_money()
+    model.obj_exp +=
+        sum(
+            bidding_group_revenue[blk, bg, bds, bus]
+            for blk in blks,
+            bg in bidding_groups,
+            bds in bid_segments,
+            bus in buses;
+            init = 0,
+        ) * money_to_thousand_money()
 
     return nothing
 end
@@ -89,7 +97,7 @@ function bidding_group_energy_offer!(
     # Time series
     spot_price_series = time_series_spot_price(inputs)
 
-    for blk in blks, bg in bidding_groups, bds in 1:maximum_bid_segments(inputs, bg), bus in buses
+    for blk in blks, bg in bidding_groups, bds in bid_segments, bus in buses
         set_objective_coefficient(
             model.jump_model,
             bidding_group_energy_offer[blk, bg, bds, bus],

@@ -30,7 +30,6 @@ IARA.add_asset_owner!(db;
 IARA.add_bidding_group!(db;
     label = "bg_3",
     assetowner_id = "asset_owner_3",
-    independent_bid_max_segments = maximum_number_of_bidding_segments,
 )
 number_of_bidding_groups += 1
 
@@ -93,7 +92,7 @@ IARA.add_thermal_unit!(db;
 # Create and link CSV files
 # -------------------------
 # Demand
-new_demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 9.9 * MW_to_GWh
+new_demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 9.9 / max_demand
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     new_demand;
@@ -102,7 +101,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 # Offers

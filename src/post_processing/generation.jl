@@ -41,7 +41,7 @@ function post_processing_generation(inputs::Inputs)
     generation[5, :, :, :] = sum(deficit; dims = 1)
 
     write_timeseries_file(
-        joinpath(output_path(inputs), "generation"),
+        joinpath(post_processing_path(inputs), "generation"),
         generation;
         dimensions = ["period", "scenario", "subperiod"],
         labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"],

@@ -101,7 +101,7 @@ The `inflow` dataframe has columns that may be mandatory or not, depending on so
 Required columns
   - `date_time::Vector{DateTime}`: date and time of the time series data.
   - `historical_inflow::Vector{Float64}`: Historical inflow data. `[hm³/s]`
-    - _Mandatory if_ `Configuration.inflow_source` _is set to_ `SIMULATE_WITH_PARP`
+    - _Mandatory if_ `Configuration.inflow_scenarios_files` _is set to_ `NONE`
 
 Example:
 ```julia
@@ -111,7 +111,8 @@ IARA.add_gauging_station!(db;
 ```
 """
 function add_gauging_station!(db::DatabaseSQLite; kwargs...)
-    PSRI.create_element!(db, "GaugingStation"; kwargs...)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    PSRI.create_element!(db, "GaugingStation"; sql_typed_kwargs...)
     return nothing
 end
 
@@ -125,7 +126,8 @@ function update_gauging_station!(
     label::String;
     kwargs...,
 )
-    for (attribute, value) in kwargs
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
             db,
             "GaugingStation",

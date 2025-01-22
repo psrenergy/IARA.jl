@@ -104,6 +104,26 @@ end
 function initialize_output_dir(args::Args)
     if !isdir(args.outputs_path)
         mkdir(args.outputs_path)
+    else
+        if args.delete_output_folder_before_execution
+            if length(readdir(args.outputs_path)) > 0
+                @warn(
+                    "The output directory $(args.outputs_path) is not empty, and the argument 'delete_output_folder_before_execution' has been provided.
+              The directory's contents will be deleted."
+                )
+                rm(args.outputs_path; force = true, recursive = true)
+                mkdir(args.outputs_path)
+            end
+        else
+            if length(readdir(args.outputs_path)) > 0
+                error(
+                    "The output directory $(args.outputs_path) is not empty
+                    Please choose another path or run IARA with the argument delete_output_folder_before_execution.
+                    You can change the output path with the argument output_path.
+                    For example, IARA.market_clearing(PATH; output_path = \"path/to/output\")",
+                )
+            end
+        end
     end
     return nothing
 end
@@ -145,15 +165,17 @@ function get_outputs_dimension_size(
     dimension_size = Int[]
     for dimension in dimensions
         if dimension == "period"
-            push!(dimension_size, number_of_periods(inputs))
+            if is_single_period(inputs)
+                push!(dimension_size, 1)
+            else
+                push!(dimension_size, number_of_periods(inputs))
+            end
         elseif dimension == "scenario"
             push!(dimension_size, number_of_scenarios(inputs))
         elseif dimension == "subscenario"
             push!(dimension_size, number_of_subscenarios(inputs, run_time_options))
         elseif dimension == "subperiod"
-            # TODO we should discuss if we should add a new condition to treat hydro subperiods
-            # The other option is to treat via the name of the output as we are doing here.
-            if output_name in ["hydro_initial_volume"]
+            if output_name in ["hydro_initial_volume", "hydro_final_volume"]
                 hydro_blks = hydro_subperiods(inputs)
                 num_hydro_subperiods = length(hydro_blks) - 1
                 push!(dimension_size, num_hydro_subperiods)
@@ -168,6 +190,8 @@ function get_outputs_dimension_size(
             end
         elseif dimension == "profile"
             push!(dimension_size, maximum_number_of_bidding_profiles(inputs))
+        elseif dimension == "complementary_group"
+            push!(dimension_size, maximum_number_of_complementary_grouping(inputs))
         else
             error("Dimension $dimension not recognized")
         end
@@ -183,7 +207,7 @@ function initialize!(
     output_name::String,
     kwargs...,
 )
-    frequency = period_type_string(inputs.collections.configurations.period_type)
+    frequency = period_type_string(inputs.collections.configurations.time_series_step)
     initial_date = inputs.collections.configurations.initial_date_time
     time_dimension = "period"
     output_type = Quiver.csv
@@ -197,7 +221,7 @@ function initialize!(
     unit = kwargs[:unit]
     labels = kwargs[:labels]
 
-    output_name *= run_time_file_suffixes(run_time_options)
+    output_name *= run_time_file_suffixes(inputs, run_time_options)
 
     file = joinpath(output_path(inputs), output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
@@ -235,6 +259,110 @@ function find_indices_of_elements_to_write_in_output(;
     return indices_of_elements_in_output
 end
 
+function write_heuristic_complementary_grouping_profile_outputs(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    data::Array{T, 3};
+    period::Int,
+    scenario::Int,
+    indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
+) where {T}
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+        period = 1
+    end
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    # Create a vector of zeros based on the number of time series
+    num_time_series = output.writer.metadata.number_of_time_series
+    data_to_write = zeros(num_time_series)
+
+    # Validate that the indices of the outputs match the jump_conatiner
+    if indices_of_elements_in_output === nothing
+        @assert size(data, 1) == num_time_series
+    else
+        @assert length(indices_of_elements_in_output) == size(data, 1)
+    end
+
+    for prf in axes(data, 2)
+        for cg in axes(data, 3)
+            vector_to_write = data[:, prf, cg]
+            if indices_of_elements_in_output === nothing
+                # Write in all indices without filtering
+                for (idx, value) in enumerate(vector_to_write)
+                    data_to_write[idx] = value
+                end
+            else
+                # Write only the filtered indices that are in the output file
+                for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
+                    data_to_write[idx_in_output] = vector_to_write[idx]
+                end
+            end
+            Quiver.write!(
+                output.writer,
+                round_output(data_to_write);
+                period, scenario, profile = prf, complementary_group = cg,
+            )
+        end
+    end
+    return nothing
+end
+
+function write_heuristic_profile_outputs(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    data::Matrix{T};
+    period::Int,
+    scenario::Int,
+    indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
+) where {T}
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+        period = 1
+    end
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    # Create a vector of zeros based on the number of time series
+    num_time_series = output.writer.metadata.number_of_time_series
+    data_to_write = zeros(num_time_series)
+
+    # Validate that the indices of the outputs match the jump_conatiner
+    if indices_of_elements_in_output === nothing
+        @assert size(data, 1) == num_time_series
+    else
+        @assert length(indices_of_elements_in_output) == size(data, 1)
+    end
+
+    for prf in axes(data, 2)
+        vector_to_write = data[:, prf]
+        if indices_of_elements_in_output === nothing
+            # Write in all indices without filtering
+            for (idx, value) in enumerate(vector_to_write)
+                data_to_write[idx] = value
+            end
+        else
+            # Write only the filtered indices that are in the output file
+            for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
+                data_to_write[idx_in_output] = vector_to_write[idx]
+            end
+        end
+        Quiver.write!(
+            output.writer,
+            round_output(data_to_write);
+            period, scenario, profile = prf,
+        )
+    end
+    return nothing
+end
+
 function write_output_per_subperiod!(
     outputs::Outputs,
     inputs::Inputs,
@@ -249,8 +377,13 @@ function write_output_per_subperiod!(
     indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
 ) where {T}
 
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
     # Pick the correct output based on the run time options
-    output = outputs.outputs[output_name*run_time_file_suffixes(run_time_options)]
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
 
     # Create a vector of zeros based on the number of time series
     num_time_series = output.writer.metadata.number_of_time_series
@@ -342,6 +475,7 @@ function treat_output_for_writing_by_pairs_of_agents(
 ) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
     number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
     blks = subperiods(inputs)
+    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
     number_of_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
 
     treated_output = if output_varies_per_subperiod
@@ -358,7 +492,7 @@ function treat_output_for_writing_by_pairs_of_agents(
                 treated_output[blk, number_of_pairs_fullfiled] = raw_output[blk, index1, index2]
             end
         else # assumes outout varies per segment (VR bids)
-            for segment in 1:number_of_segments
+            for segment in 1:valid_segments[index1]
                 treated_output[number_of_pairs_fullfiled, segment] = raw_output[index1, index2, segment]
             end
         end
@@ -382,6 +516,11 @@ function write_bid_output(
     has_profile_bids::Bool = false,
     @nospecialize(filters::Vector{<:Function} = Function[])
 )
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
     # TODO: This function deserves a refactor
     all_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
     bidding_groups_filtered = index_of_elements(
@@ -392,24 +531,29 @@ function write_bid_output(
     )
     if has_profile_bids
         bid_profiles = bidding_profiles(inputs)
+        valid_profiles = get_maximum_valid_profiles(inputs)
     else
         bid_segments = bidding_segments(inputs)
+        valid_segments = get_maximum_valid_segments(inputs)
     end
     blks = subperiods(inputs)
-    bid_segments = bidding_segments(inputs)
     buses = index_of_elements(inputs, Bus)
     num_buses = length(buses)
     size_segments = has_profile_bids ? length(bid_profiles) : length(bid_segments)
     # 4D array with dimensions: subperiod, bidding_group, bid_segment, bus
+    # We use the function write_bid_output for both writing the output of the
+    # optimization problem and the heuristic bids.
+    # This is to check only the heuristic bids dimensions.
     if isa(data, Array{Float64, 4})
+        # TODO: think of a better way to do this
         @assert size(data, 1) == length(blks)
         @assert size(data, 2) == length(all_bidding_groups)
-        @assert size(data, 3) == size_segments # TODO: maybe this configuration should be ignored for this mode.
+        @assert size(data, 3) == size_segments
         @assert size(data, 4) == length(buses)
     end
 
     # Pick the correct output based on the run time options
-    output = outputs.outputs[output_name*run_time_file_suffixes(run_time_options)]
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
 
     treated_output = zeros(length(blks), size_segments, length(bidding_groups_filtered) * length(buses))
 
@@ -417,11 +561,17 @@ function write_bid_output(
         if has_profile_bids
             for prf in bid_profiles
                 for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    # TODO: change back to maximum_bid_profiles(inputs, bg)
-                    if prf > size_segments
+                    if prf > valid_profiles[bg]
                         continue
                     end
-                    treated_output[blk, prf, (i_bg-1)*(num_buses)+bus] = data[blk, bg, prf, bus]
+                    # If the data is a OrderedDict (value of a JuMP.Variable) we can acess
+                    # directly the index (blk, bg, prf, bus) to get the value.
+                    data_bg = if isa(data, Array{Float64, 4})
+                        data[blk, i_bg, prf, bus]
+                    else
+                        data[blk, bg, prf, bus]
+                    end
+                    treated_output[blk, prf, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
                 if is_ex_post_problem(run_time_options)
                     Quiver.write!(
@@ -447,11 +597,17 @@ function write_bid_output(
         else
             for bds in bid_segments
                 for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    # TODO: change back to maximum_bid_segments(inputs, bg)
-                    if bds > size_segments
+                    if bds > valid_segments[bg]
                         continue
                     end
-                    treated_output[blk, bds, (i_bg-1)*(num_buses)+bus] = data[blk, bg, bds, bus]
+                    # If the data is a OrderedDict (value of a JuMP.Variable) we can acess
+                    # directly the index (blk, bg, prf, bus) to get the value.
+                    data_bg = if isa(data, Array{Float64, 4})
+                        data[blk, i_bg, bds, bus]
+                    else
+                        data[blk, bg, bds, bus]
+                    end
+                    treated_output[blk, bds, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
                 if is_ex_post_problem(run_time_options)
                     Quiver.write!(
@@ -490,6 +646,11 @@ function write_virtual_reservoir_bid_output(
     multiply_by::Float64 = 1.0,
     # @nospecialize(filters::Vector{<:Function} = Function[])
 )
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options) # why run_time_options?
     asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
 
@@ -499,7 +660,7 @@ function write_virtual_reservoir_bid_output(
     number_of_segments = size(data, 3)
 
     # Pick the correct output based on the run time options
-    output = outputs.outputs[output_name*run_time_file_suffixes(run_time_options)]
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
 
     number_of_asset_owners_per_virtual_reservoir = length.(virtual_reservoir_asset_owner_indices(inputs))
     treated_output = zeros(number_of_segments, sum(number_of_asset_owners_per_virtual_reservoir))
@@ -533,13 +694,16 @@ function write_virtual_reservoir_bid_output(
     end
 end
 
-function run_time_file_suffixes(run_time_options::RunTimeOptions)
+function run_time_file_suffixes(inputs::Inputs, run_time_options::RunTimeOptions)
     suffix = ""
     if !is_null(run_time_options.asset_owner_index)
         suffix *= "_asset_owner_$(run_time_options.asset_owner_index)"
     end
-    if run_time_options.clearing_model_procedure !== nothing
-        suffix *= "_$(lowercase(string(run_time_options.clearing_model_procedure)))"
+    if run_time_options.clearing_model_subproblem !== nothing
+        suffix *= "_$(lowercase(string(run_time_options.clearing_model_subproblem)))"
+    end
+    if is_single_period(inputs)
+        suffix *= "_period_$(inputs.args.period)"
     end
 
     return suffix

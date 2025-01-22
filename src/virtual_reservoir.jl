@@ -130,8 +130,25 @@ function fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs::Abst
         end
     end
     maximum_number_of_offer_segments = maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir)
-    inputs.collections.virtual_reservoir.maximum_number_of_virtual_reservoir_bidding_segments =
-        maximum_number_of_offer_segments
+    update_number_of_virtual_reservoir_bidding_segments!(inputs, maximum_number_of_offer_segments)
+
+    return nothing
+end
+
+function update_number_of_virtual_reservoir_bidding_segments!(inputs::AbstractInputs, value::Int)
+    values_array = fill(value, length(index_of_elements(inputs, VirtualReservoir)))
+    update_number_of_virtual_reservoir_bidding_segments!(inputs, values_array)
+    return nothing
+end
+
+function update_number_of_virtual_reservoir_bidding_segments!(inputs::AbstractInputs, values::Array{Int})
+    if length(inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments) == 0
+        inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments = zeros(
+            Int,
+            length(index_of_elements(inputs, VirtualReservoir)),
+        )
+    end
+    inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments .= values
     return nothing
 end
 
@@ -153,7 +170,8 @@ function post_process_virtual_reservoirs!(
     energy_stock_at_beginning_of_period =
         virtual_reservoir_energy_stock_from_previous_period(inputs, period, scenario)
 
-    inflow_series = time_series_inflow(inputs, run_time_options, 1)
+    subscenario = 1
+    inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
     inflow_as_volume = [
         sum(
             inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
@@ -211,7 +229,7 @@ function virtual_reservoir_energy_stock_from_previous_period(inputs::AbstractInp
     else
         return read_serialized_clearing_variable(
             inputs,
-            RunTime_ClearingProcedure.EX_POST_PHYSICAL,
+            RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
             :virtual_reservoir_post_processed_energy_stock;
             period = period - 1,
             scenario = scenario,
@@ -220,13 +238,13 @@ function virtual_reservoir_energy_stock_from_previous_period(inputs::AbstractInp
 end
 
 function fill_waveguide_points!(inputs::AbstractInputs, vr::Int)
-    if virtual_reservoir_waveguide_source(inputs) == Configurations_VirtualReservoirWaveguideSource.USER_PROVIDED
+    if vr_curveguide_data_source(inputs) == Configurations_VRCurveguideDataSource.READ_FROM_FILE
         fill_waveguide_points_provided_by_user!(inputs, vr)
-    elseif virtual_reservoir_waveguide_source(inputs) ==
-           Configurations_VirtualReservoirWaveguideSource.UNIFORM_VOLUME_PERCENTAGE
+    elseif vr_curveguide_data_source(inputs) ==
+           Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
         fill_waveguide_points_by_uniform_volume_percentage!(inputs, vr)
     else
-        error("Waveguide source $(virtual_reservoir_waveguide_source(inputs)) not implemented.")
+        error("Waveguide source $(vr_curveguide_data_source(inputs)) not implemented.")
     end
 end
 

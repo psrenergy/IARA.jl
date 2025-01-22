@@ -58,7 +58,7 @@ IARA.set_hydro_spill_to!(
     "hyd_2",
 )
 
-demand[1, 1, 3, 1] += 0.2171 * MW_to_GWh
+demand[1, 1, 3, 1] += 0.2171 / max_demand
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -67,7 +67,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.close_study!(db)

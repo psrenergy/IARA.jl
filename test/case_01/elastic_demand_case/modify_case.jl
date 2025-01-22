@@ -19,14 +19,15 @@ IARA.add_demand_unit!(db;
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",
+    max_demand = max_demand,
 )
 
 # Modify the demand timeseries to include elastic demand
 new_demand = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
 new_demand[1, :, :, :] .= demand[1, :, :, :]
-new_demand[2, :, 1, :] .= 1.5 * MW_to_GWh
-new_demand[2, :, 2, :] .= 1.0 * MW_to_GWh
-new_demand[2, :, [3, 4], 1] .= 1.0 * MW_to_GWh
+new_demand[2, :, 1, :] .= 1.5 / max_demand
+new_demand[2, :, 2, :] .= 1.0 / max_demand
+new_demand[2, :, [3, 4], 1] .= 1.0 / max_demand
 
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
@@ -36,7 +37,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 # Create the demand price timeseries

@@ -13,7 +13,7 @@ Electricity system dispatch and price formation typically relies on building and
 
 ## The market clearing process
 
-Each time IARA is run, it will create a number of scenarios $S$ (parallel trajectories to simulate), each of which will involve modeling a number of sequential periods $T$ (with the possibility of using the results of the previous period within each scenario to affect the curent period). The "market clearing process" run for each $S$ and each $T$ is described in detail in a separate [dedicated page](clearing_process.md), but it can be summarized as follows:
+Each time IARA is run, it will create a number of scenarios $S$ (parallel trajectories to simulate), each of which will involve modeling a number of sequential periods $T$ (with the possibility of using the results of the previous period within each scenario to affect the curent period). The "market clearing process" run for each $S$ and each $T$ is described in detail in a separate [dedicated page](clearing_procedure.md), but it can be summarized as follows:
 
 - Market clearing begins by the **collection of ex ante physical data**. This is intended to represent the best information available when the system operator is making key decisions (i.e. the "ex ante process") which cannot easily be changed in real time.
 
@@ -29,7 +29,7 @@ Each time IARA is run, it will create a number of scenarios $S$ (parallel trajec
 
 ## IARA's physical system data
 
-In order to execute the clearing process detailed above, IARA must contain relevant information about the physical units in the system, which are structured in a systematic manner as presented in a [dedicated page](physical_structures.md). The IARA database can be thought of as composed by the following components:
+In order to execute the clearing process detailed above, IARA must contain relevant information about the [physical units](build_a_case_from_scratch.md#building-the-unit-structure) in the system. The IARA database can be thought of as composed by the following components:
 
 - The **temporal structure** is used to describe underlying features such as the number of "subperiods" modeled in each "period", as well as the seasonal and/or cyclic nature of the "periods" represented in the simulation.
 

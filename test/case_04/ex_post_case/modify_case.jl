@@ -15,6 +15,7 @@ number_of_subscenarios = 2
 # Update base case elements
 IARA.update_configuration!(db;
     number_of_subscenarios,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
 )
 
 # Create and link CSV files
@@ -24,8 +25,8 @@ mv(joinpath(PATH, "demand.csv"), joinpath(PATH, "demand_ex_ante.csv"); force = t
 mv(joinpath(PATH, "demand.toml"), joinpath(PATH, "demand_ex_ante.toml"); force = true)
 
 demand_ex_post = zeros(1, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
-demand_ex_post[:, :, 1, :, :] = demand .- (0.1 / 1e3)
-demand_ex_post[:, :, 2, :, :] = demand .+ (0.1 / 1e3)
+demand_ex_post[:, :, 1, :, :] = demand .- (0.1 / max_demand)
+demand_ex_post[:, :, 2, :, :] = demand .+ (0.1 / max_demand)
 IARA.write_timeseries_file(
     joinpath(PATH, "demand_ex_post"),
     demand_ex_post;
@@ -34,7 +35,14 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subscenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
+)
+
+IARA.link_time_series_to_file(
+    db,
+    "DemandUnit";
+    demand_ex_ante = "demand_ex_ante",
+    demand_ex_post = "demand_ex_post",
 )
 
 IARA.close_study!(db)

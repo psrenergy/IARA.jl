@@ -37,7 +37,7 @@ in chunks.
 
     # Agents x subperiods
     inflow::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} = ExAnteAndExPostTimeSeriesView{Float64, 2, 3}()
-    demand_unit::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} = ExAnteAndExPostTimeSeriesView{Float64, 2, 3}()
+    demand::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} = ExAnteAndExPostTimeSeriesView{Float64, 2, 3}()
     renewable_generation::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} =
         ExAnteAndExPostTimeSeriesView{Float64, 2, 3}()
     spot_price::TimeSeriesView{Float64, 2} = TimeSeriesView{Float64, 2}()
@@ -90,11 +90,17 @@ function initialize_time_series_from_external_files(inputs)
     # Inflow
     if any_elements(inputs, HydroUnit)
         if read_inflow_from_file(inputs)
-            num_errors += initialize_da_and_rt_time_series_view_from_external_files!(
+            num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
                 inputs.time_series.inflow,
-                inputs,
-                joinpath(path_case(inputs), hydro_unit_inflow_file(inputs));
+                inputs;
+                ex_ante_file_path = joinpath(path_case(inputs), hydro_unit_inflow_ex_ante_file(inputs)),
+                ex_post_file_path = joinpath(path_case(inputs), hydro_unit_inflow_ex_post_file(inputs)),
+                files_to_read = inflow_scenarios_files(inputs),
                 expected_unit = "m3/s",
+                possible_expected_dimensions = [
+                    [:period, :scenario, :subperiod],
+                    [:period, :scenario, :hour],
+                ],
                 labels_to_read = gauging_station_label(inputs),
             )
         else
@@ -103,6 +109,9 @@ function initialize_time_series_from_external_files(inputs)
                 inputs,
                 joinpath(path_parp(inputs), gauging_station_inflow_noise_file(inputs));
                 expected_unit = "m3/s",
+                possible_expected_dimensions = [
+                    [:period, :scenario],
+                ],
                 labels_to_read = gauging_station_label(inputs),
             )
             if parp_max_lags(inputs) > 0
@@ -138,6 +147,9 @@ function initialize_time_series_from_external_files(inputs)
             inputs,
             joinpath(path_case(inputs), hydro_unit_generation_file(inputs));
             expected_unit = "GWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
             labels_to_read = hydro_unit_label(inputs),
         )
         num_errors += initialize_time_series_view_from_external_file(
@@ -145,28 +157,41 @@ function initialize_time_series_from_external_files(inputs)
             inputs,
             joinpath(path_case(inputs), hydro_unit_opportunity_cost_file(inputs));
             expected_unit = "\$/MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
             labels_to_read = hydro_unit_label(inputs),
         )
     end
 
     # Demand
     if any_elements(inputs, DemandUnit) > 0
-        num_errors += initialize_da_and_rt_time_series_view_from_external_files!(
-            inputs.time_series.demand_unit,
-            inputs,
-            joinpath(path_case(inputs), demand_unit_demand_file(inputs));
-            expected_unit = "GWh",
+        num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
+            inputs.time_series.demand,
+            inputs;
+            ex_ante_file_path = joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs)),
+            ex_post_file_path = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs)),
+            files_to_read = demand_scenarios_files(inputs),
+            expected_unit = "p.u.",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
             labels_to_read = demand_unit_label(inputs),
         )
     end
 
     # Renewable generation
     if any_elements(inputs, RenewableUnit)
-        num_errors += initialize_da_and_rt_time_series_view_from_external_files!(
+        num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
             inputs.time_series.renewable_generation,
-            inputs,
-            joinpath(path_case(inputs), renewable_unit_generation_file(inputs));
+            inputs;
+            ex_ante_file_path = joinpath(path_case(inputs), renewable_unit_generation_ex_ante_file(inputs)),
+            ex_post_file_path = joinpath(path_case(inputs), renewable_unit_generation_ex_post_file(inputs)),
+            files_to_read = renewable_scenarios_files(inputs),
             expected_unit = "p.u.",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
             labels_to_read = renewable_unit_label(inputs),
         )
     end
@@ -197,8 +222,8 @@ function initialize_time_series_from_external_files(inputs)
     # Offers
     if run_mode(inputs) == RunMode.STRATEGIC_BID ||
        (
-        run_mode(inputs) == RunMode.MARKET_CLEARING && any_elements(inputs, BiddingGroup) &&
-        read_bids_from_file(inputs)
+        is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&
+        read_bids_from_file(inputs) && has_any_bid_simple_input_files(inputs)
     )
         file = joinpath(path_case(inputs), bidding_group_quantity_offer_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(
@@ -206,6 +231,10 @@ function initialize_time_series_from_external_files(inputs)
             inputs,
             file;
             expected_unit = "MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod, :profile],
+                [:period, :scenario, :subperiod, :bid_segment],
+            ],
             bidding_groups_to_read = bidding_group_label(inputs),
             buses_to_read = bus_label(inputs),
         )
@@ -216,24 +245,28 @@ function initialize_time_series_from_external_files(inputs)
             inputs,
             file;
             expected_unit = raw"$/MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod, :profile],
+                [:period, :scenario, :subperiod, :bid_segment],
+            ],
             bidding_groups_to_read = bidding_group_label(inputs),
             buses_to_read = bus_label(inputs),
         )
     end
 
     # profile offers
-    if run_mode(inputs) == RunMode.MARKET_CLEARING &&
-       any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
-        bidding_group_labels_profile =
-            index_of_elements(inputs, BiddingGroup; filters = [has_profile_bids])
-        labels_profile = bidding_group_label(inputs)[bidding_group_labels_profile]
-
+    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&
+       read_bids_from_file(inputs) && has_any_profile_input_files(inputs)
         file = joinpath(path_case(inputs), bidding_group_quantity_offer_profile_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(
             inputs.time_series.quantity_offer_profile,
             inputs,
             file;
             expected_unit = "MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod, :profile],
+                [:period, :scenario, :subperiod, :bid_segment],
+            ],
             bidding_groups_to_read = bidding_group_label(inputs),
             buses_to_read = bus_label(inputs),
             has_profile_bids = true,
@@ -255,17 +288,16 @@ function initialize_time_series_from_external_files(inputs)
                 inputs,
                 file;
                 expected_unit = "-",
-                labels_to_read = labels_profile,
+                labels_to_read = bidding_group_label(inputs),
             )
 
             file = joinpath(path_case(inputs), bidding_group_complementary_grouping_profile_file(inputs))
-
             num_errors += initialize_time_series_view_from_external_file(
                 inputs.time_series.complementary_grouping_profile,
                 inputs,
                 file;
                 expected_unit = "-",
-                labels_to_read = labels_profile,
+                labels_to_read = bidding_group_label(inputs),
             )
 
             file = joinpath(path_case(inputs), bidding_group_minimum_activation_level_profile_file(inputs))
@@ -274,14 +306,14 @@ function initialize_time_series_from_external_files(inputs)
                 inputs,
                 file;
                 expected_unit = "-",
-                labels_to_read = labels_profile,
+                labels_to_read = bidding_group_label(inputs),
             )
         end
     end
     # Virtual reservoir offers
     if (
            run_mode(inputs) == RunMode.STRATEGIC_BID ||
-           run_mode(inputs) == RunMode.MARKET_CLEARING
+           is_market_clearing(inputs)
        ) && any_elements(inputs, VirtualReservoir) && read_bids_from_file(inputs)
         file = joinpath(path_case(inputs), virtual_reservoir_quantity_offer_file(inputs))
         num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
@@ -289,6 +321,9 @@ function initialize_time_series_from_external_files(inputs)
             inputs,
             file;
             expected_unit = "MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :bid_segment],
+            ],
             virtual_reservoirs_to_read = virtual_reservoir_label(inputs),
             asset_owners_to_read = asset_owner_label(inputs),
         )
@@ -299,6 +334,9 @@ function initialize_time_series_from_external_files(inputs)
             inputs,
             file;
             expected_unit = raw"$/MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :bid_segment],
+            ],
             virtual_reservoirs_to_read = virtual_reservoir_label(inputs),
             asset_owners_to_read = asset_owner_label(inputs),
         )
@@ -311,6 +349,9 @@ function initialize_time_series_from_external_files(inputs)
             inputs,
             joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs));
             expected_unit = raw"$/MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
             labels_to_read = elastic_demand_labels(inputs),
         )
     end
@@ -384,6 +425,120 @@ function update_time_series_views_from_external_files!(
     if any_elements(inputs, DemandUnit; filters = [is_flexible])
         fill_flexible_demand_window_caches!(inputs, time_series.demand_window.data)
     end
+
+    return nothing
+end
+
+function update_segments_profile_dimensions!(inputs, period)
+    if !any_elements(inputs, BiddingGroup)
+        return nothing
+    end
+    if run_mode(inputs) in [RunMode.STRATEGIC_BID, RunMode.PRICE_TAKER_BID]
+        inputs.collections.bidding_group._bidding_group_max_segments_period = ones(
+            Int,
+            length(index_of_elements(inputs, BiddingGroup)),
+        )
+        return nothing
+    end
+    if is_market_clearing(inputs)
+        if generate_heuristic_bids_for_clearing(inputs)
+            # TODO: In the heuristic case, the number of segments doesn't
+            # change with the period
+        elseif read_bids_from_file(inputs)
+            update_segments_profile_dimensions_by_timeseries!(inputs, period)
+        end
+    end
+    return nothing
+end
+
+function update_segments_profile_dimensions_by_timeseries!(inputs, period)
+    time_series = inputs.time_series
+    ts_quantity_offer = time_series.quantity_offer
+    ts_quantity_offer_profile = time_series.quantity_offer_profile
+    ts_virtual_reservoir_quantity_offer = time_series.virtual_reservoir_quantity_offer
+
+    # Start with 0 segments and profiles to update it later
+
+    number_of_bidding_groups = length(index_of_elements(inputs, BiddingGroup))
+    number_of_virtual_reservoirs = length(index_of_elements(inputs, VirtualReservoir))
+
+    total_valid_segments_per_period = zeros(Int, number_of_bidding_groups)
+    total_valid_profiles_per_period = zeros(Int, number_of_bidding_groups)
+    total_valid_vr_segments_per_period = zeros(Int, number_of_virtual_reservoirs)
+
+    for scenario in 1:number_of_scenarios(inputs)
+        has_profile_bids = false
+        read_bids_view_from_external_file!(
+            inputs,
+            ts_quantity_offer;
+            period = period,
+            scenario = scenario,
+            has_profile_bids,
+        )
+
+        valid_segments_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
+            inputs,
+            ts_quantity_offer;
+            has_profile_bids = has_profile_bids,
+        )
+
+        total_valid_segments_per_period =
+            max.(
+                valid_segments_per_timeseries,
+                total_valid_segments_per_period,
+            )
+
+        if has_any_profile_bids(inputs)
+            has_profile_bids = true
+            read_bids_view_from_external_file!(
+                inputs,
+                ts_quantity_offer_profile;
+                period = period,
+                scenario = scenario,
+                has_profile_bids,
+            )
+
+            valid_profiles_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
+                inputs,
+                ts_quantity_offer_profile;
+                has_profile_bids = has_profile_bids,
+            )
+
+            total_valid_profiles_per_period =
+                max.(
+                    valid_profiles_per_timeseries,
+                    total_valid_profiles_per_period,
+                )
+
+            update_number_of_bid_profiles!(inputs, valid_profiles_per_timeseries)
+        end
+
+        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+            read_virtual_reservoir_bids_view_from_external_file!(
+                inputs,
+                ts_virtual_reservoir_quantity_offer;
+                period = period,
+                scenario = scenario,
+            )
+            valid_segments_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
+                inputs,
+                ts_virtual_reservoir_quantity_offer;
+                has_profile_bids = false,
+                is_virtual_reservoir = true,
+            )
+
+            total_valid_vr_segments_per_period =
+                max.(
+                    valid_segments_per_timeseries,
+                    total_valid_vr_segments_per_period,
+                )
+        end
+    end
+
+    update_number_of_bid_segments!(inputs, total_valid_segments_per_period)
+    update_number_of_bid_profiles!(inputs, total_valid_profiles_per_period)
+    update_number_of_virtual_reservoir_bidding_segments!(inputs, total_valid_vr_segments_per_period)
+
     return nothing
 end
 

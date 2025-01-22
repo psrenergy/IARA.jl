@@ -40,12 +40,12 @@ function thermal_generation!(
         ),
     ) # k$
 
-    # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
-    if run_mode(inputs) == IARA.RunMode.MARKET_CLEARING &&
-       clearing_model_type(inputs, run_time_options) != IARA.Configurations_ClearingModelType.COST_BASED
+    # Generation costs are used as a penalty in the clearing problem
+    if is_market_clearing(inputs) &&
+       construction_type(inputs, run_time_options) != IARA.Configurations_ConstructionType.COST_BASED
         model.obj_exp = @expression(
             model.jump_model,
-            model.obj_exp + thermal_total_om_cost / 1e3
+            model.obj_exp + thermal_total_om_cost * market_clearing_tiebreaker_weight(inputs)
         )
     else
         model.obj_exp = @expression(

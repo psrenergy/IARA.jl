@@ -42,7 +42,8 @@ Hydro units are high-level data structures that represent hydro electricity gene
     # index of the downstream spillage hydro Plant in the collection HydroUnit
     spill_to::Vector{Int} = []
     waveguide_volume::Vector{Vector{Float64}} = []
-    inflow_file::String = ""
+    inflow_ex_ante_file::String = ""
+    inflow_ex_post_file::String = ""
 
     # caches
     is_associated_with_some_virtual_reservoir::Vector{Bool} = []
@@ -89,8 +90,10 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_vector_parameters(inputs.db, "HydroUnit", "waveguide_volume")
 
     # Load time series files
-    hydro_unit.inflow_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow")
+    hydro_unit.inflow_ex_ante_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow_ex_ante")
+    hydro_unit.inflow_ex_post_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow_ex_post")
 
     hydro_unit.is_associated_with_some_virtual_reservoir = zeros(Bool, num_hydro_units)
 
@@ -251,7 +254,7 @@ IARA.add_hydro_unit!(db;
 """
 function add_hydro_unit!(db::DatabaseSQLite; kwargs...)
     if !haskey(kwargs, :gaugingstation_id)
-        gauging_station_label = kwargs[:label] * "_gauging_station"
+        gauging_station_label = kwargs[:label]
         add_gauging_station!(db; label = gauging_station_label)
         kwargs = Dict(kwargs...)
         kwargs[:gaugingstation_id] = gauging_station_label
@@ -627,6 +630,39 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
         @error("Hydro Unit minimum outflow violation cost is not defined.")
         num_errors += 1
     end
+    if read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file == "" && length(hydro_unit) > 0
+        @error(
+            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_ante inflow file was linked."
+        )
+        num_errors += 1
+    end
+    if read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file == "" && length(hydro_unit) > 0
+        @error(
+            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_post inflow file was linked."
+        )
+        num_errors += 1
+    end
+    if !read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file != "" && length(hydro_unit) > 0
+        @warn(
+            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_ante inflow file was linked.
+            This file will be ignored."
+        )
+    end
+    if !read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file != "" && length(hydro_unit) > 0
+        @warn(
+            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_post inflow file was linked.
+            This file will be ignored."
+        )
+    end
+    if generate_heuristic_bids_for_clearing(inputs) &&
+       clearing_hydro_representation(inputs) ==
+       Configurations_ClearingHydroRepresentation.PURE_BIDS &&
+       any_elements(inputs, HydroUnit; filters = [operates_as_run_of_river])
+        @warn(
+            "The BidDataSource option is set to PRICETAKER_HEURISTICS, and the clearing representation is set to PURE_BIDS.
+            All Hydro Units operating as run of river will be treated with profile bids during the clearing process."
+        )
+    end
     return num_errors
 end
 
@@ -784,7 +820,7 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, 
     else
         volume = read_serialized_clearing_variable(
             inputs,
-            RunTime_ClearingProcedure.EX_POST_PHYSICAL,
+            RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
             :hydro_volume;
             period = period - 1,
             scenario = scenario,

@@ -23,15 +23,17 @@ function profile_min_activation_level!(
 )
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
-    profile_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup)
+
+    valid_profiles = get_maximum_valid_profiles(inputs)
 
     # Model variables
     @variable(
         model.jump_model,
         minimum_activation_level_profile_indicator[
-            bg in profile_bidding_groups,
-            profile in 1:maximum_profiles(inputs, bg),
+            bg in bidding_groups,
+            profile in 1:valid_profiles[bg],
         ], Bin
     )
 
@@ -40,16 +42,18 @@ function profile_min_activation_level!(
     end
 
     # Model parameters
-    minimum_activation_level_profile_series = time_series_minimum_activation_level_profile(inputs)
+    placeholder_scenario = 1
+    minimum_activation_level_profile_series =
+        time_series_minimum_activation_level_profile(inputs, model.period, placeholder_scenario)
 
     @variable(
         model.jump_model,
         profile_min_activation_level[
-            bg in profile_bidding_groups,
-            profile in 1:maximum_profiles(inputs, bg),
+            bg in bidding_groups,
+            profile in 1:valid_profiles[bg],
         ]
         in
-        MOI.Parameter(minimum_activation_level_profile_series[index_among_profile(inputs, bg), profile])
+        MOI.Parameter(minimum_activation_level_profile_series[bg, profile])
     )
 
     return nothing
@@ -69,18 +73,21 @@ function profile_min_activation_level!(
     ::Type{SubproblemUpdate},
 )
     # Define the bidding groups
-    profile_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup)
 
-    minimum_activation_level_profile_series = time_series_minimum_activation_level_profile(inputs)
+    minimum_activation_level_profile_series =
+        time_series_minimum_activation_level_profile(inputs, model.period, scenario)
     profile_min_activation_level = get_model_object(model, :profile_min_activation_level)
 
-    for bg in profile_bidding_groups, profile in bidding_profiles(inputs)
+    valid_profiles = get_maximum_valid_profiles(inputs)
+
+    for bg in bidding_groups, profile in 1:valid_profiles[bg]
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
             profile_min_activation_level[bg, profile],
-            minimum_activation_level_profile_series[index_among_profile(inputs, bg), profile],
+            minimum_activation_level_profile_series[bg, profile],
         )
     end
 
@@ -98,7 +105,7 @@ function profile_min_activation_level!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    if run_time_options.clearing_model_procedure != RunTime_ClearingProcedure.EX_POST_COMMERCIAL
+    if run_time_options.clearing_model_subproblem != RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
         if use_binary_variables(inputs)
             add_symbol_to_serialize!(outputs, :minimum_activation_level_profile_indicator)
         end

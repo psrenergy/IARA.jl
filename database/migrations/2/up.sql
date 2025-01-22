@@ -98,7 +98,6 @@ ALTER TABLE Configuration_vector_block_duration RENAME TO Configuration_vector_s
 ALTER TABLE Configuration_vector_subperiod_duration RENAME COLUMN block_duration_in_hours TO subperiod_duration_in_hours;
 ALTER TABLE Configuration_time_series_files RENAME COLUMN hour_block_map TO hour_subperiod_map;
 
-
 ALTER TABLE BiddingGroup RENAME COLUMN simple_bid_max_segments TO independent_bid_max_segments;
 ALTER TABLE BiddingGroup RENAME COLUMN multihour_bid_max_profiles TO profile_bid_max_profiles;
 

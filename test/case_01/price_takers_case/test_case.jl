@@ -26,7 +26,7 @@ finally
     end
 end
 
-IARA.price_taker_bid(PATH; plot_outputs = false)
+IARA.price_taker_bid(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

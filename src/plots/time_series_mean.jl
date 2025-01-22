@@ -16,13 +16,13 @@ Type for a time series plot with the mean of scenarios, with a confidence interv
 abstract type PlotTimeSeriesMean <: PlotType end
 
 """
-    agent_mean_and_sd_in_scenarios(::Type{PlotTimeSeriesMean}, data::Array{Float64, 3}, agent_names::Vector{String}; kwargs...)
+    agent_mean_and_sd_in_scenarios(::Type{PlotTimeSeriesMean}, data::Array{<:AbstractFloat, 3}, agent_names::Vector{String}; kwargs...)
 
 Calculate the mean and standard deviation of the data across scenarios.
 """
 function agent_mean_and_sd_in_scenarios(
     ::Type{PlotTimeSeriesMean},
-    data::Array{Float64, 3},
+    data::Array{<:AbstractFloat, 3},
     agent_names::Vector{String};
     kwargs...,
 )
@@ -33,7 +33,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesMean},
-    data::Array{Float32, 3},
+    data::Array{<:AbstractFloat, 3},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -46,18 +46,18 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesMean},
-    data::Array{Float32, 4},
+    data::Array{<:AbstractFloat, 4},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
 )
-    if !("subperiod" in dimensions) && ("bid_segment" in dimensions)
+    if !("subperiod" in dimensions) && (("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
         num_scenarios = size(time_series, 2)
         time_series, standard_dev, trace_names =
             agent_mean_and_sd_in_scenarios(PlotTimeSeriesMean, time_series, agent_names; kwargs...)
         return time_series, standard_dev, trace_names, num_scenarios
-    elseif ("subperiod" in dimensions) && !("bid_segment" in dimensions)
+    elseif ("subperiod" in dimensions) && !(("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series = merge_period_subperiod(data)
         num_scenarios = size(time_series, 2)
         time_series, standard_dev, trace_names =
@@ -72,7 +72,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesMean},
-    data::Array{Float32, 5},
+    data::Array{<:AbstractFloat, 5},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -84,7 +84,7 @@ function reshape_time_series!(
         time_series, standard_dev, agent_names =
             agent_mean_and_sd_in_scenarios(PlotTimeSeriesMean, time_series, agent_names; kwargs...)
         return time_series, standard_dev, agent_names, num_scenarios
-    elseif !("bid_segment" in dimensions)
+    elseif !(("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series = merge_period_subperiod(data)
         time_series, modified_scenario_names =
             merge_scenario_subscenario(time_series, agent_names; kwargs...)
@@ -109,7 +109,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesMean},
-    data::Array{Float32, 6},
+    data::Array{<:AbstractFloat, 6},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -124,20 +124,20 @@ function reshape_time_series!(
 end
 
 """
-    plot_data(::Type{PlotTimeSeriesMean}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, period_type::Configurations_PeriodType.T, kwargs...)
+    plot_data(::Type{PlotTimeSeriesMean}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, time_series_step::Configurations_TimeSeriesStep.T, kwargs...)
 
 Create a time series plot with the mean of scenarios, with a confidence interval of 95%.
 """
 function plot_data(
     ::Type{PlotTimeSeriesMean},
-    data::Array{Float32, N},
+    data::Array{<:AbstractFloat, N},
     agent_names::Vector{String},
     dimensions::Vector{String};
     title::String = "",
     unit::String = "",
     file_path::String,
     initial_date::DateTime,
-    period_type::Configurations_PeriodType.T,
+    time_series_step::Configurations_TimeSeriesStep.T,
     kwargs...,
 ) where {N}
     traces, standard_dev, trace_names, number_of_scenarios =
@@ -147,13 +147,13 @@ function plot_data(
     number_of_traces = size(traces, 1)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type)
+    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step)
 
-    confidence_interval_top = Vector{Vector{Float64}}()
-    confidence_interval_bottom = Vector{Vector{Float64}}()
+    confidence_interval_top = Vector{Vector{AbstractFloat}}()
+    confidence_interval_bottom = Vector{Vector{AbstractFloat}}()
     for trace in 1:number_of_traces
-        confidence_top = Vector{Float64}()
-        confidence_bottom = Vector{Float64}()
+        confidence_top = Vector{AbstractFloat}()
+        confidence_bottom = Vector{AbstractFloat}()
         for i in 1:number_of_periods
             # 95 % confidence interval
             push!(confidence_top, traces[trace, i] + 1.96 * standard_dev[trace, i] / sqrt(number_of_scenarios))

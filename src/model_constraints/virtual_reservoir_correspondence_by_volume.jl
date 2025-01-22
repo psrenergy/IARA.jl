@@ -27,11 +27,11 @@ function virtual_reservoir_correspondence_by_volume!(
     ::Type{SubproblemBuild},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    number_of_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
 
     hydro_volume = get_model_object(model, :hydro_volume)
     virtual_reservoir_energy_stock = get_model_object(model, :virtual_reservoir_energy_stock)
     virtual_reservoir_generation = get_model_object(model, :virtual_reservoir_generation)
+    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
     @constraint(
         model.jump_model,
@@ -43,7 +43,7 @@ function virtual_reservoir_correspondence_by_volume!(
         ==
         sum(
             virtual_reservoir_energy_stock[vr, ao] -
-            sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:number_of_segments) for
+            sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:valid_segments[vr]) for
             ao in virtual_reservoir_asset_owner_indices(inputs, vr)
         )
     )

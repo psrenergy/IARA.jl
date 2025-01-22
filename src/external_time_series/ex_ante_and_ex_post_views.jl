@@ -13,15 +13,15 @@
 
 Some time series can come in two flavours:
 
-1 - Ex-Ante (DA) time series: These are time series that are available before the periods of operation. They are used to make decisions for the next period.
-2 - Ex-Post (RT) time series: These are time series that are available on the period of operation. They are used to make decisions for the current period.
+1 - Ex-Ante time series: These are time series that are available before the periods of operation. They are used to make decisions for the next period.
+2 - Ex-Post time series: These are time series that are available on the period of operation. They are used to make decisions for the current period.
 
 In some use cases it is necessary to have both time series available. This view is used to store both time series in a single object.
-If the Ex-Post (RT) time series is nit available it will default to use the Ex-Ante (DA) time series.
+If the Ex-Post time series is nit available it will default to use the Ex-Ante time series.
 
 Besides the conceptual idea about the time of availability of the data there is one concrete difference between the two time series:
-The Ex-Post (RT) time series always have one dimension more than the Ex-Ante (DA) time series. This extra dimension is called `subscenario`.
-For a given period and scenario that the model made a decision we can use multiple new scenarios of the Ex-Post (RT) time series. This is the `subscenario` dimension.
+The Ex-Post time series always have one dimension more than the Ex-Ante time series. This extra dimension is called `subscenario`.
+For a given period and scenario that the model made a decision we can use multiple new scenarios of the Ex-Post time series. This is the `subscenario` dimension.
 """
 @kwdef mutable struct ExAnteAndExPostTimeSeriesView{T, N, M} <: ViewFromExternalFile
     ex_ante::TimeSeriesView{T, N} = TimeSeriesView{T, N}()
@@ -43,11 +43,14 @@ function has_ex_post_time_series(ts::ExAnteAndExPostTimeSeriesView)
     return ts.ex_post.reader !== nothing
 end
 
-function initialize_da_and_rt_time_series_view_from_external_files!(
+function initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
     ts::ExAnteAndExPostTimeSeriesView,
-    inputs,
-    file_path::AbstractString;
+    inputs;
+    ex_ante_file_path::AbstractString,
+    ex_post_file_path::AbstractString,
+    files_to_read::Configurations_UncertaintyScenariosFiles.T,
     expected_unit::String = "",
+    possible_expected_dimensions::Vector{Vector{Symbol}} = Vector{Vector{Symbol}}(),
     labels_to_read::Vector{String} = String[],
 )
     # Validate that the ExAnteAndExPostTimeSeriesView was correectly initialized
@@ -60,39 +63,27 @@ function initialize_da_and_rt_time_series_view_from_external_files!(
 
     num_errors = 0
 
-    # Build file paths
-    ex_ante_file = file_path * "_ex_ante"
-    ex_post_file = file_path * "_ex_post"
-
-    # Check if the day ahead and real time files exist
-    # If they exist we must initialize both time series
-    # If they don`t exist we must initialize only the day ahead time series
-    if quiver_file_exists(ex_ante_file) && quiver_file_exists(ex_post_file)
-        # Initialize both time series
+    if read_ex_ante_file(files_to_read)
         num_errors += initialize_time_series_view_from_external_file(
             ts.ex_ante,
             inputs,
-            ex_ante_file;
+            ex_ante_file_path;
             expected_unit = expected_unit,
+            possible_expected_dimensions = possible_expected_dimensions,
             labels_to_read = labels_to_read,
         )
+    end
+
+    if read_ex_post_file(files_to_read)
         num_errors += initialize_time_series_view_from_external_file(
             ts.ex_post,
             inputs,
-            ex_post_file;
+            ex_post_file_path;
             expected_unit = expected_unit,
             labels_to_read = labels_to_read,
         )
         # subscenario dimension should always be after period and scenario
         @assert ts.ex_post.reader.metadata.dimensions[3] == :subscenario
-    else
-        num_errors += initialize_time_series_view_from_external_file(
-            ts.ex_ante,
-            inputs,
-            file_path;
-            expected_unit = expected_unit,
-            labels_to_read = labels_to_read,
-        )
     end
 
     return num_errors

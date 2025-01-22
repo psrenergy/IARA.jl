@@ -21,7 +21,6 @@ subperiod_duration_in_hours = 1.0
 # Conversion constants
 # --------------------
 m3_per_second_to_hm3 = (3600 / 1e6) * subperiod_duration_in_hours
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 
 # Create the database
 # -------------------
@@ -37,6 +36,9 @@ db = IARA.create_study!(PATH;
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
     hydro_spillage_cost = 1.0,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 
 # Add collection elements
@@ -101,6 +103,7 @@ IARA.add_dc_line!(db;
     bus_to = "bus_2",
 )
 
+max_demand = 10.0
 IARA.add_demand_unit!(db;
     label = "dem_1",
     demand_unit_type = IARA.DemandUnit_DemandType.INELASTIC,
@@ -113,6 +116,7 @@ IARA.add_demand_unit!(db;
         existing = Int(IARA.DemandUnit_Existence.EXISTS),
     ),
     bus_id = "bus_1",
+    max_demand = max_demand,
 )
 
 # Create and link CSV files
@@ -141,14 +145,14 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hyd_1_gauging_station"],
+    labels = ["hyd_1"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "m3/s",
 )
 
-demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 10 * MW_to_GWh
+demand = ones(1, number_of_subperiods, number_of_scenarios, number_of_periods)
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -157,25 +161,25 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.link_time_series_to_file(
     db,
     "RenewableUnit";
-    generation = "renewable_generation",
+    generation_ex_ante = "renewable_generation",
 )
 
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow",
+    inflow_ex_ante = "inflow",
 )
 
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 IARA.close_study!(db)

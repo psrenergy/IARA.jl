@@ -22,8 +22,7 @@ function bidding_group_generation!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    independent_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
+    bidding_groups = index_of_elements(inputs, BiddingGroup)
     blks = subperiods(inputs)
 
     # Time series
@@ -31,13 +30,15 @@ function bidding_group_generation!(
     quantity_offer_series = time_series_quantity_offer(inputs, model.period, placeholder_scenario)
     price_offer_series = time_series_price_offer(inputs, model.period, placeholder_scenario)
 
+    valid_segments = get_maximum_valid_segments(inputs)
+
     # Parameters
     @variable(
         model.jump_model,
         bidding_group_quantity_offer[
             blk in blks,
-            bg in independent_bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bg in bidding_groups,
+            bds in 1:valid_segments[bg],
             bus in buses,
         ]
         in
@@ -47,8 +48,8 @@ function bidding_group_generation!(
         model.jump_model,
         bidding_group_price_offer[
             blk in blks,
-            bg in independent_bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bg in bidding_groups,
+            bds in 1:valid_segments[bg],
             bus in buses,
         ]
         in
@@ -60,8 +61,8 @@ function bidding_group_generation!(
         model.jump_model,
         bidding_group_generation[
             blk in blks,
-            bg in independent_bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bg in bidding_groups,
+            bds in 1:valid_segments[bg],
             bus in buses,
         ],
         lower_bound = 0.0,
@@ -70,8 +71,8 @@ function bidding_group_generation!(
         model.jump_model,
         linear_combination_bid_segments[
             blk in blks,
-            bg in independent_bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bg in bidding_groups,
+            bds in 1:valid_segments[bg],
             bus in buses,
         ],
         lower_bound = 0.0,
@@ -83,8 +84,8 @@ function bidding_group_generation!(
         model.jump_model,
         accepted_offers_cost[
             blk in blks,
-            bg in independent_bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bg in bidding_groups,
+            bds in 1:valid_segments[bg],
             bus in buses,
         ],
         bidding_group_generation[blk, bg, bds, bus] * bidding_group_price_offer[blk, bg, bds, bus],
@@ -109,8 +110,7 @@ function bidding_group_generation!(
     ::Type{SubproblemUpdate},
 )
     buses = index_of_elements(inputs, Bus)
-    independent_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
+    bidding_groups = index_of_elements(inputs, BiddingGroup)
     blks = subperiods(inputs)
 
     # Model parameters
@@ -121,7 +121,11 @@ function bidding_group_generation!(
     quantity_offer_series = time_series_quantity_offer(inputs, model.period, scenario)
     price_offer_series = time_series_price_offer(inputs, model.period, scenario)
 
-    for blk in blks, bg in independent_bidding_groups, bds in 1:maximum_bid_segments(inputs, bg), bus in buses
+    adjust_quantity_offer_for_ex_post!(inputs, run_time_options, quantity_offer_series, subscenario)
+
+    valid_segments = get_maximum_valid_segments(inputs)
+
+    for blk in blks, bg in bidding_groups, bds in 1:valid_segments[bg], bus in buses
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -160,7 +164,6 @@ function bidding_group_generation!(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_independent_bids],
     )
 
     initialize!(
@@ -203,7 +206,6 @@ function bidding_group_generation!(
         subscenario,
         multiply_by = MW_to_GW(),
         has_profile_bids = false,
-        filters = [has_independent_bids],
     )
 
     return nothing

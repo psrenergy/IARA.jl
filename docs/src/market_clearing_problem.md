@@ -7,7 +7,7 @@ This problem is defined at period $t$ and scenario $\omega$.
 Lists new sets, not present in the centralized operation or price taker subproblems.
 
 - ``K(i, n)``: Set of segment offers at node $n$ for the asset owner $i$.
-- ``K^M(i)``: Set of multi-hour profiles for the asset owner $i$.
+- ``K^M(i)``: Set of bid profiles for the asset owner $i$.
 - ``\mathcal{K}_m(i)``: Complementary grouping $m$ for the asset owner $i$.
 - ``J^{VR}``: Set of virtual reservoirs.
 - ``J^H_{VR}(r)``: Set of hydro units associated with virtual reservoir $r$.

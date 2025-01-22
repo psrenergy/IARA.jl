@@ -10,10 +10,10 @@
 # During `MARKET_CLEARING`, we have Asset Owners placing energy offers from their Bidding Groups.
 # These bids are selected by the system to meet the demand at the lowest cost possible, considering the possible constraints that the problem might have.
 
-# A possible configuration that a bid can have is to have a multi-hour bid, where the price for the energy is the same for all subperiods in the study.
-# Additionally, for multi-hour bids, the system is obligated to accept the bid for all subperiods in the study.
+# A possible configuration that a bid can have is to have a profile bid, where the price for the energy is the same for all subperiods in the study.
+# Additionally, for profile bids, the system is obligated to accept the bid for all subperiods in the study.
 
-# For this tutorial we will be building a case with two Bidding Groups, where one of them has a multi-hour bid.
+# For this tutorial we will be building a case with two Bidding Groups, where one of them has a profile bid.
 
 # ## Case overview
 
@@ -37,10 +37,7 @@ using IARA
 number_of_periods = 1
 number_of_scenarios = 1
 number_of_subperiods = 2
-maximum_number_of_bidding_segments = 1
-maximum_number_of_bidding_profiles = 1
 subperiod_duration_in_hours = 1.0
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 number_of_bidding_groups = 2
 cycle_duration_in_hours =
     subperiod_duration_in_hours * number_of_subperiods * number_of_periods
@@ -64,11 +61,12 @@ db = IARA.create_study!(PATH_BASE_CASE;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 500.0,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 ; #hide
 # ## Zone and Bus
 
-# In this tutorial we are concerned only with highlighting the specifications of a clearing with multi-hour bids.
+# In this tutorial we are concerned only with highlighting the specifications of a clearing with profile bids.
 # Therefore, we will be simplifying it by using a single zone and a single bus. 
 # We can add each of them by using the [`IARA.add_zone!`](@ref) and [`IARA.IARA.add_bus!`](@ref) functions.
 
@@ -86,6 +84,7 @@ IARA.add_demand_unit!(db;
         existing = [1],
     ),
     bus_id = "bus_1",
+    max_demand = 0.03,
 )
 
 # We can now link the time series files for the demand to the database. You can find this time series file in the [`data/case_3`]() folder.
@@ -96,12 +95,12 @@ IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "demand.csv"))
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 # ## Asset Owners and Bidding Groups
 
-# For this case, we will be demonstrating the differences of a multi-hour bid offer and an independent bid offer.
+# For this case, we will be demonstrating the differences of a profile bid offer and an independent bid offer.
 # Thus, we will create two Bidding Groups, one for each type of bid, and link them to the same Asset Owner.
 
 # We can add an Asset Owner with the function [`IARA.add_asset_owner!`](@ref).
@@ -116,13 +115,11 @@ IARA.add_asset_owner!(db;
 IARA.add_bidding_group!(db;
     label = "bg_1",
     assetowner_id = "asset_owner_1",
-    profile_bid_max_profiles = 1,
 )
 
 IARA.add_bidding_group!(db;
     label = "bg_2",
     assetowner_id = "asset_owner_1",
-    independent_bid_max_segments = 1,
 )
 
 # After adding the Bidding Groups, we can link the time series files for the price and quantity offers.
@@ -145,7 +142,7 @@ IARA.link_time_series_to_file(
     price_offer = "price_offer",
 )
 
-# We have just added the time series for the independent bidding offers. Now let's check the multi-hour bidding offers and link them to our case.
+# We have just added the time series for the independent bidding offers. Now let's check the profile bidding offers and link them to our case.
 
 # ### Quantity Offer
 

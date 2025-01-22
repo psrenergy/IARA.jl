@@ -35,7 +35,7 @@ end
 
 cp(PATH_ORIGINAL, PATH_LINEAR_2; force = true);
 
-# In the [previous section](build_policy_graph.md) we created a case with 2 periods and a linear policy graph.
+# In the [previous section](case_06_build_policy_graph.md) we created a case with 2 periods and a linear policy graph.
 # Therefore, we do not need to update the number of periods or the policy graph type.
 
 # Let's begin by running the case with a linear policy graph and 2 periods.
@@ -87,13 +87,13 @@ IARA.update_configuration!(
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demands_10_periods",
+    demand_ex_ante = "demands_10_periods",
 )
 
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow_10_periods",
+    inflow_ex_ante = "inflow_10_periods",
 )
 
 IARA.close_study!(db)
@@ -142,14 +142,14 @@ end
 
 cp(PATH_ORIGINAL, PATH_CYCLIC_2; force = true);
 
-# Now we need to update the policy graph type to `CYCLIC_WITH_FIXED_ROOT`.
+# Now we need to update the policy graph type to `CYCLIC_WITH_NULL_ROOT`.
 
 db = IARA.load_study(PATH_CYCLIC_2; read_only = false)
 
 IARA.update_configuration!(
     db;
     number_of_periods = 2,
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
 )
 
 # We will also update the inflow and demand time series files to have 2 periods.
@@ -157,13 +157,13 @@ IARA.update_configuration!(
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demands",
+    demand_ex_ante = "demands",
 )
 
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow = "inflow",
+    inflow_ex_ante = "inflow",
 )
 ;
 

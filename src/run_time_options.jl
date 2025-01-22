@@ -10,6 +10,6 @@
 
 @kwdef struct RunTimeOptions
     asset_owner_index::Int = PSRDatabaseSQLite._psrdatabasesqlite_null_value(Int)
-    clearing_model_procedure::Union{RunTime_ClearingProcedure.T, Nothing} = nothing
+    clearing_model_subproblem::Union{RunTime_ClearingSubproblem.T, Nothing} = nothing
     clearing_integer_variables_in_model::Vector{Symbol} = Symbol[]
 end

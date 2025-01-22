@@ -11,21 +11,21 @@
 
 module TestCase09BaseCase
 
-# using Test
-# using IARA
+using Test
+using IARA
 
-# const PATH = @__DIR__
+const PATH = @__DIR__
 
-# db = nothing
-# try
-#     include("build_case.jl")
-# finally
-#     if db !== nothing
-#         IARA.close_study!(db)
-#     end
-# end
+db = nothing
+try
+    include("build_case.jl")
+finally
+    if db !== nothing
+        IARA.close_study!(db)
+    end
+end
 
-# IARA.train_min_cost(PATH; plot_outputs = true)
+IARA.market_clearing(PATH; plot_outputs = true, delete_output_folder_before_execution = true)
 
 # if Main.UPDATE_RESULTS
 #     Main.update_outputs!(PATH)

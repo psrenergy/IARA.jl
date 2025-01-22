@@ -166,6 +166,14 @@ function bidding_group_file_labels(inputs)
     return labels
 end
 
+function get_dimension_dict_from_reader(reader::Quiver.Reader)
+    dimensions_dict = Dict{Symbol, Int}()
+    for (name, dimension) in zip(reader.metadata.dimensions, reader.metadata.dimension_size)
+        dimensions_dict[name] = dimension
+    end
+    return dimensions_dict
+end
+
 function virtual_reservoir_file_labels(inputs)
     labels = String[]
     for vr in index_of_elements(inputs, VirtualReservoir)

@@ -33,7 +33,7 @@ function hydro_volume!(
         upper_bound = hydro_unit_max_volume(inputs, h),
     )
 
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+    if !is_market_clearing(inputs)
         @variable(
             model.jump_model,
             hydro_volume_state[h in hydro_units_with_reservoir],
@@ -69,7 +69,7 @@ function hydro_volume!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+    if !is_market_clearing(inputs)
         return nothing
     end
 
@@ -113,7 +113,7 @@ function hydro_volume!(
     hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(outputs, :hydro_volume)
-    if run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
+    if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
         add_symbol_to_serialize!(outputs, :hydro_volume)
     end
 
@@ -139,7 +139,7 @@ function hydro_volume!(
         run_time_options,
     )
 
-    if run_time_options.clearing_model_procedure == RunTime_ClearingProcedure.EX_POST_PHYSICAL
+    if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
         add_symbol_to_serialize!(outputs, :hydro_volume)
     end
 

@@ -25,8 +25,8 @@ abstract type PlotRelationMean <: RelationPlotType end
 """
     plot_data(
         ::Type{PlotRelationAll}, 
-        data_x::Array{Float32, N}, 
-        data_y::Array{Float32, N}, 
+        data_x::Array{<:AbstractFloat, N}, 
+        data_y::Array{<:AbstractFloat, N}, 
         agent_x::String, 
         agent_y::String, 
         dimensions::Vector{String}; 
@@ -40,7 +40,7 @@ abstract type PlotRelationMean <: RelationPlotType end
         trace_mode::String, 
         file_path::String, 
         initial_date::DateTime, 
-        period_type::Configurations_PeriodType.T, 
+        time_series_step::Configurations_TimeSeriesStep.T, 
         kwargs...
     ) where {N}
 
@@ -48,8 +48,8 @@ Plot the relation between two data series for all scenarios.
 """
 function plot_data(
     ::Type{PlotRelationAll},
-    data_x::Array{Float32, N},
-    data_y::Array{Float32, N},
+    data_x::Array{<:AbstractFloat, N},
+    data_y::Array{<:AbstractFloat, N},
     agent_x::String,
     agent_y::String,
     dimensions::Vector{String};
@@ -63,7 +63,7 @@ function plot_data(
     trace_mode::String = "markers",
     file_path::String,
     initial_date::DateTime,
-    period_type::Configurations_PeriodType.T,
+    time_series_step::Configurations_TimeSeriesStep.T,
     kwargs...,
 ) where {N}
     traces_x, trace_names_x = reshape_time_series!(PlotTimeSeriesAll, data_x, [agent_x], dimensions; kwargs...)
@@ -112,8 +112,8 @@ end
 """
     plot_data(
     ::Type{PlotRelationMean},
-    data_x::Array{Float32, N},
-    data_y::Array{Float32, N},
+    data_x::Array{<:AbstractFloat, N},
+    data_y::Array{<:AbstractFloat, N},
     agent_x::String,
     agent_y::String,
     dimensions::Vector{String};
@@ -127,7 +127,7 @@ end
     trace_mode::String,
     file_path::String,
     initial_date::DateTime,
-    period_type::Configurations_PeriodType.T,
+    time_series_step::Configurations_TimeSeriesStep.T,
     kwargs...,
 ) where {N}
 
@@ -135,8 +135,8 @@ Plot the relation between two data series in average across scenarios.
 """
 function plot_data(
     ::Type{PlotRelationMean},
-    data_x::Array{Float32, N},
-    data_y::Array{Float32, N},
+    data_x::Array{<:AbstractFloat, N},
+    data_y::Array{<:AbstractFloat, N},
     agent_x::String,
     agent_y::String,
     dimensions::Vector{String};
@@ -150,7 +150,7 @@ function plot_data(
     trace_mode::String = "markers",
     file_path::String,
     initial_date::DateTime,
-    period_type::Configurations_PeriodType.T,
+    time_series_step::Configurations_TimeSeriesStep.T,
     kwargs...,
 ) where {N}
     traces_x, _, trace_names_x, _ =

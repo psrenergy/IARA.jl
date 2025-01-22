@@ -31,11 +31,11 @@ function bidding_group_profile_complementary_profile!(
     maximum_bidding_profiles = maximum_number_of_bidding_profiles(inputs)
     # Model variables
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)
-    profile_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
 
     # Model parameters
-    complementary_grouping_profile_series = time_series_complementary_grouping_profile(inputs)
+    placeholder_scenario = 1
+    complementary_grouping_profile_series =
+        time_series_complementary_grouping_profile(inputs, model.period, placeholder_scenario)
 
     maximum_complementary_grouping_profile = size(complementary_grouping_profile_series)[2]
     complementary_grouping_profile_sets = zeros(Int,
@@ -44,7 +44,9 @@ function bidding_group_profile_complementary_profile!(
         maximum_bidding_profiles,
     )
 
-    for (i_bg, bg) in enumerate(profile_bidding_groups), prf in 1:maximum_profiles(inputs, bg),
+    valid_profiles = get_maximum_valid_profiles(inputs)
+
+    for (i_bg, bg) in enumerate(bidding_groups), prf in 1:valid_profiles[bg],
         cp_idx in 1:maximum_complementary_grouping_profile
 
         complementary_group = complementary_grouping_profile_series[i_bg, cp_idx, prf]
@@ -54,8 +56,8 @@ function bidding_group_profile_complementary_profile!(
     # Model constraints
     @constraint(
         model.jump_model,
-        bidding_group_profile_complementary_profile[
-            bg in profile_bidding_groups,
+        bidding_group_profile_complementary_profile_profile[
+            bg in bidding_groups,
             cp_idx in 1:maximum_complementary_grouping_profile;
             has_complementary_grouping_profile(
                 complementary_grouping_profile_sets[bg, cp_idx, :],
@@ -63,7 +65,7 @@ function bidding_group_profile_complementary_profile!(
         ],
         sum(
             linear_combination_bid_segments_profile[bg, prf]
-            for prf in 1:maximum_profiles(inputs, bg)
+            for prf in 1:valid_profiles[bg]
             if complementary_grouping_profile_sets[bg, cp_idx, prf] == 1;
             init = 0,
         ) <= 1,

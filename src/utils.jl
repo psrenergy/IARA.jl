@@ -8,6 +8,21 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    migrations_directory()
+
+Return the path to the migration directory.
+"""
+function migrations_directory()
+    path = if is_compiled()
+        joinpath(Sys.BINDIR, "database", "migrations")
+    else
+        joinpath(dirname(@__DIR__), "database", "migrations")
+    end
+    @assert isdir(path)
+    return path
+end
+
 function locate_inputs_in_args(args...)
     for arg in args
         if arg isa Inputs
@@ -52,10 +67,10 @@ function per_minute_to_per_hour()
 end
 
 function date_time_from_period(inputs::Inputs, period::Int)
-    if period_type(inputs) == Configurations_PeriodType.MONTHLY
+    if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return initial_date_time(inputs) + Dates.Month(period - 1)
     else
-        error("Period type $(period_type(inputs)) not supported.")
+        error("Time series step $(time_series_step(inputs)) not supported.")
     end
 end
 
@@ -64,21 +79,21 @@ function period_from_date_time(
     date_time::DateTime;
     initial_date_time::DateTime = initial_date_time(inputs),
 )
-    if period_type(inputs) == Configurations_PeriodType.MONTHLY
+    if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         year_difference = Dates.year(date_time) - Dates.year(initial_date_time)
         month_difference = Dates.month(date_time) - Dates.month(initial_date_time)
         return 12 * year_difference + month_difference + 1
     else
-        error("Period type $(period_type(inputs)) not supported.")
+        error("Time series step $(time_series_step(inputs)) not supported.")
     end
 end
 
 function period_index_in_year(inputs::Inputs, period::Int)
     date_time = date_time_from_period(inputs, period)
-    if period_type(inputs) == Configurations_PeriodType.MONTHLY
+    if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return Dates.month(date_time)
     else
-        error("Period type $(period_type(inputs)) not supported.")
+        error("Time series step $(time_series_step(inputs)) not supported.")
     end
 end
 
@@ -111,17 +126,17 @@ function get_max_price(inputs::Inputs)
     return get_maximum_value_of_time_series(spot_price_file)
 end
 
-function subperiod_aggregation_type(unit::String)
+function variable_aggregation_type(unit::String)
     aggregate_by_sum = ["MWh", "GWh", "\$"]
     aggregate_by_average = ["m3/s", "m³/s", "MW", "p.u.", "\$/MWh"]
     aggregate_by_last_value = ["hm3", "hm³"]
 
     if unit in aggregate_by_sum
-        return Configurations_SubperiodAggregationType.SUM
+        return Configurations_VariableAggregationType.SUM
     elseif unit in aggregate_by_average
-        return Configurations_SubperiodAggregationType.AVERAGE
+        return Configurations_VariableAggregationType.AVERAGE
     elseif unit in aggregate_by_last_value
-        return Configurations_SubperiodAggregationType.LAST_VALUE
+        return Configurations_VariableAggregationType.LAST_VALUE
     else
         error("Unexpected unit $unit.")
     end
@@ -145,15 +160,6 @@ function build_sql_typed_kwargs(kwargs)
         end
     end
     return sql_typed_kwargs
-end
-
-function use_binary_variables(inputs, run_time_options)
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
-        return inputs.collections.configurations.use_binary_variables == Configurations_BinaryVariableUsage.USE
-    elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
-           run_mode(inputs) == RunMode.STRATEGIC_BID
-        return run_time_options.use_binary_variables == Configurations_BinaryVariableUsage.USE
-    end
 end
 
 """

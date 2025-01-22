@@ -149,7 +149,8 @@ IARA.add_battery_unit!(db;
 ```
 """
 function add_battery_unit!(db::DatabaseSQLite; kwargs...)
-    PSRI.create_element!(db, "BatteryUnit"; kwargs...)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    PSRI.create_element!(db, "BatteryUnit"; sql_typed_kwargs...)
     return nothing
 end
 
@@ -172,7 +173,8 @@ function update_battery_unit!(
     label::String;
     kwargs...,
 )
-    for (attribute, value) in kwargs
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
             db,
             "BatteryUnit",

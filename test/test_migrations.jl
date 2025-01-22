@@ -6,7 +6,7 @@ using IARA
 const PSRDatabaseSQLite = IARA.PSRDatabaseSQLite
 
 function test_iara_migrations()
-    @test PSRDatabaseSQLite.test_migrations(IARA.get_migration_dir())
+    @test PSRDatabaseSQLite.test_migrations(IARA.migrations_directory())
     return nothing
 end
 

@@ -22,7 +22,6 @@ function virtual_reservoir_generation_bounds!(
     ::Type{SubproblemBuild},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    number_of_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
 
     # Model variables
     virtual_reservoir_generation = get_model_object(model, :virtual_reservoir_generation)
@@ -30,6 +29,7 @@ function virtual_reservoir_generation_bounds!(
     # Model parameters
     virtual_reservoir_quantity_offer = get_model_object(model, :virtual_reservoir_quantity_offer)
     virtual_reservoir_energy_stock = get_model_object(model, :virtual_reservoir_energy_stock)
+    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
     # Model constraints
     @constraint(
@@ -37,7 +37,7 @@ function virtual_reservoir_generation_bounds!(
         virtual_reservoir_generation_bound_by_offer[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:number_of_segments,
+            seg in 1:valid_segments[vr],
         ],
         virtual_reservoir_generation[vr, ao, seg] <=
         virtual_reservoir_quantity_offer[vr, ao, seg]
@@ -49,7 +49,7 @@ function virtual_reservoir_generation_bounds!(
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
         ],
-        sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:number_of_segments) <=
+        sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:valid_segments[vr]) <=
         virtual_reservoir_energy_stock[vr, ao]
     )
     return nothing

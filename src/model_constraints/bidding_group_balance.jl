@@ -51,7 +51,7 @@ function bidding_group_balance!(
         bidding_group_balance[
             blk in blks,
             bg in bidding_groups,
-            bds in 1:maximum_bid_segments(inputs, bg),
+            bds in bid_segments,
             bus in buses,
         ],
         bidding_group_energy_offer[blk, bg, bds, bus] ==

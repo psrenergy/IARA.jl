@@ -104,12 +104,23 @@ reduced_test_list = Dict(
 # ],
 # "case_09" => [
 #     "case_09/base_case/test_case.jl",
+#     "case_09/nohydro_case/test_case.jl",
+#     "case_09/single_period_case/test_case.jl",
+# ],
+# "case_10" => [
+#     "case_10/guess_bid/test_case.jl",
+#     "case_10/guess_bid_multiple_units/test_case.jl",
+#     "case_10/guess_bid_ror_profile/test_case.jl",
+#     "case_10/single_period_heuristic_bid/test_case.jl",
+# ],
+# "case_11" => [
+#     "case_11/adjust_bid_ex_post/test_case.jl",
 # ],
 )
 
 test_list = isempty(reduced_test_list) ? test_modules(@__DIR__) : reduced_test_list
 
-@testset "Tests" begin
+@testset "IARA" begin
     for (main_case, files) in test_list
         @testset "$main_case" begin
             for file in files

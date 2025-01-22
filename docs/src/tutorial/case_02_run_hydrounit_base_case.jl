@@ -58,7 +58,10 @@ cp(PATH_ORIGINAL, PATH_CENTRALIZED; force = true);
 
 # Now, let's run the case with [`IARA.train_min_cost`](@ref).
 
-IARA.train_min_cost(PATH_CENTRALIZED)
+IARA.train_min_cost(
+    PATH_CENTRALIZED;
+    delete_output_folder_before_execution = true,
+)
 
 # ### Analyzing the results
 
@@ -129,17 +132,17 @@ cp(
 )
 ; #hide
 
-# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `HEURISTIC_BIDS`.
+# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `PRICETAKER_HEURISTICS`.
 
 db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false)
 
 IARA.update_configuration!(
     db;
-    clearing_bid_source = IARA.Configurations_ClearingBidSource.HEURISTIC_BIDS,
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.HYBRID,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.HYBRID,
+    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
 )
 ; #hide
 
@@ -147,7 +150,10 @@ IARA.close_study!(db)
 
 # Now, let's run the case with [`IARA.market_clearing`](@ref).
 
-IARA.market_clearing(PATH_MARKET_CLEARING)
+IARA.market_clearing(
+    PATH_MARKET_CLEARING;
+    delete_output_folder_before_execution = true,
+)
 
 # Let's take a look into some of the plots generated automatically.
 

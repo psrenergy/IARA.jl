@@ -205,7 +205,8 @@ IARA.add_thermal_unit!(
 ```
 """
 function add_thermal_unit!(db::DatabaseSQLite; kwargs...)
-    PSRI.create_element!(db, "ThermalUnit"; kwargs...)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    PSRI.create_element!(db, "ThermalUnit"; sql_typed_kwargs...)
     return nothing
 end
 
@@ -219,7 +220,8 @@ function update_thermal_unit!(
     label::String;
     kwargs...,
 )
-    for (attribute, value) in kwargs
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
             db,
             "ThermalUnit",

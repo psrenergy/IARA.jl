@@ -13,7 +13,7 @@ db = IARA.load_study(PATH; read_only = false)
 new_subperiod_duration = 30.0
 
 IARA.update_configuration!(db;
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
     cycle_discount_rate = 0.05,
     cycle_duration_in_hours = 180.0,
     number_of_nodes = number_of_periods,
@@ -34,8 +34,6 @@ IARA.update_hydro_unit_time_series_parameter!(
     date_time = DateTime(0),
 )
 
-demand = demand * new_subperiod_duration / subperiod_duration_in_hours
-
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -44,7 +42,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 # This case is built on top of the cyclic graph case

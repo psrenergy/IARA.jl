@@ -46,15 +46,6 @@ Struct of all input data.
 end
 
 """
-    migration_dir()
-
-Return the path to the migration directory.
-"""
-function get_migration_dir()
-    return joinpath(dirname(@__DIR__), "database", "migrations")
-end
-
-"""
     create_study!(
         case_path::String; 
         kwargs...
@@ -77,24 +68,19 @@ Optional arguments:
   - `number_of_scenarios::Int`: the number of scenarios in the study
   - `number_of_subperiods::Int`: the number of subperiods in the study
   - `demand_deficit_cost::Float64`: the cost of demand deficit in `R\$\\MWh`
-  - `period_type::Int`: the type of the period
+  - `time_series_step::Int`: the type of the period
   - `loop_subperiods_for_thermal_constraints::Int`
   - `iteration_limit::Int`: the maximum number of iterations of SDDP algorithm
   - `initial_date_time::Dates.DateTime`: the initial `Dates.DateTime` of the study
   - `run_mode::Int`
   - `policy_graph_type::Configurations_PolicyGraphType`: the the policy graph, of type [`IARA.Configurations_PolicyGraphType`](@ref)
-  - `use_binary_variables::Int`: whether to use binary variables
   - `cycle_duration_in_hours::Float64`: the duration of a cycle in the policy graph, in hours
   - `hydro_minimum_outflow_violation_cost::Float64`: the cost of hydro minimum outflow violation in `[\$/m³/s]`
   - `hydro_spillage_cost::Float64`: the cost of hydro spillage in `[\$/hm³]`
   - `aggregate_buses_for_strategic_bidding::Int`: whether to aggregate buses for strategic bidding (0 or 1)
   - `parp_max_lags::Int`: the maximum number of lags in the PAR(p) model
-  - `inflow_source::Int`
 """
 function create_study!(case_path::String; kwargs...)
-    migration_dir = get_migration_dir()
-    @assert isdir(migration_dir)
-
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
     sql_typed_kwargs[:label] = "Configuration"
 
@@ -102,7 +88,7 @@ function create_study!(case_path::String; kwargs...)
         PSRI.PSRDatabaseSQLiteInterface(),
         joinpath(case_path, "study.iara");
         force = true,
-        path_migrations_directory = migration_dir,
+        path_migrations_directory = migrations_directory(),
         sql_typed_kwargs...,
     )
 
@@ -193,6 +179,14 @@ function initialize!(inputs::Inputs)
     # Initialize all collections
     for fieldname in fieldnames(Collections)
         initialize!(getfield(inputs.collections, fieldname), inputs)
+    end
+
+    # Validate all collections
+    try
+        validate(inputs)
+    catch e
+        clean_up(inputs)
+        rethrow(e)
     end
 
     # Fit PAR(p) and generate scenarios
@@ -335,7 +329,7 @@ Store pre-calculated values for the collections.
 """
 
 function fill_caches!(inputs::Inputs)
-    if run_mode(inputs) == RunMode.MARKET_CLEARING &&
+    if (is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
        clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs)
     end
@@ -349,6 +343,10 @@ function fill_caches!(inputs::Inputs)
     end
     for h in index_of_elements(inputs, HydroUnit)
         fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
+    end
+    if run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
+       run_mode(inputs) == RunMode.STRATEGIC_BID
+        update_number_of_bid_segments!(inputs, 1)
     end
     return nothing
 end
@@ -379,68 +377,82 @@ function buses_represented_for_strategic_bidding(inputs)
 end
 
 """
-    time_series_inflow(inputs::Inputs)
-
-Return the inflow time series.
-"""
-function time_series_inflow(inputs)
-    if !read_inflow_from_file(inputs)
-        error("Inflow time series is not available when 'read_inflow_from_file' is set to false.")
-    end
-    return inputs.time_series.inflow
-end
-
-"""
-    time_series_inflow(inputs::Inputs, run_time_options::RunTimeOptions, subscenario::Int)
+    time_series_inflow(inputs::Inputs, run_time_options::RunTimeOptions; subscenario::Int)
 
 Return the inflow time series for the given subscenario.
 """
-function time_series_inflow(inputs, run_time_options, subscenario::Int)
-    if is_ex_post_problem(run_time_options) && time_series_inflow(inputs).ex_post.reader !== nothing
-        return time_series_inflow(inputs).ex_post[:, :, subscenario]
+function time_series_inflow(inputs, run_time_options; subscenario::Union{Int, Nothing} = nothing)
+    if is_ex_post_problem(run_time_options)
+        if read_ex_post_inflow_file(inputs)
+            if isnothing(subscenario)
+                error("Always provide a subscenario when reading the ex-post inflow file during ex-post problems.")
+            end
+            return inputs.time_series.inflow.ex_post[:, :, subscenario]
+        elseif read_ex_ante_inflow_file(inputs)
+            return inputs.time_series.inflow.ex_ante
+        end
     else
-        return time_series_inflow(inputs).ex_ante
+        if read_ex_ante_inflow_file(inputs)
+            return inputs.time_series.inflow.ex_ante
+        elseif read_ex_post_inflow_file(inputs)
+            return mean(inputs.time_series.inflow.ex_post; dims = 3)[:, :, 1]
+        end
     end
+    return error(
+        "The inflow time series is not available when the option inflow_scenarios_files is set to NONE. The PAR(p) model should be used instead.",
+    )
 end
 
 """
-    time_series_demand(inputs::Inputs)
-
-Return the demand time series.
-"""
-time_series_demand(inputs) = inputs.time_series.demand_unit
-
-"""
-    time_series_demand(inputs::Inputs, run_time_options::RunTimeOptions, subscenario::Int)
+    time_series_demand(inputs::Inputs, run_time_options::RunTimeOptions; subscenario::Int)
 
 Return the demand time series for the given subscenario.
 """
-function time_series_demand(inputs, run_time_options, subscenario::Int)
-    if is_ex_post_problem(run_time_options) && time_series_demand(inputs).ex_post.reader !== nothing
-        return time_series_demand(inputs).ex_post[:, :, subscenario]
+function time_series_demand(inputs, run_time_options; subscenario::Union{Int, Nothing} = nothing)
+    if is_ex_post_problem(run_time_options)
+        if read_ex_post_demand_file(inputs)
+            if isnothing(subscenario)
+                error("Always provide a subscenario when reading the ex-post demand file during ex-post problems.")
+            end
+            return inputs.time_series.demand.ex_post[:, :, subscenario]
+        elseif read_ex_ante_demand_file(inputs)
+            return inputs.time_series.demand.ex_ante
+        end
     else
-        return time_series_demand(inputs).ex_ante
+        if read_ex_ante_demand_file(inputs)
+            return inputs.time_series.demand.ex_ante
+        elseif read_ex_post_demand_file(inputs)
+            return mean(inputs.time_series.demand.ex_post; dims = 3)[:, :, 1]
+        end
     end
+    return ones(number_of_elements(inputs, DemandUnit), number_of_subperiods(inputs))
 end
 
 """
-    time_series_renewable_generation(inputs::Inputs)
-
-Return the renewable generation time series.
-"""
-time_series_renewable_generation(inputs) = inputs.time_series.renewable_generation
-
-"""
-    time_series_renewable_generation(inputs::Inputs, run_time_options::RunTimeOptions, subscenario::Int)
+    time_series_renewable_generation(inputs::Inputs, run_time_options::RunTimeOptions; subscenario::Int)
 
 Return the renewable generation time series for the given subscenario.
 """
-function time_series_renewable_generation(inputs, run_time_options, subscenario::Int)
-    if is_ex_post_problem(run_time_options) && time_series_renewable_generation(inputs).ex_post.reader !== nothing
-        return time_series_renewable_generation(inputs).ex_post[:, :, subscenario]
+function time_series_renewable_generation(inputs, run_time_options; subscenario::Union{Int, Nothing} = nothing)
+    if is_ex_post_problem(run_time_options)
+        if read_ex_post_renewable_file(inputs)
+            if isnothing(subscenario)
+                error(
+                    "Always provide a subscenario when reading the ex-post renewable generation file during ex-post problems.",
+                )
+            end
+            return inputs.time_series.renewable_generation.ex_post[:, :, subscenario]
+        elseif read_ex_ante_renewable_file(inputs)
+            return inputs.time_series.renewable_generation.ex_ante
+        end
     else
-        return time_series_renewable_generation(inputs).ex_ante
+        if read_ex_ante_renewable_file(inputs)
+            return inputs.time_series.renewable_generation.ex_ante
+        elseif read_ex_post_renewable_file(inputs)
+            return mean(inputs.time_series.renewable_generation.ex_post; dims = 3)[:, :, 1]
+        end
     end
+    return ones(number_of_elements(inputs, RenewableUnit), number_of_subperiods(inputs))
 end
 
 """
@@ -484,7 +496,7 @@ function time_series_quantity_offer(
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+    if !is_market_clearing(inputs)
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the quantity offer time series in STRATEGIC_BID run mode, use 'time_series_quantity_offer(inputs)'.",
         )
@@ -494,9 +506,11 @@ function time_series_quantity_offer(
         return inputs.time_series.quantity_offer
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
-        return quantity_offer
+        quantity_view = BidsView{Float64}()
+        quantity_view.data = quantity_offer
+        return quantity_view
     else
-        error("Unrecognized bid source: $(clearing_bid_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
 end
 
@@ -528,7 +542,7 @@ function time_series_price_offer(
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+    if !is_market_clearing(inputs)
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the price offer time series in STRATEGIC_BID run mode, use 'time_series_price_offer(inputs)'.",
         )
@@ -538,9 +552,11 @@ function time_series_price_offer(
         return inputs.time_series.price_offer
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
-        return price_offer
+        price_view = BidsView{Float64}()
+        price_view.data = price_offer
+        return price_view
     else
-        error("Unrecognized bid source: $(clearing_bid_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
 end
 
@@ -549,11 +565,29 @@ end
 
 Return the quantity offer profile time series.
 """
-function time_series_quantity_offer_profile(inputs)
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+function time_series_quantity_offer_profile(
+    inputs,
+    period::Int,
+    scenario::Int,
+)
+    if !is_market_clearing(inputs)
         error("Quantity offer profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.quantity_offer_profile
+    if read_bids_from_file(inputs)
+        return inputs.time_series.quantity_offer_profile
+    elseif generate_heuristic_bids_for_clearing(inputs)
+        quantity_offer_profile,
+        price_offer_profile,
+        parent_profile,
+        complementary_grouping_profile,
+        minimum_activation_level_profile =
+            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
+        quantity_profile_view = BidsView{Float64}()
+        quantity_profile_view.data = quantity_offer_profile
+        return quantity_profile_view
+    else
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
+    end
 end
 
 """
@@ -561,11 +595,29 @@ end
 
 Return the price offer profile time series.
 """
-function time_series_price_offer_profile(inputs)
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+function time_series_price_offer_profile(
+    inputs,
+    period::Int,
+    scenario::Int,
+)
+    if !is_market_clearing(inputs)
         error("Price offer profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.price_offer_profile
+    if read_bids_from_file(inputs)
+        return inputs.time_series.price_offer_profile
+    elseif generate_heuristic_bids_for_clearing(inputs)
+        quantity_offer_profile,
+        price_offer_profile,
+        parent_profile,
+        complementary_grouping_profile,
+        minimum_activation_level_profile =
+            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
+        price_profile_view = TimeSeriesView{Float64, 2}()
+        price_profile_view.data = price_offer_profile
+        return price_profile_view
+    else
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
+    end
 end
 
 """
@@ -573,11 +625,29 @@ end
 
 Return the parent profile profile time series.
 """
-function time_series_parent_profile(inputs)
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+function time_series_parent_profile(
+    inputs,
+    period::Int,
+    scenario::Int,
+)
+    if !is_market_clearing(inputs)
         error("Parent profile profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.parent_profile
+    if read_bids_from_file(inputs)
+        return inputs.time_series.parent_profile
+    elseif generate_heuristic_bids_for_clearing(inputs)
+        quantity_offer_profile,
+        price_offer_profile,
+        parent_profile,
+        complementary_grouping_profile,
+        minimum_activation_level_profile =
+            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
+        parent_profile_view = TimeSeriesView{Float64, 2}()
+        parent_profile_view.data = parent_profile
+        return parent_profile_view
+    else
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
+    end
 end
 
 """
@@ -585,11 +655,29 @@ end
 
 Return the complementary grouping profile time series.
 """
-function time_series_complementary_grouping_profile(inputs)
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+function time_series_complementary_grouping_profile(
+    inputs,
+    period::Int,
+    scenario::Int,
+)
+    if !is_market_clearing(inputs)
         error("Complementary grouping profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.complementary_grouping_profile
+    if read_bids_from_file(inputs)
+        return inputs.time_series.complementary_grouping_profile
+    elseif generate_heuristic_bids_for_clearing(inputs)
+        quantity_offer_profile,
+        price_offer_profile,
+        parent_profile,
+        complementary_grouping_profile,
+        minimum_activation_level_profile =
+            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
+        complementary_grouping_profile_view = TimeSeriesView{Float64, 3}()
+        complementary_grouping_profile_view.data = complementary_grouping_profile
+        return complementary_grouping_profile_view
+    else
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
+    end
 end
 
 """
@@ -598,11 +686,29 @@ end
 Return the minimum activation level profile time series.
 """
 
-function time_series_minimum_activation_level_profile(inputs)
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+function time_series_minimum_activation_level_profile(
+    inputs,
+    period::Int,
+    scenario::Int,
+)
+    if !is_market_clearing(inputs)
         error("Minimum activation level profile time series is only available for MarketClearing run mode.")
     end
-    return inputs.time_series.minimum_activation_level_profile
+    if read_bids_from_file(inputs)
+        return inputs.time_series.minimum_activation_level_profile
+    elseif generate_heuristic_bids_for_clearing(inputs)
+        quantity_offer_profile,
+        price_offer_profile,
+        parent_profile,
+        complementary_grouping_profile,
+        minimum_activation_level_profile =
+            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
+        minimum_activation_level_profile_view = TimeSeriesView{Float64, 2}()
+        minimum_activation_level_profile_view.data = minimum_activation_level_profile
+        return minimum_activation_level_profile_view
+    else
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
+    end
 end
 """
     time_series_virtual_reservoir_quantity_offer(inputs::Inputs)
@@ -628,7 +734,7 @@ function time_series_virtual_reservoir_quantity_offer(
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+    if !is_market_clearing(inputs)
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir quantity offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs)'.",
         )
@@ -639,9 +745,11 @@ function time_series_virtual_reservoir_quantity_offer(
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_offer, price_offer =
             read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)
-        return quantity_offer
+        quantity_view = VirtualReservoirBidsView{Float64}()
+        quantity_view.data = quantity_offer
+        return quantity_view
     else
-        error("Unrecognized bid source: $(clearing_bid_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
 end
 
@@ -669,7 +777,7 @@ function time_series_virtual_reservoir_price_offer(
     period::Int,
     scenario::Int,
 )
-    if run_mode(inputs) != RunMode.MARKET_CLEARING
+    if !is_market_clearing(inputs)
         error(
             "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir price offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_price_offer(inputs)'.",
         )
@@ -680,9 +788,11 @@ function time_series_virtual_reservoir_price_offer(
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_offer, price_offer =
             read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)
-        return price_offer
+        price_view = VirtualReservoirBidsView{Float64}()
+        price_view.data = price_offer
+        return price_view
     else
-        error("Unrecognized bid source: $(clearing_bid_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
 end
 

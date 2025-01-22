@@ -41,32 +41,48 @@ function link_offers_and_generation!(
         get_model_object(model, :battery_unit_generation)
     end
     # Offer variables
-    all_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
-    independent_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
-    profile_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
-    if any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
+    bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
+
+    if has_any_profile_bids(inputs)
         bidding_group_generation_profile = get_model_object(model, :bidding_group_generation_profile)
     end
-    if any_elements(inputs, BiddingGroup; filters = [has_independent_bids])
+    if has_any_simple_bids(inputs)
         bidding_group_generation = get_model_object(model, :bidding_group_generation)
     end
+
+    if has_any_simple_bids(inputs)
+        valid_segments = get_maximum_valid_segments(inputs)
+    end
+
+    if has_any_profile_bids(inputs)
+        valid_profiles = get_maximum_valid_profiles(inputs)
+    end
+
     @constraint(
         model.jump_model,
-        link_offers_and_generation[blk in blks, bg in all_bidding_groups, bus in buses],
-        sum(
-            bidding_group_generation[blk, bg, bds, bus] for
-            bds in 1:maximum_bid_segments(inputs, bg)
-            if bg in independent_bidding_groups;
-            init = 0.0,
-        ) +
-        sum(
-            bidding_group_generation_profile[blk, bg, prf, bus] for
-            prf in 1:maximum_profiles(inputs, bg)
-            if bg in profile_bidding_groups;
-            init = 0.0,
-        ) ==
+        link_offers_and_generation[blk in blks, bg in bidding_groups, bus in buses],
+        if has_any_simple_bids(inputs)
+            sum(
+                bidding_group_generation[blk, bg, bds, bus] for
+                bds in 1:valid_segments[bg]
+                if bg in bidding_groups;
+                init = 0.0,
+            )
+        else
+            0.0
+        end
+        +
+        if has_any_profile_bids(inputs)
+            sum(
+                bidding_group_generation_profile[blk, bg, prf, bus] for
+                prf in 1:valid_profiles[bg]
+                if bg in bidding_groups;
+                init = 0.0,
+            )
+        else
+            0.0
+        end
+        ==
         sum(
             hydro_generation[blk, h] for h in hydro_units
             if hydro_unit_bus_index(inputs, h) == bus

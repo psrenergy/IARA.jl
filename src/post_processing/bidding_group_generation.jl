@@ -21,13 +21,13 @@ function _get_generation_unit(file_path::String)
     end
 end
 
-function _get_bidding_group_bus_index(bg_index::Int, bus_index::Int)
-    return (bg_index - 1) * bus_index + bus_index
+function _get_bidding_group_bus_index(bg_index::Int, bus_index::Int, number_of_buses::Int)
+    return (bg_index - 1) * number_of_buses + bus_index
 end
 
 function _get_bidding_group_bus_labels(inputs::Inputs)
-    bus_labels = PSRI.get_parms(inputs.db, "Bus", "label")
-    bidding_group_labels = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
+    bus_labels = bus_label(inputs)
+    bidding_group_labels = bidding_group_label(inputs)
     labels = Vector{String}()
     for bg_label in bidding_group_labels
         for bus_label in bus_labels
@@ -40,8 +40,8 @@ end
 function _write_ex_ante_file(inputs::Inputs, extension::String)
     outputs_dir = output_path(inputs)
 
-    num_bidding_groups = PSRI.max_elements(inputs.db, "BiddingGroup")
-    num_buses = PSRI.max_elements(inputs.db, "Bus")
+    num_bidding_groups = length(inputs.collections.bidding_group)
+    num_buses = length(inputs.collections.bus)
 
     ex_ante_files = filter(x -> endswith(x, "_generation_ex_ante_$(extension).csv"), readdir(outputs_dir))
     if isempty(ex_ante_files)
@@ -87,7 +87,8 @@ function _write_ex_ante_file(inputs::Inputs, extension::String)
                         if is_null(bidding_group_index) || is_null(bus_index)
                             continue
                         end
-                        bidding_group_bus_index = _get_bidding_group_bus_index(bidding_group_index, bus_index)
+                        bidding_group_bus_index =
+                            _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
                         bidding_group_ex_ante[bidding_group_bus_index, 1, subperiod, scenario, period] +=
                             generation_data[unit, subperiod, scenario, period]
                     end
@@ -96,7 +97,7 @@ function _write_ex_ante_file(inputs::Inputs, extension::String)
         end
     end
     write_timeseries_file(
-        joinpath(outputs_dir, "bidding_group_generation_ex_ante_$(extension)_cost_based"),
+        joinpath(post_processing_path(inputs), "bidding_group_generation_ex_ante_$(extension)"),
         bidding_group_ex_ante;
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
         labels = _get_bidding_group_bus_labels(inputs),
@@ -116,8 +117,8 @@ end
 function _write_ex_post_file(inputs::Inputs, extension::String)
     outputs_dir = output_path(inputs)
 
-    num_bidding_groups = PSRI.max_elements(inputs.db, "BiddingGroup")
-    num_buses = PSRI.max_elements(inputs.db, "Bus")
+    num_bidding_groups = length(inputs.collections.bidding_group)
+    num_buses = length(inputs.collections.bus)
 
     ex_post_files = filter(x -> endswith(x, "_generation_ex_post_$(extension).csv"), readdir(outputs_dir))
     if isempty(ex_post_files)
@@ -163,7 +164,8 @@ function _write_ex_post_file(inputs::Inputs, extension::String)
                             if is_null(bidding_group_index) || is_null(bus_index)
                                 continue
                             end
-                            bidding_group_bus_index = _get_bidding_group_bus_index(bidding_group_index, bus_index)
+                            bidding_group_bus_index =
+                                _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
                             bidding_group_ex_post[
                                 bidding_group_bus_index,
                                 1,
@@ -180,7 +182,7 @@ function _write_ex_post_file(inputs::Inputs, extension::String)
         end
     end
     write_timeseries_file(
-        joinpath(outputs_dir, "bidding_group_generation_ex_post_$(extension)_cost_based"),
+        joinpath(post_processing_path(inputs), "bidding_group_generation_ex_post_$(extension)"),
         bidding_group_ex_post;
         dimensions = ["period", "scenario", "subscenario", "subperiod", "bid_segment"],
         labels = _get_bidding_group_bus_labels(inputs),
@@ -206,7 +208,7 @@ Create the bidding group generation files for ex-ante and ex-post data (physical
 function create_bidding_group_generation_files(inputs::Inputs)
     outputs_dir = output_path(inputs)
 
-    num_bidding_groups = PSRI.max_elements(inputs.db, "BiddingGroup")
+    num_bidding_groups = length(inputs.collections.bidding_group)
 
     if num_bidding_groups == 0
         return

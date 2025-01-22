@@ -30,8 +30,7 @@ function bidding_group_profile_precedence!(
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)
     bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options)
-    profile_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    bidding_groups = index_of_elements(inputs, BiddingGroup)
     maximum_bidding_profiles = maximum_number_of_bidding_profiles(inputs)
 
     parent_profile_bids = zeros(Int,
@@ -39,8 +38,12 @@ function bidding_group_profile_precedence!(
         maximum_bidding_profiles,
     )
 
-    for (i_bg, bg) in enumerate(profile_bidding_groups), profile in 1:maximum_profiles(inputs, bg)
-        parent_profile_bids[bg, profile] = time_series_parent_profile(inputs)[i_bg, profile]
+    valid_profiles = get_maximum_valid_profiles(inputs)
+
+    placeholder_scenario = 1
+    for (i_bg, bg) in enumerate(bidding_groups), profile in 1:valid_profiles[bg]
+        parent_profile_bids[bg, profile] =
+            time_series_parent_profile(inputs, model.period, placeholder_scenario)[i_bg, profile]
         if parent_profile_bids[bg, profile] == profile
             error("Bidding group $bg profile $profile is its own parent")
         end
@@ -50,8 +53,8 @@ function bidding_group_profile_precedence!(
     @constraint(
         model.jump_model,
         bidding_group_profile_precedence[
-            bg in profile_bidding_groups,
-            profile in 1:maximum_profiles(inputs, bg);
+            bg in bidding_groups,
+            profile in 1:valid_profiles[bg];
             is_valid_parent(parent_profile_bids[bg, profile], profile),
         ],
         linear_combination_bid_segments_profile[bg, profile]

@@ -83,9 +83,10 @@ function hydro_generation!(
         hydro_generation[b, h] * hydro_unit_om_cost(inputs, h)
     )
 
-    # Generation costs are used as a penalty in the clearing problem, with weight 1e-3
-    if run_mode(inputs) == IARA.RunMode.MARKET_CLEARING
-        model.obj_exp += money_to_thousand_money() * sum(hydro_om_cost_expression) / 1e3
+    # Generation costs are used as a penalty in the clearing problem
+    if is_market_clearing(inputs)
+        model.obj_exp +=
+            money_to_thousand_money() * sum(hydro_om_cost_expression) * market_clearing_tiebreaker_weight(inputs)
     else
         model.obj_exp += money_to_thousand_money() * sum(hydro_om_cost_expression)
     end

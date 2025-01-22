@@ -26,6 +26,8 @@ function build_model(
     ) do subproblem, t
         update_time_series_views_from_external_files!(inputs; period = t, scenario = 1)
         update_time_series_from_db!(inputs, t)
+        update_segments_profile_dimensions!(inputs, t)
+
         sp_model = build_subproblem_model(
             inputs,
             run_time_options,

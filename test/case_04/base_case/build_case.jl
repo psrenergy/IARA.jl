@@ -18,7 +18,6 @@ number_of_scenarios = 4
 number_of_subperiods = 2
 maximum_number_of_bidding_segments = 1
 subperiod_duration_in_hours = 1.0
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 
 # Create the database
 # -------------------
@@ -33,10 +32,13 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.BID_BASED,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.BID_BASED,
-    clearing_model_type_ex_post_physical = IARA.Configurations_ClearingModelType.BID_BASED,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.BID_BASED,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.BID_BASED,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.BID_BASED,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.BID_BASED,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.BID_BASED,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 
 # Add collection elements
@@ -58,14 +60,14 @@ IARA.add_asset_owner!(db;
 IARA.add_bidding_group!(db;
     label = "bg_1",
     assetowner_id = "asset_owner_1",
-    independent_bid_max_segments = maximum_number_of_bidding_segments,
 )
 IARA.add_bidding_group!(db;
     label = "bg_2",
     assetowner_id = "asset_owner_2",
-    independent_bid_max_segments = maximum_number_of_bidding_segments,
 )
 number_of_bidding_groups = 2
+
+max_demand = 10.0
 
 IARA.add_demand_unit!(db;
     label = "dem_1",
@@ -74,6 +76,7 @@ IARA.add_demand_unit!(db;
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_1",
+    max_demand = max_demand,
 )
 
 IARA.add_dc_line!(db;
@@ -91,7 +94,7 @@ IARA.add_dc_line!(db;
 # Create and link CSV files
 # -------------------------
 # Demand
-demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 10 * MW_to_GWh
+demand = ones(1, number_of_subperiods, number_of_scenarios, number_of_periods)
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -100,12 +103,12 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 # Quantity and price offers

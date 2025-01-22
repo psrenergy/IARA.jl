@@ -113,7 +113,7 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
     blks = subperiods(inputs)
     quantity_offers_ts = time_series_quantity_offer(inputs)
     price_offers_ts = time_series_price_offer(inputs)
-    demand_ts = time_series_demand(inputs)
+    demand_ts = time_series_demand(inputs, run_time_options)
 
     if aggregate_buses_for_strategic_bidding(inputs)
         inputs.collections.asset_owner.revenue_convex_hull =
@@ -134,11 +134,16 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
                     for bus in buses, bg in bidding_groups if
                     bidding_group_asset_owner_index(inputs, bg) != run_time_options.asset_owner_index
                 ]
-            demand = sum(
-                demand_ts[d, blk]
-                for d in demands;
-                init = 0.0,
-            ) / MW_to_GW()
+            demand =
+                sum(
+                    demand_mw_to_gwh(
+                        inputs,
+                        demand_ts[d, blk],
+                        d,
+                        blk,
+                    ) for d in demands;
+                    init = 0.0,
+                ) / MW_to_GW()
             # Update revenue convex hull cache
             points = pricemaker_revenue(
                 quantity_offers,
@@ -171,8 +176,12 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
             ]
             demand =
                 sum(
-                    demand_ts[d, blk]
-                    for d in demands if demand_unit_bus_index(inputs, d) == bus;
+                    demand_mw_to_gwh(
+                        inputs,
+                        demand_ts[d, blk],
+                        d,
+                        blk,
+                    ) for d in demands if demand_unit_bus_index(inputs, d) == bus;
                     init = 0.0,
                 ) / MW_to_GW()
             # Update revenue convex hull cache

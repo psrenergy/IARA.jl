@@ -29,12 +29,16 @@ end
 function Base.size(time_series::BidsView{T}) where {T}
     return size(time_series.data)
 end
+function Base.size(time_series::BidsView{T}, idx::Int) where {T}
+    return size(time_series.data, idx)
+end
 
 function initialize_bids_view_from_external_file!(
     ts::BidsView{T},
     inputs,
     file_path::AbstractString;
     expected_unit::String = "",
+    possible_expected_dimensions::Vector{Vector{Symbol}} = Vector{Vector{Symbol}}(),
     bidding_groups_to_read::Vector{String} = String[],
     buses_to_read::Vector{String} = String[],
     has_profile_bids::Bool = false,
@@ -89,7 +93,40 @@ function initialize_bids_view_from_external_file!(
         num_errors += 1
     end
 
+    dimensions = ts.reader.metadata.dimensions
+    # Validate if the dimensions are as expected
+    if !isempty(possible_expected_dimensions)
+        # Iterate through all possible dimensions and check if the time series
+        # is defined in one of them.
+        dimension_is_valid = false
+        for possible_dimensions in possible_expected_dimensions
+            if dimensions == possible_dimensions
+                dimension_is_valid = true
+                break
+            end
+        end
+        if !dimension_is_valid
+            @error(
+                "Time series file $(file_path) has dimensions $(dimensions). This is different from the possible dimensions of this file $possible_expected_dimensions.",
+            )
+            num_errors += 1
+        end
+    end
+
     # Allocate the array of correct size based on the dimension sizes of extra dimensions
+
+    dimension_dict = get_dimension_dict_from_reader(ts.reader)
+
+    if has_profile_bids
+        bid_profiles = dimension_dict[:profile]
+        segments_or_profile = 1:bid_profiles
+        update_number_of_bid_profiles!(inputs, bid_profiles)
+    else
+        bid_segments = dimension_dict[:bid_segment]
+        segments_or_profile = 1:bid_segments
+        update_number_of_bid_segments!(inputs, bid_segments)
+    end
+
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
     bid_segments = bidding_segments(inputs)
@@ -129,11 +166,11 @@ function read_bids_view_from_external_file!(
 ) where {T}
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
-    bid_segments = bidding_segments(inputs)
-    segments_or_profile = bid_segments
+
     if has_profile_bids
         bid_profiles = bidding_profiles(inputs)
-        segments_or_profile = bid_profiles
+    else
+        bid_segments = bidding_segments(inputs)
     end
     blks = subperiods(inputs)
     num_buses = length(buses)

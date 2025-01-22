@@ -17,7 +17,6 @@ number_of_periods = 3
 number_of_scenarios = 2
 number_of_subperiods = 4
 subperiod_duration_in_hours = 1.0
-MW_to_GWh = subperiod_duration_in_hours * 1e-3
 
 db = IARA.create_study!(PATH;
     number_of_periods = number_of_periods,
@@ -28,10 +27,18 @@ db = IARA.create_study!(PATH;
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     cycle_discount_rate = 0.1,
     demand_deficit_cost = 0.5,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 
 IARA.add_zone!(db; label = "zone_1")
 IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
+
+demand =
+    [b + t / 4 + s for d in 1:1, b in 1:number_of_subperiods, s in 1:number_of_scenarios, t in 1:number_of_periods]
+max_demand = maximum(demand)
+demand /= max_demand
 
 IARA.add_demand_unit!(
     db;
@@ -46,11 +53,8 @@ IARA.add_demand_unit!(
     curtailment_cost = 0.25,
     max_curtailment = 0.02,
     bus_id = "bus_1",
+    max_demand = max_demand,
 )
-
-demand =
-    MW_to_GWh *
-    [b + t / 4 + s for d in 1:1, b in 1:number_of_subperiods, s in 1:number_of_scenarios, t in 1:number_of_periods]
 
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
@@ -60,13 +64,13 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2024-01-01",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand = "demand",
+    demand_ex_ante = "demand",
 )
 
 demand_window = zeros(Float64, 1, number_of_subperiods, number_of_periods)

@@ -12,5 +12,4 @@ import Pkg
 Pkg.instantiate()
 
 using IARA
-
 IARA.main(ARGS)

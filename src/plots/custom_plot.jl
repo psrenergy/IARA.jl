@@ -9,7 +9,7 @@
 #############################################################################
 
 function _filter_time_series(
-    data::Array{<:Real, N},
+    data::Array{<:AbstractFloat, N},
     metadata::Quiver.Metadata,
     agents::Vector{String};
     kwargs...,
@@ -46,10 +46,10 @@ end
 
 function _get_adjusted_date_time(
     initial_date::DateTime,
-    period_type::Configurations_PeriodType.T,
+    time_series_step::Configurations_TimeSeriesStep.T,
     period::Union{Int, UnitRange},
 )
-    if period_type == Configurations_PeriodType.MONTHLY
+    if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         if period isa Int
             return initial_date + Dates.Month(period - 1)
         else
@@ -83,11 +83,19 @@ function _compare_axis(axis_a::Config, axis_b::Config)
 end
 
 """
-    custom_plot(filepath::String, plot_type::Type{<:PlotType}; agents::Vector{String} = Vector{String}(), title::String = "Plot", kwargs...)
+    custom_plot(
+        filepath::String, 
+        plot_type::Type{<:PlotType}; 
+        plot_path::String = "",
+        agents::Vector{String} = Vector{String}(), 
+        title::String = "Plot", 
+        kwargs...
+    )
 
 Create a customized plot from a time series file.
 
 - It requires a plot type [`PlotType`] and a file path to a time series file. 
+- The `plot_path` argument is used to set the path where the plot will be saved. If it is not provided, the plot will not be saved.
 - The `agents` argument is used to filter the agents to be plotted. If it is not provided, all agents will be plotted.
 - The `title` argument is used to set the title of the plot, which is "Plot" by default.
 - The `kwargs` arguments are used to filter the time series by its dimensions.
@@ -102,6 +110,7 @@ IARA.custom_plot(path, PlotTimeSeriesMean; subperiod = 1:10, agents=["hydro"])
 function custom_plot(
     filepath::String,
     plot_type::Type{<:PlotType};
+    plot_path::String = "",
     agents::Vector{String} = Vector{String}(),
     title::String = "Plot",
     kwargs...,
@@ -123,14 +132,14 @@ function custom_plot(
 
     data_to_plot = _filter_time_series(data, metadata, agents; kwargs...)
 
-    period_type = if metadata.frequency == "monthly" || metadata.frequency == "month"
-        Configurations_PeriodType.MONTHLY
+    time_series_step = if metadata.frequency == "monthly" || metadata.frequency == "month"
+        Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     end
 
     queried_period = get(kwargs, :period, nothing)
 
     initial_date = if !isnothing(queried_period)
-        _get_adjusted_date_time(DateTime(metadata.initial_date), period_type, queried_period)
+        _get_adjusted_date_time(DateTime(metadata.initial_date), time_series_step, queried_period)
     else
         DateTime(metadata.initial_date)
     end
@@ -142,9 +151,9 @@ function custom_plot(
         String.(metadata.dimensions);
         title = title,
         unit = metadata.unit,
-        file_path = "",
+        file_path = plot_path,
         initial_date = initial_date,
-        period_type = period_type,
+        time_series_step = time_series_step,
         kwargs...,
     )
 end
@@ -154,6 +163,7 @@ end
         filepath_x::String, 
         filepath_y::String, 
         plot_type::Type{<:IARA.RelationPlotType}; 
+        plot_path::String = "",
         agent_x::String, 
         agent_y::String, 
         title::String = "Plot", 
@@ -168,6 +178,7 @@ end
 Create a customized plot relating the values for two agents in two different time series files.
 
 - It requires a plot type [`IARA.RelationPlotType`] and a file path to a time series file. 
+- The `plot_path` argument is used to set the path where the plot will be saved. If it is not provided, the plot will not be saved.
 - The `agent_x` and `agent_y` arguments are used to filter the agents to be plotted, in the x and y axis.
 - The `title` argument is used to set the title of the plot, which is "Plot" by default.
 - The `x_label` and `y_label` arguments are used to set the labels of the x and y axis.
@@ -187,6 +198,7 @@ function custom_plot(
     filepath_x::String,
     filepath_y::String,
     plot_type::Type{<:RelationPlotType};
+    plot_path::String = "",
     agent_x::String,
     agent_y::String,
     title::String = "Plot",
@@ -223,14 +235,14 @@ function custom_plot(
     filtered_data_1 = _filter_time_series(data_1, metadata_1, [agent_x]; kwargs...)
     filtered_data_2 = _filter_time_series(data_2, metadata_2, [agent_y]; kwargs...)
 
-    period_type = if metadata_1.frequency == "month" || metadata_1.frequency == "monthly"
-        Configurations_PeriodType.MONTHLY
+    time_series_step = if metadata_1.frequency == "month" || metadata_1.frequency == "monthly"
+        Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     end
 
     queried_period = get(kwargs, :period, nothing)
 
     initial_date = if !isnothing(queried_period)
-        _get_adjusted_date_time(DateTime(metadata_1.initial_date), period_type, queried_period)
+        _get_adjusted_date_time(DateTime(metadata_1.initial_date), time_series_step, queried_period)
     else
         DateTime(metadata_1.initial_date)
     end
@@ -245,9 +257,9 @@ function custom_plot(
         title = title,
         unit_x = metadata_1.unit,
         unit_y = metadata_2.unit,
-        file_path = "",
+        file_path = plot_path,
         initial_date = initial_date,
-        period_type = period_type,
+        time_series_step = time_series_step,
         x_label = x_label,
         y_label = y_label,
         flip_x = flip_x,

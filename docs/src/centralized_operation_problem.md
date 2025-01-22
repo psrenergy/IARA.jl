@@ -22,132 +22,132 @@
 - ``L^{out}(n)``: Set of lines exiting node $n$.
 - ``J^H_U(j)``: Set of hydro units that turbine water to hydro unit $j$.
 - ``J^H_Z(j)``: Set of hydro units that spill water to hydro unit $j$.
+- ``B(j, t, w)``: Set of subperiods in window $w$ of flexible demand $j$ at period $t$.
 - ``L^{DC}``: Set of DC lines. $L^{DC} \subseteq L$.
 - ``L^{AC}``: Set of branches. $L^{AC} = L \setminus L^{DC}$.
-- ``d(\tau)``: Duration in hours of subperiod $\tau$.
-- ``C_{u \rightarrow v}``: Conversion factor from unit $u$ to unit $v$.
 
 Some branches may have a flag indicating that they are modeled as DC lines.
 
 ## Parameters
 
+- ``d(\tau)``: Duration in hours of subperiod $\tau$.
+- ``C_{u \rightarrow v}``: Conversion factor from unit $u$ to unit $v$.
+
 ### Hydro Units
 
-- ``V_j``: Maximum volume of water (hm<sup>3</sup>) in the reservoir of hydro unit $j$.
-- ``U_j``: Maximum amount of water (m<sup>3</sup>/s) that can be turbined from the hydro unit $j$.
-- ``\rho_j``: Turbine efficiency (MW/m<sup>3</sup>/s) of hydro unit $j$.
-- ``a_{j, \tau}``: Inflow of water (hm<sup>3</sup>) into the reservoir of hydro unit $j$ at the start of subperiod $\tau$.
-- ``O_j``: Minimum outflow of water (m<sup>3</sup>/s) from the reservoir of hydro unit $j$.
-- ``C^\eta``: Cost (\$/hm<sup>3</sup>) of minimum outflow violation.
-- ``C^z_j``: Cost (\$/hm<sup>3</sup>) of spilling water from hydro unit $j$.
-- ``\overline{G}^H_j``: Maximum generation (MW) of hydro unit $j$.
-- ``\underline{G}^H_j``: Minimum generation (MW) of hydro unit $j$.
+- ``V_j``: Maximum volume of water ($hm^3$) in the reservoir of hydro unit $j$.
+- ``U_j``: Maximum amount of water ($m^3/s$) that can be turbined from the hydro unit $j$.
+- ``\rho_j``: Turbine efficiency ($MW/m^3/s$) of hydro unit $j$.
+- ``a_{j, \tau}``: Inflow of water ($hm^3$) into the reservoir of hydro unit $j$ at the start of subperiod $\tau$.
+- ``O_j``: Minimum outflow of water ($m^3/s$) from the reservoir of hydro unit $j$.
+- ``C^\eta``: Cost ($\$/hm^3$) of minimum outflow violation.
+- ``C^z_j``: Cost ($\$/hm^3$) of spilling water from hydro unit $j$.
+- ``\overline{G}^H_j``: Maximum generation ($MW$) of hydro unit $j$.
+- ``\underline{G}^H_j``: Minimum generation ($MW$) of hydro unit $j$.
 
 ### Thermal Units
 
-- ``\overline{G}^T_j``: Maximum generation (MW) of thermal unit $j$.
-- ``\underline{G}^T_j``: Minimum generation (MW) of thermal unit $j$.
-- ``C^T_j``: Cost of generation (\$/MWh) of thermal unit $j$.
-- ``C^{T_{up}}_j``: Cost of startup (\$) of thermal unit $j$.
-- ``C^{T_{down}}_j``: Cost of shutdown (\$) of thermal unit $j$.
+- ``\overline{G}^T_j``: Maximum generation ($MW$) of thermal unit $j$.
+- ``\underline{G}^T_j``: Minimum generation ($MW$) of thermal unit $j$.
+- ``C^T_j``: Cost of generation ($\$/MWh$) of thermal unit $j$.
+- ``C^{T_{up}}_j``: Cost of startup ($\$$) of thermal unit $j$.
+- ``C^{T_{down}}_j``: Cost of shutdown ($\$$) of thermal unit $j$.
 - ``x^T_{j, 0}``: Commitment of thermal unit $j$ at the start of the period.
-- ``\Delta^{up}_j``: Ramp-up limit (MW/min) of thermal unit $j$.
-- ``\Delta^{down}_j``: Ramp-down limit (MW/min) of thermal unit $j$.
-- ``g^T_{j, 0}``: Generation (MW) of thermal unit $j$ at the start of the period.
-- ``UT^{max}_j``: Maximum uptime of thermal unit $j$, measured in amount of subperiods.
-- ``UT^{min}_j``: Minimum uptime (h) of thermal unit $j$, measured in amount of subperiods.
-- ``DT^{min}_j``: Minimum downtime (h) of thermal unit $j$, measured in amount of subperiods.
-- ``t^{up}_{j,0}``: Uptime of thermal unit $j$ at the start of the period, measured in amount of subperiods.
-- ``t^{down}_{j,0}``: Downtime (h) of thermal unit $j$ at the start of the period, measured in amount of subperiods.
+- ``\Delta^{up}_j``: Ramp-up limit ($MW/min$) of thermal unit $j$.
+- ``\Delta^{down}_j``: Ramp-down limit ($MW/min$) of thermal unit $j$.
+- ``g^T_{j, 0}``: Generation ($MW$) of thermal unit $j$ at the start of the period.
+- ``UT^{max}_j``: Maximum uptime ($h$) of thermal unit $j$.
+- ``UT^{min}_j``: Minimum uptime ($h$) of thermal unit $j$.
+- ``DT^{min}_j``: Minimum downtime ($h$) of thermal unit $j$.
+- ``t^{up}_{j,0}``: Uptime ($h$) of thermal unit $j$ at the start of the period.
+- ``t^{down}_{j,0}``: Downtime ($h$) of thermal unit $j$ at the start of the period.
 
 ### Renewable Units
 
-- ``G^R_j``: Maximum generation (MW) of renewable unit $j$.
-- ``G^R_{j, \tau}(\omega)``: Realized generation (p.u., as a fraction of the maximum generation) of renewable unit $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^R_j``: Cost of curtailment (\$/MWh) of renewable unit $j$.
+- ``G^R_j``: Maximum generation ($MW$) of renewable unit $j$.
+- ``G^R_{j, \tau}(\omega)``: Realized generation ($p.u.$, as a fraction of the maximum generation) of renewable unit $j$ during subperiod $\tau$ and scenario $\omega$.
+- ``C^R_j``: Cost of curtailment ($\$/MWh$) of renewable unit $j$.
 
 ### Battery Units
 
-- ``G^B_j``: Maximum generation (MW) of battery unit $j$.
-- ``\overline{s}^B_j``: Maximum state (MWh) of charge of battery unit $j$.
-- ``\underline{s}^B_j``: Minimum state (MWh) of charge of battery unit $j$.
+- ``G^B_j``: Maximum generation ($MW$) of battery unit $j$.
+- ``\overline{s}^B_j``: Maximum state ($MWh$) of charge of battery unit $j$.
+- ``\underline{s}^B_j``: Minimum state ($MWh$) of charge of battery unit $j$.
 
 ### Demands
 
-- ``D_{j, \tau}(\omega)``: Load (GWh) of demand $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^\delta``: Cost of demand deficit (\$/MWh).
-- ``C^{\delta^F}_{j, \tau}``: Cost demand curtailment (\$/MWh) of demand $j$ during subperiod $\tau$.
-- ``P_{j, \tau}(\omega)``: Maximum price (\$/MWh) of elastic demand $j$ during subperiod $\tau$ and scenario $\omega$.
+- ``D_{j, \tau}(\omega)``: Load ($GWh$) of demand $j$ during subperiod $\tau$ and scenario $\omega$.
+- ``C^\delta``: Cost of demand deficit ($\$/MWh$).
+- ``C^{\delta^F}_{j, \tau}``: Cost demand curtailment ($\$/MWh$) of demand $j$ during subperiod $\tau$.
+- ``P_{j, \tau}(\omega)``: Maximum price ($\$/MWh$) of elastic demand $j$ during subperiod $\tau$ and scenario $\omega$.
 - ``W_{j, t}``: Window of demand $j$ at period $t$, if $j \in J^{DF}$.
-- ``B(j, t, w)``: Set of subperiods in window $w$.  
-<!-- TODO: Maybe this should be in "Sets"? -->
 - ``\underline{d}^F_j``: Maximum fraction of flexible demand $j$ to be under attended at some subperiod.
 - ``\overline{d}^F_j``: Maximum fraction of flexible demand $j$ to be over attended at some subperiod.
 - ``\overline{\delta}^F_j``: Maximum fraction of flexible demand $j$ to be curtailed at a window.
 
 ### DC Lines
 
-- ``n^{from}_j``: Node where line $j$ starts. <!-- TODO: Maybe this should be in "Sets"? -->
+- ``n^{from}_j``: Node where line $j$ starts.
 - ``n^{to}_j``: Node where line $j$ ends.
-- ``\overline{f}^{from}_j``: Maximum flow (MW) from node $n^{to}_j$ to node $n^{from}_j$.
-- ``\overline{f}^{to}_j``: Maximum flow (MW) from node $n^{from}_j$ to node $n^{to}_j$.
+- ``\overline{f}^{from}_j``: Maximum flow ($MW$) from node $n^{to}_j$ to node $n^{from}_j$.
+- ``\overline{f}^{to}_j``: Maximum flow ($MW$) from node $n^{from}_j$ to node $n^{to}_j$.
 
 
 ### Branches
 
-- ``n^{from}_j``: Node where line $j$ starts. <!-- TODO Maybe this should be in "Sets"? -->
+- ``n^{from}_j``: Node where line $j$ starts.
 - ``n^{to}_j``: Node where line $j$ ends.
-- ``\overline{f}_j``: Maximum flow (MW) of line $j$.
-- ``X_j``: Reactance (p.u.) of line $j$.
+- ``\overline{f}_j``: Maximum flow ($MW$) of line $j$.
+- ``X_j``: Reactance ($p.u.$) of line $j$.
 
 
 ## Variables
 
 ### Hydro Units
 
-- ``g^H_{j, \tau}``: Generation (MWh) of hydro unit $j$ during subperiod $\tau$.
-- ``v_{j, \tau}``: Volume of water (hm<sup>3</sup>) in the reservoir at the start of subperiod $\tau$.
-- ``u_{j, \tau}``: Turbined water (hm<sup>3</sup>) from the reservoir during subperiod $\tau$.
-- ``z_{j, \tau}``: Spilled water (hm<sup>3</sup>) from the reservoir during subperiod $\tau$.
-- ``v^{S_{in}}_j``: Volume of water (hm<sup>3</sup>) in the reservoir at the start of the period.
-- ``v^{S_{out}}_j``: Volume of water (hm<sup>3</sup>) in the reservoir at the end of the period.
-- ``\eta_{j, \tau}``: Hydro minimum outflow violation (hm<sup>3</sup>) during subperiod $\tau$.
+- ``g^H_{j, \tau}``: Generation ($MWh$) of hydro unit $j$ during subperiod $\tau$.
+- ``v_{j, \tau}``: Volume of water ($hm^3$) in the reservoir at the start of subperiod $\tau$.
+- ``u_{j, \tau}``: Turbined water ($hm^3$) from the reservoir during subperiod $\tau$.
+- ``z_{j, \tau}``: Spilled water ($hm^3$) from the reservoir during subperiod $\tau$.
+- ``v^{S_{in}}_j``: Volume of water ($hm^3$) in the reservoir at the start of the period.
+- ``v^{S_{out}}_j``: Volume of water ($hm^3$) in the reservoir at the end of the period.
+- ``\eta_{j, \tau}``: Hydro minimum outflow violation ($hm^3$) during subperiod $\tau$.
 - ``x^H_{j, \tau}``: Commitment of hydro unit $j$ during subperiod $\tau$.
 
 ### Thermal Units
 
-- ``g^T_{j, \tau}``: Generation (MWh) of thermal unit $j$ during subperiod $\tau$.
+- ``g^T_{j, \tau}``: Generation ($MWh$) of thermal unit $j$ during subperiod $\tau$.
 - ``x^T_{j, \tau}``: Commitment of thermal unit $j$ during subperiod $\tau$.
 - ``y^T_{j, \tau}``: Startup of thermal unit $j$ during subperiod $\tau$.
 - ``w^T_{j, \tau}``: Shutdown of thermal unit $j$ during subperiod $\tau$.
 
 ### Renewable Units
 
-- ``g^R_{j, \tau}``: Generation (MWh) of renewable unit $j$ during subperiod $\tau$.
-- ``z^r_{j, \tau}``: Spilled generation (MWh) of renewable unit $j$ during subperiod $\tau$.
+- ``g^R_{j, \tau}``: Generation ($MWh$) of renewable unit $j$ during subperiod $\tau$.
+- ``z^r_{j, \tau}``: Spilled generation ($MWh$) of renewable unit $j$ during subperiod $\tau$.
 
 
 ### Battery Units
 
-- ``s^B_{j, \tau}``: State of charge (MWh) of battery unit $j$ at the start of subperiod $\tau$.
-- ``g^B_{j, \tau}``: Generation (MWh) of battery unit $j$ at the end of subperiod $\tau$.
-- ``s^{B_{in}}_j``: State of charge (MWh) of battery unit $j$ at the start of the period.
-- ``s^{B_{out}}_j``: State of charge (MWh) of battery unit $j$ at the end of the period.
+- ``s^B_{j, \tau}``: State of charge ($MWh$) of battery unit $j$ at the start of subperiod $\tau$.
+- ``g^B_{j, \tau}``: Generation ($MWh$) of battery unit $j$ at the end of subperiod $\tau$.
+- ``s^{B_{in}}_j``: State of charge ($MWh$) of battery unit $j$ at the start of the period.
+- ``s^{B_{out}}_j``: State of charge ($MWh$) of battery unit $j$ at the end of the period.
 
 ### Demands
 
-- ``\delta_{j, \tau}``: Demand deficit (GWh) during subperiod $\tau$.
-- ``\delta^F_{j, \tau}``: Demand curtailment (GWh) during subperiod $\tau$.
-- ``d^F_{j, \tau}``: Flexible demand to be attended (GWh) during subperiod $\tau$.
-- ``d^E_{j, \tau}``: Elastic demand to be attended (GWh) during subperiod $\tau$.
+- ``\delta_{j, \tau}``: Demand deficit ($GWh$) of demand $j$ during subperiod $\tau$.
+- ``\delta^F_{j, \tau}``: Demand curtailment ($GWh$) of demand $j$ during subperiod $\tau$.
+- ``d^F_{j, \tau}``: Flexible demand to be attended ($GWh$) of demand $j$ during subperiod $\tau$.
+- ``d^E_{j, \tau}``: Elastic demand to be attended ($GWh$) of demand $j$ during subperiod $\tau$.
 
 ### Transmission Lines
 
-- ``f_{j, \tau}``: Flow (MW) of line $j$ during subperiod $\tau$.
+- ``f_{j, \tau}``: Flow ($MW$) of line $j$ during subperiod $\tau$.
 
 ### Network Nodes
 
-- ``\theta_{n, \tau}``: Voltage angle (rad) at node $n$ during subperiod $\tau$.
+- ``\theta_{n, \tau}``: Voltage angle ($rad$) at node $n$ during subperiod $\tau$.
 
 ## Subproblem Constraints
 
@@ -289,7 +289,7 @@ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the followi
     \end{cases}
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
-$I^{up}$ and $I^{down}$ indicates if the plant started/stopped in the previous period AND has yet to reach the minimum uptime/downtime.
+The indicators $I^{up}$ and $I^{down}$ represent whether the plant started/stopped in the previous period AND has yet to reach the minimum uptime/downtime.
 Also, the following auxiliar terms are defined:
 
 ```math
@@ -417,16 +417,16 @@ When considering the compact version of the power flow, the following constraint
 #### Other plants
 
 ```math
-    0 \leq g^T_{j, \tau} \leq \overline{G}^T_j\cdot d(\tau), \quad
+    \underline{G}^T_j\cdot d(\tau) \leq g^T_{j, \tau} \leq \overline{G}^T_j\cdot d(\tau), \quad
     \forall j \in J^T \setminus J^{TC}, \tau \in B(t)
 ```
 
 ### Renewable bounds
 
 ```math
-    0 \leq g^R_{j, \tau} \leq G^R_j\cdot d(\tau), \quad
-    0 \leq z^r_{j, \tau} \leq G^R_j\cdot d(\tau), \quad
-    \forall j \in J^R
+    0 \leq g^R_{j, \tau}, \quad
+    0 \leq z^r_{j, \tau}, \quad
+    \forall j \in J^R, \tau \in B(t)
 ```
 
 ### Battery Unit bounds
@@ -468,9 +468,9 @@ Where $\beta$ is the branch flow sensitivity matrix, that can be calculated usin
     \beta = \Gamma A^T(A \Gamma A^T)^{-1}
 ```
 
-$A$ is the reduced incidence matrix and $\Gamma$ is the diagonal matrix with the susceptance of each branch of the system.
+The matrix $A$ is the reduced incidence matrix and $\Gamma$ is the diagonal matrix with the susceptance of each branch of the system.
 
-The incidence matrix defines the connections between the network nodes and branches. It has the node indices as the matrix rows, and the branch indices as the matrix columns. The elements are 1 in the intersection of a `from` node row and the branch column, -1 in the intersection of a `to` node row and the branch column, and 0 otherwise, i.e., when the node column does not belong to the branch column. Finally, the reduced incidence matrix is given by the elimination of the row corresponding to the reference node in the original incidence matrix.
+The incidence matrix defines the connections between the network nodes and branches. It has the node indices as the matrix rows, and the branch indices as the matrix columns. The elements are $1$ in the intersection of a `from` node row and the branch column, $-1$ in the intersection of a `to` node row and the branch column, and $0$ otherwise, i.e., when the node column does not belong to the branch column. Finally, the reduced incidence matrix is given by the elimination of the row corresponding to the reference node in the original incidence matrix.
 
 ### Demand Deficit Bounds
 

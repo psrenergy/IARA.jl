@@ -2,4 +2,4 @@
 
 SET BASEPATH=%~dp0
 
-CALL "%JULIA_1100%" --color=yes --project=%BASEPATH%\.. -e "import Pkg; Pkg.Registry.update(); Pkg.test()"
+CALL "%JULIA_1112%" --color=yes --project=%BASEPATH%\.. -e "import Pkg; Pkg.Registry.update(); Pkg.test()"

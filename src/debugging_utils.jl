@@ -28,7 +28,7 @@ function set_custom_hook(
     scen::Integer,
     subscenario::Integer,
 )
-    if run_mode(inputs) == RunMode.MARKET_CLEARING
+    if is_market_clearing(inputs)
         function fix_integer_variables_from_previous_problem_hook(model::JuMP.Model)
             fix_discrete_variables_from_previous_problem!(inputs, run_time_options, model, t, scen)
             optimize!(model; ignore_optimize_hook = true)
@@ -86,7 +86,7 @@ function set_custom_hook(
     end
 
     function all_optimize_hooks(model)
-        if run_mode(inputs) == RunMode.MARKET_CLEARING
+        if is_market_clearing(inputs)
             if clearing_has_fixed_binary_variables(inputs, run_time_options)
                 fix_integer_variables_hook(model)
             elseif clearing_has_fixed_binary_variables_from_previous_problem(inputs, run_time_options)
@@ -127,10 +127,10 @@ function lp_filename(inputs::Inputs, run_time_options::RunTimeOptions, t::Intege
         if is_ex_post_problem(run_time_options)
             return joinpath(
                 path_case(inputs),
-                "$(run_time_options.clearing_model_procedure)_t$(t)_s$(scen)_ss$(subscenario).lp",
+                "$(run_time_options.clearing_model_subproblem)_t$(t)_s$(scen)_ss$(subscenario).lp",
             )
         else
-            return joinpath(path_case(inputs), "$(run_time_options.clearing_model_procedure)_t$(t)_s$(scen).lp")
+            return joinpath(path_case(inputs), "$(run_time_options.clearing_model_subproblem)_t$(t)_s$(scen).lp")
         end
     end
 end

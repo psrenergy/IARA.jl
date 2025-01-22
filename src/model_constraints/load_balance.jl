@@ -54,7 +54,7 @@ function load_balance!(
     # Generation expression
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
        run_mode(inputs) == RunMode.MIN_COST ||
-       clearing_model_type(inputs, run_time_options) == Configurations_ClearingModelType.COST_BASED
+       construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
         hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
         thermal_units = index_of_elements(inputs, ThermalUnit; filters = [is_existing])
         renewable_units = index_of_elements(inputs, RenewableUnit; filters = [is_existing])
@@ -97,38 +97,55 @@ function load_balance!(
                 init = 0.0,
             )
         )
-    elseif run_mode(inputs) == RunMode.MARKET_CLEARING
-        independent_bidding_groups =
-            index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_independent_bids])
+    elseif is_market_clearing(inputs)
+        bidding_groups =
+            index_of_elements(inputs, BiddingGroup)
         hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
-        profile_bidding_groups =
-            index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
 
         # Market Clearing Variables
-        bidding_group_generation_profile = if any_elements(inputs, BiddingGroup; filters = [has_profile_bids])
+        bidding_group_generation_profile = if has_any_profile_bids(inputs)
             get_model_object(model, :bidding_group_generation_profile)
         end
-        bidding_group_generation = if any_elements(inputs, BiddingGroup; filters = [has_independent_bids])
+        bidding_group_generation = if any_elements(inputs, BiddingGroup)
             get_model_object(model, :bidding_group_generation)
         end
         hydro_generation = if any_elements(inputs, VirtualReservoir)
             get_model_object(model, :hydro_generation)
         end
 
+        if has_any_simple_bids(inputs)
+            valid_segments = get_maximum_valid_segments(inputs)
+        end
+
+        if has_any_profile_bids(inputs)
+            valid_profiles = get_maximum_valid_profiles(inputs)
+        end
+
         # Market Clearing Generation
         @expression(
             model.jump_model,
             generation[blk in blks, bus in buses],
-            sum(
-                bidding_group_generation[blk, bg, bds, bus] for
-                bg in independent_bidding_groups, bds in 1:maximum_bid_segments(inputs, bg);
-                init = 0.0,
-            ) +
-            sum(
-                bidding_group_generation_profile[blk, bg, prf, bus] for
-                bg in profile_bidding_groups, prf in 1:maximum_profiles(inputs, bg);
-                init = 0.0,
-            ) +
+            if has_any_simple_bids(inputs)
+                # The double for loop is necessary, otherwise it breaks
+                sum(
+                    bidding_group_generation[blk, bg, bds, bus] for
+                    bg in bidding_groups for bds in 1:valid_segments[bg];
+                    init = 0.0,
+                )
+            else
+                0.0
+            end
+            +
+            if has_any_profile_bids(inputs)
+                sum(
+                    bidding_group_generation_profile[blk, bg, prf, bus] for
+                    bg in bidding_groups for prf in 1:valid_profiles[bg];
+                    init = 0.0,
+                )
+            else
+                0.0
+            end
+            +
             sum(
                 hydro_generation[blk, h] for
                 h in hydro_units if

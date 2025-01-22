@@ -64,7 +64,7 @@ function hydro_commitment!(
 )
     hydro_units_with_commitment = index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_commitment])
 
-    if run_time_options.clearing_model_procedure != RunTime_ClearingProcedure.EX_POST_COMMERCIAL
+    if run_time_options.clearing_model_subproblem != RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
         add_symbol_to_query_from_subproblem_result!(outputs, [:hydro_commitment])
         if use_binary_variables(inputs)
             add_symbol_to_serialize!(outputs, :hydro_commitment)

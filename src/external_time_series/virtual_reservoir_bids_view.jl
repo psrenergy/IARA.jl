@@ -34,6 +34,7 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     inputs,
     file_path::AbstractString;
     expected_unit::String = "",
+    possible_expected_dimensions::Vector{Vector{Symbol}} = Vector{Vector{Symbol}}(),
     virtual_reservoirs_to_read::Vector{String} = String[],
     asset_owners_to_read::Vector{String} = String[],
 ) where {T}
@@ -91,21 +92,44 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
         num_errors += 1
     end
 
+    dimensions = ts.reader.metadata.dimensions
+    vr_bidding_segments = dimensions[:bid_segment]
+    update_number_of_virtual_reservoir_bidding_segments!(inputs, vr_bidding_segments)
+
+    # Validate if the dimensions are as expected
+    if !isempty(possible_expected_dimensions)
+        # Iterate through all possible dimensions and check if the time series
+        # is defined in one of them.
+        dimension_is_valid = false
+        for possible_dimensions in possible_expected_dimensions
+            if dimensions == possible_dimensions
+                dimension_is_valid = true
+                break
+            end
+        end
+        if !dimension_is_valid
+            @error(
+                "Time series file $(file_path) has dimensions $(dimensions). This is different from the possible dimensions of this file $possible_expected_dimensions.",
+            )
+            num_errors += 1
+        end
+    end
+
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
     asset_owners = index_of_elements(inputs, AssetOwner)
-    bid_segments = number_of_virtual_reservoir_bidding_segments(inputs)
+    number_of_bid_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
 
     ts.data = zeros(
         T,
         length(virtual_reservoirs),
         length(asset_owners),
-        length(bid_segments),
+        number_of_bid_segments,
     )
 
     # Initialize dynamic time series
     read_virtual_reservoir_bids_view_from_external_file!(
         inputs,
-        ts.reader;
+        ts;
         period = 1,
         scenario = 1,
     )
@@ -113,23 +137,22 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     return num_errors
 end
 
-function read_virtual_reservoir_bids_view_from_external_file(
+function read_virtual_reservoir_bids_view_from_external_file!(
     inputs,
     ts::VirtualReservoirBidsView{T};
     period::Int,
     scenario::Int,
 ) where {T}
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    bid_segments = number_of_virtual_reservoir_bidding_segments(inputs)
 
-    for bs in bid_segments
+    for bs in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
         Quiver.goto!(ts.reader; period, scenario, bid_segment = bs)
         pair_index = 0
         # vr and ao are in a bad performance order, but it is convenient for maping pairs the correct way.
         for vr in virtual_reservoirs
             for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                 pair_index += 1
-                ts.data[vr, ao, bs] = reader.data[pair_index]
+                ts.data[vr, ao, bs] = ts.reader.data[pair_index]
             end
         end
         @assert pair_index == sum(length.(virtual_reservoir_asset_owner_indices(inputs)))

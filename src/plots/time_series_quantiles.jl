@@ -16,20 +16,20 @@ Type for a time series plot with P10, P50, and P90 quantiles of scenarios.
 abstract type PlotTimeSeriesQuantiles <: PlotType end
 
 """
-    agent_quantile_in_scenarios(::Type{PlotTimeSeriesQuantiles}, data::Array{Float64, 3}, agent_names::Vector{String}; kwargs...)
+    agent_quantile_in_scenarios(::Type{PlotTimeSeriesQuantiles}, data::Array{<:AbstractFloat, 3}, agent_names::Vector{String}; kwargs...)
 
 Calculate the P10, P50, and P90 quantiles of the data across scenarios.
 """
 function agent_quantile_in_scenarios(
     ::Type{PlotTimeSeriesQuantiles},
-    data::Array{Float64, 3},
+    data::Array{<:AbstractFloat, 3},
     agent_names::Vector{String};
     kwargs...,
 )
     num_periods = size(data, 3)
     num_agents = size(data, 1)
 
-    reshaped_data = Array{Float64, 2}(undef, 3 * num_agents, num_periods)
+    reshaped_data = Array{AbstractFloat, 2}(undef, 3 * num_agents, num_periods)
     for agent in 1:num_agents
         p10_idx = agent
         p50_idx = num_agents + agent
@@ -45,7 +45,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesQuantiles},
-    data::Array{Float32, 3},
+    data::Array{<:AbstractFloat, 3},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -56,17 +56,17 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesQuantiles},
-    data::Array{Float32, 4},
+    data::Array{<:AbstractFloat, 4},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
 )
-    if !("subperiod" in dimensions) && ("bid_segment" in dimensions)
+    if !("subperiod" in dimensions) && (("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series, agent_names = merge_segment_agent(data, agent_names; kwargs...)
         time_series, agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
         return time_series, agent_names
-    elseif ("subperiod" in dimensions) && !("bid_segment" in dimensions)
+    elseif ("subperiod" in dimensions) && !(("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series = merge_period_subperiod(data)
         time_series, agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
@@ -80,7 +80,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesQuantiles},
-    data::Array{Float32, 5},
+    data::Array{<:AbstractFloat, 5},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -91,7 +91,7 @@ function reshape_time_series!(
         time_series, agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
         return time_series, agent_names
-    elseif !("bid_segment" in dimensions)
+    elseif !(("bid_segment" in dimensions) || ("profile" in dimensions))
         time_series = merge_period_subperiod(data)
         time_series, modified_scenario_names =
             merge_scenario_subscenario(time_series, agent_names; kwargs...)
@@ -114,7 +114,7 @@ end
 
 function reshape_time_series!(
     ::Type{PlotTimeSeriesQuantiles},
-    data::Array{Float32, 6},
+    data::Array{<:AbstractFloat, 6},
     agent_names::Vector{String},
     dimensions::Vector{String};
     kwargs...,
@@ -128,20 +128,20 @@ function reshape_time_series!(
 end
 
 """
-    plot_data(::Type{PlotTimeSeriesQuantiles}, data::Array{Float32, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, period_type::Configurations_PeriodType.T, kwargs...)
+    plot_data(::Type{PlotTimeSeriesQuantiles}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; title::String = "", unit::String = "", file_path::String, initial_date::DateTime, time_series_step::Configurations_TimeSeriesStep.T, kwargs...)
 
 Create a time series plot with P10, P50, and P90 quantiles of scenarios.
 """
 function plot_data(
     ::Type{PlotTimeSeriesQuantiles},
-    data::Array{Float32, N},
+    data::Array{<:AbstractFloat, N},
     agent_names::Vector{String},
     dimensions::Vector{String};
     title::String = "",
     unit::String = "",
     file_path::String,
     initial_date::DateTime,
-    period_type::Configurations_PeriodType.T,
+    time_series_step::Configurations_TimeSeriesStep.T,
     kwargs...,
 ) where {N}
     traces, trace_names = reshape_time_series!(PlotTimeSeriesQuantiles, data, agent_names, dimensions; kwargs...)
@@ -149,7 +149,7 @@ function plot_data(
     number_of_agents = length(trace_names)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, period_type)
+    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step)
     plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
     configs = Vector{Config}()

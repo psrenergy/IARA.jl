@@ -44,7 +44,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     hourly_inflow;
     dimensions = ["period", "scenario", "hour"],
-    labels = ["hyd_1_gauging_station"],
+    labels = ["hyd_1"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_hours],
     initial_date = "2020-01-01T00:00:00",
@@ -73,8 +73,6 @@ IARA.link_time_series_to_file(
     hour_subperiod_map = "hour_subperiod_map",
 )
 
-demand = demand * new_subperiod_duration / subperiod_duration_in_hours
-
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
@@ -83,7 +81,7 @@ IARA.write_timeseries_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
+    unit = "p.u.",
 )
 
 IARA.close_study!(db)

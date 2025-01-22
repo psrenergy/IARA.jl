@@ -25,13 +25,12 @@ Configurations for the problem.
     number_of_subscenarios::Int = 0
     iteration_limit::Int = 0
     initial_date_time::DateTime = DateTime(0)
-    period_type::Configurations_PeriodType.T = Configurations_PeriodType.MONTHLY
+    time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Int} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
-    use_binary_variables::Configurations_BinaryVariableUsage.T = Configurations_BinaryVariableUsage.USE
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
         Configurations_ConsiderSubperiodsLoopForThermalConstraints.DO_NOT_CONSIDER
     cycle_discount_rate::Float64 = 0.0
@@ -39,59 +38,58 @@ Configurations for the problem.
     aggregate_buses_for_strategic_bidding::Configurations_BusesAggregationForStrategicBidding.T =
         Configurations_BusesAggregationForStrategicBidding.DO_NOT_AGGREGATE
     parp_max_lags::Int = 0
-    inflow_source::Configurations_InflowSource.T = Configurations_InflowSource.READ_FROM_FILE
-    clearing_bid_source::Configurations_ClearingBidSource.T = Configurations_ClearingBidSource.READ_FROM_FILE
+    renewable_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
+    inflow_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
+    demand_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
+    bid_data_source::Configurations_BidDataSource.T = Configurations_BidDataSource.READ_FROM_FILE
     clearing_hydro_representation::Configurations_ClearingHydroRepresentation.T =
         Configurations_ClearingHydroRepresentation.PURE_BIDS
-    clearing_model_type_ex_ante_physical::Configurations_ClearingModelType.T =
-        Configurations_ClearingModelType.SKIP
-    clearing_model_type_ex_ante_commercial::Configurations_ClearingModelType.T =
-        Configurations_ClearingModelType.SKIP
-    clearing_model_type_ex_post_physical::Configurations_ClearingModelType.T =
-        Configurations_ClearingModelType.SKIP
-    clearing_model_type_ex_post_commercial::Configurations_ClearingModelType.T =
-        Configurations_ClearingModelType.SKIP
+    construction_type_ex_ante_physical::Configurations_ConstructionType.T =
+        Configurations_ConstructionType.SKIP
+    construction_type_ex_ante_commercial::Configurations_ConstructionType.T =
+        Configurations_ConstructionType.SKIP
+    construction_type_ex_post_physical::Configurations_ConstructionType.T =
+        Configurations_ConstructionType.SKIP
+    construction_type_ex_post_commercial::Configurations_ConstructionType.T =
+        Configurations_ConstructionType.SKIP
     use_fcf_in_clearing::Bool = false
-    clearing_integer_variables_ex_ante_physical_type::Configurations_ClearingIntegerVariables.T =
-        Configurations_ClearingIntegerVariables.FIXED
-    clearing_integer_variables_ex_ante_commercial_type::Configurations_ClearingIntegerVariables.T =
-        Configurations_ClearingIntegerVariables.FIXED
-    clearing_integer_variables_ex_post_physical_type::Configurations_ClearingIntegerVariables.T =
-        Configurations_ClearingIntegerVariables.FIXED
-    clearing_integer_variables_ex_post_commercial_type::Configurations_ClearingIntegerVariables.T =
-        Configurations_ClearingIntegerVariables.FIXED
-    clearing_integer_variables_ex_ante_commercial_source::RunTime_ClearingProcedure.T =
-        RunTime_ClearingProcedure.EX_ANTE_PHYSICAL
-    clearing_integer_variables_ex_post_physical_source::RunTime_ClearingProcedure.T =
-        RunTime_ClearingProcedure.EX_ANTE_PHYSICAL
-    clearing_integer_variables_ex_post_commercial_source::RunTime_ClearingProcedure.T =
-        RunTime_ClearingProcedure.EX_ANTE_PHYSICAL
-    clearing_network_representation::Configurations_ClearingNetworkRepresentation.T =
-        Configurations_ClearingNetworkRepresentation.NODAL_NODAL
+    integer_variable_representation_mincost_type::Configurations_IntegerVariableRepresentation.T =
+        Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    integer_variable_representation_ex_ante_physical_type::Configurations_IntegerVariableRepresentation.T =
+        Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    integer_variable_representation_ex_ante_commercial_type::Configurations_IntegerVariableRepresentation.T =
+        Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    integer_variable_representation_ex_post_physical_type::Configurations_IntegerVariableRepresentation.T =
+        Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    integer_variable_representation_ex_post_commercial_type::Configurations_IntegerVariableRepresentation.T =
+        Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
     settlement_type::Configurations_SettlementType.T = Configurations_SettlementType.EX_ANTE
     make_whole_payments::Configurations_MakeWholePayments.T =
-        Configurations_MakeWholePayments.CONSTRAINED_ON_AND_OFF_INSTANT
-    price_cap::Configurations_PriceCap.T = Configurations_PriceCap.REPRESENT
-    number_of_virtual_reservoir_bidding_segments::Int = 0
+        Configurations_MakeWholePayments.CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD
+    price_limits::Configurations_PriceLimits.T = Configurations_PriceLimits.REPRESENT
     number_of_bid_segments_for_file_template::Int = 0
     number_of_bid_segments_for_virtual_reservoir_file_template::Int = 0
     number_of_profiles_for_file_template::Int = 0
     number_of_complementary_groups_for_file_template::Int = 0
-    virtual_reservoir_waveguide_source::Configurations_VirtualReservoirWaveguideSource.T =
-        Configurations_VirtualReservoirWaveguideSource.UNIFORM_VOLUME_PERCENTAGE
-    waveguide_user_provided_source::Configurations_WaveguideUserProvidedSource.T =
-        Configurations_WaveguideUserProvidedSource.CSV_FILE
+    vr_curveguide_data_source::Configurations_VRCurveguideDataSource.T =
+        Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
+    vr_curveguide_data_format::Configurations_VRCurveguideDataFormat.T =
+        Configurations_VRCurveguideDataFormat.CSV_FILE
     hour_subperiod_map_file::String = ""
     fcf_cuts_file::String = ""
     spot_price_floor::Float64 = 0.0
     spot_price_cap::Float64 = 0.0
-    reservoirs_physical_virtual_correspondence_type::Configurations_ReservoirsPhysicalVirtualCorrespondenceType.T =
-        Configurations_ReservoirsPhysicalVirtualCorrespondenceType.BY_VOLUME
+    virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
+        Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
     hydro_minimum_outflow_violation_cost::Float64 = 0.0
     hydro_spillage_cost::Float64 = 0.0
+    market_clearing_tiebreaker_weight::Float64 = 0.0
 end
 
 # ---------------------------------------------------------------------
@@ -121,10 +119,10 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "initial_date_time")[1],
         "yyyy-mm-ddTHH:MM:SS",
     )
-    configurations.period_type =
+    configurations.time_series_step =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "period_type")[1],
-            Configurations_PeriodType.T,
+            PSRI.get_parms(inputs.db, "Configuration", "time_series_step")[1],
+            Configurations_TimeSeriesStep.T,
         )
     configurations.policy_graph_type =
         convert_to_enum(
@@ -135,11 +133,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_subperiod_resolution")[1],
             Configurations_HydroBalanceSubperiodResolution.T,
-        )
-    configurations.use_binary_variables =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "use_binary_variables")[1],
-            Configurations_BinaryVariableUsage.T,
         )
     loop_subperiods_for_thermal_constraints =
         PSRI.get_parms(inputs.db, "Configuration", "loop_subperiods_for_thermal_constraints")[1]
@@ -160,25 +153,30 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         else
             convert_to_enum(aggregate_buses_for_strategic_bidding, Configurations_BusesAggregationForStrategicBidding.T)
         end
-    configurations.inflow_source =
+    configurations.renewable_scenarios_files =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "inflow_source")[1],
-            Configurations_InflowSource.T,
+            PSRI.get_parms(inputs.db, "Configuration", "renewable_scenarios_files")[1],
+            Configurations_UncertaintyScenariosFiles.T,
         )
-    configurations.clearing_bid_source =
+    configurations.inflow_scenarios_files =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_bid_source")[1],
-            Configurations_ClearingBidSource.T,
+            PSRI.get_parms(inputs.db, "Configuration", "inflow_scenarios_files")[1],
+            Configurations_UncertaintyScenariosFiles.T,
+        )
+    configurations.demand_scenarios_files =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "demand_scenarios_files")[1],
+            Configurations_UncertaintyScenariosFiles.T,
+        )
+    configurations.bid_data_source =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "bid_data_source")[1],
+            Configurations_BidDataSource.T,
         )
     configurations.clearing_hydro_representation =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "clearing_hydro_representation")[1],
             Configurations_ClearingHydroRepresentation.T,
-        )
-    configurations.clearing_network_representation =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_network_representation")[1],
-            Configurations_ClearingNetworkRepresentation.T,
         )
     configurations.settlement_type =
         convert_to_enum(
@@ -190,10 +188,10 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "make_whole_payments")[1],
             Configurations_MakeWholePayments.T,
         )
-    configurations.price_cap =
+    configurations.price_limits =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "price_cap")[1],
-            Configurations_PriceCap.T,
+            PSRI.get_parms(inputs.db, "Configuration", "price_limits")[1],
+            Configurations_PriceLimits.T,
         )
     configurations.cycle_discount_rate =
         PSRI.get_parms(inputs.db, "Configuration", "cycle_discount_rate")[1]
@@ -207,8 +205,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "hydro_minimum_outflow_violation_cost")[1]
     configurations.hydro_spillage_cost =
         PSRI.get_parms(inputs.db, "Configuration", "hydro_spillage_cost")[1]
-    configurations.number_of_virtual_reservoir_bidding_segments =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_virtual_reservoir_bidding_segments")[1]
+    configurations.market_clearing_tiebreaker_weight =
+        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight")[1]
     configurations.number_of_bid_segments_for_file_template =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_bid_segments_for_file_template")[1]
     configurations.number_of_bid_segments_for_virtual_reservoir_file_template =
@@ -217,80 +215,65 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "number_of_profiles_for_file_template")[1]
     configurations.number_of_complementary_groups_for_file_template =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_complementary_groups_for_file_template")[1]
-    configurations.virtual_reservoir_waveguide_source =
+    configurations.vr_curveguide_data_source =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_waveguide_source")[1],
-            Configurations_VirtualReservoirWaveguideSource.T,
+            PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_source")[1],
+            Configurations_VRCurveguideDataSource.T,
         )
-    configurations.waveguide_user_provided_source =
+    configurations.vr_curveguide_data_format =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "waveguide_user_provided_source")[1],
-            Configurations_WaveguideUserProvidedSource.T,
+            PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_format")[1],
+            Configurations_VRCurveguideDataFormat.T,
         )
-    configurations.clearing_model_type_ex_ante_physical =
+    configurations.construction_type_ex_ante_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_ante_physical")[1],
-            Configurations_ClearingModelType.T,
+            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_ante_physical")[1],
+            Configurations_ConstructionType.T,
         )
-    configurations.clearing_model_type_ex_ante_commercial =
+    configurations.construction_type_ex_ante_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_ante_commercial")[1],
-            Configurations_ClearingModelType.T,
+            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_ante_commercial")[1],
+            Configurations_ConstructionType.T,
         )
-    configurations.clearing_model_type_ex_post_physical =
+    configurations.construction_type_ex_post_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_post_physical")[1],
-            Configurations_ClearingModelType.T,
+            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_post_physical")[1],
+            Configurations_ConstructionType.T,
         )
-    configurations.clearing_model_type_ex_post_commercial =
+    configurations.construction_type_ex_post_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_model_type_ex_post_commercial")[1],
-            Configurations_ClearingModelType.T,
+            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_post_commercial")[1],
+            Configurations_ConstructionType.T,
         )
     configurations.use_fcf_in_clearing =
         PSRI.get_parms(inputs.db, "Configuration", "use_fcf_in_clearing")[1] |> Bool
-    configurations.clearing_integer_variables_ex_ante_physical_type =
+    configurations.integer_variable_representation_ex_ante_physical_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_ante_physical_type")[1],
-            Configurations_ClearingIntegerVariables.T,
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_physical_type")[1],
+            Configurations_IntegerVariableRepresentation.T,
         )
-    configurations.clearing_integer_variables_ex_ante_commercial_type =
+    configurations.integer_variable_representation_ex_ante_commercial_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_ante_commercial_type")[1],
-            Configurations_ClearingIntegerVariables.T,
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_commercial_type")[1],
+            Configurations_IntegerVariableRepresentation.T,
         )
-    configurations.clearing_integer_variables_ex_post_physical_type =
+    configurations.integer_variable_representation_ex_post_physical_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_physical_type")[1],
-            Configurations_ClearingIntegerVariables.T,
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_physical_type")[1],
+            Configurations_IntegerVariableRepresentation.T,
         )
-    configurations.clearing_integer_variables_ex_post_commercial_type =
+    configurations.integer_variable_representation_ex_post_commercial_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_commercial_type")[1],
-            Configurations_ClearingIntegerVariables.T,
-        )
-    configurations.clearing_integer_variables_ex_ante_commercial_source =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_ante_commercial_source")[1],
-            RunTime_ClearingProcedure.T,
-        )
-    configurations.clearing_integer_variables_ex_post_physical_source =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_physical_source")[1],
-            RunTime_ClearingProcedure.T,
-        )
-    configurations.clearing_integer_variables_ex_post_commercial_source =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_integer_variables_ex_post_commercial_source")[1],
-            RunTime_ClearingProcedure.T,
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_commercial_type")[1],
+            Configurations_IntegerVariableRepresentation.T,
         )
 
     configurations.spot_price_floor = PSRI.get_parms(inputs.db, "Configuration", "spot_price_floor")[1]
     configurations.spot_price_cap = PSRI.get_parms(inputs.db, "Configuration", "spot_price_cap")[1]
-    configurations.reservoirs_physical_virtual_correspondence_type =
+    configurations.virtual_reservoir_correspondence_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "reservoirs_physical_virtual_correspondence_type")[1],
-            Configurations_ReservoirsPhysicalVirtualCorrespondenceType.T,
+            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
+            Configurations_VirtualReservoirCorrespondenceType.T,
         )
 
     # Load vectors
@@ -375,7 +358,7 @@ function validate(configurations::Configurations)
         @error("Number of subperiods must be positive.")
         num_errors += 1
     end
-    if configurations.policy_graph_type == Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT
+    if configurations.policy_graph_type == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT
         if is_null(configurations.number_of_nodes)
             @error("Configuration parameter number_of_nodes must be defined when using a cyclic policy graph for SDDP.")
             num_errors += 1
@@ -410,21 +393,22 @@ function validate(configurations::Configurations)
         @error("Hydro spillage cost must be non-negative.")
         num_errors += 1
     end
-    if configurations.policy_graph_type == Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT &&
+    if configurations.market_clearing_tiebreaker_weight <= 0
+        @error(
+            "Market clearing tiebreaker weight must be greater than zero. Current value: $(configurations.market_clearing_tiebreaker_weight)"
+        )
+        num_errors += 1
+    end
+    if configurations.policy_graph_type == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT &&
        configurations.cycle_discount_rate == 0
         @error(
             "If the policy graph is not linear, the cycle discount rate must be positive. Current discount rate: $(configurations.cycle_discount_rate)"
         )
         num_errors += 1
     end
-    if configurations.inflow_source == Configurations_InflowSource.SIMULATE_WITH_PARP &&
+    if configurations.inflow_scenarios_files == Configurations_UncertaintyScenariosFiles.NONE &&
        is_null(configurations.parp_max_lags)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
-        num_errors += 1
-    end
-    if !is_null(configurations.number_of_virtual_reservoir_bidding_segments) &&
-       configurations.number_of_virtual_reservoir_bidding_segments <= 0
-        @error("Number of virtual reservoir bidding segments must be positive.")
         num_errors += 1
     end
     if configurations.number_of_bid_segments_for_file_template < 0
@@ -444,84 +428,14 @@ function validate(configurations::Configurations)
         num_errors += 1
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       configurations.clearing_bid_source == Configurations_ClearingBidSource.READ_FROM_FILE
+       configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
         @error("Virtual reservoirs cannot be used with clearing bid source READ_FROM_FILE.")
         num_errors += 1
     end
-    if configurations.clearing_integer_variables_ex_ante_physical_type ==
-       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP
+    if configurations.integer_variable_representation_ex_ante_physical_type ==
+       Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
         @error(
             "Ex-ante physical clearing model cannot have fixed integer variables from previous step, because it is the first step."
-        )
-        num_errors += 1
-    end
-    use_integer_variables_from_ex_ante_physical = false
-    use_integer_variables_from_ex_ante_commercial = false
-    use_integer_variables_from_ex_post_physical = false
-    if configurations.clearing_integer_variables_ex_ante_commercial_type ==
-       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP
-        if Int(configurations.clearing_integer_variables_ex_ante_commercial_source) >=
-           Int(RunTime_ClearingProcedure.EX_ANTE_COMMERCIAL)
-            @error(
-                "Ex-ante commercial clearing model cannot have fixed integer variables from itself or future procedure."
-            )
-            num_errors += 1
-        else
-            use_integer_variables_from_ex_ante_physical = true
-        end
-    end
-    if configurations.clearing_integer_variables_ex_post_physical_type ==
-       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP
-        if Int(configurations.clearing_integer_variables_ex_post_physical_source) >=
-           Int(RunTime_ClearingProcedure.EX_POST_PHYSICAL)
-            @error(
-                "Ex-post physical clearing model cannot have fixed integer variables from itself or future procedure."
-            )
-            num_errors += 1
-        elseif Int(configurations.clearing_integer_variables_ex_post_physical_source) ==
-               Int(RunTime_ClearingProcedure.EX_ANTE_COMMERCIAL)
-            use_integer_variables_from_ex_ante_commercial = true
-        else
-            use_integer_variables_from_ex_ante_physical = true
-        end
-    end
-    if configurations.clearing_integer_variables_ex_post_commercial_type ==
-       Configurations_ClearingIntegerVariables.FIXED_FROM_PREVIOUS_STEP
-        if Int(configurations.clearing_integer_variables_ex_post_commercial_source) >=
-           Int(RunTime_ClearingProcedure.EX_POST_COMMERCIAL)
-            @error("Ex-post commercial clearing model cannot have fixed integer variables from itself")
-            num_errors += 1
-        elseif Int(configurations.clearing_integer_variables_ex_post_commercial_source) ==
-               Int(RunTime_ClearingProcedure.EX_POST_PHYSICAL)
-            use_integer_variables_from_ex_post_physical = true
-        elseif Int(configurations.clearing_integer_variables_ex_post_commercial_source) ==
-               Int(RunTime_ClearingProcedure.EX_ANTE_COMMERCIAL)
-            use_integer_variables_from_ex_ante_commercial = true
-        else
-            use_integer_variables_from_ex_ante_physical = true
-        end
-    end
-    if use_integer_variables_from_ex_ante_physical &&
-       configurations.clearing_model_type_ex_ante_physical ==
-       Configurations_ClearingModelType.SKIP
-        @error(
-            "The ex-ante physical clearing model type is SKIP, but it is defined as a source for integer variables in another clearing procedure."
-        )
-        num_errors += 1
-    end
-    if use_integer_variables_from_ex_ante_commercial &&
-       configurations.clearing_model_type_ex_ante_commercial ==
-       Configurations_ClearingModelType.SKIP
-        @error(
-            "The ex-ante commercial clearing model type is SKIP, but it is defined as a source for integer variables in another clearing procedure."
-        )
-        num_errors += 1
-    end
-    if use_integer_variables_from_ex_post_physical &&
-       configurations.clearing_model_type_ex_post_physical ==
-       Configurations_ClearingModelType.SKIP
-        @error(
-            "The ex-post physical clearing model type is SKIP, but it is defined as a source for integer variables in another clearing procedure."
         )
         num_errors += 1
     end
@@ -538,6 +452,13 @@ function validate(configurations::Configurations)
         @error("Spot price cap must be greater than the spot price floor.")
         num_errors += 1
     end
+    if configurations.integer_variable_representation_mincost_type ==
+       Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
+        @error(
+            "Mincost model cannot have FROM_EX_ANTE_PHYSICAL integer variables, because it is not a clearing problem."
+        )
+        num_errors += 1
+    end
     return num_errors
 end
 
@@ -549,57 +470,54 @@ Validate the Configurations' context within the inputs. Return the number of err
 function advanced_validations(inputs::AbstractInputs, configurations::Configurations)
     num_errors = 0
 
-    if run_mode(inputs) == RunMode.MARKET_CLEARING
+    if is_market_clearing(inputs)
         model_type_warning = false
         if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             if (
-                configurations.clearing_model_type_ex_ante_physical != Configurations_ClearingModelType.HYBRID &&
-                configurations.clearing_model_type_ex_ante_physical != Configurations_ClearingModelType.SKIP
+                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.HYBRID &&
+                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
             )
                 model_type_warning = true
-                configurations.clearing_model_type_ex_ante_physical = Configurations_ClearingModelType.HYBRID
+                configurations.construction_type_ex_ante_physical = Configurations_ConstructionType.HYBRID
             end
             if (
-                configurations.clearing_model_type_ex_ante_commercial != Configurations_ClearingModelType.HYBRID &&
-                configurations.clearing_model_type_ex_ante_physical != Configurations_ClearingModelType.SKIP
+                configurations.construction_type_ex_ante_commercial != Configurations_ConstructionType.HYBRID &&
+                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
             )
                 model_type_warning = true
-                configurations.clearing_model_type_ex_ante_commercial = Configurations_ClearingModelType.HYBRID
+                configurations.construction_type_ex_ante_commercial = Configurations_ConstructionType.HYBRID
             end
-            if configurations.clearing_model_type_ex_post_physical == Configurations_ClearingModelType.SKIP
+            if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP
                 @error("Ex-post physical clearing model cannot be skipped when using virtual reservoirs.")
                 num_errors += 1
-            elseif configurations.clearing_model_type_ex_ante_physical != Configurations_ClearingModelType.HYBRID
+            elseif configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.HYBRID
                 model_type_warning = true
-                configurations.clearing_model_type_ex_post_physical = Configurations_ClearingModelType.HYBRID
+                configurations.construction_type_ex_post_physical = Configurations_ConstructionType.HYBRID
             end
             if (
-                configurations.clearing_model_type_ex_post_commercial != Configurations_ClearingModelType.HYBRID &&
-                configurations.clearing_model_type_ex_ante_physical != Configurations_ClearingModelType.SKIP
+                configurations.construction_type_ex_post_commercial != Configurations_ConstructionType.HYBRID &&
+                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
             )
                 model_type_warning = true
-                configurations.clearing_model_type_ex_post_commercial = Configurations_ClearingModelType.HYBRID
+                configurations.construction_type_ex_post_commercial = Configurations_ConstructionType.HYBRID
             end
             if model_type_warning
                 @warn("All clearing models must be hybrid when using virtual reservoirs.")
             end
         end
     end
-    if run_mode(inputs) == RunMode.MARKET_CLEARING
-        if configurations.number_of_subscenarios <= 0
-            @error("Number of subscenarios must be positive.")
-            num_errors += 1
+    if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
+        if is_market_clearing(inputs)
+            if configurations.number_of_subscenarios <= 0
+                @error("Number of subscenarios must be positive.")
+                num_errors += 1
+            end
+        else
+            if configurations.number_of_subscenarios != 1
+                @error("Number of subscenarios must be one for run modes other than MARKET_CLEARING.")
+                num_errors += 1
+            end
         end
-    else
-        if configurations.number_of_subscenarios != 1
-            @error("Number of subscenarios must be one for run modes other than MARKET_CLEARING.")
-            num_errors += 1
-        end
-    end
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       is_null(configurations.number_of_virtual_reservoir_bidding_segments)
-        @error("Number of virtual reservoir bidding segments must be defined when using virtual reservoirs.")
-        num_errors += 1
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
        !any_elements(inputs, VirtualReservoir)
@@ -616,7 +534,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             @warn(
                 """
             Cycle duration in hours is $(configurations.cycle_duration_in_hours). This parameter is used to determine the node discount rate from the cycle discount rate. 
-            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. It's value is $calculated_cycle_duration.
+            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration.
             """
             )
         end
@@ -748,11 +666,11 @@ Return the initial date of the problem.
 initial_date_time(inputs::AbstractInputs) = inputs.collections.configurations.initial_date_time
 
 """
-    period_type(inputs::AbstractInputs)
+    time_series_step(inputs::AbstractInputs)
 
-Return the period type.
+Return the Time series step.
 """
-period_type(inputs::AbstractInputs) = inputs.collections.configurations.period_type
+time_series_step(inputs::AbstractInputs) = inputs.collections.configurations.time_series_step
 
 """
     periods_per_year(inputs::AbstractInputs)
@@ -760,10 +678,10 @@ period_type(inputs::AbstractInputs) = inputs.collections.configurations.period_t
 Return the number of periods per year.
 """
 function periods_per_year(inputs::AbstractInputs)
-    if period_type(inputs) == Configurations_PeriodType.MONTHLY
+    if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return 12
     else
-        error("Period type $(period_type(inputs)) not implemented.")
+        error("Time series step $(time_series_step(inputs)) not implemented.")
     end
 end
 
@@ -790,6 +708,22 @@ Return the run mode.
 run_mode(inputs::AbstractInputs) = inputs.args.run_mode
 
 """
+    is_market_clearing(inputs::AbstractInputs)
+
+Return whether the run mode is MARKET_CLEARING or SINGLE_PERIOD_MARKET_CLEARING.
+"""
+is_market_clearing(inputs::AbstractInputs) =
+    run_mode(inputs) in [RunMode.MARKET_CLEARING, RunMode.SINGLE_PERIOD_MARKET_CLEARING]
+
+"""
+    is_single_period(inputs::AbstractInputs)
+
+Return whether the run mode is SINGLE_PERIOD_MARKET_CLEARING or SINGLE_PERIOD_HEURISTIC_BID.
+"""
+is_single_period(inputs::AbstractInputs) =
+    run_mode(inputs) in [RunMode.SINGLE_PERIOD_MARKET_CLEARING, RunMode.SINGLE_PERIOD_HEURISTIC_BID]
+
+"""
     policy_graph_type(inputs::AbstractInputs)
 
 Return the policy graph type.
@@ -810,8 +744,8 @@ linear_policy_graph(inputs::AbstractInputs) =
 Return whether the policy graph is cyclic.
 """
 function cyclic_policy_graph(inputs::AbstractInputs)
-    if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_FIXED_ROOT ||
-       policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_DISTRIBUTED_ROOT
+    if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT ||
+       policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT
         return true
     else
         return false
@@ -851,8 +785,14 @@ end
 
 Return whether binary variables should be used.
 """
-use_binary_variables(inputs::AbstractInputs) =
-    inputs.collections.configurations.use_binary_variables == Configurations_BinaryVariableUsage.USE
+function use_binary_variables(inputs::AbstractInputs)
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
+        return inputs.collections.configurations.integer_variable_representation_mincost_type ==
+               Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    else
+        return true
+    end
+end
 
 """
     loop_subperiods_for_thermal_constraints(inputs::AbstractInputs)
@@ -904,12 +844,130 @@ Return the maximum number of lags in the PAR(p) model.
 parp_max_lags(inputs::AbstractInputs) = inputs.collections.configurations.parp_max_lags
 
 """
+    renewable_scenarios_files(inputs::AbstractInputs)
+
+Return which renewable scenarios files should be read.
+"""
+renewable_scenarios_files(inputs::AbstractInputs) =
+    inputs.collections.configurations.renewable_scenarios_files
+
+"""
+    read_ex_ante_renewable_file(inputs::AbstractInputs)
+
+Return whether the ex-ante renewable file should be read.
+"""
+function read_ex_ante_renewable_file(inputs::AbstractInputs)
+    return renewable_scenarios_files(inputs) in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+end
+
+"""
+    read_ex_post_renewable_file(inputs::AbstractInputs)
+
+Return whether the ex-ante renewable file should be read.
+"""
+function read_ex_post_renewable_file(inputs::AbstractInputs)
+    return renewable_scenarios_files(inputs) in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+end
+
+"""
+    inflow_scenarios_files(inputs::AbstractInputs)
+
+Return which inflow scenarios files should be read.
+"""
+inflow_scenarios_files(inputs::AbstractInputs) =
+    inputs.collections.configurations.inflow_scenarios_files
+
+"""
+    read_ex_ante_inflow_file(inputs::AbstractInputs)
+
+Return whether the ex-ante inflow file should be read.
+"""
+function read_ex_ante_inflow_file(inputs::AbstractInputs)
+    return inflow_scenarios_files(inputs) in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+end
+
+"""
+    read_ex_post_inflow_file(inputs::AbstractInputs)
+
+Return whether the ex-ante inflow file should be read.
+"""
+function read_ex_post_inflow_file(inputs::AbstractInputs)
+    return inflow_scenarios_files(inputs) in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+end
+
+"""
+    demand_scenarios_files(inputs::AbstractInputs)
+
+Return which demand scenarios files should be read.
+"""
+demand_scenarios_files(inputs::AbstractInputs) =
+    inputs.collections.configurations.demand_scenarios_files
+
+"""
+    read_ex_ante_demand_file(inputs::AbstractInputs)
+
+Return whether the ex-ante demand file should be read.
+"""
+function read_ex_ante_demand_file(inputs::AbstractInputs)
+    return demand_scenarios_files(inputs) in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+end
+
+"""
+    read_ex_post_demand_file(inputs::AbstractInputs)
+
+Return whether the ex-ante demand file should be read.
+"""
+function read_ex_post_demand_file(inputs::AbstractInputs)
+    return demand_scenarios_files(inputs) in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+end
+
+"""
+    read_ex_ante_file(files_to_read::Configurations_UncertaintyScenariosFiles.T)
+
+Return whether the ex-ante file should be read.
+"""
+read_ex_ante_file(files_to_read::Configurations_UncertaintyScenariosFiles.T) =
+    files_to_read in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+
+"""
+    read_ex_post_file(files_to_read::Configurations_UncertaintyScenariosFiles.T)
+
+Return whether the ex-post file should be read.
+"""
+read_ex_post_file(files_to_read::Configurations_UncertaintyScenariosFiles.T) =
+    files_to_read in [
+        Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
+        Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    ]
+
+"""
     read_inflow_from_file(inputs::AbstractInputs)
 
 Return whether inflow should be read from a file.
 """
 read_inflow_from_file(inputs::AbstractInputs) =
-    inputs.collections.configurations.inflow_source == Configurations_InflowSource.READ_FROM_FILE
+    inputs.collections.configurations.inflow_scenarios_files != Configurations_UncertaintyScenariosFiles.NONE
 
 """
     read_bids_from_file(inputs::AbstractInputs)
@@ -919,24 +977,24 @@ Return whether bids should be read from a file.
 function read_bids_from_file(inputs::AbstractInputs)
     run_need_bids =
         (
-            inputs.collections.configurations.clearing_model_type_ex_ante_physical !=
-            Configurations_ClearingModelType.COST_BASED
+            inputs.collections.configurations.construction_type_ex_ante_physical !=
+            Configurations_ConstructionType.COST_BASED
         ) &&
         (
-            inputs.collections.configurations.clearing_model_type_ex_ante_commercial !=
-            Configurations_ClearingModelType.COST_BASED
+            inputs.collections.configurations.construction_type_ex_ante_commercial !=
+            Configurations_ConstructionType.COST_BASED
         ) &&
         (
-            inputs.collections.configurations.clearing_model_type_ex_post_physical !=
-            Configurations_ClearingModelType.COST_BASED
+            inputs.collections.configurations.construction_type_ex_post_physical !=
+            Configurations_ConstructionType.COST_BASED
         ) &&
         (
-            inputs.collections.configurations.clearing_model_type_ex_post_commercial !=
-            Configurations_ClearingModelType.COST_BASED
+            inputs.collections.configurations.construction_type_ex_post_commercial !=
+            Configurations_ConstructionType.COST_BASED
         )
 
     if run_need_bids
-        return inputs.collections.configurations.clearing_bid_source == Configurations_ClearingBidSource.READ_FROM_FILE
+        return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
     else
         return false
     end
@@ -949,24 +1007,24 @@ Return whether heuristic bids should be generated for clearing.
 """
 function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
     no_file_model_types = [
-        Configurations_ClearingModelType.SKIP,
-        Configurations_ClearingModelType.COST_BASED,
+        Configurations_ConstructionType.SKIP,
+        Configurations_ConstructionType.COST_BASED,
     ]
-    if clearing_model_type_ex_ante_physical(inputs) in no_file_model_types &&
-       clearing_model_type_ex_ante_commercial(inputs) in no_file_model_types &&
-       clearing_model_type_ex_post_physical(inputs) in no_file_model_types &&
-       clearing_model_type_ex_post_commercial(inputs) in no_file_model_types
+    if construction_type_ex_ante_physical(inputs) in no_file_model_types &&
+       construction_type_ex_ante_commercial(inputs) in no_file_model_types &&
+       construction_type_ex_post_physical(inputs) in no_file_model_types &&
+       construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
-    return inputs.collections.configurations.clearing_bid_source == Configurations_ClearingBidSource.HEURISTIC_BIDS
+    return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.PRICETAKER_HEURISTICS
 end
 
 """
-    clearing_bid_source(inputs::AbstractInputs)
+    bid_data_source(inputs::AbstractInputs)
 
 Return the clearing bid source.
 """
-clearing_bid_source(inputs::AbstractInputs) = inputs.collections.configurations.clearing_bid_source
+bid_data_source(inputs::AbstractInputs) = inputs.collections.configurations.bid_data_source
 
 """
     clearing_hydro_representation(inputs::AbstractInputs)
@@ -977,92 +1035,68 @@ clearing_hydro_representation(inputs::AbstractInputs) =
     inputs.collections.configurations.clearing_hydro_representation
 
 """
-    clearing_model_type_ex_ante_physical(inputs::AbstractInputs)
+    construction_type_ex_ante_physical(inputs::AbstractInputs)
 
 Return the ex-ante physical clearing model type.
 """
-clearing_model_type_ex_ante_physical(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_model_type_ex_ante_physical
+construction_type_ex_ante_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.construction_type_ex_ante_physical
 
 """
-    clearing_model_type_ex_ante_commercial(inputs::AbstractInputs)
+    construction_type_ex_ante_commercial(inputs::AbstractInputs)
 
 Return the ex-ante commercial clearing model type.
 """
-clearing_model_type_ex_ante_commercial(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_model_type_ex_ante_commercial
+construction_type_ex_ante_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.construction_type_ex_ante_commercial
 
 """
-    clearing_model_type_ex_post_physical(inputs::AbstractInputs)
+    construction_type_ex_post_physical(inputs::AbstractInputs)
 
 Return the ex-post physical clearing model type.
 """
-clearing_model_type_ex_post_physical(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_model_type_ex_post_physical
+construction_type_ex_post_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.construction_type_ex_post_physical
 
 """
-    clearing_model_type_ex_post_commercial(inputs::AbstractInputs)
+    construction_type_ex_post_commercial(inputs::AbstractInputs)
 
 Return the ex-post commercial clearing model type.
 """
-clearing_model_type_ex_post_commercial(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_model_type_ex_post_commercial
+construction_type_ex_post_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.construction_type_ex_post_commercial
 
 """
-    clearing_integer_variables_ex_ante_physical_type(inputs::AbstractInputs)
+    integer_variable_representation_ex_ante_physical_type(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-ante physical.
 """
-clearing_integer_variables_ex_ante_physical_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables_ex_ante_physical_type
+integer_variable_representation_ex_ante_physical_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_ante_physical_type
 
 """
-    clearing_integer_variables_ex_ante_commercial_type(inputs::AbstractInputs)
+    integer_variable_representation_ex_ante_commercial_type(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-ante commercial.
 """
-clearing_integer_variables_ex_ante_commercial_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables_ex_ante_commercial_type
+integer_variable_representation_ex_ante_commercial_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_ante_commercial_type
 
 """
-    clearing_integer_variables_ex_post_physical_type(inputs::AbstractInputs)
+    integer_variable_representation_ex_post_physical_type(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-post physical.
 """
-clearing_integer_variables_ex_post_physical_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables_ex_post_physical_type
+integer_variable_representation_ex_post_physical_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_post_physical_type
 
 """
-    clearing_integer_variables_ex_post_commercial_type(inputs::AbstractInputs)
+    integer_variable_representation_ex_post_commercial_type(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-post commercial.
 """
-clearing_integer_variables_ex_post_commercial_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables_ex_post_commercial_type
-
-"""
-    clearing_integer_variables_ex_ante_commercial_source(inputs::AbstractInputs)
-
-Return the source of the clearing integer variables for ex-ante commercial.
-"""
-clearing_integer_variables_ex_ante_commercial_source(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables_ex_ante_commercial_source
-
-"""
-    clearing_integer_variables_ex_post_physical_source(inputs::AbstractInputs)
-
-Return the source of the clearing integer variables for ex-post physical.
-"""
-clearing_integer_variables_ex_post_physical_source(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables_ex_post_physical_source
-
-"""
-    clearing_integer_variables_ex_post_commercial_source(inputs::AbstractInputs)
-
-Return the source of the clearing integer variables for ex-post commercial.
-"""
-clearing_integer_variables_ex_post_commercial_source(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_integer_variables_ex_post_commercial_source
+integer_variable_representation_ex_post_commercial_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_post_commercial_type
 
 """
     use_fcf_in_clearing(inputs::AbstractInputs)
@@ -1070,14 +1104,6 @@ clearing_integer_variables_ex_post_commercial_source(inputs::AbstractInputs) =
 Return whether the FCF should be used in clearing.
 """
 use_fcf_in_clearing(inputs::AbstractInputs) = inputs.collections.configurations.use_fcf_in_clearing
-
-"""
-    clearing_network_representation(inputs::AbstractInputs)
-
-Return the clearing network representation.
-"""
-clearing_network_representation(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_network_representation
 
 """
     settlement_type(inputs::AbstractInputs)
@@ -1094,11 +1120,11 @@ Return the make whole payments type.
 make_whole_payments(inputs::AbstractInputs) = inputs.collections.configurations.make_whole_payments
 
 """
-    price_cap(inputs::AbstractInputs)
+    price_limits(inputs::AbstractInputs)
 
 Return the price cap type.
 """
-price_cap(inputs::AbstractInputs) = inputs.collections.configurations.price_cap
+price_limits(inputs::AbstractInputs) = inputs.collections.configurations.price_limits
 
 """
     demand_deficit_cost(inputs::AbstractInputs)
@@ -1121,6 +1147,14 @@ hydro_minimum_outflow_violation_cost(inputs::AbstractInputs) =
 Return the cost of spilling water in hydro units.
 """
 hydro_spillage_cost(inputs::AbstractInputs) = inputs.collections.configurations.hydro_spillage_cost
+
+"""
+    market_clearing_tiebreaker_weight(inputs::AbstractInputs)
+
+Return the market clearing tiebreaker weight applied to physical generation costs.
+"""
+market_clearing_tiebreaker_weight(inputs::AbstractInputs) =
+    inputs.collections.configurations.market_clearing_tiebreaker_weight
 
 """
     hour_subperiod_map_file(inputs::AbstractInputs)
@@ -1159,14 +1193,6 @@ hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
     inputs.collections.configurations.hydro_balance_subperiod_resolution
 
 """
-    number_of_virtual_reservoir_bidding_segments(inputs)
-
-Return the number of bidding segments for virtual reservoirs.
-"""
-number_of_virtual_reservoir_bidding_segments(inputs) =
-    inputs.collections.configurations.number_of_virtual_reservoir_bidding_segments
-
-"""
     number_of_bid_segments_for_file_template(inputs)
 
 Return the number of bidding segments for the time series file template.
@@ -1198,25 +1224,25 @@ Return the number of complementary groups for the time series file template.
 number_of_complementary_groups_for_file_template(inputs) =
     inputs.collections.configurations.number_of_complementary_groups_for_file_template
 """
-    virtual_reservoir_waveguide_source(inputs)
+    vr_curveguide_data_source(inputs)
 
 Return the source of the waveguide points for virtual reservoirs.
 """
-virtual_reservoir_waveguide_source(inputs) =
-    inputs.collections.configurations.virtual_reservoir_waveguide_source
+vr_curveguide_data_source(inputs) =
+    inputs.collections.configurations.vr_curveguide_data_source
 
 """
-    waveguide_user_provided_source(inputs)
+    vr_curveguide_data_format(inputs)
 
 Return the source of the user-provided waveguide points.
 """
-waveguide_user_provided_source(inputs) =
-    inputs.collections.configurations.waveguide_user_provided_source
+vr_curveguide_data_format(inputs) =
+    inputs.collections.configurations.vr_curveguide_data_format
 
 """
-    reservoirs_physical_virtual_correspondence_type(inputs)
+    virtual_reservoir_correspondence_type(inputs)
 
 Return the type of physical-virtual correspondence for the virtual reservoirs.
 """
-reservoirs_physical_virtual_correspondence_type(inputs) =
-    inputs.collections.configurations.reservoirs_physical_virtual_correspondence_type
+virtual_reservoir_correspondence_type(inputs) =
+    inputs.collections.configurations.virtual_reservoir_correspondence_type

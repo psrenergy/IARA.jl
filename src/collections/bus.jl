@@ -21,6 +21,8 @@ Collection representing the buses in the system.
     label::Vector{String} = []
     # index of the zone to which the bus belongs in the collection Zone
     zone_id_index::Vector{Int} = []
+    latitude::Vector{Float64} = []
+    longitude::Vector{Float64} = []
 end
 
 # ---------------------------------------------------------------------
@@ -40,6 +42,8 @@ function initialize!(bus::Bus, inputs::AbstractInputs)
 
     bus.label = PSRI.get_parms(inputs.db, "Bus", "label")
     bus.zone_id_index = PSRI.get_map(inputs.db, "Bus", "Zone", "id")
+    bus.latitude = PSRI.get_parms(inputs.db, "Bus", "latitude")
+    bus.longitude = PSRI.get_parms(inputs.db, "Bus", "longitude")
 
     update_time_series_from_db!(bus, inputs.db, initial_date_time(inputs))
 
@@ -72,7 +76,8 @@ IARA.add_bus!(db;
 ```
 """
 function add_bus!(db::DatabaseSQLite; kwargs...)
-    PSRI.create_element!(db, "Bus"; kwargs...)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    PSRI.create_element!(db, "Bus"; sql_typed_kwargs...)
     return nothing
 end
 
@@ -86,7 +91,8 @@ function update_bus!(
     label::String;
     kwargs...,
 )
-    for (attribute, value) in kwargs
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
             db,
             "Bus",

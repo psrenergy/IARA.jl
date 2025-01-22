@@ -67,7 +67,7 @@ The remaining constraints are a subset of the centralized operation problem, but
 ### Renewable Balance
 
 ```math
-    g^R_{j, \tau} + y^r_{j, \tau} = G^R_{j, \tau}(\omega)
+    g^R_{j, \tau} + z^r_{j, \tau} = G^R_{j, \tau}(\omega)
     \quad \forall j \in J^R_i, \tau \in B(t)
 ```
 
@@ -111,23 +111,23 @@ The remaining constraints are a subset of the centralized operation problem, but
 ### Thermal Bounds
 
 ```math
-    0 \leq g^T_{j, \tau} \leq G^T_j, \quad
+    \underline{G}^T_j\cdot d(\tau) \leq g^T_{j, \tau} \leq \overline{G}^T_j\cdot d(\tau), \quad
     \forall j \in J^T_i, \tau \in B(t)
 ```
 
 ### Renewable bounds
 
 ```math
-    0 \leq g^R_{j, \tau} \leq G^R_j, \quad
-    0 \leq y^r_{j, \tau} \leq G^R_j, \quad
-    \forall j \in J^R_i
+    0 \leq g^R_{j, \tau}, \quad
+    0 \leq z^r_{j, \tau}, \quad
+    \forall j \in J^R_i, \tau \in B(t)
 ```
 
 ### Battery Unit bounds
 
 ```math
-    -G^B_j \leq g^B_{j, \tau} \leq G^B_j, \quad
-    0 \leq s^b_{j, \tau} \leq S^B_j, \quad
+    -G^B_j \cdot d(\tau) \leq g^B_{j, \tau} \leq G^B_j \cdot d(\tau), \quad
+    \underline{s}^B_j \leq s^B_{j, \tau} \leq \overline{s}^B_j, \quad
     \forall j \in J^B_i, \tau \in B(t)
 ```
 
@@ -138,7 +138,7 @@ The remaining constraints are a subset of the centralized operation problem, but
     \sum_{\tau \in B(t)}{(
     - \sum_{n \in N}{\pi_{n, \tau}(\omega) e_{n, \tau}}
     + \sum_{j \in J^T_i}{C^T_j g^T_{j, \tau}}
-    + \sum_{j \in J^R_i}{C^R_j y^r_{j, \tau}}
+    + \sum_{j \in J^R_i}{C^R_j z^r_{j, \tau}}
     )}
     }
 ```

@@ -26,8 +26,8 @@ function bidding_group_profile_minimum_activation!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    profile_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_profile_bids])
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup)
 
     # Model variables
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)
@@ -37,12 +37,14 @@ function bidding_group_profile_minimum_activation!(
     # Model parameters
     minimum_activation_level_profile = get_model_object(model, :profile_min_activation_level)
 
+    valid_profiles = get_maximum_valid_profiles(inputs)
+
     # Model constraints
     @constraint(
         model.jump_model,
         profile_min_activation_level_ctr_down[
-            bg in profile_bidding_groups,
-            profile in 1:maximum_profiles(inputs, bg),
+            bg in bidding_groups,
+            profile in 1:valid_profiles[bg],
         ],
         minimum_activation_level_profile_indicator[bg, profile] * minimum_activation_level_profile[bg, profile] <=
         linear_combination_bid_segments_profile[bg, profile],
@@ -51,8 +53,8 @@ function bidding_group_profile_minimum_activation!(
     @constraint(
         model.jump_model,
         profile_min_activation_level_ctr_up[
-            bg in profile_bidding_groups,
-            profile in 1:maximum_profiles(inputs, bg),
+            bg in bidding_groups,
+            profile in 1:valid_profiles[bg],
         ],
         minimum_activation_level_profile_indicator[bg, profile] >=
         linear_combination_bid_segments_profile[bg, profile],

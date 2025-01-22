@@ -11,9 +11,9 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    clearing_model_type_ex_ante_physical = IARA.Configurations_ClearingModelType.SKIP,
-    clearing_model_type_ex_ante_commercial = IARA.Configurations_ClearingModelType.SKIP,
-    clearing_model_type_ex_post_commercial = IARA.Configurations_ClearingModelType.SKIP,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
 )
 
 IARA.close_study!(db)

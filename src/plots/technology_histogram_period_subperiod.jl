@@ -18,7 +18,7 @@ abstract type PlotTechnologyHistogramPeriodSubperiod <: PlotType end
 """
     plot_data(
         ::Type{PlotTechnologyHistogramPeriodSubperiod},
-        data::Array{Float32, N},
+        data::Array{<:AbstractFloat, N},
         agent_names::Vector{String},
         dimensions::Vector{String};
         title::String,
@@ -32,7 +32,7 @@ Plots a histogram where the observations are the total of generation for a techn
 """
 function plot_data(
     ::Type{PlotTechnologyHistogramPeriodSubperiod},
-    data::Array{Float32, N},
+    data::Array{<:AbstractFloat, N},
     agent_names::Vector{String},
     dimensions::Vector{String};
     title::String = "",
@@ -46,10 +46,10 @@ function plot_data(
     num_scenarios = size(data, 3)
     num_subperiods = size(data, 2)
 
-    data_to_plot = Vector{Vector{Float64}}()
+    data_to_plot = Vector{Vector{AbstractFloat}}()
     for period in 1:num_periods
         for subperiod in 1:num_subperiods
-            data_for_period_subperiod = Vector{Float64}()
+            data_for_period_subperiod = Vector{AbstractFloat}()
             for scenario in 1:num_scenarios
                 push!(data_for_period_subperiod, sum(data[:, subperiod, scenario, period]))
             end

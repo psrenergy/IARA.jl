@@ -32,7 +32,6 @@ function _write_revenue_ex_ante(
 
     num_periods, num_scenarios, num_subperiods, num_bid_segments = generation_reader.metadata.dimension_size
     num_bidding_groups = length(generation_reader.metadata.labels)
-
     dim_name = is_profile ? :profile : :bid_segment
     for period in 1:num_periods
         for scenario in 1:num_scenarios
@@ -148,7 +147,7 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
     for file in bidding_group_generation_files
         is_cost_based = occursin(r"_cost_based", file)
 
-        m = match(r"^bidding_group_generation(_profile){0,1}(_ex_[a-z]+_[a-z]+)(?:_cost_based){0,1}\.csv$", file)
+        m = match(r"^bidding_group_generation(_profile){0,1}(_ex_[a-z]+_[a-z]+)(?:_cost_based){0,1}.*\.csv$", file)
         file_type = m[2]
         is_profile = !isnothing(m[1])
 
@@ -172,7 +171,7 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
 
         # The revenue is summed over all bid segments / profiles, so we drop the last dimension
         writer = Quiver.Writer{Quiver.csv}(
-            joinpath(outputs_dir, time_series_path);
+            joinpath(post_processing_path(inputs), time_series_path);
             dimensions = String.(generation_reader.metadata.dimensions[1:end-1]),
             labels = generation_reader.metadata.labels,
             time_dimension = "period",
@@ -512,7 +511,7 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
         Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_average"))
 
     total_revenue_writer = Quiver.Writer{Quiver.csv}(
-        joinpath(outputs_dir, "bidding_group_total_revenue_$(type)");
+        joinpath(post_processing_path(inputs), "bidding_group_total_revenue_$(type)");
         dimensions = String.(revenue_ex_ante_reader.metadata.dimensions),
         labels = revenue_ex_ante_reader.metadata.labels,
         time_dimension = String(revenue_ex_ante_reader.metadata.time_dimension),
@@ -526,11 +525,6 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
         revenue_ex_ante_reader,
         revenue_ex_post_reader,
     )
-
-    # STEP 3: Removing temporary files
-
-    rm(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_average"); force = true)
-
     return
 end
 

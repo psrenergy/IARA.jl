@@ -26,7 +26,8 @@ function hydro_inflow!(
 
     if read_inflow_from_file(inputs)
         # Time series
-        inflow_series = time_series_inflow(inputs)
+        subscenario = 1 # placeholder as time-series data is replaced in SubproblemUpdate functions
+        inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
         # Parameters
         @variable(
             model.jump_model,
@@ -144,7 +145,7 @@ function hydro_inflow!(
         inflow = get_model_object(model, :inflow)
 
         # Time series
-        inflow_series = time_series_inflow(inputs, run_time_options, subscenario)
+        inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
 
         for b in subperiods(inputs), h in hydro_units
             MOI.set(

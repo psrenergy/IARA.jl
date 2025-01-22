@@ -15,11 +15,16 @@ Run post-processing routines.
 """
 function post_processing(inputs)
     Log.info("Running post-processing routines")
+    post_proc_path = post_processing_path(inputs)
+    if !isdir(post_proc_path)
+        mkdir(post_proc_path)
+    end
+
     gather_outputs_separated_by_asset_owners(inputs)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST
         post_processing_generation(inputs)
     end
-    if run_mode(inputs) == RunMode.MARKET_CLEARING
+    if is_market_clearing(inputs)
         create_bidding_group_generation_files(inputs)
         post_processing_bidding_group_revenue(inputs)
         post_processing_bidding_group_total_revenue(inputs)
@@ -29,6 +34,8 @@ function post_processing(inputs)
     end
     return nothing
 end
+
+post_processing_path(inputs) = joinpath(output_path(inputs), "post_processing")
 
 """
     read_timeseries_file_in_outputs(filename::String, inputs::Inputs)

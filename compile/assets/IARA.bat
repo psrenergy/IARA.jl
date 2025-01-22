@@ -1,0 +1,8 @@
+@echo off
+
+SET BASEPATH=%~dp0
+
+SET JULIA_HOME=
+SET JULIA_BINDIR=
+
+CALL "%BASEPATH%IARA.exe" %*

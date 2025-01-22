@@ -18,6 +18,9 @@ IARA.update_hydro_unit_time_series_parameter!(
     2.0;
     date_time = DateTime(0),
 )
-IARA.update_configuration!(db; use_binary_variables = IARA.Configurations_BinaryVariableUsage.USE)
+IARA.update_configuration!(
+    db;
+    integer_variable_representation_mincost_type = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
+)
 
 IARA.close_study!(db)

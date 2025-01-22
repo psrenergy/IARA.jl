@@ -114,5 +114,6 @@ include.(readdir(joinpath(@__DIR__, "model_constraints"); join = true))
 include.(readdir(joinpath(@__DIR__, "post_processing"); join = true))
 
 include("example_cases_builder.jl")
+include("interface_calls/InterfaceCalls.jl")
 
-end # module
+end

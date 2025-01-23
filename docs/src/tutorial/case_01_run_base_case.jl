@@ -1,6 +1,6 @@
 # # Base Case - Running
 
-# > The data for this case is available in the folder [`data/case_1`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_1)
+# > The data for this case is available in the folder [`data/case_1`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_1)
 
 using Dates
 using DataFrames

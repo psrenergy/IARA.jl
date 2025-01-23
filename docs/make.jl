@@ -144,7 +144,7 @@ for file in readdir(tutorial_dir)
     end
 end
 
-# deploydocs(;
-#     repo = "github.com/psrenergy/IARA.jl.git",
-#     push_preview = true,
-# )
+deploydocs(;
+    repo = "github.com/psrenergy/IARA.jl.git",
+    push_preview = true,
+)

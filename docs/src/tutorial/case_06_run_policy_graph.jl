@@ -1,6 +1,6 @@
 # # Policy Graphs - Running
 
-# > The data for this case is available in the folder [`data/case_6`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_6)
+# > The data for this case is available in the folder [`data/case_6`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_6)
 
 # ## Recap
 # In this tutorial, we explore the differences between two types of policy graphs, linear and cyclic, using a simple model with varying numbers of periods.

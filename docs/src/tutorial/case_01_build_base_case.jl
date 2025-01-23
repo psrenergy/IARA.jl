@@ -1,6 +1,6 @@
 # # Base Case - Building
 
-# > The data for this case is available in the folder [`data/case_1`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_1)
+# > The data for this case is available in the folder [`data/case_1`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_1)
 
 # In this tutorial, we will build a simple case containing some basic elements that can help
 # us understand some of the functionalities of the IARA package.

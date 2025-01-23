@@ -1,6 +1,6 @@
 # # Multi-hour Bid - Running
 
-# > The data for this case is available in the folder [`data/case_3`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_3)
+# > The data for this case is available in the folder [`data/case_3`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_3)
 
 using Dates
 using DataFrames

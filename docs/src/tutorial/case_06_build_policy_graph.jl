@@ -1,6 +1,6 @@
 # # Policy Graphs - Building
 
-# > The data for this case is available in the folder [`data/case_6`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_6)
+# > The data for this case is available in the folder [`data/case_6`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_6)
 
 # The goal is to understand the differences between linear and cyclic policy graphs by running simulations
 # with different numbers of periods. For this tutorial, we will:

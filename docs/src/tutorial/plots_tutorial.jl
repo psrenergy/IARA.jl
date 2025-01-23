@@ -1,5 +1,5 @@
 # # Plotting
-# > The data for this case is available in the folder [`data/plot`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/plot)
+# > The data for this case is available in the folder [`data/plot`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/plot)
 # We'll start by importing the necessary packages.
 
 using IARA

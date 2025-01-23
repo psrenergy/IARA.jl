@@ -1,6 +1,6 @@
 # # Hydro Base Case - Building
 
-# > The data for this case is available in the folder [`data/case_2`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_2)
+# > The data for this case is available in the folder [`data/case_2`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_2)
 
 using Dates
 using DataFrames

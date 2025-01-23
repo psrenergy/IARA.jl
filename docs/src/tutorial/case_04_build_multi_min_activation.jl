@@ -1,6 +1,6 @@
 # # Min activation Bid - Building
 
-# > The data for this case is available in the folder [`data/case_4`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_4)
+# > The data for this case is available in the folder [`data/case_4`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_4)
 
 # We'll start by importing the necessary packages.
 
@@ -46,7 +46,7 @@ db = IARA.load_study(PATH_MIN_ACTIVATION; read_only = false);
 
 # ## Minimum Activation Level Time series
 
-# In the [`data/case_4`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_4) folder, we have a time series files for the minimum activation level for the Bidding Group with the profile bid.
+# In the [`data/case_4`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_4) folder, we have a time series files for the minimum activation level for the Bidding Group with the profile bid.
 # Let's take a quick look at the file and load it into the database.
 
 IARA.time_series_dataframe(

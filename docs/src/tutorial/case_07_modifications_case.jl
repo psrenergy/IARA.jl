@@ -1,6 +1,6 @@
 # # Modification Parameters
 
-# > The data for this case is available in the folder [`data/case_7`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_7)
+# > The data for this case is available in the folder [`data/case_7`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_7)
 
 # ## Case overview
 

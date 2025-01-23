@@ -1,6 +1,6 @@
 # # Virtual Reservoir - Building
 
-# > The data for this case is available in the folder [`data/case_5`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_5)
+# > The data for this case is available in the folder [`data/case_5`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_5)
 
 # ## Virtual Reservoir overview
 
@@ -168,7 +168,7 @@ IARA.add_demand_unit!(db;
 # For this case, we have added time series files for the 
 # - Demand
 # - Inflow 
-# They are available in the folder [`data/case_5`](https://github.com/psrenergy/IARA.jl/tree/master/docs/src/tutorial/data/case_5)
+# They are available in the folder [`data/case_5`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_5)
 
 # Let's take a look into each of these files before linking them.
 

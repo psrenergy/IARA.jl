@@ -43,7 +43,12 @@ function _write_ex_ante_file(inputs::Inputs, extension::String)
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)
 
-    ex_ante_files = filter(x -> endswith(x, "_generation_ex_ante_$(extension).csv"), readdir(outputs_dir))
+    file_end = "_generation_ex_ante_$(extension)"
+    if is_single_period(inputs)
+        file_end *= "_period_$(inputs.args.period)"
+    end
+    file_end *= ".csv"
+    ex_ante_files = filter(x -> endswith(x, file_end), readdir(outputs_dir))
     if isempty(ex_ante_files)
         return
     end
@@ -120,7 +125,12 @@ function _write_ex_post_file(inputs::Inputs, extension::String)
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)
 
-    ex_post_files = filter(x -> endswith(x, "_generation_ex_post_$(extension).csv"), readdir(outputs_dir))
+    file_end = "_generation_ex_post_$(extension)"
+    if is_single_period(inputs)
+        file_end *= "_period_$(inputs.args.period)"
+    end
+    file_end *= ".csv"
+    ex_post_files = filter(x -> endswith(x, file_end), readdir(outputs_dir))
     if isempty(ex_post_files)
         return
     end

@@ -700,3 +700,36 @@ function build_plots(
 
     return nothing
 end
+
+function build_ui_plots(
+    inputs::Inputs,
+)
+    Log.info("Building UI plots")
+    plots_path = joinpath(output_path(inputs), "plots")
+    if !isdir(plots_path)
+        mkdir(plots_path)
+    end
+
+    buses = bus_label(inputs)
+
+    if isfile("bidding_group_total_revenue_commercial.csv")
+        for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
+            bidding_group_labels = bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs) .== asset_owner_index]
+            labels_to_read = String[]
+            for bg in bidding_group_labels
+                for bus in buses
+                    push!(labels_to_read, "$bg - $bus")
+                end
+            end
+            custom_plot(
+                joinpath(post_processing_path(inputs), "bidding_group_total_revenue_commercial.csv"),
+                PlotTimeSeriesStackedMean;
+                plot_path = joinpath(plots_path, "bidding_group_total_revenue_$asset_owner_label"),
+                agents = labels_to_read,
+                title = "$asset_owner_label Revenue",
+            )
+        end
+    end
+
+    return nothing
+end

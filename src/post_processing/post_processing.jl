@@ -31,6 +31,7 @@ function post_processing(inputs)
     end
     if inputs.args.plot_outputs
         build_plots(inputs)
+        build_ui_plots(inputs)
     end
     return nothing
 end

@@ -38,7 +38,16 @@ function julia_main()::Cint
     COMPILED[] = true
     try
         main(ARGS)
-    catch
+    catch e
+        args = Args(ARGS)
+        error_log_file = joinpath(dirname(args.path), "iara_error.log")
+        println(
+            "Error running model. Please send the $error_log_file file to the support team.",
+        )
+        open(error_log_file, "w") do io
+            println(io, "IARA v$PKG_VERSION ($GIT_DATE)")
+            return showerror(io, e, catch_backtrace())
+        end
         return 1
     end
     return 0
@@ -48,7 +57,16 @@ function julia_interface_call()::Cint
     COMPILED[] = true
     try
         InterfaceCalls.main(ARGS)
-    catch
+    catch e
+        args = Args(ARGS)
+        error_log_file = joinpath(dirname(args.path), "iara_interface_call_error.log")
+        println(
+            "Error running model. Please send the $error_log_file file to the support team.",
+        )
+        open(error_log_file, "w") do io
+            println(io, "IARA v$PKG_VERSION ($GIT_DATE)")
+            return showerror(io, e, catch_backtrace())
+        end
         return 1
     end
     return 0

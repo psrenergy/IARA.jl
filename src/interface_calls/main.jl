@@ -13,6 +13,11 @@ function interface_call(path::String; kwargs...)
     return main(args)
 end
 
+function main(args::Vector{String})
+    args = IARA.Args(args)
+    return main(args)
+end
+
 function main(args::IARA.Args)
     # Initialize dlls and other possible defaults
     IARA.initialize(args)

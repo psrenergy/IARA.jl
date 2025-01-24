@@ -103,7 +103,7 @@ end
 
 function initialize_output_dir(args::Args)
     if !isdir(args.outputs_path)
-        mkdir(args.outputs_path)
+        mkpath(args.outputs_path)
     else
         if args.delete_output_folder_before_execution
             if length(readdir(args.outputs_path)) > 0

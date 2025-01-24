@@ -37,7 +37,7 @@ function main(args::Vector{String})
         configuration;
         executables = [
             "IARA" => "julia_main",
-            "IARA_UI" => "InterfaceCalls.julia_main",
+            "IARA_UI" => "julia_interface_call",
         ],
         additional_files_path = [
             database_path,

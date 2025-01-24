@@ -44,6 +44,16 @@ function julia_main()::Cint
     return 0
 end
 
+function julia_interface_call()::Cint
+    COMPILED[] = true
+    try
+        InterfaceCalls.main(ARGS)
+    catch
+        return 1
+    end
+    return 0
+end
+
 # entry points for the different run modes
 
 const ARGS_KEYWORDS = """

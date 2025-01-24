@@ -27,6 +27,16 @@ function main(args::IARA.Args)
     return nothing
 end
 
+function julia_main()::Cint
+    COMPILED[] = true
+    try
+        main(ARGS)
+    catch
+        return 1
+    end
+    return 0
+end
+
 function run_interface_tasks(inputs::IARA.AbstractInputs)
     write_elements_to_json(inputs)
     create_plots(inputs)

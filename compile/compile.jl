@@ -35,6 +35,10 @@ function main(args::Vector{String})
 
     PSRContinuousDeployment.compile(
         configuration;
+        executables = [
+            "IARA" => "julia_main",
+            "IARA_UI" => "InterfaceCalls.julia_main",
+        ],
         additional_files_path = [
             database_path,
         ],

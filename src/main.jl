@@ -278,6 +278,12 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             maximum_number_of_profiles_for_heuristic_bids(inputs)
         update_number_of_bid_profiles!(inputs, number_of_profiles)
         update_number_of_complementary_grouping!(inputs, number_of_complementary_grouping_profiles)
+
+        Log.info("Heuristic bids")
+        Log.info("   Number of segments: $maximum_number_of_offer_segments")
+        Log.info("   Number of profiles: $number_of_profiles")
+        Log.info("   Number of complementary grouping profiles: $number_of_complementary_grouping_profiles")
+        Log.info("")
     end
 
     # Initialize the outputs

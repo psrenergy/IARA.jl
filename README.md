@@ -16,7 +16,9 @@
 |:-----------------:|:-----------------:|
 | [![Build Status][build-img]][build-url] | [![][docs-img]][docs-url] |
 
-IARA is open-source software for analyzing electricity market design choices and price formation schemes and their consequences for agents' strategies for participating in these markets.
+#### IARA: Interaction Assessment of Regulator and Agents
+
+IARA is a computational model that provides the capability to simulate mechanism designs for economic dispatch and price formation in electricity markets. Through hourly simulations of large-scale systems, incorporating uncertainties, and with detailed representation of the physical components of generation, transmission, storage, and consumption, it is possible to assess the impacts on agents and the system of price formation mechanisms based on "cost," "offer," or any hybrid model between the two.
 
 ## Funding 
 

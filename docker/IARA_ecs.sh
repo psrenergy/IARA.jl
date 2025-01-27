@@ -71,7 +71,7 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
     $IARA_PATH/IARA_interface_call.sh --delete-output-folder-before-execution --run-mode 'min-cost' $CASE_PATH # TODO confirm shell script name
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/$IARA_CASE/game_summary/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/games/$IARA_CASE/game_summary/ --recursive > /dev/null 2>&1
     echo "Completed."    
     exit 0
 fi
@@ -84,7 +84,7 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     $IARA_PATH/IARA.sh $CASE_PATH # TODO missing other arguments
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/games/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/ --recursive > /dev/null 2>&1
     echo "Completed."
     exit 0
 fi
@@ -97,7 +97,7 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     $IARA_PATH/IARA.sh $CASE_PATH # TODO missing other arguments
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/games/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/ --recursive > /dev/null 2>&1
     echo "Completed."    
     exit 0
 fi

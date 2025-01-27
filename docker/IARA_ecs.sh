@@ -68,10 +68,10 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
 
     download_and_unzip_case()
 
-    $IARA_PATH/IARA_interface_call.sh --delete-output-folder-before-execution --run-mode 'min-cost' $CASE_PATH # TODO confirm shell script name
+    $IARA_PATH/IARA_interface_call.sh --output-path 'game_summary'  --run-mode 'min-cost' $CASE_PATH 
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/games/$IARA_CASE/game_summary/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/games/$IARA_CASE/game_summary/ --recursive > /dev/null 2>&1
     echo "Completed."    
     exit 0
 fi
@@ -81,10 +81,10 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     validate_game_round()
     download_and_unzip_case()
 
-    $IARA_PATH/IARA.sh $CASE_PATH # TODO missing other arguments
+    $IARA_PATH/IARA.sh $CASE_PATH --ouput-path 'heuristic_bids' --run-mode 'single-period-heuristic-bid' --period $GAME_PERIOD # TODO missing other arguments
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/games/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/heuristic_bids/ s3://$S3_BUCKET/games/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/ --recursive > /dev/null 2>&1
     echo "Completed."
     exit 0
 fi

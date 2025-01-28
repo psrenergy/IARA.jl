@@ -543,10 +543,10 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
     return num_errors
 end
 
-function iara_log(inputs::AbstractInputs, configurations::Configurations)
-    Log.info("   periods: $(configurations.number_of_periods)")
-    Log.info("   scenarios: $(configurations.number_of_scenarios)")
-    Log.info("   subperiods: $(configurations.number_of_subperiods)")
+function iara_log_configurations(inputs::AbstractInputs)
+    Log.info("   periods: $(number_of_periods(inputs))")
+    Log.info("   scenarios: $(number_of_scenarios(inputs))")
+    Log.info("   subperiods: $(number_of_subperiods(inputs))")
     Log.info("")
 
     if is_market_clearing(inputs)

@@ -202,3 +202,7 @@ Deletes an element from a collection in the database.
 function delete_element!(db::DatabaseSQLite, collection::String, label::String)
     return PSRI.delete_element!(db, collection, label)
 end
+
+function enum_name_to_string(enum::EnumX.Enum)
+    return String(Symbol(enum))
+end

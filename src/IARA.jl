@@ -33,6 +33,7 @@ using LinearAlgebra
 using Logging
 using Random
 using Statistics
+using Printf
 
 const Log = LoggingPolyglot
 const PSRI = PSRClassesInterface

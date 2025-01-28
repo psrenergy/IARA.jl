@@ -543,10 +543,21 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
     return num_errors
 end
 
-function iara_log(configurations::Configurations)
-    Log.info("   periods: $(configurations.number_of_periods)")
-    Log.info("   scenarios: $(configurations.number_of_scenarios)")
-    Log.info("   subperiods: $(configurations.number_of_subperiods)")
+function iara_log_configurations(inputs::AbstractInputs)
+    Log.info("   periods: $(number_of_periods(inputs))")
+    Log.info("   scenarios: $(number_of_scenarios(inputs))")
+    Log.info("   subperiods: $(number_of_subperiods(inputs))")
+    Log.info("")
+
+    if is_market_clearing(inputs)
+        Log.info("Market Clearing Subproblems:")
+        Log.info("")
+        Log.info(Printf.@sprintf " %-20s %-20s %-20s" "Subproblem" "Execution Mode" "Integer Variables")
+        for clearing_model_subproblem in instances(RunTime_ClearingSubproblem.T)
+            run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
+            iara_log(inputs, run_time_options)
+        end
+    end
 
     return nothing
 end

@@ -26,8 +26,10 @@ function post_processing(inputs)
     end
     if is_market_clearing(inputs)
         create_bidding_group_generation_files(inputs)
-        post_processing_bidding_group_revenue(inputs)
-        post_processing_bidding_group_total_revenue(inputs)
+        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
+            post_processing_bidding_group_revenue(inputs)
+            post_processing_bidding_group_total_revenue(inputs)
+        end
     end
     if inputs.args.plot_outputs
         build_plots(inputs)
@@ -48,4 +50,12 @@ function read_timeseries_file_in_outputs(filename, inputs)
     filepath_quiv = joinpath(output_dir, filename * ".quiv")
     filepath = isfile(filepath_quiv) ? filepath_quiv : filepath_csv
     return read_timeseries_file(filepath)
+end
+
+function get_file_ext(filename::String)
+    return splitext(filename)[2]
+end
+
+function get_filename(filename::String)
+    return splitext(filename)[1]
 end

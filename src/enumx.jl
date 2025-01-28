@@ -213,11 +213,13 @@ end
 """
     Configurations_SettlementType
 
+  - `NONE`: None (-1)
   - `EX_ANTE`: Ex-ante (0)
   - `EX_POST`: Ex-post (1)
   - `DUAL`: Dual (2)
 """
 @enumx Configurations_SettlementType begin
+    NONE = -1
     EX_ANTE = 0
     EX_POST = 1
     DUAL = 2

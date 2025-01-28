@@ -20,115 +20,103 @@ end
 _check_floor(price::Real, floor::Real) = !is_null(floor) ? max(price, floor) : price
 _check_cap(price::Real, cap::Real) = !is_null(cap) ? min(price, cap) : price
 
-function _write_revenue_ex_ante(
-    writer::Quiver.Writer{Quiver.csv},
-    generation_reader::Quiver.Reader{Quiver.csv},
-    spot_reader::Quiver.Reader{Quiver.csv},
-    spot_price_cap::Real,
-    spot_price_floor::Real,
-    is_profile::Bool,
+function _build_revenue_without_subscenarios(
+    inputs::Inputs,
+    generation_ex_ante::Array{<:AbstractFloat, 5},
+    spot_ex_ante::Array{<:AbstractFloat, 4},
+    generation_labels::Vector{String},
+    spot_price_labels::Vector{String},
 )
-    # used for ex_ante_commercial, ex_ante_physical
+    spot_price_cap = inputs.collections.configurations.spot_price_cap
+    spot_price_floor = inputs.collections.configurations.spot_price_floor
 
-    num_periods, num_scenarios, num_subperiods, num_bid_segments = generation_reader.metadata.dimension_size
-    num_bidding_groups = length(generation_reader.metadata.labels)
-    dim_name = is_profile ? :profile : :bid_segment
+    num_bidding_groups = number_of_elements(inputs, BiddingGroup)
+    num_buses = number_of_elements(inputs, Bus)
+
+    num_bgs_times_buses, num_bid_segments, num_subperiods, num_scenarios, num_periods = 
+    size(generation_ex_ante)
+    
+    revenue = zeros(num_bidding_groups, num_subperiods, num_scenarios, num_periods)
+
     for period in 1:num_periods
         for scenario in 1:num_scenarios
             for subperiod in 1:num_subperiods
-                Quiver.goto!(spot_reader; period, scenario, subperiod = subperiod)
-                sum_generation = zeros(num_bidding_groups)
+                sum_generation = zeros(num_bgs_times_buses)
                 for bid_segment in 1:num_bid_segments
-                    Quiver.goto!(
-                        generation_reader;
-                        period,
-                        scenario,
-                        subperiod = subperiod,
-                        Symbol(dim_name) => bid_segment,
-                    )
-                    sum_generation .+= generation_reader.data
+                    generation_data = generation_ex_ante[:, bid_segment, subperiod, scenario, period]
+                    sum_generation .+= generation_data
                 end
 
-                for bg in 1:num_bidding_groups
-                    bus_i = _get_bus_index(generation_reader.metadata.labels[bg], spot_reader.metadata.labels)
+                for bg_i in 1:num_bidding_groups
+                    bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
 
-                    raw_load_marginal_cost = _check_floor(spot_reader.data[bus_i], spot_price_floor)
-                    raw_load_marginal_cost = _check_cap(raw_load_marginal_cost, spot_price_cap)
+                    spot_price_data = spot_ex_ante[bus_i, subperiod, scenario, period]
+                    processed_load_marginal_cost = _check_floor(spot_price_data, spot_price_floor)
+                    processed_load_marginal_cost = _check_cap(processed_load_marginal_cost, spot_price_cap)
 
-                    Quiver.write!(
-                        writer,
-                        sum_generation .* raw_load_marginal_cost / MW_to_GW(); # GWh to MWh
-                        period,
-                        scenario,
-                        subperiod = subperiod,
-                    )
+                    revenue[bg_i, subperiod, scenario, period] = sum_generation[(bg_i - 1) * (num_buses) + bus_i] * processed_load_marginal_cost / MW_to_GW()
                 end
             end
         end
     end
-    Quiver.close!(writer)
-    Quiver.close!(generation_reader)
-    Quiver.close!(spot_reader)
-    return
+    return revenue
 end
 
-function _write_revenue_ex_post(
-    writer::Quiver.Writer{Quiver.csv},
-    generation_reader::Quiver.Reader{Quiver.csv},
-    spot_reader::Quiver.Reader{Quiver.csv},
-    spot_price_cap::Real,
-    spot_price_floor::Real,
-    is_profile::Bool,
+function _build_revenue_with_subscenarios(
+    inputs::Inputs,
+    generation_ex_ante::Array{<:AbstractFloat, 5},
+    generation_ex_post::Array{<:AbstractFloat, 6},
+    spot_ex_ante::Array{<:AbstractFloat, 4},
+    spot_ex_post::Array{<:AbstractFloat, 5},
+    generation_labels::Vector{String},
+    spot_price_labels::Vector{String},
 )
-    # used for ex_post_commercial, ex_post_physical
+    spot_price_cap = inputs.collections.configurations.spot_price_cap
+    spot_price_floor = inputs.collections.configurations.spot_price_floor
 
-    num_periods, num_scenarios, num_subscenarios, num_subperiods, num_bid_segments =
-        generation_reader.metadata.dimension_size
-    num_bidding_groups = length(generation_reader.metadata.labels)
+    num_bidding_groups = number_of_elements(inputs, BiddingGroup)
+    num_buses = number_of_elements(inputs, Bus)
+    num_bgs_times_buses, num_bid_segments, num_subperiods, num_subscenarios, num_scenarios, num_periods =
+    size(generation_ex_post)
 
-    dim_name = is_profile ? :profile : :bid_segment
+    revenue = zeros(num_bidding_groups, num_subperiods, num_subscenarios, num_scenarios, num_periods)
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
             for subscenario in 1:num_subscenarios
                 for subperiod in 1:num_subperiods
-                    Quiver.goto!(spot_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
-                    sum_generation = zeros(num_bidding_groups)
+                    sum_generation = zeros(num_bgs_times_buses)
                     for bid_segment in 1:num_bid_segments
-                        Quiver.goto!(
-                            generation_reader;
-                            period,
-                            scenario,
-                            subscenario = subscenario,
-                            subperiod = subperiod,
-                            Symbol(dim_name) => bid_segment,
-                        )
-                        sum_generation .+= generation_reader.data
+                        generation_ex_ante_data = generation_ex_ante[:, bid_segment, subperiod, scenario, period]
+                        generation_ex_post_data = generation_ex_post[:, bid_segment, subperiod, subscenario, scenario, period]
+                        if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+                            # In the dual settlement, the ex-post generation is the difference between the ex-post and ex-ante generation
+                            # The total revenue is the sum of the ex-ante and ex-post revenue
+                            sum_generation .+= generation_ex_post_data .- generation_ex_ante_data
+                        else
+                            sum_generation .+= generation_ex_post_data
+                        end
                     end
 
-                    for bg in 1:num_bidding_groups
-                        bus_i = _get_bus_index(generation_reader.metadata.labels[bg], spot_reader.metadata.labels)
+                    for bg_i in 1:num_bidding_groups
+                        bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
+                        
+                        if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+                            spot_price_data = spot_ex_ante[bus_i, subperiod, scenario, period]
+                        else
+                            spot_price_data = spot_ex_post[bus_i, subperiod, subscenario, scenario, period]
+                        end
 
-                        raw_load_marginal_cost = _check_floor(spot_reader.data[bus_i], spot_price_floor)
-                        raw_load_marginal_cost = _check_cap(raw_load_marginal_cost, spot_price_cap)
+                        processed_load_marginal_cost = _check_floor(spot_price_data, spot_price_floor)
+                        processed_load_marginal_cost = _check_cap(processed_load_marginal_cost, spot_price_cap)
 
-                        Quiver.write!(
-                            writer,
-                            sum_generation .* raw_load_marginal_cost / MW_to_GW(); # GWh to MWh
-                            period,
-                            scenario,
-                            subscenario,
-                            subperiod = subperiod,
-                        )
+                        revenue[bg_i, subperiod, subscenario, scenario, period] += sum_generation[(bg_i - 1) * (num_buses) + bus_i] * processed_load_marginal_cost / MW_to_GW()
                     end
                 end
             end
         end
     end
-    Quiver.close!(writer)
-    Quiver.close!(generation_reader)
-    Quiver.close!(spot_reader)
-    return
+    return revenue
 end
 
 """
@@ -139,66 +127,119 @@ Post-process the bidding group revenue data, based on the generation data and th
 function post_processing_bidding_group_revenue(inputs::Inputs)
     outputs_dir = output_path(inputs)
 
-    spot_price_cap = inputs.collections.configurations.spot_price_cap
-    spot_price_floor = inputs.collections.configurations.spot_price_floor
+    bidding_group_generation_ex_ante_files = get_generation_files(outputs_dir; from_ex_post = false)
+    bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
+    bidding_group_generation_ex_post_files = get_generation_files(outputs_dir; from_ex_post = true)
+    bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
+    
+    if length(bidding_group_load_marginal_cost_ex_post_files) > 1 || length(bidding_group_load_marginal_cost_ex_ante_files) > 1
+        error("Multiple load marginal cost files found: $bidding_group_load_marginal_cost_ex_post_files, $bidding_group_load_marginal_cost_ex_ante_files")
+    end
+    
+    spot_price_ex_ante_data, metadata_spot_price_ex_ante = read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_ante_files[1]), inputs)
+    spot_price_ex_post_data, metadata_spot_price_ex_post = read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_post_files[1]), inputs)
 
-    bidding_group_generation_files = filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(outputs_dir))
+    number_of_files = length(bidding_group_generation_ex_ante_files)
 
-    for file in bidding_group_generation_files
-        is_cost_based = occursin(r"_cost_based", file)
+    for i in 1:number_of_files
+        geneneration_file_ex_ante = get_filename(bidding_group_generation_ex_ante_files[i])
+        geneneration_file_ex_post = get_filename(bidding_group_generation_ex_post_files[i])
+        geneneration_ex_ante_data, metadata_geneneration_ex_ante = read_timeseries_file_in_outputs(geneneration_file_ex_ante, inputs)
+        geneneration_ex_post_data, metadata_geneneration_ex_post = read_timeseries_file_in_outputs(geneneration_file_ex_post, inputs)
 
-        m = match(r"^bidding_group_generation(_profile){0,1}(_ex_[a-z]+_[a-z]+)(?:_cost_based){0,1}.*\.csv$", file)
-        file_type = m[2]
-        is_profile = !isnothing(m[1])
+        is_cost_based = occursin("cost_based", geneneration_file_ex_post)
+        is_profile = occursin("profile", geneneration_file_ex_post)
 
-        load_marginal_cost_file = filter(x -> startswith(x, "load_marginal_cost$file_type.csv"), readdir(outputs_dir))
-        if isempty(load_marginal_cost_file)
-            return
+        time_series_path_with_subscenarios = "bidding_group_revenue"
+        time_series_path_without_subscenarios = "bidding_group_revenue"
+        file_type_with_subscenarios = settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE ? "_ex_ante" : "_ex_post"
+        file_type_without_subscenarios = "_ex_ante"
+
+        if is_profile
+            time_series_path_with_subscenarios *= "_profile"
+            time_series_path_without_subscenarios *= "_profile"
         end
 
-        generation_reader = Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, split(file, ".")[1]))
-        spot_reader = Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, split(load_marginal_cost_file[1], ".")[1]))
+        time_series_path_with_subscenarios *= file_type_with_subscenarios
+        time_series_path_without_subscenarios *= file_type_without_subscenarios
 
-        time_series_path = "bidding_group_revenue"
-        if isnothing(m[1])
-            time_series_path *= file_type
-        else
-            time_series_path *= m[1] * file_type
-        end
         if is_cost_based
-            time_series_path *= "_cost_based"
+            time_series_path_with_subscenarios *= "_cost_based"
+            time_series_path_without_subscenarios *= "_cost_based"
         end
 
+        revenue_with_subscenarios = _build_revenue_with_subscenarios(
+            inputs,
+            geneneration_ex_ante_data,
+            geneneration_ex_post_data,
+            spot_price_ex_ante_data,
+            spot_price_ex_post_data,
+            metadata_geneneration_ex_post.labels,
+            metadata_spot_price_ex_post.labels,
+        )
+
+            
         # The revenue is summed over all bid segments / profiles, so we drop the last dimension
-        writer = Quiver.Writer{Quiver.csv}(
-            joinpath(post_processing_path(inputs), time_series_path);
-            dimensions = String.(generation_reader.metadata.dimensions[1:end-1]),
-            labels = generation_reader.metadata.labels,
+        write_timeseries_file(
+            joinpath(post_processing_path(inputs), time_series_path_with_subscenarios),
+            revenue_with_subscenarios;
+            dimensions = String.(metadata_geneneration_ex_post.dimensions[1:end-1]),
+            labels = metadata_geneneration_ex_post.labels,
             time_dimension = "period",
-            dimension_size = generation_reader.metadata.dimension_size[1:end-1],
-            initial_date = generation_reader.metadata.initial_date,
+            dimension_size = metadata_geneneration_ex_post.dimension_size[1:end-1],
+            initial_date = metadata_geneneration_ex_post.initial_date,
             unit = "\$",
         )
 
-        if startswith(file_type, "_ex_post")
-            _write_revenue_ex_post(
-                writer,
-                generation_reader,
-                spot_reader,
-                spot_price_cap,
-                spot_price_floor,
-                is_profile,
+        if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+
+            revenue_without_subscenarios = _build_revenue_without_subscenarios(
+                inputs,
+                geneneration_ex_ante_data,
+                spot_price_ex_ante_data,
+                metadata_geneneration_ex_ante.labels,
+                metadata_spot_price_ex_ante.labels,
             )
-        else
-            _write_revenue_ex_ante(
-                writer,
-                generation_reader,
-                spot_reader,
-                spot_price_cap,
-                spot_price_floor,
-                is_profile,
+
+            write_timeseries_file(
+                joinpath(post_processing_path(inputs), time_series_path_without_subscenarios),
+                revenue_without_subscenarios;
+                dimensions = String.(metadata_geneneration_ex_ante.dimensions[1:end-1]),
+                labels = metadata_geneneration_ex_ante.labels,
+                time_dimension = "period",
+                dimension_size = metadata_geneneration_ex_ante.dimension_size[1:end-1],
+                initial_date = metadata_geneneration_ex_ante.initial_date,
+                unit = "\$",
             )
         end
+    end
+    return
+end
+
+function get_generation_files(outputs_dir::String; from_ex_post::Bool)
+    from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
+    return filter(
+        x -> 
+        occursin("bidding_group_generation", x) && 
+        occursin(from_ex_post_string * "_physical", x) &&
+        get_file_ext(x) == ".csv",
+        readdir(outputs_dir)
+    )
+end
+
+function get_load_marginal_files(outputs_dir::String; from_ex_post::Bool)
+    from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
+    
+    commercial_lmc_files = filter(x -> occursin("load_marginal_cost", x) && 
+        occursin(from_ex_post_string * "_commercial", x) && get_file_ext(x) == ".csv", readdir(outputs_dir))
+
+    physical_lmc_files = filter(x -> occursin("load_marginal_cost", x) && 
+        occursin(from_ex_post_string * "_physical", x) && get_file_ext(x) == ".csv", readdir(outputs_dir))
+
+    if isempty(commercial_lmc_files)
+        return physical_lmc_files
+    else
+        return commercial_lmc_files
     end
 end
 

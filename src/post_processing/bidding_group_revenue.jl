@@ -33,9 +33,9 @@ function _build_revenue_without_subscenarios(
     num_bidding_groups = number_of_elements(inputs, BiddingGroup)
     num_buses = number_of_elements(inputs, Bus)
 
-    num_bgs_times_buses, num_bid_segments, num_subperiods, num_scenarios, num_periods = 
-    size(generation_ex_ante)
-    
+    num_bgs_times_buses, num_bid_segments, num_subperiods, num_scenarios, num_periods =
+        size(generation_ex_ante)
+
     revenue = zeros(num_bidding_groups, num_subperiods, num_scenarios, num_periods)
 
     for period in 1:num_periods
@@ -54,7 +54,8 @@ function _build_revenue_without_subscenarios(
                     processed_load_marginal_cost = _check_floor(spot_price_data, spot_price_floor)
                     processed_load_marginal_cost = _check_cap(processed_load_marginal_cost, spot_price_cap)
 
-                    revenue[bg_i, subperiod, scenario, period] = sum_generation[(bg_i - 1) * (num_buses) + bus_i] * processed_load_marginal_cost / MW_to_GW()
+                    revenue[bg_i, subperiod, scenario, period] =
+                        sum_generation[(bg_i-1)*(num_buses)+bus_i] * processed_load_marginal_cost / MW_to_GW()
                 end
             end
         end
@@ -77,7 +78,7 @@ function _build_revenue_with_subscenarios(
     num_bidding_groups = number_of_elements(inputs, BiddingGroup)
     num_buses = number_of_elements(inputs, Bus)
     num_bgs_times_buses, num_bid_segments, num_subperiods, num_subscenarios, num_scenarios, num_periods =
-    size(generation_ex_post)
+        size(generation_ex_post)
 
     revenue = zeros(num_bidding_groups, num_subperiods, num_subscenarios, num_scenarios, num_periods)
 
@@ -88,7 +89,8 @@ function _build_revenue_with_subscenarios(
                     sum_generation = zeros(num_bgs_times_buses)
                     for bid_segment in 1:num_bid_segments
                         generation_ex_ante_data = generation_ex_ante[:, bid_segment, subperiod, scenario, period]
-                        generation_ex_post_data = generation_ex_post[:, bid_segment, subperiod, subscenario, scenario, period]
+                        generation_ex_post_data =
+                            generation_ex_post[:, bid_segment, subperiod, subscenario, scenario, period]
                         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
                             # In the dual settlement, the ex-post generation is the difference between the ex-post and ex-ante generation
                             # The total revenue is the sum of the ex-ante and ex-post revenue
@@ -100,7 +102,7 @@ function _build_revenue_with_subscenarios(
 
                     for bg_i in 1:num_bidding_groups
                         bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
-                        
+
                         if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
                             spot_price_data = spot_ex_ante[bus_i, subperiod, scenario, period]
                         else
@@ -110,7 +112,8 @@ function _build_revenue_with_subscenarios(
                         processed_load_marginal_cost = _check_floor(spot_price_data, spot_price_floor)
                         processed_load_marginal_cost = _check_cap(processed_load_marginal_cost, spot_price_cap)
 
-                        revenue[bg_i, subperiod, subscenario, scenario, period] += sum_generation[(bg_i - 1) * (num_buses) + bus_i] * processed_load_marginal_cost / MW_to_GW()
+                        revenue[bg_i, subperiod, subscenario, scenario, period] +=
+                            sum_generation[(bg_i-1)*(num_buses)+bus_i] * processed_load_marginal_cost / MW_to_GW()
                     end
                 end
             end
@@ -131,28 +134,36 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
     bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
     bidding_group_generation_ex_post_files = get_generation_files(outputs_dir; from_ex_post = true)
     bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
-    
-    if length(bidding_group_load_marginal_cost_ex_post_files) > 1 || length(bidding_group_load_marginal_cost_ex_ante_files) > 1
-        error("Multiple load marginal cost files found: $bidding_group_load_marginal_cost_ex_post_files, $bidding_group_load_marginal_cost_ex_ante_files")
+
+    if length(bidding_group_load_marginal_cost_ex_post_files) > 1 ||
+       length(bidding_group_load_marginal_cost_ex_ante_files) > 1
+        error(
+            "Multiple load marginal cost files found: $bidding_group_load_marginal_cost_ex_post_files, $bidding_group_load_marginal_cost_ex_ante_files",
+        )
     end
-    
-    spot_price_ex_ante_data, metadata_spot_price_ex_ante = read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_ante_files[1]), inputs)
-    spot_price_ex_post_data, metadata_spot_price_ex_post = read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_post_files[1]), inputs)
+
+    spot_price_ex_ante_data, metadata_spot_price_ex_ante =
+        read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_ante_files[1]), inputs)
+    spot_price_ex_post_data, metadata_spot_price_ex_post =
+        read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_post_files[1]), inputs)
 
     number_of_files = length(bidding_group_generation_ex_ante_files)
 
     for i in 1:number_of_files
         geneneration_file_ex_ante = get_filename(bidding_group_generation_ex_ante_files[i])
         geneneration_file_ex_post = get_filename(bidding_group_generation_ex_post_files[i])
-        geneneration_ex_ante_data, metadata_geneneration_ex_ante = read_timeseries_file_in_outputs(geneneration_file_ex_ante, inputs)
-        geneneration_ex_post_data, metadata_geneneration_ex_post = read_timeseries_file_in_outputs(geneneration_file_ex_post, inputs)
+        geneneration_ex_ante_data, metadata_geneneration_ex_ante =
+            read_timeseries_file_in_outputs(geneneration_file_ex_ante, inputs)
+        geneneration_ex_post_data, metadata_geneneration_ex_post =
+            read_timeseries_file_in_outputs(geneneration_file_ex_post, inputs)
 
         is_cost_based = occursin("cost_based", geneneration_file_ex_post)
         is_profile = occursin("profile", geneneration_file_ex_post)
 
         time_series_path_with_subscenarios = "bidding_group_revenue"
         time_series_path_without_subscenarios = "bidding_group_revenue"
-        file_type_with_subscenarios = settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE ? "_ex_ante" : "_ex_post"
+        file_type_with_subscenarios =
+            settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE ? "_ex_ante" : "_ex_post"
         file_type_without_subscenarios = "_ex_ante"
 
         if is_profile
@@ -178,7 +189,6 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
             metadata_spot_price_ex_post.labels,
         )
 
-            
         # The revenue is summed over all bid segments / profiles, so we drop the last dimension
         write_timeseries_file(
             joinpath(post_processing_path(inputs), time_series_path_with_subscenarios),
@@ -192,7 +202,6 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
         )
 
         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-
             revenue_without_subscenarios = _build_revenue_without_subscenarios(
                 inputs,
                 geneneration_ex_ante_data,
@@ -219,22 +228,27 @@ end
 function get_generation_files(outputs_dir::String; from_ex_post::Bool)
     from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
     return filter(
-        x -> 
-        occursin("bidding_group_generation", x) && 
-        occursin(from_ex_post_string * "_physical", x) &&
-        get_file_ext(x) == ".csv",
-        readdir(outputs_dir)
+        x ->
+            occursin("bidding_group_generation", x) &&
+                occursin(from_ex_post_string * "_physical", x) &&
+                get_file_ext(x) == ".csv",
+        readdir(outputs_dir),
     )
 end
 
 function get_load_marginal_files(outputs_dir::String; from_ex_post::Bool)
     from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
-    
-    commercial_lmc_files = filter(x -> occursin("load_marginal_cost", x) && 
-        occursin(from_ex_post_string * "_commercial", x) && get_file_ext(x) == ".csv", readdir(outputs_dir))
 
-    physical_lmc_files = filter(x -> occursin("load_marginal_cost", x) && 
-        occursin(from_ex_post_string * "_physical", x) && get_file_ext(x) == ".csv", readdir(outputs_dir))
+    commercial_lmc_files = filter(
+        x ->
+            occursin("load_marginal_cost", x) &&
+                occursin(from_ex_post_string * "_commercial", x) && get_file_ext(x) == ".csv", readdir(outputs_dir),
+    )
+
+    physical_lmc_files = filter(
+        x ->
+            occursin("load_marginal_cost", x) &&
+                occursin(from_ex_post_string * "_physical", x) && get_file_ext(x) == ".csv", readdir(outputs_dir))
 
     if isempty(commercial_lmc_files)
         return physical_lmc_files
@@ -282,7 +296,7 @@ function _average_ex_post_revenue_over_subscenarios(
     return Quiver.close!(ex_post_reader)
 end
 
-function _sum_independent_profile_ex_ante(
+function _total_independent_profile_ex_ante(
     temp_writer::Quiver.Writer{Quiver.csv},
     independent_reader::Quiver.Reader{Quiver.csv},
     profile_reader::Quiver.Reader{Quiver.csv},
@@ -338,7 +352,7 @@ function _sum_independent_profile_ex_ante(
     return
 end
 
-function _sum_independent_profile_ex_post(
+function _total_independent_profile_ex_post(
     temp_writer::Quiver.Writer{Quiver.csv},
     independent_reader::Quiver.Reader{Quiver.csv},
     profile_reader::Quiver.Reader{Quiver.csv},
@@ -408,7 +422,7 @@ function _sum_independent_profile_ex_post(
     return
 end
 
-function _sum_total_revenue(
+function _total_total_revenue(
     total_revenue_writer::Quiver.Writer{Quiver.csv},
     ex_ante_reader::Quiver.Reader{Quiver.csv},
     ex_post_reader::Quiver.Reader{Quiver.csv},
@@ -433,8 +447,8 @@ function _sum_total_revenue(
     return
 end
 
-function _bidding_group_total_revenue(inputs::Inputs, type::String)
-    outputs_dir = output_path(inputs)
+function post_processing_bidding_group_total_revenue(inputs::Inputs)
+    outputs_dir = joinpath(output_path(inputs), "post_processing")
 
     temp_path = joinpath(path_case(inputs), "temp")
     if !isdir(temp_path)
@@ -451,25 +465,25 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
 
     if is_profile
         revenue_ex_ante_reader = if !is_cost_based
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
         else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)_cost_based"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_cost_based"))
         end
         revenue_ex_post_reader = if !is_cost_based
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post"))
         else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)_cost_based"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_cost_based"))
         end
 
         revenue_ex_ante_profile_reader =
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
         revenue_ex_post_profile_reader =
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post"))
 
         merged_labels =
             unique(vcat(revenue_ex_ante_reader.metadata.labels, revenue_ex_ante_profile_reader.metadata.labels))
         temp_revenue_ex_ante_writer = Quiver.Writer{Quiver.csv}(
-            joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_$(type)_sum");
+            joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_total");
             dimensions = String.(revenue_ex_ante_reader.metadata.dimensions),
             labels = merged_labels,
             time_dimension = String(revenue_ex_ante_reader.metadata.time_dimension),
@@ -479,7 +493,7 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
         )
 
         temp_revenue_ex_post_writer = Quiver.Writer{Quiver.csv}(
-            joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_sum");
+            joinpath(temp_path, "temp_bidding_group_revenue_ex_post_total");
             dimensions = String.(revenue_ex_post_reader.metadata.dimensions),
             labels = merged_labels,
             time_dimension = String(revenue_ex_post_reader.metadata.time_dimension),
@@ -488,12 +502,12 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
             unit = revenue_ex_post_reader.metadata.unit,
         )
 
-        _sum_independent_profile_ex_ante(
+        _total_independent_profile_ex_ante(
             temp_revenue_ex_ante_writer,
             revenue_ex_ante_reader,
             revenue_ex_ante_profile_reader,
         )
-        _sum_independent_profile_ex_post(
+        _total_independent_profile_ex_post(
             temp_revenue_ex_post_writer,
             revenue_ex_post_reader,
             revenue_ex_post_profile_reader,
@@ -504,21 +518,21 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
 
     revenue_ex_post_reader = if !is_cost_based
         if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_sum"))
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_total"))
         else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post"))
         end
     else
         if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_sum"))
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_total"))
         else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_$(type)_cost_based"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_cost_based"))
         end
     end
 
     initial_dimension_sizes = copy(revenue_ex_post_reader.metadata.dimension_size)
     revenue_ex_post_average_writer = Quiver.Writer{Quiver.csv}(
-        joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_average");
+        joinpath(temp_path, "temp_bidding_group_revenue_ex_post_average");
         dimensions = ["period", "scenario", "subperiod"],
         labels = revenue_ex_post_reader.metadata.labels,
         time_dimension = String(revenue_ex_post_reader.metadata.time_dimension),
@@ -536,23 +550,23 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
 
     revenue_ex_ante_reader = if !is_cost_based
         if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_$(type)_sum"))
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_total"))
         else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
         end
     else
         if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_$(type)_sum"))
+            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_total"))
         else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_$(type)_cost_based"))
+            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_cost_based"))
         end
     end
 
     revenue_ex_post_reader =
-        Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_$(type)_average"))
+        Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_average"))
 
     total_revenue_writer = Quiver.Writer{Quiver.csv}(
-        joinpath(post_processing_path(inputs), "bidding_group_total_revenue_$(type)");
+        joinpath(post_processing_path(inputs), "bidding_group_total_revenue");
         dimensions = String.(revenue_ex_ante_reader.metadata.dimensions),
         labels = revenue_ex_ante_reader.metadata.labels,
         time_dimension = String(revenue_ex_ante_reader.metadata.time_dimension),
@@ -561,20 +575,10 @@ function _bidding_group_total_revenue(inputs::Inputs, type::String)
         unit = revenue_ex_ante_reader.metadata.unit,
     )
 
-    _sum_total_revenue(
+    _total_total_revenue(
         total_revenue_writer,
         revenue_ex_ante_reader,
         revenue_ex_post_reader,
     )
     return
-end
-
-function post_processing_bidding_group_total_revenue(inputs::Inputs)
-    outputs_dir = output_path(inputs)
-
-    if !isfile(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_commercial.csv"))
-        return
-    end
-
-    return _bidding_group_total_revenue(inputs, "commercial")
 end

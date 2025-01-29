@@ -28,7 +28,9 @@ function post_processing(inputs)
         create_bidding_group_generation_files(inputs)
         if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
             post_processing_bidding_group_revenue(inputs)
-            post_processing_bidding_group_total_revenue(inputs)
+            if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+                post_processing_bidding_group_total_revenue(inputs)
+            end
         end
     end
     if inputs.args.plot_outputs

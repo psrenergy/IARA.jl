@@ -24,9 +24,6 @@ function Args(args::Vector{String})
     parsed_args = parse_commandline(args)
     run_mode = parse_run_mode(parsed_args["run-mode"])
     period = parsed_args["period"]::Int
-    if run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING && period <= 0
-        error("The period argument must be greater than zero.")
-    end
     return Args(
         parsed_args["path"],
         parsed_args["output-path"],
@@ -47,9 +44,20 @@ function Args(
     plot_outputs::Bool = true,
     period::Int = -1,
 )
+    if run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING && period <= 0
+        error(
+            "When running in the SINGLE_PERIOD_MARKET_CLEARING mode, " *
+            "the period must be greater than 0. Got period = $period.",
+        )
+    end
+    absolute_output_path = if isabspath(output_path)
+        output_path
+    else
+        joinpath(path, output_path)
+    end
     return Args(
         path,
-        output_path,
+        absolute_output_path,
         delete_output_folder_before_execution,
         run_mode,
         write_lp,

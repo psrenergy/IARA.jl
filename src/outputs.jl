@@ -103,13 +103,15 @@ end
 
 function initialize_output_dir(args::Args)
     if !isdir(args.outputs_path)
-        mkdir(args.outputs_path)
+        mkpath(args.outputs_path)
     else
         if args.delete_output_folder_before_execution
             if length(readdir(args.outputs_path)) > 0
                 @warn(
-                    "The output directory $(args.outputs_path) is not empty, and the argument 'delete_output_folder_before_execution' has been provided.
-              The directory's contents will be deleted."
+                    """
+                    The output directory $(args.outputs_path) is not empty, and the argument `delete_output_folder_before_execution` has been provided.
+                    The directory's contents will be deleted.
+                    """
                 )
                 rm(args.outputs_path; force = true, recursive = true)
                 mkdir(args.outputs_path)

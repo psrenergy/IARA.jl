@@ -16,4 +16,6 @@ Pkg.instantiate()
 
 using JuliaFormatter
 
+format(dirname(@__DIR__))
+format(dirname(@__DIR__))
 println("Formatted: ", format(dirname(@__DIR__)))

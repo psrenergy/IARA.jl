@@ -21,7 +21,7 @@ Set hooks to write lps to the file if user asks to write lps or if the model is 
 Also, set hooks to fix integer variables from previous problem, fix integer variables, and relax integrality.
 """
 function set_custom_hook(
-    node::SDDP.Node,
+    subproblem::JuMP.Model,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     t::Integer,
@@ -63,8 +63,8 @@ function set_custom_hook(
             return nothing
         end
 
-        if JuMP.solver_name(node.subproblem) != "Parametric Optimizer with HiGHS attached"
-            SDDP.write_subproblem_to_file(node, filename)
+        if JuMP.solver_name(subproblem) != "Parametric Optimizer with HiGHS attached"
+            JuMP.write_to_file(subproblem, filename)
         end
     else
         function treat_infeasibilities(model)
@@ -99,7 +99,7 @@ function set_custom_hook(
             relax_integrality_hook(model)
         end
         if inputs.args.write_lp
-            if JuMP.solver_name(node.subproblem) == "Parametric Optimizer with HiGHS attached"
+            if JuMP.solver_name(subproblem) == "Parametric Optimizer with HiGHS attached"
                 write_lp_hook(model)
             end
         else
@@ -107,7 +107,7 @@ function set_custom_hook(
         end
         return nothing
     end
-    set_optimize_hook(node.subproblem, all_optimize_hooks)
+    set_optimize_hook(subproblem, all_optimize_hooks)
 
     return
 end

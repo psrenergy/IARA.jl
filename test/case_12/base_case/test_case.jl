@@ -15,10 +15,10 @@ finally
 end
 
 IARA.single_period_market_clearing(
-    PATH; 
-    plot_outputs = false, 
+    PATH;
+    plot_outputs = false,
     delete_output_folder_before_execution = true,
-    period = 1
+    period = 1,
 )
 
 if Main.UPDATE_RESULTS

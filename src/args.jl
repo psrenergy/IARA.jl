@@ -47,7 +47,7 @@ function Args(
     if run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING && period <= 0
         error(
             "When running in the SINGLE_PERIOD_MARKET_CLEARING mode, " *
-            "the period must be greater than 0. Got period = $period."
+            "the period must be greater than 0. Got period = $period.",
         )
     end
     return Args(

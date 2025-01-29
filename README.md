@@ -1,5 +1,6 @@
 <picture>
-  <img alt="IARA.jl logo." src="https://psrenergy.github.io/IARA.jl/dev/assets/iara-logo.png" width="20%">
+  <img alt="IARA.jl logo." src="https://psrenergy.github.io/IARA.jl/dev/assets/iara-logo-light-mode.png#gh-light-mode-only" width="20%">
+  <img alt="IARA.jl logo." src="https://psrenergy.github.io/IARA.jl/dev/assets/iara-logo-dark-mode.png#gh-dark-mode-only" width="20%">
 </picture>
 
 ---

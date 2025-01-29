@@ -41,7 +41,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.BID_BASED,
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
 )
 
@@ -143,4 +143,73 @@ IARA.link_time_series_to_file(
     db,
     "DemandUnit";
     demand_ex_post = "demand_ex_post",
+)
+
+number_of_buses = 1
+number_of_bidding_groups = 3
+maximum_number_of_bidding_segments = 1
+quantity_offer =
+    zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        maximum_number_of_bidding_segments,
+        number_of_subperiods,
+        number_of_scenarios,
+        number_of_periods,
+    )
+price_offer =
+    zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        maximum_number_of_bidding_segments,
+        number_of_subperiods,
+        number_of_scenarios,
+        number_of_periods,
+    )
+
+quantity_offer[1, :, :, :, :, :] .= 100
+quantity_offer[2, :, :, :, :, :] .= 100
+quantity_offer[3, :, :, :, :, :] .= 100
+price_offer[1, :, :, :, :, :] .= 55.0
+price_offer[2, :, :, :, :, :] .= 60.0
+price_offer[3, :, :, :, :, :] .= 51.0
+
+IARA.write_bids_time_series_file(
+    joinpath(PATH, "quantity_offer"),
+    quantity_offer;
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+    labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],
+    labels_buses = ["Bus 1"],
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_subperiods,
+        maximum_number_of_bidding_segments,
+    ],
+    initial_date = "2024-01-01T00:00:00",
+    unit = "MWh",
+)
+
+IARA.write_bids_time_series_file(
+    joinpath(PATH, "price_offer"),
+    price_offer;
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+    labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],
+    labels_buses = ["Bus 1"],
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_subperiods,
+        maximum_number_of_bidding_segments,
+    ],
+    initial_date = "2024-01-01T00:00:00",
+    unit = "\$/MWh",
+)
+IARA.link_time_series_to_file(
+    db,
+    "BiddingGroup";
+    quantity_offer = "quantity_offer",
+    price_offer = "price_offer",
 )

@@ -69,3 +69,28 @@ The Market Clearing can be calculated in three ways:
 3. Hybrid Dispatch: The dispatch is calculated based on the bids submitted by the agents and the physical constraints of the system serve as a limit for the accepted bids and a tie-break for the bids with the same cost. The objective is to minimize the total cost of the bids accepted by the Operator.
 
 Any step of the Market Clearing can be calculated with any of the three model types described above.
+
+## Non-virtual reservoir settlement
+
+This is a post processing feature related to the revenue of the agents.
+Notation:
+- $\omega \in \{\text{ex-ante}, \text{ex-post}\}$: subproblem types.
+- $q^{\omega}$: primal variable representing the quantity of energy dispatched in the ex-ante or ex-post physical subproblem.
+- $\pi^{\omega}$: dual variable representing the marginal costs in the ex-ante or ex-post commercial subproblem.
+
+The revenue of the agents is calculated as follows:
+
+| Settlement Type | Expression |
+| --------------- | ---------- |
+| EX_POST | $q^{\text{ex-post}} \pi^{\text{ex-post}}$ |
+| EX_ANTE | $q^{\text{ex-post}} \pi^{\text{ex-ante}}$ |
+| HYBRID  | $q^{\text{ex-ante}} \pi^{\text{ex-ante}}+(q^{\text{ex-post}}-q^{\text{ex-ante}} ) \pi^{\text{ex-post}}$ |
+
+- The default file for **generation** is the *Physical* Problem. If this file is unavailable due to being skipped,
+  the model will use the *Commercial* Problem instead, but a warning will be generated to indicate a non-standard execution type.
+- The default file for **marginal costs** is the *Commercial Problem*. If this file is unavailable due to being skipped,
+  the model will use the *Physical Problem* instead.
+- In **EX_ANTE** or **HYBRID** settlements, if both the *Ex Ante Physical* and *Ex Ante Commercial* Problems or
+  both *Ex Post Physical* and *Ex Post Commercial* Problems are skipped, an error will occur.
+- In **EX_POST** settlements, if both the *Ex Post Physical* and *Ex Post Commercial* Problems are skipped, an error will occur.
+

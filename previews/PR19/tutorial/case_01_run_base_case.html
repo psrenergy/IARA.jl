@@ -29,6 +29,7 @@ cp(PATH_ORIGINAL, PATH_MARKET_CLEARING; force = true);</code></pre><h2 id="Centr
 [ Info:    scenarios: 4
 [ Info:    subperiods: 1
 [ Info:
+[ Info:
 [ Info: Collections
 [ Info:    RenewableUnit: 1 element(s)
 [ Info:    ThermalUnit: 6 element(s)
@@ -71,15 +72,14 @@ numerical stability report
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
-         1   8.045107e+01  1.072509e+02  1.105431e+01        14   1
-        35   1.470540e+03  8.773575e+02  1.606151e+01      9304   1
-        40   1.147586e+03  8.773575e+02  1.685449e+01      9724   1
+         1   1.550977e+03  7.469439e+02  1.078660e+01       199   1
+        40   2.157532e+03  8.773575e+02  1.538552e+01      8263   1
 -------------------------------------------------------------------
 status         : simulation_stopping
-total time (s) : 1.685449e+01
-total solves   : 9724
+total time (s) : 1.538552e+01
+total solves   : 8263
 best bound     :  8.773575e+02
-simulation ci  :  9.870426e+02 ± 2.733819e+02
+simulation ci  :  9.292647e+02 ± 2.581891e+02
 numeric issues : 0
 -------------------------------------------------------------------
 
@@ -110,6 +110,14 @@ IARA.close_study!(db)</code></pre><p>Now we are able to run the case with <a hre
 [ Info:    scenarios: 4
 [ Info:    subperiods: 1
 [ Info:
+[ Info: Market Clearing Subproblems:
+[ Info:
+[ Info:  Subproblem           Execution Mode       Integer Variables
+[ Info:  EX_ANTE_PHYSICAL     HYBRID               CALCULATE_NORMALLY
+[ Info:  EX_ANTE_COMMERCIAL   HYBRID               CALCULATE_NORMALLY
+[ Info:  EX_POST_PHYSICAL     HYBRID               CALCULATE_NORMALLY
+[ Info:  EX_POST_COMMERCIAL   HYBRID               CALCULATE_NORMALLY
+[ Info:
 [ Info: Collections
 [ Info:    RenewableUnit: 1 element(s)
 [ Info:    ThermalUnit: 6 element(s)
@@ -126,6 +134,11 @@ IARA.close_study!(db)</code></pre><p>Now we are able to run the case with <a hre
 [ Info: Cuts file:
 [ Info:    No cuts file
 [ Info:
+[ Info: Heuristic bids
+[ Info:    Number of segments: 5
+[ Info:    Number of profiles: 0
+[ Info:    Number of complementary grouping profiles: 0
+[ Info:
 [ Info: Running clearing for period: 1
 [ Info:    Running simulation EX_ANTE_PHYSICAL
 [ Info:    Running simulation EX_ANTE_COMMERCIAL
@@ -137,4 +150,4 @@ IARA.close_study!(db)</code></pre><p>Now we are able to run the case with <a hre
 [ Info:    Running simulation EX_POST_PHYSICAL
 [ Info:    Running simulation EX_POST_COMMERCIAL
 [ Info: Running post-processing routines
-[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Monday 27 January 2025 19:34">Monday 27 January 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Wednesday 29 January 2025 14:40">Wednesday 29 January 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

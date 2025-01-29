@@ -50,9 +50,14 @@ function Args(
             "the period must be greater than 0. Got period = $period.",
         )
     end
+    absolute_output_path = if isabspath(output_path)
+        output_path
+    else
+        joinpath(path, output_path)
+    end
     return Args(
         path,
-        output_path,
+        absolute_output_path,
         delete_output_folder_before_execution,
         run_mode,
         write_lp,

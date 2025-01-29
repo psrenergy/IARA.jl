@@ -47,13 +47,6 @@ function validate_game_round () {
     fi
 }
 
-curl -o iara.zip $IARA_URL
-unzip -qo iara.zip -d iara_model
-rm iara.zip
-mkdir /root/.julia
-ln -s /IARA/iara_model/share/julia/artifacts/ /root/.julia/
-IARA_PATH="$(pwd)/iara_model/bin"
-
 if [ -z "$IARA_COMMAND" ]; then
     echo "ERROR: Missing IARA_COMMAND variable. Please provide the command to be executed" 
     exit 1

@@ -14,6 +14,14 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 COPY IARA_ecs.sh .
 
+ARG IARA_URL
+RUN curl -o iara.zip $IARA_URL \ 
+    && unzip -qo iara.zip -d iara_model \ 
+    && rm iara.zip \ 
+    && mkdir /root/.julia \ 
+    && ln -s /IARA/iara_model/share/julia/artifacts/ /root/.julia/ \ 
+    && IARA_PATH="$(pwd)/iara_model/bin"
+
 RUN chmod +x IARA_ecs.sh
 
 CMD ["./IARA_ecs.sh"]

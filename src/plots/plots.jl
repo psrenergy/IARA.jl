@@ -101,7 +101,8 @@ function _snake_to_regular(snake_str::String)
     return join(capitalized_words, " ")
 end
 
-function _set_plot_defaults()
+function initialize_plotly()
+    PlotlyLight.plotly = PlotlyLight.PlotlyArtifacts()
     PlotlyLight.template!("plotly_white")
     return nothing
 end

@@ -15,8 +15,6 @@ function is_compiled()::Bool
 end
 
 function main(args::Args)
-    initialize(args)
-
     inputs = load_inputs(args)
 
     try
@@ -29,7 +27,6 @@ function main(args::Args)
 end
 
 function main(args::Vector{String})
-    print_banner()
     args = Args(args)
     return main(args)
 end
@@ -38,7 +35,15 @@ function julia_main()::Cint
     COMPILED[] = true
     try
         main(ARGS)
-    catch
+    catch e
+        error_log_file = "iara_error.log"
+        @error(
+            "Error running model. Please consult the file: $error_log_file.",
+        )
+        open(error_log_file, "w") do io
+            println(io, "IARA v$PKG_VERSION ($GIT_DATE)")
+            return showerror(io, e, catch_backtrace())
+        end
         return 1
     end
     return 0
@@ -602,15 +607,6 @@ function single_period_heuristic_bid(
 end
 
 function print_banner()
-    banner = raw"""
-     _____          _____            
-    |_   _|   /\   |  __ \     /\    
-      | |    /  \  | |__) |   /  \   
-      | |   / /\ \ |  _  /   / /\ \  
-     _| |_ / ____ \| | \ \  / ____ \ 
-    |_____/_/    \_\_|  \_\/_/    \_\
-    """
-    Log.info(banner)
     Log.info("IARA - version: $PKG_VERSION")
     return nothing
 end

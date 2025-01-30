@@ -26,11 +26,11 @@ function Args(args::Vector{String})
     period = parsed_args["period"]::Int
     return Args(
         parsed_args["path"],
-        parsed_args["output-path"],
-        parsed_args["delete-output-folder-before-execution"],
-        run_mode,
-        parsed_args["write-lp"],
-        parsed_args["plot-results"],
+        run_mode;
+        output_path = parsed_args["output-path"],
+        delete_output_folder_before_execution = parsed_args["delete-output-folder-before-execution"],
+        write_lp = parsed_args["write-lp"],
+        plot_outputs = parsed_args["plot-results"],
         period,
     )
 end
@@ -55,7 +55,8 @@ function Args(
     else
         joinpath(path, output_path)
     end
-    return Args(
+
+    args = Args(
         path,
         absolute_output_path,
         delete_output_folder_before_execution,
@@ -64,6 +65,12 @@ function Args(
         plot_outputs,
         period,
     )
+
+    initialize(args)
+
+    print_banner()
+
+    return args
 end
 
 function finish_path(path::String)
@@ -99,8 +106,7 @@ function parse_commandline(args)
         default = ""
         "--delete-output-folder-before-execution"
         help = "delete the output folder before execution"
-        arg_type = Bool
-        default = false
+        action = :store_true
         "--run-mode"
         help = "run mode"
         arg_type = String
@@ -110,8 +116,7 @@ function parse_commandline(args)
         action = :store_true
         "--plot-results"
         help = "plot results"
-        arg_type = Bool
-        default = true
+        action = :store_true
         "--period"
         help = "period for SINGLE_PERIOD_MARKET_CLEARING run mode"
         arg_type = Int

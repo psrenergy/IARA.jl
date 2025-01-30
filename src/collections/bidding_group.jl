@@ -257,16 +257,28 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     battery_units = index_of_elements(inputs, BatteryUnit)
     number_of_units_per_bidding_group = zeros(Int, length(bidding_group))
     for t in thermal_units
-        number_of_units_per_bidding_group[thermal_unit_bidding_group_index(inputs, t)] += 1
+        bg_index = thermal_unit_bidding_group_index(inputs, t)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
     end
     for h in hydro_units
-        number_of_units_per_bidding_group[hydro_unit_bidding_group_index(inputs, h)] += 1
+        bg_index = hydro_unit_bidding_group_index(inputs, h)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
     end
     for r in renewable_units
-        number_of_units_per_bidding_group[renewable_unit_bidding_group_index(inputs, r)] += 1
+        bg_index = renewable_unit_bidding_group_index(inputs, r)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
     end
     for b in battery_units
-        number_of_units_per_bidding_group[battery_unit_bidding_group_index(inputs, b)] += 1
+        bg_index = battery_unit_bidding_group_index(inputs, b)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
     end
     if any(number_of_units_per_bidding_group .== 0)
         if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID

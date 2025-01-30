@@ -19,8 +19,6 @@ function main(args::Vector{String})
 end
 
 function main(args::IARA.Args)
-    # Initialize dlls and other possible defaults
-    IARA.initialize(args)
     inputs = IARA.load_inputs(args)
 
     try

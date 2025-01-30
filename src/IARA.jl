@@ -33,6 +33,7 @@ using LinearAlgebra
 using Logging
 using Random
 using Statistics
+using Printf
 
 const Log = LoggingPolyglot
 const PSRI = PSRClassesInterface
@@ -41,7 +42,8 @@ const DatabaseSQLite = PSRI.PSRDatabaseSQLite.DatabaseSQLite
 const POI = ParametricOptInterface
 
 function initialize(args)
-    _set_plot_defaults()
+    # Initialize dlls and other possible defaults
+    initialize_plotly()
     initialize_output_dir(args)
     initialize_logger(args)
     return nothing

@@ -547,7 +547,5 @@ function post_processing_bidding_group_total_revenue(inputs::Inputs)
         return
     end
 
-    # TODO: improve this function to handle the case when some clearing problems are skipped
-
     return _bidding_group_total_revenue(inputs, "commercial")
 end

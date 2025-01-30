@@ -702,35 +702,99 @@ function build_plots(
     return nothing
 end
 
+function build_ui_individual_plots(
+    inputs::Inputs,
+)
+    plots_path = joinpath(output_path(inputs), "plots")
+
+    # Bidding group file labels
+    labels_per_asset_owner = Vector{Vector{String}}(undef, number_of_elements(inputs, AssetOwner))
+    for asset_owner_index in index_of_elements(inputs, AssetOwner)
+        bidding_group_labels = bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs) .== asset_owner_index]
+        labels_to_read = String[]
+        for bg in bidding_group_labels
+            for bus in bus_label(inputs)
+                push!(labels_to_read, "$bg - $bus")
+            end
+        end
+        labels_per_asset_owner[asset_owner_index] = labels_to_read
+    end
+
+    # Revenue
+    revenue_file_path = joinpath(post_processing_path(inputs), "bidding_group_total_revenue_commercial.csv")
+    if isfile(revenue_file_path)
+        for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
+            custom_plot(
+                revenue_file_path,
+                PlotTimeSeriesStackedMean;
+                plot_path = joinpath(plots_path, "bidding_group_total_revenue_$asset_owner_label"),
+                agents = labels_per_asset_owner[asset_owner_index],
+                title = "$asset_owner_label Revenue",
+            )
+        end
+    end
+
+    # Generation
+    generation_output_file = joinpath(output_path(inputs), "bidding_group_generation_ex_post_physical_period_$(inputs.args.period).csv")
+    generation_post_processing_file = joinpath(post_processing_path(inputs), "bidding_group_generation_ex_post_physical.csv")
+    generation_file_path = isfile(generation_output_file) ? generation_output_file : generation_post_processing_file
+    if isfile(generation_file_path)
+        for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
+            custom_plot(
+                generation_file_path,
+                PlotTimeSeriesStackedMean;
+                plot_path = joinpath(plots_path, "bidding_group_generation_$asset_owner_label"),
+                agents = labels_per_asset_owner[asset_owner_index],
+                title = "$asset_owner_label Generation",
+            )
+        end
+    end
+
+    return nothing
+end
+
+function build_ui_case_plots(
+    inputs::Inputs,
+)
+    plots_path = joinpath(output_path(inputs), "plots")
+
+    # Spot price
+    spot_price_file_path = joinpath(output_path(inputs), "load_marginal_cost_ex_post_physical_period_$(inputs.args.period).csv")
+    if isfile(spot_price_file_path)
+        custom_plot(
+            spot_price_file_path,
+            PlotTimeSeriesMean;
+            plot_path = joinpath(plots_path, "spot_price"),
+            title = "Spot Price",
+        )
+    end
+
+    # Generation by technology
+    generation_file_path = joinpath(post_processing_path(inputs), "generation.csv")
+    if isfile(generation_file_path)
+        custom_plot(
+            generation_file_path,
+            PlotTimeSeriesStackedMean;
+            plot_path = joinpath(plots_path, "generation_by_technology"),
+            title = "Generation by Technology",
+        )
+    end
+
+    return nothing
+end
+
 function build_ui_plots(
     inputs::Inputs,
 )
     Log.info("Building UI plots")
+
     plots_path = joinpath(output_path(inputs), "plots")
     if !isdir(plots_path)
         mkdir(plots_path)
     end
 
-    buses = bus_label(inputs)
-
-    if isfile("bidding_group_total_revenue_commercial.csv")
-        for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
-            bidding_group_labels = bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs) .== asset_owner_index]
-            labels_to_read = String[]
-            for bg in bidding_group_labels
-                for bus in buses
-                    push!(labels_to_read, "$bg - $bus")
-                end
-            end
-            custom_plot(
-                joinpath(post_processing_path(inputs), "bidding_group_total_revenue_commercial.csv"),
-                PlotTimeSeriesStackedMean;
-                plot_path = joinpath(plots_path, "bidding_group_total_revenue_$asset_owner_label"),
-                agents = labels_to_read,
-                title = "$asset_owner_label Revenue",
-            )
-        end
-    end
+    build_ui_individual_plots(inputs)
+    build_ui_case_plots(inputs)
 
     return nothing
 end

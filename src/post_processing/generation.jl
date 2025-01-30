@@ -14,31 +14,59 @@
 Run post-processing routines for generation.
 """
 function post_processing_generation(inputs::Inputs)
+    periods = if is_single_period(inputs) 1 else number_of_periods(inputs) end
     generation = zeros(
         5,
         number_of_subperiods(inputs),
         number_of_scenarios(inputs),
-        number_of_periods(inputs),
+        periods,
     )
+    file_suffix = ""
+    if is_market_clearing(inputs)
+        file_suffix *= "_ex_post_physical"
+    end
+    if is_single_period(inputs)
+        file_suffix *= "_period_$(inputs.args.period)"
+    end
     if number_of_elements(inputs, HydroUnit) > 0
-        hydro_generation, _ = read_timeseries_file_in_outputs("hydro_generation", inputs)
-        generation[1, :, :, :] = sum(hydro_generation; dims = 1)
+        hydro_generation, _ = read_timeseries_file_in_outputs("hydro_generation$file_suffix", inputs)
+        generation[1, :, :, :] = if is_market_clearing(inputs)
+                mean(sum(hydro_generation; dims = 1); dims = 3)
+            else
+                sum(hydro_generation; dims = 1)
+            end
     end
     if number_of_elements(inputs, ThermalUnit) > 0
-        thermal_generation, _ = read_timeseries_file_in_outputs("thermal_generation", inputs)
-        generation[2, :, :, :] = sum(thermal_generation; dims = 1)
+        thermal_generation, _ = read_timeseries_file_in_outputs("thermal_generation$file_suffix", inputs)
+        generation[2, :, :, :] = if is_market_clearing(inputs)
+            mean(sum(thermal_generation; dims = 1); dims = 3)
+        else
+            sum(thermal_generation; dims = 1)
+        end
     end
     if number_of_elements(inputs, RenewableUnit) > 0
-        renewable_generation, _ = read_timeseries_file_in_outputs("renewable_generation", inputs)
-        generation[3, :, :, :] = sum(renewable_generation; dims = 1)
+        renewable_generation, _ = read_timeseries_file_in_outputs("renewable_generation$file_suffix", inputs)
+        generation[3, :, :, :] =  if is_market_clearing(inputs)
+            mean(sum(renewable_generation; dims = 1); dims = 3)
+        else
+            sum(renewable_generation; dims = 1)
+        end
     end
     if number_of_elements(inputs, BatteryUnit) > 0
-        battery_unit_generation, _ = read_timeseries_file_in_outputs("battery_generation", inputs)
-        generation[4, :, :, :] = sum(battery_unit_generation; dims = 1)
+        battery_unit_generation, _ = read_timeseries_file_in_outputs("battery_generation$file_suffix", inputs)
+        generation[4, :, :, :] =  if is_market_clearing(inputs)
+            mean(sum(battery_unit_generation; dims = 1); dims = 3)
+        else
+            sum(battery_unit_generation; dims = 1)
+        end
     end
 
-    deficit, _ = read_timeseries_file_in_outputs("deficit", inputs)
-    generation[5, :, :, :] = sum(deficit; dims = 1)
+    deficit, _ = read_timeseries_file_in_outputs("deficit$file_suffix", inputs)
+    generation[5, :, :, :] = if is_market_clearing(inputs)
+        mean(sum(deficit; dims = 1); dims = 3)
+    else
+        sum(deficit; dims = 1)
+    end
 
     write_timeseries_file(
         joinpath(post_processing_path(inputs), "generation"),
@@ -46,7 +74,7 @@ function post_processing_generation(inputs::Inputs)
         dimensions = ["period", "scenario", "subperiod"],
         labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"],
         time_dimension = "period",
-        dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
+        dimension_size = [periods, number_of_scenarios(inputs), number_of_subperiods(inputs)],
         initial_date = initial_date_time(inputs),
         unit = "GWh",
     )

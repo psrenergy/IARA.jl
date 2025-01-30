@@ -30,8 +30,11 @@ function post_processing(inputs)
         post_processing_bidding_group_total_revenue(inputs)
     end
     if inputs.args.plot_outputs
-        build_plots(inputs)
-        build_ui_plots(inputs)
+        if is_single_period(inputs)
+            build_ui_plots(inputs)
+        else
+            build_plots(inputs)
+        end
     end
     return nothing
 end

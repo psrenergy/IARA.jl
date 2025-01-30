@@ -270,11 +270,15 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     end
     if any(number_of_units_per_bidding_group .== 0)
         if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
-            @error("Some bidding groups do not have any units assigned to them. This is not allowed for the SINGLE_PERIOD_HEURISTIC_BID run mode.")
+            @error(
+                "Some bidding groups do not have any units assigned to them. This is not allowed for the SINGLE_PERIOD_HEURISTIC_BID run mode."
+            )
             num_errors += 1
         end
         if is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)
-            @error("Some bidding groups do not have any units assigned to them. This is not allowed when creating heuristic bids for the MARKET_CLEARING run mode.")
+            @error(
+                "Some bidding groups do not have any units assigned to them. This is not allowed when creating heuristic bids for the MARKET_CLEARING run mode."
+            )
             num_errors += 1
         end
     end

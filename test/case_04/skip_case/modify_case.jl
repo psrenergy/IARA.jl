@@ -14,8 +14,9 @@ IARA.update_configuration!(db;
     bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
-    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
+    settlement_type = IARA.Configurations_SettlementType.EX_POST,
 )
 
 IARA.close_study!(db)

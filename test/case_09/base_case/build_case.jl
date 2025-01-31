@@ -33,6 +33,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.COST_BASED,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
     bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    settlement_type = IARA.Configurations_SettlementType.EX_POST,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,

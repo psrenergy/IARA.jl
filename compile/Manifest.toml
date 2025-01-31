@@ -270,7 +270,7 @@ version = "10.42.0+1"
 
 [[deps.PSRContinuousDeployment]]
 deps = ["AWS", "Dates", "EnumX", "Git", "HTTP", "JSON", "LoggingPolyglot", "PackageCompiler", "Pkg", "Random", "SlackAPI", "TOML", "UUIDs", "p7zip_jll"]
-git-tree-sha1 = "843ca46709a1155b443d251030f5fcc25973aea4"
+git-tree-sha1 = "63c7275e7a791aa417e64bb9160c1b30786044a4"
 repo-rev = "master"
 repo-url = "https://github.com/psrenergy/PSRContinuousDeployment.jl.git"
 uuid = "f0087d4c-ff99-426e-93c9-09c1a88911f9"

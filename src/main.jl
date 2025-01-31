@@ -36,8 +36,28 @@ function julia_main()::Cint
     try
         main(ARGS)
     catch e
-        error_log_file = "iara_error.log"
-        @error(
+        args = Args(ARGS)
+        error_log_file = joinpath(dirname(args.path), "iara_error.log")
+        println(
+            "Error running model. Please consult the file: $error_log_file.",
+        )
+        open(error_log_file, "w") do io
+            println(io, "IARA v$PKG_VERSION ($GIT_DATE)")
+            return showerror(io, e, catch_backtrace())
+        end
+        return 1
+    end
+    return 0
+end
+
+function julia_interface_call()::Cint
+    COMPILED[] = true
+    try
+        InterfaceCalls.main(ARGS)
+    catch e
+        args = Args(ARGS)
+        error_log_file = joinpath(dirname(args.path), "iara_interface_call_error.log")
+        println(
             "Error running model. Please consult the file: $error_log_file.",
         )
         open(error_log_file, "w") do io

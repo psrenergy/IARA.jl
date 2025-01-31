@@ -51,7 +51,7 @@ function build_model(
                 subscenario,
                 SubproblemUpdate,
             )
-            set_custom_hook(policy_graph[t], inputs, run_time_options, t, scenario, subscenario)
+            set_custom_hook(subproblem, inputs, run_time_options, t, scenario, subscenario)
             return
         end
     end

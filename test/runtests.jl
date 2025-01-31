@@ -118,6 +118,9 @@ reduced_test_list = Dict(
 #     "case_11/settlement_ex_ante/test_case.jl",
 #     "case_11/settlement_ex_post/test_case.jl",
 # ],
+# "case_12" => [
+#     "case_12/base_case/test_case.jl",
+# ],
 )
 
 test_list = isempty(reduced_test_list) ? test_modules(@__DIR__) : reduced_test_list

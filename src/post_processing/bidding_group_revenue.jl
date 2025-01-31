@@ -130,30 +130,53 @@ Post-process the bidding group revenue data, based on the generation data and th
 function post_processing_bidding_group_revenue(inputs::Inputs)
     outputs_dir = output_path(inputs)
 
-    bidding_group_generation_ex_ante_files = get_generation_files(outputs_dir; from_ex_post = false)
-    bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
+    num_bidding_groups = number_of_elements(inputs, BiddingGroup)
+    num_buses = number_of_elements(inputs, Bus)
+    num_subperiods = number_of_subperiods(inputs)
+    num_scenarios = number_of_scenarios(inputs)
+    num_periods = number_of_periods(inputs)
+    num_bid_segments = maximum_number_of_bidding_segments(inputs)
+    spot_price_ex_ante_data = zeros(num_bidding_groups, num_subperiods, num_scenarios, num_periods)
+    geneneration_ex_ante_data =
+        zeros(num_bidding_groups * num_buses, num_bid_segments, num_subperiods, num_scenarios, num_periods)
+
+    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+        bidding_group_generation_ex_ante_files = get_generation_files(outputs_dir; from_ex_post = false)
+        bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
+    end
     bidding_group_generation_ex_post_files = get_generation_files(outputs_dir; from_ex_post = true)
     bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
 
-    if length(bidding_group_load_marginal_cost_ex_post_files) > 1 ||
-       length(bidding_group_load_marginal_cost_ex_ante_files) > 1
+    if length(bidding_group_load_marginal_cost_ex_post_files) > 1
         error(
-            "Multiple load marginal cost files found: $bidding_group_load_marginal_cost_ex_post_files, $bidding_group_load_marginal_cost_ex_ante_files",
+            "Multiple load marginal cost files found: $bidding_group_load_marginal_cost_ex_ante_files",
         )
     end
 
-    spot_price_ex_ante_data, metadata_spot_price_ex_ante =
-        read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_ante_files[1]), inputs)
+    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+        if length(bidding_group_load_marginal_cost_ex_ante_files) > 1
+            error(
+                "Multiple load marginal cost files found: $bidding_group_load_marginal_cost_ex_ante_files",
+            )
+        end
+    end
+
+    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+        spot_price_ex_ante_data, metadata_spot_price_ex_ante =
+            read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_ante_files[1]), inputs)
+    end
     spot_price_ex_post_data, metadata_spot_price_ex_post =
         read_timeseries_file_in_outputs(get_filename(bidding_group_load_marginal_cost_ex_post_files[1]), inputs)
 
-    number_of_files = length(bidding_group_generation_ex_ante_files)
+    number_of_files = length(bidding_group_generation_ex_post_files)
 
     for i in 1:number_of_files
-        geneneration_file_ex_ante = get_filename(bidding_group_generation_ex_ante_files[i])
+        if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+            geneneration_file_ex_ante = get_filename(bidding_group_generation_ex_ante_files[i])
+            geneneration_ex_ante_data, metadata_geneneration_ex_ante =
+                read_timeseries_file_in_outputs(geneneration_file_ex_ante, inputs)
+        end
         geneneration_file_ex_post = get_filename(bidding_group_generation_ex_post_files[i])
-        geneneration_ex_ante_data, metadata_geneneration_ex_ante =
-            read_timeseries_file_in_outputs(geneneration_file_ex_ante, inputs)
         geneneration_ex_post_data, metadata_geneneration_ex_post =
             read_timeseries_file_in_outputs(geneneration_file_ex_post, inputs)
 
@@ -227,13 +250,28 @@ end
 
 function get_generation_files(outputs_dir::String; from_ex_post::Bool)
     from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
-    return filter(
+
+    commercial_generation_files = filter(
+        x ->
+            occursin("bidding_group_generation", x) &&
+                occursin(from_ex_post_string * "_commercial", x) &&
+                get_file_ext(x) == ".csv",
+        readdir(outputs_dir),
+    )
+
+    physical_generation_files = filter(
         x ->
             occursin("bidding_group_generation", x) &&
                 occursin(from_ex_post_string * "_physical", x) &&
                 get_file_ext(x) == ".csv",
         readdir(outputs_dir),
     )
+
+    if isempty(commercial_generation_files)
+        return physical_generation_files
+    else
+        return commercial_generation_files
+    end
 end
 
 function get_load_marginal_files(outputs_dir::String; from_ex_post::Bool)

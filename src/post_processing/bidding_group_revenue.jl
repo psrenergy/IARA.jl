@@ -36,7 +36,7 @@ function _build_revenue_without_subscenarios(
     num_bgs_times_buses, num_bid_segments, num_subperiods, num_scenarios, num_periods =
         size(generation_ex_ante)
 
-    revenue = zeros(num_bidding_groups, num_subperiods, num_scenarios, num_periods)
+    revenue = zeros(num_bgs_times_buses, num_subperiods, num_scenarios, num_periods)
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
@@ -54,7 +54,7 @@ function _build_revenue_without_subscenarios(
                     processed_load_marginal_cost = _check_floor(spot_price_data, spot_price_floor)
                     processed_load_marginal_cost = _check_cap(processed_load_marginal_cost, spot_price_cap)
 
-                    revenue[bg_i, subperiod, scenario, period] =
+                    revenue[(bg_i-1)*(num_buses)+bus_i, subperiod, scenario, period] =
                         sum_generation[(bg_i-1)*(num_buses)+bus_i] * processed_load_marginal_cost / MW_to_GW()
                 end
             end
@@ -80,7 +80,7 @@ function _build_revenue_with_subscenarios(
     num_bgs_times_buses, num_bid_segments, num_subperiods, num_subscenarios, num_scenarios, num_periods =
         size(generation_ex_post)
 
-    revenue = zeros(num_bidding_groups, num_subperiods, num_subscenarios, num_scenarios, num_periods)
+    revenue = zeros(num_bgs_times_buses, num_subperiods, num_subscenarios, num_scenarios, num_periods)
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
@@ -112,7 +112,7 @@ function _build_revenue_with_subscenarios(
                         processed_load_marginal_cost = _check_floor(spot_price_data, spot_price_floor)
                         processed_load_marginal_cost = _check_cap(processed_load_marginal_cost, spot_price_cap)
 
-                        revenue[bg_i, subperiod, subscenario, scenario, period] +=
+                        revenue[(bg_i-1)*(num_buses)+bus_i, subperiod, subscenario, scenario, period] +=
                             sum_generation[(bg_i-1)*(num_buses)+bus_i] * processed_load_marginal_cost / MW_to_GW()
                     end
                 end

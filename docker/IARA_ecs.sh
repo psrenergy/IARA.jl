@@ -16,7 +16,7 @@
 #
 # $IARA_GAME_ROUND: The round to be executed. It should be an integer
 # 
-# $GAME_PERIOD: The period to be executed. It should be an integer
+# $IARA_GAME_ROUND: The period to be executed. It should be an integer
 #
 # Usage:
 #  $ ./IARA_ecs.sh
@@ -27,11 +27,19 @@ set -e
 S3_BUCKET="meta-ccee-iara-artifacts"
 CASE_PATH="iara-case"
 
-
 function download_and_unzip_case () {
     echo "Downloading input data..."
-    aws s3 cp s3://$S3_BUCKET/games/$IARA_CASE/game_inputs.zip ./$IARA_CASE.zip > /dev/null 2>&1
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_inputs.zip ./$IARA_CASE.zip  
     unzip -qo $IARA_CASE.zip -d $CASE_PATH
+    echo "Completed."
+}
+
+function download_bids_and_move_to_case () {
+    echo "Downloading bids..."
+    echo $S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip 
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip ./bids.zip  
+    unzip -qo bids.zip -d $CASE_PATH
+    rm -f bids.zip
     echo "Completed."
 }
 
@@ -66,7 +74,7 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
     $IARA_PATH/IARA_interface_call.sh --output-path $CASE_PATH/game_summary  --run-mode 'min-cost' $CASE_PATH 
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/games/$IARA_CASE/game_summary/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_summary/ --recursive  
     echo "Completed."    
     exit 0
 fi
@@ -76,10 +84,10 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     validate_game_round
     download_and_unzip_case
 
-    $IARA_PATH/IARA.sh $CASE_PATH --output-path $CASE_PATH/heuristic_bids --run-mode 'single-period-heuristic-bid' --period $GAME_PERIOD
+    $IARA_PATH/IARA.sh $CASE_PATH --output-path $CASE_PATH/heuristic_bids --run-mode 'single-period-heuristic-bid' --period=$IARA_GAME_ROUND
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/heuristic_bids/ s3://$S3_BUCKET/games/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/heuristic_bids/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/ --recursive  
     echo "Completed."
     exit 0
 fi
@@ -88,11 +96,17 @@ fi
 if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     validate_game_round
     download_and_unzip_case
+    download_bids_and_move_to_case
 
-    $IARA_PATH/IARA.sh $CASE_PATH --output-path $CASE_PATH/results --run-mode 'single-period-market-clearing' --period $GAME_PERIOD
-    
+    $IARA_PATH/IARA.sh $CASE_PATH --output-path=$CASE_PATH/results --run-mode='single-period-market-clearing' --period=$IARA_GAME_ROUND
+
+    echo "Zipping plots..."
+    cd $CASE_PATH/results/plots
+    zip -r ../plots.zip ./*
+    cd -
+
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/outputs/ s3://$S3_BUCKET/games/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/ --recursive > /dev/null 2>&1
+    aws s3 cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
     echo "Completed."    
     exit 0
 fi

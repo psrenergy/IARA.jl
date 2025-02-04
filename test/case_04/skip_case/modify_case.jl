@@ -13,9 +13,9 @@ db = IARA.load_study(PATH; read_only = false)
 IARA.update_configuration!(db;
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
-    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.BID_BASED,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
-    settlement_type = IARA.Configurations_SettlementType.EX_POST,
+    settlement_type = IARA.Configurations_SettlementType.NONE,
 )
 
 IARA.close_study!(db)

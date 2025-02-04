@@ -986,29 +986,17 @@ read_inflow_from_file(inputs::AbstractInputs) =
 Return whether bids should be read from a file.
 """
 function read_bids_from_file(inputs::AbstractInputs)
-    run_need_bids =
-        (
-            inputs.collections.configurations.construction_type_ex_ante_physical !=
-            Configurations_ConstructionType.COST_BASED
-        ) &&
-        (
-            inputs.collections.configurations.construction_type_ex_ante_commercial !=
-            Configurations_ConstructionType.COST_BASED
-        ) &&
-        (
-            inputs.collections.configurations.construction_type_ex_post_physical !=
-            Configurations_ConstructionType.COST_BASED
-        ) &&
-        (
-            inputs.collections.configurations.construction_type_ex_post_commercial !=
-            Configurations_ConstructionType.COST_BASED
-        )
-
-    if run_need_bids
-        return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
-    else
+    no_file_model_types = [
+        Configurations_ConstructionType.SKIP,
+        Configurations_ConstructionType.COST_BASED,
+    ]
+    if construction_type_ex_ante_physical(inputs) in no_file_model_types &&
+       construction_type_ex_ante_commercial(inputs) in no_file_model_types &&
+       construction_type_ex_post_physical(inputs) in no_file_model_types &&
+       construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
+    return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
 end
 
 """

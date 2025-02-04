@@ -51,12 +51,12 @@ function _write_revenue_without_subscenarios(
                     sum_generation .+= generation_ex_ante_reader.data
                 end
 
-                spot_price_data = zeros(length(spot_price_labels))
+                spot_price_data = zeros(num_bidding_groups)
                 for bg_i in 1:num_bidding_groups
                     bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
 
                     Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
-                    spot_price_data[bus_i] = spot_ex_ante_reader.data[bus_i]
+                    spot_price_data[bg_i] = spot_ex_ante_reader.data[bus_i]
                 end
 
                 Quiver.write!(
@@ -79,9 +79,9 @@ end
 function _write_revenue_with_subscenarios(
     inputs::Inputs,
     writer_with_subscenarios::Quiver.Writer{Quiver.csv},
-    generation_ex_ante_reader::Quiver.Reader{Quiver.csv},
+    generation_ex_ante_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
     generation_ex_post_reader::Quiver.Reader{Quiver.csv},
-    spot_ex_ante_reader::Quiver.Reader{Quiver.csv},
+    spot_ex_ante_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
     spot_ex_post_reader::Quiver.Reader{Quiver.csv},
     is_profile::Bool,
 )
@@ -127,7 +127,7 @@ function _write_revenue_with_subscenarios(
                         end
                     end
 
-                    spot_price_data = zeros(length(spot_price_labels))
+                    spot_price_data = zeros(num_bidding_groups)
                     for bg_i in 1:num_bidding_groups
                         bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
 
@@ -136,7 +136,7 @@ function _write_revenue_with_subscenarios(
                                 # Just read the ex-ante generation once per subscenario
                                 Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
                             end
-                            spot_price_data[bus_i] = spot_ex_ante_reader.data[bus_i]
+                            spot_price_data[bg_i] = spot_ex_ante_reader.data[bus_i]
                         else
                             Quiver.goto!(
                                 spot_ex_post_reader;
@@ -145,7 +145,7 @@ function _write_revenue_with_subscenarios(
                                 subscenario = subscenario,
                                 subperiod = subperiod,
                             )
-                            spot_price_data[bus_i] = spot_ex_post_reader.data[bus_i]
+                            spot_price_data[bg_i] = spot_ex_post_reader.data[bus_i]
                         end
                     end
 
@@ -163,9 +163,11 @@ function _write_revenue_with_subscenarios(
     end
     Quiver.close!(writer_with_subscenarios)
     # Close readers because they reached the end of the file.
-    Quiver.close!(generation_ex_ante_reader)
+    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+        Quiver.close!(generation_ex_ante_reader)
+        Quiver.close!(spot_ex_ante_reader)
+    end
     Quiver.close!(generation_ex_post_reader)
-    Quiver.close!(spot_ex_ante_reader)
     Quiver.close!(spot_ex_post_reader)
     return nothing
 end
@@ -200,22 +202,26 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
     end
 
     number_of_files = length(bidding_group_generation_ex_post_files)
+    output_dir = output_path(inputs)
 
     for i in 1:number_of_files
         if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-            geneneration_ex_ante_file = get_filename(inputs, bidding_group_generation_ex_ante_files[i])
-            spot_price_ex_ante_file = get_filename(inputs, bidding_group_load_marginal_cost_ex_ante_files[1])
+            geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
+            spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(geneneration_ex_ante_file)
+                Quiver.Reader{Quiver.csv}(joinpath(output_dir, geneneration_ex_ante_file))
             spot_price_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(spot_price_ex_ante_file)
+                Quiver.Reader{Quiver.csv}(joinpath(output_dir, spot_price_ex_ante_file))
+        else
+            geneneration_ex_ante_reader = nothing
+            spot_price_ex_ante_reader = nothing
         end
-        spot_price_ex_post_file = get_filename(inputs, bidding_group_load_marginal_cost_ex_post_files[1])
-        geneneration_ex_post_file = get_filename(inputs, bidding_group_generation_ex_post_files[i])
+        spot_price_ex_post_file = get_filename(bidding_group_load_marginal_cost_ex_post_files[1])
+        geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
         spot_price_ex_post_reader =
-            Quiver.Reader{Quiver.csv}(spot_price_ex_post_file)
+            Quiver.Reader{Quiver.csv}(joinpath(output_dir, spot_price_ex_post_file))
         geneneration_ex_post_reader =
-            Quiver.Reader{Quiver.csv}(geneneration_ex_post_file)
+            Quiver.Reader{Quiver.csv}(joinpath(output_dir, geneneration_ex_post_file))
 
         is_cost_based = occursin("cost_based", geneneration_ex_post_file)
         is_profile = occursin("profile", geneneration_ex_post_file)
@@ -261,12 +267,12 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
         )
 
         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-            geneneration_ex_ante_file = get_filename(inputs, bidding_group_generation_ex_ante_files[i])
-            spot_price_ex_ante_file = get_filename(inputs, bidding_group_load_marginal_cost_ex_ante_files[1])
+            geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
+            spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(geneneration_ex_ante_file)
+                Quiver.Reader{Quiver.csv}(joinpath(output_dir, geneneration_ex_ante_file))
             spot_price_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(spot_price_ex_ante_file)
+                Quiver.Reader{Quiver.csv}(joinpath(output_dir, spot_price_ex_ante_file))
 
             writer_without_subscenarios = Quiver.Writer{Quiver.csv}(
                 joinpath(post_processing_path(inputs), time_series_path_without_subscenarios);

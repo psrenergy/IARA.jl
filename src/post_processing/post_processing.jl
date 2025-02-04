@@ -61,9 +61,3 @@ end
 function get_filename(filename::String)
     return splitext(filename)[1]
 end
-
-function get_filename(inputs::Inputs, filename::String)
-    output_dir = output_path(inputs)
-    filename = get_filename(filename)
-    return joinpath(output_dir, filename)
-end

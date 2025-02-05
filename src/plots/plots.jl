@@ -710,7 +710,7 @@ function build_ui_individual_plots(
     # Bidding group file labels
     labels_per_asset_owner = Vector{Vector{String}}(undef, number_of_elements(inputs, AssetOwner))
     for asset_owner_index in index_of_elements(inputs, AssetOwner)
-        bidding_group_labels = bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs) .== asset_owner_index]
+        bidding_group_labels = bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
         labels_to_read = String[]
         for bg in bidding_group_labels
             for bus in bus_label(inputs)
@@ -738,8 +738,10 @@ function build_ui_individual_plots(
     # Generation
     # TODO: choose file correctly (after post-processing PR)
     # TODO: sum over segment dimension
-    generation_output_file = joinpath(output_path(inputs), "bidding_group_generation_ex_post_physical_period_$(inputs.args.period).csv")
-    generation_post_processing_file = joinpath(post_processing_path(inputs), "bidding_group_generation_ex_post_physical.csv")
+    generation_output_file =
+        joinpath(output_path(inputs), "bidding_group_generation_ex_post_physical_period_$(inputs.args.period).csv")
+    generation_post_processing_file =
+        joinpath(post_processing_path(inputs), "bidding_group_generation_ex_post_physical.csv")
     generation_file_path = isfile(generation_output_file) ? generation_output_file : generation_post_processing_file
     if isfile(generation_file_path)
         for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
@@ -762,7 +764,8 @@ function build_ui_case_plots(
     plots_path = joinpath(output_path(inputs), "plots")
 
     # Spot price
-    spot_price_file_path = joinpath(output_path(inputs), "load_marginal_cost_ex_post_physical_period_$(inputs.args.period).csv")
+    spot_price_file_path =
+        joinpath(output_path(inputs), "load_marginal_cost_ex_post_physical_period_$(inputs.args.period).csv")
     if isfile(spot_price_file_path)
         custom_plot(
             spot_price_file_path,
@@ -811,7 +814,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
     if !isempty(offer_files)
         quantity_offer_file = offer_files[1]
         price_offer_file = offer_files[2]
-        
+
         quantity_data, quantity_metadata = read_timeseries_file(quantity_offer_file)
         price_data, price_metadata = read_timeseries_file(price_offer_file)
 
@@ -830,8 +833,8 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             price_data = price_data[:, :, :, :, inputs.args.period]
         else
             # Or from heuristic bid output files, with a single period
-            quantity_data = dropdims(quantity_data, dims = 5)
-            price_data = dropdims(price_data, dims = 5)
+            quantity_data = dropdims(quantity_data; dims = 5)
+            price_data = dropdims(price_data; dims = 5)
         end
 
         for subperiod in 1:num_subperiods
@@ -868,7 +871,6 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                     # new point
                     push!(quantity_data_to_plot[bus], quantity)
                     push!(price_data_to_plot[bus], price)
-
                 end
             end
 
@@ -914,7 +916,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
         data, metadata = read_timeseries_file(demand_file)
         # Average across subscenarios for ex-post file
         data_reshaped = if !read_ex_ante_demand_file(inputs)
-            dropdims(mean(data_reshaped, dims = 3), dims = 3)
+            dropdims(mean(data_reshaped; dims = 3); dims = 3)
         else
             data
         end
@@ -929,7 +931,8 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
         time_series_length = size(demand_to_plot, 2)
 
         configs = Vector{Config}()
-        plot_ticks, hover_ticks = _get_plot_ticks(demand_to_plot, size(data)[end], initial_date_time(inputs), time_series_step(inputs))
+        plot_ticks, hover_ticks =
+            _get_plot_ticks(demand_to_plot, size(data)[end], initial_date_time(inputs), time_series_step(inputs))
         unit = "MW"
         p10_idx = 1
         p50_idx = 2
@@ -957,7 +960,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
                 text = hover_ticks,
                 hovertemplate = "%{y} $unit<br>%{text}",
             ))
-    
+
         main_configuration = Config(;
             title = "Total demand",
             xaxis = Dict(

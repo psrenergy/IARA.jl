@@ -188,10 +188,12 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
     bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
 
     generation_path = outputs_dir
-    bidding_group_generation_files = filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(generation_path))
+    bidding_group_generation_files =
+        filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(generation_path))
     if isempty(bidding_group_generation_files)
         generation_path = post_processing_path(inputs)
-        bidding_group_generation_files = filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(generation_path))
+        bidding_group_generation_files =
+            filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(generation_path))
     end
 
     if length(bidding_group_load_marginal_cost_ex_post_files) > 1
@@ -562,7 +564,8 @@ function post_processing_bidding_group_total_revenue(inputs::Inputs)
         length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(post_processing_dir))) > 0
 
     is_cost_based =
-        length(filter(x -> occursin(r"bidding_group_revenue_.*_cost_based.*\.csv", x), readdir(post_processing_dir))) > 0
+        length(filter(x -> occursin(r"bidding_group_revenue_.*_cost_based.*\.csv", x), readdir(post_processing_dir))) >
+        0
 
     # STEP 0 (optional): Merging profile and independent bid
 

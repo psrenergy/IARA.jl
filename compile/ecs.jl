@@ -44,7 +44,7 @@ function main(args::Vector{String})
 
     return start_ecs_task_and_watch(;
         configuration = configuration,
-        memory_in_gb = 16,
+        memory_in_gb = 32,
         overwrite = parsed_args["overwrite"],
     )
 end

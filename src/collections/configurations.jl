@@ -505,6 +505,41 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 @warn("All clearing models must be hybrid when using virtual reservoirs.")
             end
         end
+        if settlement_type(inputs) == Configurations_SettlementType.NONE
+            @warn("Settlement type is NONE. No revenue will be calculated.")
+        else
+            if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP &&
+               configurations.construction_type_ex_post_commercial == Configurations_ConstructionType.SKIP
+                @error(
+                    "When using a settlement type, either ex-post physical or commercial clearing must occur — both cannot be skipped."
+                )
+                num_errors += 1
+            end
+            if settlement_type(inputs) in [Configurations_SettlementType.DUAL, Configurations_SettlementType.EX_ANTE]
+                if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
+                   configurations.construction_type_ex_ante_commercial == Configurations_ConstructionType.SKIP
+                    @error(
+                        "when using settlement type $(settlement_type(inputs)), either ex-ante physical and commercial clearing must occur — both cannot be skipped."
+                    )
+                    num_errors += 1
+                end
+            end
+            if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
+               settlement_type(inputs) == Configurations_SettlementType.DUAL
+                @warn(
+                    "The ex-ante physical clearing model is skipped.
+              Instead, generation data for revenue calculation will be sourced from the ex-ante commercial clearing model.
+              This represents a non-standard execution type."
+                )
+            end
+            if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP
+                @warn(
+                    "The ex-post physical clearing model is skipped.
+              Instead, generation data for revenue calculation will be sourced from the ex-post commercial clearing model.
+              This represents a non-standard execution type."
+                )
+            end
+        end
     end
     if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
         if is_market_clearing(inputs)

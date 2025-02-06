@@ -32,14 +32,14 @@ function _write_revenue_without_subscenarios(
 
     generation_labels = generation_ex_ante_reader.metadata.labels
     spot_price_labels = spot_ex_ante_reader.metadata.labels
-    num_bidding_groups = length(generation_labels)
+    num_bidding_groups_times_buses = length(generation_labels)
 
     dim_name = is_profile ? :profile : :bid_segment
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
             for subperiod in 1:num_subperiods
-                sum_generation = zeros(num_bidding_groups)
+                sum_generation = zeros(num_bidding_groups_times_buses)
                 for bid_segment in 1:num_bid_segments
                     Quiver.goto!(
                         generation_ex_ante_reader;
@@ -51,8 +51,8 @@ function _write_revenue_without_subscenarios(
                     sum_generation .+= generation_ex_ante_reader.data
                 end
 
-                spot_price_data = zeros(num_bidding_groups)
-                for bg_i in 1:num_bidding_groups
+                spot_price_data = zeros(num_bidding_groups_times_buses)
+                for bg_i in 1:num_bidding_groups_times_buses
                     bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
 
                     Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
@@ -90,7 +90,7 @@ function _write_revenue_with_subscenarios(
 
     generation_labels = generation_ex_post_reader.metadata.labels
     spot_price_labels = spot_ex_post_reader.metadata.labels
-    num_bidding_groups = length(generation_labels)
+    num_bidding_groups_times_buses = length(generation_labels)
 
     dim_name = is_profile ? :profile : :bid_segment
 
@@ -98,7 +98,7 @@ function _write_revenue_with_subscenarios(
         for scenario in 1:num_scenarios
             for subscenario in 1:num_subscenarios
                 for subperiod in 1:num_subperiods
-                    sum_generation = zeros(num_bidding_groups)
+                    sum_generation = zeros(num_bidding_groups_times_buses)
                     for bid_segment in 1:num_bid_segments
                         Quiver.goto!(
                             generation_ex_post_reader;
@@ -127,8 +127,8 @@ function _write_revenue_with_subscenarios(
                         end
                     end
 
-                    spot_price_data = zeros(num_bidding_groups)
-                    for bg_i in 1:num_bidding_groups
+                    spot_price_data = zeros(num_bidding_groups_times_buses)
+                    for bg_i in 1:num_bidding_groups_times_buses
                         bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
 
                         if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE

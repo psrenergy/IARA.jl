@@ -46,6 +46,7 @@ function initialize(args)
     initialize_plotly()
     initialize_output_dir(args)
     initialize_logger(args)
+    print_banner()
     return nothing
 end
 

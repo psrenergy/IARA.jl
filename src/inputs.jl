@@ -151,6 +151,7 @@ $AVAILABLE_RUN_MODES_MESSAGE
 """
 function summarize(path::String; run_mode::String = "market-clearing")
     args = Args(path, parse_run_mode(run_mode))
+    initialize(args)
     inputs = load_inputs(args)
     try
         log_inputs(inputs)
@@ -228,6 +229,7 @@ $AVAILABLE_RUN_MODES_MESSAGE
 """
 function validate(path::String; run_mode::String = "market-clearing")
     args = Args(path, parse_run_mode(run_mode))
+    initialize(args)
     inputs = load_inputs(args)
     try
         validate(inputs)

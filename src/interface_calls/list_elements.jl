@@ -49,7 +49,7 @@ function list_case_configurations(inputs::IARA.AbstractInputs)
         "number_of_periods" => IARA.number_of_periods(inputs),
         "number_of_scenarios" => IARA.number_of_scenarios(inputs),
         "number_of_subperiods" => IARA.number_of_subperiods(inputs),
-        "initial_date_time" => IARA.initial_date_time(inputs),
+        "initial_date_time" => replace(string(IARA.initial_date_time(inputs)), "T" => " "),
         "period_type" => IARA.period_type_string(IARA.time_series_step(inputs)),
     )
 end

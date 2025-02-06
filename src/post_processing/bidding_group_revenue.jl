@@ -750,10 +750,10 @@ function post_processing_bidding_group_total_revenue(
         "temp_bidding_group_revenue_ex_post_average",
     ]
     # Remove temporary files
-    # for temp_file in temp_files
-    #     if isfile(joinpath(outputs_dir, temp_file * ".csv"))
-    #         rm(joinpath(outputs_dir, temp_file * ".csv"))
-    #     end
-    # end
+    for temp_file in temp_files
+        if isfile(joinpath(outputs_dir, temp_file * ".csv"))
+            rm(joinpath(outputs_dir, temp_file * ".csv"))
+        end
+    end
     return
 end

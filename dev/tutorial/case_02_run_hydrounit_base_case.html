@@ -72,18 +72,18 @@ numerical stability report
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
-         1   2.194168e+02  2.350811e+02  2.798200e-02        90   1
-        10   1.694594e+03  8.584584e+02  1.092184e+00      5978   1
-        21   4.860368e+03  8.584595e+02  2.599516e+00     11955   1
-        28   1.178418e+03  8.584595e+02  3.607883e+00     14340   1
-        34   3.980920e+02  8.584595e+02  4.616222e+00     16076   1
-        40   7.409280e+02  8.584595e+02  5.591232e+00     17448   1
+         1   4.973543e+02  4.326837e+02  4.400301e-02       194   1
+         8   4.200192e+02  8.584553e+02  1.063959e+00      5816   1
+        21   2.759075e+03  8.584595e+02  2.569480e+00     11978   1
+        33   6.895112e+02  8.584595e+02  3.593852e+00     14501   1
+        37   2.286032e+03  8.584595e+02  4.622699e+00     16395   1
+        40   3.078794e+03  8.584595e+02  5.388195e+00     17497   1
 -------------------------------------------------------------------
 status         : simulation_stopping
-total time (s) : 5.591232e+00
-total solves   : 17448
+total time (s) : 5.388195e+00
+total solves   : 17497
 best bound     :  8.584595e+02
-simulation ci  :  9.739549e+02 ± 2.685122e+02
+simulation ci  :  9.611345e+02 ± 3.099321e+02
 numeric issues : 0
 -------------------------------------------------------------------
 
@@ -134,8 +134,7 @@ IARA.update_configuration!(
 IARA.close_study!(db)</code></pre><p>Now, let&#39;s run the case with <a href="../api_reference.html#IARA.market_clearing-Tuple{String}"><code>IARA.market_clearing</code></a>.</p><pre><code class="language-julia hljs">IARA.market_clearing(
     PATH_MARKET_CLEARING;
     delete_output_folder_before_execution = true,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌ Warning: The output directory /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_2_execution/market_clearing/outputs is not empty, and the argument `delete_output_folder_before_execution` has been provided.
-│ The directory&#39;s contents will be deleted.
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌ Warning: The output directory /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_2_execution/market_clearing/outputs is not empty, and the argument `delete_output_folder_before_execution` has been provided. The directory&#39;s contents will be deleted.
 └ @ IARA ~/work/IARA.jl/IARA.jl/src/outputs.jl:110
 [ Info: IARA - version: x.x.x
 ┌ Warning: The BidDataSource option is set to PRICETAKER_HEURISTICS, and the clearing representation is set to PURE_BIDS.
@@ -196,4 +195,4 @@ IARA.close_study!(db)</code></pre><p>Now, let&#39;s run the case with <a href=".
 [ Info:    Running simulation EX_POST_PHYSICAL
 [ Info:    Running simulation EX_POST_COMMERCIAL
 [ Info: Running post-processing routines
-[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Wednesday 5 February 2025 20:47">Wednesday 5 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Thursday 6 February 2025 19:38">Thursday 6 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -92,7 +92,7 @@ function _write_revenue_with_subscenarios(
     spot_price_labels = spot_ex_post_reader.metadata.labels
     num_bidding_groups = length(generation_labels)
 
-    dim_name = is_profile ? :profile : :bid_segment
+    @show dim_name = is_profile ? :profile : :bid_segment
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
@@ -206,7 +206,7 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
 
     for i in 1:number_of_files
         if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-            geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
+            @show geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
                 Quiver.Reader{Quiver.csv}(geneneration_ex_ante_file)
@@ -217,14 +217,14 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
             spot_price_ex_ante_reader = nothing
         end
         spot_price_ex_post_file = get_filename(bidding_group_load_marginal_cost_ex_post_files[1])
-        geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
+        @show geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
         spot_price_ex_post_reader =
             Quiver.Reader{Quiver.csv}(spot_price_ex_post_file)
         geneneration_ex_post_reader =
             Quiver.Reader{Quiver.csv}(geneneration_ex_post_file)
 
-        is_cost_based = occursin("cost_based", geneneration_ex_post_file)
-        is_profile = occursin("profile", geneneration_ex_post_file)
+        is_cost_based = occursin("cost_based", basename(geneneration_ex_post_file))
+        is_profile = occursin("profile", basename(geneneration_ex_post_file))
 
         time_series_path_with_subscenarios = "bidding_group_revenue"
         time_series_path_without_subscenarios = "bidding_group_revenue"
@@ -266,6 +266,8 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
             spot_price_ex_post_reader,
             is_profile,
         )
+
+        @show "--------------------------------"
 
         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])

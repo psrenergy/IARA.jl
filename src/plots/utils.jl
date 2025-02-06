@@ -29,7 +29,6 @@ function plot_title_from_filename(filename::String)
 end
 
 function get_revenue_file(inputs::AbstractInputs)
-
     filename = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
         "bidding_group_revenue_ex_ante"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST

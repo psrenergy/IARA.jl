@@ -92,7 +92,7 @@ function _write_revenue_with_subscenarios(
     spot_price_labels = spot_ex_post_reader.metadata.labels
     num_bidding_groups = length(generation_labels)
 
-    @show dim_name = is_profile ? :profile : :bid_segment
+    dim_name = is_profile ? :profile : :bid_segment
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
@@ -181,10 +181,12 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
     outputs_dir = output_path(inputs)
 
     if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-        bidding_group_generation_ex_ante_files = get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
+        bidding_group_generation_ex_ante_files =
+            get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
         bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
     end
-    bidding_group_generation_ex_post_files = get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
+    bidding_group_generation_ex_post_files =
+        get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
     bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
 
     if length(bidding_group_load_marginal_cost_ex_post_files) > 1
@@ -206,7 +208,7 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
 
     for i in 1:number_of_files
         if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-            @show geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
+            geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
                 Quiver.Reader{Quiver.csv}(geneneration_ex_ante_file)
@@ -217,7 +219,7 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
             spot_price_ex_ante_reader = nothing
         end
         spot_price_ex_post_file = get_filename(bidding_group_load_marginal_cost_ex_post_files[1])
-        @show geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
+        geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
         spot_price_ex_post_reader =
             Quiver.Reader{Quiver.csv}(spot_price_ex_post_file)
         geneneration_ex_post_reader =
@@ -266,8 +268,6 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
             spot_price_ex_post_reader,
             is_profile,
         )
-
-        @show "--------------------------------"
 
         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])

@@ -22,6 +22,10 @@ Struct to store parameters related to the outputs of the optimization problem.
     outputs::Dict{String, AbstractOutput} = Dict{String, AbstractOutput}()
 end
 
+@kwdef mutable struct TimeSeriesOutputs
+    outputs::Dict{String, AbstractOutput} = Dict{String, AbstractOutput}()
+end
+
 """
     output_path(inputs::Inputs)
 
@@ -158,6 +162,10 @@ mutable struct QuiverOutput <: AbstractOutput
     writer::Quiver.Writer
 end
 
+mutable struct QuiverInput <: AbstractOutput
+    reader::Quiver.Reader
+end
+
 function get_outputs_dimension_size(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -207,6 +215,7 @@ function initialize!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     output_name::String,
+    is_post_processing::Bool = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -225,7 +234,11 @@ function initialize!(
 
     output_name *= run_time_file_suffixes(inputs, run_time_options)
 
-    file = joinpath(output_path(inputs), output_name)
+    if is_post_processing
+        file = joinpath(post_processing_path(inputs), output_name)
+    else
+        file = joinpath(output_path(inputs), output_name)
+    end
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
 
     writer = Quiver.Writer{output_type}(
@@ -245,6 +258,8 @@ function initialize!(
 
     return nothing
 end
+
+post_processing_path(inputs) = joinpath(output_path(inputs), "post_processing")
 
 function find_indices_of_elements_to_write_in_output(;
     # Complete list of indices from the collection that exist in 
@@ -722,6 +737,13 @@ end
 function finalize_outputs!(outputs::Outputs)
     for output in values(outputs.outputs)
         finalize!(output)
+    end
+    return nothing
+end
+
+function finalize_outputs!(outputs::TimeSeriesOutputs)
+    for output in values(outputs.outputs)
+        Quiver.close!(output.reader)
     end
     return nothing
 end

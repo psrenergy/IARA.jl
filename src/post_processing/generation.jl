@@ -9,47 +9,89 @@
 #############################################################################
 
 """
-    post_processing_generation(inputs::Inputs)
+    post_processing_generation(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
 
 Run post-processing routines for generation.
 """
-function post_processing_generation(inputs::Inputs)
-    generation = zeros(
-        5,
-        number_of_subperiods(inputs),
-        number_of_scenarios(inputs),
-        number_of_periods(inputs),
+function post_processing_generation(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::TimeSeriesOutputs,
+    run_time_options::RunTimeOptions,
+)
+    labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"]
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "generation",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "GWh",
+        labels = labels,
+        run_time_options,
+        is_post_processing = true,
     )
+
+    hydro_generation_reader = nothing
+    thermal_generation_reader = nothing
+    renewable_generation_reader = nothing
+    battery_unit_generation_reader = nothing
+    deficit_reader = nothing
+
     if number_of_elements(inputs, HydroUnit) > 0
-        hydro_generation, _ = read_timeseries_file_in_outputs("hydro_generation", inputs)
-        generation[1, :, :, :] = sum(hydro_generation; dims = 1)
+        hydro_generation_reader = open_time_series_output(inputs, model_outputs_time_serie, "hydro_generation")
     end
     if number_of_elements(inputs, ThermalUnit) > 0
-        thermal_generation, _ = read_timeseries_file_in_outputs("thermal_generation", inputs)
-        generation[2, :, :, :] = sum(thermal_generation; dims = 1)
+        thermal_generation_reader = open_time_series_output(inputs, model_outputs_time_serie, "thermal_generation")
     end
     if number_of_elements(inputs, RenewableUnit) > 0
-        renewable_generation, _ = read_timeseries_file_in_outputs("renewable_generation", inputs)
-        generation[3, :, :, :] = sum(renewable_generation; dims = 1)
+        renewable_generation_reader = open_time_series_output(inputs, model_outputs_time_serie, "renewable_generation")
     end
     if number_of_elements(inputs, BatteryUnit) > 0
-        battery_unit_generation, _ = read_timeseries_file_in_outputs("battery_generation", inputs)
-        generation[4, :, :, :] = sum(battery_unit_generation; dims = 1)
+        battery_unit_generation_reader = open_time_series_output(inputs, model_outputs_time_serie, "battery_generation")
+    end
+    deficit_reader = open_time_series_output(inputs, model_outputs_time_serie, "deficit")
+
+    for period in periods(inputs)
+        for scenario in scenarios(inputs)
+            for subperiod in subperiods(inputs)
+                vector = AbstractFloat[]
+                add_generation_to_array!(vector, hydro_generation_reader, period, scenario, subperiod)
+                add_generation_to_array!(vector, thermal_generation_reader, period, scenario, subperiod)
+                add_generation_to_array!(vector, renewable_generation_reader, period, scenario, subperiod)
+                add_generation_to_array!(vector, battery_unit_generation_reader, period, scenario, subperiod)
+                add_generation_to_array!(vector, deficit_reader, period, scenario, subperiod)
+
+                Quiver.write!(
+                    outputs_post_processing.outputs["generation"].writer,
+                    vector;
+                    period,
+                    scenario,
+                    subperiod = subperiod,
+                )
+            end
+        end
     end
 
-    deficit, _ = read_timeseries_file_in_outputs("deficit", inputs)
-    generation[5, :, :, :] = sum(deficit; dims = 1)
+    return nothing
+end
 
-    write_timeseries_file(
-        joinpath(post_processing_path(inputs), "generation"),
-        generation;
-        dimensions = ["period", "scenario", "subperiod"],
-        labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"],
-        time_dimension = "period",
-        dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs), number_of_subperiods(inputs)],
-        initial_date = initial_date_time(inputs),
-        unit = "GWh",
-    )
+function add_generation_to_array!(
+    vector::Vector{<:AbstractFloat},
+    reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
+    period::Int,
+    scenario::Int,
+    subperiod::Int,
+)
+    if reader === nothing
+        push!(vector, 0.0)
+        return nothing
+    end
+
+    Quiver.goto!(reader; period, scenario, subperiod = subperiod)
+    summed_generation = sum(reader.data)
+    push!(vector, summed_generation)
 
     return nothing
 end

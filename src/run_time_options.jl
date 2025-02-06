@@ -12,6 +12,7 @@
     asset_owner_index::Int = PSRDatabaseSQLite._psrdatabasesqlite_null_value(Int)
     clearing_model_subproblem::Union{RunTime_ClearingSubproblem.T, Nothing} = nothing
     clearing_integer_variables_in_model::Vector{Symbol} = Symbol[]
+    is_post_processing::Bool = false
 end
 
 function iara_log(inputs::AbstractInputs, run_time_options::RunTimeOptions)

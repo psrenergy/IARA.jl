@@ -9,11 +9,16 @@
 #############################################################################
 
 """
-    gather_outputs_separated_by_asset_owners(inputs::Inputs)
+    gather_outputs_separated_by_asset_owners(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
 
 Gather outputs separated by asset owners.
 """
-function gather_outputs_separated_by_asset_owners(inputs::Inputs)
+function gather_outputs_separated_by_asset_owners(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::TimeSeriesOutputs,
+    run_time_options::RunTimeOptions,
+)
     outputs_dir = output_path(inputs)
     # Query all files that end with _asset_owner_1, _asset_owner_2, etc.
     asset_owner_files = filter(x -> occursin(r"_asset_owner_\d+", x), readdir(outputs_dir))

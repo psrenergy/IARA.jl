@@ -677,7 +677,7 @@ nodes(inputs::AbstractInputs) = collect(1:number_of_nodes(inputs))
 Return the number of subscenarios to simulate.
 """
 function number_of_subscenarios(inputs::AbstractInputs, run_time_options)
-    if is_ex_post_problem(run_time_options)
+    if is_ex_post_problem(run_time_options) || run_time_options.is_post_processing
         return inputs.collections.configurations.number_of_subscenarios
     else
         return 1

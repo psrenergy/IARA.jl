@@ -13,45 +13,92 @@
 
 Run post-processing routines.
 """
-function post_processing(inputs)
+function post_processing(inputs::Inputs)
     Log.info("Running post-processing routines")
     post_proc_path = post_processing_path(inputs)
     if !isdir(post_proc_path)
         mkdir(post_proc_path)
     end
 
-    gather_outputs_separated_by_asset_owners(inputs)
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
-        post_processing_generation(inputs)
+    outputs_post_processing = Outputs()
+    model_outputs_time_series = TimeSeriesOutputs()
+    run_time_options = RunTimeOptions(; is_post_processing = true)
+
+    try
+        post_process_outputs(inputs, outputs_post_processing, model_outputs_time_series, run_time_options)
+    finally
+        finalize_outputs!(outputs_post_processing)
+        finalize_outputs!(model_outputs_time_series)
     end
-    if is_market_clearing(inputs)
-        create_bidding_group_generation_files(inputs)
-        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
-            post_processing_bidding_group_revenue(inputs)
-            if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-                post_processing_bidding_group_total_revenue(inputs)
-            end
-        end
-    end
+
     if inputs.args.plot_outputs
         build_plots(inputs)
     end
     return nothing
 end
 
-post_processing_path(inputs) = joinpath(output_path(inputs), "post_processing")
+function post_process_outputs(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::TimeSeriesOutputs,
+    run_time_options::RunTimeOptions,
+)
+    gather_outputs_separated_by_asset_owners(
+        inputs,
+        outputs_post_processing,
+        model_outputs_time_serie,
+        run_time_options,
+    )
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
+        post_processing_generation(inputs, outputs_post_processing, model_outputs_time_serie, run_time_options)
+    end
+    if is_market_clearing(inputs)
+        create_bidding_group_generation_files(
+            inputs,
+            outputs_post_processing,
+            model_outputs_time_serie,
+            run_time_options,
+        )
+        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
+            post_processing_bidding_group_revenue(
+                inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
+                run_time_options,
+            )
+            if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+                post_processing_bidding_group_total_revenue(
+                    inputs,
+                    outputs_post_processing,
+                    model_outputs_time_serie,
+                    run_time_options,
+                )
+            end
+        end
+    end
 
-"""
-    read_timeseries_file_in_outputs(filename::String, inputs::Inputs)
+    return nothing
+end
 
-Read a timeseries file in the outputs directory.
-"""
-function read_timeseries_file_in_outputs(filename, inputs)
-    output_dir = output_path(inputs)
-    filepath_csv = joinpath(output_dir, filename * ".csv")
-    filepath_quiv = joinpath(output_dir, filename * ".quiv")
-    filepath = isfile(filepath_quiv) ? filepath_quiv : filepath_csv
-    return read_timeseries_file(filepath)
+function open_time_series_output(
+    inputs::Inputs,
+    model_outputs::TimeSeriesOutputs,
+    output_name::String;
+    is_post_processing = false,
+)
+    if is_post_processing
+        file = joinpath(post_processing_path(inputs), output_name)
+    else
+        file = joinpath(output_path(inputs), output_name)
+    end
+    reader = Quiver.Reader{Quiver.csv}(file)
+    output_timeseries = QuiverInput(reader)
+    model_outputs.outputs[output_name] = output_timeseries
+    return reader
+end
+
+function get_writer(outputs::Outputs, output_name::String)
+    return outputs.outputs[output_name].writer
 end
 
 function get_file_ext(filename::String)

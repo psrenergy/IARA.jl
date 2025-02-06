@@ -37,127 +37,103 @@ function _get_bidding_group_bus_labels(inputs::Inputs)
     return labels
 end
 
-function _write_ex_ante_file(inputs::Inputs, extension::String)
+function _write_generation_bg_file(inputs::Inputs, extension::String; is_ex_post = false)
     outputs_dir = output_path(inputs)
 
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)
 
-    ex_ante_files = filter(x -> endswith(x, "_generation_ex_ante_$(extension).csv"), readdir(outputs_dir))
-    if isempty(ex_ante_files)
+    settlement_string = is_ex_post ? "_ex_post" : "_ex_ante"
+    generation_files =
+        filter(x -> endswith(x, "_generation_$(settlement_string)_$(extension).csv"), readdir(outputs_dir))
+    if isempty(generation_files)
         return
     end
     bidding_group_ex_ante = nothing
     initial_date_time = nothing
     unit = nothing
-    for file in ex_ante_files
-        generation_data, generation_metadata = read_timeseries_file(joinpath(outputs_dir, file))
 
-        num_periods = size(generation_data, 4)
-        num_scenarios = size(generation_data, 3)
-        num_subperiods = size(generation_data, 2)
-        num_units = size(generation_data, 1)
+    number_of_bid_segments = maximum_number_of_bidding_segments(inputs)
+    # Set number of bidding segments to 1 to add the cost based generation only in the first segment
+    update_number_of_bid_segments!(inputs, 1)
 
-        if isnothing(bidding_group_ex_ante)
-            bidding_group_ex_ante = zeros(
-                num_bidding_groups * num_buses,
-                1, # bid segments
-                num_subperiods,
-                num_scenarios,
-                num_periods,
-            )
-            initial_date_time = generation_metadata.initial_date
-            unit = generation_metadata.unit
-        end
-
-        unit_collection = _get_generation_unit(file)
-        if isnothing(unit_collection)
-            continue
-        end
-
-        bg_relation_mapping = PSRI.get_map(inputs.db, unit_collection, "BiddingGroup", "id")
-        bus_relation_mapping = PSRI.get_map(inputs.db, unit_collection, "Bus", "id")
-
-        for period in 1:num_periods
-            for scenario in 1:num_scenarios
-                for subperiod in 1:num_subperiods
-                    for unit in 1:num_units
-                        bidding_group_index = bg_relation_mapping[unit]
-                        bus_index = bus_relation_mapping[unit]
-                        if is_null(bidding_group_index) || is_null(bus_index)
-                            continue
-                        end
-                        bidding_group_bus_index =
-                            _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
-                        bidding_group_ex_ante[bidding_group_bus_index, 1, subperiod, scenario, period] +=
-                            generation_data[unit, subperiod, scenario, period]
-                    end
-                end
-            end
-        end
+    if is_ex_post
+        dimensions = ["period", "scenario", "subscenario", "subperiod"]
+    else
+        dimensions = ["period", "scenario", "subperiod"]
     end
-    write_timeseries_file(
-        joinpath(post_processing_path(inputs), "bidding_group_generation_ex_ante_$(extension)"),
-        bidding_group_ex_ante;
-        dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "bidding_group_generation_$(settlement_string)_$(extension)",
+        dimensions = dimensions,
+        unit = "GWh",
         labels = _get_bidding_group_bus_labels(inputs),
-        time_dimension = "period",
-        dimension_size = [
-            size(bidding_group_ex_ante, 5),
-            size(bidding_group_ex_ante, 4),
-            size(bidding_group_ex_ante, 3),
-            1,
-        ],
-        initial_date = initial_date_time,
-        unit = unit,
+        run_time_options,
+        is_post_processing = true,
     )
-    return
-end
 
-function _write_ex_post_file(inputs::Inputs, extension::String)
-    outputs_dir = output_path(inputs)
+    update_number_of_bid_segments!(inputs, number_of_bid_segments)
 
-    num_bidding_groups = length(inputs.collections.bidding_group)
-    num_buses = length(inputs.collections.bus)
-
-    ex_post_files = filter(x -> endswith(x, "_generation_ex_post_$(extension).csv"), readdir(outputs_dir))
-    if isempty(ex_post_files)
-        return
-    end
-    bidding_group_ex_post = nothing
-    initial_date_time = nothing
-    unit = nothing
-    for file in ex_post_files
-        generation_data, generation_metadata = read_timeseries_file(joinpath(outputs_dir, file))
-
-        num_periods = size(generation_data, 5)
-        num_scenarios = size(generation_data, 4)
-        num_subscenarios = size(generation_data, 3)
-        num_subperiods = size(generation_data, 2)
-        num_units = size(generation_data, 1)
-
-        if isnothing(bidding_group_ex_post)
-            bidding_group_ex_post = zeros(
-                num_bidding_groups * num_buses,
-                1, # bid segments
-                num_subperiods,
-                num_subscenarios,
-                num_scenarios,
-                num_periods,
-            )
-            initial_date_time = generation_metadata.initial_date
-            unit = generation_metadata.unit
+    bidding_group_generation_writer =
+        get_writer(outputs_post_processing, "bidding_group_generation_$(settlement_string)_$(extension)")
+    generation_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
+    bg_relations_mapping = Dict{String, Vector{Int}}()
+    bus_relations_mapping = Dict{String, Vector{Int}}()
+    for file in generation_files
+        if isfile(joinpath(outputs_dir, file))
+            generation_readers[file] = open_time_series_output(inputs, model_outputs_time_serie, file)
+            bg_relations_mapping[file] = PSRI.get_map(inputs.db, _get_generation_unit(file), "BiddingGroup", "id")
+            bus_relations_mapping[file] = PSRI.get_map(inputs.db, _get_generation_unit(file), "Bus", "id")
         end
+    end
 
-        unit_collection = _get_generation_unit(file)
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            for subperiod in 1:num_subperiods
+                if is_ex_post
+                    for subscenario in 1:num_subscenarios
+                        bidding_group_generation = zeros(num_bidding_groups * num_buses)
+                        for (filename, reader) in generation_readers
+                            Quiver.goto!(reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
+                            labels = reader.metadata.labels
+                            num_units = length(labels)
 
-        bg_relation_mapping = PSRI.get_map(inputs.db, unit_collection, "BiddingGroup", "id")
-        bus_relation_mapping = PSRI.get_map(inputs.db, unit_collection, "Bus", "id")
+                            bg_relation_mapping = bg_relations_mapping[filename]
+                            bus_relation_mapping = bus_relations_mapping[filename]
 
-        for period in 1:num_periods
-            for scenario in 1:num_scenarios
-                for subscenario in 1:num_subscenarios
-                    for subperiod in 1:num_subperiods
+                            for unit in 1:num_units
+                                bidding_group_index = bg_relation_mapping[unit]
+                                bus_index = bus_relation_mapping[unit]
+                                if is_null(bidding_group_index) || is_null(bus_index)
+                                    continue
+                                end
+                                bidding_group_bus_index =
+                                    _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
+                                bidding_group_generation[bidding_group_bus_index] += reader.data[unit]
+                            end
+                        end
+                        Quiver.write!(
+                            bidding_group_generation_writer,
+                            bidding_group_generation;
+                            period,
+                            scenario,
+                            subperiod = subperiod,
+                            subscenario = subscenario,
+                        )
+                    end
+                else
+                    bidding_group_generation = zeros(num_bidding_groups * num_buses)
+                    for (filename, reader) in generation_readers
+                        Quiver.goto!(reader; period, scenario, subperiod = subperiod)
+                        labels = reader.metadata.labels
+                        num_units = length(labels)
+
+                        bg_relation_mapping = bg_relations_mapping[filename]
+                        bus_relation_mapping = bus_relations_mapping[filename]
+
                         for unit in 1:num_units
                             bidding_group_index = bg_relation_mapping[unit]
                             bus_index = bus_relation_mapping[unit]
@@ -166,46 +142,36 @@ function _write_ex_post_file(inputs::Inputs, extension::String)
                             end
                             bidding_group_bus_index =
                                 _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
-                            bidding_group_ex_post[
-                                bidding_group_bus_index,
-                                1,
-                                subperiod,
-                                subscenario,
-                                scenario,
-                                period,
-                            ] +=
-                                generation_data[unit, subperiod, subscenario, scenario, period]
+                            bidding_group_generation[bidding_group_bus_index] +=
+                                reader.data[unit]
                         end
                     end
+                    Quiver.write!(
+                        bidding_group_generation_writer,
+                        bidding_group_generation;
+                        period,
+                        scenario,
+                        subperiod = subperiod,
+                    )
                 end
             end
         end
     end
-    write_timeseries_file(
-        joinpath(post_processing_path(inputs), "bidding_group_generation_ex_post_$(extension)"),
-        bidding_group_ex_post;
-        dimensions = ["period", "scenario", "subscenario", "subperiod", "bid_segment"],
-        labels = _get_bidding_group_bus_labels(inputs),
-        time_dimension = "period",
-        dimension_size = [
-            size(bidding_group_ex_post, 6),
-            size(bidding_group_ex_post, 5),
-            size(bidding_group_ex_post, 4),
-            size(bidding_group_ex_post, 3),
-            1,
-        ],
-        initial_date = initial_date_time,
-        unit = unit,
-    )
+
     return
 end
 
 """
-    create_bidding_group_generation_files(inputs::Inputs)
+    create_bidding_group_generation_files(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
 
 Create the bidding group generation files for ex-ante and ex-post data (physical and commercial).
 """
-function create_bidding_group_generation_files(inputs::Inputs)
+function create_bidding_group_generation_files(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::TimeSeriesOutputs,
+    run_time_options::RunTimeOptions,
+)
     outputs_dir = output_path(inputs)
 
     num_bidding_groups = length(inputs.collections.bidding_group)
@@ -220,10 +186,10 @@ function create_bidding_group_generation_files(inputs::Inputs)
         return
     end
 
-    _write_ex_ante_file(inputs, "commercial")
-    _write_ex_ante_file(inputs, "physical")
-    _write_ex_post_file(inputs, "commercial")
-    _write_ex_post_file(inputs, "physical")
+    _write_generation_bg_file(inputs, "commercial"; is_ex_post = false)
+    _write_generation_bg_file(inputs, "physical"; is_ex_post = false)
+    _write_generation_bg_file(inputs, "commercial"; is_ex_post = true)
+    _write_generation_bg_file(inputs, "physical"; is_ex_post = true)
 
     return
 end

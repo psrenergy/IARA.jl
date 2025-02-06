@@ -225,7 +225,6 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
         geneneration_ex_post_reader =
             Quiver.Reader{Quiver.csv}(geneneration_ex_post_file)
 
-        is_cost_based = occursin("cost_based", basename(geneneration_ex_post_file))
         is_profile = occursin("profile", basename(geneneration_ex_post_file))
 
         time_series_path_with_subscenarios = "bidding_group_revenue"
@@ -241,12 +240,6 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
 
         time_series_path_with_subscenarios *= file_type_with_subscenarios
         time_series_path_without_subscenarios *= file_type_without_subscenarios
-
-        if is_cost_based
-            error("Não era um if false.")
-            time_series_path_with_subscenarios *= "_cost_based"
-            time_series_path_without_subscenarios *= "_cost_based"
-        end
 
         # The revenue is summed over all bid segments / profiles, so we drop the last dimension
         writer_with_subscenarios = Quiver.Writer{Quiver.csv}(
@@ -565,23 +558,11 @@ function post_processing_bidding_group_total_revenue(inputs::Inputs)
     is_profile =
         length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(post_processing_dir))) > 0
 
-    is_cost_based =
-        length(filter(x -> occursin(r"bidding_group_revenue_.*_cost_based.*\.csv", x), readdir(post_processing_dir))) >
-        0
-
     # STEP 0 (optional): Merging profile and independent bid
 
     if is_profile
-        revenue_ex_ante_reader = if !is_cost_based
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
-        else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_cost_based"))
-        end
-        revenue_ex_post_reader = if !is_cost_based
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post"))
-        else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_cost_based"))
-        end
+        revenue_ex_ante_reader = Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
+        revenue_ex_post_reader = Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post"))
 
         revenue_ex_ante_profile_reader =
             Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
@@ -624,18 +605,10 @@ function post_processing_bidding_group_total_revenue(inputs::Inputs)
 
     # STEP 1: Averaging ex_post over subscenarios
 
-    revenue_ex_post_reader = if !is_cost_based
-        if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_total"))
-        else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post"))
-        end
+    revenue_ex_post_reader = if is_profile
+        Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_total"))
     else
-        if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_post_total"))
-        else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post_cost_based"))
-        end
+        Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_post"))
     end
 
     initial_dimension_sizes = copy(revenue_ex_post_reader.metadata.dimension_size)
@@ -656,18 +629,10 @@ function post_processing_bidding_group_total_revenue(inputs::Inputs)
 
     # STEP 2: Summing ex_ante and ex_post (ex_ante + mean(ex_post))
 
-    revenue_ex_ante_reader = if !is_cost_based
-        if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_total"))
-        else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
-        end
+    revenue_ex_ante_reader = if is_profile
+        Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_total"))
     else
-        if is_profile
-            Quiver.Reader{Quiver.csv}(joinpath(temp_path, "temp_bidding_group_revenue_ex_ante_total"))
-        else
-            Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante_cost_based"))
-        end
+        Quiver.Reader{Quiver.csv}(joinpath(outputs_dir, "bidding_group_revenue_ex_ante"))
     end
 
     revenue_ex_post_reader =

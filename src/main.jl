@@ -15,6 +15,7 @@ function is_compiled()::Bool
 end
 
 function main(args::Args)
+    initialize(args)
     inputs = load_inputs(args)
 
     try
@@ -36,8 +37,7 @@ function julia_main()::Cint
     try
         main(ARGS)
     catch e
-        args = Args(ARGS)
-        error_log_file = joinpath(dirname(args.path), "iara_error.log")
+        error_log_file = "iara_error.log"
         println(
             "Error running model. Please consult the file: $error_log_file.",
         )
@@ -55,8 +55,7 @@ function julia_interface_call()::Cint
     try
         InterfaceCalls.main(ARGS)
     catch e
-        args = Args(ARGS)
-        error_log_file = joinpath(dirname(args.path), "iara_interface_call_error.log")
+        error_log_file = "iara_interface_call_error.log"
         println(
             "Error running model. Please consult the file: $error_log_file.",
         )

@@ -108,7 +108,7 @@ function initialize_output_dir(args::Args)
         if args.delete_output_folder_before_execution
             if length(readdir(args.outputs_path)) > 0
                 @warn(
-                    "The output directory $(args.outputs_path) is not empty, and the argument " * 
+                    "The output directory $(args.outputs_path) is not empty, and the argument " *
                     "`delete_output_folder_before_execution` has been provided. " *
                     "The directory's contents will be deleted."
                 )

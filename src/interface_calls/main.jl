@@ -19,6 +19,7 @@ function main(args::Vector{String})
 end
 
 function main(args::IARA.Args)
+    IARA.initialize(args)
     inputs = IARA.load_inputs(args)
 
     try

@@ -30,13 +30,16 @@ end
 
 function get_revenue_file(inputs::AbstractInputs)
 
-    filename = joinpath(post_processing_path(inputs), "bidding_group_revenue")
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
-        filename *= "_ex_ante"
+    filename = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+        "bidding_group_revenue_ex_ante"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
-        filename *= "_ex_post"
+        "bidding_group_revenue_ex_post"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-        filename *= "_dual"
+        "bidding_group_total_revenue"
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
+        ""
     end
+    filename *= ".csv"
 
+    return joinpath(post_processing_path(inputs), filename)
 end

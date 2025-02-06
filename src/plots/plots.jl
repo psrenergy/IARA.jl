@@ -721,16 +721,17 @@ function build_ui_individual_plots(
     end
 
     # Revenue
-    # TODO: choose file correctly (after post-processing PR)
-    revenue_file_path = joinpath(post_processing_path(inputs), "bidding_group_total_revenue_commercial.csv")
+    revenue_file_path = get_revenue_file(inputs)
     if isfile(revenue_file_path)
+        filename = get_filename(basename(revenue_file_path))
+        title = plot_title_from_filename(filename)
         for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
             custom_plot(
                 revenue_file_path,
                 PlotTimeSeriesStackedMean;
-                plot_path = joinpath(plots_path, "bidding_group_total_revenue_$asset_owner_label"),
+                plot_path = joinpath(plots_path, "$(filename)_$(asset_owner_label)"),
                 agents = labels_per_asset_owner[asset_owner_index],
-                title = "$asset_owner_label Revenue",
+                title = "$asset_owner_label $title",
             )
         end
     end

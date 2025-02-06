@@ -181,20 +181,11 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
     outputs_dir = output_path(inputs)
 
     if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-        bidding_group_generation_ex_ante_files = get_generation_files(outputs_dir; from_ex_post = false)
+        bidding_group_generation_ex_ante_files = get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
         bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
     end
-    bidding_group_generation_ex_post_files = get_generation_files(outputs_dir; from_ex_post = true)
+    bidding_group_generation_ex_post_files = get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
     bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
-
-    generation_path = outputs_dir
-    bidding_group_generation_files =
-        filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(generation_path))
-    if isempty(bidding_group_generation_files)
-        generation_path = post_processing_path(inputs)
-        bidding_group_generation_files =
-            filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(generation_path))
-    end
 
     if length(bidding_group_load_marginal_cost_ex_post_files) > 1
         error(
@@ -218,9 +209,9 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(joinpath(output_dir, geneneration_ex_ante_file))
+                Quiver.Reader{Quiver.csv}(geneneration_ex_ante_file)
             spot_price_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(joinpath(output_dir, spot_price_ex_ante_file))
+                Quiver.Reader{Quiver.csv}(spot_price_ex_ante_file)
         else
             geneneration_ex_ante_reader = nothing
             spot_price_ex_ante_reader = nothing
@@ -228,9 +219,9 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
         spot_price_ex_post_file = get_filename(bidding_group_load_marginal_cost_ex_post_files[1])
         geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
         spot_price_ex_post_reader =
-            Quiver.Reader{Quiver.csv}(joinpath(output_dir, spot_price_ex_post_file))
+            Quiver.Reader{Quiver.csv}(spot_price_ex_post_file)
         geneneration_ex_post_reader =
-            Quiver.Reader{Quiver.csv}(joinpath(output_dir, geneneration_ex_post_file))
+            Quiver.Reader{Quiver.csv}(geneneration_ex_post_file)
 
         is_cost_based = occursin("cost_based", geneneration_ex_post_file)
         is_profile = occursin("profile", geneneration_ex_post_file)
@@ -250,6 +241,7 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
         time_series_path_without_subscenarios *= file_type_without_subscenarios
 
         if is_cost_based
+            error("Não era um if false.")
             time_series_path_with_subscenarios *= "_cost_based"
             time_series_path_without_subscenarios *= "_cost_based"
         end
@@ -279,9 +271,9 @@ function post_processing_bidding_group_revenue(inputs::Inputs)
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(joinpath(output_dir, geneneration_ex_ante_file))
+                Quiver.Reader{Quiver.csv}(geneneration_ex_ante_file)
             spot_price_ex_ante_reader =
-                Quiver.Reader{Quiver.csv}(joinpath(output_dir, spot_price_ex_ante_file))
+                Quiver.Reader{Quiver.csv}(spot_price_ex_ante_file)
 
             writer_without_subscenarios = Quiver.Writer{Quiver.csv}(
                 joinpath(post_processing_path(inputs), time_series_path_without_subscenarios);
@@ -314,7 +306,15 @@ function apply_lmc_bounds(lmc::Vector{<:AbstractFloat}, inputs::Inputs)
     return lmc
 end
 
-function get_generation_files(outputs_dir::String; from_ex_post::Bool)
+function get_generation_files(output_dir::String, post_processing_dir::String; from_ex_post::Bool)
+    files = get_generation_files(output_dir; from_ex_post = from_ex_post)
+    if isempty(files)
+        files = get_generation_files(post_processing_dir; from_ex_post = from_ex_post)
+    end
+    return files
+end
+
+function get_generation_files(path::String; from_ex_post::Bool)
     from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
 
     commercial_generation_files = filter(
@@ -322,7 +322,7 @@ function get_generation_files(outputs_dir::String; from_ex_post::Bool)
             occursin("bidding_group_generation", x) &&
                 occursin(from_ex_post_string * "_commercial", x) &&
                 get_file_ext(x) == ".csv",
-        readdir(outputs_dir),
+        readdir(path),
     )
 
     physical_generation_files = filter(
@@ -330,34 +330,34 @@ function get_generation_files(outputs_dir::String; from_ex_post::Bool)
             occursin("bidding_group_generation", x) &&
                 occursin(from_ex_post_string * "_physical", x) &&
                 get_file_ext(x) == ".csv",
-        readdir(outputs_dir),
+        readdir(path),
     )
 
     if isempty(physical_generation_files)
-        return commercial_generation_files
+        return joinpath.(path, commercial_generation_files)
     else
-        return physical_generation_files
+        return joinpath.(path, physical_generation_files)
     end
 end
 
-function get_load_marginal_files(outputs_dir::String; from_ex_post::Bool)
+function get_load_marginal_files(path::String; from_ex_post::Bool)
     from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
 
     commercial_lmc_files = filter(
         x ->
             occursin("load_marginal_cost", x) &&
-                occursin(from_ex_post_string * "_commercial", x) && get_file_ext(x) == ".csv", readdir(outputs_dir),
+                occursin(from_ex_post_string * "_commercial", x) && get_file_ext(x) == ".csv", readdir(path),
     )
 
     physical_lmc_files = filter(
         x ->
             occursin("load_marginal_cost", x) &&
-                occursin(from_ex_post_string * "_physical", x) && get_file_ext(x) == ".csv", readdir(outputs_dir))
+                occursin(from_ex_post_string * "_physical", x) && get_file_ext(x) == ".csv", readdir(path))
 
     if isempty(commercial_lmc_files)
-        return physical_lmc_files
+        return joinpath.(path, physical_lmc_files)
     else
-        return commercial_lmc_files
+        return joinpath.(path, commercial_lmc_files)
     end
 end
 

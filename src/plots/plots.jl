@@ -736,21 +736,21 @@ function build_ui_individual_plots(
     end
 
     # Generation
-    # TODO: choose file correctly (after post-processing PR)
     # TODO: sum over segment dimension
-    generation_output_file =
-        joinpath(output_path(inputs), "bidding_group_generation_ex_post_physical_period_$(inputs.args.period).csv")
-    generation_post_processing_file =
-        joinpath(post_processing_path(inputs), "bidding_group_generation_ex_post_physical.csv")
-    generation_file_path = isfile(generation_output_file) ? generation_output_file : generation_post_processing_file
-    if isfile(generation_file_path)
+    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
+    if isempty(generation_files)
+        generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+    end
+    for generation_file in generation_files
+        filename = get_filename(basename(generation_file))
+        title = plot_title_from_filename(filename)
         for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
             custom_plot(
-                generation_file_path,
+                generation_file,
                 PlotTimeSeriesStackedMean;
-                plot_path = joinpath(plots_path, "bidding_group_generation_$asset_owner_label"),
+                plot_path = joinpath(plots_path, "$(filename)_$(asset_owner_label)"),
                 agents = labels_per_asset_owner[asset_owner_index],
-                title = "$asset_owner_label Generation",
+                title = "$asset_owner_label $title",
             )
         end
     end

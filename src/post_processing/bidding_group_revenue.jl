@@ -367,8 +367,6 @@ function _average_ex_post_revenue_over_subscenarios(
     temp_writer::Quiver.Writer{Quiver.csv},
     ex_post_reader::Quiver.Reader{Quiver.csv},
 )
-    @show num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
-
     num_bidding_groups = length(ex_post_reader.metadata.labels)
 
     for period in 1:num_periods

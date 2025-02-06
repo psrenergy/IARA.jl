@@ -32,8 +32,8 @@ function test_iara_interface_call()
     # json with case information
     json_file = joinpath(case_outputs_path, "iara_elements.json")
     @test isfile(json_file)
-    inflow_file = joinpath(case_outputs_path, "inflows_all.html")
-    @test isfile(inflow_file)
+    demand_file = joinpath(case_outputs_path, "total_demand.html")
+    @test isfile(demand_file)
     return nothing
 end
 

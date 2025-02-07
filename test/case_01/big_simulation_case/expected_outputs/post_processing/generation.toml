@@ -3,6 +3,6 @@ dimensions = ["period", "scenario", "subperiod"]
 dimension_size = [9, 4, 2]
 initial_date = "2020-01-01 00:00:00"
 time_dimension = "period"
-frequency = "month"
+frequency = "monthly"
 unit = "GWh"
 labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"]

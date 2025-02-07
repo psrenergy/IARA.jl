@@ -367,11 +367,12 @@ function _average_ex_post_revenue_over_subscenarios(
     temp_writer::Quiver.Writer{Quiver.csv},
     ex_post_reader::Quiver.Reader{Quiver.csv},
 )
-    num_bidding_groups = length(ex_post_reader.metadata.labels)
+    num_bidding_groups_times_buses = length(ex_post_reader.metadata.labels)
+    num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
-            summed_vals = zeros(num_subperiods, num_bidding_groups)
+            summed_vals = zeros(num_subperiods, num_bidding_groups_times_buses)
             for subscenario in 1:num_subscenarios
                 for subperiod in 1:num_subperiods
                     Quiver.goto!(
@@ -396,6 +397,8 @@ function _average_ex_post_revenue_over_subscenarios(
             end
         end
     end
+    Quiver.close!(temp_writer)
+    Quiver.close!(ex_post_reader)
     return
 end
 
@@ -449,6 +452,9 @@ function _total_independent_profile_ex_ante(
             end
         end
     end
+    Quiver.close!(temp_writer)
+    Quiver.close!(independent_reader)
+    Quiver.close!(profile_reader)
     return
 end
 
@@ -563,27 +569,15 @@ function post_processing_bidding_group_total_revenue(
     is_profile =
         length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(outputs_dir))) > 0
 
-    is_cost_based =
-        length(filter(x -> occursin(r"bidding_group_revenue_.*_cost_based\.csv", x), readdir(outputs_dir))) > 0
-
     # STEP 0 (optional): Merging profile and independent bid
 
     if is_profile
-        revenue_ex_ante_reader = if !is_cost_based
-            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_ante")
-        else
-            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_ante_cost_based")
-        end
-        revenue_ex_post_reader = if !is_cost_based
-            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_post")
-        else
-            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_post_cost_based")
-        end
-
+        revenue_ex_ante_reader = open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_ante", is_post_processing = true)
+        revenue_ex_post_reader = open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_post", is_post_processing = true)
         revenue_ex_ante_profile_reader =
-            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_ante")
+            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_ante", is_post_processing = true)
         revenue_ex_post_profile_reader =
-            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_post")
+            open_time_series_output(inputs, model_outputs_time_serie, "bidding_group_revenue_ex_post", is_post_processing = true)
 
         merged_labels =
             unique(vcat(revenue_ex_ante_reader.metadata.labels, revenue_ex_ante_profile_reader.metadata.labels))
@@ -624,12 +618,13 @@ function post_processing_bidding_group_total_revenue(
             revenue_ex_post_reader,
             revenue_ex_post_profile_reader,
         )
+        delete!(outputs_post_processing.outputs, "temp_bidding_group_revenue_ex_post_total")
+        delete!(outputs_post_processing.outputs, "temp_bidding_group_revenue_ex_ante_total")
     end
 
     # STEP 1: Averaging ex_post over subscenarios
 
-    revenue_ex_post_reader = if !is_cost_based
-        if is_profile
+    revenue_ex_post_reader = if is_profile
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
@@ -644,23 +639,6 @@ function post_processing_bidding_group_total_revenue(
                 is_post_processing = true,
             )
         end
-    else
-        if is_profile
-            open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                "temp_bidding_group_revenue_ex_post_total";
-                is_post_processing = true,
-            )
-        else
-            open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                "bidding_group_revenue_ex_post_cost_based";
-                is_post_processing = true,
-            )
-        end
-    end
 
     initialize!(
         QuiverOutput,
@@ -679,12 +657,10 @@ function post_processing_bidding_group_total_revenue(
         revenue_ex_post_average_writer,
         revenue_ex_post_reader,
     )
-    Quiver.close!(revenue_ex_post_average_writer)
 
     # STEP 2: Summing ex_ante and ex_post (ex_ante + mean(ex_post))
 
-    revenue_ex_ante_reader = if !is_cost_based
-        if is_profile
+    revenue_ex_ante_reader = if is_profile
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
@@ -699,23 +675,6 @@ function post_processing_bidding_group_total_revenue(
                 is_post_processing = true,
             )
         end
-    else
-        if is_profile
-            open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                "temp_bidding_group_revenue_ex_ante_total";
-                is_post_processing = true,
-            )
-        else
-            open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                "bidding_group_revenue_ex_ante_cost_based";
-                is_post_processing = true,
-            )
-        end
-    end
 
     revenue_ex_post_reader =
         open_time_series_output(

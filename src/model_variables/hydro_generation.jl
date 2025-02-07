@@ -178,6 +178,17 @@ function hydro_generation!(
         run_time_options,
     )
 
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "hydro_om_costs",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$",
+        labels = hydro_unit_label(inputs)[hydros],
+        run_time_options,
+    )
+
     if any_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
         add_symbol_to_query_from_subproblem_result!(
             outputs,
@@ -303,8 +314,18 @@ function hydro_generation!(
         period,
         scenario,
         subscenario,
-        multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-        divide_by_subperiod_duration_in_hours = true,
+        indices_of_elements_in_output,
+    )
+
+    write_output_per_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "hydro_om_costs",
+        hydro_generation.data .* hydro_unit_om_cost(inputs)[existing_hydro_units]';
+        period,
+        scenario,
+        subscenario,
         indices_of_elements_in_output,
     )
 

@@ -104,3 +104,44 @@ end
 function get_filename(filename::String)
     return splitext(filename)[1]
 end
+
+# TODO: This should be on Quiver.jl
+function sum_multiple_files(
+    output_filename::String,
+    filenames::Vector{String},
+    impl::Type{<:Quiver.Implementation};
+    digits::Union{Int, Nothing} = nothing,
+)
+    readers = [Quiver.Reader{impl}(filename) for filename in filenames]
+    metadata = first(readers).metadata
+    labels = metadata.labels
+
+    writer = Quiver.Writer{impl}(
+        output_filename;
+        labels = labels,
+        dimensions = string.(metadata.dimensions),
+        time_dimension = string(metadata.time_dimension),
+        dimension_size = metadata.dimension_size,
+        initial_date = metadata.initial_date,
+        unit = metadata.unit,
+    )
+
+    num_labels = length(metadata.labels)
+    data = zeros(sum(num_labels))
+    for dims in Iterators.product([1:size for size in reverse(metadata.dimension_size)]...)
+        dim_kwargs = OrderedDict(metadata.dimensions .=> reverse(dims))
+        fill!(data, 0)
+        for reader in readers
+            Quiver.goto!(reader; dim_kwargs...)
+            data .+= reader.data
+        end
+        Quiver.write!(writer, Quiver.round_digits(data, digits); dim_kwargs...)
+    end
+
+    for reader in readers
+        Quiver.close!(reader)
+    end
+
+    Quiver.close!(writer)
+    return nothing
+end

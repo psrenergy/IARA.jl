@@ -89,6 +89,17 @@ function battery_unit_storage!(
         labels = battery_unit_label(inputs)[battery_units],
         run_time_options,
     )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "battery_om_costs",
+        dimensions = ["period", "scenario"],
+        unit = "\$",
+        labels = battery_unit_label(inputs)[battery_units],
+        run_time_options,
+    )
     return nothing
 end
 
@@ -127,6 +138,19 @@ function battery_unit_storage!(
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
+        indices_of_elements_in_output,
+    )
+
+    write_output_per_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "battery_om_costs",
+        battery_unit_storage.data .* battery_unit_om_cost(inputs)[existing_battery_units]';
+        period,
+        scenario,
+        subscenario,
+        multiply_by = money_to_thousand_money(),
         indices_of_elements_in_output,
     )
 

@@ -37,12 +37,12 @@ function _get_bidding_group_bus_labels(inputs::Inputs)
     return labels
 end
 
-function _write_generation_bg_file(
+function _write_generation_costs_bg_file(
     inputs::Inputs,
     outputs_post_processing::Outputs,
     model_outputs_time_serie::TimeSeriesOutputs,
     run_time_options::RunTimeOptions,
-    extension::String;
+    clearing_procedure::String;
     is_ex_post = false,
     write_generation = false,
 )
@@ -53,9 +53,10 @@ function _write_generation_bg_file(
     num_buses = length(inputs.collections.bus)
     num_bidding_groups * num_buses
 
-    settlement_string = is_ex_post ? "ex_post" : "ex_ante"
+    generation_technologies = ["thermal", "hydro", "renewable", "battery"]
+
     generation_files =
-        filter(x -> endswith(x, "_generation_$(settlement_string)_$(extension).csv"), readdir(outputs_dir))
+        filter(x -> endswith(x, "_generation_$(clearing_procedure).csv"), readdir(outputs_dir))
     if isempty(generation_files)
         return
     end
@@ -78,28 +79,56 @@ function _write_generation_bg_file(
             QuiverOutput,
             outputs_post_processing;
             inputs,
-            output_name = "bidding_group_generation_$(settlement_string)_$(extension)",
+            output_name = "bidding_group_generation_$(clearing_procedure)",
             dimensions = dimensions,
             unit = "GWh",
             labels = _get_bidding_group_bus_labels(inputs),
             run_time_options,
             dir_path = post_processing_dir,
         )
+        bidding_group_generation_writer =
+            get_writer(outputs_post_processing, "bidding_group_generation_$(clearing_procedure)")
     end
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "bidding_group_costs_$(clearing_procedure)",
+        # Remove bid_segment dimension for costs
+        dimensions = dimensions[1:end-1],
+        unit = "\$",
+        labels = _get_bidding_group_bus_labels(inputs),
+        run_time_options,
+        dir_path = post_processing_dir,
+    )
+
+    bidding_group_costs_writer =
+        get_writer(outputs_post_processing, "bidding_group_costs_$(clearing_procedure)")
 
     update_number_of_bid_segments!(inputs, number_of_bid_segments)
 
-    bidding_group_generation_writer =
-        get_writer(outputs_post_processing, "bidding_group_generation_$(settlement_string)_$(extension)")
     generation_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
+    total_costs_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
     bg_relations_mapping = Dict{String, Vector{Int}}()
     bus_relations_mapping = Dict{String, Vector{Int}}()
-    for file in generation_files
-        if isfile(joinpath(outputs_dir, file))
-            generation_readers[file] = open_time_series_output(inputs, model_outputs_time_serie, get_filename(file))
-            bg_relations_mapping[file] = PSRI.get_map(inputs.db, _get_generation_unit(file), "BiddingGroup", "id")
-            bus_relations_mapping[file] = PSRI.get_map(inputs.db, _get_generation_unit(file), "Bus", "id")
+    for generation_technology in generation_technologies
+        generation_file, costs_file = get_generation_and_costs_files(inputs, clearing_procedure, generation_technology)
+        if isnothing(generation_file) || isnothing(costs_file)
+            continue
         end
+        generation_readers[generation_technology] =
+            open_time_series_output(inputs, model_outputs_time_serie, get_filename(generation_file))
+        total_costs_readers[generation_technology] = open_time_series_output(
+            inputs,
+            model_outputs_time_serie,
+            get_filename(costs_file);
+            dir_path = post_processing_dir,
+        )
+        bg_relations_mapping[generation_technology] =
+            PSRI.get_map(inputs.db, _get_generation_unit(generation_file), "BiddingGroup", "id")
+        bus_relations_mapping[generation_technology] =
+            PSRI.get_map(inputs.db, _get_generation_unit(generation_file), "Bus", "id")
     end
 
     for period in periods(inputs)
@@ -108,13 +137,29 @@ function _write_generation_bg_file(
                 for subscenario in subscenarios(inputs, run_time_options)
                     for subperiod in subperiods(inputs)
                         bidding_group_generation = zeros(num_bidding_groups * num_buses)
-                        for (filename, reader) in generation_readers
-                            Quiver.goto!(reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
-                            labels = reader.metadata.labels
+                        bidding_group_costs = zeros(num_bidding_groups * num_buses)
+                        for generation_technology in keys(generation_readers)
+                            generation_reader = generation_readers[generation_technology]
+                            costs_reader = total_costs_readers[generation_technology]
+                            Quiver.goto!(
+                                generation_reader;
+                                period,
+                                scenario,
+                                subscenario = subscenario,
+                                subperiod = subperiod,
+                            )
+                            Quiver.goto!(
+                                costs_reader;
+                                period,
+                                scenario,
+                                subscenario = subscenario,
+                                subperiod = subperiod,
+                            )
+                            labels = generation_reader.metadata.labels
                             num_units = length(labels)
 
-                            bg_relation_mapping = bg_relations_mapping[filename]
-                            bus_relation_mapping = bus_relations_mapping[filename]
+                            bg_relation_mapping = bg_relations_mapping[generation_technology]
+                            bus_relation_mapping = bus_relations_mapping[generation_technology]
 
                             for unit in 1:num_units
                                 bidding_group_index = bg_relation_mapping[unit]
@@ -124,7 +169,8 @@ function _write_generation_bg_file(
                                 end
                                 bidding_group_bus_index =
                                     _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
-                                bidding_group_generation[bidding_group_bus_index] += reader.data[unit]
+                                bidding_group_generation[bidding_group_bus_index] += generation_reader.data[unit]
+                                bidding_group_costs[bidding_group_bus_index] += costs_reader.data[unit]
                             end
                         end
                         if write_generation
@@ -138,18 +184,30 @@ function _write_generation_bg_file(
                                 bid_segment = 1,
                             )
                         end
+                        Quiver.write!(
+                            bidding_group_costs_writer,
+                            bidding_group_costs;
+                            period,
+                            scenario,
+                            subscenario,
+                            subperiod = subperiod,
+                        )
                     end
                 end
             else
                 for subperiod in subperiods(inputs)
                     bidding_group_generation = zeros(num_bidding_groups * num_buses)
-                    for (filename, reader) in generation_readers
-                        Quiver.goto!(reader; period, scenario, subperiod = subperiod)
-                        labels = reader.metadata.labels
+                    bidding_group_costs = zeros(num_bidding_groups * num_buses)
+                    for generation_technology in keys(generation_readers)
+                        generation_reader = generation_readers[generation_technology]
+                        costs_reader = total_costs_readers[generation_technology]
+                        Quiver.goto!(generation_reader; period, scenario, subperiod = subperiod)
+                        Quiver.goto!(costs_reader; period, scenario, subperiod = subperiod)
+                        labels = generation_reader.metadata.labels
                         num_units = length(labels)
 
-                        bg_relation_mapping = bg_relations_mapping[filename]
-                        bus_relation_mapping = bus_relations_mapping[filename]
+                        bg_relation_mapping = bg_relations_mapping[generation_technology]
+                        bus_relation_mapping = bus_relations_mapping[generation_technology]
 
                         for unit in 1:num_units
                             bidding_group_index = bg_relation_mapping[unit]
@@ -160,7 +218,8 @@ function _write_generation_bg_file(
                             bidding_group_bus_index =
                                 _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
                             bidding_group_generation[bidding_group_bus_index] +=
-                                reader.data[unit]
+                                generation_reader.data[unit]
+                            bidding_group_costs[bidding_group_bus_index] += costs_reader.data[unit]
                         end
                     end
                     if write_generation
@@ -173,12 +232,63 @@ function _write_generation_bg_file(
                             bid_segment = 1,
                         )
                     end
+                    Quiver.write!(
+                        bidding_group_costs_writer,
+                        bidding_group_costs;
+                        period,
+                        scenario,
+                        subperiod = subperiod,
+                    )
                 end
             end
         end
     end
 
     return
+end
+
+function get_generation_and_costs_files(inputs::Inputs, clearing_procedure::String, technology::String)
+    outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
+    generation_file = filter(
+        x -> endswith(x, clearing_procedure * ".csv") && occursin(technology, x) && occursin("generation", x),
+        readdir(outputs_dir),
+    )
+    costs_file = filter(
+        x -> endswith(x, clearing_procedure * ".csv") && occursin(technology, x) && occursin("total_costs", x),
+        readdir(post_processing_dir),
+    )
+    # Only one file per technology and clearing procedure is expected
+    if isempty(generation_file) || isempty(costs_file)
+        return nothing, nothing
+    end
+    return generation_file[1], costs_file[1]
+end
+
+function _merge_costs_files(
+    inputs::Inputs,
+    clearing_procedure::String,
+)
+    outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
+
+    generation_technologies = ["thermal", "hydro", "renewable", "battery"]
+    for generation_technology in generation_technologies
+        costs_files = filter(
+            x ->
+                (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
+                    && endswith(x, clearing_procedure * ".csv"), readdir(outputs_dir))
+        if isempty(costs_files)
+            continue
+        end
+        filename = generation_technology * "_total_costs_$(clearing_procedure).csv"
+        sum_multiple_files(
+            joinpath(post_processing_dir, get_filename(filename)),
+            [joinpath(outputs_dir, get_filename(file)) for file in costs_files],
+            Quiver.csv,
+        )
+    end
+    return nothing
 end
 
 """
@@ -200,12 +310,6 @@ function create_bidding_group_generation_files(
         return
     end
 
-    bidding_group_generation_files = filter(x -> occursin(r"bidding_group_generation_.*\.csv", x), readdir(outputs_dir))
-
-    if !isempty(bidding_group_generation_files)
-        return
-    end
-
     write_generation_ex_physical =
         construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED
     write_generation_ex_commercial =
@@ -215,42 +319,30 @@ function create_bidding_group_generation_files(
     write_generation_ex_post_commercial =
         construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.COST_BASED
 
-    _write_generation_bg_file(
-        inputs,
-        outputs_post_processing,
-        model_outputs_time_serie,
-        run_time_options,
-        "physical";
-        is_ex_post = false,
-        write_generation = write_generation_ex_physical,
-    )
-    _write_generation_bg_file(
-        inputs,
-        outputs_post_processing,
-        model_outputs_time_serie,
-        run_time_options,
-        "commercial";
-        is_ex_post = false,
-        write_generation = write_generation_ex_commercial,
-    )
-    _write_generation_bg_file(
-        inputs,
-        outputs_post_processing,
-        model_outputs_time_serie,
-        run_time_options,
-        "physical";
-        is_ex_post = true,
-        write_generation = write_generation_ex_post_physical,
-    )
-    _write_generation_bg_file(
-        inputs,
-        outputs_post_processing,
-        model_outputs_time_serie,
-        run_time_options,
-        "commercial";
-        is_ex_post = true,
-        write_generation = write_generation_ex_post_commercial,
-    )
+    clearing_procedures = ["ex_ante_physical", "ex_ante_commercial", "ex_post_physical", "ex_post_commercial"]
+    is_ex_post = [false, false, true, true]
+    write_generation = [
+        write_generation_ex_physical,
+        write_generation_ex_commercial,
+        write_generation_ex_post_physical,
+        write_generation_ex_post_commercial,
+    ]
+
+    for (i, clearing_procedure) in enumerate(clearing_procedures)
+        _merge_costs_files(
+            inputs,
+            clearing_procedure,
+        )
+        _write_generation_costs_bg_file(
+            inputs,
+            outputs_post_processing,
+            model_outputs_time_serie,
+            run_time_options,
+            clearing_procedure;
+            is_ex_post = is_ex_post[i],
+            write_generation = write_generation[i],
+        )
+    end
 
     return
 end

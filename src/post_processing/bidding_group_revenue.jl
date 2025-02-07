@@ -219,20 +219,25 @@ function post_processing_bidding_group_revenue(
         if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
+            costs_ex_ante_file = get_filename(bidding_group_costs_ex_ante_files[1])
             geneneration_ex_ante_reader =
                 open_time_series_output(inputs, model_outputs_time_serie, geneneration_ex_ante_file)
             spot_price_ex_ante_reader =
                 open_time_series_output(inputs, model_outputs_time_serie, spot_price_ex_ante_file)
+            costs_ex_ante_reader = open_time_series_output(inputs, model_outputs_time_serie, costs_ex_ante_file)
         else
             geneneration_ex_ante_reader = nothing
             spot_price_ex_ante_reader = nothing
+            costs_ex_ante_reader = nothing
         end
         spot_price_ex_post_file = get_filename(bidding_group_load_marginal_cost_ex_post_files[1])
         geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
+        costs_ex_post_file = get_filename(bidding_group_costs_ex_post_files[1])
         spot_price_ex_post_reader =
             open_time_series_output(inputs, model_outputs_time_serie, spot_price_ex_post_file)
         geneneration_ex_post_reader =
             open_time_series_output(inputs, model_outputs_time_serie, geneneration_ex_post_file)
+        costs_ex_post_reader = open_time_series_output(inputs, model_outputs_time_serie, costs_ex_post_file)
 
         is_profile = occursin("profile", basename(geneneration_ex_post_file))
 
@@ -649,27 +654,27 @@ function post_processing_bidding_group_total_revenue(
             QuiverOutput,
             outputs_post_processing;
             inputs,
-            output_name = "bidding_group_revenue_ex_ante_total",
+            output_name = "bidding_group_revenue_ex_ante",
             dimensions = ["period", "scenario", "subperiod"],
             unit = "\$",
             labels = merged_labels,
             run_time_options,
             dir_path = post_processing_dir,
         )
-        revenue_ex_ante_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_ante_total")
+        revenue_ex_ante_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_ante")
 
         initialize!(
             QuiverOutput,
             outputs_post_processing;
             inputs,
-            output_name = "bidding_group_revenue_ex_post_total",
+            output_name = "bidding_group_revenue_ex_post",
             dimensions = ["period", "scenario", "subscenario", "subperiod"],
             unit = "\$",
             labels = merged_labels,
             run_time_options,
             dir_path = post_processing_dir,
         )
-        revenue_ex_post_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_post_total")
+        revenue_ex_post_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_post")
 
         _total_independent_profile_ex_ante(
             revenue_ex_ante_writer,
@@ -681,23 +686,27 @@ function post_processing_bidding_group_total_revenue(
             revenue_ex_post_reader,
             revenue_ex_post_profile_reader,
         )
+    else
+        exts = [".csv", ".toml"]
+        for ext in exts
+            mv(
+                joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante$ext"),
+                joinpath(post_processing_dir, "bidding_group_revenue_ex_ante$ext"),
+            )
+            mv(
+                joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post$ext"),
+                joinpath(post_processing_dir, "bidding_group_revenue_ex_post$ext"),
+            )
+        end
     end
 
     # STEP 1: Averaging ex_post over subscenarios
 
-    revenue_ex_post_reader = if is_profile
-        open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_ex_post_total"),
-        )
-    else
-        open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post"),
-        )
-    end
+    revenue_ex_post_reader = open_time_series_output(
+        inputs,
+        model_outputs_time_serie,
+        joinpath(post_processing_dir, "bidding_group_revenue_ex_post"),
+    )
 
     initialize!(
         QuiverOutput,
@@ -719,19 +728,11 @@ function post_processing_bidding_group_total_revenue(
 
     # STEP 2: Summing ex_ante and ex_post (ex_ante + mean(ex_post))
 
-    revenue_ex_ante_reader = if is_profile
-        open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_ex_ante_total"),
-        )
-    else
-        open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(temp_dir, "bidding_group_revenue_independent_ex_ante"),
-        )
-    end
+    revenue_ex_ante_reader = open_time_series_output(
+        inputs,
+        model_outputs_time_serie,
+        joinpath(post_processing_dir, "bidding_group_revenue_ex_ante"),
+    )
 
     revenue_ex_post_reader =
         open_time_series_output(

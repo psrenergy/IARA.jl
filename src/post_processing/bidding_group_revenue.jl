@@ -231,7 +231,6 @@ function post_processing_bidding_group_revenue(
         geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
         spot_price_ex_post_reader =
             open_time_series_output(inputs, model_outputs_time_serie, spot_price_ex_post_file)
-        @show geneneration_ex_post_file
         geneneration_ex_post_reader =
             open_time_series_output(inputs, model_outputs_time_serie, geneneration_ex_post_file)
 
@@ -321,9 +320,9 @@ function apply_lmc_bounds(lmc::Vector{<:AbstractFloat}, inputs::Inputs)
 end
 
 function get_generation_files(output_dir::String, post_processing_dir::String; from_ex_post::Bool)
-    @show files = get_generation_files(output_dir; from_ex_post = from_ex_post)
+    files = get_generation_files(output_dir; from_ex_post = from_ex_post)
     if isempty(files)
-        @show files = get_generation_files(post_processing_dir; from_ex_post = from_ex_post)
+        files = get_generation_files(post_processing_dir; from_ex_post = from_ex_post)
     end
     return files
 end

@@ -48,7 +48,7 @@ function post_process_outputs(
 )
     gather_outputs_separated_by_asset_owners(inputs)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
-        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
+       (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
         post_processing_generation(inputs)
     end
     if is_market_clearing(inputs)
@@ -152,4 +152,17 @@ function sum_multiple_files(
 
     Quiver.close!(writer)
     return nothing
+end
+
+"""
+    read_timeseries_file_in_outputs(filename::String, inputs::Inputs)
+
+Read a timeseries file in the outputs directory.
+"""
+function read_timeseries_file_in_outputs(filename, inputs)
+    output_dir = output_path(inputs)
+    filepath_csv = joinpath(output_dir, filename * ".csv")
+    filepath_quiv = joinpath(output_dir, filename * ".quiv")
+    filepath = isfile(filepath_quiv) ? filepath_quiv : filepath_csv
+    return read_timeseries_file(filepath)
 end

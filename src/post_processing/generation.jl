@@ -64,7 +64,6 @@ function post_processing_generation(inputs::Inputs)
             sum(battery_unit_generation; dims = 1)
         end
     end
-    deficit_reader = open_time_series_output(inputs, model_outputs_time_serie, "deficit")
 
     deficit, _ = read_timeseries_file_in_outputs("deficit$file_suffix", inputs)
     generation[5, :, :, :] = if is_market_clearing(inputs)

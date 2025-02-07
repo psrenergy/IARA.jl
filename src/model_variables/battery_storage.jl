@@ -95,7 +95,7 @@ function battery_unit_storage!(
         outputs;
         inputs,
         output_name = "battery_om_costs",
-        dimensions = ["period", "scenario"],
+        dimensions = ["period", "scenario", "subperiod"],
         unit = "\$",
         labels = battery_unit_label(inputs)[battery_units],
         run_time_options,
@@ -150,7 +150,6 @@ function battery_unit_storage!(
         period,
         scenario,
         subscenario,
-        multiply_by = money_to_thousand_money(),
         indices_of_elements_in_output,
     )
 

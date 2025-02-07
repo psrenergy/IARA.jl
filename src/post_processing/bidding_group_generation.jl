@@ -47,6 +47,7 @@ function _write_generation_bg_file(
     write_generation = false,
 )
     outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
 
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)

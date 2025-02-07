@@ -82,13 +82,11 @@ end
 function open_time_series_output(
     inputs::Inputs,
     model_outputs::TimeSeriesOutputs,
-    output_name::String;
-    dir_path::String = output_path(inputs),
+    file::String;
 )
-    file = joinpath(dir_path, output_name)
     reader = Quiver.Reader{Quiver.csv}(file)
     output_timeseries = QuiverInput(reader)
-    model_outputs.outputs[output_name] = output_timeseries
+    model_outputs.outputs[file] = output_timeseries
     return reader
 end
 

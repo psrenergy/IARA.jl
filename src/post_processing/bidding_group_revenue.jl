@@ -190,10 +190,12 @@ function post_processing_bidding_group_revenue(
         bidding_group_generation_ex_ante_files =
             get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
         bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
+        bidding_group_costs_ex_ante_files = get_costs_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
     end
     bidding_group_generation_ex_post_files =
         get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
     bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
+    bidding_group_costs_ex_post_files = get_costs_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
 
     if length(bidding_group_load_marginal_cost_ex_post_files) > 1
         error(
@@ -228,6 +230,7 @@ function post_processing_bidding_group_revenue(
         geneneration_ex_post_file = get_filename(bidding_group_generation_ex_post_files[i])
         spot_price_ex_post_reader =
             open_time_series_output(inputs, model_outputs_time_serie, spot_price_ex_post_file)
+        @show geneneration_ex_post_file
         geneneration_ex_post_reader =
             open_time_series_output(inputs, model_outputs_time_serie, geneneration_ex_post_file)
 
@@ -242,6 +245,9 @@ function post_processing_bidding_group_revenue(
         if is_profile
             time_series_path_with_subscenarios *= "_profile"
             time_series_path_without_subscenarios *= "_profile"
+        else
+            time_series_path_with_subscenarios *= "_independent"
+            time_series_path_without_subscenarios *= "_independent"
         end
 
         time_series_path_with_subscenarios *= file_type_with_subscenarios
@@ -314,11 +320,45 @@ function apply_lmc_bounds(lmc::Vector{<:AbstractFloat}, inputs::Inputs)
 end
 
 function get_generation_files(output_dir::String, post_processing_dir::String; from_ex_post::Bool)
-    files = get_generation_files(output_dir; from_ex_post = from_ex_post)
+    @show files = get_generation_files(output_dir; from_ex_post = from_ex_post)
     if isempty(files)
-        files = get_generation_files(post_processing_dir; from_ex_post = from_ex_post)
+        @show files = get_generation_files(post_processing_dir; from_ex_post = from_ex_post)
     end
     return files
+end
+
+function get_costs_files(output_dir::String, post_processing_dir::String; from_ex_post::Bool)
+    files = get_costs_files(output_dir; from_ex_post = from_ex_post)
+    if isempty(files)
+        files = get_costs_files(post_processing_dir; from_ex_post = from_ex_post)
+    end
+    return files
+end
+
+function get_costs_files(path::String; from_ex_post::Bool)
+    from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
+
+    commercial_generation_files = filter(
+        x ->
+            occursin("bidding_group_costs", x) &&
+                occursin(from_ex_post_string * "_commercial", x) &&
+                get_file_ext(x) == ".csv",
+        readdir(path),
+    )
+
+    physical_generation_files = filter(
+        x ->
+            occursin("bidding_group_costs", x) &&
+                occursin(from_ex_post_string * "_physical", x) &&
+                get_file_ext(x) == ".csv",
+        readdir(path),
+    )
+
+    if isempty(physical_generation_files)
+        return joinpath.(path, commercial_generation_files)
+    else
+        return joinpath.(path, physical_generation_files)
+    end
 end
 
 function get_generation_files(path::String; from_ex_post::Bool)
@@ -582,28 +622,24 @@ function post_processing_bidding_group_total_revenue(
         revenue_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            "bidding_group_revenue_ex_ante";
-            dir_path = post_processing_dir,
+            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante")
         )
         revenue_ex_post_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            "bidding_group_revenue_ex_post";
-            dir_path = post_processing_dir,
+            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post")
         )
         revenue_ex_ante_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
-                "bidding_group_revenue_ex_ante";
-                dir_path = post_processing_dir,
+                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_ante")
             )
         revenue_ex_post_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
-                "bidding_group_revenue_ex_post";
-                dir_path = post_processing_dir,
+                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_post")
             )
 
         merged_labels =
@@ -613,40 +649,38 @@ function post_processing_bidding_group_total_revenue(
             QuiverOutput,
             outputs_post_processing;
             inputs,
-            output_name = "temp_bidding_group_revenue_ex_ante_total",
+            output_name = "bidding_group_revenue_ex_ante_total",
             dimensions = ["period", "scenario", "subperiod"],
             unit = "\$",
             labels = merged_labels,
             run_time_options,
-            dir_path = temp_dir,
+            dir_path = post_processing_dir,
         )
-        temp_revenue_ex_ante_writer = get_writer(outputs_post_processing, "temp_bidding_group_revenue_ex_ante_total")
+        revenue_ex_ante_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_ante_total")
 
         initialize!(
             QuiverOutput,
             outputs_post_processing;
             inputs,
-            output_name = "temp_bidding_group_revenue_ex_post_total",
+            output_name = "bidding_group_revenue_ex_post_total",
             dimensions = ["period", "scenario", "subscenario", "subperiod"],
             unit = "\$",
             labels = merged_labels,
             run_time_options,
-            dir_path = temp_dir,
+            dir_path = post_processing_dir,
         )
-        temp_revenue_ex_post_writer = get_writer(outputs_post_processing, "temp_bidding_group_revenue_ex_post_total")
+        revenue_ex_post_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_post_total")
 
         _total_independent_profile_ex_ante(
-            temp_revenue_ex_ante_writer,
+            revenue_ex_ante_writer,
             revenue_ex_ante_reader,
             revenue_ex_ante_profile_reader,
         )
         _total_independent_profile_ex_post(
-            temp_revenue_ex_post_writer,
+            revenue_ex_post_writer,
             revenue_ex_post_reader,
             revenue_ex_post_profile_reader,
         )
-        delete!(outputs_post_processing.outputs, "temp_bidding_group_revenue_ex_post_total")
-        delete!(outputs_post_processing.outputs, "temp_bidding_group_revenue_ex_ante_total")
     end
 
     # STEP 1: Averaging ex_post over subscenarios
@@ -655,15 +689,13 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            "temp_bidding_group_revenue_ex_post_total";
-            dir_path = temp_dir,
+            joinpath(post_processing_dir, "bidding_group_revenue_ex_post_total")
         )
     else
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            "bidding_group_revenue_ex_post";
-            dir_path = post_processing_dir,
+            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post")
         )
     end
 
@@ -691,15 +723,13 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            "temp_bidding_group_revenue_ex_ante_total";
-            dir_path = temp_dir,
+            joinpath(post_processing_dir, "bidding_group_revenue_ex_ante_total")
         )
     else
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            "bidding_group_revenue_ex_ante";
-            dir_path = post_processing_dir,
+            joinpath(temp_dir, "bidding_group_revenue_independent_ex_ante")
         )
     end
 
@@ -707,8 +737,7 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            "temp_bidding_group_revenue_ex_post_average";
-            dir_path = temp_dir,
+            joinpath(temp_dir, "temp_bidding_group_revenue_ex_post_average")
         )
 
     initialize!(

@@ -314,6 +314,8 @@ function hydro_generation!(
         period,
         scenario,
         subscenario,
+        multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
+        divide_by_subperiod_duration_in_hours = true,
         indices_of_elements_in_output,
     )
 

@@ -190,7 +190,8 @@ function post_processing_bidding_group_revenue(
         bidding_group_generation_ex_ante_files =
             get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
         bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
-        bidding_group_costs_ex_ante_files = get_costs_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
+        bidding_group_costs_ex_ante_files =
+            get_costs_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
     end
     bidding_group_generation_ex_post_files =
         get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
@@ -622,24 +623,24 @@ function post_processing_bidding_group_total_revenue(
         revenue_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante")
+            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante"),
         )
         revenue_ex_post_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post")
+            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post"),
         )
         revenue_ex_ante_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
-                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_ante")
+                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_ante"),
             )
         revenue_ex_post_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
-                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_post")
+                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_post"),
             )
 
         merged_labels =
@@ -689,13 +690,13 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_ex_post_total")
+            joinpath(post_processing_dir, "bidding_group_revenue_ex_post_total"),
         )
     else
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post")
+            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post"),
         )
     end
 
@@ -723,13 +724,13 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_ex_ante_total")
+            joinpath(post_processing_dir, "bidding_group_revenue_ex_ante_total"),
         )
     else
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(temp_dir, "bidding_group_revenue_independent_ex_ante")
+            joinpath(temp_dir, "bidding_group_revenue_independent_ex_ante"),
         )
     end
 
@@ -737,7 +738,7 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(temp_dir, "temp_bidding_group_revenue_ex_post_average")
+            joinpath(temp_dir, "temp_bidding_group_revenue_ex_post_average"),
         )
 
     initialize!(

@@ -123,11 +123,15 @@ function _write_generation_costs_bg_file(
             continue
         end
         generation_readers[generation_technology] =
-            open_time_series_output(inputs, model_outputs_time_serie, joinpath(outputs_dir, get_filename(generation_file)))
+            open_time_series_output(
+                inputs,
+                model_outputs_time_serie,
+                joinpath(outputs_dir, get_filename(generation_file)),
+            )
         total_costs_readers[generation_technology] = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, get_filename(costs_file))
+            joinpath(post_processing_dir, get_filename(costs_file)),
         )
         bg_relations_mapping[generation_technology] =
             PSRI.get_map(inputs.db, _get_generation_unit(generation_file), "BiddingGroup", "id")

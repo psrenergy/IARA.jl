@@ -9,7 +9,7 @@
 #############################################################################
 
 function interface_call(path::String; kwargs...)
-    args = IARA.Args(path, IARA.RunMode.MARKET_CLEARING; kwargs...)
+    args = IARA.Args(path, IARA.RunMode.INTERFACE_CALL; kwargs...)
     return main(args)
 end
 

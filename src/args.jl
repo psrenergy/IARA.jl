@@ -47,7 +47,8 @@ function Args(
     plot_ui_outputs::Bool = false,
     period::Int = -1,
 )
-    if (run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID) && period <= 0
+    if (run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
+       period <= 0
         error(
             "When running in single period modes, " *
             "the period must be greater than 0. Got period = $period.",

@@ -541,7 +541,8 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             end
         end
     end
-    if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID || run_mode(inputs) == RunMode.INTERFACE_CALL
+    if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
+       run_mode(inputs) == RunMode.INTERFACE_CALL
         if configurations.number_of_subscenarios <= 0
             @error("Number of subscenarios must be positive.")
             num_errors += 1

@@ -541,17 +541,15 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             end
         end
     end
-    if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
-        if is_market_clearing(inputs)
-            if configurations.number_of_subscenarios <= 0
-                @error("Number of subscenarios must be positive.")
-                num_errors += 1
-            end
-        else
-            if configurations.number_of_subscenarios != 1
-                @error("Number of subscenarios must be one for run modes other than MARKET_CLEARING.")
-                num_errors += 1
-            end
+    if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID || run_mode(inputs) == RunMode.INTERFACE_CALL
+        if configurations.number_of_subscenarios <= 0
+            @error("Number of subscenarios must be positive.")
+            num_errors += 1
+        end
+    else
+        if configurations.number_of_subscenarios != 1
+            @error("Number of subscenarios must be one for run mode $(run_mode(inputs)).")
+            num_errors += 1
         end
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&

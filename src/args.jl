@@ -15,6 +15,7 @@ mutable struct Args
     run_mode::RunMode.T
     write_lp::Bool
     plot_outputs::Bool
+    plot_ui_outputs::Bool
     # period is only used in the SINGLE_PERIOD_MARKET_CLEARING run mode
     # its value should be -1 in all other cases
     period::Int
@@ -31,6 +32,7 @@ function Args(args::Vector{String})
         delete_output_folder_before_execution = parsed_args["delete-output-folder-before-execution"],
         write_lp = parsed_args["write-lp"],
         plot_outputs = parsed_args["plot-results"],
+        plot_ui_outputs = parsed_args["plot-ui-results"],
         period,
     )
 end
@@ -42,11 +44,12 @@ function Args(
     delete_output_folder_before_execution::Bool = false,
     write_lp::Bool = false,
     plot_outputs::Bool = true,
+    plot_ui_outputs::Bool = false,
     period::Int = -1,
 )
-    if run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING && period <= 0
+    if (run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID) && period <= 0
         error(
-            "When running in the SINGLE_PERIOD_MARKET_CLEARING mode, " *
+            "When running in single period modes, " *
             "the period must be greater than 0. Got period = $period.",
         )
     end
@@ -63,6 +66,7 @@ function Args(
         run_mode,
         write_lp,
         plot_outputs,
+        plot_ui_outputs,
         period,
     )
 
@@ -112,6 +116,9 @@ function parse_commandline(args)
         action = :store_true
         "--plot-results"
         help = "plot results"
+        action = :store_true
+        "--plot-ui-results"
+        help = "plot UI results"
         action = :store_true
         "--period"
         help = "period for SINGLE_PERIOD_MARKET_CLEARING run mode"

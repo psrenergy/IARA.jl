@@ -44,7 +44,7 @@ function _write_generation_bg_file(
     run_time_options::RunTimeOptions,
     extension::String;
     is_ex_post = false,
-    write_generation = false
+    write_generation = false,
 )
     outputs_dir = output_path(inputs)
 
@@ -205,15 +205,51 @@ function create_bidding_group_generation_files(
         return
     end
 
-    write_generation_ex_physical = construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED
-    write_generation_ex_commercial = construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.COST_BASED
-    write_generation_ex_post_physical = construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.COST_BASED
-    write_generation_ex_post_commercial = construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.COST_BASED
+    write_generation_ex_physical =
+        construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED
+    write_generation_ex_commercial =
+        construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.COST_BASED
+    write_generation_ex_post_physical =
+        construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.COST_BASED
+    write_generation_ex_post_commercial =
+        construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.COST_BASED
 
-    _write_generation_bg_file(inputs, outputs_post_processing, model_outputs_time_serie, run_time_options, "physical"; is_ex_post = false, write_generation = write_generation_ex_physical)
-    _write_generation_bg_file(inputs, outputs_post_processing, model_outputs_time_serie, run_time_options, "commercial"; is_ex_post = false, write_generation = write_generation_ex_commercial)
-    _write_generation_bg_file(inputs, outputs_post_processing, model_outputs_time_serie, run_time_options, "physical"; is_ex_post = true, write_generation = write_generation_ex_post_physical)
-    _write_generation_bg_file(inputs, outputs_post_processing, model_outputs_time_serie, run_time_options, "commercial"; is_ex_post = true, write_generation = write_generation_ex_post_commercial)
+    _write_generation_bg_file(
+        inputs,
+        outputs_post_processing,
+        model_outputs_time_serie,
+        run_time_options,
+        "physical";
+        is_ex_post = false,
+        write_generation = write_generation_ex_physical,
+    )
+    _write_generation_bg_file(
+        inputs,
+        outputs_post_processing,
+        model_outputs_time_serie,
+        run_time_options,
+        "commercial";
+        is_ex_post = false,
+        write_generation = write_generation_ex_commercial,
+    )
+    _write_generation_bg_file(
+        inputs,
+        outputs_post_processing,
+        model_outputs_time_serie,
+        run_time_options,
+        "physical";
+        is_ex_post = true,
+        write_generation = write_generation_ex_post_physical,
+    )
+    _write_generation_bg_file(
+        inputs,
+        outputs_post_processing,
+        model_outputs_time_serie,
+        run_time_options,
+        "commercial";
+        is_ex_post = true,
+        write_generation = write_generation_ex_post_commercial,
+    )
 
     return
 end

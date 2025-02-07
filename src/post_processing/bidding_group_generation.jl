@@ -82,7 +82,7 @@ function _write_generation_bg_file(
             unit = "GWh",
             labels = _get_bidding_group_bus_labels(inputs),
             run_time_options,
-            is_post_processing = true,
+            dir_path = post_processing_dir,
         )
     end
 

@@ -184,6 +184,7 @@ function post_processing_bidding_group_revenue(
     run_time_options::RunTimeOptions,
 )
     outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
 
     if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
         bidding_group_generation_ex_ante_files = get_generation_files(outputs_dir; from_ex_post = false)
@@ -207,7 +208,7 @@ function post_processing_bidding_group_revenue(
     end
 
     number_of_files = length(bidding_group_generation_ex_post_files)
-    output_dir = output_path(inputs)
+    outputs_dir = output_path(inputs)
 
     for i in 1:number_of_files
         if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
@@ -260,7 +261,7 @@ function post_processing_bidding_group_revenue(
             unit = "\$",
             labels = geneneration_ex_post_reader.metadata.labels,
             run_time_options,
-            is_post_processing = true,
+            dir_path = post_processing_dir,
         )
         writer_with_subscenarios = get_writer(outputs_post_processing, time_series_path_with_subscenarios)
 
@@ -291,7 +292,7 @@ function post_processing_bidding_group_revenue(
                 unit = "\$",
                 labels = geneneration_ex_ante_reader.metadata.labels,
                 run_time_options,
-                is_post_processing = true,
+                dir_path = post_processing_dir,
             )
             writer_without_subscenarios = get_writer(outputs_post_processing, time_series_path_without_subscenarios)
 
@@ -564,10 +565,12 @@ function post_processing_bidding_group_total_revenue(
     model_outputs_time_serie::TimeSeriesOutputs,
     run_time_options::RunTimeOptions,
 )
-    outputs_dir = joinpath(output_path(inputs), "post_processing")
+    outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
+    temp_dir = joinpath(path_case(inputs), "temp")
 
     is_profile =
-        length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(outputs_dir))) > 0
+        length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(post_processing_dir))) > 0
 
     # STEP 0 (optional): Merging profile and independent bid
 
@@ -576,27 +579,27 @@ function post_processing_bidding_group_total_revenue(
             inputs,
             model_outputs_time_serie,
             "bidding_group_revenue_ex_ante";
-            is_post_processing = true,
+            dir_path = post_processing_dir,
         )
         revenue_ex_post_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
             "bidding_group_revenue_ex_post";
-            is_post_processing = true,
+            dir_path = post_processing_dir,
         )
         revenue_ex_ante_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
                 "bidding_group_revenue_ex_ante";
-                is_post_processing = true,
+                dir_path = post_processing_dir,
             )
         revenue_ex_post_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
                 "bidding_group_revenue_ex_post";
-                is_post_processing = true,
+                dir_path = post_processing_dir,
             )
 
         merged_labels =
@@ -611,7 +614,7 @@ function post_processing_bidding_group_total_revenue(
             unit = "\$",
             labels = merged_labels,
             run_time_options,
-            is_post_processing = true,
+            dir_path = temp_dir,
         )
         temp_revenue_ex_ante_writer = get_writer(outputs_post_processing, "temp_bidding_group_revenue_ex_ante_total")
 
@@ -624,7 +627,7 @@ function post_processing_bidding_group_total_revenue(
             unit = "\$",
             labels = merged_labels,
             run_time_options,
-            is_post_processing = true,
+            dir_path = temp_dir,
         )
         temp_revenue_ex_post_writer = get_writer(outputs_post_processing, "temp_bidding_group_revenue_ex_post_total")
 
@@ -649,14 +652,14 @@ function post_processing_bidding_group_total_revenue(
             inputs,
             model_outputs_time_serie,
             "temp_bidding_group_revenue_ex_post_total";
-            is_post_processing = true,
+            dir_path = temp_dir,
         )
     else
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
             "bidding_group_revenue_ex_post";
-            is_post_processing = true,
+            dir_path = post_processing_dir,
         )
     end
 
@@ -669,7 +672,7 @@ function post_processing_bidding_group_total_revenue(
         unit = "\$",
         labels = revenue_ex_post_reader.metadata.labels,
         run_time_options,
-        is_post_processing = true,
+        dir_path = temp_dir,
     )
     revenue_ex_post_average_writer = get_writer(outputs_post_processing, "temp_bidding_group_revenue_ex_post_average")
 
@@ -685,14 +688,14 @@ function post_processing_bidding_group_total_revenue(
             inputs,
             model_outputs_time_serie,
             "temp_bidding_group_revenue_ex_ante_total";
-            is_post_processing = true,
+            dir_path = temp_dir,
         )
     else
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
             "bidding_group_revenue_ex_ante";
-            is_post_processing = true,
+            dir_path = post_processing_dir,
         )
     end
 
@@ -701,7 +704,7 @@ function post_processing_bidding_group_total_revenue(
             inputs,
             model_outputs_time_serie,
             "temp_bidding_group_revenue_ex_post_average";
-            is_post_processing = true,
+            dir_path = temp_dir,
         )
 
     initialize!(
@@ -713,7 +716,7 @@ function post_processing_bidding_group_total_revenue(
         unit = "\$",
         labels = revenue_ex_ante_reader.metadata.labels,
         run_time_options,
-        is_post_processing = true,
+        dir_path = post_processing_dir,
     )
     total_revenue_writer = get_writer(outputs_post_processing, "bidding_group_total_revenue")
 
@@ -723,16 +726,5 @@ function post_processing_bidding_group_total_revenue(
         revenue_ex_post_reader,
     )
 
-    temp_files = [
-        "temp_bidding_group_revenue_ex_ante_total",
-        "temp_bidding_group_revenue_ex_post_total",
-        "temp_bidding_group_revenue_ex_post_average",
-    ]
-    # Remove temporary files
-    for temp_file in temp_files
-        if isfile(joinpath(outputs_dir, temp_file * ".csv"))
-            rm(joinpath(outputs_dir, temp_file * ".csv"))
-        end
-    end
     return
 end

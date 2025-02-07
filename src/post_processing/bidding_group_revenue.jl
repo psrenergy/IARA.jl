@@ -691,16 +691,24 @@ function _join_independent_and_profile_bid(
         exts = [".csv", ".toml"]
         for ext in exts
             if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-                mv(
-                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
-                    joinpath(post_processing_dir, "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
-                )
+                bidding_group_revenue_independent_ex_ante_file =
+                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext")
+                if isfile(bidding_group_revenue_independent_ex_ante_file)
+                    mv(
+                        bidding_group_revenue_independent_ex_ante_file,
+                        joinpath(post_processing_dir, "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                    )
+                end
             end
             if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
-                mv(
-                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
-                    joinpath(post_processing_dir, "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
-                )
+                bidding_group_revenue_independent_ex_post_file =
+                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext")
+                if isfile(bidding_group_revenue_independent_ex_post_file)
+                    mv(
+                        joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                        joinpath(post_processing_dir, "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                    )
+                end
             end
         end
     end

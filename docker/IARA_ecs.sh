@@ -71,7 +71,7 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
 
     download_and_unzip_case
 
-    $IARA_PATH/IARA_interface_call.sh --output-path="game_summary"  --run-mode 'min-cost' $CASE_PATH 
+    $IARA_PATH/IARA.sh --output-path="game_summary" --run-mode 'interface-call' $CASE_PATH 
     
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_summary/ --recursive  
@@ -98,7 +98,13 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     download_and_unzip_case
     download_bids_and_move_to_case
 
-    $IARA_PATH/IARA.sh $CASE_PATH --output-path="results" --run-mode='single-period-market-clearing' --period=$IARA_GAME_ROUND
+    $IARA_PATH/IARA.sh $CASE_PATH --output-path="results" --run-mode='single-period-market-clearing' --period=$IARA_GAME_ROUND --plot-ui-results
+
+    # Check if plots are in the results folder
+    if [ ! -d "$CASE_PATH/results/plots" ]; then
+        echo "Warning: No plots were generated"
+        exit 0
+    fi
 
     echo "Zipping plots..."
     cd $CASE_PATH/results/plots

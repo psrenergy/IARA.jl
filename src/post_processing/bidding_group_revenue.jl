@@ -270,7 +270,8 @@ function post_processing_bidding_group_revenue(
             run_time_options,
             dir_path = post_processing_dir,
         )
-        writer_with_subscenarios = get_writer(outputs_post_processing, inputs, run_time_options, time_series_path_with_subscenarios)
+        writer_with_subscenarios =
+            get_writer(outputs_post_processing, inputs, run_time_options, time_series_path_with_subscenarios)
 
         _write_revenue_with_subscenarios(
             inputs,
@@ -301,7 +302,8 @@ function post_processing_bidding_group_revenue(
                 run_time_options,
                 dir_path = post_processing_dir,
             )
-            writer_without_subscenarios = get_writer(outputs_post_processing, inputs, run_time_options, time_series_path_without_subscenarios)
+            writer_without_subscenarios =
+                get_writer(outputs_post_processing, inputs, run_time_options, time_series_path_without_subscenarios)
 
             _write_revenue_without_subscenarios(
                 inputs,
@@ -644,7 +646,8 @@ function _join_independent_and_profile_bid(
                 run_time_options,
                 dir_path = post_processing_dir,
             )
-            revenue_ex_ante_writer = get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_ante")
+            revenue_ex_ante_writer =
+                get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_ante")
 
             _total_independent_profile_ex_ante(
                 revenue_ex_ante_writer,
@@ -679,7 +682,8 @@ function _join_independent_and_profile_bid(
                 run_time_options,
                 dir_path = post_processing_dir,
             )
-            revenue_ex_post_writer = get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_post")
+            revenue_ex_post_writer =
+                get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_post")
 
             _total_independent_profile_ex_post(
                 revenue_ex_post_writer,
@@ -692,21 +696,39 @@ function _join_independent_and_profile_bid(
         for ext in exts
             if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
                 bidding_group_revenue_independent_ex_ante_file =
-                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext")
+                    joinpath(
+                        post_processing_dir,
+                        "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options) *
+                        "$ext",
+                    )
                 if isfile(bidding_group_revenue_independent_ex_ante_file)
                     mv(
                         bidding_group_revenue_independent_ex_ante_file,
-                        joinpath(post_processing_dir, "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                        joinpath(
+                            post_processing_dir,
+                            "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext",
+                        ),
                     )
                 end
             end
             if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
                 bidding_group_revenue_independent_ex_post_file =
-                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext")
+                    joinpath(
+                        post_processing_dir,
+                        "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options) *
+                        "$ext",
+                    )
                 if isfile(bidding_group_revenue_independent_ex_post_file)
                     mv(
-                        joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
-                        joinpath(post_processing_dir, "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                        joinpath(
+                            post_processing_dir,
+                            "bidding_group_revenue_independent_ex_post" *
+                            run_time_file_suffixes(inputs, run_time_options) * "$ext",
+                        ),
+                        joinpath(
+                            post_processing_dir,
+                            "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext",
+                        ),
                     )
                 end
             end
@@ -750,7 +772,8 @@ function post_processing_bidding_group_total_revenue(
         run_time_options,
         dir_path = temp_dir,
     )
-    revenue_ex_post_average_writer = get_writer(outputs_post_processing, inputs, run_time_options, "temp_bidding_group_revenue_ex_post_average")
+    revenue_ex_post_average_writer =
+        get_writer(outputs_post_processing, inputs, run_time_options, "temp_bidding_group_revenue_ex_post_average")
 
     _average_ex_post_revenue_over_subscenarios(
         revenue_ex_post_average_writer,

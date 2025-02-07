@@ -97,7 +97,7 @@ function open_time_series_output(
 end
 
 function get_writer(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, output_name::String)
-    return outputs.outputs[output_name * run_time_file_suffixes(inputs, run_time_options)].writer
+    return outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)].writer
 end
 
 function get_file_ext(filename::String)

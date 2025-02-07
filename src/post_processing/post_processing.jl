@@ -128,11 +128,20 @@ function sum_multiple_files(
 
     num_labels = length(metadata.labels)
     data = zeros(sum(num_labels))
+    first_warning = true
     for dims in Iterators.product([1:size for size in reverse(metadata.dimension_size)]...)
         dim_kwargs = OrderedDict(metadata.dimensions .=> reverse(dims))
         fill!(data, 0)
         for reader in readers
             Quiver.goto!(reader; dim_kwargs...)
+            # TODO: This is a workaround for the case when the data is not the same length
+            if length(reader.data) != length(data)
+                if first_warning
+                    Log.warn("The length of the data in the files is different for summing the $output_filename")
+                    first_warning = false
+                end
+                continue
+            end
             data .+= reader.data
         end
         Quiver.write!(writer, Quiver.round_digits(data, digits); dim_kwargs...)

@@ -65,6 +65,12 @@ function post_process_outputs(
                 model_outputs_time_serie,
                 run_time_options,
             )
+            _join_independent_and_profile_bid(
+                inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
+                run_time_options,
+            )
             if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
                 post_processing_bidding_group_total_revenue(
                     inputs,
@@ -90,8 +96,8 @@ function open_time_series_output(
     return reader
 end
 
-function get_writer(outputs::Outputs, output_name::String)
-    return outputs.outputs[output_name].writer
+function get_writer(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, output_name::String)
+    return outputs.outputs[output_name * run_time_file_suffixes(inputs, run_time_options)].writer
 end
 
 function get_file_ext(filename::String)

@@ -92,7 +92,7 @@ function _write_generation_costs_bg_file(
             dir_path = post_processing_dir,
         )
         bidding_group_generation_writer =
-            get_writer(outputs_post_processing, "bidding_group_generation_$(clearing_procedure)")
+            get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_generation_$(clearing_procedure)")
     end
 
     initialize!(
@@ -109,7 +109,7 @@ function _write_generation_costs_bg_file(
     )
 
     bidding_group_costs_writer =
-        get_writer(outputs_post_processing, "bidding_group_costs_$(clearing_procedure)")
+        get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_costs_$(clearing_procedure)")
 
     update_number_of_bid_segments!(inputs, number_of_bid_segments)
 
@@ -123,15 +123,11 @@ function _write_generation_costs_bg_file(
             continue
         end
         generation_readers[generation_technology] =
-            open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                joinpath(outputs_dir, get_filename(generation_file)),
-            )
+            open_time_series_output(inputs, model_outputs_time_serie, joinpath(outputs_dir, get_filename(generation_file)))
         total_costs_readers[generation_technology] = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, get_filename(costs_file)),
+            joinpath(post_processing_dir, get_filename(costs_file))
         )
         bg_relations_mapping[generation_technology] =
             PSRI.get_map(inputs.db, _get_generation_unit(generation_file), "BiddingGroup", "id")

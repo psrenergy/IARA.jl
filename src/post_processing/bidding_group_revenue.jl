@@ -270,7 +270,7 @@ function post_processing_bidding_group_revenue(
             run_time_options,
             dir_path = post_processing_dir,
         )
-        writer_with_subscenarios = get_writer(outputs_post_processing, time_series_path_with_subscenarios)
+        writer_with_subscenarios = get_writer(outputs_post_processing, inputs, run_time_options, time_series_path_with_subscenarios)
 
         _write_revenue_with_subscenarios(
             inputs,
@@ -301,7 +301,7 @@ function post_processing_bidding_group_revenue(
                 run_time_options,
                 dir_path = post_processing_dir,
             )
-            writer_without_subscenarios = get_writer(outputs_post_processing, time_series_path_without_subscenarios)
+            writer_without_subscenarios = get_writer(outputs_post_processing, inputs, run_time_options, time_series_path_without_subscenarios)
 
             _write_revenue_without_subscenarios(
                 inputs,
@@ -603,6 +603,111 @@ function _total_revenue(
     return
 end
 
+function _join_independent_and_profile_bid(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::TimeSeriesOutputs,
+    run_time_options::RunTimeOptions,
+)
+    outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
+    temp_dir = joinpath(path_case(inputs), "temp")
+
+    is_profile =
+        length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(post_processing_dir))) > 0
+
+    if is_profile
+        if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+            revenue_ex_ante_reader = open_time_series_output(
+                inputs,
+                model_outputs_time_serie,
+                joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante"),
+            )
+            revenue_ex_ante_profile_reader =
+                open_time_series_output(
+                    inputs,
+                    model_outputs_time_serie,
+                    joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_ante"),
+                )
+
+            merged_labels =
+                unique(vcat(revenue_ex_ante_reader.metadata.labels, revenue_ex_ante_profile_reader.metadata.labels))
+
+            initialize!(
+                QuiverOutput,
+                outputs_post_processing;
+                inputs,
+                output_name = "bidding_group_revenue_ex_ante",
+                dimensions = ["period", "scenario", "subperiod"],
+                unit = "\$",
+                labels = merged_labels,
+                run_time_options,
+                dir_path = post_processing_dir,
+            )
+            revenue_ex_ante_writer = get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_ante")
+
+            _total_independent_profile_ex_ante(
+                revenue_ex_ante_writer,
+                revenue_ex_ante_reader,
+                revenue_ex_ante_profile_reader,
+            )
+        end
+        if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
+            revenue_ex_post_reader = open_time_series_output(
+                inputs,
+                model_outputs_time_serie,
+                joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post"),
+            )
+            revenue_ex_post_profile_reader =
+                open_time_series_output(
+                    inputs,
+                    model_outputs_time_serie,
+                    joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_post"),
+                )
+
+            merged_labels =
+                unique(vcat(revenue_ex_post_reader.metadata.labels, revenue_ex_post_reader.metadata.labels))
+
+            initialize!(
+                QuiverOutput,
+                outputs_post_processing;
+                inputs,
+                output_name = "bidding_group_revenue_ex_post",
+                dimensions = ["period", "scenario", "subscenario", "subperiod"],
+                unit = "\$",
+                labels = merged_labels,
+                run_time_options,
+                dir_path = post_processing_dir,
+            )
+            revenue_ex_post_writer = get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_post")
+
+            _total_independent_profile_ex_post(
+                revenue_ex_post_writer,
+                revenue_ex_post_reader,
+                revenue_ex_post_profile_reader,
+            )
+        end
+    else
+        exts = [".csv", ".toml"]
+        for ext in exts
+            if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+                mv(
+                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                    joinpath(post_processing_dir, "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                )
+            end
+            if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
+                mv(
+                    joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                    joinpath(post_processing_dir, "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options) * "$ext"),
+                )
+            end
+        end
+    end
+
+    return nothing
+end
+
 """
     post_processing_bidding_group_total_revenue(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
 
@@ -617,88 +722,6 @@ function post_processing_bidding_group_total_revenue(
     outputs_dir = output_path(inputs)
     post_processing_dir = post_processing_path(inputs)
     temp_dir = joinpath(path_case(inputs), "temp")
-
-    is_profile =
-        length(filter(x -> occursin(r"bidding_group_revenue_profile_.*\.csv", x), readdir(post_processing_dir))) > 0
-
-    # STEP 0 (optional): Merging profile and independent bid
-
-    if is_profile
-        revenue_ex_ante_reader = open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante"),
-        )
-        revenue_ex_post_reader = open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post"),
-        )
-        revenue_ex_ante_profile_reader =
-            open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_ante"),
-            )
-        revenue_ex_post_profile_reader =
-            open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_post"),
-            )
-
-        merged_labels =
-            unique(vcat(revenue_ex_ante_reader.metadata.labels, revenue_ex_ante_profile_reader.metadata.labels))
-
-        initialize!(
-            QuiverOutput,
-            outputs_post_processing;
-            inputs,
-            output_name = "bidding_group_revenue_ex_ante",
-            dimensions = ["period", "scenario", "subperiod"],
-            unit = "\$",
-            labels = merged_labels,
-            run_time_options,
-            dir_path = post_processing_dir,
-        )
-        revenue_ex_ante_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_ante")
-
-        initialize!(
-            QuiverOutput,
-            outputs_post_processing;
-            inputs,
-            output_name = "bidding_group_revenue_ex_post",
-            dimensions = ["period", "scenario", "subscenario", "subperiod"],
-            unit = "\$",
-            labels = merged_labels,
-            run_time_options,
-            dir_path = post_processing_dir,
-        )
-        revenue_ex_post_writer = get_writer(outputs_post_processing, "bidding_group_revenue_ex_post")
-
-        _total_independent_profile_ex_ante(
-            revenue_ex_ante_writer,
-            revenue_ex_ante_reader,
-            revenue_ex_ante_profile_reader,
-        )
-        _total_independent_profile_ex_post(
-            revenue_ex_post_writer,
-            revenue_ex_post_reader,
-            revenue_ex_post_profile_reader,
-        )
-    else
-        exts = [".csv", ".toml"]
-        for ext in exts
-            mv(
-                joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante$ext"),
-                joinpath(post_processing_dir, "bidding_group_revenue_ex_ante$ext"),
-            )
-            mv(
-                joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post$ext"),
-                joinpath(post_processing_dir, "bidding_group_revenue_ex_post$ext"),
-            )
-        end
-    end
 
     # STEP 1: Averaging ex_post over subscenarios
 
@@ -719,7 +742,7 @@ function post_processing_bidding_group_total_revenue(
         run_time_options,
         dir_path = temp_dir,
     )
-    revenue_ex_post_average_writer = get_writer(outputs_post_processing, "temp_bidding_group_revenue_ex_post_average")
+    revenue_ex_post_average_writer = get_writer(outputs_post_processing, inputs, run_time_options, "temp_bidding_group_revenue_ex_post_average")
 
     _average_ex_post_revenue_over_subscenarios(
         revenue_ex_post_average_writer,
@@ -752,7 +775,7 @@ function post_processing_bidding_group_total_revenue(
         run_time_options,
         dir_path = post_processing_dir,
     )
-    total_revenue_writer = get_writer(outputs_post_processing, "bidding_group_total_revenue")
+    total_revenue_writer = get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_total_revenue")
 
     _total_revenue(
         total_revenue_writer,

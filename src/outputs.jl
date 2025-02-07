@@ -215,7 +215,7 @@ function initialize!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     output_name::String,
-    is_post_processing::Bool = false,
+    dir_path::String = output_path(inputs),
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -234,11 +234,7 @@ function initialize!(
 
     output_name *= run_time_file_suffixes(inputs, run_time_options)
 
-    if is_post_processing
-        file = joinpath(post_processing_path(inputs), output_name)
-    else
-        file = joinpath(output_path(inputs), output_name)
-    end
+    file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
 
     writer = Quiver.Writer{output_type}(

@@ -19,6 +19,7 @@ function post_processing_generation(
     model_outputs_time_serie::TimeSeriesOutputs,
     run_time_options::RunTimeOptions,
 )
+    post_processing_dir = post_processing_path(inputs)
     labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"]
 
     initialize!(
@@ -30,7 +31,7 @@ function post_processing_generation(
         unit = "GWh",
         labels = labels,
         run_time_options,
-        is_post_processing = true,
+        dir_path = post_processing_dir,
     )
 
     hydro_generation_reader = nothing

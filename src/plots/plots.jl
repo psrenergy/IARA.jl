@@ -926,7 +926,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
         data, metadata = read_timeseries_file(demand_file)
         # Average across subscenarios for ex-post file
         data_reshaped = if !read_ex_ante_demand_file(inputs)
-            dropdims(mean(data_reshaped; dims = 3); dims = 3)
+            dropdims(mean(data; dims = 3); dims = 3)
         else
             data
         end

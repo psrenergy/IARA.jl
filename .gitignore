@@ -73,3 +73,4 @@ docs/src/tutorial/*.md
 test_iara_interface_call
 
 temp_repo_mirror/
+sddp_converter/

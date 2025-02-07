@@ -66,10 +66,6 @@ function Args(
         period,
     )
 
-    initialize(args)
-
-    print_banner()
-
     return args
 end
 

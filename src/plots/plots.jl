@@ -724,7 +724,7 @@ function build_ui_individual_plots(
     revenue_file_path = get_revenue_file(inputs)
     if isfile(revenue_file_path)
         filename = get_filename(basename(revenue_file_path))
-        title = plot_title_from_filename(filename)
+        title = plot_title_from_filename(inputs, filename)
         for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
             custom_plot(
                 revenue_file_path,
@@ -744,7 +744,7 @@ function build_ui_individual_plots(
     end
     for generation_file in generation_files
         filename = get_filename(basename(generation_file))
-        title = plot_title_from_filename(filename)
+        title = plot_title_from_filename(inputs, filename)
         for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
             custom_plot(
                 generation_file,
@@ -779,12 +779,21 @@ function build_ui_case_plots(
     # Generation by technology
     generation_file_path = joinpath(post_processing_path(inputs), "generation.csv")
     if isfile(generation_file_path)
+        # Generation
         custom_plot(
             generation_file_path,
             PlotTimeSeriesStackedMean;
             plot_path = joinpath(plots_path, "generation_by_technology"),
             title = "Generation by Technology",
             agents = ["hydro", "thermal", "renewable", "battery_unit"], # Does not include deficit
+        )
+        # Deficit
+        custom_plot(
+            generation_file_path,
+            PlotTimeSeriesMean;
+            plot_path = joinpath(plots_path, "deficit"),
+            title = "Deficit",
+            agents = ["deficit"], # Does not include deficit
         )
     end
 

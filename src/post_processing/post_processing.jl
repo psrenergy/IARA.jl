@@ -35,11 +35,10 @@ function post_processing(inputs)
         end
     end
     if inputs.args.plot_outputs
-        if is_single_period(inputs)
-            build_ui_plots(inputs)
-        else
-            build_plots(inputs)
-        end
+        build_plots(inputs)
+    end
+    if inputs.args.plot_ui_outputs
+        build_ui_plots(inputs)
     end
     return nothing
 end

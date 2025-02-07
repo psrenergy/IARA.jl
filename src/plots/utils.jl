@@ -21,8 +21,9 @@ function get_offer_file_paths(inputs::AbstractInputs)
     return offer_files
 end
 
-function plot_title_from_filename(filename::String)
-    title = _snake_to_regular(filename)
+function plot_title_from_filename(inputs::AbstractInputs, filename::String)
+    title = replace(filename, "_period_$(inputs.args.period)" => "")
+    title = _snake_to_regular(title)
     title = replace(title, "Ex Post" => "Ex-Post")
     title = replace(title, "Ex Ante" => "Ex-Ante")
     return title

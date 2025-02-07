@@ -434,3 +434,23 @@ function clearing_has_volume_variables(inputs::Inputs, run_time_options::RunTime
     end
     return construction_type(inputs, run_time_options) != Configurations_ConstructionType.BID_BASED
 end
+
+"""
+    clearing_has_physical_variables(inputs::Inputs)
+
+Check if the market clearing has physical variables in at least one of its problems.
+"""
+function clearing_has_physical_variables(inputs::Inputs)
+    physical_variable_model_types = [
+        Configurations_ConstructionType.COST_BASED,
+        Configurations_ConstructionType.HYBRID,
+    ]
+    if construction_type_ex_ante_physical(inputs) in physical_variable_model_types ||
+       construction_type_ex_ante_commercial(inputs) in physical_variable_model_types ||
+       construction_type_ex_post_physical(inputs) in physical_variable_model_types ||
+       construction_type_ex_post_commercial(inputs) in physical_variable_model_types
+        return true
+    else
+        return false
+    end
+end

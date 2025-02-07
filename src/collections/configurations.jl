@@ -511,7 +511,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP &&
                configurations.construction_type_ex_post_commercial == Configurations_ConstructionType.SKIP
                 @error(
-                    "When using a settlement type, either ex-post physical or commercial clearing must occur — both cannot be skipped."
+                    "When using a settlement type, either ex-post physical or ex-post commercial clearing must occur — both cannot be skipped."
                 )
                 num_errors += 1
             end
@@ -519,7 +519,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
                    configurations.construction_type_ex_ante_commercial == Configurations_ConstructionType.SKIP
                     @error(
-                        "when using settlement type $(settlement_type(inputs)), either ex-ante physical and commercial clearing must occur — both cannot be skipped."
+                        "When using settlement type $(settlement_type(inputs)), either ex-ante physical or ex-ante commercial clearing must occur — both cannot be skipped."
                     )
                     num_errors += 1
                 end
@@ -527,31 +527,30 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
                settlement_type(inputs) == Configurations_SettlementType.DUAL
                 @warn(
-                    "The ex-ante physical clearing model is skipped.
-              Instead, generation data for revenue calculation will be sourced from the ex-ante commercial clearing model.
-              This represents a non-standard execution type."
+                    "The ex-ante physical clearing model is skipped. " *
+                    "Instead, generation data for revenue calculation will be sourced from the ex-ante commercial clearing model. " *
+                    "This represents a non-standard execution type."
                 )
             end
             if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP
                 @warn(
-                    "The ex-post physical clearing model is skipped.
-              Instead, generation data for revenue calculation will be sourced from the ex-post commercial clearing model.
-              This represents a non-standard execution type."
+                    "The ex-post physical clearing model is skipped. " *
+                    "Instead, generation data for revenue calculation will be sourced from the ex-post commercial clearing model. " *
+                    "This represents a non-standard execution type."
                 )
             end
         end
     end
-    if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
-        if is_market_clearing(inputs)
-            if configurations.number_of_subscenarios <= 0
-                @error("Number of subscenarios must be positive.")
-                num_errors += 1
-            end
-        else
-            if configurations.number_of_subscenarios != 1
-                @error("Number of subscenarios must be one for run modes other than MARKET_CLEARING.")
-                num_errors += 1
-            end
+    if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
+       run_mode(inputs) == RunMode.INTERFACE_CALL
+        if configurations.number_of_subscenarios <= 0
+            @error("Number of subscenarios must be positive.")
+            num_errors += 1
+        end
+    else
+        if configurations.number_of_subscenarios != 1
+            @error("Number of subscenarios must be one for run mode $(run_mode(inputs)).")
+            num_errors += 1
         end
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&

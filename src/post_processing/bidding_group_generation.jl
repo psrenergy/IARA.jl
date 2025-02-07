@@ -55,8 +55,13 @@ function _write_generation_costs_bg_file(
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
 
+    file_end = "_generation_$(clearing_procedure)"
+    if is_single_period(inputs)
+        file_end *= "_period_$(inputs.args.period)"
+    end
+    file_end *= ".csv"
     generation_files =
-        filter(x -> endswith(x, "_generation_$(clearing_procedure).csv"), readdir(outputs_dir))
+        filter(x -> endswith(x, file_end), readdir(outputs_dir))
     if isempty(generation_files)
         return
     end

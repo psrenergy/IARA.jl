@@ -37,7 +37,6 @@ function main(args::Vector{String})
         configuration;
         executables = [
             "IARA" => "julia_main",
-            "IARA_interface_call" => "julia_interface_call",
         ],
         additional_files_path = [
             database_path,
@@ -47,7 +46,6 @@ function main(args::Vector{String})
         ],
         linux_additional_files_path = [
             joinpath(assets_path, "IARA.sh"),
-            joinpath(assets_path, "IARA_interface_call.sh"),
         ],
     )
 

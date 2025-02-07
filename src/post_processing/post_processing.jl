@@ -34,6 +34,9 @@ function post_processing(inputs::Inputs)
     if inputs.args.plot_outputs
         build_plots(inputs)
     end
+    if inputs.args.plot_ui_outputs
+        build_ui_plots(inputs)
+    end
     return nothing
 end
 
@@ -43,14 +46,10 @@ function post_process_outputs(
     model_outputs_time_serie::TimeSeriesOutputs,
     run_time_options::RunTimeOptions,
 )
-    gather_outputs_separated_by_asset_owners(
-        inputs,
-        outputs_post_processing,
-        model_outputs_time_serie,
-        run_time_options,
-    )
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
-        post_processing_generation(inputs, outputs_post_processing, model_outputs_time_serie, run_time_options)
+    gather_outputs_separated_by_asset_owners(inputs)
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
+        post_processing_generation(inputs)
     end
     if is_market_clearing(inputs)
         create_bidding_group_generation_files(

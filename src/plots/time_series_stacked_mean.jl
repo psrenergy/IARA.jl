@@ -153,7 +153,9 @@ function plot_data(
 
     configs = Vector{Config}()
 
-    title = title * " - Mean across scenarios"
+    if number_of_scenarios > 1
+        title = title * " - Mean across scenarios"
+    end
     for trace in 1:number_of_traces
         push!(
             configs,

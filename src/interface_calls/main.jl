@@ -9,7 +9,7 @@
 #############################################################################
 
 function interface_call(path::String; kwargs...)
-    args = IARA.Args(path, IARA.RunMode.MARKET_CLEARING; kwargs...)
+    args = IARA.Args(path, IARA.RunMode.INTERFACE_CALL; kwargs...)
     return main(args)
 end
 
@@ -19,6 +19,7 @@ function main(args::Vector{String})
 end
 
 function main(args::IARA.Args)
+    IARA.initialize(args)
     inputs = IARA.load_inputs(args)
 
     try

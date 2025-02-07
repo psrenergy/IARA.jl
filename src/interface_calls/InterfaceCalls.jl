@@ -16,5 +16,6 @@ using JSON
 include("list_elements.jl")
 include("plots.jl")
 include("main.jl")
+include("utils.jl")
 
 end # end module

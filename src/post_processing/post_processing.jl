@@ -21,7 +21,8 @@ function post_processing(inputs)
     end
 
     gather_outputs_separated_by_asset_owners(inputs)
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+       (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
         post_processing_generation(inputs)
     end
     if is_market_clearing(inputs)
@@ -35,6 +36,9 @@ function post_processing(inputs)
     end
     if inputs.args.plot_outputs
         build_plots(inputs)
+    end
+    if inputs.args.plot_ui_outputs
+        build_ui_plots(inputs)
     end
     return nothing
 end

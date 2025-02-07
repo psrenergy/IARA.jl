@@ -11,45 +11,11 @@
 function create_plots(inputs::IARA.AbstractInputs)
     # Create plots
     @info("Creating plots")
-
-    # Plot inflows
-    inflow_file = joinpath(IARA.path_case(inputs), IARA.hydro_unit_inflow_ex_ante_file(inputs))
-    inflow_file *= isfile(inflow_file * ".csv") ? ".csv" :
-                   isfile(inflow_file * ".quiv") ? ".quiv" : ""
-    if isfile(inflow_file)
-        IARA.custom_plot(
-            inflow_file,
-            IARA.PlotTimeSeriesAll;
-            title = "Inflows",
-            plot_path = joinpath(IARA.output_path(inputs), "inflows"),
-        )
+    plots_path = joinpath(IARA.output_path(inputs), "plots")
+    if !isdir(plots_path)
+        mkdir(plots_path)
     end
+    IARA.plot_demand(inputs, plots_path)
 
-    # Plot demand
-    demand_file = joinpath(IARA.path_case(inputs), IARA.demand_unit_demand_ex_ante_file(inputs))
-    demand_file *= isfile(demand_file * ".csv") ? ".csv" :
-                   isfile(demand_file * ".quiv") ? ".quiv" : ""
-    if isfile(demand_file)
-        IARA.custom_plot(
-            demand_file,
-            IARA.PlotTimeSeriesAll;
-            title = "Demand",
-            plot_path = joinpath(IARA.output_path(inputs), "demand"),
-        )
-    end
-
-    # Plot renewable generation
-    renewable_generation_file = joinpath(IARA.path_case(inputs), IARA.renewable_unit_generation_ex_ante_file(inputs))
-    renewable_generation_file *=
-        isfile(renewable_generation_file * ".csv") ? ".csv" :
-        isfile(renewable_generation_file * ".quiv") ? ".quiv" : ""
-    if isfile(renewable_generation_file)
-        IARA.custom_plot(
-            renewable_generation_file,
-            IARA.PlotTimeSeriesAll;
-            title = "Renewable Generation",
-            plot_path = joinpath(IARA.output_path(inputs), "renewable_generation"),
-        )
-    end
     return nothing
 end

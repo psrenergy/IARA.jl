@@ -172,6 +172,105 @@ function _write_revenue_with_subscenarios(
     return nothing
 end
 
+function _subtract_revenue_from_costs(
+    revenue_reader::Quiver.Reader{Quiver.csv},
+    costs_reader::Quiver.Reader{Quiver.csv},
+    writer::Quiver.Writer{Quiver.csv},
+)
+    num_periods, num_scenarios, num_subperiods = revenue_reader.metadata.dimension_size
+
+    for period in 1:num_periods
+        for scenario in 1:num_scenarios
+            for subperiod in 1:num_subperiods
+                Quiver.goto!(revenue_reader; period, scenario, subperiod = subperiod)
+                revenue = revenue_reader.data
+
+                Quiver.goto!(costs_reader; period, scenario, subperiod = subperiod)
+                costs = costs_reader.data
+
+                Quiver.write!(writer, revenue .- costs; period, scenario, subperiod = subperiod)
+            end
+        end
+    end
+    Quiver.close!(writer)
+    Quiver.close!(revenue_reader)
+    Quiver.close!(costs_reader)
+    return
+end
+
+function calculate_profits_settlement(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::TimeSeriesOutputs,
+    run_time_options::RunTimeOptions,
+)
+    outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
+
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+        file_revenue = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_ex_ante_average" * run_time_file_suffixes(inputs, run_time_options),
+        )
+        settlement_string = "ex_ante"
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+        file_revenue = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_ex_post_average" * run_time_file_suffixes(inputs, run_time_options),
+        )
+        settlement_string = "ex_post"
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        file_revenue = joinpath(
+            post_processing_dir,
+            "bidding_group_total_revenue" * run_time_file_suffixes(inputs, run_time_options),
+        )
+        settlement_string = "total"
+    else
+        error("Settlement type not supported")
+    end
+
+    bidding_group_revenue_reader =
+        open_time_series_output(
+            inputs,
+            model_outputs_time_serie,
+            file_revenue,
+        )
+
+    bidding_group_costs_files_average = joinpath(
+        post_processing_dir,
+        "bidding_group_costs_ex_post_average" * run_time_file_suffixes(inputs, run_time_options),
+    )
+
+    bidding_group_costs_reader =
+        open_time_series_output(
+            inputs,
+            model_outputs_time_serie,
+            bidding_group_costs_files_average,
+        )
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "bidding_group_profit_$(settlement_string)",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$",
+        labels = bidding_group_revenue_reader.metadata.labels,
+        run_time_options,
+        dir_path = post_processing_dir,
+    )
+
+    writer = get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_profit_$(settlement_string)")
+
+    _subtract_revenue_from_costs(
+        bidding_group_revenue_reader,
+        bidding_group_costs_reader,
+        writer,
+    )
+
+    return nothing
+end
+
 """
     post_processing_bidding_group_revenue(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
 
@@ -738,6 +837,90 @@ function _join_independent_and_profile_bid(
     return nothing
 end
 
+function average_ex_post_revenue_and_costs(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::TimeSeriesOutputs,
+    run_time_options::RunTimeOptions,
+)
+    outputs_dir = output_path(inputs)
+    post_processing_dir = post_processing_path(inputs)
+    temp_dir = joinpath(path_case(inputs), "temp")
+
+    string_settlement = settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE ? "ex_ante" : "ex_post"
+
+    revenue_ex_post_reader = open_time_series_output(
+        inputs,
+        model_outputs_time_serie,
+        joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_$(string_settlement)" * run_time_file_suffixes(inputs, run_time_options),
+        ),
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "bidding_group_revenue_$(string_settlement)_average",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$",
+        labels = revenue_ex_post_reader.metadata.labels,
+        run_time_options,
+        dir_path = post_processing_dir,
+    )
+    revenue_ex_post_average_writer =
+        get_writer(
+            outputs_post_processing,
+            inputs,
+            run_time_options,
+            "bidding_group_revenue_$(string_settlement)_average",
+        )
+
+    _average_ex_post_revenue_over_subscenarios(
+        revenue_ex_post_average_writer,
+        revenue_ex_post_reader,
+    )
+
+    bidding_group_costs_files =
+        get_costs_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
+
+    if length(bidding_group_costs_files) > 1
+        error("Multiple cost files found: $bidding_group_costs_files")
+    end
+
+    bidding_group_costs_file = get_filename(bidding_group_costs_files[1])
+
+    costs_ex_post_reader =
+        open_time_series_output(
+            inputs,
+            model_outputs_time_serie,
+            bidding_group_costs_file,
+        )
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "bidding_group_costs_ex_post_average",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$",
+        labels = costs_ex_post_reader.metadata.labels,
+        run_time_options,
+        dir_path = post_processing_dir,
+    )
+
+    costs_ex_post_average_writer =
+        get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_costs_ex_post_average")
+
+    _average_ex_post_revenue_over_subscenarios(
+        costs_ex_post_average_writer,
+        costs_ex_post_reader,
+    )
+
+    return nothing
+end
+
 """
     post_processing_bidding_group_total_revenue(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
 
@@ -751,34 +934,6 @@ function post_processing_bidding_group_total_revenue(
 )
     outputs_dir = output_path(inputs)
     post_processing_dir = post_processing_path(inputs)
-    temp_dir = joinpath(path_case(inputs), "temp")
-
-    # STEP 1: Averaging ex_post over subscenarios
-
-    revenue_ex_post_reader = open_time_series_output(
-        inputs,
-        model_outputs_time_serie,
-        joinpath(post_processing_dir, "bidding_group_revenue_ex_post"),
-    )
-
-    initialize!(
-        QuiverOutput,
-        outputs_post_processing;
-        inputs,
-        output_name = "temp_bidding_group_revenue_ex_post_average",
-        dimensions = ["period", "scenario", "subperiod"],
-        unit = "\$",
-        labels = revenue_ex_post_reader.metadata.labels,
-        run_time_options,
-        dir_path = temp_dir,
-    )
-    revenue_ex_post_average_writer =
-        get_writer(outputs_post_processing, inputs, run_time_options, "temp_bidding_group_revenue_ex_post_average")
-
-    _average_ex_post_revenue_over_subscenarios(
-        revenue_ex_post_average_writer,
-        revenue_ex_post_reader,
-    )
 
     # STEP 2: Summing ex_ante and ex_post (ex_ante + mean(ex_post))
 
@@ -792,7 +947,7 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(temp_dir, "temp_bidding_group_revenue_ex_post_average"),
+            joinpath(post_processing_dir, "bidding_group_revenue_ex_post_average"),
         )
 
     initialize!(

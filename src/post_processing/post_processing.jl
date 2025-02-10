@@ -58,7 +58,8 @@ function post_process_outputs(
             model_outputs_time_serie,
             run_time_options,
         )
-        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
+        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE &&
+           any_elements(inputs, BiddingGroup)
             post_processing_bidding_group_revenue(
                 inputs,
                 outputs_post_processing,
@@ -66,6 +67,12 @@ function post_process_outputs(
                 run_time_options,
             )
             _join_independent_and_profile_bid(
+                inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
+                run_time_options,
+            )
+            average_ex_post_revenue_and_costs(
                 inputs,
                 outputs_post_processing,
                 model_outputs_time_serie,
@@ -79,6 +86,12 @@ function post_process_outputs(
                     run_time_options,
                 )
             end
+            calculate_profits_settlement(
+                inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
+                run_time_options,
+            )
         end
     end
 

@@ -60,6 +60,15 @@ if [ -z "$IARA_COMMAND" ]; then
     exit 1
 fi
 
+if [ "$IARA_COMMAND" == "help" ]; then
+   
+    $IARA_PATH/IARA.sh  --help
+
+    echo "Completed."
+
+    exit 0
+fi
+
 if [ -z "$IARA_CASE" ]; then
     echo "ERROR: Missing IARA_CASE variable. Please provide the
     path to the case folder in S3, it is a hash that identifies the case"
@@ -114,12 +123,5 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
     echo "Completed."    
-    exit 0
-fi
-
-if [ "$IARA_COMMAND" == "help" ]; then
-   
-    $IARA_PATH/IARA.sh  --help
-
     exit 0
 fi

@@ -553,7 +553,7 @@ function _average_ex_post_revenue_over_subscenarios(
     return
 end
 
-function _total_independent_profile_ex_ante(
+function _total_independent_profile_without_subscenarios(
     temp_writer::Quiver.Writer{Quiver.csv},
     independent_reader::Quiver.Reader{Quiver.csv},
     profile_reader::Quiver.Reader{Quiver.csv},
@@ -609,7 +609,7 @@ function _total_independent_profile_ex_ante(
     return
 end
 
-function _total_independent_profile_ex_post(
+function _total_independent_profile_with_subscenarios(
     temp_writer::Quiver.Writer{Quiver.csv},
     independent_reader::Quiver.Reader{Quiver.csv},
     profile_reader::Quiver.Reader{Quiver.csv},
@@ -734,12 +734,18 @@ function _join_independent_and_profile_bid(
             merged_labels =
                 unique(vcat(revenue_ex_ante_reader.metadata.labels, revenue_ex_ante_profile_reader.metadata.labels))
 
+            if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+                dimensions = ["period", "scenario", "subperiod"]
+            else
+                dimensions = ["period", "scenario", "subscenario", "subperiod"]
+            end
+
             initialize!(
                 QuiverOutput,
                 outputs_post_processing;
                 inputs,
                 output_name = "bidding_group_revenue_ex_ante",
-                dimensions = ["period", "scenario", "subperiod"],
+                dimensions = dimensions,
                 unit = "\$",
                 labels = merged_labels,
                 run_time_options,
@@ -748,11 +754,19 @@ function _join_independent_and_profile_bid(
             revenue_ex_ante_writer =
                 get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_ante")
 
-            _total_independent_profile_ex_ante(
-                revenue_ex_ante_writer,
-                revenue_ex_ante_reader,
-                revenue_ex_ante_profile_reader,
-            )
+            if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+                _total_independent_profile_without_subscenarios(
+                    revenue_ex_ante_writer,
+                    revenue_ex_ante_reader,
+                    revenue_ex_ante_profile_reader,
+                )
+            else
+                _total_independent_profile_with_subscenarios(
+                    revenue_ex_ante_writer,
+                    revenue_ex_ante_reader,
+                    revenue_ex_ante_profile_reader,
+                )
+            end
         end
         if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
             revenue_ex_post_reader = open_time_series_output(
@@ -784,7 +798,7 @@ function _join_independent_and_profile_bid(
             revenue_ex_post_writer =
                 get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_post")
 
-            _total_independent_profile_ex_post(
+                _total_independent_profile_with_subscenarios(
                 revenue_ex_post_writer,
                 revenue_ex_post_reader,
                 revenue_ex_post_profile_reader,

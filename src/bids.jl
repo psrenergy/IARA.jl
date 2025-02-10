@@ -1157,7 +1157,7 @@ function write_individual_bids_files(
         length(bidding_group_indexes_to_read) * length(buses) * number_of_subperiods(inputs) *
         number_of_scenarios(inputs) * maximum_number_of_bidding_segments(inputs)
 
-    period_column = ones(df_length) * inputs.args.period
+    period_column = ones(Int, df_length) * inputs.args.period
     scenario_column = zeros(Int, df_length)
     subperiod_column = zeros(Int, df_length)
     bid_segment_column = zeros(Int, df_length)
@@ -1268,7 +1268,7 @@ function write_individual_virtual_reservoir_bids_files(
         length(virtual_reservoirs) * number_of_scenarios(inputs) *
         maximum_number_of_virtual_reservoir_bidding_segments(inputs)
 
-    period_column = ones(df_length) * inputs.args.period
+    period_column = ones(Int, df_length) * inputs.args.period
     scenario_column = zeros(Int, df_length)
     bid_segment_column = zeros(Int, df_length)
     virtual_reservoir_column = Vector{String}(undef, df_length)

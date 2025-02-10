@@ -81,6 +81,14 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
     download_and_unzip_case
 
     $IARA_PATH/IARA.sh --output-path="game_summary" --run-mode 'interface-call' $CASE_PATH 
+
+    echo "Zipping plots..."
+    cd $CASE_PATH/game_summary/plots
+    zip -r ../plots.zip ./*
+    cd -
+
+    echo "Removing plots folder..."
+    rm -rf $CASE_PATH/game_summary/plots
     
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_summary/ --recursive  

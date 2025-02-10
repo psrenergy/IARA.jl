@@ -798,7 +798,7 @@ function _join_independent_and_profile_bid(
             revenue_ex_post_writer =
                 get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_post")
 
-                _total_independent_profile_with_subscenarios(
+            _total_independent_profile_with_subscenarios(
                 revenue_ex_post_writer,
                 revenue_ex_post_reader,
                 revenue_ex_post_profile_reader,

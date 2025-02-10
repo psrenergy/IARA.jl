@@ -116,3 +116,10 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     echo "Completed."    
     exit 0
 fi
+
+if [ "$IARA_COMMAND" == "help" ]; then
+   
+    $IARA_PATH/IARA.sh  --help
+
+    exit 0
+fi

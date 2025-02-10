@@ -33,7 +33,6 @@ format/Manifest.toml
 revise/Manifest.toml
 
 # Nunca commitar o executavel
-PSRExample
 *.ok
 *.log
 *.exe
@@ -55,6 +54,7 @@ PSRExample
 compile/build/
 compile/setup/*.zip
 compile/setup/setup.ini
+compile/compilation_case_*
 
 # Expected outputs should not be ignored
 !**/expected_outputs/*.toml

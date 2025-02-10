@@ -27,4 +27,3 @@ ENV IARA_PATH=/IARA/iara_model/bin
 RUN chmod +x IARA_ecs.sh
 
 CMD ["./IARA_ecs.sh"]
-

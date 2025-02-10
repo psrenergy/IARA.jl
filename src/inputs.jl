@@ -66,6 +66,7 @@ Optional arguments:
 
   - `number_of_periods::Int`: the number of periods in the study
   - `number_of_scenarios::Int`: the number of scenarios in the study
+  - `number_of_subscenarios::Int`: the number of subscenarios in the study
   - `number_of_subperiods::Int`: the number of subperiods in the study
   - `demand_deficit_cost::Float64`: the cost of demand deficit in `R\$\\MWh`
   - `time_series_step::Int`: the type of the period
@@ -228,6 +229,7 @@ $AVAILABLE_RUN_MODES_MESSAGE
 """
 function validate(path::String; run_mode::String = "market-clearing")
     args = Args(path, parse_run_mode(run_mode))
+    initialize(args)
     inputs = load_inputs(args)
     try
         validate(inputs)
@@ -298,7 +300,7 @@ function log_inputs(inputs::Inputs)
     Log.info("")
     Log.info("Execution options")
     iara_log(inputs.args)
-    iara_log(inputs.collections.configurations)
+    iara_log_configurations(inputs)
     Log.info("")
     Log.info("Collections")
     for fieldname in fieldnames(Collections)
@@ -422,7 +424,7 @@ function time_series_demand(inputs, run_time_options; subscenario::Union{Int, No
         if read_ex_ante_demand_file(inputs)
             return inputs.time_series.demand.ex_ante
         elseif read_ex_post_demand_file(inputs)
-            return mean(inputs.time_series.demand.ex_post; dims = 3)[:, :, 1]
+            return mean(inputs.time_series.demand.ex_post.data; dims = 3)[:, :, 1]
         end
     end
     return ones(number_of_elements(inputs, DemandUnit), number_of_subperiods(inputs))

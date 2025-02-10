@@ -69,6 +69,7 @@ if [ "$IARA_COMMAND" == "help" ]; then
     exit 0
 fi
 
+
 if [ -z "$IARA_CASE" ]; then
     echo "ERROR: Missing IARA_CASE variable. Please provide the
     path to the case folder in S3, it is a hash that identifies the case"

@@ -60,6 +60,8 @@ end
   - `MARKET_CLEARING`: Market clearing (3)
   - `MIN_COST`: Centralized operation simulation (4)
   - `SINGLE_PERIOD_MARKET_CLEARING`: Single period market clearing (5)
+  - `SINGLE_PERIOD_HEURISTIC_BID`: Single period heuristic bid (6)
+  - `INTERFACE_CALL`: Interface call (7)
 """
 @enumx RunMode begin
     TRAIN_MIN_COST = 0
@@ -69,6 +71,7 @@ end
     MIN_COST = 4
     SINGLE_PERIOD_MARKET_CLEARING = 5
     SINGLE_PERIOD_HEURISTIC_BID = 6
+    INTERFACE_CALL = 7
 end
 
 const AVAILABLE_RUN_MODES_MESSAGE = """
@@ -80,6 +83,7 @@ const AVAILABLE_RUN_MODES_MESSAGE = """
     - market-clearing
     - single-period-market-clearing
     - single-period-heuristic-bid
+    - interface-call
     """
 
 function parse_run_mode(run_mode::Union{String, Nothing})
@@ -97,6 +101,8 @@ function parse_run_mode(run_mode::Union{String, Nothing})
         return RunMode.SINGLE_PERIOD_MARKET_CLEARING
     elseif run_mode == "single-period-heuristic-bid"
         return RunMode.SINGLE_PERIOD_HEURISTIC_BID
+    elseif run_mode == "interface-call"
+        return RunMode.INTERFACE_CALL
     else
         error(
             """
@@ -213,11 +219,13 @@ end
 """
     Configurations_SettlementType
 
+  - `NONE`: None (-1)
   - `EX_ANTE`: Ex-ante (0)
   - `EX_POST`: Ex-post (1)
   - `DUAL`: Dual (2)
 """
 @enumx Configurations_SettlementType begin
+    NONE = -1
     EX_ANTE = 0
     EX_POST = 1
     DUAL = 2

@@ -237,12 +237,59 @@ end
 Validate the BiddingGroup's context within the inputs. Return the number of errors found.
 """
 function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGroup)
-    asset_owners = index_of_elements(inputs, AssetOwner)
     num_errors = 0
+
+    # Check if the assigned AssetOwner exists in the database
+    asset_owners = index_of_elements(inputs, AssetOwner)
     for i in 1:length(bidding_group)
         if !(bidding_group.asset_owner_index[i] in asset_owners)
             @error(
                 "BiddingGroup $(bidding_group.label[i]) AssetOwner ID $(bidding_group.asset_owner_index[i]) not found."
+            )
+            num_errors += 1
+        end
+    end
+
+    # Check if all bidding_groups have units assigned to them. If not, some run_modes and options are not available.
+    thermal_units = index_of_elements(inputs, ThermalUnit)
+    hydro_units = index_of_elements(inputs, HydroUnit)
+    renewable_units = index_of_elements(inputs, RenewableUnit)
+    battery_units = index_of_elements(inputs, BatteryUnit)
+    number_of_units_per_bidding_group = zeros(Int, length(bidding_group))
+    for t in thermal_units
+        bg_index = thermal_unit_bidding_group_index(inputs, t)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
+    end
+    for h in hydro_units
+        bg_index = hydro_unit_bidding_group_index(inputs, h)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
+    end
+    for r in renewable_units
+        bg_index = renewable_unit_bidding_group_index(inputs, r)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
+    end
+    for b in battery_units
+        bg_index = battery_unit_bidding_group_index(inputs, b)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
+    end
+    if any(number_of_units_per_bidding_group .== 0)
+        if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+            @error(
+                "Some bidding groups do not have any units assigned to them. This is not allowed for the SINGLE_PERIOD_HEURISTIC_BID run mode."
+            )
+            num_errors += 1
+        end
+        if is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)
+            @error(
+                "Some bidding groups do not have any units assigned to them. This is not allowed when creating heuristic bids for the MARKET_CLEARING run mode."
             )
             num_errors += 1
         end

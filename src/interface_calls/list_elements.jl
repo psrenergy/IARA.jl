@@ -27,7 +27,7 @@ function write_elements_to_json(inputs::IARA.AbstractInputs)
     buses_list = list_buses(inputs)
 
     # List assets and minimal characteristics (maximum and minimum generation, etc.)
-    @show assets_list = list_assets(inputs)
+    assets_list = list_assets(inputs)
 
     data = Dict(
         "configurations" => configurations_list,
@@ -49,6 +49,8 @@ function list_case_configurations(inputs::IARA.AbstractInputs)
         "number_of_periods" => IARA.number_of_periods(inputs),
         "number_of_scenarios" => IARA.number_of_scenarios(inputs),
         "number_of_subperiods" => IARA.number_of_subperiods(inputs),
+        "initial_date_time" => replace(string(IARA.initial_date_time(inputs)), "T" => " "),
+        "period_type" => IARA.period_type_string(IARA.time_series_step(inputs)),
     )
 end
 

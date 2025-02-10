@@ -1,3 +1,14 @@
+#############################################################################
+#  Copyright (c) 2024: PSR, CCEE (Câmara de Comercialização de Energia  
+#      Elétrica), and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#############################################################################
+# IARA
+# See https://github.com/psrenergy/IARA.jl
+#############################################################################
+
 module TestInterfaceCalls
 
 using Test
@@ -21,8 +32,8 @@ function test_iara_interface_call()
     # json with case information
     json_file = joinpath(case_outputs_path, "iara_elements.json")
     @test isfile(json_file)
-    inflow_file = joinpath(case_outputs_path, "inflows_all.html")
-    @test isfile(inflow_file)
+    demand_file = joinpath(case_outputs_path, "plots", "total_demand.html")
+    @test isfile(demand_file)
     return nothing
 end
 

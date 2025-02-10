@@ -505,18 +505,52 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 @warn("All clearing models must be hybrid when using virtual reservoirs.")
             end
         end
-    end
-    if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
-        if is_market_clearing(inputs)
-            if configurations.number_of_subscenarios <= 0
-                @error("Number of subscenarios must be positive.")
-                num_errors += 1
-            end
+        if settlement_type(inputs) == Configurations_SettlementType.NONE
+            @warn("Settlement type is NONE. No revenue will be calculated.")
         else
-            if configurations.number_of_subscenarios != 1
-                @error("Number of subscenarios must be one for run modes other than MARKET_CLEARING.")
+            if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP &&
+               configurations.construction_type_ex_post_commercial == Configurations_ConstructionType.SKIP
+                @error(
+                    "When using a settlement type, either ex-post physical or ex-post commercial clearing must occur — both cannot be skipped."
+                )
                 num_errors += 1
             end
+            if settlement_type(inputs) in [Configurations_SettlementType.DUAL, Configurations_SettlementType.EX_ANTE]
+                if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
+                   configurations.construction_type_ex_ante_commercial == Configurations_ConstructionType.SKIP
+                    @error(
+                        "When using settlement type $(settlement_type(inputs)), either ex-ante physical or ex-ante commercial clearing must occur — both cannot be skipped."
+                    )
+                    num_errors += 1
+                end
+            end
+            if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
+               settlement_type(inputs) == Configurations_SettlementType.DUAL
+                @warn(
+                    "The ex-ante physical clearing model is skipped. " *
+                    "Instead, generation data for revenue calculation will be sourced from the ex-ante commercial clearing model. " *
+                    "This represents a non-standard execution type."
+                )
+            end
+            if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP
+                @warn(
+                    "The ex-post physical clearing model is skipped. " *
+                    "Instead, generation data for revenue calculation will be sourced from the ex-post commercial clearing model. " *
+                    "This represents a non-standard execution type."
+                )
+            end
+        end
+    end
+    if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
+       run_mode(inputs) == RunMode.INTERFACE_CALL
+        if configurations.number_of_subscenarios <= 0
+            @error("Number of subscenarios must be positive.")
+            num_errors += 1
+        end
+    else
+        if configurations.number_of_subscenarios != 1
+            @error("Number of subscenarios must be one for run mode $(run_mode(inputs)).")
+            num_errors += 1
         end
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
@@ -543,10 +577,21 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
     return num_errors
 end
 
-function iara_log(configurations::Configurations)
-    Log.info("   periods: $(configurations.number_of_periods)")
-    Log.info("   scenarios: $(configurations.number_of_scenarios)")
-    Log.info("   subperiods: $(configurations.number_of_subperiods)")
+function iara_log_configurations(inputs::AbstractInputs)
+    Log.info("   periods: $(number_of_periods(inputs))")
+    Log.info("   scenarios: $(number_of_scenarios(inputs))")
+    Log.info("   subperiods: $(number_of_subperiods(inputs))")
+    Log.info("")
+
+    if is_market_clearing(inputs)
+        Log.info("Market Clearing Subproblems:")
+        Log.info("")
+        Log.info(Printf.@sprintf " %-20s %-20s %-20s" "Subproblem" "Execution Mode" "Integer Variables")
+        for clearing_model_subproblem in instances(RunTime_ClearingSubproblem.T)
+            run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
+            iara_log(inputs, run_time_options)
+        end
+    end
 
     return nothing
 end
@@ -975,29 +1020,17 @@ read_inflow_from_file(inputs::AbstractInputs) =
 Return whether bids should be read from a file.
 """
 function read_bids_from_file(inputs::AbstractInputs)
-    run_need_bids =
-        (
-            inputs.collections.configurations.construction_type_ex_ante_physical !=
-            Configurations_ConstructionType.COST_BASED
-        ) &&
-        (
-            inputs.collections.configurations.construction_type_ex_ante_commercial !=
-            Configurations_ConstructionType.COST_BASED
-        ) &&
-        (
-            inputs.collections.configurations.construction_type_ex_post_physical !=
-            Configurations_ConstructionType.COST_BASED
-        ) &&
-        (
-            inputs.collections.configurations.construction_type_ex_post_commercial !=
-            Configurations_ConstructionType.COST_BASED
-        )
-
-    if run_need_bids
-        return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
-    else
+    no_file_model_types = [
+        Configurations_ConstructionType.SKIP,
+        Configurations_ConstructionType.COST_BASED,
+    ]
+    if construction_type_ex_ante_physical(inputs) in no_file_model_types &&
+       construction_type_ex_ante_commercial(inputs) in no_file_model_types &&
+       construction_type_ex_post_physical(inputs) in no_file_model_types &&
+       construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
+    return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
 end
 
 """

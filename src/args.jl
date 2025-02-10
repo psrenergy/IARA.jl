@@ -15,6 +15,7 @@ mutable struct Args
     run_mode::RunMode.T
     write_lp::Bool
     plot_outputs::Bool
+    plot_ui_outputs::Bool
     # period is only used in the SINGLE_PERIOD_MARKET_CLEARING run mode
     # its value should be -1 in all other cases
     period::Int
@@ -24,16 +25,14 @@ function Args(args::Vector{String})
     parsed_args = parse_commandline(args)
     run_mode = parse_run_mode(parsed_args["run-mode"])
     period = parsed_args["period"]::Int
-    if run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING && period <= 0
-        error("The period argument must be greater than zero.")
-    end
     return Args(
         parsed_args["path"],
-        parsed_args["output-path"],
-        parsed_args["delete-output-folder-before-execution"],
-        run_mode,
-        parsed_args["write-lp"],
-        parsed_args["plot-results"],
+        run_mode;
+        output_path = parsed_args["output-path"],
+        delete_output_folder_before_execution = parsed_args["delete-output-folder-before-execution"],
+        write_lp = parsed_args["write-lp"],
+        plot_outputs = parsed_args["plot-results"],
+        plot_ui_outputs = parsed_args["plot-ui-results"],
         period,
     )
 end
@@ -45,17 +44,34 @@ function Args(
     delete_output_folder_before_execution::Bool = false,
     write_lp::Bool = false,
     plot_outputs::Bool = true,
+    plot_ui_outputs::Bool = false,
     period::Int = -1,
 )
-    return Args(
+    if (run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
+       period <= 0
+        error(
+            "When running in single period modes, " *
+            "the period must be greater than 0. Got period = $period.",
+        )
+    end
+    absolute_output_path = if isabspath(output_path)
+        output_path
+    else
+        joinpath(path, output_path)
+    end
+
+    args = Args(
         path,
-        output_path,
+        absolute_output_path,
         delete_output_folder_before_execution,
         run_mode,
         write_lp,
         plot_outputs,
+        plot_ui_outputs,
         period,
     )
+
+    return args
 end
 
 function finish_path(path::String)
@@ -91,8 +107,7 @@ function parse_commandline(args)
         default = ""
         "--delete-output-folder-before-execution"
         help = "delete the output folder before execution"
-        arg_type = Bool
-        default = false
+        action = :store_true
         "--run-mode"
         help = "run mode"
         arg_type = String
@@ -102,8 +117,10 @@ function parse_commandline(args)
         action = :store_true
         "--plot-results"
         help = "plot results"
-        arg_type = Bool
-        default = true
+        action = :store_true
+        "--plot-ui-results"
+        help = "plot UI results"
+        action = :store_true
         "--period"
         help = "period for SINGLE_PERIOD_MARKET_CLEARING run mode"
         arg_type = Int

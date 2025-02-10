@@ -33,6 +33,7 @@ using LinearAlgebra
 using Logging
 using Random
 using Statistics
+using Printf
 
 const Log = LoggingPolyglot
 const PSRI = PSRClassesInterface
@@ -41,9 +42,11 @@ const DatabaseSQLite = PSRI.PSRDatabaseSQLite.DatabaseSQLite
 const POI = ParametricOptInterface
 
 function initialize(args)
-    _set_plot_defaults()
+    # Initialize dlls and other possible defaults
+    initialize_plotly()
     initialize_output_dir(args)
     initialize_logger(args)
+    print_banner()
     return nothing
 end
 
@@ -98,6 +101,7 @@ include("plots/technology_histogram_subperiod.jl")
 include("plots/time_series_stacked_mean.jl")
 include("plots/relation_plot.jl")
 include("plots/custom_plot.jl")
+include("plots/utils.jl")
 
 include("utils.jl")
 include("mathematical_model.jl")

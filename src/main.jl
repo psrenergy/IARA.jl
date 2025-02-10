@@ -16,7 +16,6 @@ end
 
 function main(args::Args)
     initialize(args)
-
     inputs = load_inputs(args)
 
     try
@@ -29,16 +28,27 @@ function main(args::Args)
 end
 
 function main(args::Vector{String})
-    print_banner()
     args = Args(args)
-    return main(args)
+    if args.run_mode == RunMode.INTERFACE_CALL
+        return InterfaceCalls.main(args)
+    else
+        return main(args)
+    end
 end
 
 function julia_main()::Cint
     COMPILED[] = true
     try
         main(ARGS)
-    catch
+    catch e
+        error_log_file = "iara_error.log"
+        println(
+            "Error running model. Please consult the file: $error_log_file.",
+        )
+        open(error_log_file, "w") do io
+            println(io, "IARA v$PKG_VERSION ($GIT_DATE)")
+            return showerror(io, e, catch_backtrace())
+        end
         return 1
     end
     return 0
@@ -278,6 +288,12 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             maximum_number_of_profiles_for_heuristic_bids(inputs)
         update_number_of_bid_profiles!(inputs, number_of_profiles)
         update_number_of_complementary_grouping!(inputs, number_of_complementary_grouping_profiles)
+
+        Log.info("Heuristic bids")
+        Log.info("   Number of segments: $maximum_number_of_offer_segments")
+        Log.info("   Number of profiles: $number_of_profiles")
+        Log.info("   Number of complementary grouping profiles: $number_of_complementary_grouping_profiles")
+        Log.info("")
     end
 
     # Initialize the outputs
@@ -596,15 +612,6 @@ function single_period_heuristic_bid(
 end
 
 function print_banner()
-    banner = raw"""
-     _____          _____            
-    |_   _|   /\   |  __ \     /\    
-      | |    /  \  | |__) |   /  \   
-      | |   / /\ \ |  _  /   / /\ \  
-     _| |_ / ____ \| | \ \  / ____ \ 
-    |_____/_/    \_\_|  \_\/_/    \_\
-    """
-    Log.info(banner)
     Log.info("IARA - version: $PKG_VERSION")
     return nothing
 end

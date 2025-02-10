@@ -108,8 +108,9 @@ function initialize_output_dir(args::Args)
         if args.delete_output_folder_before_execution
             if length(readdir(args.outputs_path)) > 0
                 @warn(
-                    "The output directory $(args.outputs_path) is not empty, and the argument 'delete_output_folder_before_execution' has been provided.
-              The directory's contents will be deleted."
+                    "The output directory $(args.outputs_path) is not empty, and the argument " *
+                    "`delete_output_folder_before_execution` has been provided. " *
+                    "The directory's contents will be deleted."
                 )
                 rm(args.outputs_path; force = true, recursive = true)
                 mkdir(args.outputs_path)
@@ -117,10 +118,10 @@ function initialize_output_dir(args::Args)
         else
             if length(readdir(args.outputs_path)) > 0
                 error(
-                    "The output directory $(args.outputs_path) is not empty
-                    Please choose another path or run IARA with the argument delete_output_folder_before_execution.
-                    You can change the output path with the argument output_path.
-                    For example, IARA.market_clearing(PATH; output_path = \"path/to/output\")",
+                    "The output directory $(args.outputs_path) is not empty. " *
+                    "Please choose another path or run IARA with the argument delete_output_folder_before_execution. " *
+                    "You can change the output path with the argument output_path. " *
+                    "For example, IARA.market_clearing(PATH; output_path = \"path/to/output\")",
                 )
             end
         end

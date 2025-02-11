@@ -23,4 +23,16 @@ IARA.delete_element!(
     "Hydro Downstream",
 )
 
+IARA.delete_element!(
+    db,
+    "BiddingGroup",
+    "UpstreamA_01",
+)
+
+IARA.delete_element!(
+    db,
+    "BiddingGroup",
+    "DownstreamA_01",
+)
+
 IARA.close_study!(db)

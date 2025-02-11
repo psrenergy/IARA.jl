@@ -23,7 +23,7 @@ function test_iara_interface_call()
     if isdir(case_path)
         rm(case_path; force = true, recursive = true)
     end
-    IARA.ExampleCases.build_example_case(case_path, "boto_base_01")
+    IARA.ExampleCases.build_example_case(case_path, "boto_nohydro_01")
 
     case_outputs_path = joinpath(case_path, "outputs")
     # Run the interface call

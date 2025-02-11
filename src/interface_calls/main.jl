@@ -13,13 +13,9 @@ function interface_call(path::String; kwargs...)
     return main(args)
 end
 
-function main(args::Vector{String})
-    args = IARA.Args(args)
-    return main(args)
-end
-
 function main(args::IARA.Args)
     IARA.initialize(args)
+    validate_interface_run_modes(args)
     inputs = IARA.load_inputs(args)
 
     try
@@ -34,5 +30,23 @@ end
 function run_interface_tasks(inputs::IARA.AbstractInputs)
     write_elements_to_json(inputs)
     create_plots(inputs)
+    return nothing
+end
+
+function validate_interface_run_modes(args::IARA.Args)
+    args_list = [
+        [args.path, "--run-mode=single-period-heuristic-bid", "--period=1", "--plot-ui-results", "--delete-output-folder-before-execution"],
+        [args.path, "--run-mode=single-period-market-clearing", "--period=1", "--plot-ui-results", "--delete-output-folder-before-execution"],
+    ]
+    run_modes_list = [
+        IARA.RunMode.SINGLE_PERIOD_HEURISTIC_BID,
+        IARA.RunMode.SINGLE_PERIOD_MARKET_CLEARING,
+    ]
+    @info("Validating database for interface run modes")
+    for (args_iter, run_mode_iter) in zip(args_list, run_modes_list)
+        @info("    Validating database for $(run_mode_iter)")
+        IARA.validate_database(args_iter)
+    end
+    @info("Database validated for interface run modes")
     return nothing
 end

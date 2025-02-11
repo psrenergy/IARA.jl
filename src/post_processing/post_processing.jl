@@ -14,7 +14,7 @@
 Run post-processing routines.
 """
 function post_processing(inputs)
-    Log.info("Running post-processing routines")
+    @info("Running post-processing routines")
     post_proc_path = post_processing_path(inputs)
     if !isdir(post_proc_path)
         mkdir(post_proc_path)

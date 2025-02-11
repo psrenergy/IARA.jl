@@ -297,12 +297,12 @@ function advanced_validations(inputs::Inputs)
 end
 
 function log_inputs(inputs::Inputs)
-    Log.info("")
-    Log.info("Execution options")
+    @info("")
+    @info("Execution options")
     iara_log(inputs.args)
     iara_log_configurations(inputs)
-    Log.info("")
-    Log.info("Collections")
+    @info("")
+    @info("Collections")
     for fieldname in fieldnames(Collections)
         if fieldname == :configurations
             continue
@@ -310,17 +310,17 @@ function log_inputs(inputs::Inputs)
         collection = getfield(inputs.collections, fieldname)
         iara_log(collection)
     end
-    Log.info("")
-    Log.info("Time Series from external files")
+    @info("")
+    @info("Time Series from external files")
     iara_log(inputs.time_series)
-    Log.info("")
-    Log.info("Cuts file:")
+    @info("")
+    @info("Cuts file:")
     if has_fcf_cuts_to_read(inputs)
-        Log.info("  $(fcf_cuts_file(inputs))")
+        @info("  $(fcf_cuts_file(inputs))")
     else
-        Log.info("   No cuts file")
+        @info("   No cuts file")
     end
-    Log.info("")
+    @info("")
     return nothing
 end
 

@@ -106,6 +106,6 @@ end
 
 function iara_log(@nospecialize(collection::C)) where {C <: AbstractCollection}
     if length(collection) != 0
-        Log.info("   $(nameof(C)): $(length(collection)) element(s)")
+        @info("   $(nameof(C)): $(length(collection)) element(s)")
     end
 end

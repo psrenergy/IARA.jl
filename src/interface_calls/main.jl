@@ -35,8 +35,20 @@ end
 
 function validate_interface_run_modes(args::IARA.Args)
     args_list = [
-        [args.path, "--run-mode=single-period-heuristic-bid", "--period=1", "--plot-ui-results", "--delete-output-folder-before-execution"],
-        [args.path, "--run-mode=single-period-market-clearing", "--period=1", "--plot-ui-results", "--delete-output-folder-before-execution"],
+        [
+            args.path,
+            "--run-mode=single-period-heuristic-bid",
+            "--period=1",
+            "--plot-ui-results",
+            "--delete-output-folder-before-execution",
+        ],
+        [
+            args.path,
+            "--run-mode=single-period-market-clearing",
+            "--period=1",
+            "--plot-ui-results",
+            "--delete-output-folder-before-execution",
+        ],
     ]
     run_modes_list = [
         IARA.RunMode.SINGLE_PERIOD_HEURISTIC_BID,

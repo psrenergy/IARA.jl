@@ -22,7 +22,7 @@ Struct to store parameters related to the outputs of the optimization problem.
     outputs::Dict{String, AbstractOutput} = Dict{String, AbstractOutput}()
 end
 
-@kwdef mutable struct TimeSeriesOutputs
+@kwdef mutable struct OutputReaders
     outputs::Dict{String, AbstractOutput} = Dict{String, AbstractOutput}()
 end
 
@@ -736,7 +736,7 @@ function finalize_outputs!(outputs::Outputs)
     return nothing
 end
 
-function finalize_outputs!(outputs::TimeSeriesOutputs)
+function finalize_outputs!(outputs::OutputReaders)
     for output in values(outputs.outputs)
         Quiver.close!(output.reader)
     end

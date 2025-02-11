@@ -96,7 +96,7 @@ function battery_unit_storage!(
         inputs,
         output_name = "battery_om_costs",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "\$",
+        unit = "k\$",
         labels = battery_unit_label(inputs)[battery_units],
         run_time_options,
     )

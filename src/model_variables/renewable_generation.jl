@@ -158,7 +158,7 @@ function renewable_generation!(
         inputs,
         output_name = "renewable_om_costs",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "\$/MWh",
+        unit = "k\$",
         labels = renewable_unit_label(inputs),
         run_time_options,
     )

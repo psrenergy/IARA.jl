@@ -9,7 +9,7 @@
 #############################################################################
 
 """
-    post_processing_generation(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
+    post_processing_generation(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::OutputReaders, run_time_options::RunTimeOptions)
 
 Run post-processing routines for generation.
 """

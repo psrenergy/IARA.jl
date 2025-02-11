@@ -21,7 +21,7 @@ function post_processing(inputs::Inputs)
     end
 
     outputs_post_processing = Outputs()
-    model_outputs_time_series = TimeSeriesOutputs()
+    model_outputs_time_series = OutputReaders()
     run_time_options = RunTimeOptions(; is_post_processing = true)
 
     try
@@ -43,7 +43,7 @@ end
 function post_process_outputs(
     inputs::Inputs,
     outputs_post_processing::Outputs,
-    model_outputs_time_serie::TimeSeriesOutputs,
+    model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
     gather_outputs_separated_by_asset_owners(inputs)
@@ -53,6 +53,12 @@ function post_process_outputs(
     end
     if is_market_clearing(inputs)
         create_bidding_group_generation_files(
+            inputs,
+            outputs_post_processing,
+            model_outputs_time_serie,
+            run_time_options,
+        )
+        create_bidding_group_cost_files(
             inputs,
             outputs_post_processing,
             model_outputs_time_serie,
@@ -72,7 +78,15 @@ function post_process_outputs(
                 model_outputs_time_serie,
                 run_time_options,
             )
-            average_ex_post_revenue_and_costs(
+            if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
+                average_ex_post_revenue(
+                    inputs,
+                    outputs_post_processing,
+                    model_outputs_time_serie,
+                    run_time_options,
+                )
+            end
+            average_ex_post_costs(
                 inputs,
                 outputs_post_processing,
                 model_outputs_time_serie,
@@ -100,9 +114,12 @@ end
 
 function open_time_series_output(
     inputs::Inputs,
-    model_outputs::TimeSeriesOutputs,
+    model_outputs::OutputReaders,
     file::String;
 )
+    if !isfile(file * ".csv")
+        return nothing
+    end
     reader = Quiver.Reader{Quiver.csv}(file)
     output_timeseries = QuiverInput(reader)
     model_outputs.outputs[file] = output_timeseries

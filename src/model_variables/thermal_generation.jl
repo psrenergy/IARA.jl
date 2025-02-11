@@ -100,7 +100,7 @@ function thermal_generation!(
         inputs,
         output_name = "thermal_om_costs",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "\$/MWh",
+        unit = "k\$",
         labels = thermal_unit_label(inputs)[thermals],
         run_time_options,
     )

@@ -9,7 +9,7 @@
 #############################################################################
 
 """
-    gather_outputs_separated_by_asset_owners(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::TimeSeriesOutputs, run_time_options::RunTimeOptions)
+    gather_outputs_separated_by_asset_owners(inputs::Inputs, run_time_options::RunTimeOptions)
 
 Gather outputs separated by asset owners.
 """

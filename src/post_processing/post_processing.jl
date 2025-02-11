@@ -78,20 +78,6 @@ function post_process_outputs(
                 model_outputs_time_serie,
                 run_time_options,
             )
-            if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
-                average_ex_post_revenue(
-                    inputs,
-                    outputs_post_processing,
-                    model_outputs_time_serie,
-                    run_time_options,
-                )
-            end
-            average_ex_post_costs(
-                inputs,
-                outputs_post_processing,
-                model_outputs_time_serie,
-                run_time_options,
-            )
             if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
                 post_processing_bidding_group_total_revenue(
                     inputs,

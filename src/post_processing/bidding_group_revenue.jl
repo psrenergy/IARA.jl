@@ -566,17 +566,28 @@ function _total_revenue(
     ex_ante_reader::Quiver.Reader{Quiver.csv},
     ex_post_reader::Quiver.Reader{Quiver.csv},
 )
-    num_periods, num_scenarios, num_subperiods = ex_ante_reader.metadata.dimension_size
+    num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
-            for subperiod in 1:num_subperiods
-                Quiver.goto!(ex_ante_reader; period, scenario, subperiod = subperiod)
-                Quiver.goto!(ex_post_reader; period, scenario, subperiod = subperiod)
+            for subscenario in 1:num_subscenarios
+                for subperiod in 1:num_subperiods
+                    if subscenario == 1
+                        Quiver.goto!(ex_ante_reader; period, scenario, subperiod = subperiod)
+                    end
+                    Quiver.goto!(ex_post_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
 
-                total_revenue = ex_ante_reader.data .+ ex_post_reader.data
+                    total_revenue = ex_ante_reader.data .+ ex_post_reader.data
 
-                Quiver.write!(total_revenue_writer, total_revenue; period, scenario, subperiod = subperiod)
+                    Quiver.write!(
+                        total_revenue_writer,
+                        total_revenue;
+                        period,
+                        scenario,
+                        subscenario = subscenario,
+                        subperiod = subperiod,
+                    )
+                end
             end
         end
     end
@@ -730,51 +741,6 @@ function _join_independent_and_profile_bid(
     return nothing
 end
 
-function average_ex_post_revenue(
-    inputs::Inputs,
-    outputs_post_processing::Outputs,
-    model_outputs_time_serie::OutputReaders,
-    run_time_options::RunTimeOptions,
-)
-    post_processing_dir = post_processing_path(inputs)
-    temp_dir = joinpath(path_case(inputs), "temp")
-
-    revenue_ex_post_reader = open_time_series_output(
-        inputs,
-        model_outputs_time_serie,
-        joinpath(
-            post_processing_dir,
-            "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options),
-        ),
-    )
-
-    initialize!(
-        QuiverOutput,
-        outputs_post_processing;
-        inputs,
-        output_name = "temp_bidding_group_revenue_ex_post_average",
-        dimensions = ["period", "scenario", "subperiod"],
-        unit = "\$",
-        labels = revenue_ex_post_reader.metadata.labels,
-        run_time_options,
-        dir_path = temp_dir,
-    )
-    revenue_ex_post_average_writer =
-        get_writer(
-            outputs_post_processing,
-            inputs,
-            run_time_options,
-            "temp_bidding_group_revenue_ex_post_average",
-        )
-
-    _average_ex_post_over_subscenarios(
-        revenue_ex_post_average_writer,
-        revenue_ex_post_reader,
-    )
-
-    return nothing
-end
-
 """
     post_processing_bidding_group_total_revenue(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::OutputReaders, run_time_options::RunTimeOptions)
 
@@ -790,7 +756,7 @@ function post_processing_bidding_group_total_revenue(
     post_processing_dir = post_processing_path(inputs)
     tempdir = joinpath(path_case(inputs), "temp")
 
-    # Summing ex_ante and ex_post (ex_ante + mean(ex_post))
+    # Summing ex_ante and ex_post for dual settlement
 
     revenue_ex_ante_reader = open_time_series_output(
         inputs,
@@ -802,7 +768,7 @@ function post_processing_bidding_group_total_revenue(
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(tempdir, "temp_bidding_group_revenue_ex_post_average"),
+            joinpath(post_processing_dir, "bidding_group_revenue_ex_post"),
         )
 
     initialize!(
@@ -810,7 +776,7 @@ function post_processing_bidding_group_total_revenue(
         outputs_post_processing;
         inputs,
         output_name = "bidding_group_total_revenue",
-        dimensions = ["period", "scenario", "subperiod"],
+        dimensions = ["period", "scenario", "subscenario", "subperiod"],
         unit = "\$",
         labels = revenue_ex_ante_reader.metadata.labels,
         run_time_options,

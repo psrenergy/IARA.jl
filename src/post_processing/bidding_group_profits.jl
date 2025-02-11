@@ -1,29 +1,3 @@
-function _subtract_revenue_from_costs_without_subscenarios(
-    revenue_reader::Quiver.Reader{Quiver.csv},
-    costs_reader::Quiver.Reader{Quiver.csv},
-    writer::Quiver.Writer{Quiver.csv},
-)
-    num_periods, num_scenarios, num_subperiods = revenue_reader.metadata.dimension_size
-
-    for period in 1:num_periods
-        for scenario in 1:num_scenarios
-            for subperiod in 1:num_subperiods
-                Quiver.goto!(revenue_reader; period, scenario, subperiod = subperiod)
-                revenue = revenue_reader.data
-
-                Quiver.goto!(costs_reader; period, scenario, subperiod = subperiod)
-                costs = costs_reader.data
-
-                Quiver.write!(writer, revenue .- costs; period, scenario, subperiod = subperiod)
-            end
-        end
-    end
-    Quiver.close!(writer)
-    Quiver.close!(revenue_reader)
-    Quiver.close!(costs_reader)
-    return
-end
-
 function _subtract_revenue_from_costs_with_subscenarios(
     revenue_reader::Quiver.Reader{Quiver.csv},
     costs_reader::Quiver.Reader{Quiver.csv},
@@ -52,6 +26,11 @@ function _subtract_revenue_from_costs_with_subscenarios(
     return nothing
 end
 
+"""
+    calculate_profits_settlement(inputs, outputs_post_processing, model_outputs_time_serie, run_time_options)
+
+Calculate the profits of the bidding groups for the different settlement types.
+"""
 function calculate_profits_settlement(
     inputs::Inputs,
     outputs_post_processing::Outputs,
@@ -91,17 +70,10 @@ function calculate_profits_settlement(
             file_revenue,
         )
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-        bidding_group_costs_files = joinpath(
-            tempdir,
-            "temp_bidding_group_costs_ex_post_average" * run_time_file_suffixes(inputs, run_time_options),
-        )
-        dimensions = ["period", "scenario", "subperiod"]
-    else
-        bidding_group_costs_files = get_costs_files(outputs_dir, post_processing_dir; from_ex_post = true)
-        bidding_group_costs_files = get_filename(bidding_group_costs_files[1])
-        dimensions = ["period", "scenario", "subscenario", "subperiod"]
-    end
+    # The costs associated to the bgs are from the ex post settlement
+    bidding_group_costs_files = get_costs_files(outputs_dir, post_processing_dir; from_ex_post = true)
+    bidding_group_costs_files = get_filename(bidding_group_costs_files[1])
+    dimensions = ["period", "scenario", "subscenario", "subperiod"]
 
     bidding_group_costs_reader =
         open_time_series_output(
@@ -124,20 +96,11 @@ function calculate_profits_settlement(
 
     writer = get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_profit_$(settlement_string)")
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-        # TODO: Check which settlements should be with subscenarios
-        _subtract_revenue_from_costs_without_subscenarios(
-            bidding_group_revenue_reader,
-            bidding_group_costs_reader,
-            writer,
-        )
-    else
-        _subtract_revenue_from_costs_with_subscenarios(
-            bidding_group_revenue_reader,
-            bidding_group_costs_reader,
-            writer,
-        )
-    end
+    _subtract_revenue_from_costs_with_subscenarios(
+        bidding_group_revenue_reader,
+        bidding_group_costs_reader,
+        writer,
+    )
 
     return nothing
 end

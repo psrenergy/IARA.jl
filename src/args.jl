@@ -146,12 +146,12 @@ function parse_commandline(args)
 end
 
 function iara_log(args::Args)
-    Log.info("   Path: $(realpath(args.path))")
-    Log.info("   Output path: $(realpath(args.outputs_path))")
-    Log.info("   Run mode: $(args.run_mode)")
+    @info("   Path: $(realpath(args.path))")
+    @info("   Output path: $(realpath(args.outputs_path))")
+    @info("   Run mode: $(args.run_mode)")
     if args.write_lp
-        Log.info("   Write .lp files of subproblems: true")
+        @info("   Write .lp files of subproblems: true")
     end
-    Log.info("   Plot results: $(args.plot_outputs)")
+    @info("   Plot results: $(args.plot_outputs)")
     return nothing
 end

@@ -16,7 +16,7 @@ using DataFrames
 number_of_periods = 5
 number_of_scenarios = 1
 number_of_subscenarios = 3
-number_of_subperiods = 1
+number_of_subperiods = 2
 subperiod_duration_in_hours = 1.0
 
 # Conversion constants
@@ -31,6 +31,7 @@ db = IARA.create_study!(PATH;
     number_of_periods = number_of_periods,
     number_of_scenarios = number_of_scenarios,
     number_of_subperiods = number_of_subperiods,
+    number_of_subscenarios = number_of_subscenarios,
     initial_date_time = "2024-01-01",
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
@@ -41,7 +42,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.BID_BASED,
-    settlement_type = IARA.Configurations_SettlementType.NONE,
+    settlement_type = IARA.Configurations_SettlementType.EX_POST,
     bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
 )

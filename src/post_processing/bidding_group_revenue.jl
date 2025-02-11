@@ -52,11 +52,11 @@ function _write_revenue_without_subscenarios(
                 end
 
                 spot_price_data = zeros(num_bidding_groups_times_buses)
-                for bg_i in 1:num_bidding_groups_times_buses
-                    bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
+                for bg_bus_i in 1:num_bidding_groups_times_buses
+                    bus_i = _get_bus_index(generation_labels[bg_bus_i], spot_price_labels)
 
                     Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
-                    spot_price_data[bg_i] = spot_ex_ante_reader.data[bus_i]
+                    spot_price_data[bg_bus_i] = spot_ex_ante_reader.data[bus_i]
                 end
 
                 Quiver.write!(
@@ -128,15 +128,15 @@ function _write_revenue_with_subscenarios(
                     end
 
                     spot_price_data = zeros(num_bidding_groups_times_buses)
-                    for bg_i in 1:num_bidding_groups_times_buses
-                        bus_i = _get_bus_index(generation_labels[bg_i], spot_price_labels)
+                    for bg_bus_i in 1:num_bidding_groups_times_buses
+                        bus_i = _get_bus_index(generation_labels[bg_bus_i], spot_price_labels)
 
                         if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
                             if subscenario == 1
                                 # Just read the ex-ante generation once per subscenario
                                 Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
                             end
-                            spot_price_data[bg_i] = spot_ex_ante_reader.data[bus_i]
+                            spot_price_data[bg_bus_i] = spot_ex_ante_reader.data[bus_i]
                         else
                             Quiver.goto!(
                                 spot_ex_post_reader;
@@ -145,7 +145,7 @@ function _write_revenue_with_subscenarios(
                                 subscenario = subscenario,
                                 subperiod = subperiod,
                             )
-                            spot_price_data[bg_i] = spot_ex_post_reader.data[bus_i]
+                            spot_price_data[bg_bus_i] = spot_ex_post_reader.data[bus_i]
                         end
                     end
 
@@ -448,21 +448,21 @@ function _total_independent_profile_without_subscenarios(
                 bg_indices_independent = Dict{Int, Float64}()
                 bg_indices_profile = Dict{Int, Float64}()
 
-                for bg_i in eachindex(merged_labels)
-                    bg_label = merged_labels[bg_i]
+                for bg_bus_i in eachindex(merged_labels)
+                    bg_label = merged_labels[bg_bus_i]
                     if !isnothing(independent_reader) && bg_label in independent_reader.metadata.labels
-                        bg_indices_independent[bg_i] =
+                        bg_indices_independent[bg_bus_i] =
                             independent_reader.data[findfirst(x -> x == bg_label, independent_reader.metadata.labels)]
                     end
                     if !isnothing(profile_reader) && bg_label in profile_reader.metadata.labels
-                        bg_indices_profile[bg_i] =
+                        bg_indices_profile[bg_bus_i] =
                             profile_reader.data[findfirst(x -> x == bg_label, profile_reader.metadata.labels)]
                     end
                 end
 
                 summed_vals = zeros(num_bidding_groups)
-                for bg_i in eachindex(merged_labels)
-                    summed_vals[bg_i] += get(bg_indices_independent, bg_i, 0) + get(bg_indices_profile, bg_i, 0)
+                for bg_bus_i in eachindex(merged_labels)
+                    summed_vals[bg_bus_i] += get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
                 end
 
                 Quiver.write!(temp_writer, summed_vals; period, scenario, subperiod = subperiod)
@@ -517,24 +517,24 @@ function _total_independent_profile_with_subscenarios(
                     bg_indices_independent = Dict{Int, Float64}()
                     bg_indices_profile = Dict{Int, Float64}()
 
-                    for bg_i in eachindex(merged_labels)
-                        bg_label = merged_labels[bg_i]
+                    for bg_bus_i in eachindex(merged_labels)
+                        bg_label = merged_labels[bg_bus_i]
                         if !isnothing(independent_reader) && bg_label in independent_reader.metadata.labels
-                            bg_indices_independent[bg_i] =
+                            bg_indices_independent[bg_bus_i] =
                                 independent_reader.data[findfirst(
                                     x -> x == bg_label,
                                     independent_reader.metadata.labels,
                                 )]
                         end
                         if !isnothing(profile_reader) && bg_label in profile_reader.metadata.labels
-                            bg_indices_profile[bg_i] =
+                            bg_indices_profile[bg_bus_i] =
                                 profile_reader.data[findfirst(x -> x == bg_label, profile_reader.metadata.labels)]
                         end
                     end
 
                     summed_vals = zeros(num_bidding_groups)
-                    for bg_i in eachindex(merged_labels)
-                        summed_vals[bg_i] += get(bg_indices_independent, bg_i, 0) + get(bg_indices_profile, bg_i, 0)
+                    for bg_bus_i in eachindex(merged_labels)
+                        summed_vals[bg_bus_i] += get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
                     end
 
                     Quiver.write!(

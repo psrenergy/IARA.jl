@@ -462,7 +462,8 @@ function _total_independent_profile_without_subscenarios(
 
                 summed_vals = zeros(num_bidding_groups)
                 for bg_bus_i in eachindex(merged_labels)
-                    summed_vals[bg_bus_i] += get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
+                    summed_vals[bg_bus_i] +=
+                        get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
                 end
 
                 Quiver.write!(temp_writer, summed_vals; period, scenario, subperiod = subperiod)
@@ -534,7 +535,8 @@ function _total_independent_profile_with_subscenarios(
 
                     summed_vals = zeros(num_bidding_groups)
                     for bg_bus_i in eachindex(merged_labels)
-                        summed_vals[bg_bus_i] += get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
+                        summed_vals[bg_bus_i] +=
+                            get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
                     end
 
                     Quiver.write!(
@@ -600,13 +602,19 @@ function _join_independent_and_profile_bid(
         revenue_ex_ante_independent_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options)),
+            joinpath(
+                post_processing_dir,
+                "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+            ),
         )
         revenue_ex_ante_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
-                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options)),
+                joinpath(
+                    post_processing_dir,
+                    "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+                ),
             )
         if !isnothing(revenue_ex_ante_independent_reader)
             labels_independent = revenue_ex_ante_independent_reader.metadata.labels
@@ -641,7 +649,12 @@ function _join_independent_and_profile_bid(
             dir_path = post_processing_dir,
         )
         revenue_ex_ante_writer =
-            get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options))
+            get_writer(
+                outputs_post_processing,
+                inputs,
+                run_time_options,
+                "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+            )
 
         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
             _total_independent_profile_without_subscenarios(
@@ -663,13 +676,19 @@ function _join_independent_and_profile_bid(
         revenue_ex_post_indepedent_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options)),
+            joinpath(
+                post_processing_dir,
+                "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+            ),
         )
         revenue_ex_post_profile_reader =
             open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
-                joinpath(post_processing_dir, "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options)),
+                joinpath(
+                    post_processing_dir,
+                    "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+                ),
             )
 
         if !isnothing(revenue_ex_post_indepedent_reader)

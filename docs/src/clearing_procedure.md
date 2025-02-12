@@ -10,17 +10,19 @@ Other arrows in the diagram below represent other input data (physical random va
 
 Even though the above diagram is the "default" structure for the market clearing process, which is quite flexible and able to accommodate a number of market designs, some market design choices might either omit some of these steps or introduce relationships between the subproblems. You can [get started](tutorial/first_execution.md) by exploring IARA's features for representing market design options that will affect the clearing process.
 
-## Ex-Ante
+## Clearing Procedures
+
+### Ex-Ante
 
 The Ex-Ante step is responsible for calculating the physical and commercial dispatches one day before the actual operation. The Ex-Ante step is divided into two steps: Ex-Ante Physical and Ex-Ante Commercial. 
 In the Virtual Reservoir, the allocation of predicted inflows for this agent is added to its balance.
 
-## Ex-Ante Physical
+### Ex-Ante Physical
 
 The Ex-Ante Physical step is responsible for calculating the physical generation amount that will be dispatched a day before the actual operation. The physical units are calculated based on the bids submitted by the agents and the constraints of the system. In the Virtual Reservoir, the allocation of predicted inflows for this agent is added to its balance.
 In this problem, the Market Clearing is calculated with all integer variables, and the result will generally be used in other subsequent problems.
 
-## Ex-Ante Commercial
+### Ex-Ante Commercial
 
 The Ex-Ante Commercial step is responsible for calculating the clearing prices of the day-ahead market.
 
@@ -30,7 +32,7 @@ To calculate the prices there are three options:
 2. LP that receives variables to be fixed from a previous problem: it can only receive the binary variables from the ex-ante physical problem.
 3. LP that runs relaxed.
 
-## Ex-Post
+### Ex-Post
 
 In ex-post problems, a set of sub-scenarios can be provided for each scenario verified in the ex-ante, representing shocks that simulate real-time variations. Each scenario can have their own set of sub-scenarios, but the number of sub-scenarios must be the same for all scenarios.
 
@@ -38,7 +40,7 @@ The first sub-scenario calculated in the ex-post is used to transmit the state v
 
 At a given period, the Virtual Reservoir balance is added to the ex-post inflow allocation for this agent in its balance, and the offers accepted by the Operator are debited. After this operation, an adjustment can be made so that the Virtual Reservoir balance equals the Available Energy of the hydros that make up this reservoir.
 
-## Ex-Post Physical
+### Ex-Post Physical
 
 The Ex-Post Physical step is responsible for calculating the physical generation amount that will be dispatched in real-time. The physical units are calculated based on the bids submitted by the agents and the constraints of the system. In the Virtual Reservoir, the allocation of inflows for this agent is added to its balance.
 
@@ -48,7 +50,7 @@ The binary variable can be treated as follows:
 2. LP that receives variables to be fixed from a previous problem: the binary variables from the ex-ante physical or commercial problem.
 3. LP that runs relaxed.
 
-## Ex-Post Commercial
+### Ex-Post Commercial
 
 The Ex-Post Commercial step is responsible for calculating the clearing prices of the real-time market.
 
@@ -70,9 +72,9 @@ The Market Clearing can be calculated in three ways:
 
 Any step of the Market Clearing can be calculated with any of the three model types described above.
 
-## Non-virtual reservoir settlement
+## Standard Reservoir settlement
 
-This is a post processing feature related to the revenue of the agents.
+This is a post processing feature related to the revenue of the agents that isn't related to Virtual Reservoirs.
 Notation:
 - $\omega \in \{\text{ex-ante}, \text{ex-post}\}$: subproblem types.
 - $q^{\omega}$: primal variable representing the quantity of energy dispatched in the ex-ante or ex-post physical subproblem.

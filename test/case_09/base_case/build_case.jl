@@ -84,7 +84,6 @@ try
     )
     IARA.add_bidding_group!(db; label = "PricetakerA_01", assetowner_id = "Pricetaker Agent")
     IARA.add_bidding_group!(db; label = "SelfproducerA_01", assetowner_id = "Selfproducer Agent")
-    IARA.add_bidding_group!(db; label = "SelfproducerA_02", assetowner_id = "Selfproducer Agent")
     IARA.add_bidding_group!(db; label = "UpstreamA_01", assetowner_id = "Hydro upstream Agent")
     IARA.add_bidding_group!(db; label = "DownstreamA_01", assetowner_id = "Hydro downstream Agent")
 
@@ -144,21 +143,18 @@ try
     demands = [
         Dict(
             "name" => "Demand 1",
-            "bg" => "PricetakerA_01",
             "bus" => "Western",
             "cap" => 90.0,
             "price" => 30000.0,
         ),
         Dict(
             "name" => "Demand 2",
-            "bg" => "PricetakerA_01",
             "bus" => "Western",
             "cap" => 40.0,
             "price" => 30000.0,
         ),
         Dict(
             "name" => "Demand 3",
-            "bg" => "SelfproducerA_02",
             "bus" => "Eastern",
             "cap" => 20.0,
             "price" => 10000.0,

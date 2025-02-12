@@ -555,7 +555,7 @@ function iara_log(ts::TimeSeriesViewsFromExternalFiles)
     for field in fieldnames(TimeSeriesViewsFromExternalFiles)
         ts_field = getfield(ts, field)
         if !isempty(ts_field)
-            Log.info("   $(field)")
+            @info("   $(field)")
         end
     end
 end

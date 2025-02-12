@@ -289,11 +289,11 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         update_number_of_bid_profiles!(inputs, number_of_profiles)
         update_number_of_complementary_grouping!(inputs, number_of_complementary_grouping_profiles)
 
-        Log.info("Heuristic bids")
-        Log.info("   Number of segments: $maximum_number_of_offer_segments")
-        Log.info("   Number of profiles: $number_of_profiles")
-        Log.info("   Number of complementary grouping profiles: $number_of_complementary_grouping_profiles")
-        Log.info("")
+        @info("Heuristic bids")
+        @info("   Number of segments: $maximum_number_of_offer_segments")
+        @info("   Number of profiles: $number_of_profiles")
+        @info("   Number of complementary grouping profiles: $number_of_complementary_grouping_profiles")
+        @info("")
     end
 
     # Initialize the outputs
@@ -306,7 +306,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
     try
         for period in 1:number_of_periods(inputs)
-            Log.info("Running clearing for period: $period")
+            @info("Running clearing for period: $period")
             # Update the time series in the database to the current period
             update_time_series_from_db!(inputs, period)
 
@@ -401,7 +401,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
 
     try
         period = inputs.args.period
-        Log.info("Running clearing for period: $period")
+        @info("Running clearing for period: $period")
         # Update the time series in the database to the current period
         update_time_series_from_db!(inputs, period)
 
@@ -480,7 +480,7 @@ function run_clearing_simulation(
         return nothing
     end
 
-    Log.info("   Running simulation $(run_time_options.clearing_model_subproblem)")
+    @info("   Running simulation $(run_time_options.clearing_model_subproblem)")
     model = build_model(inputs, run_time_options; current_period = period)
 
     if use_fcf_in_clearing(inputs)
@@ -569,7 +569,7 @@ function single_period_heuristic_bid(
 
     try
         period = inputs.args.period
-        Log.info("Building heuristic bids for period: $period")
+        @info("Building heuristic bids for period: $period")
         # Update the time series in the database to the current period
         update_time_series_from_db!(inputs, period)
 
@@ -611,8 +611,16 @@ function single_period_heuristic_bid(
     return nothing
 end
 
+function validate_database(args::Vector{String})
+    args = Args(args)
+    inputs = load_inputs(args)
+    close_study!(inputs.db)
+    close_all_external_files_time_series_readers!(inputs)
+    return nothing
+end
+
 function print_banner()
-    Log.info("IARA - version: $PKG_VERSION")
+    @info("IARA - version: $PKG_VERSION")
     return nothing
 end
 

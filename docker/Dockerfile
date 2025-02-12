@@ -5,6 +5,7 @@ WORKDIR /IARA
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    zip \
     unzip
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -19,8 +20,9 @@ RUN curl -o iara.zip $IARA_URL \
     && unzip -qo iara.zip -d iara_model \ 
     && rm iara.zip \ 
     && mkdir /root/.julia \ 
-    && ln -s /IARA/iara_model/share/julia/artifacts/ /root/.julia/ \ 
-    && IARA_PATH="$(pwd)/iara_model/bin"
+    && ln -s /IARA/iara_model/share/julia/artifacts/ /root/.julia/  
+
+ENV IARA_PATH=/IARA/iara_model/bin
 
 RUN chmod +x IARA_ecs.sh
 

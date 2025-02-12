@@ -433,7 +433,7 @@ Build plots for the outputs of the model.
 function build_plots(
     inputs::Inputs,
 )
-    Log.info("Building plots")
+    @info("Building plots")
     plots_path = joinpath(output_path(inputs), "plots")
     if !isdir(plots_path)
         mkdir(plots_path)
@@ -806,7 +806,7 @@ end
 function build_ui_plots(
     inputs::Inputs,
 )
-    Log.info("Building UI plots")
+    @info("Building UI plots")
 
     plots_path = joinpath(output_path(inputs), "plots")
     if !isdir(plots_path)
@@ -926,7 +926,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
         data, metadata = read_timeseries_file(demand_file)
         # Average across subscenarios for ex-post file
         data_reshaped = if !read_ex_ante_demand_file(inputs)
-            dropdims(mean(data_reshaped; dims = 3); dims = 3)
+            dropdims(mean(data; dims = 3); dims = 3)
         else
             data
         end

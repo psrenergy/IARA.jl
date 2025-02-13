@@ -610,16 +610,22 @@ function _join_independent_and_profile_bid(
     run_time_file_suffixes(inputs, run_time_options)
 
     if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-        revenue_ex_ante_independent_reader = open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(
-                post_processing_dir,
-                "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
-            ),
-        )
-        revenue_ex_ante_profile_reader =
-            open_time_series_output(
+        if has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs)
+            revenue_ex_ante_independent_reader = open_time_series_output(
+                inputs,
+                model_outputs_time_serie,
+                joinpath(
+                    post_processing_dir,
+                    "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+                ),
+            )
+            labels_independent = revenue_ex_ante_independent_reader.metadata.labels
+        else
+            revenue_ex_ante_independent_reader = nothing
+            labels_independent = String[]
+        end
+        if has_any_profile_bids(inputs)
+            revenue_ex_ante_profile_reader = open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
                 joinpath(
@@ -627,14 +633,9 @@ function _join_independent_and_profile_bid(
                     "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
                 ),
             )
-        if !isnothing(revenue_ex_ante_independent_reader)
-            labels_independent = revenue_ex_ante_independent_reader.metadata.labels
-        else
-            labels_independent = String[]
-        end
-        if !isnothing(revenue_ex_ante_profile_reader)
             labels_profile = revenue_ex_ante_profile_reader.metadata.labels
         else
+            revenue_ex_ante_profile_reader = nothing
             labels_profile = String[]
         end
 
@@ -684,16 +685,22 @@ function _join_independent_and_profile_bid(
         end
     end
     if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
-        revenue_ex_post_indepedent_reader = open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(
-                post_processing_dir,
-                "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
-            ),
-        )
-        revenue_ex_post_profile_reader =
-            open_time_series_output(
+        if has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs)
+            revenue_ex_post_indepedent_reader = open_time_series_output(
+                inputs,
+                model_outputs_time_serie,
+                joinpath(
+                    post_processing_dir,
+                    "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+                ),
+            )
+            labels_independent = revenue_ex_post_indepedent_reader.metadata.labels
+        else
+            revenue_ex_post_indepedent_reader = nothing
+            labels_independent = String[]
+        end
+        if has_any_profile_bids(inputs)
+            revenue_ex_post_profile_reader = open_time_series_output(
                 inputs,
                 model_outputs_time_serie,
                 joinpath(
@@ -701,15 +708,9 @@ function _join_independent_and_profile_bid(
                     "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
                 ),
             )
-
-        if !isnothing(revenue_ex_post_indepedent_reader)
-            labels_independent = revenue_ex_post_indepedent_reader.metadata.labels
-        else
-            labels_independent = String[]
-        end
-        if !isnothing(revenue_ex_post_profile_reader)
             labels_profile = revenue_ex_post_profile_reader.metadata.labels
         else
+            revenue_ex_post_profile_reader = nothing
             labels_profile = String[]
         end
 

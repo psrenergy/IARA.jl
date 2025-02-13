@@ -12,7 +12,6 @@ function _write_costs_bg_file(
 
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)
-    num_bidding_groups * num_buses
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
 
@@ -56,8 +55,6 @@ function _write_costs_bg_file(
     update_number_of_bid_segments!(inputs, number_of_bid_segments)
 
     total_costs_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
-    bg_relations_mapping = Dict{String, Vector{Int}}()
-    bus_relations_mapping = Dict{String, Vector{Int}}()
     for generation_technology in generation_technologies
         costs_file = get_costs_files_from_tech(inputs, clearing_procedure, generation_technology)
         if isnothing(costs_file)
@@ -68,10 +65,6 @@ function _write_costs_bg_file(
             model_outputs_time_serie,
             joinpath(tempdir, get_filename(costs_file)),
         )
-        bg_relations_mapping[generation_technology] =
-            PSRI.get_map(inputs.db, _get_generation_unit(costs_file), "BiddingGroup", "id")
-        bus_relations_mapping[generation_technology] =
-            PSRI.get_map(inputs.db, _get_generation_unit(costs_file), "Bus", "id")
     end
 
     for period in periods(inputs)
@@ -82,6 +75,7 @@ function _write_costs_bg_file(
                         bidding_group_costs = zeros(num_bidding_groups * num_buses)
                         for generation_technology in keys(total_costs_readers)
                             costs_reader = total_costs_readers[generation_technology]
+                            collection = _get_generation_unit(costs_reader.filename)
                             Quiver.goto!(
                                 costs_reader;
                                 period,
@@ -92,12 +86,9 @@ function _write_costs_bg_file(
                             labels = costs_reader.metadata.labels
                             num_units = length(labels)
 
-                            bg_relation_mapping = bg_relations_mapping[generation_technology]
-                            bus_relation_mapping = bus_relations_mapping[generation_technology]
-
                             for unit in 1:num_units
-                                bidding_group_index = bg_relation_mapping[unit]
-                                bus_index = bus_relation_mapping[unit]
+                                bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
+                                bus_index = generic_unit_bus_index(inputs, collection, unit)
                                 if is_null(bidding_group_index) || is_null(bus_index)
                                     continue
                                 end
@@ -121,16 +112,14 @@ function _write_costs_bg_file(
                     bidding_group_costs = zeros(num_bidding_groups * num_buses)
                     for generation_technology in keys(total_costs_readers)
                         costs_reader = total_costs_readers[generation_technology]
+                        collection = _get_generation_unit(costs_reader.filename)
                         Quiver.goto!(costs_reader; period, scenario, subperiod = subperiod)
                         labels = costs_reader.metadata.labels
                         num_units = length(labels)
 
-                        bg_relation_mapping = bg_relations_mapping[generation_technology]
-                        bus_relation_mapping = bus_relations_mapping[generation_technology]
-
                         for unit in 1:num_units
-                            bidding_group_index = bg_relation_mapping[unit]
-                            bus_index = bus_relation_mapping[unit]
+                            bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
+                            bus_index = generic_unit_bus_index(inputs, collection, unit)
                             if is_null(bidding_group_index) || is_null(bus_index)
                                 continue
                             end
@@ -154,14 +143,6 @@ function _write_costs_bg_file(
     Quiver.close!(bidding_group_costs_writer)
 
     return
-end
-
-function get_costs_files(output_dir::String, post_processing_dir::String; from_ex_post::Bool)
-    files = get_costs_files(output_dir; from_ex_post = from_ex_post)
-    if isempty(files)
-        files = get_costs_files(post_processing_dir; from_ex_post = from_ex_post)
-    end
-    return files
 end
 
 function get_costs_files(path::String; from_ex_post::Bool)
@@ -197,10 +178,10 @@ function get_costs_files_from_tech(inputs::Inputs, clearing_procedure::String, t
         x -> endswith(x, clearing_procedure * ".csv") && occursin(technology, x) && occursin("total_costs", x),
         readdir(tempdir),
     )
-    # Only one file per technology and clearing procedure is expected
     if isempty(costs_file)
         return nothing
     end
+    # Only one file per technology and clearing procedure is expected
     return costs_file[1]
 end
 

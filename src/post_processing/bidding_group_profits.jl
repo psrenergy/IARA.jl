@@ -71,7 +71,7 @@ function calculate_profits_settlement(
         )
 
     # The costs associated to the bgs are from the ex post settlement
-    bidding_group_costs_files = get_costs_files(outputs_dir, post_processing_dir; from_ex_post = true)
+    bidding_group_costs_files = get_costs_files(post_processing_dir; from_ex_post = true)
     bidding_group_costs_files = get_filename(bidding_group_costs_files[1])
     dimensions = ["period", "scenario", "subscenario", "subperiod"]
 

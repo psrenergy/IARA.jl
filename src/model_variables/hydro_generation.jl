@@ -184,7 +184,7 @@ function hydro_generation!(
         inputs,
         output_name = "hydro_om_costs",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "k\$",
+        unit = "\$",
         labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
@@ -328,6 +328,7 @@ function hydro_generation!(
         period,
         scenario,
         subscenario,
+        multiply_by = 1 / money_to_thousand_money(),
         indices_of_elements_in_output,
     )
 

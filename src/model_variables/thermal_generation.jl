@@ -100,8 +100,9 @@ function thermal_generation!(
         inputs,
         output_name = "thermal_om_costs",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "k\$",
+        unit = "\$",
         labels = thermal_unit_label(inputs)[thermals],
+        multiply_by = 1 / money_to_thousand_money(),
         run_time_options,
     )
     return nothing

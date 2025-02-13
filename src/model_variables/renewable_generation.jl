@@ -158,7 +158,7 @@ function renewable_generation!(
         inputs,
         output_name = "renewable_om_costs",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "k\$",
+        unit = "\$",
         labels = renewable_unit_label(inputs),
         run_time_options,
     )
@@ -237,6 +237,7 @@ function renewable_generation!(
         period,
         scenario,
         subscenario,
+        multiply_by = 1 / money_to_thousand_money(),
         indices_of_elements_in_output,
     )
 

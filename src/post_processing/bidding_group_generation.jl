@@ -9,7 +9,7 @@
 #############################################################################
 
 function _get_generation_unit(file_path::String)
-    unit_name = match(r"^([a-z]+)_.*\.csv$", basename(file_path))
+    unit_name = match(r"^([a-z]+)_.*", basename(file_path))
     if unit_name[1] == "thermal"
         return "ThermalUnit"
     elseif unit_name[1] == "hydro"
@@ -18,6 +18,30 @@ function _get_generation_unit(file_path::String)
         return "BatteryUnit"
     elseif unit_name[1] == "renewable"
         return "RenewableUnit"
+    end
+end
+
+function generic_unit_bidding_group_index(inputs::Inputs, collection::String, unit_index::Int)
+    if collection == "ThermalUnit"
+        return thermal_unit_bidding_group_index(inputs, unit_index)
+    elseif collection == "HydroUnit"
+        return hydro_unit_bidding_group_index(inputs, unit_index)
+    elseif collection == "BatteryUnit"
+        return battery_unit_bidding_group_index(inputs, unit_index)
+    elseif collection == "RenewableUnit"
+        return renewable_unit_bidding_group_index(inputs, unit_index)
+    end
+end
+
+function generic_unit_bus_index(inputs::Inputs, collection::String, unit_index::Int)
+    if collection == "ThermalUnit"
+        return thermal_unit_bus_index(inputs, unit_index)
+    elseif collection == "HydroUnit"
+        return hydro_unit_bus_index(inputs, unit_index)
+    elseif collection == "BatteryUnit"
+        return battery_unit_bus_index(inputs, unit_index)
+    elseif collection == "RenewableUnit"
+        return renewable_unit_bus_index(inputs, unit_index)
     end
 end
 
@@ -50,7 +74,6 @@ function _write_generation_bg_file(
 
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)
-    num_bidding_groups * num_buses
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
 
@@ -100,8 +123,6 @@ function _write_generation_bg_file(
     update_number_of_bid_segments!(inputs, number_of_bid_segments)
 
     generation_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
-    bg_relations_mapping = Dict{String, Vector{Int}}()
-    bus_relations_mapping = Dict{String, Vector{Int}}()
     for generation_technology in generation_technologies
         generation_file = get_generation_files(inputs, clearing_procedure, generation_technology)
         if isnothing(generation_file)
@@ -113,10 +134,6 @@ function _write_generation_bg_file(
                 model_outputs_time_serie,
                 joinpath(outputs_dir, get_filename(generation_file)),
             )
-        bg_relations_mapping[generation_technology] =
-            PSRI.get_map(inputs.db, _get_generation_unit(generation_file), "BiddingGroup", "id")
-        bus_relations_mapping[generation_technology] =
-            PSRI.get_map(inputs.db, _get_generation_unit(generation_file), "Bus", "id")
     end
 
     for period in periods(inputs)
@@ -125,9 +142,9 @@ function _write_generation_bg_file(
                 for subscenario in subscenarios(inputs, run_time_options)
                     for subperiod in subperiods(inputs)
                         bidding_group_generation = zeros(num_bidding_groups * num_buses)
-                        bidding_group_costs = zeros(num_bidding_groups * num_buses)
                         for generation_technology in keys(generation_readers)
                             generation_reader = generation_readers[generation_technology]
+                            collection = _get_generation_unit(generation_reader.filename)
                             Quiver.goto!(
                                 generation_reader;
                                 period,
@@ -138,12 +155,9 @@ function _write_generation_bg_file(
                             labels = generation_reader.metadata.labels
                             num_units = length(labels)
 
-                            bg_relation_mapping = bg_relations_mapping[generation_technology]
-                            bus_relation_mapping = bus_relations_mapping[generation_technology]
-
                             for unit in 1:num_units
-                                bidding_group_index = bg_relation_mapping[unit]
-                                bus_index = bus_relation_mapping[unit]
+                                bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
+                                bus_index = generic_unit_bus_index(inputs, collection, unit)
                                 if is_null(bidding_group_index) || is_null(bus_index)
                                     continue
                                 end
@@ -168,16 +182,14 @@ function _write_generation_bg_file(
                     bidding_group_generation = zeros(num_bidding_groups * num_buses)
                     for generation_technology in keys(generation_readers)
                         generation_reader = generation_readers[generation_technology]
+                        collection = _get_generation_unit(generation_reader.filename)
                         Quiver.goto!(generation_reader; period, scenario, subperiod = subperiod)
                         labels = generation_reader.metadata.labels
                         num_units = length(labels)
 
-                        bg_relation_mapping = bg_relations_mapping[generation_technology]
-                        bus_relation_mapping = bus_relations_mapping[generation_technology]
-
                         for unit in 1:num_units
-                            bidding_group_index = bg_relation_mapping[unit]
-                            bus_index = bus_relation_mapping[unit]
+                            bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
+                            bus_index = generic_unit_bus_index(inputs, collection, unit)
                             if is_null(bidding_group_index) || is_null(bus_index)
                                 continue
                             end

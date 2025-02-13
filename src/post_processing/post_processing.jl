@@ -14,7 +14,7 @@
 Run post-processing routines.
 """
 function post_processing(inputs::Inputs)
-    Log.info("Running post-processing routines")
+    @info("Running post-processing routines")
     post_proc_path = post_processing_path(inputs)
     if !isdir(post_proc_path)
         mkdir(post_proc_path)
@@ -104,6 +104,7 @@ function open_time_series_output(
     file::String;
 )
     if !isfile(file * ".csv")
+        @error("File $file.csv does not exist")
         return nothing
     end
     reader = Quiver.Reader{Quiver.csv}(file)
@@ -132,7 +133,10 @@ function sum_multiple_files(
     digits::Union{Int, Nothing} = nothing,
 )
     readers = [Quiver.Reader{impl}(filename) for filename in filenames]
-    metadata = first(readers).metadata
+    all_labels = [reader.metadata.labels for reader in readers]
+    # Find the reader with the most labels
+    maximum_labels_idx = argmax(length.(all_labels))
+    metadata = readers[maximum_labels_idx].metadata
     labels = metadata.labels
 
     writer = Quiver.Writer{impl}(
@@ -146,22 +150,22 @@ function sum_multiple_files(
     )
 
     num_labels = length(metadata.labels)
-    data = zeros(sum(num_labels))
-    first_warning = true
+    data = zeros(num_labels)
     for dims in Iterators.product([1:size for size in reverse(metadata.dimension_size)]...)
         dim_kwargs = OrderedDict(metadata.dimensions .=> reverse(dims))
         fill!(data, 0)
         for reader in readers
             Quiver.goto!(reader; dim_kwargs...)
-            # TODO: This is a workaround for the case when the data is not the same length
             if length(reader.data) != length(data)
-                if first_warning
-                    Log.warn("The length of the data in the files is different for summing the $output_filename")
-                    first_warning = false
-                end
-                continue
+                # If this happens, it means that the reader has less labels than the writer
+                # We need to match the labels of the reader with the writer
+                all_labels = metadata.labels
+                current_labels = reader.metadata.labels
+                index_of_file_in_sum = [findfirst(isequal(x), all_labels) for x in current_labels]
+                data[index_of_file_in_sum] .+= reader.data
+            else
+                data .+= reader.data
             end
-            data .+= reader.data
         end
         Quiver.write!(writer, Quiver.round_digits(data, digits); dim_kwargs...)
     end

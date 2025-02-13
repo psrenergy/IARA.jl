@@ -79,8 +79,8 @@ pages = [
         "Formulations" => [
             "Conceptual formulations" => "conceptual_formulation.md",
             "Centralized operation problem" => "centralized_operation_problem.md",
-            "Price taker problem" => "price_taker_problem.md",
-            "Strategic bid problem" => "strategic_bid_problem.md",
+            # "Price taker problem" => "price_taker_problem.md",
+            # "Strategic bid problem" => "strategic_bid_problem.md",
             "Market clearing problem" => "market_clearing_problem.md",
         ],
     ],

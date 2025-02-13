@@ -72,6 +72,7 @@ function _write_generation_bg_file(
     outputs_dir = output_path(inputs)
     post_processing_dir = post_processing_path(inputs)
 
+    num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)
 
@@ -136,7 +137,7 @@ function _write_generation_bg_file(
             )
     end
 
-    for period in periods(inputs)
+    for period in 1:num_periods
         for scenario in scenarios(inputs)
             if is_ex_post
                 for subscenario in subscenarios(inputs, run_time_options)
@@ -223,10 +224,16 @@ function get_generation_files(inputs::Inputs, clearing_procedure::String, techno
         x -> endswith(x, clearing_procedure * ".csv") && occursin(technology, x) && occursin("generation", x),
         readdir(outputs_dir),
     )
-    # Only one file per technology and clearing procedure is expected
+    if isempty(generation_file)
+        generation_file = filter(
+            x -> endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") && occursin(technology, x) && occursin("generation", x),
+            readdir(outputs_dir),
+    )
+    end
     if isempty(generation_file)
         return nothing
     end
+    # Only one file per technology and clearing procedure is expected
     return generation_file[1]
 end
 

@@ -42,6 +42,9 @@ function build_ui_agents_plots(
         # Bidding Group Revenue
         if isfile(revenue_file_path)
             for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
+                if isempty(labels_per_asset_owner[asset_owner_index])
+                    continue
+                end
                 custom_plot(
                     revenue_file_path,
                     PlotTimeSeriesStackedMean;
@@ -61,11 +64,16 @@ function build_ui_agents_plots(
                 get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
         end
         for generation_file in generation_files
+            filename = get_filename(basename(generation_file))
+            filename = replace(filename, "_period_$(inputs.args.period)" => "")
             for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
+                if isempty(labels_per_asset_owner[asset_owner_index])
+                    continue
+                end
                 custom_plot(
                     generation_file,
                     PlotTimeSeriesStackedMean;
-                    plot_path = joinpath(plots_path, "bidding_group_generation_$(asset_owner_label)"),
+                    plot_path = joinpath(plots_path, "$(filename)_$(asset_owner_label)"),
                     agents = labels_per_asset_owner[asset_owner_index],
                     title = "$asset_owner_label - Bidding Group Generation",
                     add_suffix_to_title = false,

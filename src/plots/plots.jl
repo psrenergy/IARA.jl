@@ -160,7 +160,8 @@ function _get_plot_ticks(
                     subperiod_true_index = isnothing(queried_subperiods) ? 1 : queried_subperiods[1]
                     push!(
                         hover_ticks,
-                        Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") * "<br>Subperiod $subperiod_true_index",
+                        Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") *
+                        "<br>Subperiod $subperiod_true_index",
                     )
                 end
             else

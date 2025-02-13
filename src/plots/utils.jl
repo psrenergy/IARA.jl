@@ -57,5 +57,5 @@ function get_load_marginal_cost_file(inputs::AbstractInputs)
         end
     end
 
-    error("Load marginal cost file not found")
+    return error("Load marginal cost file not found")
 end

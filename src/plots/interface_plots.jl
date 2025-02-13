@@ -7,7 +7,6 @@ function build_ui_operator_plots(
     plot_total_revenue(inputs, plots_path)
 
     return nothing
-
 end
 
 function build_ui_agents_plots(
@@ -29,7 +28,8 @@ function build_ui_agents_plots(
         # Bidding group file labels
         labels_per_asset_owner = Vector{Vector{String}}(undef, number_of_elements(inputs, AssetOwner))
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
-            bidding_group_labels = bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
+            bidding_group_labels =
+                bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
             labels_to_read = String[]
             for bg in bidding_group_labels
                 for bus in bus_label(inputs)
@@ -57,7 +57,8 @@ function build_ui_agents_plots(
         # Bidding Group Generation
         generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
         if isempty(generation_files)
-            generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+            generation_files =
+                get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
         end
         for generation_file in generation_files
             for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
@@ -252,7 +253,8 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
         if read_ex_ante_demand_file(inputs)
             num_periods, num_scenarios, num_subperiods = metadata.dimension_size
             num_subscenarios = 1
-            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_periods * num_subperiods, num_subscenarios)
+            reshaped_data =
+                Array{Float64, 3}(undef, metadata.number_of_time_series, num_periods * num_subperiods, num_subscenarios)
             # Use only first scenario
             reshaped_data[:, :, 1] = data[:, 1, :]
         else
@@ -272,7 +274,8 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
 
     configs = Vector{Config}()
     # Fix subscenario dimension with arbitrary value to get plot_ticks
-    @show plot_ticks, hover_ticks = _get_plot_ticks(reshaped_data[:, 1, :], num_periods, initial_date_time(inputs), time_series_step(inputs))
+    plot_ticks, hover_ticks =
+        _get_plot_ticks(reshaped_data[:, 1, :], num_periods, initial_date_time(inputs), time_series_step(inputs))
     title = "Total demand"
     unit = "MW"
     color_idx = 0
@@ -282,7 +285,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
         push!(
             configs,
             Config(;
-                x = 1:(num_periods * num_subperiods),
+                x = 1:(num_periods*num_subperiods),
                 y = reshaped_data[d, subscenario, :] * demand_unit_max_demand(inputs, d),
                 name = label,
                 line = Dict("color" => _get_plot_color(color_idx)),
@@ -306,7 +309,6 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
 
     _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_demand.html"))
 
-        
     return nothing
 end
 
@@ -320,7 +322,7 @@ function plot_asset_owner_total_revenue(inputs::AbstractInputs, plots_path::Stri
         @warn "Plotting asset owner total revenue for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
     end
     @assert num_periods == 1 "Total revenue plot only implemented for single period run mode. Number of periods: $num_periods"
-    
+
     labels_to_read = String[]
     for bg in bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
         for bus in bus_label(inputs)
@@ -334,7 +336,7 @@ function plot_asset_owner_total_revenue(inputs::AbstractInputs, plots_path::Stri
     indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
 
     # Fixed scenario, fixed period, sum for all bidding groups
-    reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1], dims = 1), dims = 1)
+    reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
 
     configs = Vector{Config}()
     title = "$ao_label - Total Revenue"
@@ -371,7 +373,7 @@ function plot_total_revenue(inputs::AbstractInputs, plots_path::String)
         @warn "Plotting total revenue for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
     end
     @assert num_periods == 1 "Total revenue plot only implemented for single period run mode. Number of periods: $num_periods"
-    
+
     asset_onwer_indexes = index_of_elements(inputs, AssetOwner)
     reshaped_data = Array{Float64, 3}(undef, length(asset_onwer_indexes), num_subperiods, num_subscenarios)
 
@@ -383,9 +385,9 @@ function plot_total_revenue(inputs::AbstractInputs, plots_path::String)
             end
         end
         indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
-        
+
         # Fixed scenario, fixed period, sum for the asset owner's bidding groups
-        reshaped_data[i, :, :] = dropdims(sum(data[indexes_to_read, :, :, 1, 1], dims = 1), dims = 1)
+        reshaped_data[i, :, :] = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
     end
 
     for subscenario in 1:num_subscenarios
@@ -411,9 +413,11 @@ function plot_total_revenue(inputs::AbstractInputs, plots_path::String)
             yaxis = Dict("title" => "Revenue [\$]"),
         )
 
-        _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_revenue_subscenario_$subscenario.html"))
+        _save_plot(
+            Plot(configs, main_configuration),
+            joinpath(plots_path, "total_revenue_subscenario_$subscenario.html"),
+        )
     end
 
     return nothing
 end
-    

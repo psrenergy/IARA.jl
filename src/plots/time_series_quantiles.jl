@@ -151,7 +151,8 @@ function plot_data(
     number_of_agents = length(trace_names)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; simplified_ticks)
+    plot_ticks, hover_ticks =
+        _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; simplified_ticks)
     plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
     configs = Vector{Config}()

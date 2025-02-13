@@ -149,7 +149,8 @@ function plot_data(
     number_of_traces = size(traces, 1)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; simplified_ticks)
+    plot_ticks, hover_ticks =
+        _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; simplified_ticks)
 
     confidence_interval_top = Vector{Vector{AbstractFloat}}()
     confidence_interval_bottom = Vector{Vector{AbstractFloat}}()

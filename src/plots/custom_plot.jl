@@ -113,6 +113,8 @@ function custom_plot(
     plot_path::String = "",
     agents::Vector{String} = Vector{String}(),
     title::String = "Plot",
+    add_suffix_to_title::Bool = true,
+    simplified_ticks::Bool = false,
     kwargs...,
 )
     # kwargs contains the dimensions
@@ -154,6 +156,8 @@ function custom_plot(
         file_path = plot_path,
         initial_date = initial_date,
         time_series_step = time_series_step,
+        add_suffix_to_title = add_suffix_to_title,
+        simplified_ticks = simplified_ticks,
         kwargs...,
     )
 end

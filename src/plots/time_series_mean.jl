@@ -138,6 +138,8 @@ function plot_data(
     file_path::String,
     initial_date::DateTime,
     time_series_step::Configurations_TimeSeriesStep.T,
+    add_suffix_to_title::Bool = true,
+    simplified_ticks::Bool = false,
     kwargs...,
 ) where {N}
     traces, standard_dev, trace_names, number_of_scenarios =
@@ -147,7 +149,7 @@ function plot_data(
     number_of_traces = size(traces, 1)
 
     initial_number_of_periods = size(data, N)
-    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step)
+    plot_ticks, hover_ticks = _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; simplified_ticks)
 
     confidence_interval_top = Vector{Vector{AbstractFloat}}()
     confidence_interval_bottom = Vector{Vector{AbstractFloat}}()
@@ -167,8 +169,8 @@ function plot_data(
 
     configs = Vector{Config}()
 
-    if number_of_scenarios > 1
-        title = title * " - Mean across scenarios"
+    if number_of_scenarios > 1 && add_suffix_to_title
+        title *= " - Mean across scenarios"
     end
     for trace in 1:number_of_traces
         push!(
@@ -207,10 +209,16 @@ function plot_data(
             ))
     end
 
+    x_axis_title = if simplified_ticks
+        "Subperiod"
+    else
+        "Period"
+    end
+
     main_configuration = Config(;
         title = title,
         xaxis = Dict(
-            "title" => "Period",
+            "title" => x_axis_title,
             "tickmode" => "array",
             "tickvals" => [i for i in eachindex(plot_ticks)],
             "ticktext" => plot_ticks,

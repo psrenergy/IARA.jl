@@ -43,3 +43,19 @@ function get_revenue_file(inputs::AbstractInputs)
 
     return joinpath(post_processing_path(inputs), filename)
 end
+
+function get_load_marginal_cost_file(inputs::AbstractInputs)
+    base_name = "load_marginal_cost"
+    subproblem_suffixes = ["_ex_post_commercial", "_ex_post_physical", "_ex_ante_commercial", "_ex_ante_physical"]
+    period_suffix = "_period_$(inputs.args.period)"
+    extension = ".csv"
+
+    for subproblem_suffix in subproblem_suffixes
+        filename = base_name * subproblem_suffix * period_suffix * extension
+        if isfile(joinpath(output_path(inputs), filename))
+            return joinpath(output_path(inputs), filename)
+        end
+    end
+
+    error("Load marginal cost file not found")
+end

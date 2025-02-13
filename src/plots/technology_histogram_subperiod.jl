@@ -30,6 +30,8 @@ function plot_data(
     file_path::String,
     initial_date::DateTime,
     time_series_step::Configurations_TimeSeriesStep.T,
+    add_suffix_to_title::Bool = true,
+    simplified_ticks::Bool = false,
 ) where {N}
 
     # observations are each scenario - period for plant i in subperiod j
@@ -57,7 +59,10 @@ function plot_data(
         )
     end
 
-    plot_ref.layout.title.text = title * " - Subperiod"
+    if add_suffix_to_title
+        title *= " - Subperiod"
+    end
+    plot_ref.layout.title.text = title
     plot_ref.layout.xaxis.title = unit
     plot_ref.layout.yaxis.title = "Frequency"
 

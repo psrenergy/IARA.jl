@@ -244,67 +244,69 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
         ""
     end
     demand_file *= InterfaceCalls.timeseries_file_extension(demand_file)
+    number_of_demands = number_of_elements(inputs, DemandUnit)
+
     if isfile(demand_file)
         data, metadata = read_timeseries_file(demand_file)
-        # Average across subscenarios for ex-post file
-        data_reshaped = if !read_ex_ante_demand_file(inputs)
-            dropdims(mean(data; dims = 3); dims = 3)
+        data = merge_period_subperiod(data)
+        if read_ex_ante_demand_file(inputs)
+            num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+            num_subscenarios = 1
+            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_periods * num_subperiods, num_subscenarios)
+            # Use only first scenario
+            reshaped_data[:, :, 1] = data[:, 1, :]
         else
-            data
+            @show num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+            # Use only first scenario
+            reshaped_data = data[:, :, 1, :]
         end
-        data_reshaped = merge_period_subperiod(data_reshaped)
-        # Sum all units
-        total_demand = zeros(1, size(data_reshaped)[2:end]...)
-        for demand_index in 1:number_of_elements(inputs, DemandUnit)
-            total_demand[1, :, :] .+= data_reshaped[demand_index, :, :] * demand_unit_max_demand(inputs, demand_index)
+        if num_scenarios > 1
+            @warn "Plotting demand for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
         end
-        demand_to_plot, names = agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, total_demand, ["Total demand"])
+    else
+        num_periods = number_of_periods(inputs)
+        num_subperiods = number_of_subperiods(inputs)
+        num_subscenarios = 1
+        reshaped_data = ones(number_of_demands, num_periods * num_subperiods, num_subscenarios)
+    end
 
-        time_series_length = size(demand_to_plot, 2)
-
-        configs = Vector{Config}()
-        plot_ticks, hover_ticks =
-            _get_plot_ticks(demand_to_plot, size(data)[end], initial_date_time(inputs), time_series_step(inputs); simplified = true)
-        unit = "MW"
-        p10_idx = 1
-        p50_idx = 2
-        p90_idx = 3
-        push!(configs,
+    configs = Vector{Config}()
+    # Fix subscenario dimension with arbitrary value to get plot_ticks
+    @show plot_ticks, hover_ticks = _get_plot_ticks(reshaped_data[:, 1, :], num_periods, initial_date_time(inputs), time_series_step(inputs))
+    title = "Total demand"
+    unit = "MW"
+    color_idx = 0
+    for d in 1:number_of_demands, subscenario in 1:num_subscenarios
+        label = demand_unit_label(inputs, d) * " - Subscenario $subscenario"
+        color_idx += 1
+        push!(
+            configs,
             Config(;
-                x = vcat(1:time_series_length, time_series_length:-1:1),
-                y = vcat(demand_to_plot[p10_idx, :], reverse(demand_to_plot[p90_idx, :])),
-                name = names[1] * " (P10 - P90)",
-                fill = "toself",
-                line = Dict("color" => "transparent"),
-                fillcolor = _get_plot_color(1; transparent = true),
-                type = "line",
-                text = hover_ticks,
-                hovertemplate = "%{y} $unit",
-                hovermode = "closest",
-            ))
-        push!(configs,
-            Config(;
-                x = 1:time_series_length,
-                y = demand_to_plot[p50_idx, :],
-                name = names[1] * " (P50)",
-                line = Dict("color" => _get_plot_color(1)),
+                x = 1:(num_periods * num_subperiods),
+                y = reshaped_data[d, subscenario, :] * demand_unit_max_demand(inputs, d),
+                name = label,
+                line = Dict("color" => _get_plot_color(color_idx)),
                 type = "line",
                 text = hover_ticks,
                 hovertemplate = "%{y} $unit<br>%{text}",
-            ))
-
-        main_configuration = Config(;
-            title = "Total demand",
-            xaxis = Dict(
-                "title" => "Subperiod",
-                "tickmode" => "array",
-                "tickvals" => [i for i in eachindex(plot_ticks)],
-                "ticktext" => plot_ticks,
             ),
-            yaxis = Dict("title" => unit),
         )
-        _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_demand.html"))
     end
+
+    main_configuration = Config(;
+        title = title,
+        xaxis = Dict(
+            "title" => "Period",
+            "tickmode" => "array",
+            "tickvals" => [i for i in eachindex(plot_ticks)],
+            "ticktext" => plot_ticks,
+        ),
+        yaxis = Dict("title" => "Demand [$unit]"),
+    )
+
+    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_demand.html"))
+
+        
     return nothing
 end
 

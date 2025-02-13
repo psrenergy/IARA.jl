@@ -91,6 +91,7 @@ include("outputs.jl")
 include("inflow.jl")
 
 include("plots/plots.jl")
+include("plots/interface_plots.jl")
 include("plots/time_series_mean.jl")
 include("plots/time_series_all.jl")
 include("plots/time_series_quantiles.jl")

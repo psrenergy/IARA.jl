@@ -140,6 +140,8 @@ function plot_data(
     file_path::String,
     initial_date::DateTime,
     time_series_step::Configurations_TimeSeriesStep.T,
+    add_suffix_to_title::Bool = true,
+    simplified_ticks::Bool = false,
     kwargs...,
 ) where {N}
     traces, trace_names = reshape_time_series!(PlotTimeSeriesAll, data, agent_names, dimensions; kwargs...)
@@ -148,13 +150,15 @@ function plot_data(
 
     initial_number_of_periods = size(data, N)
     plot_ticks, hover_ticks =
-        _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; kwargs...)
+        _get_plot_ticks(traces, initial_number_of_periods, initial_date, time_series_step; simplified_ticks, kwargs...)
 
     plot_type = ifelse(number_of_periods == 1, "bar", "line")
 
     configs = Vector{Config}()
 
-    title = title * " - Individual scenarios"
+    if add_suffix_to_title
+        title *= " - Individual scenarios"
+    end
     for trace in 1:number_of_traces
         push!(
             configs,
@@ -170,10 +174,16 @@ function plot_data(
         )
     end
 
+    x_axis_title = if simplified_ticks
+        "Subperiod"
+    else
+        "Period"
+    end
+
     main_configuration = Config(;
         title = title,
         xaxis = Dict(
-            "title" => "Period",
+            "title" => x_axis_title,
             "tickmode" => "array",
             "tickvals" => [i for i in eachindex(plot_ticks)],
             "ticktext" => plot_ticks,

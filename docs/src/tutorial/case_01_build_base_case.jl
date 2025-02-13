@@ -135,12 +135,10 @@ IARA.update_bus_relation!(
 IARA.add_asset_owner!(
     db;
     label = "Thermal Owner",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
 )
 IARA.add_asset_owner!(
     db;
     label = "Price Taker",
-    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 
 # ### Bidding Groups

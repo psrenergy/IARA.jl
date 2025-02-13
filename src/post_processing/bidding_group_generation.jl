@@ -226,9 +226,11 @@ function get_generation_files(inputs::Inputs, clearing_procedure::String, techno
     )
     if isempty(generation_file)
         generation_file = filter(
-            x -> endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") && occursin(technology, x) && occursin("generation", x),
+            x ->
+                endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") &&
+                    occursin(technology, x) && occursin("generation", x),
             readdir(outputs_dir),
-    )
+        )
     end
     if isempty(generation_file)
         return nothing

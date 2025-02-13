@@ -151,6 +151,28 @@ function renewable_generation!(
         labels = renewable_unit_label(inputs),
         run_time_options,
     )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "renewable_om_costs",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$",
+        labels = renewable_unit_label(inputs),
+        run_time_options,
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "renewable_curtailment_costs",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$",
+        labels = renewable_unit_label(inputs),
+        run_time_options,
+    )
     return nothing
 end
 
@@ -203,6 +225,31 @@ function renewable_generation!(
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
+        indices_of_elements_in_output,
+    )
+
+    write_output_per_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "renewable_om_costs",
+        renewable_generation.data .* renewable_unit_om_cost(inputs)[existing_renewables]';
+        period,
+        scenario,
+        subscenario,
+        multiply_by = 1 / money_to_thousand_money(),
+        indices_of_elements_in_output,
+    )
+
+    write_output_per_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "renewable_curtailment_costs",
+        renewable_curtailment.data .* renewable_unit_curtailment_cost(inputs)[existing_renewables]';
+        period,
+        scenario,
+        subscenario,
         indices_of_elements_in_output,
     )
     return nothing

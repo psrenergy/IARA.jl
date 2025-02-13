@@ -93,6 +93,18 @@ function thermal_generation!(
         labels = thermal_unit_label(inputs)[thermals],
         run_time_options,
     )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "thermal_om_costs",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$",
+        labels = thermal_unit_label(inputs)[thermals],
+        multiply_by = 1 / money_to_thousand_money(),
+        run_time_options,
+    )
     return nothing
 end
 
@@ -131,6 +143,18 @@ function thermal_generation!(
         scenario,
         subscenario,
         multiply_by = MW_to_GW(),
+        indices_of_elements_in_output,
+    )
+
+    write_output_per_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "thermal_om_costs",
+        thermal_generation.data .* thermal_unit_om_cost(inputs)[existing_thermal_units]';
+        period,
+        scenario,
+        subscenario,
         indices_of_elements_in_output,
     )
 

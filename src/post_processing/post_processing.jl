@@ -104,7 +104,7 @@ function open_time_series_output(
     file::String;
 )
     if !isfile(file * ".csv")
-        @error("File $file.csv does not exist")
+        error("File $file.csv does not exist")
         return nothing
     end
     reader = Quiver.Reader{Quiver.csv}(file)

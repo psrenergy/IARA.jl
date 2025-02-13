@@ -107,7 +107,6 @@ IARA.link_time_series_to_file(
 
 IARA.add_asset_owner!(db;
     label = "asset_owner_1",
-    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 
 # Now we can define its Bidding Groups with [`IARA.add_bidding_group!`](@ref).

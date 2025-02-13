@@ -126,14 +126,12 @@ IARA.set_hydro_spill_to!(db, "hydro_1", "hydro_2")
 
 IARA.add_asset_owner!(db;
     label = "asset_owner_1",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     segment_fraction = [1.0],
     risk_factor = [0.1],
 )
 
 IARA.add_asset_owner!(db;
     label = "asset_owner_2",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     segment_fraction = [1.0],
     risk_factor = [0.9],
 )

@@ -75,7 +75,6 @@ IARA.update_configuration!(
 IARA.add_asset_owner!(
     db;
     label = "Hydro Owner",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
 )
 
 # Now we will add a new Bidding Group called `Hydro Owner Group`, using the [`IARA.add_bidding_group!`](@ref) function.

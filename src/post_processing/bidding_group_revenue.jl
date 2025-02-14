@@ -665,7 +665,7 @@ function _join_independent_and_profile_bid(
                 outputs_post_processing,
                 inputs,
                 run_time_options,
-                "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+                "bidding_group_revenue_ex_ante",
             )
 
         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL

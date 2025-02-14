@@ -45,6 +45,22 @@ function get_revenue_file(inputs::AbstractInputs)
     return joinpath(post_processing_path(inputs), filename)
 end
 
+function get_profit_file(inputs::AbstractInputs)
+    filename = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+        "bidding_group_profit_ex_ante"
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+        "bidding_group_profit_ex_post"
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        "bidding_group_total_profit"
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
+        ""
+    end
+    filename *= "_period_$(inputs.args.period)"
+    filename *= ".csv"
+
+    return joinpath(post_processing_path(inputs), filename)
+end
+
 function get_load_marginal_cost_file(inputs::AbstractInputs)
     base_name = "load_marginal_cost"
     subproblem_suffixes = ["_ex_post_commercial", "_ex_post_physical", "_ex_ante_commercial", "_ex_ante_physical"]

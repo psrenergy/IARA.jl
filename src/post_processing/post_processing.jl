@@ -34,7 +34,7 @@ function post_processing(inputs::Inputs)
     if inputs.args.plot_outputs
         build_plots(inputs)
     end
-    if inputs.args.plot_ui_outputs
+    if inputs.args.plot_ui_outputs && is_market_clearing(inputs)
         build_ui_plots(inputs)
     end
     return nothing

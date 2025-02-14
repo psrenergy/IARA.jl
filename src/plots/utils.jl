@@ -39,6 +39,7 @@ function get_revenue_file(inputs::AbstractInputs)
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
         ""
     end
+    filename *= "_period_$(inputs.args.period)"
     filename *= ".csv"
 
     return joinpath(post_processing_path(inputs), filename)

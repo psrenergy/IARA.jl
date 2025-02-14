@@ -347,6 +347,12 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
     # Fixed scenario, fixed period, sum for all bidding groups
     reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
 
+    plot_type = if num_subperiods == 1
+        "bar"
+    else
+        "line"
+    end
+
     configs = Vector{Config}()
     title = "$ao_label - Total Profit"
     for subscenario in 1:num_subscenarios
@@ -357,7 +363,7 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
                 y = reshaped_data[:, subscenario],
                 name = "Subscenario $subscenario",
                 line = Dict("color" => _get_plot_color(subscenario)),
-                type = "line",
+                type = plot_type,
             ),
         )
     end
@@ -399,6 +405,12 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
         reshaped_data[i, :, :] = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
     end
 
+    plot_type = if num_subperiods == 1
+        "bar"
+    else
+        "line"
+    end
+
     for subscenario in 1:num_subscenarios
         configs = Vector{Config}()
         title = "Total Profit - Subscenario $subscenario"
@@ -411,7 +423,7 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
                     y = reshaped_data[asset_owner_index, :, subscenario],
                     name = ao_label,
                     line = Dict("color" => _get_plot_color(asset_owner_index)),
-                    type = "line",
+                    type = plot_type,
                 ),
             )
         end

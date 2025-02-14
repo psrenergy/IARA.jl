@@ -266,7 +266,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
             # Use only first scenario
             reshaped_data[:, :, 1] = data[:, 1, :]
         else
-            @show num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+            num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
             # Use only first scenario
             reshaped_data = data[:, :, 1, :]
         end

@@ -1163,8 +1163,8 @@ function write_individual_bids_files(
     bid_segment_column = zeros(Int, df_length)
     bus_column = Vector{String}(undef, df_length)
     bidding_group_column = Vector{String}(undef, df_length)
-    quantity_column = zeros(df_length)
     price_column = zeros(df_length)
+    quantity_column = zeros(df_length)
 
     line_index = 0
     for scenario in 1:number_of_scenarios(inputs)
@@ -1193,8 +1193,8 @@ function write_individual_bids_files(
                     bid_segment_column[line_index] = segment
                     bus_column[line_index] = bus_label(inputs, bus)
                     bidding_group_column[line_index] = bidding_group_label(inputs, bg)
-                    quantity_column[line_index] = inputs.time_series.quantity_offer[bg, bus, segment, subperiod]
                     price_column[line_index] = inputs.time_series.price_offer[bg, bus, segment, subperiod]
+                    quantity_column[line_index] = inputs.time_series.quantity_offer[bg, bus, segment, subperiod]
                 end
             end
         end
@@ -1207,8 +1207,8 @@ function write_individual_bids_files(
         bid_segment = bid_segment_column,
         bus = bus_column,
         bidding_group = bidding_group_column,
-        quantity = quantity_column,
         price = price_column,
+        quantity = quantity_column,
     )
 
     CSV.write(joinpath(output_path(inputs), filename), df)
@@ -1272,8 +1272,8 @@ function write_individual_virtual_reservoir_bids_files(
     scenario_column = zeros(Int, df_length)
     bid_segment_column = zeros(Int, df_length)
     virtual_reservoir_column = Vector{String}(undef, df_length)
-    quantity_column = zeros(df_length)
     price_column = zeros(df_length)
+    quantity_column = zeros(df_length)
 
     line_index = 0
     for scenario in 1:number_of_scenarios(inputs)
@@ -1297,10 +1297,10 @@ function write_individual_virtual_reservoir_bids_files(
                 scenario_column[line_index] = scenario
                 bid_segment_column[line_index] = segment
                 virtual_reservoir_column[line_index] = virtual_reservoir_label(inputs, vr)
-                quantity_column[line_index] =
-                    inputs.time_series.virtual_reservoir_quantity_offer[vr, asset_owner_index, segment]
                 price_column[line_index] =
                     inputs.time_series.virtual_reservoir_price_offer[vr, asset_owner_index, segment]
+                quantity_column[line_index] =
+                    inputs.time_series.virtual_reservoir_quantity_offer[vr, asset_owner_index, segment]
             end
         end
     end
@@ -1310,8 +1310,8 @@ function write_individual_virtual_reservoir_bids_files(
         scenario = scenario_column,
         bid_segment = bid_segment_column,
         virtual_reservoir = virtual_reservoir_column,
-        quantity = quantity_column,
         price = price_column,
+        quantity = quantity_column,
     )
 
     CSV.write(joinpath(output_path(inputs), filename), df)

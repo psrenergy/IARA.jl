@@ -128,6 +128,7 @@ function list_assets(inputs::IARA.AbstractInputs)
             "type" => "hydro",
             "min_generation" => IARA.hydro_unit_min_generation(inputs)[hydro_unit_index],
             "max_generation" => IARA.hydro_unit_max_generation(inputs)[hydro_unit_index],
+            "om_cost" => IARA.hydro_unit_om_cost(inputs)[hydro_unit_index],
         )
         push!(assets_list, asset_dict)
     end
@@ -137,6 +138,7 @@ function list_assets(inputs::IARA.AbstractInputs)
             "type" => "thermal",
             "min_generation" => IARA.thermal_unit_min_generation(inputs)[thermal_unit_index],
             "max_generation" => IARA.thermal_unit_max_generation(inputs)[thermal_unit_index],
+            "om_cost" => IARA.thermal_unit_om_cost(inputs)[thermal_unit_index],
         )
         push!(assets_list, asset_dict)
     end
@@ -145,6 +147,7 @@ function list_assets(inputs::IARA.AbstractInputs)
             "label" => renewable_unit_label,
             "type" => "renewable",
             "max_generation" => IARA.renewable_unit_max_generation(inputs)[renewable_unit_index],
+            "om_cost" => IARA.renewable_unit_om_cost(inputs)[renewable_unit_index],
         )
         push!(assets_list, asset_dict)
     end

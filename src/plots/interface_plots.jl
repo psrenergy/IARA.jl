@@ -371,7 +371,7 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
     main_configuration = Config(;
         title = title,
         xaxis = Dict(
-            "title" =>  "Subperiod",
+            "title" => "Subperiod",
             "tickmode" => "array",
             "tickvals" => 1:num_subperiods,
             "ticktext" => string.(1:num_subperiods),
@@ -436,7 +436,7 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" =>  "Subperiod",
+                "title" => "Subperiod",
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),

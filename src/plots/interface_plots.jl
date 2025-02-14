@@ -4,7 +4,7 @@ function build_ui_operator_plots(
     plots_path = joinpath(output_path(inputs), "plots", "operator")
     mkdir(plots_path)
 
-    plot_total_revenue(inputs, plots_path)
+    plot_total_profit(inputs, plots_path)
 
     return nothing
 end
@@ -16,11 +16,11 @@ function build_ui_agents_plots(
     plots_path = joinpath(output_path(inputs), "plots", "agents")
     mkdir(plots_path)
 
-    # Total Revenue
-    revenue_file_path = get_revenue_file(inputs)
-    if isfile(revenue_file_path)
+    # Total Profit
+    profit_file_path = get_profit_file(inputs)
+    if isfile(profit_file_path)
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
-            plot_asset_owner_total_revenue(inputs, plots_path, asset_owner_index)
+            plot_asset_owner_total_profit(inputs, plots_path, asset_owner_index)
         end
     end
 
@@ -40,6 +40,7 @@ function build_ui_agents_plots(
         end
 
         # Bidding Group Revenue
+        revenue_file_path = get_revenue_file(inputs)
         if isfile(revenue_file_path)
             for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
                 if isempty(labels_per_asset_owner[asset_owner_index])
@@ -320,16 +321,16 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
     return nothing
 end
 
-function plot_asset_owner_total_revenue(inputs::AbstractInputs, plots_path::String, asset_owner_index::Int)
+function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::String, asset_owner_index::Int)
     ao_label = asset_owner_label(inputs, asset_owner_index)
-    revenue_file_path = get_revenue_file(inputs)
-    data, metadata = read_timeseries_file(revenue_file_path)
+    profit_file_path = get_profit_file(inputs)
+    data, metadata = read_timeseries_file(profit_file_path)
 
     num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
     if num_scenarios > 1 && asset_owner_index == first(index_of_elements(inputs, AssetOwner))
-        @warn "Plotting asset owner total revenue for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
+        @warn "Plotting asset owner total profit for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
     end
-    @assert num_periods == 1 "Total revenue plot only implemented for single period run mode. Number of periods: $num_periods"
+    @assert num_periods == 1 "Total profit plot only implemented for single period run mode. Number of periods: $num_periods"
 
     labels_to_read = String[]
     for bg in bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
@@ -337,7 +338,7 @@ function plot_asset_owner_total_revenue(inputs::AbstractInputs, plots_path::Stri
             push!(labels_to_read, "$bg - $bus")
         end
     end
-    # If the asset owner has no bidding groups, there is no revenue to plot
+    # If the asset owner has no bidding groups, there is no profit to plot
     if isempty(labels_to_read)
         return nothing
     end
@@ -347,7 +348,7 @@ function plot_asset_owner_total_revenue(inputs::AbstractInputs, plots_path::Stri
     reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
 
     configs = Vector{Config}()
-    title = "$ao_label - Total Revenue"
+    title = "$ao_label - Total Profit"
     for subscenario in 1:num_subscenarios
         push!(
             configs,
@@ -364,23 +365,23 @@ function plot_asset_owner_total_revenue(inputs::AbstractInputs, plots_path::Stri
     main_configuration = Config(;
         title = title,
         xaxis = Dict("title" => "Subperiod"),
-        yaxis = Dict("title" => "Revenue [\$]"),
+        yaxis = Dict("title" => "Profit [\$]"),
     )
 
-    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_revenue_$ao_label.html"))
+    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_profit_$ao_label.html"))
 
     return nothing
 end
 
-function plot_total_revenue(inputs::AbstractInputs, plots_path::String)
-    revenue_file_path = get_revenue_file(inputs)
-    data, metadata = read_timeseries_file(revenue_file_path)
+function plot_total_profit(inputs::AbstractInputs, plots_path::String)
+    profit_file_path = get_profit_file(inputs)
+    data, metadata = read_timeseries_file(profit_file_path)
 
     num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
     if num_scenarios > 1
-        @warn "Plotting total revenue for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
+        @warn "Plotting total profit for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
     end
-    @assert num_periods == 1 "Total revenue plot only implemented for single period run mode. Number of periods: $num_periods"
+    @assert num_periods == 1 "Total profit plot only implemented for single period run mode. Number of periods: $num_periods"
 
     asset_onwer_indexes = index_of_elements(inputs, AssetOwner)
     reshaped_data = Array{Float64, 3}(undef, length(asset_onwer_indexes), num_subperiods, num_subscenarios)
@@ -400,7 +401,7 @@ function plot_total_revenue(inputs::AbstractInputs, plots_path::String)
 
     for subscenario in 1:num_subscenarios
         configs = Vector{Config}()
-        title = "Total Revenue - Subscenario $subscenario"
+        title = "Total Profit - Subscenario $subscenario"
         for asset_owner_index in asset_onwer_indexes
             ao_label = asset_owner_label(inputs, asset_owner_index)
             push!(
@@ -418,12 +419,12 @@ function plot_total_revenue(inputs::AbstractInputs, plots_path::String)
         main_configuration = Config(;
             title = title,
             xaxis = Dict("title" => "Subperiod"),
-            yaxis = Dict("title" => "Revenue [\$]"),
+            yaxis = Dict("title" => "Profit [\$]"),
         )
 
         _save_plot(
             Plot(configs, main_configuration),
-            joinpath(plots_path, "total_revenue_subscenario_$subscenario.html"),
+            joinpath(plots_path, "total_profit_subscenario_$subscenario.html"),
         )
     end
 

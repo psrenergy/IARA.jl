@@ -67,7 +67,13 @@ function _write_costs_bg_file(
         )
     end
 
-    for period in periods(inputs)
+    num_periods = if is_single_period(inputs)
+        1
+    else
+        number_of_periods(inputs)
+    end
+
+    for period in num_periods
         for scenario in scenarios(inputs)
             if is_ex_post
                 for subscenario in subscenarios(inputs, run_time_options)
@@ -148,7 +154,7 @@ end
 function get_costs_files(path::String; from_ex_post::Bool)
     from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
 
-    commercial_generation_files = filter(
+    commercial_costs_files = filter(
         x ->
             occursin("bidding_group_costs", x) &&
                 occursin(from_ex_post_string * "_commercial", x) &&
@@ -156,7 +162,7 @@ function get_costs_files(path::String; from_ex_post::Bool)
         readdir(path),
     )
 
-    physical_generation_files = filter(
+    physical_costs_files = filter(
         x ->
             occursin("bidding_group_costs", x) &&
                 occursin(from_ex_post_string * "_physical", x) &&
@@ -164,10 +170,10 @@ function get_costs_files(path::String; from_ex_post::Bool)
         readdir(path),
     )
 
-    if isempty(physical_generation_files)
-        return joinpath.(path, commercial_generation_files)
+    if isempty(physical_costs_files)
+        return joinpath.(path, commercial_costs_files)
     else
-        return joinpath.(path, physical_generation_files)
+        return joinpath.(path, physical_costs_files)
     end
 end
 
@@ -198,6 +204,14 @@ function _merge_costs_files(
             x ->
                 (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
                     && endswith(x, clearing_procedure * ".csv"), readdir(outputs_dir))
+
+        if isempty(costs_files)
+            costs_files = filter(
+                x ->
+                    (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
+                        && endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv"),
+                readdir(outputs_dir))
+        end
         if isempty(costs_files)
             continue
         end

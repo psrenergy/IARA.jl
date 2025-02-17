@@ -16,6 +16,16 @@ Pkg.instantiate()
 
 using JuliaFormatter
 
+formatted = format(dirname(@__DIR__))
+
 format(dirname(@__DIR__))
 format(dirname(@__DIR__))
-println("Formatted: ", format(dirname(@__DIR__)))
+
+if formatted
+    @info "All files have been formatted!"
+    exit(0)
+end
+
+@error "Some files have not been formatted!"
+
+exit(1)

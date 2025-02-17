@@ -21,19 +21,7 @@ jobs:
       - name: Format check
         shell: julia --color=yes {0}
         run: |
-          using Pkg
-          # If you update the version, also update the style guide docs.
-          Pkg.add(PackageSpec(name="JuliaFormatter", version="1"))
-          using JuliaFormatter
-          format("src", verbose=true)
-          format("test", verbose=true)
-          out = String(read(Cmd(`git diff`)))
-          if isempty(out)
-              exit(0)
-          end
-          @error "Some files have not been formatted !!!"
-          write(stdout, out)
-          exit(1)
+          .\format\format.bat
 
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}

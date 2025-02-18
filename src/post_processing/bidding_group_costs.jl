@@ -73,7 +73,7 @@ function _write_costs_bg_file(
         number_of_periods(inputs)
     end
 
-    for period in num_periods
+    for period in 1:num_periods
         for scenario in scenarios(inputs)
             if is_ex_post
                 for subscenario in subscenarios(inputs, run_time_options)

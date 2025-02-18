@@ -102,12 +102,20 @@ function open_time_series_output(
     inputs::Inputs,
     model_outputs::OutputReaders,
     file::String;
+    convert_to_binary::Bool = false
 )
     if !isfile(file * ".csv")
         error("File $file.csv does not exist")
         return nothing
     end
-    reader = Quiver.Reader{Quiver.csv}(file)
+     reader = if convert_to_binary
+        convert_time_series_file_to_binary(file)
+        # converting sends the converted file to a temp path
+        file_path = joinpath(dirname(file), "temp", basename(file))
+        Quiver.Reader{Quiver.binary}(file_path)
+    else
+        Quiver.Reader{Quiver.csv}(file)
+    end
     output_timeseries = QuiverInput(reader)
     model_outputs.outputs[file] = output_timeseries
     return reader

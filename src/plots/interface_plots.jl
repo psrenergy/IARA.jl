@@ -94,37 +94,29 @@ function build_ui_general_plots(
     mkdir(plots_path)
 
     # Spot price
-    custom_plot(
-        get_load_marginal_cost_file(inputs),
-        PlotTimeSeriesAll;
+    plot_ui_timeseries(;
+        file_path = get_load_marginal_cost_file(inputs),
         plot_path = joinpath(plots_path, "spot_price"),
         title = "Spot Price",
-        add_suffix_to_title = false,
-        simplified_ticks = true,
     )
 
     # Generation by technology
     generation_file_path = joinpath(post_processing_path(inputs), "generation.csv")
     if isfile(generation_file_path)
         # Generation
-        custom_plot(
-            generation_file_path,
-            PlotTimeSeriesStackedMean;
+        plot_ui_timeseries(;
+            file_path = generation_file_path,
             plot_path = joinpath(plots_path, "generation_by_technology"),
             title = "Generation by Technology",
-            add_suffix_to_title = false,
-            simplified_ticks = true,
-            agents = ["hydro", "thermal", "renewable", "battery_unit"], # Does not include deficit
+            agent_labels = ["hydro", "thermal", "renewable", "battery_unit"], # Does not include deficit
+            stack = true,
         )
         # Deficit
-        custom_plot(
-            generation_file_path,
-            PlotTimeSeriesMean;
+        plot_ui_timeseries(;
+            file_path = generation_file_path,
             plot_path = joinpath(plots_path, "deficit"),
             title = "Deficit",
-            add_suffix_to_title = false,
-            simplified_ticks = true,
-            agents = ["deficit"], # Does not include deficit
+            agent_labels = ["deficit"],
         )
     end
 
@@ -347,37 +339,56 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
     # Fixed scenario, fixed period, sum for all bidding groups
     reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
 
-    plot_type = if num_subperiods == 1
-        "bar"
-    else
-        "line"
-    end
-
     configs = Vector{Config}()
     title = "$ao_label - Total Profit"
-    for subscenario in 1:num_subscenarios
+
+    if num_subperiods == 1
         push!(
             configs,
             Config(;
-                x = 1:num_subperiods,
-                y = reshaped_data[:, subscenario],
-                name = "Subscenario $subscenario",
-                line = Dict("color" => _get_plot_color(subscenario)),
-                type = plot_type,
+                x = 1:num_subscenarios,
+                y = reshaped_data[1, :],
+                name = "",
+                line = Dict("color" => _get_plot_color(1)),
+                type = "bar",
             ),
         )
-    end
 
-    main_configuration = Config(;
-        title = title,
-        xaxis = Dict(
-            "title" => "Subperiod",
-            "tickmode" => "array",
-            "tickvals" => 1:num_subperiods,
-            "ticktext" => string.(1:num_subperiods),
-        ),
-        yaxis = Dict("title" => "Profit [\$]"),
-    )
+        main_configuration = Config(;
+            title = title,
+            xaxis = Dict(
+                "title" => "Subscenario",
+                "tickmode" => "array",
+                "tickvals" => 1:num_subscenarios,
+                "ticktext" => string.(1:num_subscenarios),
+            ),
+            yaxis = Dict("title" => "Profit [\$]"),
+        )
+    else
+        for subscenario in 1:num_subscenarios
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subperiods,
+                    y = reshaped_data[:, subscenario],
+                    name = "Subscenario $subscenario",
+                    line = Dict("color" => _get_plot_color(subscenario)),
+                    type = "line",
+                ),
+            )
+        end
+
+        main_configuration = Config(;
+            title = title,
+            xaxis = Dict(
+                "title" => "Subperiod",
+                "tickmode" => "array",
+                "tickvals" => 1:num_subperiods,
+                "ticktext" => string.(1:num_subperiods),
+            ),
+            yaxis = Dict("title" => "Profit [\$]"),
+        )
+    end
 
     _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_profit_$ao_label.html"))
 
@@ -410,25 +421,19 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
         reshaped_data[i, :, :] = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
     end
 
-    plot_type = if num_subperiods == 1
-        "bar"
-    else
-        "line"
-    end
-
-    for subscenario in 1:num_subscenarios
+    if num_subperiods == 1
         configs = Vector{Config}()
-        title = "Total Profit - Subscenario $subscenario"
+        title = "Total Profit"
         for asset_owner_index in asset_onwer_indexes
             ao_label = asset_owner_label(inputs, asset_owner_index)
             push!(
                 configs,
                 Config(;
-                    x = 1:num_subperiods,
-                    y = reshaped_data[asset_owner_index, :, subscenario],
+                    x = 1:num_subscenarios,
+                    y = reshaped_data[asset_owner_index, 1, :],
                     name = ao_label,
                     line = Dict("color" => _get_plot_color(asset_owner_index)),
-                    type = plot_type,
+                    type = "bar",
                 ),
             )
         end
@@ -436,19 +441,168 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" => "Subperiod",
+                "title" => "Subscenario",
                 "tickmode" => "array",
-                "tickvals" => 1:num_subperiods,
-                "ticktext" => string.(1:num_subperiods),
+                "tickvals" => 1:num_subscenarios,
+                "ticktext" => string.(1:num_subscenarios),
             ),
             yaxis = Dict("title" => "Profit [\$]"),
         )
 
         _save_plot(
             Plot(configs, main_configuration),
-            joinpath(plots_path, "total_profit_subscenario_$subscenario.html"),
+            joinpath(plots_path, "total_profit.html"),
+        )
+    else
+        for subscenario in 1:num_subscenarios
+            configs = Vector{Config}()
+            title = "Total Profit - Subscenario $subscenario"
+            for asset_owner_index in asset_onwer_indexes
+                ao_label = asset_owner_label(inputs, asset_owner_index)
+                push!(
+                    configs,
+                    Config(;
+                        x = 1:num_subperiods,
+                        y = reshaped_data[asset_owner_index, :, subscenario],
+                        name = ao_label,
+                        line = Dict("color" => _get_plot_color(asset_owner_index)),
+                        type = "line",
+                    ),
+                )
+            end
+
+            main_configuration = Config(;
+                title = title,
+                xaxis = Dict(
+                    "title" => "Subperiod",
+                    "tickmode" => "array",
+                    "tickvals" => 1:num_subperiods,
+                    "ticktext" => string.(1:num_subperiods),
+                ),
+                yaxis = Dict("title" => "Profit [\$]"),
+            )
+
+            _save_plot(
+                Plot(configs, main_configuration),
+                joinpath(plots_path, "total_profit_subscenario_$subscenario.html"),
+            )
+        end
+    end
+
+    return nothing
+end
+
+function plot_ui_timeseries(;
+    file_path::String,
+    plot_path::String,
+    title::String,
+    agent_labels::Vector{String} = String[],
+    stack::Bool = false,
+)
+    data, metadata = read_timeseries_file(file_path)
+
+    if isempty(agent_labels)
+        agent_labels = String.(metadata.labels)
+        number_of_agents = length(agent_labels)
+        agent_indexes = 1:number_of_agents
+    else
+        number_of_agents = length(agent_labels)
+        agent_indexes = [findfirst(isequal(agent), metadata.labels) for agent in agent_labels]
+    end
+
+    has_subscenarios = :subscenario in metadata.dimensions
+
+    if has_subscenarios
+        @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+        reshaped_data = data[agent_indexes, :, :, 1, 1]
+    else
+        @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+        num_subscenarios = 1
+        reshaped_data = Array{Float64, 3}(undef, number_of_agents, num_subperiods, num_subscenarios)
+        reshaped_data[:, :, 1] = data[agent_indexes, :, 1, 1]
+    end
+    if num_scenarios > 1
+        @warn "Plotting $title for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
+    end
+    @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
+
+    configs = Vector{Config}()
+    color_idx = 0
+
+    plot_kwargs = if stack
+        Dict(
+            :mode => "lines+markers",
+            :stackgroup => "one",
+        )
+    else
+        Dict()
+    end
+
+    if num_subperiods == 1
+        plot_ticks = ["$i" for i in 1:num_subscenarios]
+        hover_ticks = ["Subscenario $i" for i in 1:num_subscenarios]
+        for agent in 1:number_of_agents
+            label = agent_labels[agent]
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subscenarios,
+                    y = reshaped_data[agent, 1, :],
+                    name = label,
+                    line = Dict("color" => _get_plot_color(color_idx)),
+                    type = "bar",
+                    text = hover_ticks,
+                    hovertemplate = "%{y} $(metadata.unit)<br>%{text}",
+                    plot_kwargs...,
+                ),
+            )
+        end
+        main_configuration = Config(;
+            title = title,
+            xaxis = Dict(
+                "title" => "Subscenario",
+                "tickmode" => "array",
+                "tickvals" => 1:num_subscenarios,
+                "ticktext" => plot_ticks,
+            ),
+            yaxis = Dict("title" => metadata.unit),
+        )
+    else
+        plot_ticks = ["$i" for i in 1:num_subperiods]
+        hover_ticks = ["Subperiod $i" for i in 1:num_subperiods]
+        for agent in 1:number_of_agents, subscenario in 1:num_subscenarios
+            label = agent_labels[agent] * " - Subscenario $subscenario"
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subperiods,
+                    y = reshaped_data[agent, :, subscenario],
+                    name = label,
+                    line = Dict("color" => _get_plot_color(color_idx)),
+                    type = "line",
+                    text = hover_ticks,
+                    hovertemplate = "%{y} $(metadata.unit)<br>%{text}",
+                    plot_kwargs...,
+                ),
+            )
+        end
+        main_configuration = Config(;
+            title = title,
+            xaxis = Dict(
+                "title" => "Subperiod",
+                "tickmode" => "array",
+                "tickvals" => 1:num_subperiods,
+                "ticktext" => plot_ticks,
+            ),
+            yaxis = Dict("title" => metadata.unit),
         )
     end
+
+    _save_plot(Plot(configs, main_configuration), plot_path * ".html")
 
     return nothing
 end

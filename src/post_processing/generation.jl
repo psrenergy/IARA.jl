@@ -27,7 +27,12 @@ function post_processing_generation(inputs::Inputs)
     )
     file_suffix = ""
     if is_market_clearing(inputs)
-        file_suffix *= "_ex_post_physical"
+        if (construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP) ||
+           (construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.BID_BASED)
+            file_suffix *= "_ex_post_commercial"
+        else
+            file_suffix *= "_ex_post_physical"
+        end
     end
     if is_single_period(inputs)
         file_suffix *= "_period_$(inputs.args.period)"

@@ -18,7 +18,7 @@ IARA.update_thermal_unit_time_series_parameter!(
     "Thermal 1",
     "om_cost",
     40;
-    date_time = DateTime(0)
+    date_time = DateTime(0),
 )
 
 IARA.update_thermal_unit_time_series_parameter!(
@@ -26,7 +26,7 @@ IARA.update_thermal_unit_time_series_parameter!(
     "Thermal 2",
     "om_cost",
     50;
-    date_time = DateTime(0)
+    date_time = DateTime(0),
 )
 
 IARA.update_thermal_unit_time_series_parameter!(
@@ -34,7 +34,7 @@ IARA.update_thermal_unit_time_series_parameter!(
     "Thermal 3",
     "om_cost",
     65;
-    date_time = DateTime(0)
+    date_time = DateTime(0),
 )
 
 number_of_buses = 1

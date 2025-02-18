@@ -212,9 +212,19 @@ function post_processing_bidding_group_revenue(
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
-                open_time_series_output(inputs, model_outputs_time_serie, geneneration_ex_ante_file; convert_to_binary = true)
+                open_time_series_output(
+                    inputs,
+                    model_outputs_time_serie,
+                    geneneration_ex_ante_file;
+                    convert_to_binary = true,
+                )
             spot_price_ex_ante_reader =
-                open_time_series_output(inputs, model_outputs_time_serie, spot_price_ex_ante_file; convert_to_binary = true)
+                open_time_series_output(
+                    inputs,
+                    model_outputs_time_serie,
+                    spot_price_ex_ante_file;
+                    convert_to_binary = true,
+                )
         else
             geneneration_ex_ante_reader = nothing
             spot_price_ex_ante_reader = nothing

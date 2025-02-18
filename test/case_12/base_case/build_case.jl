@@ -16,7 +16,7 @@ using DataFrames
 number_of_periods = 5
 number_of_scenarios = 1
 number_of_subscenarios = 3
-number_of_subperiods = 2
+number_of_subperiods = 1
 subperiod_duration_in_hours = 1.0
 
 # Conversion constants

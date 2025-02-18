@@ -120,6 +120,12 @@ reduced_test_list = Dict(
 # ],
 # "case_12" => [
 #     "case_12/base_case/test_case.jl",
+#     "case_12/different_cvus/test_case.jl",
+#     "case_12/dual_settlement/test_case.jl",
+# ],
+# "case_13" => [
+#     "case_13/base_case/test_case.jl",
+#     "case_13/dual_settlement/test_case.jl",
 # ],
 )
 

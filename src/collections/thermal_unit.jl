@@ -257,6 +257,54 @@ function update_thermal_unit_relation!(
 end
 
 """
+    update_thermal_unit_time_series_parameter!(
+        db::DatabaseSQLite, 
+        label::String, 
+        attribute::String, 
+        value; 
+        dimensions...
+    )
+
+Update a Thermal Unit time series parameter in the database for a given dimension value
+
+Arguments:
+
+  - `db::PSRClassesInterface.DatabaseSQLite`: Database
+  - `label::String`: Thermal Unit label
+  - `attribute::String`: Attribute name
+  - `value`: Value to be updated
+  - `dimensions...`: Dimension values
+
+Example:
+```julia
+IARA.update_thermal_unit_time_series_parameter!(
+    db,
+    "therm_1",
+    "om_cost",
+    30.0;
+    date_time = DateTime(0), # dimension value
+)
+```
+"""
+function update_thermal_unit_time_series_parameter!(
+    db::DatabaseSQLite,
+    label::String,
+    attribute::String,
+    value;
+    dimensions...,
+)
+    PSRI.PSRDatabaseSQLite.update_time_series_row!(
+        db,
+        "ThermalUnit",
+        attribute,
+        label,
+        value;
+        dimensions...,
+    )
+    return db
+end
+
+"""
     validate(thermal_unit::ThermalUnit)
 
 Validate the Thermal Units' parameters. Return the number of errors found.

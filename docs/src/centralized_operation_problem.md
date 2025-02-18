@@ -40,8 +40,8 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``\rho_j``: Turbine efficiency ($MW/m^3/s$) of hydro unit $j$.
 - ``a_{j, \tau}``: Inflow of water ($hm^3$) into the reservoir of hydro unit $j$ at the start of subperiod $\tau$.
 - ``O_j``: Minimum outflow of water ($m^3/s$) from the reservoir of hydro unit $j$.
-- ``C^\eta``: Cost ($\$/hm^3$) of minimum outflow violation.
-- ``C^z_j``: Cost ($\$/hm^3$) of spilling water from hydro unit $j$.
+- ``C^\eta``: Cost (``\$/hm^3``) of minimum outflow violation.
+- ``C^z_j``: Cost (``\$/hm^3``) of spilling water from hydro unit $j$.
 - ``\overline{G}^H_j``: Maximum generation ($MW$) of hydro unit $j$.
 - ``\underline{G}^H_j``: Minimum generation ($MW$) of hydro unit $j$.
 
@@ -49,9 +49,9 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 - ``\overline{G}^T_j``: Maximum generation ($MW$) of thermal unit $j$.
 - ``\underline{G}^T_j``: Minimum generation ($MW$) of thermal unit $j$.
-- ``C^T_j``: Cost of generation ($\$/MWh$) of thermal unit $j$.
-- ``C^{T_{up}}_j``: Cost of startup ($\$$) of thermal unit $j$.
-- ``C^{T_{down}}_j``: Cost of shutdown ($\$$) of thermal unit $j$.
+- ``C^T_j``: Cost of generation (``\$/MWh``) of thermal unit $j$.
+- ``C^{T_{up}}_j``: Cost of startup (``\$``) of thermal unit $j$.
+- ``C^{T_{down}}_j``: Cost of shutdown (``\$``) of thermal unit $j$.
 - ``x^T_{j, 0}``: Commitment of thermal unit $j$ at the start of the period.
 - ``\Delta^{up}_j``: Ramp-up limit ($MW/min$) of thermal unit $j$.
 - ``\Delta^{down}_j``: Ramp-down limit ($MW/min$) of thermal unit $j$.
@@ -66,7 +66,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 - ``G^R_j``: Maximum generation ($MW$) of renewable unit $j$.
 - ``G^R_{j, \tau}(\omega)``: Realized generation ($p.u.$, as a fraction of the maximum generation) of renewable unit $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^R_j``: Cost of curtailment ($\$/MWh$) of renewable unit $j$.
+- ``C^R_j``: Cost of curtailment (``\$/MWh``) of renewable unit $j$.
 
 ### Battery Units
 
@@ -77,9 +77,9 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 ### Demands
 
 - ``D_{j, \tau}(\omega)``: Load ($GWh$) of demand $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^\delta``: Cost of demand deficit ($\$/MWh$).
-- ``C^{\delta^F}_{j, \tau}``: Cost demand curtailment ($\$/MWh$) of demand $j$ during subperiod $\tau$.
-- ``P_{j, \tau}(\omega)``: Maximum price ($\$/MWh$) of elastic demand $j$ during subperiod $\tau$ and scenario $\omega$.
+- ``C^\delta``: Cost of demand deficit (``\$/MWh``).
+- ``C^{\delta^F}_{j, \tau}``: Cost demand curtailment (``\$/MWh``) of demand $j$ during subperiod $\tau$.
+- ``P_{j, \tau}(\omega)``: Maximum price (``\$/MWh``) of elastic demand $j$ during subperiod $\tau$ and scenario $\omega$.
 - ``W_{j, t}``: Window of demand $j$ at period $t$, if $j \in J^{DF}$.
 - ``\underline{d}^F_j``: Maximum fraction of flexible demand $j$ to be under attended at some subperiod.
 - ``\overline{d}^F_j``: Maximum fraction of flexible demand $j$ to be over attended at some subperiod.

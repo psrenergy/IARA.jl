@@ -492,13 +492,13 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
     return nothing
 end
 
- function plot_ui_timeseries(;
+function plot_ui_timeseries(;
     file_path::String,
     plot_path::String,
     title::String,
     agent_labels::Vector{String} = String[],
     stack::Bool = false,
- )
+)
     data, metadata = read_timeseries_file(file_path)
 
     if isempty(agent_labels)
@@ -605,4 +605,4 @@ end
     _save_plot(Plot(configs, main_configuration), plot_path * ".html")
 
     return nothing
- end
+end

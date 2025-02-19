@@ -51,7 +51,7 @@ function get_profit_file(inputs::AbstractInputs)
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
         "bidding_group_profit_ex_post"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-        "bidding_group_total_profit"
+        "bidding_group_profit_total"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
         ""
     end

@@ -19,6 +19,7 @@ IARA.single_period_market_clearing(
     plot_outputs = false,
     delete_output_folder_before_execution = true,
     period = 1,
+    plot_ui_outputs = true,
 )
 
 if Main.UPDATE_RESULTS

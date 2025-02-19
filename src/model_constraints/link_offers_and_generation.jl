@@ -130,6 +130,32 @@ function link_offers_and_generation!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
+    if write_tiebreaker_output(inputs)
+        add_custom_recorder_to_query_from_subproblem_result!(
+            outputs,
+            :tiebreaker_marginal_cost,
+            constraint_dual_recorder(:link_offers_and_generation),
+        )
+
+        labels = labels_for_output_by_pair_of_agents(
+            inputs,
+            run_time_options,
+            inputs.collections.bidding_group,
+            inputs.collections.bus;
+            index_getter = all_buses,
+        )
+
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "tiebreaker_marginal_cost",
+            dimensions = ["period", "scenario", "subperiod"],
+            unit = "\$/MWh",
+            labels = labels,
+            run_time_options,
+        )
+    end
     return nothing
 end
 function link_offers_and_generation!(
@@ -142,5 +168,20 @@ function link_offers_and_generation!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
+    if write_tiebreaker_output(inputs)
+        tiebreaker_marginal_cost = simulation_results.data[:tiebreaker_marginal_cost]
+
+        write_tiebreaker_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "tiebreaker_marginal_cost",
+            tiebreaker_marginal_cost.data;
+            period,
+            scenario,
+            subscenario,
+            multiply_by = 1 / money_to_thousand_money(),
+        )
+    end
     return nothing
 end

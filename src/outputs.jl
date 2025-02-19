@@ -646,6 +646,75 @@ function write_bid_output(
     end
 end
 
+function write_tiebreaker_output(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    data::Array{Float64, 3};
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+    multiply_by::Float64 = 1.0,
+    has_profile_bids::Bool = false,
+    @nospecialize(filters::Vector{<:Function} = Function[])
+)
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    # TODO: This function deserves a refactor
+    all_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
+    bidding_groups_filtered = index_of_elements(
+        inputs,
+        BiddingGroup;
+        run_time_options,
+        filters = filters,
+    )
+
+    blks = subperiods(inputs)
+    buses = index_of_elements(inputs, Bus)
+    num_buses = length(buses)
+    # 3D array with dimensions: subperiod, bidding_group, bus
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    treated_output = zeros(length(blks), length(bidding_groups_filtered) * length(buses))
+
+    for blk in blks
+        for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
+            # If the data is a OrderedDict (value of a JuMP.Variable) we can acess
+            # directly the index (blk, bg, prf, bus) to get the value.
+            data_bg = if isa(data, Array{Float64, 3})
+                data[blk, i_bg, bus]
+            else
+                data[blk, bg, bus]
+            end
+            treated_output[blk, (i_bg-1)*(num_buses)+bus] = data_bg
+        end
+        if is_ex_post_problem(run_time_options)
+            Quiver.write!(
+                output.writer,
+                round_output(treated_output[blk, :] * multiply_by);
+                period,
+                scenario,
+                subscenario,
+                subperiod = blk,
+            )
+        else
+            Quiver.write!(
+                output.writer,
+                round_output(treated_output[blk, :] * multiply_by);
+                period,
+                scenario,
+                subperiod = blk,
+            )
+        end
+    end
+end
+
 function write_virtual_reservoir_bid_output(
     outputs::Outputs,
     inputs::Inputs,

@@ -454,3 +454,19 @@ function clearing_has_physical_variables(inputs::Inputs)
         return false
     end
 end
+
+function write_tiebreaker_output(inputs)
+    if construction_type_ex_ante_physical(inputs) != Configurations_ConstructionType.HYBRID &&
+       construction_type_ex_ante_commercial(inputs) != Configurations_ConstructionType.HYBRID &&
+       construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.HYBRID &&
+       construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.HYBRID
+        # Tiebreaker output is only written for hybrid models
+        return false
+    end
+
+    if number_of_elements(inputs, BiddingGroup) > 0 && number_of_elements(inputs, Bus) == 1
+        return true
+    else
+        return false
+    end
+end

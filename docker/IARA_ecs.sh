@@ -55,6 +55,17 @@ function validate_game_round () {
     fi
 }
 
+function catch_iara_error() {
+    local exit_code=$?
+    echo "Error: IARA failed with exit code $exit_code"
+    if [ -e './iara_error.log' ]
+        then
+            echo "Uploading error log to S3..."
+            aws s3 cp ./iara_error.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/iara_error.log
+            echo "Completed."
+    fi
+}
+
 if [ -z "$IARA_COMMAND" ]; then
     echo "ERROR: Missing IARA_COMMAND variable. Please provide the command to be executed" 
     exit 1
@@ -80,6 +91,7 @@ fi
 if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
 
     download_and_unzip_case
+    trap 'catch_iara_error' ERR
 
     $IARA_PATH/IARA.sh --output-path="game_summary" --run-mode 'interface-call' $CASE_PATH 
 

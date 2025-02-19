@@ -114,6 +114,8 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     validate_game_round
     download_and_unzip_case
 
+    trap 'catch_iara_error' ERR
+
     $IARA_PATH/IARA.sh $CASE_PATH --output-path="heuristic_bids" --run-mode 'single-period-heuristic-bid' --period=$IARA_GAME_ROUND
     
     echo "Uploading results to S3..."
@@ -127,6 +129,8 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     validate_game_round
     download_and_unzip_case
     download_bids_and_move_to_case
+
+    trap 'catch_iara_error' ERR
 
     $IARA_PATH/IARA.sh $CASE_PATH --output-path="results" --run-mode='single-period-market-clearing' --period=$IARA_GAME_ROUND --plot-ui-results
 

@@ -1211,7 +1211,10 @@ function write_individual_bids_files(
         quantity = quantity_column,
     )
 
-    CSV.write(joinpath(output_path(inputs), filename), df)
+    open(joinpath(output_path(inputs), filename), "w") do io
+        write(io, "sep=,\n")
+    end
+    CSV.write(joinpath(output_path(inputs), filename), df; append=true, writeheader=true)
 
     return nothing
 end

@@ -48,6 +48,17 @@ function initialize_heuristic_bids_outputs(
             unit = "\$/MWh",
             labels,
         )
+
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            run_time_options,
+            output_name = "bidding_group_no_markup_price_offer",
+            dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+            unit = "\$/MWh",
+            labels,
+        )
     end
 
     if has_any_profile_bids(inputs)
@@ -263,6 +274,12 @@ function markup_offers_for_period_scenario(
         maximum_number_of_offer_segments,
         number_of_subperiods(inputs),
     )
+    no_markup_price_offers = zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        maximum_number_of_offer_segments,
+        number_of_subperiods(inputs),
+    )
 
     number_of_segments_validation_flag = false
 
@@ -295,6 +312,7 @@ function markup_offers_for_period_scenario(
             bg,
             quantity_offers,
             price_offers,
+            no_markup_price_offers,
             thermal_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
@@ -305,6 +323,7 @@ function markup_offers_for_period_scenario(
             bg,
             quantity_offers,
             price_offers,
+            no_markup_price_offers,
             renewable_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
@@ -316,6 +335,7 @@ function markup_offers_for_period_scenario(
             bg,
             quantity_offers,
             price_offers,
+            no_markup_price_offers,
             hydro_reservoir_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
@@ -353,6 +373,19 @@ function markup_offers_for_period_scenario(
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
         permutedims(price_offers, (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+    )
+
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_no_markup_price_offer",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(no_markup_price_offers, (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
@@ -588,6 +621,7 @@ function build_thermal_offers!(
     bg_index::Int,
     quantity_offers::Array{Float64, 4},
     price_offers::Array{Float64, 4},
+    no_markup_price_offers::Array{Float64, 4},
     thermal_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -608,6 +642,8 @@ function build_thermal_offers!(
                         segment_fraction
                     price_offers[bg_index, bus, segment, subperiod] =
                         thermal_unit_om_cost(inputs, thermal_unit) * (1 + risk_factor)
+                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                        thermal_unit_om_cost(inputs, thermal_unit)
                 end
             end
         end
@@ -633,6 +669,7 @@ function build_renewable_offers!(
     bg_index::Int,
     quantity_offers::Array{Float64, 4},
     price_offers::Array{Float64, 4},
+    no_markup_price_offers::Array{Float64, 4},
     renewable_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -654,6 +691,8 @@ function build_renewable_offers!(
                         subperiod_duration_in_hours(inputs, subperiod) * segment_fraction
                     price_offers[bg_index, bus, segment, subperiod] =
                         renewable_unit_om_cost(inputs, renewable_unit) * (1 + risk_factor)
+                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                        renewable_unit_om_cost(inputs, renewable_unit)
                 end
             end
         end
@@ -680,6 +719,7 @@ function build_hydro_offers!(
     bg_index::Int,
     quantity_offers::Array{Float64, 4},
     price_offers::Array{Float64, 4},
+    no_markup_price_offers::Array{Float64, 4},
     hydro_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -699,6 +739,8 @@ function build_hydro_offers!(
                         time_series_hydro_generation(inputs)[hydro_unit, subperiod] / MW_to_GW() * segment_fraction
                     price_offers[bg_index, bus, segment, subperiod] =
                         time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] * (1 + risk_factor)
+                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                        time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod]
                 end
                 if isnothing(available_energy)
                     continue

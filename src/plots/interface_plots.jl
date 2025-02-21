@@ -146,15 +146,28 @@ end
 function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
     offer_files = get_offer_file_paths(inputs)
     if !isempty(offer_files)
+        plot_no_markup_price = false
         quantity_offer_file = offer_files[1]
         price_offer_file = offer_files[2]
+        if length(offer_files) == 3
+            no_markup_price_offer_file = offer_files[3]
+            plot_no_markup_price = true
+        end
 
         quantity_data, quantity_metadata = read_timeseries_file(quantity_offer_file)
         price_data, price_metadata = read_timeseries_file(price_offer_file)
+        if plot_no_markup_price
+            no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_offer_file)
+        end
 
         @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price offer file columns"
         @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price offer file dimensions"
         @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
+        if plot_no_markup_price
+            @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
+            @assert no_markup_price_metadata.dimension_size == price_metadata.dimension_size "Mismatch between reference price and price offer file dimensions"
+            @assert no_markup_price_metadata.labels == price_metadata.labels "Mismatch between reference price and price offer file labels"
+        end
 
         num_labels = quantity_metadata.number_of_time_series
         num_periods, num_scenarios, num_subperiods, num_bid_segments = quantity_metadata.dimension_size
@@ -165,15 +178,26 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             # From input files, with all periods
             quantity_data = quantity_data[:, :, :, :, inputs.args.period]
             price_data = price_data[:, :, :, :, inputs.args.period]
+            if plot_no_markup_price
+                no_markup_price_data = no_markup_price_data[:, :, :, :, inputs.args.period]
+            end
         else
             # Or from heuristic bid output files, with a single period
             quantity_data = dropdims(quantity_data; dims = 5)
             price_data = dropdims(price_data; dims = 5)
+            if plot_no_markup_price
+                no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
+            end
         end
 
         for subperiod in 1:num_subperiods
             reshaped_quantity = [Float64[] for bus in 1:num_buses]
             reshaped_price = [Float64[] for bus in 1:num_buses]
+            if plot_no_markup_price
+                reshaped_no_markup_price = [Float64[] for bus in 1:num_buses]
+                # the second quantity is necessary because we will sort both vectors in increasing price order
+                reshaped_no_markup_quantity = [Float64[] for bus in 1:num_buses]
+            end
 
             for segment in 1:num_bid_segments
                 for label_index in 1:num_labels
@@ -184,6 +208,11 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                     # push point
                     push!(reshaped_quantity[bus_index], quantity)
                     push!(reshaped_price[bus_index], price)
+                    if plot_no_markup_price
+                        no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
+                        push!(reshaped_no_markup_price[bus_index], no_markup_price)
+                        push!(reshaped_no_markup_quantity[bus_index], quantity)
+                    end
                 end
             end
 
@@ -192,6 +221,12 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 reshaped_quantity[bus] = reshaped_quantity[bus][sort_order]
                 reshaped_quantity[bus] = cumsum(reshaped_quantity[bus])
                 reshaped_price[bus] = reshaped_price[bus][sort_order]
+                if plot_no_markup_price
+                    no_markup_sort_order = sortperm(reshaped_no_markup_price[bus])
+                    reshaped_no_markup_quantity[bus] = reshaped_no_markup_quantity[bus][no_markup_sort_order]
+                    reshaped_no_markup_quantity[bus] = cumsum(reshaped_no_markup_quantity[bus])
+                    reshaped_no_markup_price[bus] = reshaped_no_markup_price[bus][no_markup_sort_order]
+                end
             end
 
             quantity_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
@@ -208,20 +243,51 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 end
             end
 
+            if plot_no_markup_price
+                no_markup_quantity_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
+                no_markup_price_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
+
+                for bus in 1:num_buses
+                    for (quantity, price) in zip(reshaped_no_markup_quantity[bus], reshaped_no_markup_price[bus])
+                        # old point
+                        push!(no_markup_quantity_data_to_plot[bus], no_markup_quantity_data_to_plot[bus][end])
+                        push!(no_markup_price_data_to_plot[bus], price)
+                        # new point
+                        push!(no_markup_quantity_data_to_plot[bus], quantity)
+                        push!(no_markup_price_data_to_plot[bus], price)
+                    end
+                end
+            end
+
             configs = Vector{Config}()
 
             title = "Available Offers - Subperiod $subperiod"
+            color_idx = 0
             for bus in 1:num_buses
+                color_idx += 1
                 push!(
                     configs,
                     Config(;
                         x = quantity_data_to_plot[bus],
                         y = price_data_to_plot[bus],
                         name = bus_label(inputs, bus),
-                        line = Dict("color" => _get_plot_color(bus)),
+                        line = Dict("color" => _get_plot_color(color_idx)),
                         type = "line",
                     ),
                 )
+                if plot_no_markup_price
+                    color_idx += 1
+                    push!(
+                        configs,
+                        Config(;
+                            x = no_markup_quantity_data_to_plot[bus],
+                            y = no_markup_price_data_to_plot[bus],
+                            name = bus_label(inputs, bus) * " - Recommended Offer",
+                            line = Dict("color" => _get_plot_color(color_idx)),
+                            type = "line",
+                        ),
+                    )
+                end
             end
 
             main_configuration = Config(;

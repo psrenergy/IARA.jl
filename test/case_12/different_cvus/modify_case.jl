@@ -65,7 +65,7 @@ no_markup_price_offer =
         maximum_number_of_bidding_segments,
         number_of_subperiods,
         number_of_scenarios,
-        number_of_periods,
+        1, # number of periods for reference price is always 1
     )
 
 quantity_offer[1, :, :, :, :, :] .= 100
@@ -113,14 +113,14 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "bidding_group_no_markup_price_period_1"),
+    joinpath(PATH, "bidding_group_no_markup_price_offer_period_1"),
     no_markup_price_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],
     labels_buses = ["Bus 1"],
     time_dimension = "period",
     dimension_size = [
-        number_of_periods,
+        1, # number of periods for reference price is always 1
         number_of_scenarios,
         number_of_subperiods,
         maximum_number_of_bidding_segments,

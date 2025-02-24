@@ -152,29 +152,32 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
         if plot_no_markup_price
             @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
-            @assert no_markup_price_metadata.dimension_size == price_metadata.dimension_size "Mismatch between reference price and price offer file dimensions"
-            @assert no_markup_price_metadata.labels == price_metadata.labels "Mismatch between reference price and price offer file labels"
+            # The number of periods in the reference price file is always 1
+            # The number of bid segments does not need to match
+            @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price offer file dimensions"
+            @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price offer file labels"
         end
 
         num_labels = quantity_metadata.number_of_time_series
         num_periods, num_scenarios, num_subperiods, num_bid_segments = quantity_metadata.dimension_size
         num_buses = number_of_elements(inputs, Bus)
 
+        if plot_no_markup_price
+            num_bid_segments_no_markup = no_markup_price_metadata.dimension_size[end]
+        end
+
         # Remove the period dimension
         if num_periods > 1
             # From input files, with all periods
             quantity_data = quantity_data[:, :, :, :, inputs.args.period]
             price_data = price_data[:, :, :, :, inputs.args.period]
-            if plot_no_markup_price
-                no_markup_price_data = no_markup_price_data[:, :, :, :, inputs.args.period]
-            end
         else
             # Or from heuristic bid output files, with a single period
             quantity_data = dropdims(quantity_data; dims = 5)
             price_data = dropdims(price_data; dims = 5)
-            if plot_no_markup_price
-                no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
-            end
+        end
+        if plot_no_markup_price
+            no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
         end
 
         for subperiod in 1:num_subperiods
@@ -195,7 +198,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                     # push point
                     push!(reshaped_quantity[bus_index], quantity)
                     push!(reshaped_price[bus_index], price)
-                    if plot_no_markup_price
+                    if plot_no_markup_price && segment <= num_bid_segments_no_markup
                         no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
                         push!(reshaped_no_markup_price[bus_index], no_markup_price)
                         push!(reshaped_no_markup_quantity[bus_index], quantity)

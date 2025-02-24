@@ -4,83 +4,70 @@ function build_ui_operator_plots(
     plots_path = joinpath(output_path(inputs), "plots", "operator")
     mkdir(plots_path)
 
-    plot_total_profit(inputs, plots_path)
+    # Profit
+    profit_file_path = get_profit_file(inputs)
+    plot_path = joinpath(plots_path, "total_profit")
+    plot_asset_owner_sum_output(inputs, profit_file_path, plot_path, "Total Profit")
+
+    # Revenue
+    revenue_file_path = get_revenue_file(inputs)
+    plot_path = joinpath(plots_path, "total_revenue")
+    plot_asset_owner_sum_output(inputs, revenue_file_path, plot_path, "Total Revenue")
+
+    # Generation
+    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
+    if isempty(generation_files)
+        generation_files =
+            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+    end
+    generation_file = generation_files[1]
+    plot_path = joinpath(plots_path, "total_generation")
+    plot_asset_owner_sum_output(inputs, generation_file, plot_path, "Total Generation")
 
     return nothing
 end
 
 function build_ui_agents_plots(
     inputs::Inputs;
-    create_bidding_group_plots::Bool = false,
 )
     plots_path = joinpath(output_path(inputs), "plots", "agents")
     mkdir(plots_path)
 
-    # Total Profit
+    # Profit
     profit_file_path = get_profit_file(inputs)
     if isfile(profit_file_path)
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
-            plot_asset_owner_total_profit(inputs, plots_path, asset_owner_index)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Profit"
+            plot_path = joinpath(plots_path, "profit_$ao_label.html")
+            plot_asset_owner_output(inputs, profit_file_path, plot_path, asset_owner_index, title)
         end
     end
 
-    if create_bidding_group_plots
-        # Bidding group file labels
-        labels_per_asset_owner = Vector{Vector{String}}(undef, number_of_elements(inputs, AssetOwner))
+    # Revenue
+    revenue_file_path = get_revenue_file(inputs)
+    if isfile(revenue_file_path)
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
-            bidding_group_labels =
-                bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
-            labels_to_read = String[]
-            for bg in bidding_group_labels
-                for bus in bus_label(inputs)
-                    push!(labels_to_read, "$bg - $bus")
-                end
-            end
-            labels_per_asset_owner[asset_owner_index] = labels_to_read
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Revenue"
+            plot_path = joinpath(plots_path, "revenue_$ao_label.html")
+            plot_asset_owner_output(inputs, revenue_file_path, plot_path, asset_owner_index, title)
         end
+    end
 
-        # Bidding Group Revenue
-        revenue_file_path = get_revenue_file(inputs)
-        if isfile(revenue_file_path)
-            for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
-                if isempty(labels_per_asset_owner[asset_owner_index])
-                    continue
-                end
-                custom_plot(
-                    revenue_file_path,
-                    PlotTimeSeriesStackedMean;
-                    plot_path = joinpath(plots_path, "bidding_group_revenue_$(asset_owner_label)"),
-                    agents = labels_per_asset_owner[asset_owner_index],
-                    title = "$asset_owner_label - Bidding Group Revenue",
-                    add_suffix_to_title = false,
-                    simplified_ticks = true,
-                )
-            end
-        end
-
-        # Bidding Group Generation
-        generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
-        if isempty(generation_files)
-            generation_files =
-                get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
-        end
-        for generation_file in generation_files
-            filename = get_filename(basename(generation_file))
-            filename = replace(filename, "_period_$(inputs.args.period)" => "")
-            for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
-                if isempty(labels_per_asset_owner[asset_owner_index])
-                    continue
-                end
-                custom_plot(
-                    generation_file,
-                    PlotTimeSeriesStackedMean;
-                    plot_path = joinpath(plots_path, "$(filename)_$(asset_owner_label)"),
-                    agents = labels_per_asset_owner[asset_owner_index],
-                    title = "$asset_owner_label - Bidding Group Generation",
-                    add_suffix_to_title = false,
-                    simplified_ticks = true,
-                )
-            end
+    # Generation
+    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
+    if isempty(generation_files)
+        generation_files =
+            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+    end
+    generation_file = generation_files[1]
+    if isfile(generation_file)
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Generation"
+            plot_path = joinpath(plots_path, "generation_$ao_label.html")
+            plot_asset_owner_output(inputs, generation_file, plot_path, asset_owner_index, title)
         end
     end
 
@@ -379,10 +366,27 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
     return nothing
 end
 
-function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::String, asset_owner_index::Int)
-    ao_label = asset_owner_label(inputs, asset_owner_index)
-    profit_file_path = get_profit_file(inputs)
-    data, metadata = read_timeseries_file(profit_file_path)
+function plot_asset_owner_output(
+    inputs::AbstractInputs,
+    file_path::String,
+    plot_path::String, 
+    asset_owner_index::Int,
+    title::String,
+)
+    data, metadata = read_timeseries_file(file_path)
+
+    if :bid_segment in metadata.dimensions
+        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
+        # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
+        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
+        data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
+        metadata.dimension_size = metadata.dimension_size[1:end .!= segment_index]
+    end
+
+    if !(:subscenario in metadata.dimensions)
+        @warn "Plotting asset owner outputs not implemented for ex-ante data."
+        return nothing
+    end
 
     num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
     if num_scenarios > 1 && asset_owner_index == first(index_of_elements(inputs, AssetOwner))
@@ -406,7 +410,6 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
     reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
 
     configs = Vector{Config}()
-    title = "$ao_label - Total Profit"
 
     if num_subperiods == 1
         push!(
@@ -428,7 +431,7 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
                 "tickvals" => 1:num_subscenarios,
                 "ticktext" => string.(1:num_subscenarios),
             ),
-            yaxis = Dict("title" => "Profit [\$]"),
+            yaxis = Dict("title" => "[$(metadata.unit)]"),
         )
     else
         for subscenario in 1:num_subscenarios
@@ -452,18 +455,30 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),
             ),
-            yaxis = Dict("title" => "Profit [\$]"),
+            yaxis = Dict("title" => "[$(metadata.unit)]"),
         )
     end
 
-    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_profit_$ao_label.html"))
+    _save_plot(Plot(configs, main_configuration), plot_path)
 
     return nothing
 end
 
-function plot_total_profit(inputs::AbstractInputs, plots_path::String)
-    profit_file_path = get_profit_file(inputs)
-    data, metadata = read_timeseries_file(profit_file_path)
+function plot_asset_owner_sum_output(
+    inputs::AbstractInputs,
+    file_path::String,
+    plot_path::String, 
+    title::String,
+)
+    data, metadata = read_timeseries_file(file_path)
+
+    if :bid_segment in metadata.dimensions
+        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
+        # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
+        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
+        data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
+        metadata.dimension_size = metadata.dimension_size[1:end .!= segment_index]
+    end
 
     num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
     if num_scenarios > 1
@@ -489,7 +504,6 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
 
     if num_subperiods == 1
         configs = Vector{Config}()
-        title = "Total Profit"
         for asset_owner_index in asset_onwer_indexes
             ao_label = asset_owner_label(inputs, asset_owner_index)
             push!(
@@ -512,17 +526,14 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
                 "tickvals" => 1:num_subscenarios,
                 "ticktext" => string.(1:num_subscenarios),
             ),
-            yaxis = Dict("title" => "Profit [\$]"),
+            yaxis = Dict("title" => metadata.unit),
         )
 
-        _save_plot(
-            Plot(configs, main_configuration),
-            joinpath(plots_path, "total_profit.html"),
-        )
+        _save_plot(Plot(configs, main_configuration), plot_path * ".html")
     else
         for subscenario in 1:num_subscenarios
             configs = Vector{Config}()
-            title = "Total Profit - Subscenario $subscenario"
+            title *= " - Subscenario $subscenario"
             for asset_owner_index in asset_onwer_indexes
                 ao_label = asset_owner_label(inputs, asset_owner_index)
                 push!(
@@ -545,13 +556,10 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
                     "tickvals" => 1:num_subperiods,
                     "ticktext" => string.(1:num_subperiods),
                 ),
-                yaxis = Dict("title" => "Profit [\$]"),
+                yaxis = Dict("title" => metadata.unit),
             )
 
-            _save_plot(
-                Plot(configs, main_configuration),
-                joinpath(plots_path, "total_profit_subscenario_$subscenario.html"),
-            )
+            _save_plot(Plot(configs, main_configuration), plot_path * "_subscenario_$subscenario.html")
         end
     end
 

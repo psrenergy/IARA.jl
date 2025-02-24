@@ -533,7 +533,6 @@ function plot_asset_owner_sum_output(
     else
         for subscenario in 1:num_subscenarios
             configs = Vector{Config}()
-            title *= " - Subscenario $subscenario"
             for asset_owner_index in asset_onwer_indexes
                 ao_label = asset_owner_label(inputs, asset_owner_index)
                 push!(
@@ -549,7 +548,7 @@ function plot_asset_owner_sum_output(
             end
 
             main_configuration = Config(;
-                title = title,
+                title = title * " - Subscenario $subscenario",
                 xaxis = Dict(
                     "title" => "Subperiod",
                     "tickmode" => "array",

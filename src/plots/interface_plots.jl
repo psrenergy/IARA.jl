@@ -153,7 +153,8 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         if plot_no_markup_price
             @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
             # The number of periods in the reference price file is always 1
-            @assert no_markup_price_metadata.dimension_size[2:end] == price_metadata.dimension_size[2:end] "Mismatch between reference price and price offer file dimensions"
+            # The number of bid segments does not need to match
+            @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price offer file dimensions"
             @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price offer file labels"
         end
 

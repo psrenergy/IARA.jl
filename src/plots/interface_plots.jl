@@ -369,7 +369,7 @@ end
 function plot_asset_owner_output(
     inputs::AbstractInputs,
     file_path::String,
-    plot_path::String, 
+    plot_path::String,
     asset_owner_index::Int,
     title::String,
 )
@@ -380,7 +380,7 @@ function plot_asset_owner_output(
         # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
         segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
         data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
-        metadata.dimension_size = metadata.dimension_size[1:end .!= segment_index]
+        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
     end
 
     if !(:subscenario in metadata.dimensions)
@@ -467,7 +467,7 @@ end
 function plot_asset_owner_sum_output(
     inputs::AbstractInputs,
     file_path::String,
-    plot_path::String, 
+    plot_path::String,
     title::String,
 )
     data, metadata = read_timeseries_file(file_path)
@@ -477,7 +477,7 @@ function plot_asset_owner_sum_output(
         # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
         segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
         data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
-        metadata.dimension_size = metadata.dimension_size[1:end .!= segment_index]
+        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
     end
 
     num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size

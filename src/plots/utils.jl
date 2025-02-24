@@ -20,14 +20,14 @@ function get_offer_file_paths(inputs::AbstractInputs)
         else
             output_path(inputs)
         end
-        no_markup_price_path = joinpath(no_markup_price_folder, "bidding_group_no_markup_price_period_$(inputs.args.period).csv")
+        no_markup_price_path =
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_period_$(inputs.args.period).csv")
         if isfile(no_markup_price_path)
             push!(offer_files, no_markup_price_path)
         else
             @warn("Reference price (no markup) offer file not found: $(no_markup_price_path)")
         end
     end
-
 
     return offer_files
 end

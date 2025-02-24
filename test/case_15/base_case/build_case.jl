@@ -52,40 +52,40 @@ db = IARA.create_study!(PATH;
 IARA.add_zone!(db; label = "Zona")
 IARA.add_bus!(db; label = "Sistema", zone_id = "Zona")
 
-IARA.add_asset_owner!(db; label = "Agente A")
-IARA.add_asset_owner!(db; label = "Agente B")
-IARA.add_asset_owner!(db; label = "Agente C")
-IARA.add_asset_owner!(db; label = "Agente D")
-IARA.add_asset_owner!(db; label = "Agente E")
+IARA.add_asset_owner!(db; label = "Agente 40")
+IARA.add_asset_owner!(db; label = "Agente 45")
+IARA.add_asset_owner!(db; label = "Agente 60")
+IARA.add_asset_owner!(db; label = "Agente 75")
+IARA.add_asset_owner!(db; label = "Agente 80")
 
 IARA.add_bidding_group!(
     db;
     label = "a",
-    assetowner_id = "Agente A",
+    assetowner_id = "Agente 40",
 )
 
 IARA.add_bidding_group!(
     db;
     label = "b",
-    assetowner_id = "Agente B",
+    assetowner_id = "Agente 45",
 )
 
 IARA.add_bidding_group!(
     db;
     label = "c",
-    assetowner_id = "Agente C",
+    assetowner_id = "Agente 60",
 )
 
 IARA.add_bidding_group!(
     db;
     label = "d",
-    assetowner_id = "Agente D",
+    assetowner_id = "Agente 75",
 )
 
 IARA.add_bidding_group!(
     db;
     label = "e",
-    assetowner_id = "Agente E",
+    assetowner_id = "Agente 80",
 )
 
 IARA.add_thermal_unit!(

@@ -113,7 +113,7 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "bidding_group_no_markup_price_period_1"),
+    joinpath(PATH, "bidding_group_no_markup_price_offer_period_1"),
     no_markup_price_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],

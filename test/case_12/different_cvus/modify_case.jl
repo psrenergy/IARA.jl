@@ -58,6 +58,15 @@ price_offer =
         number_of_scenarios,
         number_of_periods,
     )
+no_markup_price_offer =
+    zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        maximum_number_of_bidding_segments,
+        number_of_subperiods,
+        number_of_scenarios,
+        number_of_periods,
+    )
 
 quantity_offer[1, :, :, :, :, :] .= 100
 quantity_offer[2, :, :, :, :, :] .= 100
@@ -65,6 +74,9 @@ quantity_offer[3, :, :, :, :, :] .= 100
 price_offer[1, :, :, :, :, :] .= 41.0
 price_offer[2, :, :, :, :, :] .= 51.0
 price_offer[3, :, :, :, :, :] .= 65.0
+no_markup_price_offer[1, :, :, :, :, :] .= 40.0
+no_markup_price_offer[2, :, :, :, :, :] .= 50.0
+no_markup_price_offer[3, :, :, :, :, :] .= 65.0
 
 IARA.write_bids_time_series_file(
     joinpath(PATH, "quantity_offer"),
@@ -99,6 +111,24 @@ IARA.write_bids_time_series_file(
     initial_date = "2024-01-01T00:00:00",
     unit = "\$/MWh",
 )
+
+IARA.write_bids_time_series_file(
+    joinpath(PATH, "bidding_group_no_markup_price_period_1"),
+    no_markup_price_offer;
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+    labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],
+    labels_buses = ["Bus 1"],
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_subperiods,
+        maximum_number_of_bidding_segments,
+    ],
+    initial_date = "2024-01-01T00:00:00",
+    unit = "\$/MWh",
+)
+
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";

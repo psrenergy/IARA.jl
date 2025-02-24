@@ -4,83 +4,70 @@ function build_ui_operator_plots(
     plots_path = joinpath(output_path(inputs), "plots", "operator")
     mkdir(plots_path)
 
-    plot_total_profit(inputs, plots_path)
+    # Profit
+    profit_file_path = get_profit_file(inputs)
+    plot_path = joinpath(plots_path, "total_profit")
+    plot_asset_owner_sum_output(inputs, profit_file_path, plot_path, "Total Profit")
+
+    # Revenue
+    revenue_file_path = get_revenue_file(inputs)
+    plot_path = joinpath(plots_path, "total_revenue")
+    plot_asset_owner_sum_output(inputs, revenue_file_path, plot_path, "Total Revenue")
+
+    # Generation
+    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
+    if isempty(generation_files)
+        generation_files =
+            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+    end
+    generation_file = generation_files[1]
+    plot_path = joinpath(plots_path, "total_generation")
+    plot_asset_owner_sum_output(inputs, generation_file, plot_path, "Total Generation")
 
     return nothing
 end
 
 function build_ui_agents_plots(
     inputs::Inputs;
-    create_bidding_group_plots::Bool = false,
 )
     plots_path = joinpath(output_path(inputs), "plots", "agents")
     mkdir(plots_path)
 
-    # Total Profit
+    # Profit
     profit_file_path = get_profit_file(inputs)
     if isfile(profit_file_path)
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
-            plot_asset_owner_total_profit(inputs, plots_path, asset_owner_index)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Profit"
+            plot_path = joinpath(plots_path, "profit_$ao_label.html")
+            plot_asset_owner_output(inputs, profit_file_path, plot_path, asset_owner_index, title)
         end
     end
 
-    if create_bidding_group_plots
-        # Bidding group file labels
-        labels_per_asset_owner = Vector{Vector{String}}(undef, number_of_elements(inputs, AssetOwner))
+    # Revenue
+    revenue_file_path = get_revenue_file(inputs)
+    if isfile(revenue_file_path)
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
-            bidding_group_labels =
-                bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
-            labels_to_read = String[]
-            for bg in bidding_group_labels
-                for bus in bus_label(inputs)
-                    push!(labels_to_read, "$bg - $bus")
-                end
-            end
-            labels_per_asset_owner[asset_owner_index] = labels_to_read
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Revenue"
+            plot_path = joinpath(plots_path, "revenue_$ao_label.html")
+            plot_asset_owner_output(inputs, revenue_file_path, plot_path, asset_owner_index, title)
         end
+    end
 
-        # Bidding Group Revenue
-        revenue_file_path = get_revenue_file(inputs)
-        if isfile(revenue_file_path)
-            for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
-                if isempty(labels_per_asset_owner[asset_owner_index])
-                    continue
-                end
-                custom_plot(
-                    revenue_file_path,
-                    PlotTimeSeriesStackedMean;
-                    plot_path = joinpath(plots_path, "bidding_group_revenue_$(asset_owner_label)"),
-                    agents = labels_per_asset_owner[asset_owner_index],
-                    title = "$asset_owner_label - Bidding Group Revenue",
-                    add_suffix_to_title = false,
-                    simplified_ticks = true,
-                )
-            end
-        end
-
-        # Bidding Group Generation
-        generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
-        if isempty(generation_files)
-            generation_files =
-                get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
-        end
-        for generation_file in generation_files
-            filename = get_filename(basename(generation_file))
-            filename = replace(filename, "_period_$(inputs.args.period)" => "")
-            for (asset_owner_index, asset_owner_label) in enumerate(asset_owner_label(inputs))
-                if isempty(labels_per_asset_owner[asset_owner_index])
-                    continue
-                end
-                custom_plot(
-                    generation_file,
-                    PlotTimeSeriesStackedMean;
-                    plot_path = joinpath(plots_path, "$(filename)_$(asset_owner_label)"),
-                    agents = labels_per_asset_owner[asset_owner_index],
-                    title = "$asset_owner_label - Bidding Group Generation",
-                    add_suffix_to_title = false,
-                    simplified_ticks = true,
-                )
-            end
+    # Generation
+    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
+    if isempty(generation_files)
+        generation_files =
+            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+    end
+    generation_file = generation_files[1]
+    if isfile(generation_file)
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Generation"
+            plot_path = joinpath(plots_path, "generation_$ao_label.html")
+            plot_asset_owner_output(inputs, generation_file, plot_path, asset_owner_index, title)
         end
     end
 
@@ -146,15 +133,28 @@ end
 function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
     offer_files = get_offer_file_paths(inputs)
     if !isempty(offer_files)
+        plot_no_markup_price = false
         quantity_offer_file = offer_files[1]
         price_offer_file = offer_files[2]
+        if length(offer_files) == 3
+            no_markup_price_offer_file = offer_files[3]
+            plot_no_markup_price = true
+        end
 
         quantity_data, quantity_metadata = read_timeseries_file(quantity_offer_file)
         price_data, price_metadata = read_timeseries_file(price_offer_file)
+        if plot_no_markup_price
+            no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_offer_file)
+        end
 
         @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price offer file columns"
         @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price offer file dimensions"
         @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
+        if plot_no_markup_price
+            @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
+            @assert no_markup_price_metadata.dimension_size == price_metadata.dimension_size "Mismatch between reference price and price offer file dimensions"
+            @assert no_markup_price_metadata.labels == price_metadata.labels "Mismatch between reference price and price offer file labels"
+        end
 
         num_labels = quantity_metadata.number_of_time_series
         num_periods, num_scenarios, num_subperiods, num_bid_segments = quantity_metadata.dimension_size
@@ -165,15 +165,26 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             # From input files, with all periods
             quantity_data = quantity_data[:, :, :, :, inputs.args.period]
             price_data = price_data[:, :, :, :, inputs.args.period]
+            if plot_no_markup_price
+                no_markup_price_data = no_markup_price_data[:, :, :, :, inputs.args.period]
+            end
         else
             # Or from heuristic bid output files, with a single period
             quantity_data = dropdims(quantity_data; dims = 5)
             price_data = dropdims(price_data; dims = 5)
+            if plot_no_markup_price
+                no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
+            end
         end
 
         for subperiod in 1:num_subperiods
             reshaped_quantity = [Float64[] for bus in 1:num_buses]
             reshaped_price = [Float64[] for bus in 1:num_buses]
+            if plot_no_markup_price
+                reshaped_no_markup_price = [Float64[] for bus in 1:num_buses]
+                # the second quantity is necessary because we will sort both vectors in increasing price order
+                reshaped_no_markup_quantity = [Float64[] for bus in 1:num_buses]
+            end
 
             for segment in 1:num_bid_segments
                 for label_index in 1:num_labels
@@ -184,6 +195,11 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                     # push point
                     push!(reshaped_quantity[bus_index], quantity)
                     push!(reshaped_price[bus_index], price)
+                    if plot_no_markup_price
+                        no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
+                        push!(reshaped_no_markup_price[bus_index], no_markup_price)
+                        push!(reshaped_no_markup_quantity[bus_index], quantity)
+                    end
                 end
             end
 
@@ -192,6 +208,12 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 reshaped_quantity[bus] = reshaped_quantity[bus][sort_order]
                 reshaped_quantity[bus] = cumsum(reshaped_quantity[bus])
                 reshaped_price[bus] = reshaped_price[bus][sort_order]
+                if plot_no_markup_price
+                    no_markup_sort_order = sortperm(reshaped_no_markup_price[bus])
+                    reshaped_no_markup_quantity[bus] = reshaped_no_markup_quantity[bus][no_markup_sort_order]
+                    reshaped_no_markup_quantity[bus] = cumsum(reshaped_no_markup_quantity[bus])
+                    reshaped_no_markup_price[bus] = reshaped_no_markup_price[bus][no_markup_sort_order]
+                end
             end
 
             quantity_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
@@ -208,20 +230,51 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 end
             end
 
+            if plot_no_markup_price
+                no_markup_quantity_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
+                no_markup_price_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
+
+                for bus in 1:num_buses
+                    for (quantity, price) in zip(reshaped_no_markup_quantity[bus], reshaped_no_markup_price[bus])
+                        # old point
+                        push!(no_markup_quantity_data_to_plot[bus], no_markup_quantity_data_to_plot[bus][end])
+                        push!(no_markup_price_data_to_plot[bus], price)
+                        # new point
+                        push!(no_markup_quantity_data_to_plot[bus], quantity)
+                        push!(no_markup_price_data_to_plot[bus], price)
+                    end
+                end
+            end
+
             configs = Vector{Config}()
 
             title = "Available Offers - Subperiod $subperiod"
+            color_idx = 0
             for bus in 1:num_buses
+                color_idx += 1
                 push!(
                     configs,
                     Config(;
                         x = quantity_data_to_plot[bus],
                         y = price_data_to_plot[bus],
                         name = bus_label(inputs, bus),
-                        line = Dict("color" => _get_plot_color(bus)),
+                        line = Dict("color" => _get_plot_color(color_idx)),
                         type = "line",
                     ),
                 )
+                if plot_no_markup_price
+                    color_idx += 1
+                    push!(
+                        configs,
+                        Config(;
+                            x = no_markup_quantity_data_to_plot[bus],
+                            y = no_markup_price_data_to_plot[bus],
+                            name = bus_label(inputs, bus) * " - Recommended Offer",
+                            line = Dict("color" => _get_plot_color(color_idx)),
+                            type = "line",
+                        ),
+                    )
+                end
             end
 
             main_configuration = Config(;
@@ -313,10 +366,27 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
     return nothing
 end
 
-function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::String, asset_owner_index::Int)
-    ao_label = asset_owner_label(inputs, asset_owner_index)
-    profit_file_path = get_profit_file(inputs)
-    data, metadata = read_timeseries_file(profit_file_path)
+function plot_asset_owner_output(
+    inputs::AbstractInputs,
+    file_path::String,
+    plot_path::String,
+    asset_owner_index::Int,
+    title::String,
+)
+    data, metadata = read_timeseries_file(file_path)
+
+    if :bid_segment in metadata.dimensions
+        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
+        # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
+        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
+        data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
+        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
+    end
+
+    if !(:subscenario in metadata.dimensions)
+        @warn "Plotting asset owner outputs not implemented for ex-ante data."
+        return nothing
+    end
 
     num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
     if num_scenarios > 1 && asset_owner_index == first(index_of_elements(inputs, AssetOwner))
@@ -340,7 +410,6 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
     reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
 
     configs = Vector{Config}()
-    title = "$ao_label - Total Profit"
 
     if num_subperiods == 1
         push!(
@@ -362,7 +431,7 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
                 "tickvals" => 1:num_subscenarios,
                 "ticktext" => string.(1:num_subscenarios),
             ),
-            yaxis = Dict("title" => "Profit [\$]"),
+            yaxis = Dict("title" => "[$(metadata.unit)]"),
         )
     else
         for subscenario in 1:num_subscenarios
@@ -386,18 +455,30 @@ function plot_asset_owner_total_profit(inputs::AbstractInputs, plots_path::Strin
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),
             ),
-            yaxis = Dict("title" => "Profit [\$]"),
+            yaxis = Dict("title" => "[$(metadata.unit)]"),
         )
     end
 
-    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_profit_$ao_label.html"))
+    _save_plot(Plot(configs, main_configuration), plot_path)
 
     return nothing
 end
 
-function plot_total_profit(inputs::AbstractInputs, plots_path::String)
-    profit_file_path = get_profit_file(inputs)
-    data, metadata = read_timeseries_file(profit_file_path)
+function plot_asset_owner_sum_output(
+    inputs::AbstractInputs,
+    file_path::String,
+    plot_path::String,
+    title::String,
+)
+    data, metadata = read_timeseries_file(file_path)
+
+    if :bid_segment in metadata.dimensions
+        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
+        # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
+        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
+        data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
+        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
+    end
 
     num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
     if num_scenarios > 1
@@ -423,7 +504,6 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
 
     if num_subperiods == 1
         configs = Vector{Config}()
-        title = "Total Profit"
         for asset_owner_index in asset_onwer_indexes
             ao_label = asset_owner_label(inputs, asset_owner_index)
             push!(
@@ -446,17 +526,14 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
                 "tickvals" => 1:num_subscenarios,
                 "ticktext" => string.(1:num_subscenarios),
             ),
-            yaxis = Dict("title" => "Profit [\$]"),
+            yaxis = Dict("title" => metadata.unit),
         )
 
-        _save_plot(
-            Plot(configs, main_configuration),
-            joinpath(plots_path, "total_profit.html"),
-        )
+        _save_plot(Plot(configs, main_configuration), plot_path * ".html")
     else
         for subscenario in 1:num_subscenarios
             configs = Vector{Config}()
-            title = "Total Profit - Subscenario $subscenario"
+            title *= " - Subscenario $subscenario"
             for asset_owner_index in asset_onwer_indexes
                 ao_label = asset_owner_label(inputs, asset_owner_index)
                 push!(
@@ -479,13 +556,10 @@ function plot_total_profit(inputs::AbstractInputs, plots_path::String)
                     "tickvals" => 1:num_subperiods,
                     "ticktext" => string.(1:num_subperiods),
                 ),
-                yaxis = Dict("title" => "Profit [\$]"),
+                yaxis = Dict("title" => metadata.unit),
             )
 
-            _save_plot(
-                Plot(configs, main_configuration),
-                joinpath(plots_path, "total_profit_subscenario_$subscenario.html"),
-            )
+            _save_plot(Plot(configs, main_configuration), plot_path * "_subscenario_$subscenario.html")
         end
     end
 

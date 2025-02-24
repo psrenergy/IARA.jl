@@ -162,6 +162,10 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         num_periods, num_scenarios, num_subperiods, num_bid_segments = quantity_metadata.dimension_size
         num_buses = number_of_elements(inputs, Bus)
 
+        if plot_no_markup_price
+            num_bid_segments_no_markup = no_markup_price_metadata.dimension_size[end]
+        end
+
         # Remove the period dimension
         if num_periods > 1
             # From input files, with all periods
@@ -194,7 +198,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                     # push point
                     push!(reshaped_quantity[bus_index], quantity)
                     push!(reshaped_price[bus_index], price)
-                    if plot_no_markup_price
+                    if plot_no_markup_price && segment <= num_bid_segments_no_markup
                         no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
                         push!(reshaped_no_markup_price[bus_index], no_markup_price)
                         push!(reshaped_no_markup_quantity[bus_index], quantity)

@@ -152,7 +152,8 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
         if plot_no_markup_price
             @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
-            @assert no_markup_price_metadata.dimension_size == price_metadata.dimension_size "Mismatch between reference price and price offer file dimensions"
+            # The number of periods in the reference price file is always 1
+            @assert no_markup_price_metadata.dimension_size[2:end] == price_metadata.dimension_size[2:end] "Mismatch between reference price and price offer file dimensions"
             @assert no_markup_price_metadata.labels == price_metadata.labels "Mismatch between reference price and price offer file labels"
         end
 
@@ -165,16 +166,13 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             # From input files, with all periods
             quantity_data = quantity_data[:, :, :, :, inputs.args.period]
             price_data = price_data[:, :, :, :, inputs.args.period]
-            if plot_no_markup_price
-                no_markup_price_data = no_markup_price_data[:, :, :, :, inputs.args.period]
-            end
         else
             # Or from heuristic bid output files, with a single period
             quantity_data = dropdims(quantity_data; dims = 5)
             price_data = dropdims(price_data; dims = 5)
-            if plot_no_markup_price
-                no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
-            end
+        end
+        if plot_no_markup_price
+            no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
         end
 
         for subperiod in 1:num_subperiods

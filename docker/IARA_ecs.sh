@@ -55,6 +55,24 @@ function validate_game_round () {
     fi
 }
 
+function catch_iara_error() {
+    local exit_code=$?
+    echo "Error: IARA failed with exit code $exit_code"
+    if [ -e './iara_error.log' ]
+        then
+            echo "Uploading error log to S3..."
+            aws s3 cp ./iara_error.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/iara_error.log
+            echo "Completed."
+    fi
+}
+
+function get_heuristic_bid_no_markup() {
+    echo "Downloading heuristic bid no markup price offer..."
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml
+    echo "Completed."
+}
+
 if [ -z "$IARA_COMMAND" ]; then
     echo "ERROR: Missing IARA_COMMAND variable. Please provide the command to be executed" 
     exit 1
@@ -80,6 +98,7 @@ fi
 if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
 
     download_and_unzip_case
+    trap 'catch_iara_error' ERR
 
     $IARA_PATH/IARA.sh --output-path="game_summary" --run-mode 'interface-call' $CASE_PATH 
 
@@ -102,6 +121,8 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     validate_game_round
     download_and_unzip_case
 
+    trap 'catch_iara_error' ERR
+
     $IARA_PATH/IARA.sh $CASE_PATH --output-path="heuristic_bids" --run-mode 'single-period-heuristic-bid' --period=$IARA_GAME_ROUND
     
     echo "Uploading results to S3..."
@@ -115,6 +136,9 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     validate_game_round
     download_and_unzip_case
     download_bids_and_move_to_case
+    get_heuristic_bid_no_markup
+
+    trap 'catch_iara_error' ERR
 
     $IARA_PATH/IARA.sh $CASE_PATH --output-path="results" --run-mode='single-period-market-clearing' --period=$IARA_GAME_ROUND --plot-ui-results
 

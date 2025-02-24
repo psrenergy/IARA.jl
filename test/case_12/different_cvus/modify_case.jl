@@ -65,7 +65,7 @@ no_markup_price_offer =
         maximum_number_of_bidding_segments,
         number_of_subperiods,
         number_of_scenarios,
-        number_of_periods,
+        1, # number of periods for reference price is always 1
     )
 
 quantity_offer[1, :, :, :, :, :] .= 100
@@ -120,7 +120,7 @@ IARA.write_bids_time_series_file(
     labels_buses = ["Bus 1"],
     time_dimension = "period",
     dimension_size = [
-        number_of_periods,
+        1, # number of periods for reference price is always 1
         number_of_scenarios,
         number_of_subperiods,
         maximum_number_of_bidding_segments,

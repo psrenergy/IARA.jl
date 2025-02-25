@@ -107,6 +107,7 @@ function seasonal_simulation_scheme(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
+    Random.seed!(1234)
     prob_end = node_termination_probability(inputs)
     transition_probability_matrix = zeros(number_of_nodes(inputs), number_of_nodes(inputs))
 

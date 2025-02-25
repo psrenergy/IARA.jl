@@ -28,6 +28,7 @@ in chunks.
 
     # Agents
     inflow_noise::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
+    period_season_map::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
 
     # Agents x subperiods
     demand_window::TimeSeriesView{Int, 2} = TimeSeriesView{Int, 2}()
@@ -87,6 +88,20 @@ function initialize_time_series_from_external_files(inputs)
         num_errors += initialize_hour_subperiod_mapping(inputs)
     end
 
+    # Period season map
+    if has_period_season_map(inputs)
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.period_season_map,
+            inputs,
+            joinpath(path_case(inputs), period_season_map_file(inputs));
+            expected_unit = " ",
+            possible_expected_dimensions = [
+                [:period, :scenario],
+            ],
+            labels_to_read = ["season"],
+        )
+    end
+
     # Inflow
     if any_elements(inputs, HydroUnit)
         if read_inflow_from_file(inputs)
@@ -100,6 +115,8 @@ function initialize_time_series_from_external_files(inputs)
                 possible_expected_dimensions = [
                     [:period, :scenario, :subperiod],
                     [:period, :scenario, :hour],
+                    [:season, :scenario, :subperiod],
+                    [:season, :scenario, :hour],
                 ],
                 labels_to_read = gauging_station_label(inputs),
             )
@@ -175,6 +192,7 @@ function initialize_time_series_from_external_files(inputs)
             expected_unit = "p.u.",
             possible_expected_dimensions = [
                 [:period, :scenario, :subperiod],
+                [:season, :scenario, :subperiod],
             ],
             labels_to_read = demand_unit_label(inputs),
         )
@@ -191,6 +209,7 @@ function initialize_time_series_from_external_files(inputs)
             expected_unit = "p.u.",
             possible_expected_dimensions = [
                 [:period, :scenario, :subperiod],
+                [:season, :scenario, :subperiod],
             ],
             labels_to_read = renewable_unit_label(inputs),
         )

@@ -27,40 +27,6 @@ IARA.update_configuration!(db;
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 
-aux_seasons = zeros(Int, 1, number_of_scenarios, number_of_periods)
-aux_seasons[1,:,:] = 
-[
-    1 2 2 2 1 1;
-    1 2 2 2 1 1;
-    1 2 2 2 1 1;
-    1 1 2 2 2 1;
-    1 1 2 2 2 1;
-    1 1 2 2 2 1;
-    1 1 1 2 2 2;
-    1 1 1 2 2 2;
-    1 1 1 2 2 2;
-    1 2 2 1 1 2;
-    1 2 2 1 1 2;
-    1 2 2 1 1 2;
-]
-
-IARA.write_timeseries_file(
-    joinpath(PATH, "season_ids"),
-    aux_seasons;
-    dimensions = ["period", "scenario"],
-    labels = ["season"],
-    time_dimension = "period",
-    dimension_size = [number_of_periods, number_of_scenarios],
-    initial_date = "2020",
-    unit = " ",
-)
-
-IARA.link_time_series_to_file(
-    db,
-    "Configuration";
-    period_season_map = "season_ids",
-)
-
 ###########################################
 # Time series
 ###########################################

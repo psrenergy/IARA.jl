@@ -105,7 +105,7 @@ end
 function seasonal_simulation_scheme(
     model::ProblemModel,
     inputs::Inputs,
-    run_time_options::RunTimeOptions
+    run_time_options::RunTimeOptions,
 )
     prob_end = node_termination_probability(inputs)
     transition_probability_matrix = zeros(number_of_nodes(inputs), number_of_nodes(inputs))
@@ -116,7 +116,7 @@ function seasonal_simulation_scheme(
             transition_probability_matrix[node_idx, child.term] = child.probability / (1 - prob_end)
         end
     end
-    @assert all(sum(transition_probability_matrix, dims=2) .== 1.0)
+    @assert all(sum(transition_probability_matrix; dims = 2) .== 1.0)
 
     simulation_scheme =
         Array{Array{Tuple{Int, Tuple{Int, Int}}, 1}, 1}(

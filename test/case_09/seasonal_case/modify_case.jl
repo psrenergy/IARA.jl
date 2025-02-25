@@ -62,7 +62,7 @@ for i_d in 1:number_of_demand_scenarios
     for i_r in 1:number_of_renewable_scenarios
         for i_h in 1:number_of_hydro_scenarios
             i_scenario = number_of_hydro_scenarios * ((number_of_renewable_scenarios * (i_d - 1) + i_r) - 1) + i_h
-            
+
             # Summer
             r[1, :, i_scenario, 1] = r_summer[i_r, :] * r_pu_multiplier
             d[1, :, i_scenario, 1] = d_summer[i_d, :] * d_pu_multiplier[1]

@@ -94,9 +94,15 @@ function initialize_time_series_view_from_external_file(
             end
         end
         if !dimension_is_valid
-            @error(
-                "Time series file $(file_path) has dimensions $(ts.dimensions). This is different from the possible dimensions of this file $possible_expected_dimensions.",
-            )
+            error_msg = "Time series file $(file_path) has dimensions $(ts.dimensions). This is different from the possible dimensions of this file $possible_expected_dimensions."
+            for possible_dimensions in possible_expected_dimensions
+                if ts.dimensions[2:end] == possible_dimensions[2:end]
+                    error_msg *= " If the dimensions differ only between :period and :season, you might have defined the wrong Configurations_PolicyGraphType in the configurations."
+                    error_msg *= " Cyclic policy graphs should have :season as the first dimension in the data, while linear policy graphs should have :period as the first dimension."
+                    break
+                end
+            end
+            @error(error_msg)
             num_errors += 1
         end
     end

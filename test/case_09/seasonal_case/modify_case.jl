@@ -23,6 +23,9 @@ number_of_subperiods = 3
 IARA.update_configuration!(db;
     number_of_scenarios = number_of_scenarios,
     number_of_subscenarios = number_of_subscenarios,
+    number_of_nodes = number_of_seasons,
+    expected_number_of_repeats_per_node = [3, 3],
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )

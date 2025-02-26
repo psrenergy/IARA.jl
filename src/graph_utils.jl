@@ -19,6 +19,9 @@ function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothi
         if isnothing(current_period)
             error("current_period must be provided for the MARKET_CLEARING run mode")
         end
+        if cyclic_policy_graph(inputs)
+            error("Cyclic policy graph not implemented for MARKET_CLEARING run mode")
+        end
         graph = SDDP.Graph(0)
         SDDP.add_node(graph, current_period)
         SDDP.add_edge(graph, 0 => current_period, 1.0)

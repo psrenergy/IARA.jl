@@ -66,10 +66,15 @@ function catch_iara_error() {
     fi
 }
 
-function get_heuristic_bid_no_markup() {
+function get_heuristic_bid_files() {
     echo "Downloading heuristic bid no markup price offer..."
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml
+
+    echo "Downloading heuristic bid energy offer..."
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_reference_energy_offer_period_$IARA_GAME_ROUND.csv
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_reference_energy_offer_period_$IARA_GAME_ROUND.toml
+
     echo "Completed."
 }
 
@@ -136,7 +141,7 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     validate_game_round
     download_and_unzip_case
     download_bids_and_move_to_case
-    get_heuristic_bid_no_markup
+    get_heuristic_bid_files
 
     trap 'catch_iara_error' ERR
 

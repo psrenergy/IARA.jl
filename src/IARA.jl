@@ -27,6 +27,7 @@ using PSRClassesInterface
 using Quiver
 using Serialization
 using SDDP
+using StatsBase
 
 # Julia std packages
 using Dates

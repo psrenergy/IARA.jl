@@ -82,7 +82,7 @@ function simulate(
     run_time_options::RunTimeOptions;
     current_period::Union{Nothing, Int} = nothing,
 )
-    simulation_scheme = build_simulation_scheme(inputs, run_time_options; current_period)
+    simulation_scheme = build_simulation_scheme(model, inputs, run_time_options; current_period)
 
     simulations = SDDP.simulate(
         # The trained model to simulate.
@@ -99,6 +99,7 @@ function simulate(
 end
 
 function build_simulation_scheme(
+    model::ProblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions;
     current_period::Union{Nothing, Int} = nothing,
@@ -121,11 +122,7 @@ function build_simulation_scheme(
             simulation_scheme[scheme_index] = [(t, (scenario, subscenario)) for t in 1:number_of_periods(inputs)]
         end
     else
-        for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-            scheme_index += 1
-            simulation_scheme[scheme_index] =
-                [(mod1(t, number_of_nodes(inputs)), (scenario, subscenario)) for t in 1:number_of_periods(inputs)]
-        end
+        simulation_scheme = seasonal_simulation_scheme(model, inputs, run_time_options)
     end
 
     return simulation_scheme

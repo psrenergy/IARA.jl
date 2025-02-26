@@ -27,10 +27,10 @@ end
 
 IARA.market_clearing(PATH; plot_outputs = true, delete_output_folder_before_execution = true)
 
-# if Main.UPDATE_RESULTS
-#     Main.update_outputs!(PATH)
-# else
-#     Main.compare_outputs(PATH)
-# end
+if Main.UPDATE_RESULTS
+    Main.update_outputs!(PATH)
+else
+    Main.compare_outputs(PATH)
+end
 
 end

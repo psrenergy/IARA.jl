@@ -15,4 +15,6 @@ IARA.update_configuration!(db;
     expected_number_of_repeats_per_node = [2 for _ in 1:number_of_periods],
 )
 
+# This case is built on top of the cyclic graph case
+
 IARA.close_study!(db)

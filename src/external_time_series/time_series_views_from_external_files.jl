@@ -28,6 +28,7 @@ in chunks.
 
     # Agents
     inflow_noise::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
+    period_season_map::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
 
     # Agents x subperiods
     demand_window::TimeSeriesView{Int, 2} = TimeSeriesView{Int, 2}()
@@ -87,9 +88,28 @@ function initialize_time_series_from_external_files(inputs)
         num_errors += initialize_hour_subperiod_mapping(inputs)
     end
 
+    # Period season map
+    if has_period_season_map(inputs)
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.period_season_map,
+            inputs,
+            joinpath(path_case(inputs), period_season_map_file(inputs));
+            expected_unit = " ",
+            possible_expected_dimensions = [
+                [:period, :scenario],
+            ],
+            labels_to_read = ["season"],
+        )
+    end
+
     # Inflow
     if any_elements(inputs, HydroUnit)
         if read_inflow_from_file(inputs)
+            possible_dimensions = if cyclic_policy_graph(inputs)
+                [[:season, :scenario, :subperiod], [:season, :scenario, :hour]]
+            else
+                [[:period, :scenario, :subperiod], [:period, :scenario, :hour]]
+            end
             num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
                 inputs.time_series.inflow,
                 inputs;
@@ -97,10 +117,7 @@ function initialize_time_series_from_external_files(inputs)
                 ex_post_file_path = joinpath(path_case(inputs), hydro_unit_inflow_ex_post_file(inputs)),
                 files_to_read = inflow_scenarios_files(inputs),
                 expected_unit = "m3/s",
-                possible_expected_dimensions = [
-                    [:period, :scenario, :subperiod],
-                    [:period, :scenario, :hour],
-                ],
+                possible_expected_dimensions = possible_dimensions,
                 labels_to_read = gauging_station_label(inputs),
             )
         else
@@ -166,6 +183,11 @@ function initialize_time_series_from_external_files(inputs)
 
     # Demand
     if any_elements(inputs, DemandUnit) > 0
+        possible_dimensions = if cyclic_policy_graph(inputs)
+            [[:season, :scenario, :subperiod]]
+        else
+            [[:period, :scenario, :subperiod]]
+        end
         num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
             inputs.time_series.demand,
             inputs;
@@ -173,15 +195,18 @@ function initialize_time_series_from_external_files(inputs)
             ex_post_file_path = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs)),
             files_to_read = demand_scenarios_files(inputs),
             expected_unit = "p.u.",
-            possible_expected_dimensions = [
-                [:period, :scenario, :subperiod],
-            ],
+            possible_expected_dimensions = possible_dimensions,
             labels_to_read = demand_unit_label(inputs),
         )
     end
 
     # Renewable generation
     if any_elements(inputs, RenewableUnit)
+        possible_dimensions = if cyclic_policy_graph(inputs)
+            [[:season, :scenario, :subperiod]]
+        else
+            [[:period, :scenario, :subperiod]]
+        end
         num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
             inputs.time_series.renewable_generation,
             inputs;
@@ -189,9 +214,7 @@ function initialize_time_series_from_external_files(inputs)
             ex_post_file_path = joinpath(path_case(inputs), renewable_unit_generation_ex_post_file(inputs)),
             files_to_read = renewable_scenarios_files(inputs),
             expected_unit = "p.u.",
-            possible_expected_dimensions = [
-                [:period, :scenario, :subperiod],
-            ],
+            possible_expected_dimensions = possible_dimensions,
             labels_to_read = renewable_unit_label(inputs),
         )
     end

@@ -94,9 +94,15 @@ function initialize_time_series_view_from_external_file(
             end
         end
         if !dimension_is_valid
-            @error(
-                "Time series file $(file_path) has dimensions $(ts.dimensions). This is different from the possible dimensions of this file $possible_expected_dimensions.",
-            )
+            error_msg = "Time series file $(file_path) has dimensions $(ts.dimensions). This is different from the possible dimensions of this file $possible_expected_dimensions."
+            for possible_dimensions in possible_expected_dimensions
+                if ts.dimensions[2:end] == possible_dimensions[2:end]
+                    error_msg *= " If the dimensions differ only between :period and :season, you might have defined the wrong Configurations_PolicyGraphType in the configurations."
+                    error_msg *= " Cyclic policy graphs should have :season as the first dimension in the data, while linear policy graphs should have :period as the first dimension."
+                    break
+                end
+            end
+            @error(error_msg)
             num_errors += 1
         end
     end
@@ -107,6 +113,10 @@ function initialize_time_series_view_from_external_file(
     period_dimension_index = findfirst(isequal(:period), dimension_names)
     if period_dimension_index !== nothing
         deleteat!(dimension_sizes, period_dimension_index)
+    end
+    season_dimension_index = findfirst(isequal(:season), dimension_names)
+    if season_dimension_index !== nothing
+        deleteat!(dimension_sizes, season_dimension_index)
     end
     scenario_dimension_index = findfirst(isequal(:scenario), dimension_names)
     if scenario_dimension_index !== nothing
@@ -200,6 +210,20 @@ function read_time_series_view_from_external_file!(
         read_inflow_period!(
             inputs,
             ts,
+        )
+    elseif ts.dimensions == [:season, :scenario, :subscenario, :subperiod]
+        read_season_scenario_subscenario_subperiod!(
+            inputs,
+            ts;
+            season = period,
+            scenario,
+        )
+    elseif ts.dimensions == [:season, :scenario, :subperiod]
+        read_season_scenario_subperiod!(
+            inputs,
+            ts;
+            season = period,
+            scenario,
         )
     else
         error("Time series with dimensions $(ts.dimensions) not supported.")
@@ -400,6 +424,38 @@ function read_inflow_period!(
     for inflow_period in 1:ts.reader.metadata.dimension_size[1]
         Quiver.goto!(ts.reader; inflow_period)
         ts.exact_dimensions_data[:, inflow_period] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_season_scenario_subscenario_subperiod!(
+    inputs,
+    ts::TimeSeriesView{T, N};
+    season::Int,
+    scenario::Int,
+) where {T, N}
+    # Loop in subperiods
+    for subperiod in 1:ts.reader.metadata.dimension_size[4],
+        subscenario in 1:ts.reader.metadata.dimension_size[3]
+
+        Quiver.goto!(ts.reader; season, scenario, subscenario, subperiod)
+        ts.exact_dimensions_data[:, subperiod, subscenario] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_season_scenario_subperiod!(
+    inputs,
+    ts::TimeSeriesView{T, N};
+    season::Int,
+    scenario::Int,
+) where {T, N}
+    # Loop in subperiods
+    for subperiod in 1:ts.reader.metadata.dimension_size[3]
+        Quiver.goto!(ts.reader; season, scenario, subperiod)
+        ts.exact_dimensions_data[:, subperiod] = ts.reader.data
     end
     ts.data = ts.exact_dimensions_data
     return nothing

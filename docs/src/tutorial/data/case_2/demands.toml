@@ -1,8 +1,8 @@
 version = 1
-dimensions = ["period", "scenario", "subperiod"]
+dimensions = ["season", "scenario", "subperiod"]
 dimension_size = [2, 12, 1]
 initial_date = "2000-01-01 00:00:00"
-time_dimension = "period"
+time_dimension = "season"
 frequency = "month"
 unit = "p.u."
 labels = ["Demand1", "Demand2", "Demand3"]

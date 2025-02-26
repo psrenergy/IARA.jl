@@ -116,3 +116,57 @@ function get_load_marginal_cost_files(inputs::AbstractInputs)
 
     return filenames
 end
+
+function get_generation_files(inputs::AbstractInputs)
+    base_name = "bidding_group_generation"
+    period_suffix = "_period_$(inputs.args.period)"
+    extension = ".csv"
+
+    filenames = String[]
+
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        ex_ante_suffixes = ["_ex_ante_physical", "_ex_ante_commercial"]
+        ex_post_suffixes = ["_ex_post_physical", "_ex_post_commercial"]
+
+        for subproblem_suffix in ex_ante_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            elseif isfile(joinpath(post_processing_path(inputs), filename))
+                push!(filenames, joinpath(post_processing_path(inputs), filename))
+                break
+            end
+        end
+
+        for subproblem_suffix in ex_post_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            elseif isfile(joinpath(post_processing_path(inputs), filename))
+                push!(filenames, joinpath(post_processing_path(inputs), filename))
+                break
+            end
+        end
+    else
+        subproblem_suffixes = ["_ex_post_physical", "_ex_post_commercial", "_ex_ante_physical", "_ex_ante_commercial"]
+
+        for subproblem_suffix in subproblem_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            elseif isfile(joinpath(post_processing_path(inputs), filename))
+                push!(filenames, joinpath(post_processing_path(inputs), filename))
+                break
+            end
+        end
+    end
+
+    if isempty(filenames)
+        error("Generation file not found")
+    end
+
+    return filenames
+end

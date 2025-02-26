@@ -10,12 +10,11 @@ function build_ui_operator_plots(
     plot_asset_owner_sum_output(inputs, profit_file_path, plot_path, "Total Profit"; round_data = true)
 
     # Revenue
-
     revenue_files = get_revenue_files(inputs)
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(revenue_files) == 2
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
-        plot_asset_owner_sum_output(inputs, revenue_files[1], plot_path, "Total Revenue Ex-Ante"; round_data = true)
+        plot_asset_owner_sum_output(inputs, revenue_files[1], plot_path, "Total Revenue Ex-Ante"; round_data = true, ex_ante_plot = true)
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
         plot_asset_owner_sum_output(inputs, revenue_files[2], plot_path, "Total Revenue Ex-Post"; round_data = true)
     else
@@ -25,14 +24,18 @@ function build_ui_operator_plots(
     end
 
     # Generation
-    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
-    if isempty(generation_files)
-        generation_files =
-            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+    generation_files = get_generation_files(inputs)
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        @assert length(generation_files) == 2
+        plot_path = joinpath(plots_path, "total_generation_ex_ante")
+        plot_asset_owner_sum_output(inputs, generation_files[1], plot_path, "Total Generation Ex-Ante"; ex_ante_plot = true)
+        plot_path = joinpath(plots_path, "total_generation_ex_post")
+        plot_asset_owner_sum_output(inputs, generation_files[2], plot_path, "Total Generation Ex-Post")
+    else
+        @assert length(generation_files) == 1
+        plot_path = joinpath(plots_path, "total_generation")
+        plot_asset_owner_sum_output(inputs, generation_files[1], plot_path, "Total Generation")
     end
-    generation_file = generation_files[1]
-    plot_path = joinpath(plots_path, "total_generation")
-    plot_asset_owner_sum_output(inputs, generation_file, plot_path, "Total Generation")
 
     return nothing
 end
@@ -62,7 +65,7 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue Ex-Ante"
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
-            plot_asset_owner_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
+            plot_asset_owner_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true, ex_ante_plot = true)
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
@@ -81,18 +84,28 @@ function build_ui_agents_plots(
     end
 
     # Generation
-    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
-    if isempty(generation_files)
-        generation_files =
-            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
-    end
-    generation_file = generation_files[1]
-    if isfile(generation_file)
+    generation_files = get_generation_files(inputs)
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        @assert length(generation_files) == 2
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Generation Ex-Ante"
+            plot_path = joinpath(plots_path, "generation_ex_ante_$ao_label.html")
+            plot_asset_owner_output(inputs, generation_files[1], plot_path, asset_owner_index, title; ex_ante_plot = true)
+        end
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Generation Ex-Post"
+            plot_path = joinpath(plots_path, "generation_ex_post_$ao_label.html")
+            plot_asset_owner_output(inputs, generation_files[2], plot_path, asset_owner_index, title)
+        end
+    else
+        @assert length(generation_files) == 1
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Generation"
             plot_path = joinpath(plots_path, "generation_$ao_label.html")
-            plot_asset_owner_output(inputs, generation_file, plot_path, asset_owner_index, title)
+            plot_asset_owner_output(inputs, generation_files[1], plot_path, asset_owner_index, title)
         end
     end
 
@@ -114,6 +127,7 @@ function build_ui_general_plots(
             plot_path = joinpath(plots_path, "spot_price_ex_ante"),
             title = "Spot Price Ex-Ante",
             round_data = true,
+            ex_ante_plot = true,
         )
         plot_ui_timeseries(;
             file_path = files[2],
@@ -421,6 +435,7 @@ function plot_asset_owner_output(
     title::String;
     subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
+    ex_ante_plot::Bool = false,
 )
     data, metadata = read_timeseries_file(file_path)
 
@@ -495,7 +510,7 @@ function plot_asset_owner_output(
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),
             ),
-            yaxis = Dict("title" => "[$(metadata.unit)]"),
+            yaxis = Dict("title" => "$(metadata.unit)"),
         )
     else
         for subperiod in 1:num_subperiods
@@ -511,15 +526,20 @@ function plot_asset_owner_output(
             )
         end
 
+        x_axis_title = if ex_ante_plot
+            "Scenario"
+        else
+            "Subscenario"
+        end
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" => "Subscenario",
+                "title" => x_axis_title,
                 "tickmode" => "array",
                 "tickvals" => 1:num_subscenarios,
                 "ticktext" => string.(1:num_subscenarios),
             ),
-            yaxis = Dict("title" => "[$(metadata.unit)]"),
+            yaxis = Dict("title" => "$(metadata.unit)"),
         )
     end
 
@@ -535,6 +555,7 @@ function plot_asset_owner_sum_output(
     title::String;
     subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
+    ex_ante_plot::Bool = false,
 )
     data, metadata = read_timeseries_file(file_path)
 
@@ -633,10 +654,15 @@ function plot_asset_owner_sum_output(
                 )
             end
 
+            x_axis_title = if ex_ante_plot
+                "Scenario"
+            else
+                "Subscenario"
+            end
             main_configuration = Config(;
                 title = title * " - Subperiod $subperiod",
                 xaxis = Dict(
-                    "title" => "Subscenario",
+                    "title" => x_axis_title,
                     "tickmode" => "array",
                     "tickvals" => 1:num_subscenarios,
                     "ticktext" => string.(1:num_subscenarios),
@@ -659,6 +685,7 @@ function plot_ui_timeseries(;
     stack::Bool = false,
     subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
+    ex_ante_plot::Bool = false,
 )
     data, metadata = read_timeseries_file(file_path)
 
@@ -706,8 +733,6 @@ function plot_ui_timeseries(;
     end
 
     if subperiod_on_x_axis && num_subperiods != 1
-        plot_ticks = ["$i" for i in 1:num_subperiods]
-        hover_ticks = ["Subperiod $i" for i in 1:num_subperiods]
         for agent in 1:number_of_agents, subscenario in 1:num_subscenarios
             label = agent_labels[agent] * " - Subscenario $subscenario"
             color_idx += 1
@@ -719,8 +744,6 @@ function plot_ui_timeseries(;
                     name = label,
                     line = Dict("color" => _get_plot_color(color_idx)),
                     type = "line",
-                    text = hover_ticks,
-                    hovertemplate = "%{y} $(metadata.unit)<br>%{text}",
                     plot_kwargs...,
                 ),
             )
@@ -731,13 +754,11 @@ function plot_ui_timeseries(;
                 "title" => "Subperiod",
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
-                "ticktext" => plot_ticks,
+                "ticktext" => string(1:num_subperiods),
             ),
             yaxis = Dict("title" => metadata.unit),
         )
     else
-        plot_ticks = ["$i" for i in 1:num_subscenarios]
-        hover_ticks = ["Subscenario $i" for i in 1:num_subscenarios]
         for agent in 1:number_of_agents, subperiod in 1:num_subperiods
             label = agent_labels[agent] * " - Subperiod $subperiod"
             color_idx += 1
@@ -749,19 +770,22 @@ function plot_ui_timeseries(;
                     name = label,
                     line = Dict("color" => _get_plot_color(color_idx)),
                     type = "bar",
-                    text = hover_ticks,
-                    hovertemplate = "%{y} $(metadata.unit)<br>%{text}",
                     plot_kwargs...,
                 ),
             )
         end
+        x_axis_title = if ex_ante_plot
+            "Scenario"
+        else
+            "Subscenario"
+        end
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" => "Subscenario",
+                "title" => x_axis_title,
                 "tickmode" => "array",
                 "tickvals" => 1:num_subscenarios,
-                "ticktext" => plot_ticks,
+                "ticktext" => string.(1:num_subscenarios),
             ),
             yaxis = Dict("title" => metadata.unit),
         )

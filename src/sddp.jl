@@ -41,10 +41,8 @@ function build_model(
         end
 
         SDDP.parameterize(sp_model.jump_model, scenario_combinations) do (scenario, subscenario)
-            if subscenario == 1
-                update_time_series_views_from_external_files!(inputs; period = t, scenario)
-                update_time_series_from_db!(inputs, t)
-            end
+            update_time_series_views_from_external_files!(inputs; period = t, scenario)
+            update_time_series_from_db!(inputs, t)
             model_action(
                 sp_model,
                 inputs,

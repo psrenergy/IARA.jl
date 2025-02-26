@@ -76,6 +76,7 @@ Configurations for the problem.
         Configurations_VRCurveguideDataFormat.CSV_FILE
     hour_subperiod_map_file::String = ""
     fcf_cuts_file::String = ""
+    period_season_map_file::String = ""
     spot_price_floor::Float64 = 0.0
     spot_price_cap::Float64 = 0.0
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
@@ -275,6 +276,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "hour_subperiod_map")
     configurations.fcf_cuts_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "fcf_cuts")
+    configurations.period_season_map_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "period_season_map")
 
     update_time_series_from_db!(configurations, inputs.db, initial_date_time(inputs))
 
@@ -1188,6 +1191,20 @@ fcf_cuts_file(inputs::AbstractInputs) = inputs.collections.configurations.fcf_cu
 Return whether the FCF cuts file is defined.
 """
 has_fcf_cuts_to_read(inputs::AbstractInputs) = fcf_cuts_file(inputs) != ""
+
+"""
+    period_season_map_file(inputs::AbstractInputs)
+
+Return the file with the period to season map.
+"""
+period_season_map_file(inputs::AbstractInputs) = inputs.collections.configurations.period_season_map_file
+
+"""
+    has_period_season_map(inputs::AbstractInputs)
+
+Return whether the period to season map file is defined.
+"""
+has_period_season_map(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
 
 """
     hydro_balance_subperiod_resolution(inputs::AbstractInputs)

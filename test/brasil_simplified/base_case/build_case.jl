@@ -4585,7 +4585,7 @@ end
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
-    dimensions = ["period", "scenario", "subperiod"],
+    dimensions = ["season", "scenario", "subperiod"],
     labels = ["hyd_$(bus_labels[h])" for h in 1:number_of_hydro_units],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
@@ -4605,7 +4605,7 @@ IARA.link_time_series_to_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
-    dimensions = ["period", "scenario", "subperiod"],
+    dimensions = ["season", "scenario", "subperiod"],
     labels = ["dem_$label" for label in bus_labels],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],

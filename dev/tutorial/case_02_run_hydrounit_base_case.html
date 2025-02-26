@@ -52,7 +52,7 @@ cp(PATH_ORIGINAL, PATH_CENTRALIZED; force = true);</code></pre><pre class="docum
 problem
   nodes           : 2
   state variables : 0
-  scenarios       : Inf
+  scenarios       : 1.44000e+02
   existing cuts   : false
 options
   solver          : serial mode
@@ -62,7 +62,7 @@ subproblem structure
   VariableRef                                  : [22, 22]
   JuMP.AffExpr in MOI.EqualTo{Float64}         : [4, 4]
   JuMP.VariableRef in MOI.GreaterThan{Float64} : [17, 17]
-  JuMP.VariableRef in MOI.LessThan{Float64}    : [9, 9]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [9, 10]
   JuMP.VariableRef in MOI.Parameter{Float64}   : [5, 5]
 numerical stability report
   matrix range     [1e+00, 2e+03]
@@ -72,19 +72,14 @@ numerical stability report
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
-         1   1.903637e+03  7.818800e+02  1.189291e-01       662   1
-         6   4.850880e+03  8.584592e+02  1.210527e+00      6561   1
-        20   1.697856e+03  8.584595e+02  2.230849e+00      9862   1
-        24   3.117615e+03  8.584595e+02  3.414865e+00     14267   1
-        31   1.461543e+03  8.584595e+02  4.642510e+00     16613   1
-        38   8.286344e+02  8.584595e+02  5.676062e+00     18088   1
-        40   2.026752e+02  8.584595e+02  5.781149e+00     18242   1
+         1   1.059548e+02  7.999601e+01  1.645613e-02        26   1
+        20   8.216462e+01  7.999601e+01  1.223001e-01       720   1
 -------------------------------------------------------------------
 status         : simulation_stopping
-total time (s) : 5.781149e+00
-total solves   : 18242
-best bound     :  8.584595e+02
-simulation ci  :  9.881985e+02 ± 3.112648e+02
+total time (s) : 1.223001e-01
+total solves   : 720
+best bound     :  7.999601e+01
+simulation ci  :  8.367958e+01 ± 6.426566e+00
 numeric issues : 0
 -------------------------------------------------------------------
 
@@ -196,4 +191,4 @@ IARA.close_study!(db)</code></pre><p>Now, let&#39;s run the case with <a href=".
 [ Info:    Running simulation EX_POST_PHYSICAL
 [ Info:    Running simulation EX_POST_COMMERCIAL
 [ Info: Running post-processing routines
-[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Wednesday 26 February 2025 20:49">Wednesday 26 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Wednesday 26 February 2025 22:24">Wednesday 26 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

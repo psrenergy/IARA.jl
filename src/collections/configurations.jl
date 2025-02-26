@@ -70,10 +70,6 @@ Configurations for the problem.
     make_whole_payments::Configurations_MakeWholePayments.T =
         Configurations_MakeWholePayments.CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD
     price_limits::Configurations_PriceLimits.T = Configurations_PriceLimits.REPRESENT
-    number_of_bid_segments_for_file_template::Int = 0
-    number_of_bid_segments_for_virtual_reservoir_file_template::Int = 0
-    number_of_profiles_for_file_template::Int = 0
-    number_of_complementary_groups_for_file_template::Int = 0
     vr_curveguide_data_source::Configurations_VRCurveguideDataSource.T =
         Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
     vr_curveguide_data_format::Configurations_VRCurveguideDataFormat.T =
@@ -207,14 +203,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "hydro_spillage_cost")[1]
     configurations.market_clearing_tiebreaker_weight =
         PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight")[1]
-    configurations.number_of_bid_segments_for_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_bid_segments_for_file_template")[1]
-    configurations.number_of_bid_segments_for_virtual_reservoir_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_bid_segments_for_virtual_reservoir_file_template")[1]
-    configurations.number_of_profiles_for_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_profiles_for_file_template")[1]
-    configurations.number_of_complementary_groups_for_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_complementary_groups_for_file_template")[1]
     configurations.vr_curveguide_data_source =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_source")[1],
@@ -409,22 +397,6 @@ function validate(configurations::Configurations)
     if configurations.inflow_scenarios_files == Configurations_UncertaintyScenariosFiles.NONE &&
        is_null(configurations.parp_max_lags)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
-        num_errors += 1
-    end
-    if configurations.number_of_bid_segments_for_file_template < 0
-        @error("Number of bidding segments for the time series file template must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.number_of_bid_segments_for_virtual_reservoir_file_template < 0
-        @error("Number of bidding segments for the virtual reservoir time series file template must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.number_of_profiles_for_file_template < 0
-        @error("Number of profiles for the time series file template must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.number_of_complementary_groups_for_file_template < 0
-        @error("Number of complementary groups for the time series file template must be non-negative.")
         num_errors += 1
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
@@ -1225,37 +1197,6 @@ Return the hydro balance subperiod resolution.
 hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
     inputs.collections.configurations.hydro_balance_subperiod_resolution
 
-"""
-    number_of_bid_segments_for_file_template(inputs)
-
-Return the number of bidding segments for the time series file template.
-"""
-number_of_bid_segments_for_file_template(inputs) =
-    inputs.collections.configurations.number_of_bid_segments_for_file_template
-
-"""
-    number_of_bid_segments_for_virtual_reservoir_file_template(inputs)
-
-Return the number of bidding segments for the virtual reservoir time series file template.
-"""
-number_of_bid_segments_for_virtual_reservoir_file_template(inputs) =
-    inputs.collections.configurations.number_of_bid_segments_for_virtual_reservoir_file_template
-
-"""
-    number_of_profiles_for_file_template(inputs)
-
-Return the number of profiles for the time series file template.
-"""
-number_of_profiles_for_file_template(inputs) =
-    inputs.collections.configurations.number_of_profiles_for_file_template
-
-"""
-    number_of_complementary_groups_for_file_template(inputs)
-
-Return the number of complementary groups for the time series file template.
-"""
-number_of_complementary_groups_for_file_template(inputs) =
-    inputs.collections.configurations.number_of_complementary_groups_for_file_template
 """
     vr_curveguide_data_source(inputs)
 

@@ -10,10 +10,10 @@
 
 module IARA
 
+# External packages
 using ArgParse
 using CSV
 using DataFrames
-using Dates
 using EnumX
 using HiGHS
 using JuMP
@@ -28,9 +28,9 @@ using Quiver
 using Serialization
 using SDDP
 
-using Libdl
+# Julia std packages
+using Dates
 using LinearAlgebra
-using Logging
 using Random
 using Statistics
 using Printf

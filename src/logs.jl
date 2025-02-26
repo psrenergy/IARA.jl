@@ -56,7 +56,7 @@ end
 function finalize_logger()
     Log.close_polyglot_logger()
     # back to default logger
-    logger = Logging.ConsoleLogger()
-    global_logger(logger)
+    logger = Log.Logging.ConsoleLogger()
+    Log.Logging.global_logger(logger)
     return nothing
 end

@@ -7,20 +7,20 @@ function build_ui_operator_plots(
     # Profit
     profit_file_path = get_profit_file(inputs)
     plot_path = joinpath(plots_path, "total_profit")
-    plot_asset_owner_sum_output(inputs, profit_file_path, plot_path, "Total Profit"; round_data = true)
+    plot_operator_output(inputs, profit_file_path, plot_path, "Total Profit"; round_data = true)
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(revenue_files) == 2
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
-        plot_asset_owner_sum_output(inputs, revenue_files[1], plot_path, "Total Revenue Ex-Ante"; round_data = true, ex_ante_plot = true)
+        plot_operator_output(inputs, revenue_files[1], plot_path, "Total Revenue Ex-Ante"; round_data = true, ex_ante_plot = true)
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
-        plot_asset_owner_sum_output(inputs, revenue_files[2], plot_path, "Total Revenue Ex-Post"; round_data = true)
+        plot_operator_output(inputs, revenue_files[2], plot_path, "Total Revenue Ex-Post"; round_data = true)
     else
         @assert length(revenue_files) == 1
         plot_path = joinpath(plots_path, "total_revenue")
-        plot_asset_owner_sum_output(inputs, revenue_files[1], plot_path, "Total Revenue"; round_data = true)
+        plot_operator_output(inputs, revenue_files[1], plot_path, "Total Revenue"; round_data = true)
     end
 
     # Generation
@@ -28,13 +28,13 @@ function build_ui_operator_plots(
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(generation_files) == 2
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
-        plot_asset_owner_sum_output(inputs, generation_files[1], plot_path, "Total Generation Ex-Ante"; ex_ante_plot = true)
+        plot_operator_output(inputs, generation_files[1], plot_path, "Total Generation Ex-Ante"; ex_ante_plot = true)
         plot_path = joinpath(plots_path, "total_generation_ex_post")
-        plot_asset_owner_sum_output(inputs, generation_files[2], plot_path, "Total Generation Ex-Post")
+        plot_operator_output(inputs, generation_files[2], plot_path, "Total Generation Ex-Post")
     else
         @assert length(generation_files) == 1
         plot_path = joinpath(plots_path, "total_generation")
-        plot_asset_owner_sum_output(inputs, generation_files[1], plot_path, "Total Generation")
+        plot_operator_output(inputs, generation_files[1], plot_path, "Total Generation")
     end
 
     return nothing
@@ -53,7 +53,7 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Profit"
             plot_path = joinpath(plots_path, "profit_$ao_label.html")
-            plot_asset_owner_output(inputs, profit_file_path, plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(inputs, profit_file_path, plot_path, asset_owner_index, title; round_data = true)
         end
     end
 
@@ -65,13 +65,13 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue Ex-Ante"
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
-            plot_asset_owner_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true, ex_ante_plot = true)
+            plot_agent_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true, ex_ante_plot = true)
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue Ex-Post"
             plot_path = joinpath(plots_path, "revenue_ex_post_$ao_label.html")
-            plot_asset_owner_output(inputs, revenue_files[2], plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(inputs, revenue_files[2], plot_path, asset_owner_index, title; round_data = true)
         end
     else
         @assert length(revenue_files) == 1
@@ -79,7 +79,7 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue"
             plot_path = joinpath(plots_path, "revenue_$ao_label.html")
-            plot_asset_owner_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
         end
     end
 
@@ -91,13 +91,13 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Generation Ex-Ante"
             plot_path = joinpath(plots_path, "generation_ex_ante_$ao_label.html")
-            plot_asset_owner_output(inputs, generation_files[1], plot_path, asset_owner_index, title; ex_ante_plot = true)
+            plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title; ex_ante_plot = true)
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Generation Ex-Post"
             plot_path = joinpath(plots_path, "generation_ex_post_$ao_label.html")
-            plot_asset_owner_output(inputs, generation_files[2], plot_path, asset_owner_index, title)
+            plot_agent_output(inputs, generation_files[2], plot_path, asset_owner_index, title)
         end
     else
         @assert length(generation_files) == 1
@@ -105,7 +105,7 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Generation"
             plot_path = joinpath(plots_path, "generation_$ao_label.html")
-            plot_asset_owner_output(inputs, generation_files[1], plot_path, asset_owner_index, title)
+            plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title)
         end
     end
 
@@ -122,14 +122,14 @@ function build_ui_general_plots(
     files = get_load_marginal_cost_files(inputs)
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(files) == 2
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = files[1],
             plot_path = joinpath(plots_path, "spot_price_ex_ante"),
             title = "Spot Price Ex-Ante",
             round_data = true,
             ex_ante_plot = true,
         )
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = files[2],
             plot_path = joinpath(plots_path, "spot_price_ex_post"),
             title = "Spot Price Ex-Post",
@@ -137,7 +137,7 @@ function build_ui_general_plots(
         )
     else
         @assert length(files) == 1
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = files[1],
             plot_path = joinpath(plots_path, "spot_price"),
             title = "Spot Price",
@@ -149,7 +149,7 @@ function build_ui_general_plots(
     generation_file_path = joinpath(post_processing_path(inputs), "generation.csv")
     if isfile(generation_file_path)
         # Generation
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = generation_file_path,
             plot_path = joinpath(plots_path, "generation_by_technology"),
             title = "Generation by Technology",
@@ -157,7 +157,7 @@ function build_ui_general_plots(
             stack = true,
         )
         # Deficit
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = generation_file_path,
             plot_path = joinpath(plots_path, "deficit"),
             title = "Deficit",
@@ -427,7 +427,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
     return nothing
 end
 
-function plot_asset_owner_output(
+function plot_agent_output(
     inputs::AbstractInputs,
     file_path::String,
     plot_path::String,
@@ -441,7 +441,7 @@ function plot_asset_owner_output(
 
     if :bid_segment in metadata.dimensions
         segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
-        # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
+        # The data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
         segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
         data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
         metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
@@ -548,7 +548,7 @@ function plot_asset_owner_output(
     return nothing
 end
 
-function plot_asset_owner_sum_output(
+function plot_operator_output(
     inputs::AbstractInputs,
     file_path::String,
     plot_path::String,
@@ -677,7 +677,7 @@ function plot_asset_owner_sum_output(
     return nothing
 end
 
-function plot_ui_timeseries(;
+function plot_general_output(;
     file_path::String,
     plot_path::String,
     title::String,

@@ -72,10 +72,15 @@ function catch_iara_error() {
     fi
 }
 
-function get_heuristic_bid_no_markup() {
+function get_heuristic_bid_files() {
     echo "Downloading heuristic bid no markup price offer..."
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml
+
+    echo "Downloading heuristic bid energy offer..."
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_reference_energy_offer_period_$IARA_GAME_ROUND.csv
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_reference_energy_offer_period_$IARA_GAME_ROUND.toml
+
     echo "Completed."
 }
 
@@ -95,6 +100,26 @@ function save_iara_case_to_next_round() {
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$next_round/game_inputs.zip 
 
+    echo "Completed."
+}
+
+function save_iara_log() {
+    echo "Saving IARA log from $1..."
+    if [ -e "./$CASE_PATH/$1/iara.log" ]
+        then
+        if [ "$IARA_COMMAND" == "json and htmls for case creation"  ]; 
+            then
+            aws s3 cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/json_iara.log
+        elif [ "$IARA_COMMAND" == "heuristic bid"  ]; 
+            then
+            aws s3 cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_iara.log
+        elif [ "$IARA_COMMAND" == "single period market clearing"  ]; 
+            then
+            aws s3 cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/market_clearing_iara.log
+        fi
+    else
+        echo "IARA log not found in $1"
+    fi
     echo "Completed."
 }
 
@@ -127,6 +152,8 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
 
     $IARA_PATH/IARA.sh --output-path="game_summary" --run-mode 'interface-call' $CASE_PATH 
 
+    save_iara_log "game_summary"
+
     echo "Zipping plots..."
     cd $CASE_PATH/game_summary/plots
     zip -r ../plots.zip ./*
@@ -149,6 +176,8 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     trap 'catch_iara_error' ERR
 
     $IARA_PATH/IARA.sh $CASE_PATH --output-path="heuristic_bids" --run-mode 'single-period-heuristic-bid' --period=$IARA_GAME_ROUND
+
+    save_iara_log "heuristic_bids"
     
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/heuristic_bids/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/ --recursive  
@@ -161,11 +190,13 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     validate_game_round
     download_and_unzip_case
     download_bids_and_move_to_case
-    get_heuristic_bid_no_markup
+    get_heuristic_bid_files
 
     trap 'catch_iara_error' ERR
 
     $IARA_PATH/IARA.sh $CASE_PATH --output-path="results" --run-mode='single-period-market-clearing' --period=$IARA_GAME_ROUND --plot-ui-results
+
+    save_iara_log "results"
 
     # Check if plots are in the results folder
     if [ ! -d "$CASE_PATH/results/plots" ]; then

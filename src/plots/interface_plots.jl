@@ -14,7 +14,14 @@ function build_ui_operator_plots(
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(revenue_files) == 2
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
-        plot_operator_output(inputs, revenue_files[1], plot_path, "Total Revenue Ex-Ante"; round_data = true, ex_ante_plot = true)
+        plot_operator_output(
+            inputs,
+            revenue_files[1],
+            plot_path,
+            "Total Revenue Ex-Ante";
+            round_data = true,
+            ex_ante_plot = true,
+        )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
         plot_operator_output(inputs, revenue_files[2], plot_path, "Total Revenue Ex-Post"; round_data = true)
     else
@@ -65,7 +72,15 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue Ex-Ante"
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
-            plot_agent_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true, ex_ante_plot = true)
+            plot_agent_output(
+                inputs,
+                revenue_files[1],
+                plot_path,
+                asset_owner_index,
+                title;
+                round_data = true,
+                ex_ante_plot = true,
+            )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
@@ -342,13 +357,17 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
             demand_time_index = (inputs.args.period - 1) * num_subperiods + subperiod
             y_axis_limits = [minimum(minimum.(price_data_to_plot)), maximum(maximum.(price_data_to_plot))] .* 1.1
-            y_axis_range = range(y_axis_limits[1], y_axis_limits[2], length = 100)
+            y_axis_range = range(y_axis_limits[1], y_axis_limits[2]; length = 100)
             # Ex-post min demand
             color_idx += 1
             push!(
                 configs,
                 Config(;
-                    x = range(ex_post_min_demand[demand_time_index], ex_post_min_demand[demand_time_index], length = 100),
+                    x = range(
+                        ex_post_min_demand[demand_time_index],
+                        ex_post_min_demand[demand_time_index];
+                        length = 100,
+                    ),
                     y = y_axis_range,
                     name = "Ex-post minimum demand",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
@@ -362,7 +381,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             push!(
                 configs,
                 Config(;
-                    x = range(ex_ante_demand[demand_time_index], ex_ante_demand[demand_time_index], length = 100),
+                    x = range(ex_ante_demand[demand_time_index], ex_ante_demand[demand_time_index]; length = 100),
                     y = y_axis_range,
                     name = "Ex-ante demand",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
@@ -376,7 +395,11 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             push!(
                 configs,
                 Config(;
-                    x = range(ex_post_max_demand[demand_time_index], ex_post_max_demand[demand_time_index], length = 100),
+                    x = range(
+                        ex_post_max_demand[demand_time_index],
+                        ex_post_max_demand[demand_time_index];
+                        length = 100,
+                    ),
                     y = y_axis_range,
                     name = "Ex-post maximum demand",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
@@ -406,10 +429,11 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
     ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
 
     # Add artifical agent dimension to get plot ticks
-    ticks_demand = [ex_ante_demand' ; ex_post_min_demand' ; ex_post_max_demand']
+    ticks_demand = [ex_ante_demand'; ex_post_min_demand'; ex_post_max_demand']
 
     configs = Vector{Config}()
-    plot_ticks, hover_ticks = _get_plot_ticks(ticks_demand, num_periods, initial_date_time(inputs), time_series_step(inputs))
+    plot_ticks, hover_ticks =
+        _get_plot_ticks(ticks_demand, num_periods, initial_date_time(inputs), time_series_step(inputs))
     title = "Demand"
     unit = "MW"
     color_idx = 0

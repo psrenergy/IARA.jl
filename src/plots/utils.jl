@@ -214,12 +214,12 @@ function get_demands_to_plot(
         end
 
         # Min and max demand across subscenarios
-        ex_post_min_demand = dropdims(minimum(ex_post_demand, dims = 1), dims = 1)
-        ex_post_max_demand = dropdims(maximum(ex_post_demand, dims = 1), dims = 1)
+        ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
+        ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
 
         # If there is no ex-ante demand file, the ex-ante demand is the average of the ex-post demand across subscenarios
         if !read_ex_ante_demand_file(inputs)
-            ex_ante_demand = dropdims(mean(ex_post_demand, dims = 1), dims = 1)
+            ex_ante_demand = dropdims(mean(ex_post_demand; dims = 1); dims = 1)
         end
     end
 

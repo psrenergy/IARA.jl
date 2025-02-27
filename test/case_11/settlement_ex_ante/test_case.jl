@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase09GuessBid
+module TestCase11SettlementExAnte
 
 using Test
 using IARA

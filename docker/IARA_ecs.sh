@@ -29,7 +29,13 @@ CASE_PATH="iara-case"
 
 function download_and_unzip_case () {
     echo "Downloading input data..."
-    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_inputs.zip ./$IARA_CASE.zip  
+    if [ "$IARA_GAME_ROUND" -eq 1 ] || [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
+        echo "Downloading input data from case creation..."
+        aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_inputs.zip ./$IARA_CASE.zip  
+    else
+        echo "Downloading input data from previous round..."
+        aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip ./$IARA_CASE.zip
+    fi
     unzip -qo $IARA_CASE.zip -d $CASE_PATH
     echo "Completed."
 }
@@ -70,6 +76,25 @@ function get_heuristic_bid_no_markup() {
     echo "Downloading heuristic bid no markup price offer..."
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml
+    echo "Completed."
+}
+
+function save_iara_case_to_next_round() {
+    echo "Preparing IARA case to next round..."
+    next_round=$((IARA_GAME_ROUND + 1))
+    
+    echo "Moving all .json results to main case folder root..."
+    mv $CASE_PATH/results/*.json $CASE_PATH/
+    rm -rf $CASE_PATH/results
+
+    echo "Zipping case..."
+    cd $CASE_PATH
+    zip -r ../$CASE_PATH.zip ./*
+    cd -
+
+    echo "Uploading results to S3..."
+    aws s3 cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$next_round/game_inputs.zip 
+
     echo "Completed."
 }
 
@@ -155,6 +180,9 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
 
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
+
+    save_iara_case_to_next_round
+
     echo "Completed."    
     exit 0
 fi

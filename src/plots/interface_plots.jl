@@ -338,6 +338,54 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 end
             end
 
+            # Add demand lines
+            ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
+            demand_time_index = (inputs.args.period - 1) * num_subperiods + subperiod
+            y_axis_limits = [minimum(minimum.(price_data_to_plot)), maximum(maximum.(price_data_to_plot))] .* 1.1
+            y_axis_range = range(y_axis_limits[1], y_axis_limits[2], length = 100)
+            # Ex-post min demand
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = range(ex_post_min_demand[demand_time_index], ex_post_min_demand[demand_time_index], length = 100),
+                    y = y_axis_range,
+                    name = "Ex-post minimum demand",
+                    line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                    type = "line",
+                    mode = "lines",
+                    hovertemplate = "%{x} MWh",
+                ),
+            )
+            # Ex-ante demand
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = range(ex_ante_demand[demand_time_index], ex_ante_demand[demand_time_index], length = 100),
+                    y = y_axis_range,
+                    name = "Ex-ante demand",
+                    line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                    type = "line",
+                    mode = "lines",
+                    hovertemplate = "%{x} MWh",
+                ),
+            )
+            # Ex-post max demand
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = range(ex_post_max_demand[demand_time_index], ex_post_max_demand[demand_time_index], length = 100),
+                    y = y_axis_range,
+                    name = "Ex-post maximum demand",
+                    line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                    type = "line",
+                    mode = "lines",
+                    hovertemplate = "%{x} MWh",
+                ),
+            )
+
             main_configuration = Config(;
                 title = title,
                 xaxis = Dict("title" => "Quantity [MWh]"),
@@ -352,64 +400,62 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 end
 
 function plot_demand(inputs::AbstractInputs, plots_path::String)
-    demand_file = if read_ex_ante_demand_file(inputs)
-        joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs))
-    elseif read_ex_post_demand_file(inputs)
-        joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs))
-    else
-        ""
-    end
-    demand_file *= InterfaceCalls.timeseries_file_extension(demand_file)
     number_of_demands = number_of_elements(inputs, DemandUnit)
+    num_periods = number_of_periods(inputs)
+    num_subperiods = number_of_subperiods(inputs)
+    ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
 
-    if isfile(demand_file)
-        data, metadata = read_timeseries_file(demand_file)
-        data = merge_period_subperiod(data)
-        if read_ex_ante_demand_file(inputs)
-            num_periods, num_scenarios, num_subperiods = metadata.dimension_size
-            num_subscenarios = 1
-            reshaped_data =
-                Array{Float64, 3}(undef, metadata.number_of_time_series, num_periods * num_subperiods, num_subscenarios)
-            # Use only first scenario
-            reshaped_data[:, :, 1] = data[:, 1, :]
-        else
-            num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
-            # Use only first scenario
-            reshaped_data = data[:, :, 1, :]
-        end
-        if num_scenarios > 1
-            @warn "Plotting demand for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
-        end
-    else
-        num_periods = number_of_periods(inputs)
-        num_subperiods = number_of_subperiods(inputs)
-        num_subscenarios = 1
-        reshaped_data = ones(number_of_demands, num_periods * num_subperiods, num_subscenarios)
-    end
+    # Add artifical agent dimension to get plot ticks
+    ticks_demand = [ex_ante_demand' ; ex_post_min_demand' ; ex_post_max_demand']
 
     configs = Vector{Config}()
-    # Fix subscenario dimension with arbitrary value to get plot_ticks
-    plot_ticks, hover_ticks =
-        _get_plot_ticks(reshaped_data[:, 1, :], num_periods, initial_date_time(inputs), time_series_step(inputs))
-    title = "Total demand"
+    plot_ticks, hover_ticks = _get_plot_ticks(ticks_demand, num_periods, initial_date_time(inputs), time_series_step(inputs))
+    title = "Demand"
     unit = "MW"
     color_idx = 0
-    for d in 1:number_of_demands, subscenario in 1:num_subscenarios
-        label = demand_unit_label(inputs, d) * " - Subscenario $subscenario"
-        color_idx += 1
-        push!(
-            configs,
-            Config(;
-                x = 1:(num_periods*num_subperiods),
-                y = reshaped_data[d, subscenario, :] * demand_unit_max_demand(inputs, d),
-                name = label,
-                line = Dict("color" => _get_plot_color(color_idx)),
-                type = "line",
-                text = hover_ticks,
-                hovertemplate = "%{y} $unit<br>%{text}",
-            ),
-        )
-    end
+
+    # Ex-post max demand
+    color_idx += 1
+    push!(
+        configs,
+        Config(;
+            x = 1:(num_periods*num_subperiods),
+            y = ex_post_max_demand,
+            name = "Ex-post maximum demand",
+            line = Dict("color" => _get_plot_color(color_idx)),
+            type = "line",
+            text = hover_ticks,
+            hovertemplate = "%{y} $unit<br>%{text}",
+        ),
+    )
+    # Ex-ante demand
+    color_idx += 1
+    push!(
+        configs,
+        Config(;
+            x = 1:(num_periods*num_subperiods),
+            y = ex_ante_demand,
+            name = "Ex-ante demand",
+            line = Dict("color" => _get_plot_color(color_idx)),
+            type = "line",
+            text = hover_ticks,
+            hovertemplate = "%{y} $unit<br>%{text}",
+        ),
+    )
+    # Ex-post min demand
+    color_idx += 1
+    push!(
+        configs,
+        Config(;
+            x = 1:(num_periods*num_subperiods),
+            y = ex_post_min_demand,
+            name = "Ex-post minimum demand",
+            line = Dict("color" => _get_plot_color(color_idx)),
+            type = "line",
+            text = hover_ticks,
+            hovertemplate = "%{y} $unit<br>%{text}",
+        ),
+    )
 
     main_configuration = Config(;
         title = title,

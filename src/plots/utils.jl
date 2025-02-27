@@ -170,3 +170,58 @@ function get_generation_files(inputs::AbstractInputs)
 
     return filenames
 end
+
+function get_demands_to_plot(
+    inputs::AbstractInputs,
+)
+    number_of_demands = number_of_elements(inputs, DemandUnit)
+    # TODO: filter out demands that belong to a bidding group
+
+    ex_ante_demand = ones(number_of_periods(inputs) * number_of_subperiods(inputs))
+    if read_ex_ante_demand_file(inputs)
+        demand_file = joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs) * ".csv")
+        data, metadata = read_timeseries_file(demand_file)
+        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+        data = merge_period_subperiod(data)
+
+        ex_ante_demand = zeros(num_periods * num_subperiods)
+        # Use only first scenario
+        scenario = 1
+        for d in 1:number_of_demands
+            ex_ante_demand += data[d, scenario, :] * demand_unit_max_demand(inputs, d)
+        end
+        if num_scenarios > 1
+            @warn "Plotting demand for scenario 1 and ignoring the other scenarios. Total number of scenarios in file $demand_file: $num_scenarios"
+        end
+    end
+
+    ex_post_min_demand = copy(ex_ante_demand)
+    ex_post_max_demand = copy(ex_ante_demand)
+    if read_ex_post_demand_file(inputs)
+        demand_file = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs) * ".csv")
+        data, metadata = read_timeseries_file(demand_file)
+        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+        data = merge_period_subperiod(data)
+
+        ex_post_demand = zeros(num_subscenarios, num_periods * num_subperiods)
+        # Use only first scenario
+        scenario = 1
+        for d in 1:number_of_demands
+            ex_post_demand += data[d, :, scenario, :] * demand_unit_max_demand(inputs, d)
+        end
+        if num_scenarios > 1
+            @warn "Plotting demand for scenario 1 and ignoring the other scenarios. Total number of scenarios in file $demand_file: $num_scenarios"
+        end
+
+        # Min and max demand across subscenarios
+        ex_post_min_demand = dropdims(minimum(ex_post_demand, dims = 1), dims = 1)
+        ex_post_max_demand = dropdims(maximum(ex_post_demand, dims = 1), dims = 1)
+
+        # If there is no ex-ante demand file, the ex-ante demand is the average of the ex-post demand across subscenarios
+        if !read_ex_ante_demand_file(inputs)
+            ex_ante_demand = dropdims(mean(ex_post_demand, dims = 1), dims = 1)
+        end
+    end
+
+    return ex_ante_demand, ex_post_min_demand, ex_post_max_demand
+end

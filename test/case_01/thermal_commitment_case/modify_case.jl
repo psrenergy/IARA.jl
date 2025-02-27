@@ -11,7 +11,7 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    integer_variable_representation_mincost_type = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
+    integer_variable_representation_mincost = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
 )
 
 IARA.add_thermal_unit!(db;

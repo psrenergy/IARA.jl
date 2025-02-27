@@ -188,7 +188,7 @@ IARA.link_time_series_to_file(
 
 IARA.update_configuration!(
     db;
-    integer_variable_representation_mincost_type = 0,
+    integer_variable_representation_mincost = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
 )
 
 minimum_activation_level_profile =

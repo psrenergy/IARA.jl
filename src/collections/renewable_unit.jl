@@ -325,3 +325,7 @@ end
 # ---------------------------------------------------------------------
 # Collection getters
 # ---------------------------------------------------------------------
+
+function renewable_unit_zone_index(inputs::AbstractInputs, idx::Int)
+    return bus_zone_index(inputs, renewable_unit_bus_index(inputs, idx))
+end

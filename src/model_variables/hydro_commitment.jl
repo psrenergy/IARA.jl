@@ -33,7 +33,7 @@ function hydro_commitment!(
         binary = true,
     )
 
-    if use_binary_variables(inputs)
+    if use_binary_variables(inputs, run_time_options)
         add_symbol_to_integer_variables_list!(run_time_options, :hydro_commitment)
     end
 
@@ -66,7 +66,7 @@ function hydro_commitment!(
 
     if run_time_options.clearing_model_subproblem != RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
         add_symbol_to_query_from_subproblem_result!(outputs, [:hydro_commitment])
-        if use_binary_variables(inputs)
+        if use_binary_variables(inputs, run_time_options)
             add_symbol_to_serialize!(outputs, :hydro_commitment)
         end
     end

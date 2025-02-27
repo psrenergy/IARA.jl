@@ -502,3 +502,7 @@ Check if the Thermal Unit at index 'idx' has commitment initial condition.
 """
 has_commitment_initial_condition(thermal_unit::ThermalUnit, idx::Int) =
     thermal_unit.commitment_initial_condition[idx] != ThermalUnit_CommitmentInitialCondition.UNDEFINED
+
+function thermal_unit_zone_index(inputs::AbstractInputs, idx::Int)
+    return bus_zone_index(inputs, thermal_unit_bus_index(inputs, idx))
+end

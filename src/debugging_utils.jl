@@ -95,7 +95,7 @@ function set_custom_hook(
                 relax_integrality_hook(model)
             end
         end
-        if !use_binary_variables(inputs)
+        if !use_binary_variables(inputs, run_time_options)
             relax_integrality_hook(model)
         end
         if inputs.args.write_lp

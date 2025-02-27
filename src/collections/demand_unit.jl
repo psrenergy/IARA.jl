@@ -390,3 +390,7 @@ function demand_mw_to_gwh(
     return demand_ts * demand_unit_max_demand(inputs, demand_index) * subperiod_duration_in_hours(inputs, subperiod) *
            MW_to_GW()
 end
+
+function demand_unit_zone_index(inputs::AbstractInputs, idx::Int)
+    return bus_zone_index(inputs, demand_unit_bus_index(inputs, idx))
+end

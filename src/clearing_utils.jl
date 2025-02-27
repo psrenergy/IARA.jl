@@ -329,25 +329,8 @@ function skip_clearing_subproblem(inputs::Inputs, run_time_options::RunTimeOptio
     return construction_type(inputs, run_time_options) == Configurations_ConstructionType.SKIP
 end
 
-"""
-    integer_variable_representation(inputs::Inputs, run_time_options::RunTimeOptions)
-
-Determine the clearing integer variables.
-"""
-function integer_variable_representation(inputs::Inputs, run_time_options::RunTimeOptions)
-    if is_ex_ante_problem(run_time_options)
-        if is_physical_problem(run_time_options)
-            return integer_variable_representation_ex_ante_physical_type(inputs)
-        elseif is_commercial_problem(run_time_options)
-            return integer_variable_representation_ex_ante_commercial_type(inputs)
-        end
-    elseif is_ex_post_problem(run_time_options)
-        if is_physical_problem(run_time_options)
-            return integer_variable_representation_ex_post_physical_type(inputs)
-        elseif is_commercial_problem(run_time_options)
-            return integer_variable_representation_ex_post_commercial_type(inputs)
-        end
-    end
+function is_mincost(inputs::Inputs)
+    return run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
 end
 
 """

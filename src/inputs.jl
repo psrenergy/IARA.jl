@@ -25,6 +25,7 @@ Struct of all input collections.
     bus::Bus = Bus()
     demand_unit::DemandUnit = DemandUnit()
     dc_line::DCLine = DCLine()
+    interconnection::Interconnection = Interconnection()
     branch::Branch = Branch()
     battery_unit::BatteryUnit = BatteryUnit()
     asset_owner::AssetOwner = AssetOwner()

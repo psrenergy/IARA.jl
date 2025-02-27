@@ -829,3 +829,7 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, 
         return volume.data[end, :]
     end
 end
+
+function hydro_unit_zone_index(inputs::AbstractInputs, idx::Int)
+    return bus_zone_index(inputs, hydro_unit_bus_index(inputs, idx))
+end

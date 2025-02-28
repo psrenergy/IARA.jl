@@ -315,7 +315,7 @@ function advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableU
     if !read_ex_post_renewable_file(inputs) && renewable_unit.generation_ex_post_file != "" &&
        length(renewable_unit) > 0
         @warn(
-            "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), " * 
+            "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), " *
             "but an ex_post generation file was linked. This file will be ignored."
         )
     end

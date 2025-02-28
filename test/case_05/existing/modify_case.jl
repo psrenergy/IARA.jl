@@ -20,24 +20,7 @@ IARA.add_gauging_station!(db;
         historical_inflow = reverse(historical_inflow_values) .+ historical_inflow_values,
     ),
 )
-# IARA.add_hydro_unit!(db;
-#     label = "hyd_2",
-#     parameters = DataFrame(;
-#         date_time = [DateTime(0), DateTime("2020-03-01T00:00:00")],
-#         existing = [Int(IARA.HydroUnit_Existence.DOES_NOT_EXIST), Int(IARA.HydroUnit_Existence.EXISTS)],
-#         production_factor = [0.5, missing],
-#         min_generation = [0.0, missing],
-#         max_generation = [3.5, missing],
-#         max_turbining = [7.0, missing],
-#         min_volume = [0.0, missing],
-#         max_volume = [0.0, missing],
-#         min_outflow = [0.0, missing],
-#         om_cost = [0.0, missing],
-#     ),
-#     initial_volume = 0.0,
-#     bus_id = "bus_2",
-#     gaugingstation_id = "gs_2",
-# )
+
 IARA.add_hydro_unit!(db;
     label = "hyd_2",
     parameters = DataFrame(;

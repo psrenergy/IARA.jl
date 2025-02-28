@@ -186,11 +186,6 @@ IARA.link_time_series_to_file(
     price_offer_profile = "price_offer_profile",
 )
 
-IARA.update_configuration!(
-    db;
-    integer_variable_representation_mincost = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
-)
-
 minimum_activation_level_profile =
     zeros(
         number_of_bidding_groups,

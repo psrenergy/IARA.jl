@@ -14,9 +14,9 @@ function load_balance! end
 # Flow is in [MW], generation and deficit are in [MWh], demand is in [GWh]
 
 function zonal_mincost_generation_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
@@ -67,9 +67,9 @@ function zonal_mincost_generation_expression(
 end
 
 function zonal_clearing_generation_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
@@ -132,9 +132,9 @@ function zonal_clearing_generation_expression(
 end
 
 function zonal_transmission_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
@@ -163,9 +163,9 @@ function zonal_transmission_expression(
 end
 
 function zonal_demand_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
@@ -217,9 +217,9 @@ function zonal_demand_expression(
 end
 
 function nodal_mincost_generation_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
@@ -270,13 +270,13 @@ function nodal_mincost_generation_expression(
 end
 
 function nodal_clearing_generation_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
-    bidding_groups =index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup)
     hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
 
     # Market Clearing Variables
@@ -335,9 +335,9 @@ function nodal_clearing_generation_expression(
 end
 
 function nodal_transmission_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
@@ -383,9 +383,9 @@ function nodal_transmission_expression(
 end
 
 function nodal_demand_expression(
-    model::SubproblemModel, 
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
+    model::SubproblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
 )
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
@@ -436,7 +436,6 @@ function nodal_demand_expression(
     return net_demand
 end
 
-
 function zonal_load_balance!(
     model::SubproblemModel,
     inputs::Inputs,
@@ -445,13 +444,14 @@ function zonal_load_balance!(
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
-    generation = if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
-                    run_mode(inputs) == RunMode.MIN_COST ||
-                    construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
-        zonal_mincost_generation_expression(model, inputs, run_time_options)
-    else
-        zonal_clearing_generation_expression(model, inputs, run_time_options)
-    end
+    generation =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            zonal_mincost_generation_expression(model, inputs, run_time_options)
+        else
+            zonal_clearing_generation_expression(model, inputs, run_time_options)
+        end
     transmission = zonal_transmission_expression(model, inputs, run_time_options)
     net_demand = zonal_demand_expression(model, inputs, run_time_options)
 
@@ -472,13 +472,14 @@ function nodal_load_balance!(
 )
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
-    generation = if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
-                    run_mode(inputs) == RunMode.MIN_COST ||
-                    construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
-        nodal_mincost_generation_expression(model, inputs, run_time_options)
-    else
-        nodal_clearing_generation_expression(model, inputs, run_time_options)
-    end
+    generation =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            nodal_mincost_generation_expression(model, inputs, run_time_options)
+        else
+            nodal_clearing_generation_expression(model, inputs, run_time_options)
+        end
     transmission = nodal_transmission_expression(model, inputs, run_time_options)
     net_demand = nodal_demand_expression(model, inputs, run_time_options)
 

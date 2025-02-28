@@ -66,7 +66,7 @@ Configurations for the problem.
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
     integer_variable_representation_ex_post_commercial::Configurations_IntegerVariableRepresentation.T =
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
-    network_representation_mincost::Configurations_NetworkRepresentation.T = 
+    network_representation_mincost::Configurations_NetworkRepresentation.T =
         Configurations_NetworkRepresentation.NODAL
     network_representation_ex_ante_physical::Configurations_NetworkRepresentation.T =
         Configurations_NetworkRepresentation.NODAL
@@ -266,7 +266,7 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_commercial")[1],
             Configurations_IntegerVariableRepresentation.T,
         )
-    configurations.network_representation_mincost = 
+    configurations.network_representation_mincost =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "network_representation_mincost")[1],
             Configurations_NetworkRepresentation.T,
@@ -830,12 +830,14 @@ function expected_number_of_repeats_per_node(inputs::AbstractInputs, node::Int)
 end
 
 """
-    use_binary_variables(inputs::AbstractInputs)
+    use_binary_variables(inputs::AbstractInputs, run_time_options)
 
 Return whether binary variables should be used.
 """
 function use_binary_variables(inputs::AbstractInputs, run_time_options)
-    return integer_variable_representation(inputs, run_time_options) == Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    ivr = integer_variable_representation(inputs, run_time_options)
+    return ivr == Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY ||
+           ivr == Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
 end
 
 """
@@ -1356,7 +1358,7 @@ function network_representation(inputs::AbstractInputs, run_time_options)
         elseif is_commercial_problem(run_time_options)
             return network_representation_ex_post_commercial(inputs)
         end
-    else 
+    else
         error("Not implemented")
     end
 end

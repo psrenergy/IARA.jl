@@ -374,39 +374,6 @@ function is_physical_problem(run_time_options::RunTimeOptions)
 end
 
 """
-    clearing_has_fixed_binary_variables_from_previous_problem(inputs::Inputs, run_time_options::RunTimeOptions)
-
-Check if the clearing has fixed binary variables from the previous problem.
-"""
-function clearing_has_fixed_binary_variables_from_previous_problem(inputs::Inputs, run_time_options::RunTimeOptions)
-    return integer_variable_representation(inputs, run_time_options) ==
-           Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
-end
-
-"""
-    clearing_has_fixed_binary_variables(
-        inputs::Inputs, 
-        run_time_options::RunTimeOptions
-    )
-
-Check if the clearing has fixed binary variables.
-"""
-function clearing_has_fixed_binary_variables(inputs::Inputs, run_time_options::RunTimeOptions)
-    return integer_variable_representation(inputs, run_time_options) ==
-           Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
-end
-
-"""
-    clearing_has_linearized_binary_variables(inputs::Inputs, run_time_options::RunTimeOptions)
-
-Check if the clearing has linearized binary variables.
-"""
-function clearing_has_linearized_binary_variables(inputs::Inputs, run_time_options::RunTimeOptions)
-    return integer_variable_representation(inputs, run_time_options) ==
-           Configurations_IntegerVariableRepresentation.LINEARIZE
-end
-
-"""
     clearing_has_volume_variables(inputs::Inputs, run_time_options::RunTimeOptions)
 
 Check if the clearing has volume variables.

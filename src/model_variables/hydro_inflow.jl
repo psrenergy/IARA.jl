@@ -23,6 +23,7 @@ function hydro_inflow!(
 )
     num_existing_hydros = number_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
     existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    num_hydro_units = number_of_elements(inputs, HydroUnit; run_time_options)
 
     if read_inflow_from_file(inputs)
         # Time series
@@ -54,7 +55,7 @@ function hydro_inflow!(
 
         if parp_max_lags(inputs) > 0
             # Initial state
-            normalized_initial_state = zeros(num_existing_hydros, parp_max_lags(inputs))
+            normalized_initial_state = zeros(num_hydro_units, parp_max_lags(inputs))
             for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
                 period_idx = mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
                 normalized_initial_state[h, tau] = normalized_initial_inflow(inputs, period_idx, h, tau)

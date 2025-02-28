@@ -58,6 +58,11 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
             ).historical_inflow
     end
 
+    if any(isempty.(gauging_station.historical_inflow))
+        # TODO: How to add in validation?
+        @error("Inflow is set to use the PAR(p) model, but GaugingStation historical inflow data is missing.")
+    end
+
     # Get the last 'parp_max_lags' inflow values for each gauging station
     gauging_station.inflow_initial_state = zeros(num_gauging_stations, parp_max_lags(inputs))
     for (idx, inflow_vector) in enumerate(gauging_station.historical_inflow)

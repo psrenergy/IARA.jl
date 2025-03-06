@@ -6,3 +6,295 @@ label.en = "Configuration"
 id = "label"
 label.en = "Label"
 tooltip.en = "The label of the configuration"
+
+[[attribute]]
+id = "number_of_nodes"
+label.en = "Nodes"
+tooltip.en = "The number of nodes in the configuration"
+hide = true
+
+[[attribute]]
+id = "number_of_subscenarios"
+label.en = "Subscenarios"
+tooltip.en = "The number of subscenarios in the configuration"
+hide = true
+
+[[attribute]]
+id = "iteration_limit"
+label.en = "Iteration Limit"
+tooltip.en = "The iteration limit of the configuration"
+hide = true
+
+[[attribute]]
+id = "initial_date_time"
+label.en = "Initial Date Time"
+tooltip.en = "The initial date time of the configuration"
+hide = true
+
+[[attribute]]
+id = "time_series_step"
+label.en = "Time Series Step"
+tooltip.en = "The time series step of the configuration"
+hide = true
+
+[[attribute]]
+id = "hydro_balance_subperiod_resolution"
+label.en = "Hydro Balance Subperiod Resolution"
+tooltip.en = "The hydro balance subperiod resolution of the configuration"
+hide = true
+
+[[attribute]]
+id = "loop_subperiods_for_thermal_constraints"
+label.en = "Loop Subperiods for Thermal Constraints"
+tooltip.en = "The loop subperiods for thermal constraints of the configuration"
+hide = true
+
+[[attribute]]
+id = "cycle_discount_rate"
+label.en = "Cycle Discount Rate"
+tooltip.en = "The cycle discount rate of the configuration"
+hide = true
+
+[[attribute]]
+id = "cycle_duration_in_hours"
+label.en = "Cycle Duration in Hours"
+tooltip.en = "The cycle duration in hours of the configuration"
+hide = true
+
+[[attribute]]
+id = "hydro_minimum_outflow_violation_cost"
+label.en = "Hydro Minimum Outflow Violation Cost"
+tooltip.en = "The hydro minimum outflow violation cost of the configuration"
+hide = true
+
+[[attribute]]
+id = "hydro_spillage_cost"
+label.en = "Hydro Spillage Cost"
+tooltip.en = "The hydro spillage cost of the configuration"
+hide = true
+
+[[attribute]]
+id = "aggregate_buses_for_strategic_bidding"
+label.en = "Aggregate Buses for Strategic Bidding"
+tooltip.en = "The aggregate buses for strategic bidding of the configuration"
+hide = true
+
+[[attribute]]
+id = "parp_max_lags"
+label.en = "PARP Max Lags"
+tooltip.en = "The PARP max lags of the configuration"
+hide = true
+
+[[attribute]]
+id = "bid_data_source"
+label.en = "Bid Data Source"
+tooltip.en = "The bid data source of the configuration"
+hide = true
+
+[[attribute]]
+id = "clearing_hydro_representation"
+label.en = "Clearing Hydro Representation"
+tooltip.en = "The clearing hydro representation of the configuration"
+hide = true
+
+[[attribute]]
+id = "ex_post_physical_hydro_representation"
+label.en = "Ex Post Physical Hydro Representation"
+tooltip.en = "The ex post physical hydro representation of the configuration"
+hide = true
+
+[[attribute]]
+id = "clearing_integer_variables"
+label.en = "Clearing Integer Variables"
+tooltip.en = "The clearing integer variables of the configuration"
+hide = true
+
+[[attribute]]
+id = "settlement_type"
+label.en = "Settlement Type"
+tooltip.en = "The settlement type of the configuration"
+hide = true
+
+[[attribute]]
+id = "make_whole_payments"
+label.en = "Make Whole Payments"
+tooltip.en = "The make whole payments of the configuration"
+hide = true
+
+[[attribute]]
+id = "price_limits"
+label.en = "Price Limits"
+tooltip.en = "The price limits of the configuration"
+hide = true
+
+[[attribute]]
+id = "construction_type_ex_ante_physical"
+label.en = "Construction Type Ex Ante Physical"
+tooltip.en = "The construction type ex ante physical of the configuration"
+hide = true
+
+[[attribute]]
+id = "construction_type_ex_ante_commercial"
+label.en = "Construction Type Ex Ante Commercial"
+tooltip.en = "The construction type ex ante commercial of the configuration"
+hide = true
+
+[[attribute]]
+id = "construction_type_ex_post_physical"
+label.en = "Construction Type Ex Post Physical"
+tooltip.en = "The construction type ex post physical of the configuration"
+hide = true
+
+[[attribute]]
+id = "construction_type_ex_post_commercial"
+label.en = "Construction Type Ex Post Commercial"
+tooltip.en = "The construction type ex post commercial of the configuration"
+hide = true
+
+[[attribute]]
+id = "use_fcf_in_clearing"
+label.en = "Use FCF in Clearing"
+tooltip.en = "The use FCF in clearing of the configuration"
+hide = true
+
+[[attribute]]
+id = "integer_variable_representation_ex_ante_physical"
+label.en = "Integer Variable Representation Ex Ante Physical"
+tooltip.en = "The integer variable representation ex ante physical of the configuration"
+hide = true
+
+[[attribute]]
+id = "integer_variable_representation_ex_ante_commercial"
+label.en = "Integer Variable Representation Ex Ante Commercial"
+tooltip.en = "The integer variable representation ex ante commercial of the configuration"
+hide = true
+
+[[attribute]]
+id = "integer_variable_representation_ex_post_physical"
+label.en = "Integer Variable Representation Ex Post Physical"
+tooltip.en = "The integer variable representation ex post physical of the configuration"
+hide = true
+
+[[attribute]]
+id = "integer_variable_representation_ex_post_commercial"
+label.en = "Integer Variable Representation Ex Post Commercial"
+tooltip.en = "The integer variable representation ex post commercial of the configuration"
+hide = true
+
+[[attribute]]
+id = "spot_price_floor"
+label.en = "Spot Price Floor"
+tooltip.en = "The spot price floor of the configuration"
+hide = true
+
+[[attribute]]
+id = "spot_price_cap"
+label.en = "Spot Price Cap"
+tooltip.en = "The spot price cap of the configuration"
+hide = true
+
+[[attribute]]
+id = "virtual_reservoir_correspondence_type"
+label.en = "Virtual Reservoir Correspondence Type"
+tooltip.en = "The virtual reservoir correspondence type of the configuration"
+hide = true
+
+[[attribute]]
+id = "vr_curveguide_data_source"
+label.en = "VR Curveguide Data Source"
+tooltip.en = "The VR curveguide data source of the configuration"
+hide = true
+
+[[attribute]]
+id = "vr_curveguide_data_format"
+label.en = "VR Curveguide Data Format"
+tooltip.en = "The VR curveguide data format of the configuration"
+hide = true
+
+[[attribute]]
+id = "number_of_periods"
+label.en = "Periods"
+tooltip.en = "The number of periods in the configuration"
+
+[[attribute]]
+id = "number_of_scenarios"
+label.en = "Scenarios"
+tooltip.en = "The number of scenarios in the configuration"
+
+[[attribute]]
+id = "number_of_subperiods"
+label.en = "Subperiods"
+tooltip.en = "The number of subperiods in the configuration"
+hide = true
+
+[[attribute]]
+id = "demand_deficit_cost"
+label.en = "Demand Deficit Cost"
+tooltip.en = "The demand deficit cost of the configuration"
+hide = true
+
+[[attribute]]
+id = "policy_graph_type"
+label.en = "Policy Graph Type"
+tooltip.en = "The policy graph type of the configuration"
+hide = true
+
+[[attribute]]
+id = "renewable_scenarios_files"
+label.en = "Renewable Scenarios Files"
+tooltip.en = "The renewable scenarios files of the configuration"
+hide = true
+
+[[attribute]]
+id = "inflow_scenarios_files"
+label.en = "Inflow Scenarios Files"
+tooltip.en = "The inflow scenarios files of the configuration"
+hide = true
+
+[[attribute]]
+id = "demand_scenarios_files"
+label.en = "Demand Scenarios Files"
+tooltip.en = "The demand scenarios files of the configuration"
+hide = true
+
+[[attribute]]
+id = "market_clearing_tiebreaker_weight"
+label.en = "Market Clearing Tiebreaker Weight"
+tooltip.en = "The market clearing tiebreaker weight of the configuration"
+hide = true
+
+[[attribute]]
+id = "integer_variable_representation_mincost"
+label.en = "Integer Variable Representation Min Cost"
+tooltip.en = "The integer variable representation min cost of the configuration"
+hide = true
+
+[[attribute]]
+id = "network_representation_mincost"
+label.en = "Network Representation Min Cost"
+tooltip.en = "The network representation min cost of the configuration"
+hide = true
+
+[[attribute]]
+id = "network_representation_ex_ante_physical"
+label.en = "Network Representation Ex Ante Physical"    
+tooltip.en = "The network representation ex ante physical of the configuration"
+hide = true
+
+[[attribute]]
+id = "network_representation_ex_ante_commercial"
+label.en = "Network Representation Ex Ante Commercial"
+tooltip.en = "The network representation ex ante commercial of the configuration"
+hide = true
+
+[[attribute]]
+id = "network_representation_ex_post_physical"
+label.en = "Network Representation Ex Post Physical"
+tooltip.en = "The network representation ex post physical of the configuration"
+hide = true
+
+[[attribute]]
+id = "network_representation_ex_post_commercial"
+label.en = "Network Representation Ex Post Commercial"
+tooltip.en = "The network representation ex post commercial of the configuration"
+hide = true

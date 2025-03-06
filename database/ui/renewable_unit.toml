@@ -1,1 +1,3 @@
 id = "RenewableUnit"
+icon = "lucide/dam.svg"
+label.en = "Renewable Unit"

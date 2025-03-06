@@ -1,1 +1,3 @@
 id = "Bus"
+icon = "lucide/dam.svg"
+label.en = "Bus"

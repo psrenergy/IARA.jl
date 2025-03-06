@@ -1,1 +1,3 @@
 id = "GaugingStation"
+icon = "lucide/dam.svg"
+label.en = "Gauging Station"

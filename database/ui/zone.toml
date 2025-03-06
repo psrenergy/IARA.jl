@@ -1,1 +1,3 @@
 id = "Zone"
+icon = "lucide/dam.svg"
+label.en = "Zone"

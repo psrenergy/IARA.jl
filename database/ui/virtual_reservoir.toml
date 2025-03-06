@@ -1,1 +1,3 @@
 id = "VirtualReservoir"
+icon = "lucide/dam.svg"
+label.en = "Virtual Reservoir"

@@ -1,1 +1,3 @@
 id = "DemandUnit"
+icon = "lucide/dam.svg"
+label.en = "Demand Unit"

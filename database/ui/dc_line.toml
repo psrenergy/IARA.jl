@@ -1,1 +1,3 @@
 id = "DCLine"
+icon = "lucide/dam.svg"
+label.en = "DC Line"

@@ -1,1 +1,3 @@
 id = "BiddingGroup"
+icon = "lucide/dam.svg"
+label.en = "Bidding Group"

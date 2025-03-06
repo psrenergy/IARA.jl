@@ -1,1 +1,3 @@
 id = "BatteryUnit"
+icon = "lucide/dam.svg"
+label.en = "Battery Unit"

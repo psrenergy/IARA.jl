@@ -1,1 +1,3 @@
 id = "AssetOwner"
+icon = "lucide/dam.svg"
+label.en = "Asset Owner"

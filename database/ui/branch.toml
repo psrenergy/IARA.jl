@@ -1,1 +1,3 @@
 id = "Branch"
+icon = "lucide/dam.svg"
+label.en = "Branch"

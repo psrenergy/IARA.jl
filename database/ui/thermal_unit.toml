@@ -1,1 +1,3 @@
 id = "ThermalUnit"
+icon = "lucide/dam.svg"
+label.en = "Thermal Unit"

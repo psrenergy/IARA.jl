@@ -58,7 +58,8 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
             ).historical_inflow
     end
 
-    if any(isempty.(gauging_station.historical_inflow))
+    if any(isempty.(gauging_station.historical_inflow)) ||
+       any(length.(gauging_station.historical_inflow) .< parp_max_lags(inputs))
         # If it reaches here, it's an error.
         # This will be brought in validation
         return nothing
@@ -185,9 +186,20 @@ Validate the GaugingStation within the inputs context. Return the number of erro
 """
 function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingStation)
     num_errors = 0
-    if !read_inflow_from_file(inputs) && any(isempty.(gauging_station.historical_inflow))
-        @error("Inflow is set to use the PAR(p) model, but GaugingStation historical inflow data is missing.")
-        num_errors += 1
+    if !read_inflow_from_file(inputs)
+        if any(isempty.(gauging_station.historical_inflow))
+            @error("Inflow is set to use the PAR(p) model, but GaugingStation historical inflow data is missing.")
+            num_errors += 1
+        end
+        for i in 1:length(gauging_station.historical_inflow)
+            if length(gauging_station.historical_inflow[i]) < parp_max_lags(inputs)
+                @error(
+                    "There isn't enough historical inflow in GaugingStation $(gauging_station.label[i]) data for the PAR(p) model.
+             Expected at least $(parp_max_lags(inputs)) values, but got $(length(gauging_station.historical_inflow[i]))."
+                )
+                num_errors += 1
+            end
+        end
     end
     return num_errors
 end

@@ -654,15 +654,6 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
             This file will be ignored."
         )
     end
-    if generate_heuristic_bids_for_clearing(inputs) &&
-       clearing_hydro_representation(inputs) ==
-       Configurations_ClearingHydroRepresentation.PURE_BIDS &&
-       any_elements(inputs, HydroUnit; filters = [operates_as_run_of_river])
-        @warn(
-            "The BidDataSource option is set to PRICETAKER_HEURISTICS, and the clearing representation is set to PURE_BIDS.
-            All Hydro Units operating as run of river will be treated with profile bids during the clearing process."
-        )
-    end
     return num_errors
 end
 

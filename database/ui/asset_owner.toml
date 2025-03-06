@@ -1,5 +1,5 @@
 id = "AssetOwner"
-icon = "lucide/dam.svg"
+icon = "lucide/building-2.svg"
 label.en = "Asset Owner"
 
 [[attribute_group]]

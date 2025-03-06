@@ -1,5 +1,5 @@
 id = "VirtualReservoir"
-icon = "lucide/dam.svg"
+icon = "lucide/minus.svg"
 label.en = "Virtual Reservoir"
 
 [[attribute]]

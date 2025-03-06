@@ -1,6 +1,11 @@
 id = "DCLine"
-icon = "lucide/dam.svg"
+icon = "lucide/minus.svg"
 label.en = "DC Line"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
 
 [[attribute]]
 id = "label"

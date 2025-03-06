@@ -1,5 +1,5 @@
 id = "BatteryUnit"
-icon = "lucide/dam.svg"
+icon = "lucide/battery-charging.svg"
 label.en = "Battery Unit"
 
 [[attribute_group]]

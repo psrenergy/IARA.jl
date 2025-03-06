@@ -1,5 +1,5 @@
 id = "BiddingGroup"
-icon = "lucide/dam.svg"
+icon = "lucide/group.svg"
 label.en = "Bidding Group"
 
 [[attribute_group]]

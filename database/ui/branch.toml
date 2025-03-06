@@ -1,5 +1,5 @@
 id = "Branch"
-icon = "lucide/dam.svg"
+icon = "lucide/minus.svg"
 label.en = "Branch"
 
 [[attribute_group]]

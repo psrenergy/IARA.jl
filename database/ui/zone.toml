@@ -1,5 +1,5 @@
 id = "Zone"
-icon = "lucide/group.svg"
+icon = "lucide/map-pinned.svg"
 label.en = "Zone"
 
 [[attribute]]

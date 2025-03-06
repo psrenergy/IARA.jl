@@ -6,3 +6,13 @@ label.en = "DC Line"
 id = "label"
 label.en = "Label"
 tooltip.en = "Label of the DC line"
+
+[[attribute]]
+id = "bus_to"
+label.en = "Bus To"
+tooltip.en = "Bus to of the DC line"
+
+[[attribute]]
+id = "bus_from"
+label.en = "Bus From"
+tooltip.en = "Bus from of the DC line"

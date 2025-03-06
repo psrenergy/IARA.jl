@@ -2,7 +2,22 @@ id = "BiddingGroup"
 icon = "lucide/dam.svg"
 label.en = "Bidding Group"
 
+[[attribute_group]]
+id = "markup"
+label.en = "Markup"
+icon = "lucide/circle-dollar-sign.svg"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
 tooltip.en = "Label of the bidding group"
+
+[[attribute]]
+id = "bid_type"
+label.en = "Bid Type"
+tooltip.en = "Bid type of the bidding group"
+
+[[attribute]]
+id = "assetowner_id"
+label.en = "Asset Owner"
+tooltip.en = "Asset owner of the bidding group"

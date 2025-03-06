@@ -6,3 +6,18 @@ label.en = "Bus"
 id = "label"
 label.en = "Label"
 tooltip.en = "Label of the bus"
+
+[[attribute]]
+id = "zone_id"
+label.en = "Zone"
+tooltip.en = "Zone of the bus"
+
+[[attribute]]
+id = "latitude"
+label.en = "Latitude"
+tooltip.en = "Latitude of the bus"
+
+[[attribute]]
+id = "longitude"
+label.en = "Longitude"
+tooltip.en = "Longitude of the bus"

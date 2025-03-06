@@ -2,6 +2,11 @@ id = "AssetOwner"
 icon = "lucide/dam.svg"
 label.en = "Asset Owner"
 
+[[attribute_group]]
+id = "markup"
+label.en = "Markup"
+icon = "lucide/circle-dollar-sign.svg"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

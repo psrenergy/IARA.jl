@@ -2,7 +2,62 @@ id = "HydroUnit"
 icon = "lucide/dam.svg"
 label.en = "Hydro Unit"
 
+[[attribute_group]]
+id = "waveguide"
+label.en = "Waveguide"
+icon = "lucide/settings-2.svg"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
 tooltip.en = "Label of the hydro unit"
+
+[[attribute]]
+id = "initial_volume"
+label.en = "Initial Volume"
+tooltip.en = "Initial volume of the hydro unit"
+
+[[attribute]]
+id = "initial_volume_type"
+label.en = "Initial Volume Type"
+tooltip.en = "Initial volume type of the hydro unit"
+
+[[attribute]]
+id = "has_commitment"
+label.en = "Has Commitment"
+tooltip.en = "Has commitment of the hydro unit"
+
+[[attribute]]
+id = "operation_type"
+label.en = "Operation Type"
+tooltip.en = "Operation type of the hydro unit"
+
+[[attribute]]
+id = "bus_id"
+label.en = "Bus"
+tooltip.en = "Bus of the hydro unit"
+
+[[attribute]]
+id = "biddinggroup_id"
+label.en = "Bidding Group"
+tooltip.en = "Bidding group of the hydro unit"
+
+[[attribute]]
+id = "gaugingstation_id"
+label.en = "Gauging Station"
+tooltip.en = "Gauging station of the hydro unit"
+
+[[attribute]]
+id = "hydrounit_turbine_to"
+label.en = "Turbine To"
+tooltip.en = "Turbine to of the hydro unit"
+
+[[attribute]]
+id = "hydrounit_spill_to"
+label.en = "Spill To"
+tooltip.en = "Spill to of the hydro unit"

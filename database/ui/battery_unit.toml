@@ -2,6 +2,11 @@ id = "BatteryUnit"
 icon = "lucide/dam.svg"
 label.en = "Battery Unit"
 
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

@@ -1,5 +1,5 @@
 id = "Configuration"
-icon = "lucide/settings-2.svg"
+icon = "lucide/settings.svg"
 label.en = "Configuration"
 
 [[attribute]]

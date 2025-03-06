@@ -26,3 +26,25 @@ tooltip.en = "Bus to of the branch"
 id = "bus_from"
 label.en = "Bus From"
 tooltip.en = "Bus from of the branch"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the branch"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the branch"
+
+[[attribute]]
+id = "capacity"
+label.en = "Capacity"
+tooltip.en = "Capacity of the branch"
+
+[[attribute]]
+id = "reactance"
+label.en = "Reactance"
+tooltip.en = "Reactance of the branch"

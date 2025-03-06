@@ -6,11 +6,11 @@ label.en = "Disabled"
 id = 1
 label.en = "Enabled"
 
-[[existence]]
+[[existing]]
 id = 0
 label.en = "Does Not Exist"
 
-[[existence]]
+[[existing]]
 id = 1
 label.en = "Exists"
 

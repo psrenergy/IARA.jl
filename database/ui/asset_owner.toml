@@ -16,3 +16,13 @@ tooltip.en = "Label of the asset owner"
 id = "price_type"
 label.en = "Price Type"
 tooltip.en = "Price type of the asset owner"
+
+[[attribute]]
+id = "risk_factor"
+label.en = "Risk Factor"
+tooltip.en = "Risk factor of the asset owner"
+
+[[attribute]]
+id = "segment_fraction"
+label.en = "Segment Fraction"
+tooltip.en = "Segment fraction of the asset owner"

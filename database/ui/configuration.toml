@@ -1,11 +1,11 @@
 id = "Configuration"
-icon = "lucide/dam.svg"
+icon = "lucide/settings-2.svg"
 label.en = "Configuration"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "The label of the configuration"
+tooltip.en = "Labelof the configuration"
 
 [[attribute]]
 id = "number_of_nodes"

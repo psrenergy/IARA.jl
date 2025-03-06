@@ -1,8 +1,8 @@
 id = "Bus"
-icon = "lucide/dam.svg"
+icon = "lucide/waypoints.svg"
 label.en = "Bus"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "The label of the bus"
+tooltip.en = "Labelof the bus"

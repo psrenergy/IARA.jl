@@ -5,4 +5,4 @@ label.en = "Interconnection"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "The label of the interconnection"
+tooltip.en = "Labelof the interconnection"

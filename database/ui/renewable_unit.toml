@@ -1,8 +1,8 @@
 id = "RenewableUnit"
-icon = "lucide/dam.svg"
+icon = "lucide/sun.svg"
 label.en = "Renewable Unit"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "The label of the renewable unit"
+tooltip.en = "Labelof the renewable unit"

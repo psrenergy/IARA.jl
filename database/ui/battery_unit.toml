@@ -5,4 +5,4 @@ label.en = "Battery Unit"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "The label of the battery unit"
+tooltip.en = "Labelof the battery unit"

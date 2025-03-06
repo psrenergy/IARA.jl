@@ -1,8 +1,8 @@
 id = "DemandUnit"
-icon = "lucide/dam.svg"
+icon = "lucide/zap.svg"
 label.en = "Demand Unit"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "The label of the demand unit"
+tooltip.en = "Labelof the demand unit"

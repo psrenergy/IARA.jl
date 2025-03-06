@@ -5,4 +5,4 @@ label.en = "Asset Owner"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "The label of the asset owner"
+tooltip.en = "Labelof the asset owner"

@@ -2,6 +2,11 @@ id = "GaugingStation"
 icon = "lucide/gauge.svg"
 label.en = "Gauging Station"
 
+[[attribute_group]]
+id = "historical_inflow"
+label.en = "Historical Inflow"
+icon = "lucide/chart-spline.svg"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

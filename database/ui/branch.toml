@@ -1,3 +1,8 @@
 id = "Branch"
 icon = "lucide/dam.svg"
 label.en = "Branch"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "The label of the branch"

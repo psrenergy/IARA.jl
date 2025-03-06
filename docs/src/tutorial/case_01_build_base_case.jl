@@ -45,16 +45,10 @@ const PATH_BASE_CASE = joinpath(@__DIR__, "data", "case_1")
 
 # For more details, see the [SDDP.jl documentation](https://sddp.dev/stable/tutorial/first_steps/).
 
-# For this initial case, we will define a cyclic policy graph, with two periods (nodes) that will represent the _Winter_ and _Summer_ seasons
+# For this initial case, we will define a linear policy graph, with two periods (nodes) that will represent the _Winter_ and _Summer_ seasons
 # and an yearly discount rate of 10%.
 
 # Additionally, each period will be consists of a single subperiod, with a duration of 24 hours.
-
-# To illustrate the concept of this cyclic policy graph, we can think of a two-period diagram as follows:
-
-# ```@raw html
-# <img src="..\\assets\\simple_cycle_diagram.png"></img>
-# ```
 
 # In this case, we will define 4 scenarios.
 
@@ -77,7 +71,7 @@ db = IARA.create_study!(PATH_BASE_CASE;
     number_of_scenarios = number_of_scenarios,
     number_of_subperiods = number_of_subperiods,
     subperiod_duration_in_hours = subperiod_duration_in_hours,
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     number_of_nodes = number_of_periods,
     cycle_discount_rate = cycle_discount_rate,
     cycle_duration_in_hours = cycle_duration_in_hours,

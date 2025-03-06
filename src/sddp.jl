@@ -82,7 +82,7 @@ function simulate(
     run_time_options::RunTimeOptions;
     current_period::Union{Nothing, Int} = nothing,
 )
-    simulation_scheme = build_simulation_scheme(inputs, run_time_options; current_period)
+    simulation_scheme = build_simulation_scheme(model, inputs, run_time_options; current_period)
 
     simulations = SDDP.simulate(
         # The trained model to simulate.
@@ -99,6 +99,7 @@ function simulate(
 end
 
 function build_simulation_scheme(
+    model::ProblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions;
     current_period::Union{Nothing, Int} = nothing,
@@ -121,11 +122,7 @@ function build_simulation_scheme(
             simulation_scheme[scheme_index] = [(t, (scenario, subscenario)) for t in 1:number_of_periods(inputs)]
         end
     else
-        for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-            scheme_index += 1
-            simulation_scheme[scheme_index] =
-                [(mod1(t, number_of_nodes(inputs)), (scenario, subscenario)) for t in 1:number_of_periods(inputs)]
-        end
+        simulation_scheme = seasonal_simulation_scheme(model, inputs, run_time_options)
     end
 
     return simulation_scheme
@@ -180,4 +177,113 @@ function read_cuts_to_model!(
     end
 
     return model
+end
+
+"""
+    set_custom_hook(
+        node::SDDP.Node,
+        inputs::Inputs,
+        t::Integer,
+        scen::Integer,
+        subscenario::Integer,
+    )
+
+Set hooks to write lps to the file if user asks to write lps or if the model is infeasible.
+Also, set hooks to fix integer variables from previous problem, fix integer variables, and relax integrality.
+"""
+function set_custom_hook(
+    subproblem::JuMP.Model,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    t::Integer,
+    scen::Integer,
+    subscenario::Integer,
+)
+    function fix_integer_variables_from_previous_problem_hook(model::JuMP.Model)
+        fix_discrete_variables_from_previous_problem!(inputs, run_time_options, model, t, scen)
+        optimize!(model; ignore_optimize_hook = true)
+        return nothing
+    end
+
+    function fix_integer_variables_hook(model::JuMP.Model)
+        # On min cost and other we can use it as an SDDiP.
+        # On market clearing we would like to solve, fix and 
+        # only then solve the linear version to get the duals
+        if is_market_clearing(inputs)
+            optimize!(model; ignore_optimize_hook = true)
+            undo = fix_discrete_variables(model)
+            optimize!(model; ignore_optimize_hook = true)
+        else
+            optimize!(model; ignore_optimize_hook = true)
+        end
+        return nothing
+    end
+
+    function relax_integrality_hook(model::JuMP.Model)
+        relax_integrality(model)
+        optimize!(model; ignore_optimize_hook = true)
+        return nothing
+    end
+
+    if inputs.args.write_lp
+        filename = lp_filename(inputs, run_time_options, t, scen, subscenario)
+        function write_lp_hook(model)
+            optimize!(model; ignore_optimize_hook = true)
+            optimizer = JuMP.backend(model).optimizer.model.optimizer
+            # We make this statement because when using ParametricOptInterface the 
+            # written might not pass all parameters to the file.
+            # Writing directly from the lower leve API will ensure that exactly the 
+            # model being solved is written.
+            _pass_names_to_solver(optimizer)
+            HiGHS.Highs_writeModel(optimizer.inner, filename)
+            return nothing
+        end
+
+        if JuMP.solver_name(subproblem) != "Parametric Optimizer with HiGHS attached"
+            JuMP.write_to_file(subproblem, filename)
+        end
+    else
+        function treat_infeasibilities(model)
+            JuMP.optimize!(model; ignore_optimize_hook = true)
+            status = JuMP.termination_status(model)
+            if status == MOI.INFEASIBLE
+                optimizer = JuMP.backend(model).optimizer.model.optimizer
+                filename = lp_filename(inputs, run_time_options, t, scen, subscenario)
+
+                # We make this statement because when using ParametricOptInterface the 
+                # written might not pass all parameters to the file.
+                # Writing directly from the lower leve API will ensure that exactly the 
+                # model being solved is written.
+                _pass_names_to_solver(optimizer)
+                HiGHS.Highs_writeModel(optimizer.inner, filename)
+            end
+            return nothing
+        end
+    end
+
+    function all_optimize_hooks(model)
+        if integer_variable_representation(inputs, run_time_options) ==
+           Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+            fix_integer_variables_hook(model)
+        elseif integer_variable_representation(inputs, run_time_options) ==
+               Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
+            fix_integer_variables_from_previous_problem_hook(model)
+        elseif integer_variable_representation(inputs, run_time_options) ==
+               Configurations_IntegerVariableRepresentation.LINEARIZE
+            relax_integrality_hook(model)
+        else
+            error("Invalid integer variable representation.")
+        end
+        if inputs.args.write_lp
+            if JuMP.solver_name(subproblem) == "Parametric Optimizer with HiGHS attached"
+                write_lp_hook(model)
+            end
+        else
+            treat_infeasibilities(model)
+        end
+        return nothing
+    end
+    set_optimize_hook(subproblem, all_optimize_hooks)
+
+    return
 end

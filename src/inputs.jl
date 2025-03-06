@@ -25,6 +25,7 @@ Struct of all input collections.
     bus::Bus = Bus()
     demand_unit::DemandUnit = DemandUnit()
     dc_line::DCLine = DCLine()
+    interconnection::Interconnection = Interconnection()
     branch::Branch = Branch()
     battery_unit::BatteryUnit = BatteryUnit()
     asset_owner::AssetOwner = AssetOwner()
@@ -865,3 +866,10 @@ hour_subperiod_map(inputs) = inputs.time_series.hour_subperiod_mapping.hour_subp
 Return a vector of vectors, mapping each subperiod to multiple hours.
 """
 subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod_hour_map
+
+"""
+    current_season(inputs)
+
+Return the season associated with the current period and scenario.
+"""
+current_season(inputs) = inputs.time_series.period_season_map[1]

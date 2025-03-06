@@ -14,9 +14,20 @@ function get_offer_file_paths(inputs::AbstractInputs)
                 joinpath(output_path(inputs), "bidding_group_price_offer_period_$(inputs.args.period).csv"),
             )
         end
+        @assert all(isfile.(offer_files)) "Offer files not found: $(offer_files)"
+        no_markup_price_folder = if read_bids_from_file(inputs)
+            path_case(inputs)
+        else
+            output_path(inputs)
+        end
+        no_markup_price_path =
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_offer_period_$(inputs.args.period).csv")
+        if isfile(no_markup_price_path)
+            push!(offer_files, no_markup_price_path)
+        else
+            @warn("Reference price (no markup) offer file not found: $(no_markup_price_path)")
+        end
     end
-
-    @assert all(isfile.(offer_files)) "Offer files not found: $(offer_files)"
 
     return offer_files
 end
@@ -29,20 +40,20 @@ function plot_title_from_filename(inputs::AbstractInputs, filename::String)
     return title
 end
 
-function get_revenue_file(inputs::AbstractInputs)
-    filename = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
-        "bidding_group_revenue_ex_ante"
+function get_revenue_files(inputs::AbstractInputs)
+    filenames = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+        ["bidding_group_revenue_ex_ante"]
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
-        "bidding_group_revenue_ex_post"
+        ["bidding_group_revenue_ex_post"]
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-        "bidding_group_total_revenue"
+        ["bidding_group_revenue_ex_ante", "bidding_group_revenue_ex_post"]
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
-        ""
+        [""]
     end
-    filename *= "_period_$(inputs.args.period)"
-    filename *= ".csv"
+    filenames .*= "_period_$(inputs.args.period)"
+    filenames .*= ".csv"
 
-    return joinpath(post_processing_path(inputs), filename)
+    return joinpath.(post_processing_path(inputs), filenames)
 end
 
 function get_profit_file(inputs::AbstractInputs)
@@ -51,7 +62,7 @@ function get_profit_file(inputs::AbstractInputs)
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
         "bidding_group_profit_ex_post"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-        "bidding_group_total_profit"
+        "bidding_group_profit_total"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
         ""
     end
@@ -61,18 +72,47 @@ function get_profit_file(inputs::AbstractInputs)
     return joinpath(post_processing_path(inputs), filename)
 end
 
-function get_load_marginal_cost_file(inputs::AbstractInputs)
+function get_load_marginal_cost_files(inputs::AbstractInputs)
     base_name = "load_marginal_cost"
-    subproblem_suffixes = ["_ex_post_commercial", "_ex_post_physical", "_ex_ante_commercial", "_ex_ante_physical"]
     period_suffix = "_period_$(inputs.args.period)"
     extension = ".csv"
 
-    for subproblem_suffix in subproblem_suffixes
-        filename = base_name * subproblem_suffix * period_suffix * extension
-        if isfile(joinpath(output_path(inputs), filename))
-            return joinpath(output_path(inputs), filename)
+    filenames = String[]
+
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        ex_ante_suffixes = ["_ex_ante_commercial", "_ex_ante_physical"]
+        ex_post_suffixes = ["_ex_post_commercial", "_ex_post_physical"]
+
+        for subproblem_suffix in ex_ante_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            end
+        end
+
+        for subproblem_suffix in ex_post_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            end
+        end
+    else
+        subproblem_suffixes = ["_ex_post_commercial", "_ex_post_physical", "_ex_ante_commercial", "_ex_ante_physical"]
+
+        for subproblem_suffix in subproblem_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            end
         end
     end
 
-    return error("Load marginal cost file not found")
+    if isempty(filenames)
+        error("Load marginal cost file not found")
+    end
+
+    return filenames
 end

@@ -20,7 +20,7 @@ Collection representing the buses in the system.
 @collection @kwdef mutable struct Bus <: AbstractCollection
     label::Vector{String} = []
     # index of the zone to which the bus belongs in the collection Zone
-    zone_id_index::Vector{Int} = []
+    zone_index::Vector{Int} = []
     latitude::Vector{Float64} = []
     longitude::Vector{Float64} = []
 end
@@ -41,7 +41,7 @@ function initialize!(bus::Bus, inputs::AbstractInputs)
     end
 
     bus.label = PSRI.get_parms(inputs.db, "Bus", "label")
-    bus.zone_id_index = PSRI.get_map(inputs.db, "Bus", "Zone", "id")
+    bus.zone_index = PSRI.get_map(inputs.db, "Bus", "Zone", "id")
     bus.latitude = PSRI.get_parms(inputs.db, "Bus", "latitude")
     bus.longitude = PSRI.get_parms(inputs.db, "Bus", "longitude")
 
@@ -150,7 +150,7 @@ Validate the Bus within the inputs context. Return the number of errors found.
 function advanced_validations(inputs::AbstractInputs, bus::Bus)
     num_errors = 0
     for i in 1:length(bus)
-        if !(bus.zone_id_index[i] in index_of_elements(inputs, Zone))
+        if !(bus.zone_index[i] in index_of_elements(inputs, Zone))
             @error("Bus $(bus.label[i]) is not associated with any zone.")
             num_errors += 1
         end

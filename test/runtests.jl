@@ -106,6 +106,7 @@ reduced_test_list = Dict(
 #     "case_09/base_case/test_case.jl",
 #     "case_09/nohydro_case/test_case.jl",
 #     "case_09/single_period_case/test_case.jl",
+#     "case_09/seasonal_case/test_case.jl",
 # ],
 # "case_10" => [
 #     "case_10/guess_bid/test_case.jl",
@@ -120,6 +121,19 @@ reduced_test_list = Dict(
 # ],
 # "case_12" => [
 #     "case_12/base_case/test_case.jl",
+#     "case_12/different_cvus/test_case.jl",
+#     "case_12/dual_settlement/test_case.jl",
+# ],
+# "case_13" => [
+#     "case_13/base_case/test_case.jl",
+#     "case_13/dual_settlement/test_case.jl",
+# ],
+# "case_14" => [
+#     "case_14/base_case/test_case.jl",
+#     "case_14/dual_settlement/test_case.jl",
+# ],
+# "case_15" => [
+#     "case_15/base_case/test_case.jl",
 # ],
 )
 

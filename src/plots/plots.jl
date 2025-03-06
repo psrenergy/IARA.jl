@@ -143,9 +143,7 @@ function _get_plot_ticks(
 
     num_ticks = size(data, 2)
     num_subperiods = 0
-    if num_periods != num_ticks
-        num_subperiods = num_ticks ÷ num_periods
-    end
+    num_subperiods = num_ticks ÷ num_periods
     plot_ticks = Vector{String}()
     hover_ticks = Vector{String}()
 
@@ -154,31 +152,19 @@ function _get_plot_ticks(
         hover_ticks = ["Subperiod $i" for i in 1:num_subperiods]
     else
         if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
-            if num_subperiods == 0
-                for i in 0:num_periods-1
-                    push!(plot_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
-                    subperiod_true_index = isnothing(queried_subperiods) ? 1 : queried_subperiods[1]
+            for i in 0:num_periods-1
+                for j in 1:num_subperiods
+                    if j == 1
+                        push!(plot_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
+                    else
+                        push!(plot_ticks, "") # we do not display ticks for each subperiod, only when hovering
+                    end
+                    subperiod_true_index = isnothing(queried_subperiods) ? j : queried_subperiods[j]
                     push!(
                         hover_ticks,
                         Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") *
                         "<br>Subperiod $subperiod_true_index",
                     )
-                end
-            else
-                for i in 0:num_periods-1
-                    for j in 1:num_subperiods
-                        if j == 1
-                            push!(plot_ticks, Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm"))
-                        else
-                            push!(plot_ticks, "") # we do not display ticks for each subperiod, only when hovering
-                        end
-                        subperiod_true_index = isnothing(queried_subperiods) ? j : queried_subperiods[j]
-                        push!(
-                            hover_ticks,
-                            Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") *
-                            "<br>Subperiod $subperiod_true_index",
-                        )
-                    end
                 end
             end
         else
@@ -649,8 +635,7 @@ function build_plots(
         push!(plot_configs, plot_config_generation)
     end
 
-    if !use_binary_variables(inputs) &&
-       run_mode(inputs) != RunMode.STRATEGIC_BID
+    if run_mode(inputs) != RunMode.STRATEGIC_BID
         # Load Marginal Cost
         plot_config_load_marginal_cost = PlotConfig(
             "Load Marginal Cost",

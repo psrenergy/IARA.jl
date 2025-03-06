@@ -1,7 +1,7 @@
 function _subtract_revenue_from_costs_with_subscenarios(
-    revenue_reader::Quiver.Reader{Quiver.csv},
-    costs_reader::Quiver.Reader{Quiver.csv},
-    writer::Quiver.Writer{Quiver.csv},
+    revenue_reader::Quiver.Reader,
+    costs_reader::Quiver.Reader,
+    writer::Quiver.Writer,
 )
     num_periods, num_scenarios, num_subscenarios, num_subperiods = revenue_reader.metadata.dimension_size
 

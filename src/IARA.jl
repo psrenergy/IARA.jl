@@ -10,10 +10,10 @@
 
 module IARA
 
+# External packages
 using ArgParse
 using CSV
 using DataFrames
-using Dates
 using EnumX
 using HiGHS
 using JuMP
@@ -27,10 +27,11 @@ using PSRClassesInterface
 using Quiver
 using Serialization
 using SDDP
+using StatsBase
 
-using Libdl
+# Julia std packages
+using Dates
 using LinearAlgebra
-using Logging
 using Random
 using Statistics
 using Printf
@@ -67,6 +68,7 @@ include("collections/dc_line.jl")
 include("collections/demand_unit.jl")
 include("collections/gauging_station.jl")
 include("collections/hydro_unit.jl")
+include("collections/interconnection.jl")
 include("collections/renewable_unit.jl")
 include("collections/thermal_unit.jl")
 include("collections/virtual_reservoir.jl")

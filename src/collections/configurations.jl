@@ -56,30 +56,37 @@ Configurations for the problem.
     construction_type_ex_post_commercial::Configurations_ConstructionType.T =
         Configurations_ConstructionType.SKIP
     use_fcf_in_clearing::Bool = false
-    integer_variable_representation_mincost_type::Configurations_IntegerVariableRepresentation.T =
+    integer_variable_representation_mincost::Configurations_IntegerVariableRepresentation.T =
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
-    integer_variable_representation_ex_ante_physical_type::Configurations_IntegerVariableRepresentation.T =
+    integer_variable_representation_ex_ante_physical::Configurations_IntegerVariableRepresentation.T =
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
-    integer_variable_representation_ex_ante_commercial_type::Configurations_IntegerVariableRepresentation.T =
+    integer_variable_representation_ex_ante_commercial::Configurations_IntegerVariableRepresentation.T =
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
-    integer_variable_representation_ex_post_physical_type::Configurations_IntegerVariableRepresentation.T =
+    integer_variable_representation_ex_post_physical::Configurations_IntegerVariableRepresentation.T =
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
-    integer_variable_representation_ex_post_commercial_type::Configurations_IntegerVariableRepresentation.T =
+    integer_variable_representation_ex_post_commercial::Configurations_IntegerVariableRepresentation.T =
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    network_representation_mincost::Configurations_NetworkRepresentation.T =
+        Configurations_NetworkRepresentation.NODAL
+    network_representation_ex_ante_physical::Configurations_NetworkRepresentation.T =
+        Configurations_NetworkRepresentation.NODAL
+    network_representation_ex_ante_commercial::Configurations_NetworkRepresentation.T =
+        Configurations_NetworkRepresentation.NODAL
+    network_representation_ex_post_physical::Configurations_NetworkRepresentation.T =
+        Configurations_NetworkRepresentation.NODAL
+    network_representation_ex_post_commercial::Configurations_NetworkRepresentation.T =
+        Configurations_NetworkRepresentation.NODAL
     settlement_type::Configurations_SettlementType.T = Configurations_SettlementType.EX_ANTE
     make_whole_payments::Configurations_MakeWholePayments.T =
         Configurations_MakeWholePayments.CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD
     price_limits::Configurations_PriceLimits.T = Configurations_PriceLimits.REPRESENT
-    number_of_bid_segments_for_file_template::Int = 0
-    number_of_bid_segments_for_virtual_reservoir_file_template::Int = 0
-    number_of_profiles_for_file_template::Int = 0
-    number_of_complementary_groups_for_file_template::Int = 0
     vr_curveguide_data_source::Configurations_VRCurveguideDataSource.T =
         Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
     vr_curveguide_data_format::Configurations_VRCurveguideDataFormat.T =
         Configurations_VRCurveguideDataFormat.CSV_FILE
     hour_subperiod_map_file::String = ""
     fcf_cuts_file::String = ""
+    period_season_map_file::String = ""
     spot_price_floor::Float64 = 0.0
     spot_price_cap::Float64 = 0.0
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
@@ -207,14 +214,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "hydro_spillage_cost")[1]
     configurations.market_clearing_tiebreaker_weight =
         PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight")[1]
-    configurations.number_of_bid_segments_for_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_bid_segments_for_file_template")[1]
-    configurations.number_of_bid_segments_for_virtual_reservoir_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_bid_segments_for_virtual_reservoir_file_template")[1]
-    configurations.number_of_profiles_for_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_profiles_for_file_template")[1]
-    configurations.number_of_complementary_groups_for_file_template =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_complementary_groups_for_file_template")[1]
     configurations.vr_curveguide_data_source =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_source")[1],
@@ -247,27 +246,46 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         )
     configurations.use_fcf_in_clearing =
         PSRI.get_parms(inputs.db, "Configuration", "use_fcf_in_clearing")[1] |> Bool
-    configurations.integer_variable_representation_ex_ante_physical_type =
+    configurations.integer_variable_representation_ex_ante_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_physical_type")[1],
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_physical")[1],
             Configurations_IntegerVariableRepresentation.T,
         )
-    configurations.integer_variable_representation_ex_ante_commercial_type =
+    configurations.integer_variable_representation_ex_ante_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_commercial_type")[1],
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_commercial")[1],
             Configurations_IntegerVariableRepresentation.T,
         )
-    configurations.integer_variable_representation_ex_post_physical_type =
+    configurations.integer_variable_representation_ex_post_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_physical_type")[1],
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_physical")[1],
             Configurations_IntegerVariableRepresentation.T,
         )
-    configurations.integer_variable_representation_ex_post_commercial_type =
+    configurations.integer_variable_representation_ex_post_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_commercial_type")[1],
+            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_commercial")[1],
             Configurations_IntegerVariableRepresentation.T,
         )
-
+    configurations.network_representation_mincost =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "network_representation_mincost")[1],
+            Configurations_NetworkRepresentation.T,
+        )
+    configurations.network_representation_ex_ante_physical =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_ante_physical")[1],
+            Configurations_NetworkRepresentation.T,
+        )
+    configurations.network_representation_ex_ante_commercial =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_ante_commercial")[1],
+            Configurations_NetworkRepresentation.T,
+        )
+    configurations.network_representation_ex_post_physical =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_post_physical")[1],
+            Configurations_NetworkRepresentation.T,
+        )
     configurations.spot_price_floor = PSRI.get_parms(inputs.db, "Configuration", "spot_price_floor")[1]
     configurations.spot_price_cap = PSRI.get_parms(inputs.db, "Configuration", "spot_price_cap")[1]
     configurations.virtual_reservoir_correspondence_type =
@@ -287,6 +305,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "hour_subperiod_map")
     configurations.fcf_cuts_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "fcf_cuts")
+    configurations.period_season_map_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "period_season_map")
 
     update_time_series_from_db!(configurations, inputs.db, initial_date_time(inputs))
 
@@ -411,28 +431,12 @@ function validate(configurations::Configurations)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
         num_errors += 1
     end
-    if configurations.number_of_bid_segments_for_file_template < 0
-        @error("Number of bidding segments for the time series file template must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.number_of_bid_segments_for_virtual_reservoir_file_template < 0
-        @error("Number of bidding segments for the virtual reservoir time series file template must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.number_of_profiles_for_file_template < 0
-        @error("Number of profiles for the time series file template must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.number_of_complementary_groups_for_file_template < 0
-        @error("Number of complementary groups for the time series file template must be non-negative.")
-        num_errors += 1
-    end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
        configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
         @error("Virtual reservoirs cannot be used with clearing bid source READ_FROM_FILE.")
         num_errors += 1
     end
-    if configurations.integer_variable_representation_ex_ante_physical_type ==
+    if configurations.integer_variable_representation_ex_ante_physical ==
        Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
         @error(
             "Ex-ante physical clearing model cannot have fixed integer variables from previous step, because it is the first step."
@@ -452,7 +456,7 @@ function validate(configurations::Configurations)
         @error("Spot price cap must be greater than the spot price floor.")
         num_errors += 1
     end
-    if configurations.integer_variable_representation_mincost_type ==
+    if configurations.integer_variable_representation_mincost ==
        Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
         @error(
             "Mincost model cannot have FROM_EX_ANTE_PHYSICAL integer variables, because it is not a clearing problem."
@@ -826,17 +830,14 @@ function expected_number_of_repeats_per_node(inputs::AbstractInputs, node::Int)
 end
 
 """
-    use_binary_variables(inputs::AbstractInputs)
+    use_binary_variables(inputs::AbstractInputs, run_time_options)
 
 Return whether binary variables should be used.
 """
-function use_binary_variables(inputs::AbstractInputs)
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
-        return inputs.collections.configurations.integer_variable_representation_mincost_type ==
-               Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
-    else
-        return true
-    end
+function use_binary_variables(inputs::AbstractInputs, run_time_options)
+    ivr = integer_variable_representation(inputs, run_time_options)
+    return ivr == Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY ||
+           ivr == Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
 end
 
 """
@@ -1100,36 +1101,84 @@ construction_type_ex_post_commercial(inputs::AbstractInputs) =
     inputs.collections.configurations.construction_type_ex_post_commercial
 
 """
-    integer_variable_representation_ex_ante_physical_type(inputs::AbstractInputs)
+    integer_variable_representation_mincost(inputs::AbstractInputs)
+
+Return the clearing integer variables type for mincost.
+"""
+integer_variable_representation_mincost(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_mincost
+
+"""
+    integer_variable_representation_ex_ante_physical(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-ante physical.
 """
-integer_variable_representation_ex_ante_physical_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.integer_variable_representation_ex_ante_physical_type
+integer_variable_representation_ex_ante_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_ante_physical
 
 """
-    integer_variable_representation_ex_ante_commercial_type(inputs::AbstractInputs)
+    integer_variable_representation_ex_ante_commercial(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-ante commercial.
 """
-integer_variable_representation_ex_ante_commercial_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.integer_variable_representation_ex_ante_commercial_type
+integer_variable_representation_ex_ante_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_ante_commercial
 
 """
-    integer_variable_representation_ex_post_physical_type(inputs::AbstractInputs)
+    integer_variable_representation_ex_post_physical(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-post physical.
 """
-integer_variable_representation_ex_post_physical_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.integer_variable_representation_ex_post_physical_type
+integer_variable_representation_ex_post_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_post_physical
 
 """
-    integer_variable_representation_ex_post_commercial_type(inputs::AbstractInputs)
+    integer_variable_representation_ex_post_commercial(inputs::AbstractInputs)
 
 Return the clearing integer variables type for ex-post commercial.
 """
-integer_variable_representation_ex_post_commercial_type(inputs::AbstractInputs) =
-    inputs.collections.configurations.integer_variable_representation_ex_post_commercial_type
+integer_variable_representation_ex_post_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.integer_variable_representation_ex_post_commercial
+
+"""
+    network_representation_mincost(inputs::AbstractInputs)
+
+Return the network representation for the mincost model.
+"""
+network_representation_mincost(inputs::AbstractInputs) =
+    inputs.collections.configurations.network_representation_mincost
+
+"""
+    network_representation_ex_ante_physical(inputs::AbstractInputs)
+
+Return the network representation for the ex-ante physical model.
+"""
+network_representation_ex_ante_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.network_representation_ex_ante_physical
+
+"""
+    network_representation_ex_ante_commercial(inputs::AbstractInputs)
+
+Return the network representation for the ex-ante commercial model.
+"""
+network_representation_ex_ante_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.network_representation_ex_ante_commercial
+
+"""
+    network_representation_ex_post_physical(inputs::AbstractInputs)
+
+Return the network representation for the ex-post physical model.
+"""
+network_representation_ex_post_physical(inputs::AbstractInputs) =
+    inputs.collections.configurations.network_representation_ex_post_physical
+
+"""
+    network_representation_ex_post_commercial(inputs::AbstractInputs)
+
+Return the network representation for the ex-post commercial model.
+"""
+network_representation_ex_post_commercial(inputs::AbstractInputs) =
+    inputs.collections.configurations.network_representation_ex_post_commercial
 
 """
     use_fcf_in_clearing(inputs::AbstractInputs)
@@ -1218,6 +1267,20 @@ Return whether the FCF cuts file is defined.
 has_fcf_cuts_to_read(inputs::AbstractInputs) = fcf_cuts_file(inputs) != ""
 
 """
+    period_season_map_file(inputs::AbstractInputs)
+
+Return the file with the period to season map.
+"""
+period_season_map_file(inputs::AbstractInputs) = inputs.collections.configurations.period_season_map_file
+
+"""
+    has_period_season_map(inputs::AbstractInputs)
+
+Return whether the period to season map file is defined.
+"""
+has_period_season_map(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
+
+"""
     hydro_balance_subperiod_resolution(inputs::AbstractInputs)
 
 Return the hydro balance subperiod resolution.
@@ -1225,37 +1288,6 @@ Return the hydro balance subperiod resolution.
 hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
     inputs.collections.configurations.hydro_balance_subperiod_resolution
 
-"""
-    number_of_bid_segments_for_file_template(inputs)
-
-Return the number of bidding segments for the time series file template.
-"""
-number_of_bid_segments_for_file_template(inputs) =
-    inputs.collections.configurations.number_of_bid_segments_for_file_template
-
-"""
-    number_of_bid_segments_for_virtual_reservoir_file_template(inputs)
-
-Return the number of bidding segments for the virtual reservoir time series file template.
-"""
-number_of_bid_segments_for_virtual_reservoir_file_template(inputs) =
-    inputs.collections.configurations.number_of_bid_segments_for_virtual_reservoir_file_template
-
-"""
-    number_of_profiles_for_file_template(inputs)
-
-Return the number of profiles for the time series file template.
-"""
-number_of_profiles_for_file_template(inputs) =
-    inputs.collections.configurations.number_of_profiles_for_file_template
-
-"""
-    number_of_complementary_groups_for_file_template(inputs)
-
-Return the number of complementary groups for the time series file template.
-"""
-number_of_complementary_groups_for_file_template(inputs) =
-    inputs.collections.configurations.number_of_complementary_groups_for_file_template
 """
     vr_curveguide_data_source(inputs)
 
@@ -1279,3 +1311,54 @@ Return the type of physical-virtual correspondence for the virtual reservoirs.
 """
 virtual_reservoir_correspondence_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_correspondence_type
+
+"""
+    integer_variable_representation(inputs::Inputs, run_time_options)
+
+Determine the integer variables representation.
+"""
+function integer_variable_representation(inputs::AbstractInputs, run_time_options)
+    if is_mincost(inputs)
+        return integer_variable_representation_mincost(inputs)
+    elseif is_ex_ante_problem(run_time_options)
+        if is_physical_problem(run_time_options)
+            return integer_variable_representation_ex_ante_physical(inputs)
+        elseif is_commercial_problem(run_time_options)
+            return integer_variable_representation_ex_ante_commercial(inputs)
+        end
+    elseif is_ex_post_problem(run_time_options)
+        if is_physical_problem(run_time_options)
+            return integer_variable_representation_ex_post_physical(inputs)
+        elseif is_commercial_problem(run_time_options)
+            return integer_variable_representation_ex_post_commercial(inputs)
+        end
+    else
+        # TODO review this. This is what is happening in PRICE TAKER and STRATEGIC BID
+        return Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
+    end
+end
+
+"""
+    network_representation(inputs::Inputs, run_time_options)
+
+Determine the network representation.
+"""
+function network_representation(inputs::AbstractInputs, run_time_options)
+    if is_mincost(inputs)
+        return network_representation_mincost(inputs)
+    elseif is_ex_ante_problem(run_time_options)
+        if is_physical_problem(run_time_options)
+            return network_representation_ex_ante_physical(inputs)
+        elseif is_commercial_problem(run_time_options)
+            return network_representation_ex_ante_commercial(inputs)
+        end
+    elseif is_ex_post_problem(run_time_options)
+        if is_physical_problem(run_time_options)
+            return network_representation_ex_post_physical(inputs)
+        elseif is_commercial_problem(run_time_options)
+            return network_representation_ex_post_commercial(inputs)
+        end
+    else
+        error("Not implemented")
+    end
+end

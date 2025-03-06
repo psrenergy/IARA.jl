@@ -279,6 +279,17 @@ end
     DO_NOT_AGGREGATE = 0
 end
 
+""" 
+    Configurations_NetworkRepresentation
+
+  - `NODAL`: Nodal representation (0)
+  - `ZONAL`: Zonal representation (1)
+"""
+@enumx Configurations_NetworkRepresentation begin
+    NODAL = 0
+    ZONAL = 1
+end
+
 """
     HydroUnit_InitialVolumeType
 
@@ -380,6 +391,17 @@ end
   - `DOES_NOT_EXIST`: Branch does not exist (0)
 """
 @enumx Branch_Existence begin
+    EXISTS = 1
+    DOES_NOT_EXIST = 0
+end
+
+"""
+  Interconnection_Existence
+
+  - `EXISTS`: Interconnection exists (1)
+  - `DOES_NOT_EXIST`: Interconnection does not exist (0)
+"""
+@enumx Interconnection_Existence begin
     EXISTS = 1
     DOES_NOT_EXIST = 0
 end

@@ -22,9 +22,9 @@ _check_cap(price::Real, cap::Real) = !is_null(cap) ? min(price, cap) : price
 
 function _write_revenue_without_subscenarios(
     inputs::Inputs,
-    writer_without_subscenarios::Quiver.Writer{Quiver.csv},
-    generation_ex_ante_reader::Quiver.Reader{Quiver.csv},
-    spot_ex_ante_reader::Quiver.Reader{Quiver.csv},
+    writer_without_subscenarios::Quiver.Writer,
+    generation_ex_ante_reader::Quiver.Reader,
+    spot_ex_ante_reader::Quiver.Reader,
     is_profile::Bool,
 )
     num_periods, num_scenarios, num_subperiods, num_bid_segments =
@@ -78,11 +78,11 @@ end
 
 function _write_revenue_with_subscenarios(
     inputs::Inputs,
-    writer_with_subscenarios::Quiver.Writer{Quiver.csv},
-    generation_ex_ante_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
-    generation_ex_post_reader::Quiver.Reader{Quiver.csv},
-    spot_ex_ante_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
-    spot_ex_post_reader::Quiver.Reader{Quiver.csv},
+    writer_with_subscenarios::Quiver.Writer,
+    generation_ex_ante_reader::Union{Quiver.Reader, Nothing},
+    generation_ex_post_reader::Quiver.Reader,
+    spot_ex_ante_reader::Union{Quiver.Reader, Nothing},
+    spot_ex_post_reader::Quiver.Reader,
     is_profile::Bool,
 )
     num_periods, num_scenarios, num_subscenarios, num_subperiods, num_bid_segments =
@@ -109,16 +109,14 @@ function _write_revenue_with_subscenarios(
                             Symbol(dim_name) => bid_segment,
                         )
                         if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-                            if subscenario == 1
-                                # Just read the ex-ante generation once per subscenario
-                                Quiver.goto!(
-                                    generation_ex_ante_reader;
-                                    period,
-                                    scenario,
-                                    subperiod = subperiod,
-                                    Symbol(dim_name) => bid_segment,
-                                )
-                            end
+                            # Just read the ex-ante generation once per subscenario
+                            Quiver.goto!(
+                                generation_ex_ante_reader;
+                                period,
+                                scenario,
+                                subperiod = subperiod,
+                                Symbol(dim_name) => bid_segment,
+                            )
                             # In the dual settlement, the ex-post generation is the difference between the ex-post and ex-ante generation
                             # The total revenue is the sum of the ex-ante and ex-post revenue
                             sum_generation .+= generation_ex_post_reader.data .- generation_ex_ante_reader.data
@@ -132,10 +130,7 @@ function _write_revenue_with_subscenarios(
                         bus_i = _get_bus_index(generation_labels[bg_bus_i], spot_price_labels)
 
                         if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
-                            if subscenario == 1
-                                # Just read the ex-ante generation once per subscenario
-                                Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
-                            end
+                            Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
                             spot_price_data[bg_bus_i] = spot_ex_ante_reader.data[bus_i]
                         else
                             Quiver.goto!(
@@ -217,9 +212,19 @@ function post_processing_bidding_group_revenue(
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
-                open_time_series_output(inputs, model_outputs_time_serie, geneneration_ex_ante_file)
+                open_time_series_output(
+                    inputs,
+                    model_outputs_time_serie,
+                    geneneration_ex_ante_file;
+                    convert_to_binary = true,
+                )
             spot_price_ex_ante_reader =
-                open_time_series_output(inputs, model_outputs_time_serie, spot_price_ex_ante_file)
+                open_time_series_output(
+                    inputs,
+                    model_outputs_time_serie,
+                    spot_price_ex_ante_file;
+                    convert_to_binary = true,
+                )
         else
             geneneration_ex_ante_reader = nothing
             spot_price_ex_ante_reader = nothing
@@ -374,8 +379,8 @@ function get_load_marginal_files(path::String; from_ex_post::Bool)
 end
 
 function _average_ex_post_over_subscenarios(
-    temp_writer::Quiver.Writer{Quiver.csv},
-    ex_post_reader::Quiver.Reader{Quiver.csv},
+    temp_writer::Quiver.Writer,
+    ex_post_reader::Quiver.Reader,
 )
     num_bidding_groups_times_buses = length(ex_post_reader.metadata.labels)
     num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
@@ -413,9 +418,9 @@ function _average_ex_post_over_subscenarios(
 end
 
 function _total_independent_profile_without_subscenarios(
-    temp_writer::Quiver.Writer{Quiver.csv},
-    independent_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
-    profile_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
+    temp_writer::Quiver.Writer,
+    independent_reader::Union{Quiver.Reader, Nothing},
+    profile_reader::Union{Quiver.Reader, Nothing},
     merged_labels::Vector{String},
 )
     if isnothing(independent_reader)
@@ -481,9 +486,9 @@ function _total_independent_profile_without_subscenarios(
 end
 
 function _total_independent_profile_with_subscenarios(
-    temp_writer::Quiver.Writer{Quiver.csv},
-    independent_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
-    profile_reader::Union{Quiver.Reader{Quiver.csv}, Nothing},
+    temp_writer::Quiver.Writer,
+    independent_reader::Union{Quiver.Reader, Nothing},
+    profile_reader::Union{Quiver.Reader, Nothing},
     merged_labels::Vector{String},
 )
     if !isnothing(independent_reader)
@@ -562,9 +567,9 @@ function _total_independent_profile_with_subscenarios(
 end
 
 function _total_revenue(
-    total_revenue_writer::Quiver.Writer{Quiver.csv},
-    ex_ante_reader::Quiver.Reader{Quiver.csv},
-    ex_post_reader::Quiver.Reader{Quiver.csv},
+    total_revenue_writer::Quiver.Writer,
+    ex_ante_reader::Quiver.Reader,
+    ex_post_reader::Quiver.Reader,
 )
     num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
 
@@ -572,9 +577,7 @@ function _total_revenue(
         for scenario in 1:num_scenarios
             for subscenario in 1:num_subscenarios
                 for subperiod in 1:num_subperiods
-                    if subscenario == 1
-                        Quiver.goto!(ex_ante_reader; period, scenario, subperiod = subperiod)
-                    end
+                    Quiver.goto!(ex_ante_reader; period, scenario, subperiod = subperiod)
                     Quiver.goto!(ex_post_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
 
                     total_revenue = ex_ante_reader.data .+ ex_post_reader.data
@@ -757,19 +760,26 @@ function post_processing_bidding_group_total_revenue(
     post_processing_dir = post_processing_path(inputs)
     tempdir = joinpath(path_case(inputs), "temp")
 
+    period_suffix = if is_single_period(inputs)
+        "_period_$(inputs.args.period)"
+    else
+        ""
+    end
+
     # Summing ex_ante and ex_post for dual settlement
 
     revenue_ex_ante_reader = open_time_series_output(
         inputs,
         model_outputs_time_serie,
-        joinpath(post_processing_dir, "bidding_group_revenue_ex_ante"),
+        joinpath(post_processing_dir, "bidding_group_revenue_ex_ante" * period_suffix);
+        convert_to_binary = true,
     )
 
     revenue_ex_post_reader =
         open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(post_processing_dir, "bidding_group_revenue_ex_post"),
+            joinpath(post_processing_dir, "bidding_group_revenue_ex_post" * period_suffix),
         )
 
     initialize!(

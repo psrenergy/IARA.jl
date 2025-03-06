@@ -2,7 +2,7 @@
 
 Here is a table of the model attributes that need a external file:
 
-| **Collection** | **Atribute** | **Description** | **Parameter** | **Unit** | **Dimensions** |
+| **Collection** | **Attribute** | **Description** | **Parameter** | **Unit** | **Dimensions** |
 |----------------|--------------|-----------------|-------------- |----------|----------------|
 | BiddingGroup | quantity\_offer_file | Quantity of offers for independent segement bids | $Q_{i, n, \tau, k}(\omega)$ | $GWh$ | `period`, `scenario`, `subperiod`, `bid_segment` |
 | BiddingGroup | price\_offer\_file | Price of offers for independent segement bids | $P_{i, n, \tau, k}(\omega)$ | ``\$/MWh`` | `period`, `scenario`, `subperiod`, `bid_segment` |

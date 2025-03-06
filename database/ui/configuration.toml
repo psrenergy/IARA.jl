@@ -235,6 +235,8 @@ hide = true
 
 [[attribute]]
 id = "policy_graph_type"
+type = "enum"
+enum = "policy_graph_type"
 label.en = "Policy Graph Type"
 tooltip.en = "Policy graph type of the configuration"
 hide = true

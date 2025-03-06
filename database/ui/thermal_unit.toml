@@ -14,6 +14,8 @@ tooltip.en = "Label of the thermal unit"
 
 [[attribute]]
 id = "has_commitment"
+type = "enum"
+enum = "has_commitment"
 label.en = "Has Commitment"
 tooltip.en = "Has commitment of the thermal unit"
 

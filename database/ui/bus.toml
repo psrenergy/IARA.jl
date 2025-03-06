@@ -5,4 +5,4 @@ label.en = "Bus"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the bus"
+tooltip.en = "Label of the bus"

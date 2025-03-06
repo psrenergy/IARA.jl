@@ -5,4 +5,4 @@ label.en = "Thermal Unit"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the thermal unit"
+tooltip.en = "Label of the thermal unit"

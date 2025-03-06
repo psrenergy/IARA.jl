@@ -5,4 +5,4 @@ label.en = "Bidding Group"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the bidding group"
+tooltip.en = "Label of the bidding group"

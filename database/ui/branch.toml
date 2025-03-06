@@ -5,4 +5,4 @@ label.en = "Branch"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the branch"
+tooltip.en = "Label of the branch"

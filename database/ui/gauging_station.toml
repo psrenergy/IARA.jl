@@ -5,4 +5,4 @@ label.en = "Gauging Station"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the gauging station"
+tooltip.en = "Label of the gauging station"

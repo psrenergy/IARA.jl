@@ -5,4 +5,4 @@ label.en = "Zone"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the zone"
+tooltip.en = "Label of the zone"

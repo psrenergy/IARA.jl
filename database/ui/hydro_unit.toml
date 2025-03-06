@@ -5,4 +5,4 @@ label.en = "Hydro Unit"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the hydro unit"
+tooltip.en = "Label of the hydro unit"

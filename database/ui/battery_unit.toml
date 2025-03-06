@@ -5,4 +5,19 @@ label.en = "Battery Unit"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the battery unit"
+tooltip.en = "Label of the battery unit"
+
+[[attribute]]
+id = "initial_storage"
+label.en = "Initial Storage"
+tooltip.en = "Initial storage of the battery unit"
+
+[[attribute]]
+id = "bus_id"
+label.en = "Bus ID"
+tooltip.en = "Bus ID of the battery unit"
+
+[[attribute]]
+id = "biddinggroup_id"
+label.en = "Bidding Group ID"
+tooltip.en = "Bidding group ID of the battery unit"

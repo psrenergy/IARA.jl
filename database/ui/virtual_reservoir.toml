@@ -5,4 +5,4 @@ label.en = "Virtual Reservoir"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the virtual reservoir"
+tooltip.en = "Label of the virtual reservoir"

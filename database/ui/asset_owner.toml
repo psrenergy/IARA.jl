@@ -5,4 +5,9 @@ label.en = "Asset Owner"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the asset owner"
+tooltip.en = "Label of the asset owner"
+
+[[attribute]]
+id = "price_type"
+label.en = "Price Type"
+tooltip.en = "Price type of the asset owner"

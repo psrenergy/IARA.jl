@@ -5,4 +5,4 @@ label.en = "DC Line"
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Labelof the DC line"
+tooltip.en = "Label of the DC line"

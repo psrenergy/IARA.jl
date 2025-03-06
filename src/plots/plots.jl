@@ -635,8 +635,7 @@ function build_plots(
         push!(plot_configs, plot_config_generation)
     end
 
-    if !use_binary_variables(inputs) &&
-       run_mode(inputs) != RunMode.STRATEGIC_BID
+    if run_mode(inputs) != RunMode.STRATEGIC_BID
         # Load Marginal Cost
         plot_config_load_marginal_cost = PlotConfig(
             "Load Marginal Cost",

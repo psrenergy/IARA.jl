@@ -37,7 +37,7 @@ function profile_min_activation_level!(
         ], Bin
     )
 
-    if use_binary_variables(inputs)
+    if use_binary_variables(inputs, run_time_options)
         add_symbol_to_integer_variables_list!(run_time_options, :minimum_activation_level_profile_indicator)
     end
 
@@ -106,7 +106,7 @@ function profile_min_activation_level!(
     ::Type{InitializeOutput},
 )
     if run_time_options.clearing_model_subproblem != RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
-        if use_binary_variables(inputs)
+        if use_binary_variables(inputs, run_time_options)
             add_symbol_to_serialize!(outputs, :minimum_activation_level_profile_indicator)
         end
         add_symbol_to_query_from_subproblem_result!(outputs, :minimum_activation_level_profile_indicator)

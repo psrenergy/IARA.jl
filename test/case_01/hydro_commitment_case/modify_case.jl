@@ -20,7 +20,7 @@ IARA.update_hydro_unit_time_series_parameter!(
 )
 IARA.update_configuration!(
     db;
-    integer_variable_representation_mincost_type = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
+    integer_variable_representation_mincost = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
 )
 
 IARA.close_study!(db)

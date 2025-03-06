@@ -305,13 +305,13 @@ function advanced_validations(inputs::AbstractInputs, demand_unit::DemandUnit)
     end
     if !read_ex_ante_demand_file(inputs) && demand_unit.demand_ex_ante_file != "" && length(demand_unit) > 0
         @warn(
-            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but an ex_ante demand file was linked.
-            This file will be ignored.")
+            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), " *
+            "but an ex_ante demand file was linked. This file will be ignored.")
     end
     if !read_ex_post_demand_file(inputs) && demand_unit.demand_ex_post_file != "" && length(demand_unit) > 0
         @warn(
-            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but an ex_post demand file was linked.
-            This file will be ignored.")
+            "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), " *
+            "but an ex_post demand file was linked. This file will be ignored.")
     end
     return num_errors
 end
@@ -389,4 +389,8 @@ function demand_mw_to_gwh(
 )
     return demand_ts * demand_unit_max_demand(inputs, demand_index) * subperiod_duration_in_hours(inputs, subperiod) *
            MW_to_GW()
+end
+
+function demand_unit_zone_index(inputs::AbstractInputs, idx::Int)
+    return bus_zone_index(inputs, demand_unit_bus_index(inputs, idx))
 end

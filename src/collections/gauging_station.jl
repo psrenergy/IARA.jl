@@ -59,8 +59,9 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
     end
 
     if any(isempty.(gauging_station.historical_inflow))
-        # TODO: How to add in validation?
-        @error("Inflow is set to use the PAR(p) model, but GaugingStation historical inflow data is missing.")
+        # If it reaches here, it's an error.
+        # This will be brought in validation
+        return nothing
     end
 
     # Get the last 'parp_max_lags' inflow values for each gauging station
@@ -184,6 +185,10 @@ Validate the GaugingStation within the inputs context. Return the number of erro
 """
 function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingStation)
     num_errors = 0
+    if !read_inflow_from_file(inputs) && any(isempty.(gauging_station.historical_inflow))
+        @error("Inflow is set to use the PAR(p) model, but GaugingStation historical inflow data is missing.")
+        num_errors += 1
+    end
     return num_errors
 end
 

@@ -21,7 +21,6 @@ function hydro_inflow!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    num_existing_hydros = number_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
     existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
     num_hydro_units = number_of_elements(inputs, HydroUnit; run_time_options)
 

@@ -73,6 +73,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``G^B_j``: Maximum generation ($MW$) of battery unit $j$.
 - ``\overline{s}^B_j``: Maximum state ($MWh$) of charge of battery unit $j$.
 - ``\underline{s}^B_j``: Minimum state ($MWh$) of charge of battery unit $j$.
+- ``C^S_j``: Cost of storage (``\$/MWh``) of battery unit $j$.
 
 ### Demands
 
@@ -111,6 +112,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``z_{j, \tau}``: Spilled water ($hm^3$) from the reservoir during subperiod $\tau$.
 - ``v^{S_{in}}_j``: Volume of water ($hm^3$) in the reservoir at the start of the period.
 - ``v^{S_{out}}_j``: Volume of water ($hm^3$) in the reservoir at the end of the period.
+- ``a^S_{j, \tau}``: Inflow slack ($m^3/s$) of hydro unit $j$ during subperiod $\tau$.
 - ``\eta_{j, \tau}``: Hydro minimum outflow violation ($hm^3$) during subperiod $\tau$.
 - ``x^H_{j, \tau}``: Commitment of hydro unit $j$ during subperiod $\tau$.
 
@@ -131,6 +133,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 - ``s^B_{j, \tau}``: State of charge ($MWh$) of battery unit $j$ at the start of subperiod $\tau$.
 - ``g^B_{j, \tau}``: Generation ($MWh$) of battery unit $j$ at the end of subperiod $\tau$.
+- ``s^B_{j, \tau}``: State of charge ($MWh$) of battery unit $j$ at the end of subperiod $\tau$.
 - ``s^{B_{in}}_j``: State of charge ($MWh$) of battery unit $j$ at the start of the period.
 - ``s^{B_{out}}_j``: State of charge ($MWh$) of battery unit $j$ at the end of the period.
 
@@ -202,7 +205,7 @@ The following constraints are defined for a subproblem at period $t$ and scenari
 ```math
     v_{j, \tau+1} = v_{j, \tau} - u_{j, \tau} - z_{j, \tau}
     + \sum_{n \in J^H_U(j)}{u_{n, \tau}} 
-    + \sum_{n \in J^H_Z(j)}{z_{n, \tau}} +  a_{j, \tau} \\
+    + \sum_{n \in J^H_Z(j)}{z_{n, \tau}} +  a_{j, \tau} + a^S_{j, \tau} \\
     \quad \forall j \in J^H, \tau \in B(t)
 ```
 
@@ -493,7 +496,7 @@ The incidence matrix defines the connections between the network nodes and branc
     C_{GW \rightarrow MW} \bigg( \sum_{j \in J^D} C^\delta \delta_{j, \tau}
     + \sum_{j \in J^{DF}} C^{\delta^F}_{j, \tau} \delta^F_{j, \tau}
     - \sum_{j \in J^{DE}} P_{j, \tau}(\omega) d^E_{j, \tau} \bigg) 
-    
+    + \sum_{j \in J^B} C^S_j s^B_{j, \tau} \\
     + \sum_{j \in J^H} \left( C^\eta \eta_{j, \tau}  + C^z z_{j, \tau} \right) \\
     + \sum_{j \in J^T} \left( C^{T_{up}}_j y^T_{j, \tau}
     + C^{T_{down}}_j w^T_{j, \tau} \right) 

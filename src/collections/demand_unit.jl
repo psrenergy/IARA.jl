@@ -87,7 +87,7 @@ function update_time_series_from_db!(demand_unit::DemandUnit, db::DatabaseSQLite
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     demand_unit.existing =
         @memoized_serialization "demand_unit-existing-$date" convert_to_enum.(
-             PSRDatabaseSQLite.read_time_series_row(
+            PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "DemandUnit",
                 "existing";

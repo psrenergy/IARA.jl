@@ -67,7 +67,7 @@ function update_time_series_from_db!(branch::Branch, db::DatabaseSQLite, period_
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     branch.existing =
         @memoized_serialization "branch-existing-$date" convert_to_enum.(
-             PSRDatabaseSQLite.read_time_series_row(
+            PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "Branch",
                 "existing";

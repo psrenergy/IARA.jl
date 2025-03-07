@@ -77,7 +77,7 @@ function update_time_series_from_db!(
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     renewable_unit.existing =
         @memoized_serialization "renewable_unit-existing-$date" convert_to_enum.(
-             PSRDatabaseSQLite.read_time_series_row(
+            PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "RenewableUnit",
                 "existing";

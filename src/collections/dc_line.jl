@@ -61,7 +61,7 @@ function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, period
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     dc_line.existing =
         @memoized_serialization "dc_line-existing-$date" convert_to_enum.(
-             PSRDatabaseSQLite.read_time_series_row(
+            PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "DCLine",
                 "existing";

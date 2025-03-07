@@ -61,7 +61,7 @@ function update_time_series_from_db!(interconnection::Interconnection, db::Datab
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     interconnection.existing =
         @memoized_serialization "interconnection-existing-$date" convert_to_enum.(
-             PSRDatabaseSQLite.read_time_series_row(
+            PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "Interconnection",
                 "existing";

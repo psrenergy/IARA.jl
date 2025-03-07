@@ -2,7 +2,7 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "095fc31154be675caf1e36d00da070e236697e2d"
+project_hash = "c38971a270f7356fc91e2257b4d68deb968d01e3"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -451,6 +451,12 @@ version = "1.1.9"
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.6+0"
+
+[[deps.MemoizedSerialization]]
+deps = ["Serialization"]
+git-tree-sha1 = "7936edae56efb825dd4649d768a79eb3b264a9c0"
+uuid = "a7e9380e-af78-4e01-8a55-c3c07e4c7344"
+version = "0.5.1"
 
 [[deps.Missings]]
 deps = ["DataAPI"]

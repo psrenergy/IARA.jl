@@ -101,8 +101,9 @@ function update_time_series_from_db!(
     db::DatabaseSQLite,
     period_date_time::DateTime,
 )
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     thermal_unit.existing =
-        convert_to_enum.(
+        @memoized_serialization "thermal_unit-existing-$date" convert_to_enum.(
             PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "ThermalUnit",
@@ -111,31 +112,34 @@ function update_time_series_from_db!(
             ),
             ThermalUnit_Existence.T,
         )
-    thermal_unit.min_generation = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "min_generation";
-        date_time = period_date_time,
-    )
-    thermal_unit.max_generation = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "max_generation";
-        date_time = period_date_time,
-    )
-    thermal_unit.om_cost = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "om_cost";
-        date_time = period_date_time,
-    )
-    thermal_unit.startup_cost = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "startup_cost";
-        date_time = period_date_time,
-    )
-
+    thermal_unit.min_generation =
+        @memoized_serialization "thermal_unit-min_generation-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "min_generation";
+            date_time = period_date_time,
+        )
+    thermal_unit.max_generation =
+        @memoized_serialization "thermal_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "max_generation";
+            date_time = period_date_time,
+        )
+    thermal_unit.om_cost =
+        @memoized_serialization "thermal_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "om_cost";
+            date_time = period_date_time,
+        )
+    thermal_unit.startup_cost =
+        @memoized_serialization "thermal_unit-startup_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "startup_cost";
+            date_time = period_date_time,
+        )
     return nothing
 end
 

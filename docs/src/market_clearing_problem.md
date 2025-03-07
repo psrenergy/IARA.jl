@@ -24,12 +24,12 @@ We add the following parameters to the list of parameters of the strategic subpr
 - ``P_{i, n, \tau, k}(\omega)``: Price offer of asset owner $i$ on network node $n$ during subperiod $\tau$, segment $k$ and scenario $\omega$.
 - ``Q_{i, n, \tau, k}(\omega)``: Quantity offer of asset owner $i$ on network node $n$ during subperiod $\tau$, segment $k$ and scenario $\omega$.
 
-### Multi-hour Bids
+### Profile Bids
 
 - ``P^M_{i, n, k}(\omega)``: Price offer of asset owner $i$ on network node $n$, profile $k$ and scenario $\omega$.
 - ``Q^M_{i, n, \tau, k}(\omega)``: Quantity offer of asset owner $i$ on network node $n$ during subperiod $\tau$, profile $k$ and scenario $\omega$.
 - ``\mathcal{p}(k)``: Parent profile of profile $k$.
-- ``X_{i, k}``: Minimum activation level of profile $k$ of asset owner $i$ on network node $n$.
+- ``X_{i, k}(\omega)``: Minimum activation level of profile $k$ of asset owner $i$ on network node $n$ and scenario $\omega$.
 
 ### Virtual Reservoirs
 - ``P^{VR}_{r, i, k}(\omega)``: Price offer of asset owner $i$ on virtual reservoir $r$ for segment $k$ at scenario $\omega$.
@@ -77,7 +77,7 @@ Flexible Bids
     0 \leq \lambda_{i, n , \tau, k} \leq 1 \quad \forall i \in I, n \in N, \tau \in B(t), k \in K(i, n) \\
 ```
 
-Multi-hour Bids
+Profile Bids
 
 ```math
     0 \leq \lambda^M_{i, k} \leq 1 \quad \forall i \in I, k \in K^M(i) \\
@@ -105,7 +105,7 @@ Flexible Bids
     q_{i, n, \tau, k} = \lambda_{i, n , \tau, k} Q_{i, n, \tau, k}(\omega) \quad \forall i \in I, n \in N, \tau \in B(t), k \in K(i, n) \\
 ```
 
-Multi-hour Bids
+Profile Bids
     
 ```math
     q^M_{i, n, \tau, k} = \lambda^M_{i, k} Q^M_{i, n, \tau, k}(\omega) \quad \forall i \in I, n \in N, \tau \in B(t), k \in K^M(i) \\
@@ -126,7 +126,7 @@ Multi-hour Bids
 ### Minimum Acceptance
 
 ```math
-   \lambda^X_{i, k} X_{i, k} \leq \lambda^M_{i, k} \leq \lambda^X_{i, k} \quad \forall i \in I, k \in K^M(i) \\
+   \lambda^X_{i, k} X_{i, k}(\omega) \leq \lambda^M_{i, k} \leq \lambda^X_{i, k} \quad \forall i \in I, k \in K^M(i) \\
 ```
 
 ### Physical-Virtual Coupling

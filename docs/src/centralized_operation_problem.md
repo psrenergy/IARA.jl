@@ -40,8 +40,8 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``\rho_j``: Turbine efficiency ($MW/m^3/s$) of hydro unit $j$.
 - ``a_{j, \tau}``: Inflow of water ($hm^3$) into the reservoir of hydro unit $j$ at the start of subperiod $\tau$.
 - ``O_j``: Minimum outflow of water ($m^3/s$) from the reservoir of hydro unit $j$.
-- ``C^\eta``: Cost ($\$/hm^3$) of minimum outflow violation.
-- ``C^z_j``: Cost ($\$/hm^3$) of spilling water from hydro unit $j$.
+- ``C^\eta``: Cost (``\$/hm^3``) of minimum outflow violation.
+- ``C^z_j``: Cost (``\$/hm^3``) of spilling water from hydro unit $j$.
 - ``\overline{G}^H_j``: Maximum generation ($MW$) of hydro unit $j$.
 - ``\underline{G}^H_j``: Minimum generation ($MW$) of hydro unit $j$.
 
@@ -49,9 +49,9 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 - ``\overline{G}^T_j``: Maximum generation ($MW$) of thermal unit $j$.
 - ``\underline{G}^T_j``: Minimum generation ($MW$) of thermal unit $j$.
-- ``C^T_j``: Cost of generation ($\$/MWh$) of thermal unit $j$.
-- ``C^{T_{up}}_j``: Cost of startup ($\$$) of thermal unit $j$.
-- ``C^{T_{down}}_j``: Cost of shutdown ($\$$) of thermal unit $j$.
+- ``C^T_j``: Cost of generation (``\$/MWh``) of thermal unit $j$.
+- ``C^{T_{up}}_j``: Cost of startup (``\$``) of thermal unit $j$.
+- ``C^{T_{down}}_j``: Cost of shutdown (``\$``) of thermal unit $j$.
 - ``x^T_{j, 0}``: Commitment of thermal unit $j$ at the start of the period.
 - ``\Delta^{up}_j``: Ramp-up limit ($MW/min$) of thermal unit $j$.
 - ``\Delta^{down}_j``: Ramp-down limit ($MW/min$) of thermal unit $j$.
@@ -66,20 +66,21 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 - ``G^R_j``: Maximum generation ($MW$) of renewable unit $j$.
 - ``G^R_{j, \tau}(\omega)``: Realized generation ($p.u.$, as a fraction of the maximum generation) of renewable unit $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^R_j``: Cost of curtailment ($\$/MWh$) of renewable unit $j$.
+- ``C^R_j``: Cost of curtailment (``\$/MWh``) of renewable unit $j$.
 
 ### Battery Units
 
 - ``G^B_j``: Maximum generation ($MW$) of battery unit $j$.
 - ``\overline{s}^B_j``: Maximum state ($MWh$) of charge of battery unit $j$.
 - ``\underline{s}^B_j``: Minimum state ($MWh$) of charge of battery unit $j$.
+- ``C^S_j``: Cost of storage (``\$/MWh``) of battery unit $j$.
 
 ### Demands
 
 - ``D_{j, \tau}(\omega)``: Load ($GWh$) of demand $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^\delta``: Cost of demand deficit ($\$/MWh$).
-- ``C^{\delta^F}_{j, \tau}``: Cost demand curtailment ($\$/MWh$) of demand $j$ during subperiod $\tau$.
-- ``P_{j, \tau}(\omega)``: Maximum price ($\$/MWh$) of elastic demand $j$ during subperiod $\tau$ and scenario $\omega$.
+- ``C^\delta``: Cost of demand deficit (``\$/MWh``).
+- ``C^{\delta^F}_{j, \tau}``: Cost demand curtailment (``\$/MWh``) of demand $j$ during subperiod $\tau$.
+- ``P_{j, \tau}(\omega)``: Maximum price (``\$/MWh``) of elastic demand $j$ during subperiod $\tau$ and scenario $\omega$.
 - ``W_{j, t}``: Window of demand $j$ at period $t$, if $j \in J^{DF}$.
 - ``\underline{d}^F_j``: Maximum fraction of flexible demand $j$ to be under attended at some subperiod.
 - ``\overline{d}^F_j``: Maximum fraction of flexible demand $j$ to be over attended at some subperiod.
@@ -111,6 +112,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``z_{j, \tau}``: Spilled water ($hm^3$) from the reservoir during subperiod $\tau$.
 - ``v^{S_{in}}_j``: Volume of water ($hm^3$) in the reservoir at the start of the period.
 - ``v^{S_{out}}_j``: Volume of water ($hm^3$) in the reservoir at the end of the period.
+- ``a^S_{j, \tau}``: Inflow slack ($m^3/s$) of hydro unit $j$ during subperiod $\tau$.
 - ``\eta_{j, \tau}``: Hydro minimum outflow violation ($hm^3$) during subperiod $\tau$.
 - ``x^H_{j, \tau}``: Commitment of hydro unit $j$ during subperiod $\tau$.
 
@@ -131,6 +133,7 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 - ``s^B_{j, \tau}``: State of charge ($MWh$) of battery unit $j$ at the start of subperiod $\tau$.
 - ``g^B_{j, \tau}``: Generation ($MWh$) of battery unit $j$ at the end of subperiod $\tau$.
+- ``s^B_{j, \tau}``: State of charge ($MWh$) of battery unit $j$ at the end of subperiod $\tau$.
 - ``s^{B_{in}}_j``: State of charge ($MWh$) of battery unit $j$ at the start of the period.
 - ``s^{B_{out}}_j``: State of charge ($MWh$) of battery unit $j$ at the end of the period.
 
@@ -202,7 +205,7 @@ The following constraints are defined for a subproblem at period $t$ and scenari
 ```math
     v_{j, \tau+1} = v_{j, \tau} - u_{j, \tau} - z_{j, \tau}
     + \sum_{n \in J^H_U(j)}{u_{n, \tau}} 
-    + \sum_{n \in J^H_Z(j)}{z_{n, \tau}} +  a_{j, \tau} \\
+    + \sum_{n \in J^H_Z(j)}{z_{n, \tau}} +  a_{j, \tau} + a^S_{j, \tau} \\
     \quad \forall j \in J^H, \tau \in B(t)
 ```
 
@@ -493,7 +496,7 @@ The incidence matrix defines the connections between the network nodes and branc
     C_{GW \rightarrow MW} \bigg( \sum_{j \in J^D} C^\delta \delta_{j, \tau}
     + \sum_{j \in J^{DF}} C^{\delta^F}_{j, \tau} \delta^F_{j, \tau}
     - \sum_{j \in J^{DE}} P_{j, \tau}(\omega) d^E_{j, \tau} \bigg) 
-    
+    + \sum_{j \in J^B} C^S_j s^B_{j, \tau} \\
     + \sum_{j \in J^H} \left( C^\eta \eta_{j, \tau}  + C^z z_{j, \tau} \right) \\
     + \sum_{j \in J^T} \left( C^{T_{up}}_j y^T_{j, \tau}
     + C^{T_{down}}_j w^T_{j, \tau} \right) 

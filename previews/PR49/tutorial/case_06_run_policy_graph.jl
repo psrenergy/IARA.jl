@@ -152,18 +152,18 @@ IARA.update_configuration!(
     policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
 )
 
-# We will also update the inflow and demand time series files to have 2 periods.
+# We will also update the inflow and demand time series files to have 2 periods, and replace the period dimension with season, as required for cyclic cases.
 
 IARA.link_time_series_to_file(
     db,
     "DemandUnit";
-    demand_ex_ante = "demands",
+    demand_ex_ante = "demands_by_season",
 )
 
 IARA.link_time_series_to_file(
     db,
     "HydroUnit";
-    inflow_ex_ante = "inflow",
+    inflow_ex_ante = "inflow_by_season",
 )
 ;
 

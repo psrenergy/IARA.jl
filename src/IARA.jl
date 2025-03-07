@@ -28,6 +28,7 @@ using Quiver
 using Serialization
 using SDDP
 using StatsBase
+using MemoizedSerialization
 
 # Julia std packages
 using Dates
@@ -44,6 +45,7 @@ const POI = ParametricOptInterface
 
 function initialize(args)
     # Initialize dlls and other possible defaults
+    MemoizedSerialization.clean!()
     initialize_plotly()
     initialize_output_dir(args)
     initialize_logger(args)

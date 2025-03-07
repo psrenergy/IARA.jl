@@ -74,9 +74,10 @@ function update_time_series_from_db!(
     db::DatabaseSQLite,
     period_date_time::DateTime,
 )
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     renewable_unit.existing =
-        convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
+        @memoized_serialization "renewable_unit-existing-$date" convert_to_enum.(
+             PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "RenewableUnit",
                 "existing";
@@ -84,25 +85,27 @@ function update_time_series_from_db!(
             ),
             RenewableUnit_Existence.T,
         )
-    renewable_unit.max_generation = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "RenewableUnit",
-        "max_generation";
-        date_time = period_date_time,
-    )
-    renewable_unit.om_cost = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "RenewableUnit",
-        "om_cost";
-        date_time = period_date_time,
-    )
-    renewable_unit.curtailment_cost = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "RenewableUnit",
-        "curtailment_cost";
-        date_time = period_date_time,
-    )
-
+    renewable_unit.max_generation =
+        @memoized_serialization "renewable_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "RenewableUnit",
+            "max_generation";
+            date_time = period_date_time,
+        )
+    renewable_unit.om_cost =
+        @memoized_serialization "renewable_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "RenewableUnit",
+            "om_cost";
+            date_time = period_date_time,
+        )
+    renewable_unit.curtailment_cost =
+        @memoized_serialization "renewable_unit-curtailment_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "RenewableUnit",
+            "curtailment_cost";
+            date_time = period_date_time,
+        )
     return nothing
 end
 

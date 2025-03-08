@@ -1,26 +1,8 @@
 id = "Zone"
-icon = "lucide/group.svg"
+icon = "lucide/map-pinned.svg"
 label.en = "Zone"
-
-[[card]]
-query = """
-SELECT 
-  CASE 
-    WHEN COUNT(*) = 0 THEN 'inactive'
-    ELSE 'active'
-  END
-FROM Zone;
-"""
-type = "string"
-label.en = "Status"
-
-[[card]]
-query = "SELECT COUNT(*) FROM Zone"
-type = "integer"
-label.en = "Elements"
-unit.en = "Zone(s)"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Name of the zone"
+tooltip.en = "Label of the zone"

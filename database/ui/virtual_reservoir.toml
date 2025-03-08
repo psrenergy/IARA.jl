@@ -1,0 +1,8 @@
+id = "VirtualReservoir"
+icon = "lucide/minus.svg"
+label.en = "Virtual Reservoir"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Label of the virtual reservoir"

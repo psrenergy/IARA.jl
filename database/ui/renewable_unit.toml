@@ -1,0 +1,28 @@
+id = "RenewableUnit"
+icon = "lucide/sun.svg"
+label.en = "Renewable Unit"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Label of the renewable unit"
+
+[[attribute]]
+id = "technology_type"
+label.en = "Technology Type"
+tooltip.en = "Technology type of the renewable unit"
+
+[[attribute]]
+id = "bus_id"
+label.en = "Bus"
+tooltip.en = "Bus of the renewable unit"
+
+[[attribute]]
+id = "biddinggroup_id"
+label.en = "Bidding Group"
+tooltip.en = "Bidding group of the renewable unit"

@@ -6,50 +6,286 @@ label.en = "Disabled"
 id = 1
 label.en = "Enabled"
 
-[[conf_stage_type]]
+[[existing]]
 id = 0
-label.en = "Monthly"
+label.en = "Does Not Exist"
 
-[[conf_run_mode]]
-id = 0
-label.en = "Centralized Operation"
-
-[[conf_run_mode]]
+[[existing]]
 id = 1
-label.en = "Price Taker Bid"
+label.en = "Exists"
 
-[[conf_run_mode]]
+[[has_commitment]]
+id = 0
+label.en = "No Commitment"
+
+[[has_commitment]]
+id = 1
+label.en = "Has Commitment"
+
+[[policy_graph_type]]
+id = 0
+label.en = "Cyclic With Null Root"
+
+[[policy_graph_type]]
+id = 1
+label.en = "Linear"
+
+[[policy_graph_type]]
 id = 2
-label.en = "Strategic Bid"
+label.en = "Cyclic With Season Root"
 
-[[conf_run_mode]]
-id = 3
-label.en = "Market Clearing"
-
-[[battery_om_type]]
+[[time_series_step]]
 id = 0
-label.en = "Type 0"
+label.en = "One Month Per Period"
 
-[[battery_regulation_type]]
+[[hydro_balance_subperiod_resolution]]
 id = 0
-label.en = "Type 0"
+label.en = "Chronological Subperiods"
 
-[[renewable_plant_technology_type]]
-id = 0
-label.en = "Type 0"
-
-[[renewable_plant_technology_type]]
+[[hydro_balance_subperiod_resolution]]
 id = 1
-label.en = "Type 1"
+label.en = "Aggregated Subperiods"
 
-[[hydro_initial_volume_type]]
+[[variable_aggregation_type]]
+id = 0
+label.en = "Sum"
+
+[[variable_aggregation_type]]
+id = 1
+label.en = "Average"
+
+[[variable_aggregation_type]]
+id = 2
+label.en = "Last Value"
+
+[[bid_data_source]]
+id = 0
+label.en = "Read From File"
+
+[[bid_data_source]]
+id = 1
+label.en = "Price Taker Heuristics"
+
+[[clearing_hydro_representation]]
+id = 0
+label.en = "Pure Bids"
+
+[[clearing_hydro_representation]]
+id = 1
+label.en = "Virtual Reservoirs"
+
+[[integer_variable_representation]]
+id = 0
+label.en = "Calculate Normally"
+
+[[integer_variable_representation]]
+id = 1
+label.en = "From Ex Ante Physical"
+
+[[integer_variable_representation]]
+id = 2
+label.en = "Linearize"
+
+[[construction_type]]
+id = -1
+label.en = "Skip"
+
+[[construction_type]]
+id = 0
+label.en = "Cost Based"
+
+[[construction_type]]
+id = 1
+label.en = "Bid Based"
+
+[[construction_type]]
+id = 2
+label.en = "Hybrid"
+
+[[uncertainty_scenarios_files]]
+id = 0
+label.en = "None"
+
+[[uncertainty_scenarios_files]]
+id = 1
+label.en = "Only Ex Ante"
+
+[[uncertainty_scenarios_files]]
+id = 2
+label.en = "Only Ex Post"
+
+[[uncertainty_scenarios_files]]
+id = 3
+label.en = "Ex Ante And Ex Post"
+
+[[settlement_type]]
+id = -1
+label.en = "None"
+
+[[settlement_type]]
+id = 0
+label.en = "Ex Ante"
+
+[[settlement_type]]
+id = 1
+label.en = "Ex Post"
+
+[[settlement_type]]
+id = 2
+label.en = "Dual"
+
+[[make_whole_payments]]
+id = 0
+label.en = "Constrained On And Off Per Subperiod"
+
+[[make_whole_payments]]
+id = 1
+label.en = "Constrained on Per Subperiod"
+
+[[make_whole_payments]]
+id = 2
+label.en = "Constrained on Period Aggregate"
+
+[[make_whole_payments]]
+id = 3
+label.en = "Ignore"
+
+[[price_limits]]
+id = 0
+label.en = "Represent"
+
+[[price_limits]]
+id = 1
+label.en = "Ignore"
+
+[[consider_subperiods_loop_for_thermal_constraints]]
+id = 0
+label.en = "Consider"
+
+[[consider_subperiods_loop_for_thermal_constraints]]
+id = 1
+label.en = "Do Not Consider"
+
+[[buses_aggregation_for_strategic_bidding]]
+id = 0
+label.en = "Do Not Aggregate"
+
+[[buses_aggregation_for_strategic_bidding]]
+id = 1
+label.en = "Aggregate"
+
+[[network_representation]]
+id = 0
+label.en = "Nodal"
+
+[[network_representation]]
+id = 1
+label.en = "Zonal"
+
+[[initial_volume_type]]
 id = 0
 label.en = "Per Unit"
 
-[[hydro_initial_volume_type]]
-id = 1
-label.en = "Elevation"
-
-[[hydro_initial_volume_type]]
+[[initial_volume_type]]
 id = 2
 label.en = "Volume"
+
+[[operation_type]]
+id = 0
+label.en = "Reservoir"
+
+[[operation_type]]
+id = 1
+label.en = "Run of River"
+
+[[demand_type]]
+id = 0
+label.en = "Inelastic"
+
+[[demand_type]]
+id = 1
+label.en = "Elastic"
+
+[[demand_type]]
+id = 2
+label.en = "Flexible"
+
+[[line_model]]
+id = 0
+label.en = "AC"
+
+[[line_model]]
+id = 1
+label.en = "DC"
+
+[[price_type]]
+id = 0
+label.en = "Price Taker"
+
+[[price_type]]
+id = 1
+label.en = "Price Maker"
+
+[[bid_type]]
+id = 0
+label.en = "Markup Heuristic"
+
+[[bid_type]]
+id = 1
+label.en = "Optimize"
+
+[[clearing_subproblem]]
+id = 0
+label.en = "Ex Ante Physical"
+
+[[clearing_subproblem]]
+id = 1
+label.en = "Ex Ante Commercial"
+
+[[clearing_subproblem]]
+id = 2
+label.en = "Ex Post Physical"
+
+[[clearing_subproblem]]
+id = 3
+label.en = "Ex Post Commercial"
+
+[[commitment_initial_condition]]
+id = 0
+label.en = "Off"
+
+[[commitment_initial_condition]]
+id = 1
+label.en = "On"
+
+[[commitment_initial_condition]]
+id = 2
+label.en = "Undefined"
+
+[[vrcurveguide_data_source]]
+id = 0
+label.en = "Read From File"
+
+[[vrcurveguide_data_source]]
+id = 1
+label.en = "Uniform Across Reservoirs"
+
+[[vrcurveguide_data_format]]
+id = 0
+label.en = "CSV File"
+
+[[vrcurveguide_data_format]]
+id = 1
+label.en = "Formatted Data"
+
+[[virtual_reservoir_correspondence_type]]
+id = 0
+label.en = "Ignore"
+
+[[virtual_reservoir_correspondence_type]]
+id = 1
+label.en = "Standard Correspondence Constraint"
+
+[[virtual_reservoir_correspondence_type]]
+id = 2
+label.en = "Delta Correspondence Constraint"

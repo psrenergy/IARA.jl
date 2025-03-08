@@ -1,43 +1,28 @@
 id = "AssetOwner"
-icon = "lucide/user-round.svg"
-label.en = "AssetOwner"
+icon = "lucide/building-2.svg"
+label.en = "Asset Owner"
 
-[[card]]
-query = """
-SELECT 
-  CASE 
-    WHEN COUNT(*) = 0 THEN 'inactive'
-    ELSE 'active'
-  END
-FROM AssetOwner;
-"""
-type = "string"
-label.en = "Status"
-
-[[card]]
-query = "SELECT COUNT(*) FROM AssetOwner"
-type = "integer"
-label.en = "Elements"
-unit.en = "AssetOwner(s)"
+[[attribute_group]]
+id = "markup"
+label.en = "Markup"
+icon = "lucide/circle-dollar-sign.svg"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Name of the branch"
+tooltip.en = "Label of the asset owner"
 
 [[attribute]]
-id = "is_price_maker"
-label.en = "Price Maker"
-tooltip.en = "Price maker asset owner"
-type = "enum"
-enum = "bool"
+id = "price_type"
+label.en = "Price Type"
+tooltip.en = "Price type of the asset owner"
 
 [[attribute]]
-id = "quantity_offer"
-label.en = "Quantity Offer"
-tooltip.en = "Name of the quantity offer time series file"
+id = "risk_factor"
+label.en = "Risk Factor"
+tooltip.en = "Risk factor of the asset owner"
 
 [[attribute]]
-id = "price_offer"
-label.en = "Price Offer"
-tooltip.en = "Name of the price offer time series file"
+id = "segment_fraction"
+label.en = "Segment Fraction"
+tooltip.en = "Segment fraction of the asset owner"

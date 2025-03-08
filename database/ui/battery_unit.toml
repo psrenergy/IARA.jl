@@ -1,0 +1,60 @@
+id = "BatteryUnit"
+icon = "lucide/battery-charging.svg"
+label.en = "Battery Unit"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Label of the battery unit"
+
+[[attribute]]
+id = "initial_storage"
+label.en = "Initial Storage"
+tooltip.en = "Initial storage of the battery unit"
+
+[[attribute]]
+id = "bus_id"
+label.en = "Bus ID"
+tooltip.en = "Bus ID of the battery unit"
+
+[[attribute]]
+id = "biddinggroup_id"
+label.en = "Bidding Group ID"
+tooltip.en = "Bidding group ID of the battery unit"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the battery unit"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the battery unit"
+
+[[attribute]]
+id = "min_storage"
+label.en = "Min Storage"
+tooltip.en = "Min storage of the battery unit"
+
+[[attribute]]
+id = "max_storage"
+label.en = "Max Storage"
+tooltip.en = "Max storage of the battery unit"
+
+[[attribute]]
+id = "max_capacity"
+label.en = "Max Capacity"
+tooltip.en = "Max capacity of the battery unit"
+
+[[attribute]]
+id = "om_cost"
+label.en = "OM Cost"
+tooltip.en = "OM cost of the battery unit"

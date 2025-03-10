@@ -101,8 +101,9 @@ function update_time_series_from_db!(
     db::DatabaseSQLite,
     period_date_time::DateTime,
 )
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     thermal_unit.existing =
-        convert_to_enum.(
+        @memoized_serialization "thermal_unit-existing-$date" convert_to_enum.(
             PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "ThermalUnit",
@@ -111,31 +112,34 @@ function update_time_series_from_db!(
             ),
             ThermalUnit_Existence.T,
         )
-    thermal_unit.min_generation = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "min_generation";
-        date_time = period_date_time,
-    )
-    thermal_unit.max_generation = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "max_generation";
-        date_time = period_date_time,
-    )
-    thermal_unit.om_cost = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "om_cost";
-        date_time = period_date_time,
-    )
-    thermal_unit.startup_cost = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "ThermalUnit",
-        "startup_cost";
-        date_time = period_date_time,
-    )
-
+    thermal_unit.min_generation =
+        @memoized_serialization "thermal_unit-min_generation-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "min_generation";
+            date_time = period_date_time,
+        )
+    thermal_unit.max_generation =
+        @memoized_serialization "thermal_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "max_generation";
+            date_time = period_date_time,
+        )
+    thermal_unit.om_cost =
+        @memoized_serialization "thermal_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "om_cost";
+            date_time = period_date_time,
+        )
+    thermal_unit.startup_cost =
+        @memoized_serialization "thermal_unit-startup_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "ThermalUnit",
+            "startup_cost";
+            date_time = period_date_time,
+        )
     return nothing
 end
 
@@ -461,6 +465,73 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
                 "Thermal Unit $(thermal_unit.label[i]) Bidding Group ID $(thermal_unit.bidding_group_index[i]) not found."
             )
             num_errors += 1
+        end
+        if generate_heuristic_bids_for_clearing(inputs)
+            if thermal_unit.has_commitment[i] == ThermalUnit_HasCommitment.HAS_COMMITMENT
+                @warn(
+                    "Heuristic bids for clearing are enabled. Commitment status of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.startup_cost[i]) && thermal_unit.startup_cost[i] > 0
+                @warn(
+                    "Heuristic bids for clearing are enabled. Startup cost of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.shutdown_cost[i]) && thermal_unit.shutdown_cost[i] > 0
+                @warn(
+                    "Heuristic bids for clearing are enabled. Shutdown cost of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.max_startups[i])
+                @warn(
+                    "Heuristic bids for clearing are enabled. Max Startups of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.max_shutdowns[i])
+                @warn(
+                    "Heuristic bids for clearing are enabled. Max Shutdowns of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.min_uptime[i])
+                @warn(
+                    "Heuristic bids for clearing are enabled. Min Uptime of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.min_downtime[i])
+                @warn(
+                    "Heuristic bids for clearing are enabled. Min Downtime of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.generation_initial_condition[i])
+                @warn(
+                    "Heuristic bids for clearing are enabled. Generation Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.uptime_initial_condition[i])
+                @warn(
+                    "Heuristic bids for clearing are enabled. Uptime Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if !is_null(thermal_unit.downtime_initial_condition[i])
+                @warn(
+                    "Heuristic bids for clearing are enabled. Downtime Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if thermal_unit_min_generation(inputs, i) > 0
+                @warn(
+                    "Heuristic bids for clearing are enabled. Min Generation of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if has_ramp_constraints(thermal_unit, i)
+                @warn(
+                    "Heuristic bids for clearing are enabled. Ramp constraints of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
+            if has_commitment_initial_condition(thermal_unit, i)
+                @warn(
+                    "Heuristic bids for clearing are enabled. Commitment Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bidding offer."
+                )
+            end
         end
     end
     return num_errors

@@ -58,8 +58,9 @@ end
 Update the Interconnection collection time series from the database.
 """
 function update_time_series_from_db!(interconnection::Interconnection, db::DatabaseSQLite, period_date_time::DateTime)
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     interconnection.existing =
-        convert_to_enum.(
+        @memoized_serialization "interconnection-existing-$date" convert_to_enum.(
             PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "Interconnection",
@@ -68,19 +69,20 @@ function update_time_series_from_db!(interconnection::Interconnection, db::Datab
             ),
             Interconnection_Existence.T,
         )
-    interconnection.capacity_to = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "Interconnection",
-        "capacity_to";
-        date_time = period_date_time,
-    )
-    interconnection.capacity_from = PSRDatabaseSQLite.read_time_series_row(
-        db,
-        "Interconnection",
-        "capacity_from";
-        date_time = period_date_time,
-    )
-
+    interconnection.capacity_to =
+        @memoized_serialization "interconnection-capacity_to-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "Interconnection",
+            "capacity_to";
+            date_time = period_date_time,
+        )
+    interconnection.capacity_from =
+        @memoized_serialization "interconnection-capacity_from-$date" PSRDatabaseSQLite.read_time_series_row(
+            db,
+            "Interconnection",
+            "capacity_from";
+            date_time = period_date_time,
+        )
     return nothing
 end
 

@@ -161,13 +161,13 @@ function update_demand_unit!(db::DatabaseSQLite, label::String; kwargs...)
 end
 
 """
-    update_demand_relation_unit!(db::DatabaseSQLite, demand_label::String; collection::String, relation_type::String, related_label::String)
+    update_demand_unit_relation!(db::DatabaseSQLite, demand_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Demand named 'label' in the database.
 
 Example:
 ```julia
-IARA.update_demand_relation_unit!(
+IARA.update_demand_unit_relation!(
     db, 
     "dem_1"; 
     collection = "Bus", 
@@ -176,7 +176,7 @@ IARA.update_demand_relation_unit!(
 )
 ```
 """
-function update_demand_relation_unit!(
+function update_demand_unit_relation!(
     db::DatabaseSQLite,
     demand_label::String;
     collection::String,

@@ -42,6 +42,6 @@ IARA.add_branch!(db;
     bus_to = "bus_3",
 )
 
-IARA.update_demand_relation_unit!(db, "dem_1"; collection = "Bus", relation_type = "id", related_label = "bus_3")
+IARA.update_demand_unit_relation!(db, "dem_1"; collection = "Bus", relation_type = "id", related_label = "bus_3")
 
 IARA.close_study!(db)

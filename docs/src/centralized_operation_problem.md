@@ -66,7 +66,8 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 - ``G^R_j``: Maximum generation ($MW$) of renewable unit $j$.
 - ``G^R_{j, \tau}(\omega)``: Realized generation ($p.u.$, as a fraction of the maximum generation) of renewable unit $j$ during subperiod $\tau$ and scenario $\omega$.
-- ``C^R_j``: Cost of curtailment (``\$/MWh``) of renewable unit $j$.
+- ``C^{Rz}_j``: Cost of curtailment (``\$/MWh``) of renewable unit $j$.
+- ``C^R_j``: Cost of generation (``\$/MWh``) of renewable unit $j$.
 
 ### Battery Units
 
@@ -497,12 +498,10 @@ The incidence matrix defines the connections between the network nodes and branc
     + \sum_{j \in J^{DF}} C^{\delta^F}_{j, \tau} \delta^F_{j, \tau}
     - \sum_{j \in J^{DE}} P_{j, \tau}(\omega) d^E_{j, \tau} \bigg) 
     + \sum_{j \in J^B} C^S_j s^B_{j, \tau} \\
-    + \sum_{j \in J^H} \left( C^\eta \eta_{j, \tau}  + C^z z_{j, \tau} \right) \\
+    + \sum_{j \in J^H} \left( C^\eta \eta_{j, \tau}  + C^z z_{j, \tau} \right)
     + \sum_{j \in J^T} \left( C^{T_{up}}_j y^T_{j, \tau}
-    + C^{T_{down}}_j w^T_{j, \tau} \right) 
-
-    +  \bigg( \sum_{j \in J^T} C^T_j g^T_{j, \tau}
-    + \sum_{j \in J^R} C^R_j z^r_{j, \tau} + \sum_{r \in R} C^\varphi_r \varphi_{r, \tau}  
-    \bigg)
+    + C^{T_{down}}_j w^T_{j, \tau} \right) \\
+    +  \sum_{j \in J^T} C^T_j g^T_{j, \tau}
+    + \sum_{j \in J^R} C^{Rz}_j z^r_{j, \tau} + \sum_{j \in J^R} C^R_j g^R_{j, \tau} 
     \Bigg)
 ```

@@ -153,7 +153,7 @@ end
 
 Update the Demand named 'label' in the database.
 """
-function update_demand!(db::DatabaseSQLite, label::String; kwargs...)
+function update_demand_unit!(db::DatabaseSQLite, label::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
     for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(db, "DemandUnit", string(attribute), label, value)
@@ -162,13 +162,13 @@ function update_demand!(db::DatabaseSQLite, label::String; kwargs...)
 end
 
 """
-    update_demand_relation!(db::DatabaseSQLite, demand_label::String; collection::String, relation_type::String, related_label::String)
+    update_demand_unit_relation!(db::DatabaseSQLite, demand_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Demand named 'label' in the database.
 
 Example:
 ```julia
-IARA.update_demand_relation!(
+IARA.update_demand_unit_relation!(
     db, 
     "dem_1"; 
     collection = "Bus", 
@@ -177,13 +177,16 @@ IARA.update_demand_relation!(
 )
 ```
 """
-function update_demand_relation!(
+function update_demand_unit_relation!(
     db::DatabaseSQLite,
     demand_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
+    if collection == "BiddingGroup"
+        error("It's not possible to relate a DemandUnit to a Bidding Group.")
+    end
     PSRI.set_related!(
         db,
         "DemandUnit",

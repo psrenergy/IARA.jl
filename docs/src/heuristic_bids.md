@@ -66,7 +66,7 @@ Let's consider two sets of bid profiles:
  - ``K^M(j)``: Set of main profiles
  - ``K^C(j)``: Set of child profiles
 
-The main profile captures only the generation and opportunity cost of hydro unit $j.
+The main profile captures only the generation and opportunity cost of hydro unit $j$.
 The child profile allows the hydro unit to shift energy between different subperiods.
 
 #### Main Profile
@@ -76,7 +76,7 @@ The main profile is defined as:
 ```math
 \begin{align}
 Q^M_{i, n, \tau, k}(\omega) &= g^H_{j, \tau}(\omega) &\quad \forall k \in  K^M(j), j \in J^H(b)  \\
-P^M_{i, n, k}(\omega) &= \frac{1}{d(\tau)} \sum_{\tau \in B(t)} \pi^H_{j, \tau} &\quad \forall k \in K^M(j), j \in J^H(b)
+P^M_{i, n, k}(\omega) &= \frac{1}{ \sum_{\tau \in B(t)} d(\tau)} \sum_{\tau \in B(t)} \pi^H_{j, \tau} d(\tau) &\quad \forall k \in K^M(j), j \in J^H(b)
 \end{align}
 ```
 

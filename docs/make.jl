@@ -104,6 +104,11 @@ pages = [
             "tutorial/plots_tutorial.md",
         ],
     ],
+    "Input and Outputs" => [
+        "Quiver" => "quiver_format.md",
+        "Input files" => "input_files.md",
+        "Output files" => "output_files.md",
+    ],
     "Contributing" => [
         "How to contribute" => "contributing.md",
         "Developer guides" => "development_guides.md",

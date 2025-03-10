@@ -1,66 +1,23 @@
 id = "DCLine"
-icon = "lucide/waypoints.svg"
-label.en = "DCLine"
-
-[[card]]
-query = """
-SELECT 
-  CASE 
-    WHEN COUNT(*) = 0 THEN 'inactive'
-    ELSE 'active'
-  END
-FROM DCLine;
-"""
-type = "string"
-label.en = "Status"
-
-[[card]]
-query = "SELECT COUNT(*) FROM DCLine"
-type = "integer"
-label.en = "Elements"
-unit.en = "DC Line(s)"
+icon = "lucide/spline.svg"
+label.en = "DC Line"
 
 [[attribute_group]]
 id = "parameters"
 label.en = "Parameters"
-icon = "lucide/log-in.svg"
-
-[[attribute]]
-id = "date_time"
-label.en = "Date Time"
-tooltip.en = "Date and time"
-format = "yyyy-MM-dd HH:mm"
-unit = "yyyy-MM-dd HH:mm"
+icon = "lucide/settings-2.svg"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Name of the DC line"
-
-[[attribute]]
-id = "existing"
-label.en = "Existing"
-tooltip.en = "Indicates if the DC line is already installed in the system"
-type = "enum"
-enum = "bool"
-hide = true
-
-[[attribute]]
-id = "capacity_to"
-label.en = "Capacity To"
-tooltip.en = "Maximum power flow in the 'to' direction"
-
-[[attribute]]
-id = "capacity_from"
-label.en = "Capacity From"
-tooltip.en = "Maximum power flow in the 'from' direction"
+tooltip.en = "Label of the DC line"
 
 [[attribute]]
 id = "bus_to"
 label.en = "Bus To"
-tooltip.en = "Bus to"
+tooltip.en = "Bus to of the DC line"
 
 [[attribute]]
 id = "bus_from"
 label.en = "Bus From"
-tooltip.en = "Bus from"
+tooltip.en = "Bus from of the DC line"

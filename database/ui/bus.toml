@@ -1,31 +1,23 @@
 id = "Bus"
-icon = "lucide/waypoints.svg"
+icon = "lucide/circle-small.svg"
 label.en = "Bus"
-
-[[card]]
-query = """
-SELECT 
-  CASE 
-    WHEN COUNT(*) = 0 THEN 'inactive'
-    ELSE 'active'
-  END
-FROM Bus;
-"""
-type = "string"
-label.en = "Status"
-
-[[card]]
-query = "SELECT COUNT(*) FROM Bus"
-type = "integer"
-label.en = "Elements"
-unit.en = "Bus(es)"
 
 [[attribute]]
 id = "label"
 label.en = "Label"
-tooltip.en = "Name of the bus"
+tooltip.en = "Label of the bus"
 
 [[attribute]]
 id = "zone_id"
 label.en = "Zone"
-tooltip.en = "Name of the zone"
+tooltip.en = "Zone of the bus"
+
+[[attribute]]
+id = "latitude"
+label.en = "Latitude"
+tooltip.en = "Latitude of the bus"
+
+[[attribute]]
+id = "longitude"
+label.en = "Longitude"
+tooltip.en = "Longitude of the bus"

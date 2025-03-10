@@ -1,0 +1,23 @@
+id = "Interconnection"
+icon = "lucide/spline.svg"
+label.en = "Interconnection"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "label"
+label.en = "Label"
+tooltip.en = "Label of the interconnection"
+
+[[attribute]]
+id = "zone_to"
+label.en = "Zone To"
+tooltip.en = "Zone to of the interconnection"
+
+[[attribute]]
+id = "zone_from"
+label.en = "Zone From"
+tooltip.en = "Zone from of the interconnection"

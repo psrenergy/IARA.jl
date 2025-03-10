@@ -1,5 +1,5 @@
 id = "DCLine"
-icon = "lucide/minus.svg"
+icon = "lucide/spline.svg"
 label.en = "DC Line"
 
 [[attribute_group]]

@@ -1,5 +1,5 @@
 id = "Bus"
-icon = "lucide/waypoints.svg"
+icon = "lucide/circle-small.svg"
 label.en = "Bus"
 
 [[attribute]]

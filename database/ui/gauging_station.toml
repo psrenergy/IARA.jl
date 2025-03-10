@@ -11,3 +11,8 @@ icon = "lucide/chart-spline.svg"
 id = "label"
 label.en = "Label"
 tooltip.en = "Label of the gauging station"
+
+[[attribute]]
+id = "gaugingstation_downstream"
+label.en = "Gauging Station Downstream"
+tooltip.en = "Gauging station downstream of the gauging station"

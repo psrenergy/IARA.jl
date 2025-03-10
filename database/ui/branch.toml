@@ -1,5 +1,5 @@
 id = "Branch"
-icon = "lucide/minus.svg"
+icon = "lucide/git-branch.svg"
 label.en = "Branch"
 
 [[attribute_group]]

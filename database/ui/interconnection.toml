@@ -1,5 +1,5 @@
 id = "Interconnection"
-icon = "lucide/minus.svg"
+icon = "lucide/spline.svg"
 label.en = "Interconnection"
 
 [[attribute_group]]

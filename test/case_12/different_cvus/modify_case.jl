@@ -129,6 +129,23 @@ IARA.write_bids_time_series_file(
     unit = "\$/MWh",
 )
 
+IARA.write_bids_time_series_file(
+    joinpath(PATH, "bidding_group_no_markup_energy_offer_period_1"),
+    quantity_offer;
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+    labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],
+    labels_buses = ["Bus 1"],
+    time_dimension = "period",
+    dimension_size = [
+        1, # number of periods for reference price is always 1
+        number_of_scenarios,
+        number_of_subperiods,
+        maximum_number_of_bidding_segments,
+    ],
+    initial_date = "2024-01-01T00:00:00",
+    unit = "MWh",
+)
+
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";

@@ -7,32 +7,42 @@ function build_ui_operator_plots(
     # Profit
     profit_file_path = get_profit_file(inputs)
     plot_path = joinpath(plots_path, "total_profit")
-    plot_asset_owner_sum_output(inputs, profit_file_path, plot_path, "Total Profit"; round_data = true)
+    plot_operator_output(inputs, profit_file_path, plot_path, "Total Profit"; round_data = true)
 
     # Revenue
-
     revenue_files = get_revenue_files(inputs)
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(revenue_files) == 2
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
-        plot_asset_owner_sum_output(inputs, revenue_files[1], plot_path, "Total Revenue Ex-Ante"; round_data = true)
+        plot_operator_output(
+            inputs,
+            revenue_files[1],
+            plot_path,
+            "Total Revenue Ex-Ante";
+            round_data = true,
+            ex_ante_plot = true,
+        )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
-        plot_asset_owner_sum_output(inputs, revenue_files[2], plot_path, "Total Revenue Ex-Post"; round_data = true)
+        plot_operator_output(inputs, revenue_files[2], plot_path, "Total Revenue Ex-Post"; round_data = true)
     else
         @assert length(revenue_files) == 1
         plot_path = joinpath(plots_path, "total_revenue")
-        plot_asset_owner_sum_output(inputs, revenue_files[1], plot_path, "Total Revenue"; round_data = true)
+        plot_operator_output(inputs, revenue_files[1], plot_path, "Total Revenue"; round_data = true)
     end
 
     # Generation
-    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
-    if isempty(generation_files)
-        generation_files =
-            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
+    generation_files = get_generation_files(inputs)
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        @assert length(generation_files) == 2
+        plot_path = joinpath(plots_path, "total_generation_ex_ante")
+        plot_operator_output(inputs, generation_files[1], plot_path, "Total Generation Ex-Ante"; ex_ante_plot = true)
+        plot_path = joinpath(plots_path, "total_generation_ex_post")
+        plot_operator_output(inputs, generation_files[2], plot_path, "Total Generation Ex-Post")
+    else
+        @assert length(generation_files) == 1
+        plot_path = joinpath(plots_path, "total_generation")
+        plot_operator_output(inputs, generation_files[1], plot_path, "Total Generation")
     end
-    generation_file = generation_files[1]
-    plot_path = joinpath(plots_path, "total_generation")
-    plot_asset_owner_sum_output(inputs, generation_file, plot_path, "Total Generation")
 
     return nothing
 end
@@ -50,7 +60,7 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Profit"
             plot_path = joinpath(plots_path, "profit_$ao_label.html")
-            plot_asset_owner_output(inputs, profit_file_path, plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(inputs, profit_file_path, plot_path, asset_owner_index, title; round_data = true)
         end
     end
 
@@ -62,13 +72,21 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue Ex-Ante"
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
-            plot_asset_owner_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(
+                inputs,
+                revenue_files[1],
+                plot_path,
+                asset_owner_index,
+                title;
+                round_data = true,
+                ex_ante_plot = true,
+            )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue Ex-Post"
             plot_path = joinpath(plots_path, "revenue_ex_post_$ao_label.html")
-            plot_asset_owner_output(inputs, revenue_files[2], plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(inputs, revenue_files[2], plot_path, asset_owner_index, title; round_data = true)
         end
     else
         @assert length(revenue_files) == 1
@@ -76,23 +94,33 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Revenue"
             plot_path = joinpath(plots_path, "revenue_$ao_label.html")
-            plot_asset_owner_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
         end
     end
 
     # Generation
-    generation_files = get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = true)
-    if isempty(generation_files)
-        generation_files =
-            get_generation_files(output_path(inputs), post_processing_path(inputs); from_ex_post = false)
-    end
-    generation_file = generation_files[1]
-    if isfile(generation_file)
+    generation_files = get_generation_files(inputs)
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+        @assert length(generation_files) == 2
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Generation Ex-Ante"
+            plot_path = joinpath(plots_path, "generation_ex_ante_$ao_label.html")
+            plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title; ex_ante_plot = true)
+        end
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - Generation Ex-Post"
+            plot_path = joinpath(plots_path, "generation_ex_post_$ao_label.html")
+            plot_agent_output(inputs, generation_files[2], plot_path, asset_owner_index, title)
+        end
+    else
+        @assert length(generation_files) == 1
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - Generation"
             plot_path = joinpath(plots_path, "generation_$ao_label.html")
-            plot_asset_owner_output(inputs, generation_file, plot_path, asset_owner_index, title)
+            plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title)
         end
     end
 
@@ -109,13 +137,14 @@ function build_ui_general_plots(
     files = get_load_marginal_cost_files(inputs)
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(files) == 2
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = files[1],
             plot_path = joinpath(plots_path, "spot_price_ex_ante"),
             title = "Spot Price Ex-Ante",
             round_data = true,
+            ex_ante_plot = true,
         )
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = files[2],
             plot_path = joinpath(plots_path, "spot_price_ex_post"),
             title = "Spot Price Ex-Post",
@@ -123,7 +152,7 @@ function build_ui_general_plots(
         )
     else
         @assert length(files) == 1
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = files[1],
             plot_path = joinpath(plots_path, "spot_price"),
             title = "Spot Price",
@@ -135,7 +164,7 @@ function build_ui_general_plots(
     generation_file_path = joinpath(post_processing_path(inputs), "generation.csv")
     if isfile(generation_file_path)
         # Generation
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = generation_file_path,
             plot_path = joinpath(plots_path, "generation_by_technology"),
             title = "Generation by Technology",
@@ -143,7 +172,7 @@ function build_ui_general_plots(
             stack = true,
         )
         # Deficit
-        plot_ui_timeseries(;
+        plot_general_output(;
             file_path = generation_file_path,
             plot_path = joinpath(plots_path, "deficit"),
             title = "Deficit",
@@ -180,8 +209,9 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         plot_no_markup_price = false
         quantity_offer_file = offer_files[1]
         price_offer_file = offer_files[2]
-        if length(offer_files) == 3
+        if length(offer_files) == 4
             no_markup_price_offer_file = offer_files[3]
+            no_markup_quantity_offer_file = offer_files[4]
             plot_no_markup_price = true
         end
 
@@ -189,17 +219,23 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         price_data, price_metadata = read_timeseries_file(price_offer_file)
         if plot_no_markup_price
             no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_offer_file)
+            no_markup_quantity_data, no_markup_quantity_metadata = read_timeseries_file(no_markup_quantity_offer_file)
         end
 
         @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price offer file columns"
         @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price offer file dimensions"
         @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
         if plot_no_markup_price
+            # Compare the price files
             @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
             # The number of periods in the reference price file is always 1
             # The number of bid segments does not need to match
             @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price offer file dimensions"
             @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price offer file labels"
+            # Compare both "no_markup" files
+            @assert no_markup_price_metadata.number_of_time_series == no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity offer file columns"
+            @assert no_markup_price_metadata.dimension_size == no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity offer file dimensions"
+            @assert no_markup_price_metadata.labels == no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity offer file labels"
         end
 
         num_labels = quantity_metadata.number_of_time_series
@@ -222,6 +258,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         end
         if plot_no_markup_price
             no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
+            no_markup_quantity_data = dropdims(no_markup_quantity_data; dims = 5)
         end
 
         for subperiod in 1:num_subperiods
@@ -242,10 +279,19 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                     # push point
                     push!(reshaped_quantity[bus_index], quantity)
                     push!(reshaped_price[bus_index], price)
-                    if plot_no_markup_price && segment <= num_bid_segments_no_markup
+                end
+            end
+
+            if plot_no_markup_price
+                for segment in 1:num_bid_segments_no_markup
+                    for label_index in 1:num_labels
+                        bus_index = _get_bus_index(quantity_metadata.labels[label_index], bus_label(inputs))
+                        # mean across scenarios
                         no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
+                        no_markup_quantity = mean(no_markup_quantity_data[label_index, segment, subperiod, :])
+                        # push point
                         push!(reshaped_no_markup_price[bus_index], no_markup_price)
-                        push!(reshaped_no_markup_quantity[bus_index], quantity)
+                        push!(reshaped_no_markup_quantity[bus_index], no_markup_quantity)
                     end
                 end
             end
@@ -324,6 +370,62 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 end
             end
 
+            # Add demand lines
+            ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
+            demand_time_index = (inputs.args.period - 1) * num_subperiods + subperiod
+            y_axis_limits = [minimum(minimum.(price_data_to_plot)), maximum(maximum.(price_data_to_plot))] .* 1.1
+            y_axis_range = range(y_axis_limits[1], y_axis_limits[2]; length = 100)
+            # Ex-post min demand
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = range(
+                        ex_post_min_demand[demand_time_index],
+                        ex_post_min_demand[demand_time_index];
+                        length = 100,
+                    ),
+                    y = y_axis_range,
+                    name = "Ex-post minimum demand",
+                    line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                    type = "line",
+                    mode = "lines",
+                    hovertemplate = "%{x} MWh",
+                ),
+            )
+            # Ex-ante demand
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = range(ex_ante_demand[demand_time_index], ex_ante_demand[demand_time_index]; length = 100),
+                    y = y_axis_range,
+                    name = "Ex-ante demand",
+                    line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                    type = "line",
+                    mode = "lines",
+                    hovertemplate = "%{x} MWh",
+                ),
+            )
+            # Ex-post max demand
+            color_idx += 1
+            push!(
+                configs,
+                Config(;
+                    x = range(
+                        ex_post_max_demand[demand_time_index],
+                        ex_post_max_demand[demand_time_index];
+                        length = 100,
+                    ),
+                    y = y_axis_range,
+                    name = "Ex-post maximum demand",
+                    line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                    type = "line",
+                    mode = "lines",
+                    hovertemplate = "%{x} MWh",
+                ),
+            )
+
             main_configuration = Config(;
                 title = title,
                 xaxis = Dict("title" => "Quantity [MWh]"),
@@ -338,64 +440,63 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 end
 
 function plot_demand(inputs::AbstractInputs, plots_path::String)
-    demand_file = if read_ex_ante_demand_file(inputs)
-        joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs))
-    elseif read_ex_post_demand_file(inputs)
-        joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs))
-    else
-        ""
-    end
-    demand_file *= InterfaceCalls.timeseries_file_extension(demand_file)
     number_of_demands = number_of_elements(inputs, DemandUnit)
+    num_periods = number_of_periods(inputs)
+    num_subperiods = number_of_subperiods(inputs)
+    ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
 
-    if isfile(demand_file)
-        data, metadata = read_timeseries_file(demand_file)
-        data = merge_period_subperiod(data)
-        if read_ex_ante_demand_file(inputs)
-            num_periods, num_scenarios, num_subperiods = metadata.dimension_size
-            num_subscenarios = 1
-            reshaped_data =
-                Array{Float64, 3}(undef, metadata.number_of_time_series, num_periods * num_subperiods, num_subscenarios)
-            # Use only first scenario
-            reshaped_data[:, :, 1] = data[:, 1, :]
-        else
-            num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
-            # Use only first scenario
-            reshaped_data = data[:, :, 1, :]
-        end
-        if num_scenarios > 1
-            @warn "Plotting demand for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
-        end
-    else
-        num_periods = number_of_periods(inputs)
-        num_subperiods = number_of_subperiods(inputs)
-        num_subscenarios = 1
-        reshaped_data = ones(number_of_demands, num_periods * num_subperiods, num_subscenarios)
-    end
+    # Add artifical agent dimension to get plot ticks
+    ticks_demand = [ex_ante_demand'; ex_post_min_demand'; ex_post_max_demand']
 
     configs = Vector{Config}()
-    # Fix subscenario dimension with arbitrary value to get plot_ticks
     plot_ticks, hover_ticks =
-        _get_plot_ticks(reshaped_data[:, 1, :], num_periods, initial_date_time(inputs), time_series_step(inputs))
-    title = "Total demand"
+        _get_plot_ticks(ticks_demand, num_periods, initial_date_time(inputs), time_series_step(inputs))
+    title = "Demand"
     unit = "MW"
     color_idx = 0
-    for d in 1:number_of_demands, subscenario in 1:num_subscenarios
-        label = demand_unit_label(inputs, d) * " - Subscenario $subscenario"
-        color_idx += 1
-        push!(
-            configs,
-            Config(;
-                x = 1:(num_periods*num_subperiods),
-                y = reshaped_data[d, subscenario, :] * demand_unit_max_demand(inputs, d),
-                name = label,
-                line = Dict("color" => _get_plot_color(color_idx)),
-                type = "line",
-                text = hover_ticks,
-                hovertemplate = "%{y} $unit<br>%{text}",
-            ),
-        )
-    end
+
+    # Ex-post max demand
+    color_idx += 1
+    push!(
+        configs,
+        Config(;
+            x = 1:(num_periods*num_subperiods),
+            y = ex_post_max_demand,
+            name = "Ex-post maximum demand",
+            line = Dict("color" => _get_plot_color(color_idx)),
+            type = "line",
+            text = hover_ticks,
+            hovertemplate = "%{y} $unit<br>%{text}",
+        ),
+    )
+    # Ex-ante demand
+    color_idx += 1
+    push!(
+        configs,
+        Config(;
+            x = 1:(num_periods*num_subperiods),
+            y = ex_ante_demand,
+            name = "Ex-ante demand",
+            line = Dict("color" => _get_plot_color(color_idx)),
+            type = "line",
+            text = hover_ticks,
+            hovertemplate = "%{y} $unit<br>%{text}",
+        ),
+    )
+    # Ex-post min demand
+    color_idx += 1
+    push!(
+        configs,
+        Config(;
+            x = 1:(num_periods*num_subperiods),
+            y = ex_post_min_demand,
+            name = "Ex-post minimum demand",
+            line = Dict("color" => _get_plot_color(color_idx)),
+            type = "line",
+            text = hover_ticks,
+            hovertemplate = "%{y} $unit<br>%{text}",
+        ),
+    )
 
     main_configuration = Config(;
         title = title,
@@ -413,7 +514,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String)
     return nothing
 end
 
-function plot_asset_owner_output(
+function plot_agent_output(
     inputs::AbstractInputs,
     file_path::String,
     plot_path::String,
@@ -421,12 +522,13 @@ function plot_asset_owner_output(
     title::String;
     subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
+    ex_ante_plot::Bool = false,
 )
     data, metadata = read_timeseries_file(file_path)
 
     if :bid_segment in metadata.dimensions
         segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
-        # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
+        # The data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
         segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
         data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
         metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
@@ -495,7 +597,7 @@ function plot_asset_owner_output(
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),
             ),
-            yaxis = Dict("title" => "[$(metadata.unit)]"),
+            yaxis = Dict("title" => "$(metadata.unit)"),
         )
     else
         for subperiod in 1:num_subperiods
@@ -511,15 +613,20 @@ function plot_asset_owner_output(
             )
         end
 
+        x_axis_title = if ex_ante_plot
+            "Scenario"
+        else
+            "Subscenario"
+        end
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" => "Subscenario",
+                "title" => x_axis_title,
                 "tickmode" => "array",
                 "tickvals" => 1:num_subscenarios,
                 "ticktext" => string.(1:num_subscenarios),
             ),
-            yaxis = Dict("title" => "[$(metadata.unit)]"),
+            yaxis = Dict("title" => "$(metadata.unit)"),
         )
     end
 
@@ -528,13 +635,14 @@ function plot_asset_owner_output(
     return nothing
 end
 
-function plot_asset_owner_sum_output(
+function plot_operator_output(
     inputs::AbstractInputs,
     file_path::String,
     plot_path::String,
     title::String;
     subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
+    ex_ante_plot::Bool = false,
 )
     data, metadata = read_timeseries_file(file_path)
 
@@ -633,10 +741,15 @@ function plot_asset_owner_sum_output(
                 )
             end
 
+            x_axis_title = if ex_ante_plot
+                "Scenario"
+            else
+                "Subscenario"
+            end
             main_configuration = Config(;
                 title = title * " - Subperiod $subperiod",
                 xaxis = Dict(
-                    "title" => "Subscenario",
+                    "title" => x_axis_title,
                     "tickmode" => "array",
                     "tickvals" => 1:num_subscenarios,
                     "ticktext" => string.(1:num_subscenarios),
@@ -651,7 +764,7 @@ function plot_asset_owner_sum_output(
     return nothing
 end
 
-function plot_ui_timeseries(;
+function plot_general_output(;
     file_path::String,
     plot_path::String,
     title::String,
@@ -659,6 +772,7 @@ function plot_ui_timeseries(;
     stack::Bool = false,
     subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
+    ex_ante_plot::Bool = false,
 )
     data, metadata = read_timeseries_file(file_path)
 
@@ -706,8 +820,6 @@ function plot_ui_timeseries(;
     end
 
     if subperiod_on_x_axis && num_subperiods != 1
-        plot_ticks = ["$i" for i in 1:num_subperiods]
-        hover_ticks = ["Subperiod $i" for i in 1:num_subperiods]
         for agent in 1:number_of_agents, subscenario in 1:num_subscenarios
             label = agent_labels[agent] * " - Subscenario $subscenario"
             color_idx += 1
@@ -719,8 +831,6 @@ function plot_ui_timeseries(;
                     name = label,
                     line = Dict("color" => _get_plot_color(color_idx)),
                     type = "line",
-                    text = hover_ticks,
-                    hovertemplate = "%{y} $(metadata.unit)<br>%{text}",
                     plot_kwargs...,
                 ),
             )
@@ -731,13 +841,11 @@ function plot_ui_timeseries(;
                 "title" => "Subperiod",
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
-                "ticktext" => plot_ticks,
+                "ticktext" => string(1:num_subperiods),
             ),
             yaxis = Dict("title" => metadata.unit),
         )
     else
-        plot_ticks = ["$i" for i in 1:num_subscenarios]
-        hover_ticks = ["Subscenario $i" for i in 1:num_subscenarios]
         for agent in 1:number_of_agents, subperiod in 1:num_subperiods
             label = agent_labels[agent] * " - Subperiod $subperiod"
             color_idx += 1
@@ -749,19 +857,22 @@ function plot_ui_timeseries(;
                     name = label,
                     line = Dict("color" => _get_plot_color(color_idx)),
                     type = "bar",
-                    text = hover_ticks,
-                    hovertemplate = "%{y} $(metadata.unit)<br>%{text}",
                     plot_kwargs...,
                 ),
             )
         end
+        x_axis_title = if ex_ante_plot
+            "Scenario"
+        else
+            "Subscenario"
+        end
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" => "Subscenario",
+                "title" => x_axis_title,
                 "tickmode" => "array",
                 "tickvals" => 1:num_subscenarios,
-                "ticktext" => plot_ticks,
+                "ticktext" => string.(1:num_subscenarios),
             ),
             yaxis = Dict("title" => metadata.unit),
         )

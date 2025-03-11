@@ -53,6 +53,7 @@ function list_case_configurations(inputs::IARA.AbstractInputs)
         "period_type" => IARA.period_type_string(IARA.time_series_step(inputs)),
         "price_offer_file" => IARA.bidding_group_price_offer_file(inputs),
         "quantity_offer_file" => IARA.bidding_group_quantity_offer_file(inputs),
+        "demand_deficit_cost" => IARA.demand_deficit_cost(inputs),
     )
 end
 

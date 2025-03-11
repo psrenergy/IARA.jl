@@ -51,6 +51,7 @@ in chunks.
     # BiddingGroups x buses x segments x subperiods
     quantity_offer::BidsView{Float64} = BidsView{Float64}()
     price_offer::BidsView{Float64} = BidsView{Float64}()
+    no_markup_price_offer::BidsView{Float64} = BidsView{Float64}()
 
     # BiddingGroups x buses x segments x subperiods
     quantity_offer_profile = BidsView{Float64}()

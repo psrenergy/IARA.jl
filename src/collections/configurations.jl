@@ -413,9 +413,9 @@ function validate(configurations::Configurations)
         @error("Hydro spillage cost must be non-negative.")
         num_errors += 1
     end
-    if configurations.market_clearing_tiebreaker_weight <= 0
+    if configurations.market_clearing_tiebreaker_weight < 0
         @error(
-            "Market clearing tiebreaker weight must be greater than zero. Current value: $(configurations.market_clearing_tiebreaker_weight)"
+            "Market clearing tiebreaker weight cannot be less than zero. Current value: $(configurations.market_clearing_tiebreaker_weight)"
         )
         num_errors += 1
     end

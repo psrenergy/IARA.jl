@@ -1,8 +1,8 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.2"
+julia_version = "1.11.3"
 manifest_format = "2.0"
-project_hash = "c38971a270f7356fc91e2257b4d68deb968d01e3"
+project_hash = "e0c6c619d194c3b5b581e3793c549a7f17e09792"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -353,6 +353,15 @@ version = "1.23.1"
     [deps.JuMP.weakdeps]
     DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 
+[[deps.LRUCache]]
+git-tree-sha1 = "b3cc6698599b10e652832c2f23db3cab99d51b59"
+uuid = "8ac3fa9e-de4c-5943-b1dc-09c6b5f20637"
+version = "1.6.1"
+weakdeps = ["Serialization"]
+
+    [deps.LRUCache.extensions]
+    SerializationExt = ["Serialization"]
+
 [[deps.LaTeXStrings]]
 git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
@@ -453,10 +462,12 @@ uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.6+0"
 
 [[deps.MemoizedSerialization]]
-deps = ["Serialization"]
-git-tree-sha1 = "7936edae56efb825dd4649d768a79eb3b264a9c0"
+deps = ["LRUCache", "Serialization"]
+git-tree-sha1 = "a31f750c7cb275690151ff022634f224eaae372f"
+repo-rev = "main"
+repo-url = "https://github.com/raphasampaio/MemoizedSerialization.jl.git"
 uuid = "a7e9380e-af78-4e01-8a55-c3c07e4c7344"
-version = "0.5.1"
+version = "0.6.0"
 
 [[deps.Missings]]
 deps = ["DataAPI"]

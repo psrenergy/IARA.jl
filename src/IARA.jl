@@ -45,7 +45,7 @@ const POI = ParametricOptInterface
 
 function initialize(args)
     # Initialize dlls and other possible defaults
-    MemoizedSerialization.clean!()
+    MemoizedSerialization.clean!(; max_size = 100_000)
     initialize_plotly()
     initialize_output_dir(args)
     initialize_logger(args)

@@ -60,7 +60,7 @@ Update the DC Line collection time series from the database.
 function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, period_date_time::DateTime)
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     dc_line.existing =
-        @memoized_serialization "dc_line-existing-$date" convert_to_enum.(
+        @memoized_lru "dc_line-existing-$date" convert_to_enum.(
             PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "DCLine",
@@ -70,14 +70,14 @@ function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, period
             DCLine_Existence.T,
         )
     dc_line.capacity_to =
-        @memoized_serialization "dc_line-capacity_to-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "dc_line-capacity_to-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "DCLine",
             "capacity_to";
             date_time = period_date_time,
         )
     dc_line.capacity_from =
-        @memoized_serialization "dc_line-capacity_from-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "dc_line-capacity_from-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "DCLine",
             "capacity_from";

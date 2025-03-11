@@ -688,6 +688,41 @@ function bid_based_market_clearing_model_action(args...)
         bidding_group_generation!(args...)
     end
 
+    # For clearing problems with BID_BASED representation, physical variables are only created for units without bidding groups
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_no_bidding_group])
+        hydro_generation!(args...)
+        hydro_volume!(args...)
+        hydro_inflow!(args...)
+        if any_valid_elements(
+            inputs,
+            run_time_options,
+            HydroUnit,
+            action;
+            filters = [has_no_bidding_group, has_commitment],
+        )
+            hydro_commitment!(args...)
+        end
+    end
+    if any_valid_elements(inputs, run_time_options, ThermalUnit, action; filters = [has_no_bidding_group])
+        thermal_generation!(args...)
+        if any_valid_elements(
+            inputs,
+            run_time_options,
+            ThermalUnit,
+            action;
+            filters = [has_no_bidding_group, has_commitment],
+        )
+            thermal_commitment!(args...)
+        end
+    end
+    if any_valid_elements(inputs, run_time_options, RenewableUnit, action; filters = [has_no_bidding_group])
+        renewable_generation!(args...)
+    end
+    if any_valid_elements(inputs, run_time_options, BatteryUnit, action; filters = [has_no_bidding_group])
+        battery_unit_generation!(args...)
+        battery_unit_storage!(args...)
+    end
+
     if any_valid_elements(inputs, run_time_options, DemandUnit, action)
         demand!(args...)
         if any_valid_elements(inputs, run_time_options, DemandUnit, action; filters = [is_elastic])

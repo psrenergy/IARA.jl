@@ -398,7 +398,7 @@ function time_series_inflow(inputs, run_time_options; subscenario::Union{Int, No
         if read_ex_ante_inflow_file(inputs)
             return inputs.time_series.inflow.ex_ante
         elseif read_ex_post_inflow_file(inputs)
-            return mean(inputs.time_series.inflow.ex_post; dims = 3)[:, :, 1]
+            return mean(inputs.time_series.inflow.ex_post.data; dims = 3)[:, :, 1]
         end
     end
     return error(
@@ -452,7 +452,7 @@ function time_series_renewable_generation(inputs, run_time_options; subscenario:
         if read_ex_ante_renewable_file(inputs)
             return inputs.time_series.renewable_generation.ex_ante
         elseif read_ex_post_renewable_file(inputs)
-            return mean(inputs.time_series.renewable_generation.ex_post; dims = 3)[:, :, 1]
+            return mean(inputs.time_series.renewable_generation.ex_post.data; dims = 3)[:, :, 1]
         end
     end
     return ones(number_of_elements(inputs, RenewableUnit), number_of_subperiods(inputs))

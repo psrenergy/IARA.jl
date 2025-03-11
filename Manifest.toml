@@ -463,7 +463,7 @@ version = "2.28.6+0"
 
 [[deps.MemoizedSerialization]]
 deps = ["LRUCache", "Serialization"]
-git-tree-sha1 = "a31f750c7cb275690151ff022634f224eaae372f"
+git-tree-sha1 = "6f51ac7a84dc71fae82a18942ebcbd8ad930c8d5"
 repo-rev = "main"
 repo-url = "https://github.com/raphasampaio/MemoizedSerialization.jl.git"
 uuid = "a7e9380e-af78-4e01-8a55-c3c07e4c7344"

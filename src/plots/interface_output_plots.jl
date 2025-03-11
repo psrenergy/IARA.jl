@@ -371,7 +371,16 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             end
 
             # Add demand lines
-            ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
+            ex_ante_demand, ex_post_demand = get_demands_to_plot(inputs)
+            demand_name = "demand"
+            if any_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+                ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs)
+                ex_ante_demand = ex_ante_demand .- ex_ante_generation
+                ex_post_demand = ex_post_demand .- ex_post_generation
+                demand_name = "net demand"
+            end
+            ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
+            ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
             demand_time_index = (inputs.args.period - 1) * num_subperiods + subperiod
             y_axis_limits = [minimum(minimum.(price_data_to_plot)), maximum(maximum.(price_data_to_plot))] .* 1.1
             y_axis_range = range(y_axis_limits[1], y_axis_limits[2]; length = 100)
@@ -386,7 +395,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                         length = 100,
                     ),
                     y = y_axis_range,
-                    name = "Ex-post minimum demand",
+                    name = "Ex-post minimum $demand_name",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -400,7 +409,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 Config(;
                     x = range(ex_ante_demand[demand_time_index], ex_ante_demand[demand_time_index]; length = 100),
                     y = y_axis_range,
-                    name = "Ex-ante demand",
+                    name = "Ex-ante $demand_name",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -418,7 +427,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                         length = 100,
                     ),
                     y = y_axis_range,
-                    name = "Ex-post maximum demand",
+                    name = "Ex-post maximum $demand_name",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",

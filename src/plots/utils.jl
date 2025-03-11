@@ -200,8 +200,9 @@ function get_demands_to_plot(
         end
     end
 
-    ex_post_min_demand = copy(ex_ante_demand)
-    ex_post_max_demand = copy(ex_ante_demand)
+    num_subscenarios_placeholder = 1
+    ex_post_demand = zeros(num_subscenarios_placeholder, number_of_periods(inputs) * number_of_subperiods(inputs))
+    ex_post_demand[num_subscenarios_placeholder, :] = copy(ex_ante_demand)
     if read_ex_post_demand_file(inputs)
         demand_file = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs) * ".csv")
         data, metadata = read_timeseries_file(demand_file)
@@ -218,15 +219,62 @@ function get_demands_to_plot(
             @warn "Plotting demand for scenario 1 and ignoring the other scenarios. Total number of scenarios in file $demand_file: $num_scenarios"
         end
 
-        # Min and max demand across subscenarios
-        ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
-        ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
-
         # If there is no ex-ante demand file, the ex-ante demand is the average of the ex-post demand across subscenarios
         if !read_ex_ante_demand_file(inputs)
             ex_ante_demand = dropdims(mean(ex_post_demand; dims = 1); dims = 1)
         end
     end
 
-    return ex_ante_demand, ex_post_min_demand, ex_post_max_demand
+    return ex_ante_demand, ex_post_demand
+end
+
+function get_renewable_generation_to_plot(
+    inputs::AbstractInputs,
+)
+    renewable_units = index_of_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+
+    ex_ante_generation = ones(number_of_periods(inputs) * number_of_subperiods(inputs))
+    if read_ex_ante_renewable_file(inputs)
+        generation_file = joinpath(path_case(inputs), renewable_unit_generation_ex_ante_file(inputs) * ".csv")
+        data, metadata = read_timeseries_file(generation_file)
+        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+        data = merge_period_subperiod(data)
+
+        ex_ante_generation = zeros(num_periods * num_subperiods)
+        # Use only first scenario
+        scenario = 1
+        for r in renewable_units
+            ex_ante_generation += data[r, scenario, :] * renewable_unit_max_generation(inputs, r)
+        end
+        if num_scenarios > 1
+            @warn "Plotting renewable generation for scenario 1 and ignoring the other scenarios. Total number of scenarios in file $generation_file: $num_scenarios"
+        end
+    end
+
+    num_subscenarios_placeholder = 1
+    ex_post_generation = zeros(num_subscenarios_placeholder, number_of_periods(inputs) * number_of_subperiods(inputs))
+    ex_post_generation[num_subscenarios_placeholder, :] = copy(ex_ante_generation)
+    if read_ex_post_renewable_file(inputs)
+        generation_file = joinpath(path_case(inputs), renewable_unit_generation_ex_post_file(inputs) * ".csv")
+        data, metadata = read_timeseries_file(generation_file)
+        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+        data = merge_period_subperiod(data)
+
+        ex_post_generation = zeros(num_subscenarios, num_periods * num_subperiods)
+        # Use only first scenario
+        scenario = 1
+        for r in renewable_units
+            ex_post_generation += data[r, :, scenario, :] * renewable_unit_max_generation(inputs, r)
+        end
+        if num_scenarios > 1
+            @warn "Plotting renewable generation for scenario 1 and ignoring the other scenarios. Total number of scenarios in file $generation_file: $num_scenarios"
+        end
+
+        # If there is no ex-ante renewable generation file, the ex-ante renewable generation is the average of the ex-post renewable generation across subscenarios
+        if !read_ex_ante_renewable_file(inputs)
+            ex_ante_generation = dropdims(mean(ex_post_generation; dims = 1); dims = 1)
+        end
+    end
+
+    return ex_ante_generation, ex_post_generation
 end

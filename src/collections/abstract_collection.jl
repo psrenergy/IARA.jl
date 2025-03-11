@@ -32,7 +32,8 @@ end
 function index_of_elements(
     inputs,
     collection::Type{<:AbstractCollection};
-    run_time_options::RunTimeOptions = RunTimeOptions(), @nospecialize(filters::Vector{<:Function} = Function[]),
+    run_time_options::RunTimeOptions = RunTimeOptions(), 
+    @nospecialize(filters::Vector{<:Function} = Function[]),
 )
     c = get_collection(inputs, collection)
     element_indexes = Int[]
@@ -86,7 +87,7 @@ function number_of_elements(
     inputs,
     collection::Type{<:AbstractCollection};
     run_time_options::RunTimeOptions = RunTimeOptions(),
-    @nospecialize(filters::Vector{<:Function} = Function[])
+    @nospecialize(filters::Vector{<:Function} = Function[]),
 )
     return length(index_of_elements(inputs, collection; run_time_options, filters))
 end
@@ -95,7 +96,7 @@ function any_elements(
     inputs,
     collection::Type{<:AbstractCollection};
     run_time_options::RunTimeOptions = RunTimeOptions(),
-    @nospecialize(filters::Vector{<:Function} = Function[])
+    @nospecialize(filters::Vector{<:Function} = Function[]),
 )
     return !isempty(index_of_elements(inputs, collection; run_time_options, filters))
 end

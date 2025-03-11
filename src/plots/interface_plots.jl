@@ -209,8 +209,9 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         plot_no_markup_price = false
         quantity_offer_file = offer_files[1]
         price_offer_file = offer_files[2]
-        if length(offer_files) == 3
+        if length(offer_files) == 4
             no_markup_price_offer_file = offer_files[3]
+            no_markup_quantity_offer_file = offer_files[4]
             plot_no_markup_price = true
         end
 
@@ -218,17 +219,23 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         price_data, price_metadata = read_timeseries_file(price_offer_file)
         if plot_no_markup_price
             no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_offer_file)
+            no_markup_quantity_data, no_markup_quantity_metadata = read_timeseries_file(no_markup_quantity_offer_file)
         end
 
         @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price offer file columns"
         @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price offer file dimensions"
         @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
         if plot_no_markup_price
+            # Compare the price files
             @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
             # The number of periods in the reference price file is always 1
             # The number of bid segments does not need to match
             @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price offer file dimensions"
             @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price offer file labels"
+            # Compare both "no_markup" files
+            @assert no_markup_price_metadata.number_of_time_series == no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity offer file columns"
+            @assert no_markup_price_metadata.dimension_size == no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity offer file dimensions"
+            @assert no_markup_price_metadata.labels == no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity offer file labels"
         end
 
         num_labels = quantity_metadata.number_of_time_series
@@ -251,6 +258,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
         end
         if plot_no_markup_price
             no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
+            no_markup_quantity_data = dropdims(no_markup_quantity_data; dims = 5)
         end
 
         for subperiod in 1:num_subperiods
@@ -271,10 +279,19 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                     # push point
                     push!(reshaped_quantity[bus_index], quantity)
                     push!(reshaped_price[bus_index], price)
-                    if plot_no_markup_price && segment <= num_bid_segments_no_markup
+                end
+            end
+
+            if plot_no_markup_price
+                for segment in 1:num_bid_segments_no_markup
+                    for label_index in 1:num_labels
+                        bus_index = _get_bus_index(quantity_metadata.labels[label_index], bus_label(inputs))
+                        # mean across scenarios
                         no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
+                        no_markup_quantity = mean(no_markup_quantity_data[label_index, segment, subperiod, :])
+                        # push point
                         push!(reshaped_no_markup_price[bus_index], no_markup_price)
-                        push!(reshaped_no_markup_quantity[bus_index], quantity)
+                        push!(reshaped_no_markup_quantity[bus_index], no_markup_quantity)
                     end
                 end
             end

@@ -1179,21 +1179,50 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         buses_to_read = bus_label(inputs),
     )
 
+    no_markup_price_file = joinpath(
+        output_path(inputs),
+        "bidding_group_no_markup_price_offer" * period_suffix,
+    )
+    initialize_bids_view_from_external_file!(
+        inputs.time_series.no_markup_price_offer,
+        inputs,
+        no_markup_price_file;
+        expected_unit = raw"$/MWh",
+        possible_expected_dimensions = [
+            [:period, :scenario, :subperiod, :bid_segment],
+        ],
+        bidding_groups_to_read = bidding_group_label(inputs),
+        buses_to_read = bus_label(inputs),
+    )
+
     for asset_owner_index in index_of_elements(inputs, AssetOwner)
-        write_individual_bids_files(inputs, asset_owner_index)
+        write_individual_bids_files(inputs, asset_owner_index; use_no_markup_price = false)
+        write_individual_bids_files(inputs, asset_owner_index; use_no_markup_price = true)
     end
 end
 
 function write_individual_bids_files(
     inputs::AbstractInputs,
-    asset_owner_index::Int,
+    asset_owner_index::Int;
+    use_no_markup_price::Bool = false,
 )
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
 
+    price_data = if use_no_markup_price
+        inputs.time_series.no_markup_price_offer
+    else
+        inputs.time_series.price_offer
+    end
+
     bidding_group_indexes_to_read =
         bidding_group_asset_owner_index(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
-    filename = "$(asset_owner_label(inputs, asset_owner_index))_bids_period_$(inputs.args.period).csv"
+
+    filename = if use_no_markup_price
+        "$(asset_owner_label(inputs, asset_owner_index))_no_markup_bids_period_$(inputs.args.period).csv"
+    else
+        "$(asset_owner_label(inputs, asset_owner_index))_bids_period_$(inputs.args.period).csv"
+    end
 
     df_length =
         length(bidding_group_indexes_to_read) * length(buses) * number_of_subperiods(inputs) *
@@ -1220,7 +1249,7 @@ function write_individual_bids_files(
         )
         read_bids_view_from_external_file!(
             inputs,
-            inputs.time_series.price_offer;
+            price_data;
             period = 1,
             scenario,
             has_profile_bids = false,
@@ -1235,7 +1264,7 @@ function write_individual_bids_files(
                     bid_segment_column[line_index] = segment
                     bus_column[line_index] = bus_label(inputs, bus)
                     bidding_group_column[line_index] = bidding_group_label(inputs, bg)
-                    price_column[line_index] = inputs.time_series.price_offer[bg, bus, segment, subperiod]
+                    price_column[line_index] = price_data[bg, bus, segment, subperiod]
                     quantity_column[line_index] = inputs.time_series.quantity_offer[bg, bus, segment, subperiod]
                 end
             end

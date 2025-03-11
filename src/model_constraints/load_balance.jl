@@ -467,13 +467,14 @@ function zonal_load_balance!(
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
+    physical_generation = zonal_physical_generation_expression(model, inputs, run_time_options)
     generation =
         if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
            run_mode(inputs) == RunMode.MIN_COST ||
            construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
             physical_generation.data
         else
-            bid_generation = nodal_bid_generation_expression(model, inputs, run_time_options)
+            bid_generation = zonal_bid_generation_expression(model, inputs, run_time_options)
             physical_generation.data + bid_generation.data
         end
     transmission = zonal_transmission_expression(model, inputs, run_time_options)

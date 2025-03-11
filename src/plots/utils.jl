@@ -28,7 +28,9 @@ function get_offer_file_paths(inputs::AbstractInputs)
             push!(offer_files, no_markup_price_path)
             push!(offer_files, no_markup_quantity_path)
         else
-            @warn("Reference price and quantity offer files not found: $(no_markup_price_path), $(no_markup_quantity_path)")
+            @warn(
+                "Reference price and quantity offer files not found: $(no_markup_price_path), $(no_markup_quantity_path)"
+            )
         end
     end
 

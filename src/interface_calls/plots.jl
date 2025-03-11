@@ -11,11 +11,7 @@
 function create_plots(inputs::IARA.AbstractInputs)
     # Create plots
     @info("Creating plots")
-    plots_path = joinpath(IARA.output_path(inputs), "plots")
-    if !isdir(plots_path)
-        mkdir(plots_path)
-    end
-    IARA.plot_demand(inputs, plots_path)
+    IARA.build_ui_initial_plots(inputs)
 
     return nothing
 end

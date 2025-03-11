@@ -53,27 +53,27 @@ db = IARA.create_study!(PATH;
 IARA.add_zone!(db; label = "Zona")
 IARA.add_bus!(db; label = "Sistema", zone_id = "Zona")
 
-IARA.add_asset_owner!(db; 
+IARA.add_asset_owner!(db;
     label = "Agente 40",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
-IARA.add_asset_owner!(db; 
+IARA.add_asset_owner!(db;
     label = "Agente 45",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
-IARA.add_asset_owner!(db; 
+IARA.add_asset_owner!(db;
     label = "Agente 60",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
-IARA.add_asset_owner!(db; 
+IARA.add_asset_owner!(db;
     label = "Agente 75",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
-IARA.add_asset_owner!(db; 
+IARA.add_asset_owner!(db;
     label = "Agente 80",
     risk_factor = [0.1],
     segment_fraction = [1.0],

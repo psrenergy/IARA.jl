@@ -78,8 +78,8 @@ function get_heuristic_bid_files() {
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml
 
     echo "Downloading heuristic bid energy offer..."
-    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_reference_energy_offer_period_$IARA_GAME_ROUND.csv
-    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_reference_energy_offer_period_$IARA_GAME_ROUND.toml
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.csv ./$CASE_PATH/bidding_group_no_markup_energy_offer_period_$IARA_GAME_ROUND.csv
+    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.toml ./$CASE_PATH/bidding_group_no_markup_energy_offer_period_$IARA_GAME_ROUND.toml
 
     echo "Completed."
 }

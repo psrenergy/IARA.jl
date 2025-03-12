@@ -1,3 +1,20 @@
+function build_ui_plots(
+    inputs::Inputs,
+)
+    @info("Building UI plots")
+
+    plots_path = joinpath(output_path(inputs), "plots")
+    if !isdir(plots_path)
+        mkdir(plots_path)
+    end
+
+    build_ui_general_plots(inputs)
+    build_ui_operator_plots(inputs)
+    build_ui_agents_plots(inputs)
+
+    return nothing
+end
+
 function build_ui_operator_plots(
     inputs::Inputs,
 )
@@ -186,23 +203,6 @@ function build_ui_general_plots(
     return nothing
 end
 
-function build_ui_plots(
-    inputs::Inputs,
-)
-    @info("Building UI plots")
-
-    plots_path = joinpath(output_path(inputs), "plots")
-    if !isdir(plots_path)
-        mkdir(plots_path)
-    end
-
-    build_ui_general_plots(inputs)
-    build_ui_operator_plots(inputs)
-    build_ui_agents_plots(inputs)
-
-    return nothing
-end
-
 function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
     offer_files = get_offer_file_paths(inputs)
     if !isempty(offer_files)
@@ -371,7 +371,16 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             end
 
             # Add demand lines
-            ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
+            ex_ante_demand, ex_post_demand = get_demands_to_plot(inputs)
+            demand_name = "demand"
+            if any_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+                ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs)
+                ex_ante_demand = ex_ante_demand .- ex_ante_generation
+                ex_post_demand = ex_post_demand .- ex_post_generation
+                demand_name = "net demand"
+            end
+            ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
+            ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
             demand_time_index = (inputs.args.period - 1) * num_subperiods + subperiod
             y_axis_limits = [minimum(minimum.(price_data_to_plot)), maximum(maximum.(price_data_to_plot))] .* 1.1
             y_axis_range = range(y_axis_limits[1], y_axis_limits[2]; length = 100)
@@ -386,7 +395,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                         length = 100,
                     ),
                     y = y_axis_range,
-                    name = "Ex-post minimum demand",
+                    name = "Ex-post minimum $demand_name",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -400,7 +409,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 Config(;
                     x = range(ex_ante_demand[demand_time_index], ex_ante_demand[demand_time_index]; length = 100),
                     y = y_axis_range,
-                    name = "Ex-ante demand",
+                    name = "Ex-ante $demand_name",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -418,7 +427,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                         length = 100,
                     ),
                     y = y_axis_range,
-                    name = "Ex-post maximum demand",
+                    name = "Ex-post maximum $demand_name",
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -435,81 +444,6 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "offer_curve_subperiod_$subperiod.html"))
         end
     end
-
-    return nothing
-end
-
-function plot_demand(inputs::AbstractInputs, plots_path::String)
-    number_of_demands = number_of_elements(inputs, DemandUnit)
-    num_periods = number_of_periods(inputs)
-    num_subperiods = number_of_subperiods(inputs)
-    ex_ante_demand, ex_post_min_demand, ex_post_max_demand = get_demands_to_plot(inputs)
-
-    # Add artifical agent dimension to get plot ticks
-    ticks_demand = [ex_ante_demand'; ex_post_min_demand'; ex_post_max_demand']
-
-    configs = Vector{Config}()
-    plot_ticks, hover_ticks =
-        _get_plot_ticks(ticks_demand, num_periods, initial_date_time(inputs), time_series_step(inputs))
-    title = "Demand"
-    unit = "MW"
-    color_idx = 0
-
-    # Ex-post max demand
-    color_idx += 1
-    push!(
-        configs,
-        Config(;
-            x = 1:(num_periods*num_subperiods),
-            y = ex_post_max_demand,
-            name = "Ex-post maximum demand",
-            line = Dict("color" => _get_plot_color(color_idx)),
-            type = "line",
-            text = hover_ticks,
-            hovertemplate = "%{y} $unit<br>%{text}",
-        ),
-    )
-    # Ex-ante demand
-    color_idx += 1
-    push!(
-        configs,
-        Config(;
-            x = 1:(num_periods*num_subperiods),
-            y = ex_ante_demand,
-            name = "Ex-ante demand",
-            line = Dict("color" => _get_plot_color(color_idx)),
-            type = "line",
-            text = hover_ticks,
-            hovertemplate = "%{y} $unit<br>%{text}",
-        ),
-    )
-    # Ex-post min demand
-    color_idx += 1
-    push!(
-        configs,
-        Config(;
-            x = 1:(num_periods*num_subperiods),
-            y = ex_post_min_demand,
-            name = "Ex-post minimum demand",
-            line = Dict("color" => _get_plot_color(color_idx)),
-            type = "line",
-            text = hover_ticks,
-            hovertemplate = "%{y} $unit<br>%{text}",
-        ),
-    )
-
-    main_configuration = Config(;
-        title = title,
-        xaxis = Dict(
-            "title" => "Period",
-            "tickmode" => "array",
-            "tickvals" => [i for i in eachindex(plot_ticks)],
-            "ticktext" => plot_ticks,
-        ),
-        yaxis = Dict("title" => "Demand [$unit]"),
-    )
-
-    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "total_demand.html"))
 
     return nothing
 end

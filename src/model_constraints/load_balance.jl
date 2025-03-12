@@ -13,34 +13,52 @@ function load_balance! end
 # Important notes for this implementation:
 # Flow is in [MW], generation and deficit are in [MWh], demand is in [GWh]
 
-function zonal_mincost_generation_expression(
+function zonal_physical_generation_expression(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
+    # For clearing problems with BID_BASED or HYBRID representation, 
+    # physical generation variables are used only for units without bidding groups
+    filters =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            [is_existing]
+        else
+            [is_existing, has_no_bidding_group]
+        end
+    hydro_filters =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            [is_existing]
+        else
+            [is_existing, has_no_bidding_group, !is_associated_with_some_virtual_reservoir]
+        end
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
-    hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
-    thermal_units = index_of_elements(inputs, ThermalUnit; filters = [is_existing])
-    renewable_units = index_of_elements(inputs, RenewableUnit; filters = [is_existing])
-    battery_units = index_of_elements(inputs, BatteryUnit; filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; filters = hydro_filters)
+    thermal_units = index_of_elements(inputs, ThermalUnit; filters = filters)
+    renewable_units = index_of_elements(inputs, RenewableUnit; filters = filters)
+    battery_units = index_of_elements(inputs, BatteryUnit; filters = filters)
     # Centralized Operation Variables
-    hydro_generation = if any_elements(inputs, HydroUnit; filters = [is_existing])
+    hydro_generation = if any_elements(inputs, HydroUnit; filters = hydro_filters)
         get_model_object(model, :hydro_generation)
     end
-    thermal_generation = if any_elements(inputs, ThermalUnit; filters = [is_existing])
+    thermal_generation = if any_elements(inputs, ThermalUnit; filters = filters)
         get_model_object(model, :thermal_generation)
     end
-    renewable_generation = if any_elements(inputs, RenewableUnit; filters = [is_existing])
+    renewable_generation = if any_elements(inputs, RenewableUnit; filters = filters)
         get_model_object(model, :renewable_generation)
     end
-    battery_unit_generation = if any_elements(inputs, BatteryUnit; filters = [is_existing])
+    battery_unit_generation = if any_elements(inputs, BatteryUnit; filters = filters)
         get_model_object(model, :battery_unit_generation)
     end
     # Centralized Operation Generation
     @expression(
         model.jump_model,
-        generation[blk in blks, zone in zones],
+        physical_generation[blk in blks, zone in zones],
         sum(
             hydro_generation[blk, h] for
             h in hydro_units if hydro_unit_zone_index(inputs, h) == zone;
@@ -63,10 +81,10 @@ function zonal_mincost_generation_expression(
         )
     )
 
-    return generation
+    return physical_generation
 end
 
-function zonal_clearing_generation_expression(
+function zonal_bid_generation_expression(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -75,6 +93,7 @@ function zonal_clearing_generation_expression(
     blks = subperiods(inputs)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
+    buses = index_of_elements(inputs, Bus)
 
     # Market Clearing Variables
     bidding_group_generation_profile = if has_any_profile_bids(inputs)
@@ -98,12 +117,13 @@ function zonal_clearing_generation_expression(
     # Market Clearing Generation
     @expression(
         model.jump_model,
-        generation[blk in blks, zone in zones],
+        bid_generation[blk in blks, zone in zones],
         if has_any_simple_bids(inputs)
             # The double for loop is necessary, otherwise it breaks
             sum(
-                bidding_group_generation[blk, bg, bds, zone] for
-                bg in bidding_groups for bds in 1:valid_segments[bg];
+                bidding_group_generation[blk, bg, bds, bus] for
+                bus in buses, bg in bidding_groups for bds in 1:valid_segments[bg] if
+                bus_zone_index(inputs, bus) == zone;
                 init = 0.0,
             )
         else
@@ -112,8 +132,9 @@ function zonal_clearing_generation_expression(
         +
         if has_any_profile_bids(inputs)
             sum(
-                bidding_group_generation_profile[blk, bg, prf, zone] for
-                bg in bidding_groups for prf in 1:valid_profiles[bg];
+                bidding_group_generation_profile[blk, bg, prf, bus] for
+                bus in buses, bg in bidding_groups for prf in 1:valid_profiles[bg] if
+                bus_zone_index(inputs, bus) == zone;
                 init = 0.0,
             )
         else
@@ -128,7 +149,7 @@ function zonal_clearing_generation_expression(
             init = 0.0,
         )
     )
-    return generation
+    return bid_generation
 end
 
 function zonal_transmission_expression(
@@ -216,34 +237,52 @@ function zonal_demand_expression(
     return net_demand
 end
 
-function nodal_mincost_generation_expression(
+function nodal_physical_generation_expression(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
+    # For clearing problems with BID_BASED or HYBRID representation, 
+    # the only physical variables added to the load balance are of units without bidding groups
+    filters =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            [is_existing]
+        else
+            [is_existing, has_no_bidding_group]
+        end
+    hydro_filters =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            [is_existing]
+        else
+            [is_existing, has_no_bidding_group, !is_associated_with_some_virtual_reservoir]
+        end
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
-    hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
-    thermal_units = index_of_elements(inputs, ThermalUnit; filters = [is_existing])
-    renewable_units = index_of_elements(inputs, RenewableUnit; filters = [is_existing])
-    battery_units = index_of_elements(inputs, BatteryUnit; filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit; filters = hydro_filters)
+    thermal_units = index_of_elements(inputs, ThermalUnit; filters = filters)
+    renewable_units = index_of_elements(inputs, RenewableUnit; filters = filters)
+    battery_units = index_of_elements(inputs, BatteryUnit; filters = filters)
     # Centralized Operation Variables
-    hydro_generation = if any_elements(inputs, HydroUnit; filters = [is_existing])
+    hydro_generation = if any_elements(inputs, HydroUnit; filters = hydro_filters)
         get_model_object(model, :hydro_generation)
     end
-    thermal_generation = if any_elements(inputs, ThermalUnit; filters = [is_existing])
+    thermal_generation = if any_elements(inputs, ThermalUnit; filters = filters)
         get_model_object(model, :thermal_generation)
     end
-    renewable_generation = if any_elements(inputs, RenewableUnit; filters = [is_existing])
+    renewable_generation = if any_elements(inputs, RenewableUnit; filters = filters)
         get_model_object(model, :renewable_generation)
     end
-    battery_unit_generation = if any_elements(inputs, BatteryUnit; filters = [is_existing])
+    battery_unit_generation = if any_elements(inputs, BatteryUnit; filters = filters)
         get_model_object(model, :battery_unit_generation)
     end
     # Centralized Operation Generation
     @expression(
         model.jump_model,
-        generation[blk in blks, bus in buses],
+        physical_generation[blk in blks, bus in buses],
         sum(
             hydro_generation[blk, h] for
             h in hydro_units if hydro_unit_bus_index(inputs, h) == bus;
@@ -266,10 +305,10 @@ function nodal_mincost_generation_expression(
         )
     )
 
-    return generation
+    return physical_generation
 end
 
-function nodal_clearing_generation_expression(
+function nodal_bid_generation_expression(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -301,7 +340,7 @@ function nodal_clearing_generation_expression(
     # Market Clearing Generation
     @expression(
         model.jump_model,
-        generation[blk in blks, bus in buses],
+        bid_generation[blk in blks, bus in buses],
         if has_any_simple_bids(inputs)
             # The double for loop is necessary, otherwise it breaks
             sum(
@@ -331,7 +370,7 @@ function nodal_clearing_generation_expression(
             init = 0.0,
         )
     )
-    return generation
+    return bid_generation
 end
 
 function nodal_transmission_expression(
@@ -444,13 +483,15 @@ function zonal_load_balance!(
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
+    physical_generation = zonal_physical_generation_expression(model, inputs, run_time_options)
     generation =
         if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
            run_mode(inputs) == RunMode.MIN_COST ||
            construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
-            zonal_mincost_generation_expression(model, inputs, run_time_options)
+            physical_generation.data
         else
-            zonal_clearing_generation_expression(model, inputs, run_time_options)
+            bid_generation = zonal_bid_generation_expression(model, inputs, run_time_options)
+            physical_generation.data + bid_generation.data
         end
     transmission = zonal_transmission_expression(model, inputs, run_time_options)
     net_demand = zonal_demand_expression(model, inputs, run_time_options)
@@ -472,13 +513,15 @@ function nodal_load_balance!(
 )
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
+    physical_generation = nodal_physical_generation_expression(model, inputs, run_time_options)
     generation =
         if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
            run_mode(inputs) == RunMode.MIN_COST ||
            construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
-            nodal_mincost_generation_expression(model, inputs, run_time_options)
+            physical_generation.data
         else
-            nodal_clearing_generation_expression(model, inputs, run_time_options)
+            bid_generation = nodal_bid_generation_expression(model, inputs, run_time_options)
+            physical_generation.data + bid_generation.data
         end
     transmission = nodal_transmission_expression(model, inputs, run_time_options)
     net_demand = nodal_demand_expression(model, inputs, run_time_options)

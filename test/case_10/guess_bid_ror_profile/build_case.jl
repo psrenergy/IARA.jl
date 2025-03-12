@@ -237,7 +237,7 @@ IARA.update_thermal_unit_relation!(db, "ter_1";
     relation_type = "id",
     related_label = "bg_2",
 )
-IARA.update_thermal_unit_relation!(db, "ter_1";
+IARA.update_thermal_unit_relation!(db, "ter_2";
     collection = "BiddingGroup",
     relation_type = "id",
     related_label = "bg_2",

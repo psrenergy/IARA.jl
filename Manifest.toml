@@ -2,7 +2,7 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "e0c6c619d194c3b5b581e3793c549a7f17e09792"
+project_hash = "ba6ea3e47c3a6fe55407ef812d9ea6e7f29f4a9f"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -463,11 +463,9 @@ version = "2.28.6+0"
 
 [[deps.MemoizedSerialization]]
 deps = ["LRUCache", "Serialization"]
-git-tree-sha1 = "6f51ac7a84dc71fae82a18942ebcbd8ad930c8d5"
-repo-rev = "main"
-repo-url = "https://github.com/raphasampaio/MemoizedSerialization.jl.git"
+git-tree-sha1 = "420682018aa7b7591fd50e496ff14cbe49bfcf9c"
 uuid = "a7e9380e-af78-4e01-8a55-c3c07e4c7344"
-version = "0.6.0"
+version = "0.5.3"
 
 [[deps.Missings]]
 deps = ["DataAPI"]

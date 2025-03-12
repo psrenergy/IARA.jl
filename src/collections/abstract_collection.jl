@@ -32,7 +32,7 @@ end
 function index_of_elements(
     inputs,
     collection::Type{<:AbstractCollection};
-    run_time_options::RunTimeOptions = RunTimeOptions(), 
+    run_time_options::RunTimeOptions = RunTimeOptions(),
     @nospecialize(filters::Vector{<:Function} = Function[]),
 )
     c = get_collection(inputs, collection)

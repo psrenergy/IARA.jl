@@ -28,14 +28,22 @@ function zonal_physical_generation_expression(
         else
             [is_existing, has_no_bidding_group]
         end
+    hydro_filters =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            [is_existing]
+        else
+            [is_existing, has_no_bidding_group, !is_associated_with_some_virtual_reservoir]
+        end
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
-    hydro_units = index_of_elements(inputs, HydroUnit; filters = filters)
+    hydro_units = index_of_elements(inputs, HydroUnit; filters = hydro_filters)
     thermal_units = index_of_elements(inputs, ThermalUnit; filters = filters)
     renewable_units = index_of_elements(inputs, RenewableUnit; filters = filters)
     battery_units = index_of_elements(inputs, BatteryUnit; filters = filters)
     # Centralized Operation Variables
-    hydro_generation = if any_elements(inputs, HydroUnit; filters = filters)
+    hydro_generation = if any_elements(inputs, HydroUnit; filters = hydro_filters)
         get_model_object(model, :hydro_generation)
     end
     thermal_generation = if any_elements(inputs, ThermalUnit; filters = filters)
@@ -244,14 +252,22 @@ function nodal_physical_generation_expression(
         else
             [is_existing, has_no_bidding_group]
         end
+    hydro_filters =
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
+           run_mode(inputs) == RunMode.MIN_COST ||
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
+            [is_existing]
+        else
+            [is_existing, has_no_bidding_group, !is_associated_with_some_virtual_reservoir]
+        end
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
-    hydro_units = index_of_elements(inputs, HydroUnit; filters = filters)
+    hydro_units = index_of_elements(inputs, HydroUnit; filters = hydro_filters)
     thermal_units = index_of_elements(inputs, ThermalUnit; filters = filters)
     renewable_units = index_of_elements(inputs, RenewableUnit; filters = filters)
     battery_units = index_of_elements(inputs, BatteryUnit; filters = filters)
     # Centralized Operation Variables
-    hydro_generation = if any_elements(inputs, HydroUnit; filters = filters)
+    hydro_generation = if any_elements(inputs, HydroUnit; filters = hydro_filters)
         get_model_object(model, :hydro_generation)
     end
     thermal_generation = if any_elements(inputs, ThermalUnit; filters = filters)

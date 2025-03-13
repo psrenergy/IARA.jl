@@ -673,7 +673,7 @@ function build_renewable_offers!(
     renewable_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
-    renewable_generation_series::TimeSeriesView{Float64, 2},
+    renewable_generation_series::Array{Float64, 2},
 )
     buses = index_of_elements(inputs, Bus)
 

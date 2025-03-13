@@ -53,26 +53,16 @@ db = IARA.create_study!(PATH;
 IARA.add_zone!(db; label = "Zona")
 IARA.add_bus!(db; label = "Sistema", zone_id = "Zona")
 
-IARA.add_asset_owner!(db;
-    label = "Agente 40",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente 45",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente 60",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente 75",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente 80",
-)
+IARA.add_asset_owner!(db; label = "Agente Azul")
+IARA.add_asset_owner!(db; label = "Agente Vermelho")
+IARA.add_asset_owner!(db; label = "Agente Verde")
+IARA.add_asset_owner!(db; label = "Agente Roxo")
+IARA.add_asset_owner!(db; label = "Agente Amarelo")
 
 IARA.add_bidding_group!(
     db;
     label = "a",
-    assetowner_id = "Agente 40",
+    assetowner_id = "Agente Vermelho",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
@@ -80,7 +70,7 @@ IARA.add_bidding_group!(
 IARA.add_bidding_group!(
     db;
     label = "b",
-    assetowner_id = "Agente 45",
+    assetowner_id = "Agente Verde",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
@@ -88,7 +78,7 @@ IARA.add_bidding_group!(
 IARA.add_bidding_group!(
     db;
     label = "c",
-    assetowner_id = "Agente 60",
+    assetowner_id = "Agente Amarelo",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
@@ -96,7 +86,7 @@ IARA.add_bidding_group!(
 IARA.add_bidding_group!(
     db;
     label = "d",
-    assetowner_id = "Agente 75",
+    assetowner_id = "Agente Azul",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
@@ -104,7 +94,7 @@ IARA.add_bidding_group!(
 IARA.add_bidding_group!(
     db;
     label = "e",
-    assetowner_id = "Agente 80",
+    assetowner_id = "Agente Roxo",
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )

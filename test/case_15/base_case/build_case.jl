@@ -190,9 +190,9 @@ demand_ex_post = zeros(1, number_of_subperiods, number_of_subscenarios, number_o
 demand_ex_post[:, 1, 1, :, :] .= 130 / max_demand
 demand_ex_post[:, 2, 1, :, :] .= 210 / max_demand
 demand_ex_post[:, 1, 2, :, :] .= 130 / max_demand
-demand_ex_post[:, 2, 2, :, :] .= 230 / max_demand
+demand_ex_post[:, 2, 2, :, :] .= 210 / max_demand
 demand_ex_post[:, 1, 3, :, :] .= 150 / max_demand
-demand_ex_post[:, 2, 3, :, :] .= 210 / max_demand
+demand_ex_post[:, 2, 3, :, :] .= 230 / max_demand
 demand_ex_post[:, 1, 4, :, :] .= 150 / max_demand
 demand_ex_post[:, 2, 4, :, :] .= 230 / max_demand
 

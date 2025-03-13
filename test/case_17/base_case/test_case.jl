@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase10GuessBidRORProfile
+module TestCase17GuessBidROR
 
 using Test
 using IARA

@@ -392,11 +392,11 @@ function time_series_inflow(inputs, run_time_options; subscenario::Union{Int, No
             end
             return inputs.time_series.inflow.ex_post[:, :, subscenario]
         elseif read_ex_ante_inflow_file(inputs)
-            return inputs.time_series.inflow.ex_ante
+            return inputs.time_series.inflow.ex_ante.data
         end
     else
         if read_ex_ante_inflow_file(inputs)
-            return inputs.time_series.inflow.ex_ante
+            return inputs.time_series.inflow.ex_ante.data
         elseif read_ex_post_inflow_file(inputs)
             return mean(inputs.time_series.inflow.ex_post.data; dims = 3)[:, :, 1]
         end
@@ -419,11 +419,11 @@ function time_series_demand(inputs, run_time_options; subscenario::Union{Int, No
             end
             return inputs.time_series.demand.ex_post[:, :, subscenario]
         elseif read_ex_ante_demand_file(inputs)
-            return inputs.time_series.demand.ex_ante
+            return inputs.time_series.demand.ex_ante.data
         end
     else
         if read_ex_ante_demand_file(inputs)
-            return inputs.time_series.demand.ex_ante
+            return inputs.time_series.demand.ex_ante.data
         elseif read_ex_post_demand_file(inputs)
             return mean(inputs.time_series.demand.ex_post.data; dims = 3)[:, :, 1]
         end
@@ -446,11 +446,11 @@ function time_series_renewable_generation(inputs, run_time_options; subscenario:
             end
             return inputs.time_series.renewable_generation.ex_post[:, :, subscenario]
         elseif read_ex_ante_renewable_file(inputs)
-            return inputs.time_series.renewable_generation.ex_ante
+            return inputs.time_series.renewable_generation.ex_ante.data
         end
     else
         if read_ex_ante_renewable_file(inputs)
-            return inputs.time_series.renewable_generation.ex_ante
+            return inputs.time_series.renewable_generation.ex_ante.data
         elseif read_ex_post_renewable_file(inputs)
             return mean(inputs.time_series.renewable_generation.ex_post.data; dims = 3)[:, :, 1]
         end

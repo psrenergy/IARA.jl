@@ -16,15 +16,23 @@
 - ``J^{DF}``: Set of flexible demands. $J^{DF} \cap J^{DE} = J^{DF} \cap J^{DI} = \emptyset$.
 - ``L``: Set of transmission lines.
 - ``N``: Set of network nodes (a.k.a. buses).
+- ``Z``: Set of zones.
 - ``N^{-ref}``: Set of network nodes, except for the angle reference node.
 - ``B(t)``: Set of subperiods in period $t$.
 - ``L^{in}(n)``: Set of lines entering node $n$.
 - ``L^{out}(n)``: Set of lines exiting node $n$.
+- ``Z^{in}(n)``: Set of interconnections entering zone $z$.
+- ``Z^{out}(n)``: Set of interconnections exiting zone $z$.
 - ``J^H_U(j)``: Set of hydro units that turbine water to hydro unit $j$.
 - ``J^H_Z(j)``: Set of hydro units that spill water to hydro unit $j$.
 - ``B(j, t, w)``: Set of subperiods in window $w$ of flexible demand $j$ at period $t$.
 - ``L^{DC}``: Set of DC lines. $L^{DC} \subseteq L$.
 - ``L^{AC}``: Set of branches. $L^{AC} = L \setminus L^{DC}$.
+
+Note: 
+- The set $J^T(n)$ is defined as the set of thermal units connected to node $n$.
+- The set $J^T(z)$ is defined as the set of thermal units connected to zone $z$.
+All other sets are defined similarly.
 
 Some branches may have a flag indicating that they are modeled as DC lines.
 
@@ -86,6 +94,13 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``\overline{d}^F_j``: Maximum fraction of flexible demand $j$ to be over attended at some subperiod.
 - ``\overline{\delta}^F_j``: Maximum fraction of flexible demand $j$ to be curtailed at a window.
 
+### Interconections
+
+- ``Z^{from}_j``: Zone where interconnection $j$ starts.
+- ``Z^{to}_j``: Zone where interconnection $j$ ends.
+- ``\overline{f}^{Z, from}_j``: Maximum flow ($MW$) from zone $Z^{to}_j$ to zone $zone^{from}_j$.
+- ``\overline{f}^{Z, to}_j``: Maximum flow ($MW$) from zone $Z^{from}_j$ to zone $zone^{to}_j$.
+
 ### DC Lines
 
 - ``n^{from}_j``: Node where line $j$ starts.
@@ -144,6 +159,10 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 - ``d^F_{j, \tau}``: Flexible demand to be attended ($GWh$) of demand $j$ during subperiod $\tau$.
 - ``d^E_{j, \tau}``: Elastic demand to be attended ($GWh$) of demand $j$ during subperiod $\tau$.
 
+### Interconnections
+
+- ``f^I_{j, \tau}``: Flow ($MW$) of interconnection $j$ during subperiod $\tau$.
+
 ### Transmission Lines
 
 - ``f_{j, \tau}``: Flow ($MW$) of line $j$ during subperiod $\tau$.
@@ -156,7 +175,24 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 The following constraints are defined for a subproblem at period $t$ and scenario $\omega$.
 
-### Demand Balance
+### Demand Balance (Zonal)
+
+```math
+    C_{MW \rightarrow GW}  \bigg(
+    \sum_{j \in J^T(z)}{g^T_{j, \tau}}
+    + \sum_{j \in J^H(z)}{g^H_{j, \tau}}
+    + \sum_{j \in J^R(z)}{g^R_{j, \tau}}
+    + \sum_{j \in J^B(z)}{g^B_{j, \tau}} 
+    + \sum_{l \in Z^{in}(z)}{f^I_{j, \tau} \cdot d(\tau)} \\
+    - \sum_{l \in Z^{out}(z)}{f^I_{j, \tau} \cdot d(\tau)} \bigg)
+    + \sum_{j \in J^{DI}(z)}{\delta_{j, \tau}}
+    = \sum_{j \in J^{DI}(z)}{D_{j, \tau, \omega}}
+    + \sum_{j \in J^{DF}(z)}{d^F_{j, \tau}}
+    + \sum_{j \in J^{DE}(z)}{d^E_{j, \tau}}
+    \quad \forall z \in Z, \tau \in B(t)
+```
+
+### Demand Balance (Nodal)
 
 ```math
     C_{MW \rightarrow GW}  \bigg(

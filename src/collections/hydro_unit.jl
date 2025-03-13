@@ -120,7 +120,7 @@ function update_time_series_from_db!(
 )
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     hydro_unit.existing =
-        @memoized_serialization "hydro_unit-existing-$date" convert_to_enum.(
+        @memoized_lru "hydro_unit-existing-$date" convert_to_enum.(
             PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "HydroUnit",
@@ -130,56 +130,56 @@ function update_time_series_from_db!(
             HydroUnit_Existence.T,
         )
     hydro_unit.production_factor =
-        @memoized_serialization "hydro_unit-production_factor-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-production_factor-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "production_factor";
             date_time = period_date_time,
         )
     hydro_unit.min_generation =
-        @memoized_serialization "hydro_unit-min_generation-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-min_generation-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "min_generation";
             date_time = period_date_time,
         )
     hydro_unit.max_generation =
-        @memoized_serialization "hydro_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "max_generation";
             date_time = period_date_time,
         )
     hydro_unit.max_turbining =
-        @memoized_serialization "hydro_unit-max_turbining-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-max_turbining-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "max_turbining";
             date_time = period_date_time,
         )
     hydro_unit.min_volume =
-        @memoized_serialization "hydro_unit-min_volume-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-min_volume-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "min_volume";
             date_time = period_date_time,
         )
     hydro_unit.max_volume =
-        @memoized_serialization "hydro_unit-max_volume-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-max_volume-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "max_volume";
             date_time = period_date_time,
         )
     hydro_unit.min_outflow =
-        @memoized_serialization "hydro_unit-min_outflow-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-min_outflow-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "min_outflow";
             date_time = period_date_time,
         )
     hydro_unit.om_cost =
-        @memoized_serialization "hydro_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "hydro_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "HydroUnit",
             "om_cost";

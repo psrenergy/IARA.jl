@@ -64,7 +64,7 @@ Update the Battery Unit time series from the database.
 function update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLite, period_date_time::DateTime)
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     battery_unit.existing =
-        @memoized_serialization "battery-existing-$date" convert_to_enum.(
+        @memoized_lru "battery-existing-$date" convert_to_enum.(
             PSRDatabaseSQLite.read_time_series_row(
                 db,
                 "BatteryUnit",
@@ -74,28 +74,28 @@ function update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLi
             BatteryUnit_Existence.T,
         )
     battery_unit.min_storage =
-        @memoized_serialization "battery-min_storage-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-min_storage-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "BatteryUnit",
             "min_storage";
             date_time = period_date_time,
         )
     battery_unit.max_storage =
-        @memoized_serialization "battery-max_storage-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-max_storage-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "BatteryUnit",
             "max_storage";
             date_time = period_date_time,
         )
     battery_unit.max_capacity =
-        @memoized_serialization "battery-max_capacity-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-max_capacity-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "BatteryUnit",
             "max_capacity";
             date_time = period_date_time,
         )
     battery_unit.om_cost =
-        @memoized_serialization "battery-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
             db,
             "BatteryUnit",
             "om_cost";

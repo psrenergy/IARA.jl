@@ -53,21 +53,11 @@ db = IARA.create_study!(PATH;
 IARA.add_zone!(db; label = "Zona")
 IARA.add_bus!(db; label = "Sistema", zone_id = "Zona")
 
-IARA.add_asset_owner!(db;
-    label = "Agente Amarelo",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente Vermelho",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente Roxo",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente Verde",
-)
-IARA.add_asset_owner!(db;
-    label = "Agente Azul",
-)
+IARA.add_asset_owner!(db; label = "Agente Azul")
+IARA.add_asset_owner!(db; label = "Agente Vermelho")
+IARA.add_asset_owner!(db; label = "Agente Verde")
+IARA.add_asset_owner!(db; label = "Agente Roxo")
+IARA.add_asset_owner!(db; label = "Agente Amarelo")
 
 IARA.add_bidding_group!(
     db;

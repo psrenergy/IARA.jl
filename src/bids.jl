@@ -1055,10 +1055,11 @@ function virtual_reservoir_markup_offers_for_period_scenario(
                 end
 
                 # Get weighted average opportunity cost
-                average_cost = 1 / period_duration * sum(
-                                    time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] *
-                                    subperiod_duration_in_hours(inputs, subperiod) for
-                                    subperiod in 1:number_of_subperiods(inputs))
+                average_cost =
+                    1 / period_duration * sum(
+                        time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] *
+                        subperiod_duration_in_hours(inputs, subperiod) for
+                        subperiod in 1:number_of_subperiods(inputs))
 
                 for risk_idx in 1:asset_owner_number_of_risk_factors[ao]
                     segment = (unit_idx - 1) * asset_owner_number_of_risk_factors[ao] + risk_idx

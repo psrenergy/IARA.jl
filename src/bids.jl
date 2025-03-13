@@ -1215,8 +1215,7 @@ function write_individual_bids_files(
         inputs.time_series.price_offer
     end
 
-    bidding_group_indexes_to_read =
-        bidding_group_asset_owner_index(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
+    bidding_group_indexes_to_read = findall(isequal(asset_owner_index), bidding_group_asset_owner_index(inputs))
 
     filename = if use_no_markup_price
         "$(asset_owner_label(inputs, asset_owner_index))_no_markup_bids_period_$(inputs.args.period).csv"

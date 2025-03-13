@@ -16,7 +16,7 @@ IARA.update_configuration!(
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
 )
 
-max_generation = 50.0
+max_generation = 60.0
 
 IARA.add_renewable_unit!(db;
     label = "Renovavel 1",
@@ -33,10 +33,10 @@ IARA.add_renewable_unit!(db;
 
 renewable_generation_ex_post =
     zeros(1, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
-renewable_generation_ex_post[:, :, 1, :, :] .= 15 / max_generation
-renewable_generation_ex_post[:, :, 2, :, :] .= 25 / max_generation
-renewable_generation_ex_post[:, :, 3, :, :] .= 35 / max_generation
-renewable_generation_ex_post[:, :, 4, :, :] .= 45 / max_generation
+renewable_generation_ex_post[:, :, 1, :, :] .= 60 / max_generation
+renewable_generation_ex_post[:, :, 2, :, :] .= 35 / max_generation
+renewable_generation_ex_post[:, :, 3, :, :] .= 25 / max_generation
+renewable_generation_ex_post[:, :, 4, :, :] .= 0 / max_generation
 
 IARA.write_timeseries_file(
     joinpath(PATH, "renewable_generation_ex_post"),

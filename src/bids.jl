@@ -1040,6 +1040,8 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         maximum_number_of_offer_segments,
     )
 
+    period_duration =
+        sum(subperiod_duration_in_hours(inputs, subperiod) for subperiod in 1:number_of_subperiods(inputs))
     for vr in virtual_reservoir_indices
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             # vr parameters
@@ -1051,8 +1053,12 @@ function virtual_reservoir_markup_offers_for_period_scenario(
                 if total_generation > available_energy_per_hydro_unit[hydro_unit]
                     total_generation = available_energy_per_hydro_unit[hydro_unit]
                 end
-                average_cost =
-                    sum(time_series_hydro_opportunity_cost(inputs)[hydro_unit, :]) / number_of_subperiods(inputs) # TODO: weighted average
+
+                # Get weighted average opportunity cost
+                average_cost = 1 / period_duration * sum(
+                                    time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] *
+                                    subperiod_duration_in_hours(inputs, subperiod) for
+                                    subperiod in 1:number_of_subperiods(inputs))
 
                 for risk_idx in 1:asset_owner_number_of_risk_factors[ao]
                     segment = (unit_idx - 1) * asset_owner_number_of_risk_factors[ao] + risk_idx

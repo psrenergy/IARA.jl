@@ -71,8 +71,6 @@ function bidding_group_markup_units(inputs::Inputs)
 
     bidding_group_number_of_risk_factors = zeros(Int, number_of_bidding_groups)
     bidding_group_hydro_units = [Int[] for _ in 1:number_of_bidding_groups]
-    bidding_group_hydro_units_reservoir = [Int[] for _ in 1:number_of_bidding_groups]
-    bidding_group_hydro_units_run_of_river = [Int[] for _ in 1:number_of_bidding_groups]
     bidding_group_thermal_units = [Int[] for _ in 1:number_of_bidding_groups]
     bidding_group_renewable_units = [Int[] for _ in 1:number_of_bidding_groups]
 
@@ -81,22 +79,11 @@ function bidding_group_markup_units(inputs::Inputs)
         if clearing_hydro_representation(inputs) !=
            Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
-            bidding_group_hydro_units_reservoir[bg] =
-                findall(
-                    idx -> operates_with_reservoir(inputs.collections.hydro_unit, idx),
-                    bidding_group_hydro_units[bg],
-                )
-            bidding_group_hydro_units_run_of_river[bg] =
-                findall(
-                    idx -> operates_as_run_of_river(inputs.collections.hydro_unit, idx),
-                    bidding_group_hydro_units[bg],
-                )
         end
         bidding_group_thermal_units[bg] = findall(isequal(bg), thermal_unit_bidding_group_index(inputs))
         bidding_group_renewable_units[bg] = findall(isequal(bg), renewable_unit_bidding_group_index(inputs))
     end
     return bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
     bidding_group_thermal_units, bidding_group_renewable_units
 end
 
@@ -105,18 +92,17 @@ function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
     bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
     bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
 
-    number_of_hydro_units_reservoir_per_bidding_group_and_bus =
-        get_number_of_units_per_bus_and_bg(inputs, bidding_group_hydro_units_reservoir, hydro_unit_bus_index)
+    number_of_hydro_units_per_bidding_group_and_bus =
+        get_number_of_units_per_bus_and_bg(inputs, bidding_group_hydro_units, hydro_unit_bus_index)
     number_of_thermal_units_per_bidding_group_and_bus =
         get_number_of_units_per_bus_and_bg(inputs, bidding_group_thermal_units, thermal_unit_bus_index)
     number_of_renewable_units_per_bidding_group_and_bus =
         get_number_of_units_per_bus_and_bg(inputs, bidding_group_renewable_units, renewable_unit_bus_index)
 
     number_of_units_per_bidding_group_and_bus =
-        number_of_hydro_units_reservoir_per_bidding_group_and_bus .+
+        number_of_hydro_units_per_bidding_group_and_bus .+
         number_of_thermal_units_per_bidding_group_and_bus .+
         number_of_renewable_units_per_bidding_group_and_bus
 
@@ -159,7 +145,6 @@ function markup_offers_for_period_scenario(
     renewable_generation_series = time_series_renewable_generation(inputs, run_time_options)
 
     bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
     bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
 
     maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)

@@ -24,7 +24,6 @@ function thermal_ramp!(
     ramp_indexes =
         index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_ramp_constraints])
 
-    # TODO: Check if necessary to divide by hours
     # Model Variables
     thermal_generation = get_model_object(model, :thermal_generation)
 
@@ -35,9 +34,9 @@ function thermal_ramp!(
             b in 2:number_of_subperiods(inputs),
             t in ramp_indexes,
         ],
-        thermal_generation[b, t] / subperiod_duration_in_hours(inputs, b)
+        thermal_generation[b, t]
         -
-        thermal_generation[b-1, t] / subperiod_duration_in_hours(inputs, b - 1)
+        thermal_generation[b-1, t]
         <=
         thermal_unit_max_ramp_up(inputs, t) * per_minute_to_per_hour()
         * (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, b - 1)) / 2
@@ -49,9 +48,9 @@ function thermal_ramp!(
             b in 2:number_of_subperiods(inputs),
             t in ramp_indexes,
         ],
-        thermal_generation[b-1, t] / subperiod_duration_in_hours(inputs, b - 1)
+        thermal_generation[b-1, t]
         -
-        thermal_generation[b, t] / subperiod_duration_in_hours(inputs, b) <=
+        thermal_generation[b, t] <=
         thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour()
         * (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, b - 1)) / 2
     )

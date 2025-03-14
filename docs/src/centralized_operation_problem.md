@@ -262,12 +262,12 @@ The following constraints are defined for a subproblem at period $t$ and scenari
 ### Thermal Ramping
 
 ```math
-    \frac{g^T_{j, \tau}}{d(\tau)} - \frac{g^T_{j, \tau-1}}{d(\tau-1)} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
+    g^T_{j, \tau} - g^T_{j, \tau-1} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
     \quad \forall j \in J^T, \tau \in B(t)
 ```
 
 ```math
-    \frac{g^T_{j, \tau-1}}{d(\tau-1)} - \frac{g^T_{j, \tau}}{d(\tau)} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
+    g^T_{j, \tau-1} - g^T_{j, \tau} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
     \quad \forall j \in J^T, \tau \in B(t)
 ```
 

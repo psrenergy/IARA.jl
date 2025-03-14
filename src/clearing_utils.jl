@@ -185,34 +185,6 @@ function serialize_virtual_reservoir_heuristic_bids(
     return nothing
 end
 
-function serialize_heuristic_profile_bids(
-    inputs::Inputs,
-    quantity_profile_offers::Array{Float64, 4},
-    price_profile_offers::Array{Float64, 2},
-    complementary_grouping_profile::Array{Float64, 3},
-    minimum_activation_level_profile::Array{Float64, 2},
-    parent_profile::Array{Float64, 2};
-    period::Int,
-    scenario::Int,
-)
-    temp_path = joinpath(path_case(inputs), "temp")
-    if !isdir(temp_path)
-        mkdir(temp_path)
-    end
-    serialized_file_name =
-        joinpath(temp_path, "heuristic_profile_bids_period_$(period)_scenario_$(scenario).json")
-
-    data_to_serialize = Dict{Symbol, Any}()
-    data_to_serialize[:quantity_profile_offers] = quantity_profile_offers
-    data_to_serialize[:price_profile_offers] = price_profile_offers
-    data_to_serialize[:complementary_grouping_profile] = complementary_grouping_profile
-    data_to_serialize[:minimum_activation_level_profile] = minimum_activation_level_profile
-    data_to_serialize[:parent_profile] = parent_profile
-
-    Serialization.serialize(serialized_file_name, data_to_serialize)
-    return nothing
-end
-
 """
     read_serialized_clearing_variable(inputs::Inputs, clearing_model_subproblem::RunTime_ClearingSubproblem.T, symbol_to_read::Symbol; period::Int, scenario::Int)
 
@@ -281,22 +253,6 @@ function read_serialized_virtual_reservoir_heuristic_bids(
     data = Serialization.deserialize(serialized_file_name)
 
     return data[:quantity_offer], data[:price_offer]
-end
-
-function read_serialized_heuristic_profile_bids(
-    inputs::Inputs;
-    period::Int,
-    scenario::Int,
-)
-    temp_path = joinpath(path_case(inputs), "temp")
-    serialized_file_name =
-        joinpath(temp_path, "heuristic_profile_bids_period_$(period)_scenario_$(scenario).json")
-
-    data = Serialization.deserialize(serialized_file_name)
-
-    return data[:quantity_profile_offers], data[:price_profile_offers],
-    data[:parent_profile], data[:complementary_grouping_profile],
-    data[:minimum_activation_level_profile]
 end
 
 """

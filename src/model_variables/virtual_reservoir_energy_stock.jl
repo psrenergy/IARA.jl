@@ -62,9 +62,9 @@ function virtual_reservoir_energy_stock!(
     virtual_reservoir_energy_stock_at_beginning_of_period =
         virtual_reservoir_energy_stock_from_previous_period(inputs, model.period, scenario)
     volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, model.period, scenario)
+    energy_arrival = additional_energy_from_inflows(inputs, inflow_as_volume, volume_at_beginning_of_period)
     virtual_reservoir_energy_stock = get_model_object(model, :virtual_reservoir_energy_stock)
     for vr in virtual_reservoirs
-        energy_arrival = additional_energy_from_inflows(inputs, vr, inflow_as_volume, volume_at_beginning_of_period)
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             MOI.set(
                 model.jump_model,

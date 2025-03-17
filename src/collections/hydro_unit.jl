@@ -259,7 +259,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "Island",
 )
 ```
-"""
+""" # TODO: correct the units of the parameters
 function add_hydro_unit!(db::DatabaseSQLite; kwargs...)
     if !haskey(kwargs, :gaugingstation_id)
         gauging_station_label = kwargs[:label]

@@ -61,65 +61,6 @@ function initialize_heuristic_bids_outputs(
         )
     end
 
-    if has_any_profile_bids(inputs)
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
-            output_name = "bidding_group_energy_offer_profile",
-            dimensions = ["period", "scenario", "subperiod", "profile"],
-            unit = "MWh",
-            labels,
-        )
-
-        labels = bidding_group_label(inputs)
-
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
-            output_name = "bidding_group_price_offer_profile",
-            dimensions = ["period", "scenario", "profile"],
-            unit = "\$/MWh",
-            labels,
-        )
-
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
-            output_name = "bidding_group_parent_profile",
-            dimensions = ["period", "scenario", "profile"],
-            unit = "\$/MWh",
-            labels,
-        )
-
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
-            output_name = "bidding_group_complementary_grouping_profile",
-            dimensions = ["period", "scenario", "complementary_group", "profile"],
-            unit = "\$/MWh",
-            labels,
-        )
-
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
-            output_name = "bidding_group_minimum_activation_level_profile",
-            dimensions = ["period", "scenario", "profile"],
-            unit = "\$/MWh",
-            labels,
-        )
-    end
-
     return nothing
 end
 
@@ -130,8 +71,6 @@ function bidding_group_markup_units(inputs::Inputs)
 
     bidding_group_number_of_risk_factors = zeros(Int, number_of_bidding_groups)
     bidding_group_hydro_units = [Int[] for _ in 1:number_of_bidding_groups]
-    bidding_group_hydro_units_reservoir = [Int[] for _ in 1:number_of_bidding_groups]
-    bidding_group_hydro_units_run_of_river = [Int[] for _ in 1:number_of_bidding_groups]
     bidding_group_thermal_units = [Int[] for _ in 1:number_of_bidding_groups]
     bidding_group_renewable_units = [Int[] for _ in 1:number_of_bidding_groups]
 
@@ -140,22 +79,11 @@ function bidding_group_markup_units(inputs::Inputs)
         if clearing_hydro_representation(inputs) !=
            Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
-            bidding_group_hydro_units_reservoir[bg] =
-                findall(
-                    idx -> operates_with_reservoir(inputs.collections.hydro_unit, idx),
-                    bidding_group_hydro_units[bg],
-                )
-            bidding_group_hydro_units_run_of_river[bg] =
-                findall(
-                    idx -> operates_as_run_of_river(inputs.collections.hydro_unit, idx),
-                    bidding_group_hydro_units[bg],
-                )
         end
         bidding_group_thermal_units[bg] = findall(isequal(bg), thermal_unit_bidding_group_index(inputs))
         bidding_group_renewable_units[bg] = findall(isequal(bg), renewable_unit_bidding_group_index(inputs))
     end
     return bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
     bidding_group_thermal_units, bidding_group_renewable_units
 end
 
@@ -164,18 +92,17 @@ function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
     bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
     bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
 
-    number_of_hydro_units_reservoir_per_bidding_group_and_bus =
-        get_number_of_units_per_bus_and_bg(inputs, bidding_group_hydro_units_reservoir, hydro_unit_bus_index)
+    number_of_hydro_units_per_bidding_group_and_bus =
+        get_number_of_units_per_bus_and_bg(inputs, bidding_group_hydro_units, hydro_unit_bus_index)
     number_of_thermal_units_per_bidding_group_and_bus =
         get_number_of_units_per_bus_and_bg(inputs, bidding_group_thermal_units, thermal_unit_bus_index)
     number_of_renewable_units_per_bidding_group_and_bus =
         get_number_of_units_per_bus_and_bg(inputs, bidding_group_renewable_units, renewable_unit_bus_index)
 
     number_of_units_per_bidding_group_and_bus =
-        number_of_hydro_units_reservoir_per_bidding_group_and_bus .+
+        number_of_hydro_units_per_bidding_group_and_bus .+
         number_of_thermal_units_per_bidding_group_and_bus .+
         number_of_renewable_units_per_bidding_group_and_bus
 
@@ -186,45 +113,6 @@ function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
     maximum_number_of_offer_segments = maximum(number_of_offer_segments; init = 0)
 
     return maximum_number_of_offer_segments
-end
-
-function maximum_number_of_profiles_for_heuristic_bids(inputs::Inputs)
-    bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
-    number_of_bidding_groups = length(bidding_group_indexes)
-    number_of_buses = number_of_elements(inputs, Bus)
-    bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
-    bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
-
-    number_of_hydro_units_run_of_river_per_bidding_group_and_bus =
-        get_number_of_units_per_bus_and_bg(
-            inputs,
-            bidding_group_hydro_units_run_of_river,
-            hydro_unit_bus_index,
-        )
-
-    number_of_profiles_per_hydro = number_of_subperiods(inputs) * (number_of_subperiods(inputs) - 1) + 1
-
-    number_of_complementary_grouping_profiles_per_hydro = 2 * number_of_subperiods(inputs)
-
-    number_of_units_per_bidding_group_and_bus = number_of_hydro_units_run_of_river_per_bidding_group_and_bus
-
-    maximum_number_of_units_per_bidding_group_profile =
-        dropdims(maximum(number_of_units_per_bidding_group_and_bus; dims = 2); dims = 2)
-
-    number_of_hydro_profiles = number_of_profiles_per_hydro * maximum_number_of_units_per_bidding_group_profile
-
-    number_of_complementary_grouping_profiles =
-        number_of_complementary_grouping_profiles_per_hydro * maximum_number_of_units_per_bidding_group_profile
-
-    number_of_profiles = maximum(number_of_hydro_profiles; init = 0)
-
-    number_of_complementary_grouping_profiles =
-        number_of_complementary_grouping_profiles_per_hydro * maximum_number_of_units_per_bidding_group_profile
-
-    number_of_complementary_grouping_profiles = maximum(number_of_complementary_grouping_profiles; init = 0)
-
-    return number_of_profiles, number_of_complementary_grouping_profiles
 end
 
 """
@@ -257,7 +145,6 @@ function markup_offers_for_period_scenario(
     renewable_generation_series = time_series_renewable_generation(inputs, run_time_options)
 
     bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
     bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
 
     maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
@@ -293,9 +180,9 @@ function markup_offers_for_period_scenario(
             thermal_unit_bus_index,
         )
 
-        hydro_reservoir_unit_indexes_per_bus = get_unit_index_by_bus(
+        hydro_unit_indexes_per_bus = get_unit_index_by_bus(
             inputs,
-            bidding_group_hydro_units_reservoir,
+            bidding_group_hydro_units,
             bg,
             hydro_unit_bus_index,
         )
@@ -336,7 +223,7 @@ function markup_offers_for_period_scenario(
             quantity_offers,
             price_offers,
             no_markup_price_offers,
-            hydro_reservoir_unit_indexes_per_bus,
+            hydro_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
             available_energy_per_hydro_unit,
@@ -396,168 +283,6 @@ function markup_offers_for_period_scenario(
             inputs,
             quantity_offers,
             price_offers;
-            period,
-            scenario,
-        )
-    end
-
-    return nothing
-end
-
-function markup_offers_profile_for_period_scenario(
-    inputs::Inputs,
-    outputs::Outputs,
-    run_time_options::RunTimeOptions,
-    period::Int,
-    scenario::Int,
-)
-    all_bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
-    bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
-    number_of_bidding_groups = length(bidding_group_indexes)
-
-    number_of_buses = number_of_elements(inputs, Bus)
-
-    available_energy_per_hydro_unit =
-        if is_market_clearing(inputs) &&
-           clearing_hydro_representation(inputs) ==
-           Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            hydro_available_energy(inputs, run_time_options, period, scenario)
-        end
-
-    bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_hydro_units_reservoir, bidding_group_hydro_units_run_of_river,
-    bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
-
-    number_of_hydro_profiles, number_of_complementary_grouping_profiles =
-        maximum_number_of_profiles_for_heuristic_bids(inputs)
-
-    quantity_profile_offers = zeros(
-        number_of_bidding_groups,
-        number_of_buses,
-        number_of_hydro_profiles,
-        number_of_subperiods(inputs),
-    )
-
-    price_profile_offers = zeros(
-        number_of_bidding_groups,
-        number_of_hydro_profiles,
-    )
-
-    complementary_grouping_profile =
-        zeros(
-            number_of_bidding_groups,
-            number_of_complementary_grouping_profiles,
-            number_of_hydro_profiles,
-        )
-
-    minimum_activation_level_profile = zeros(
-        number_of_bidding_groups,
-        number_of_hydro_profiles,
-    )
-
-    parent_profile =
-        zeros(
-            number_of_bidding_groups,
-            number_of_hydro_profiles,
-        )
-
-    for bg in bidding_group_indexes
-        if length(bidding_group_hydro_units_run_of_river[bg]) == 0
-            continue
-        end
-
-        hydro_reservoir_unit_indexes_per_bus = get_unit_index_by_bus(
-            inputs,
-            bidding_group_hydro_units_run_of_river,
-            bg,
-            hydro_unit_bus_index,
-        )
-
-        build_hydro_profile_offers!(
-            inputs,
-            bg,
-            quantity_profile_offers,
-            price_profile_offers,
-            complementary_grouping_profile,
-            minimum_activation_level_profile,
-            parent_profile,
-            hydro_reservoir_unit_indexes_per_bus,
-            bidding_group_number_of_risk_factors[bg],
-            available_energy_per_hydro_unit,
-        )
-    end
-
-    write_bid_output(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_energy_offer_profile",
-        # We have to permutate the dimensions because the function expects the dimensions in the order
-        # subperiod, bidding_group, bid_segments, bus
-        permutedims(quantity_profile_offers, (4, 1, 3, 2));
-        period,
-        scenario,
-        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        has_profile_bids = true,
-    )
-
-    indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-        elements_in_output_file = all_bidding_group_indexes,
-        elements_to_write = bidding_group_indexes,
-    )
-
-    write_heuristic_profile_outputs(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_price_offer_profile",
-        price_profile_offers;
-        period,
-        scenario,
-        indices_of_elements_in_output,
-    )
-
-    write_heuristic_profile_outputs(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_parent_profile",
-        parent_profile;
-        period,
-        scenario,
-        indices_of_elements_in_output,
-    )
-
-    write_heuristic_complementary_grouping_profile_outputs(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_complementary_grouping_profile",
-        permutedims(complementary_grouping_profile, (1, 3, 2));
-        period,
-        scenario,
-        indices_of_elements_in_output,
-    )
-
-    write_heuristic_profile_outputs(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_minimum_activation_level_profile",
-        minimum_activation_level_profile;
-        period,
-        scenario,
-        indices_of_elements_in_output,
-    )
-
-    if is_market_clearing(inputs)
-        serialize_heuristic_profile_bids(
-            inputs,
-            quantity_profile_offers,
-            price_profile_offers,
-            complementary_grouping_profile,
-            minimum_activation_level_profile,
-            parent_profile;
             period,
             scenario,
         )
@@ -755,89 +480,6 @@ function build_hydro_offers!(
     end
 
     segment_offset_per_bus .+= length.(hydro_unit_indexes_per_bus) .* number_of_risk_factors
-
-    return nothing
-end
-
-function build_hydro_profile_offers!(
-    inputs::Inputs,
-    bg_index::Int,
-    quantity_profile_offers::Array{Float64, 4},
-    price_profile_offers::Array{Float64, 2},
-    complementary_grouping_profile::Array{Float64, 3},
-    minimum_activation_level_profile::Array{Float64, 2},
-    parent_profiles_profile::Array{Float64, 2},
-    hydro_unit_indexes_per_bus::Vector{Vector{Int}},
-    number_of_risk_factors::Int,
-    available_energy::Union{Vector{Float64}, Nothing},
-)
-    # The array minimum_activation_level_profile is not used in this function
-    # It is only included to keep the function signature consistent with the other build functions
-    # TODO: Add risk profile to the hydro units (number_of_risk_factors > 1)
-    buses = index_of_elements(inputs, Bus)
-
-    # Create the main profile offers
-    period_duration =
-        sum(subperiod_duration_in_hours(inputs, subperiod) for subperiod in 1:number_of_subperiods(inputs))
-    unit_idx = 1
-    for bus in buses
-        for hydro_unit in hydro_unit_indexes_per_bus[bus]
-            price_profile_offers[bg_index, unit_idx] =
-                1 / period_duration * sum(
-                    time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] *
-                    subperiod_duration_in_hours(inputs, subperiod) for
-                    subperiod in 1:number_of_subperiods(inputs)
-                )
-            for subperiod in 1:number_of_subperiods(inputs)
-                quantity_profile_offers[bg_index, bus, unit_idx, subperiod] =
-                    time_series_hydro_generation(inputs)[hydro_unit, subperiod] / MW_to_GW()
-            end
-            parent_profiles_profile[bg_index, unit_idx] = 0
-            unit_idx += 1
-        end
-    end
-    number_of_parent_profiles = unit_idx - 1
-    number_of_profiles_per_hydro = number_of_subperiods(inputs) * (number_of_subperiods(inputs) - 1) + 1
-
-    # Create the child offers
-    for bus in buses
-        for (unit_idx, hydro_unit) in enumerate(hydro_unit_indexes_per_bus[bus])
-            profile = number_of_parent_profiles + (unit_idx - 1) * number_of_profiles_per_hydro
-            for entering_subperiod in 1:number_of_subperiods(inputs)
-                for leaving_subperiod in 1:number_of_subperiods(inputs)
-                    if entering_subperiod == leaving_subperiod
-                        continue
-                    end
-                    profile += 1
-                    hydro_generation_entering_subperiod =
-                        time_series_hydro_generation(inputs)[hydro_unit, entering_subperiod] / MW_to_GW()
-                    hydro_generation_leaving_subperiod =
-                        time_series_hydro_generation(inputs)[hydro_unit, leaving_subperiod] / MW_to_GW()
-                    upper_bound_hydro_generation =
-                        hydro_unit_max_generation(inputs, hydro_unit) *
-                        subperiod_duration_in_hours(inputs, entering_subperiod)
-
-                    # Adjust the hydro generation if it is above the upper bound
-                    if hydro_generation_leaving_subperiod + hydro_generation_entering_subperiod >
-                       upper_bound_hydro_generation
-                        # Only allow transfer the delta between the hydro generation and the upper bound
-                        # Else, it would be possible to the hydro generation to be above the upper bound
-                        hydro_generation_leaving_subperiod =
-                            upper_bound_hydro_generation - hydro_generation_entering_subperiod
-                    end
-                    quantity_profile_offers[bg_index, bus, profile, entering_subperiod] +=
-                        hydro_generation_leaving_subperiod
-                    quantity_profile_offers[bg_index, bus, profile, leaving_subperiod] -=
-                        hydro_generation_leaving_subperiod
-                    parent_profiles_profile[bg_index, profile] = unit_idx
-                    complementary_grouping_profile[bg_index, entering_subperiod, profile] = 1
-                    complementary_grouping_profile[bg_index, number_of_subperiods(inputs)+leaving_subperiod, profile] =
-                        1
-                end
-            end
-            # TODO: Add available_energy when it is reservoir
-        end
-    end
 
     return nothing
 end

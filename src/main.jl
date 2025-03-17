@@ -284,15 +284,8 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
         update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
 
-        number_of_profiles, number_of_complementary_grouping_profiles =
-            maximum_number_of_profiles_for_heuristic_bids(inputs)
-        update_number_of_bid_profiles!(inputs, number_of_profiles)
-        update_number_of_complementary_grouping!(inputs, number_of_complementary_grouping_profiles)
-
         @info("Heuristic bids")
         @info("   Number of segments: $maximum_number_of_offer_segments")
-        @info("   Number of profiles: $number_of_profiles")
-        @info("   Number of complementary grouping profiles: $number_of_complementary_grouping_profiles")
         @info("")
     end
 
@@ -319,15 +312,6 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                     if any_elements(inputs, BiddingGroup)
                         if has_any_simple_bids(inputs)
                             markup_offers_for_period_scenario(
-                                inputs,
-                                heuristic_bids_outputs,
-                                run_time_options,
-                                period,
-                                scenario,
-                            )
-                        end
-                        if has_any_profile_bids(inputs)
-                            markup_offers_profile_for_period_scenario(
                                 inputs,
                                 heuristic_bids_outputs,
                                 run_time_options,

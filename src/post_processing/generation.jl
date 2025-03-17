@@ -65,9 +65,12 @@ function post_processing_generation(inputs::Inputs)
             push!(files, joinpath(output_path(inputs), file))
         end
     end
-    impl = _get_implementation_of_a_list_of_files(files)
+    current_impl = _get_implementation_of_a_list_of_files(files)
+    impl = Quiver.binary
     if number_of_elements(inputs, HydroUnit) > 0
         filename = joinpath(output_path(inputs), "hydro_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "hydro_generation$file_suffix")
         filename_sum = joinpath(temp_path, "hydro_generation_sum$file_suffix")
         Quiver.apply_expression_over_agents(
             filename_sum,
@@ -98,6 +101,8 @@ function post_processing_generation(inputs::Inputs)
     end
     if number_of_elements(inputs, ThermalUnit) > 0
         filename = joinpath(output_path(inputs), "thermal_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "thermal_generation$file_suffix")
         filename_sum = joinpath(temp_path, "thermal_generation_sum$file_suffix")
         Quiver.apply_expression_over_agents(
             filename_sum,
@@ -128,6 +133,8 @@ function post_processing_generation(inputs::Inputs)
     end
     if number_of_elements(inputs, RenewableUnit) > 0
         filename = joinpath(output_path(inputs), "renewable_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "renewable_generation$file_suffix")
         filename_sum = joinpath(temp_path, "renewable_generation_sum$file_suffix")
         Quiver.apply_expression_over_agents(
             filename_sum,
@@ -158,6 +165,8 @@ function post_processing_generation(inputs::Inputs)
     end
     if number_of_elements(inputs, BatteryUnit) > 0
         filename = joinpath(output_path(inputs), "battery_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "battery_generation$file_suffix")
         filename_sum = joinpath(temp_path, "battery_generation_sum$file_suffix")
         Quiver.apply_expression_over_agents(
             filename_sum,
@@ -187,6 +196,8 @@ function post_processing_generation(inputs::Inputs)
         end
     end
     filename = joinpath(output_path(inputs), "deficit$file_suffix")
+    Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+    filename = joinpath(temp_path, "deficit$file_suffix")
     filename_sum = joinpath(temp_path, "deficit_sum$file_suffix")
     Quiver.apply_expression_over_agents(
         filename_sum,
@@ -208,9 +219,15 @@ function post_processing_generation(inputs::Inputs)
         )
     end
 
+    if current_impl == Quiver.csv
+        dir_path = temp_path
+    else
+        dir_path = post_processing_path(inputs)
+    end
+
     if is_market_clearing(inputs)
         Quiver.merge(
-            joinpath(post_processing_path(inputs), "generation$file_suffix"),
+            joinpath(dir_path, "generation$file_suffix"),
             [
                 joinpath(temp_path, "hydro_generation_mean$file_suffix"),
                 joinpath(temp_path, "thermal_generation_mean$file_suffix"),
@@ -223,7 +240,7 @@ function post_processing_generation(inputs::Inputs)
         )
     else
         Quiver.merge(
-            joinpath(post_processing_path(inputs), "generation$file_suffix"),
+            joinpath(dir_path, "generation$file_suffix"),
             [
                 joinpath(temp_path, "hydro_generation_sum$file_suffix"),
                 joinpath(temp_path, "thermal_generation_sum$file_suffix"),
@@ -233,6 +250,15 @@ function post_processing_generation(inputs::Inputs)
             ],
             impl;
             digits = 6,
+        )
+    end
+
+    if current_impl == Quiver.csv
+        Quiver.convert(
+            joinpath(temp_path, "generation$file_suffix"),
+            Quiver.binary,
+            Quiver.csv;
+            destination_directory = post_processing_path(inputs)
         )
     end
 

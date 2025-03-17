@@ -44,7 +44,7 @@ Where:
 - $P_{i, n, \tau, k}(\omega)$ represents the bid offer in segment $k$ for price, calculated by applying a risk factor $p_f$ to the operational cost $\overline{C}^T_j$.
 
 The bid offers are calculated for each thermal unit $j$ in bidding group $b$ and network node $n$ and bid segment $k$.
-Each segment represent a combination of thermal unit and risk factor, so the number of segments is the product of the number of thermal units and the number of risk factors in the bidding group.
+Each segment represents a combination of thermal unit and risk factor, so the number of segments is the product of the number of thermal units and the number of risk factors in the bidding group.
 
 Note: Other thermal unit attributes are not considered when forming these bid offers.
 

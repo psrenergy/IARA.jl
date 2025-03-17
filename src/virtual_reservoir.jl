@@ -53,7 +53,9 @@ function additional_energy_from_inflows(
     hydro_units = order_to_spill_excess_of_inflow(inputs)
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
     for h in hydro_units
-        max_turbining = hydro_unit_max_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() * sum(subperiod_duration_in_hours(inputs))
+        max_turbining =
+            hydro_unit_max_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
+            sum(subperiod_duration_in_hours(inputs))
         inflow_excess = max(volume[h] + inflow_as_volume[h] - (hydro_unit_max_volume(inputs, h) + max_turbining), 0)
         inflow_as_volume[h] -= inflow_excess
         h_downstream = hydro_unit_spill_to(inputs, h)

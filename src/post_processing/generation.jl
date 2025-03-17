@@ -24,7 +24,7 @@ function create_zero_generation_file(
     else
         number_of_periods(inputs)
     end
-    temp_path = joinpath(path_case(inputs), "temp")
+    temp_path = joinpath(output_path(inputs), "temp")
     zeros_array = zeros(Float64, 1, number_of_subperiods(inputs), number_of_scenarios(inputs), periods)
     write_timeseries_file(
         joinpath(temp_path, filename),
@@ -42,7 +42,7 @@ end
 
 function post_processing_generation(inputs::Inputs)
     file_suffix = ""
-    temp_path = joinpath(path_case(inputs), "temp")
+    temp_path = joinpath(output_path(inputs), "temp")
     if !isdir(temp_path)
         mkdir(temp_path)
     end

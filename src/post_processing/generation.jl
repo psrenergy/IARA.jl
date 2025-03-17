@@ -258,7 +258,7 @@ function post_processing_generation(inputs::Inputs)
             joinpath(temp_path, "generation$file_suffix"),
             Quiver.binary,
             Quiver.csv;
-            destination_directory = post_processing_path(inputs)
+            destination_directory = post_processing_path(inputs),
         )
     end
 

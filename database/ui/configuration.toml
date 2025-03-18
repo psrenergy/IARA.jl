@@ -279,7 +279,7 @@ hide = true
 
 [[attribute]]
 id = "network_representation_ex_ante_physical"
-label.en = "Network Representation Ex Ante Physical"    
+label.en = "Network Representation Ex Ante Physical"
 tooltip.en = "Network representation ex ante physical of the configuration"
 hide = true
 

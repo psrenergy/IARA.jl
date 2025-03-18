@@ -472,6 +472,7 @@ function _join_independent_and_profile_bid(
             [filepath_independent, filepath_profile],
             +,
             Quiver.csv,
+            digits = 6,
         )
     end
     if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
@@ -524,6 +525,7 @@ function _join_independent_and_profile_bid(
             [filepath_independent, filepath_profile],
             +,
             impl,
+            digits = 6,
         )
     end
 

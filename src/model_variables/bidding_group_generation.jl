@@ -26,9 +26,8 @@ function bidding_group_generation!(
     blks = subperiods(inputs)
 
     # Time series
-    placeholder_scenario = 1
-    quantity_offer_series = time_series_quantity_offer(inputs, model.node, placeholder_scenario)
-    price_offer_series = time_series_price_offer(inputs, model.node, placeholder_scenario)
+    placeholder_quantity_offer_series = 0.0
+    placeholder_price_offer_series = 0.0
 
     valid_segments = get_maximum_valid_segments(inputs)
 
@@ -42,7 +41,7 @@ function bidding_group_generation!(
             bus in buses,
         ]
         in
-        MOI.Parameter(quantity_offer_series[bg, bus, bds, blk])
+        MOI.Parameter(placeholder_quantity_offer_series)
     ) # MWh
     @variable(
         model.jump_model,
@@ -53,7 +52,7 @@ function bidding_group_generation!(
             bus in buses,
         ]
         in
-        MOI.Parameter(price_offer_series[bg, bus, bds, blk])
+        MOI.Parameter(placeholder_price_offer_series)
     ) # $/MWh
 
     # Variables

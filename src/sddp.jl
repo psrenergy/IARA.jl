@@ -130,8 +130,6 @@ function build_simulation_scheme(
         simulation_scheme = seasonal_simulation_scheme(inputs, run_time_options; current_period)
     end
 
-    @show simulation_scheme
-
     return simulation_scheme
 end
 

@@ -89,8 +89,8 @@ h_ex_post[:, :, 2, :, :] = copy(h_ex_ante) * 0.9
 r_ex_post[:, :, 2, :, :] = copy(r_ex_ante) * 0.9
 d_ex_post[:, :, 2, :, :] = copy(d_ex_ante) * 0.9
 
-r_ex_post = max.(r_ex_post, 1.0)
-d_ex_post = max.(d_ex_post, 1.0)
+r_ex_post = min.(r_ex_post, 1.0)
+d_ex_post = min.(d_ex_post, 1.0)
 
 IARA.write_timeseries_file(
     joinpath(PATH, "h_ex_ante"),

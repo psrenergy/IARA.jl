@@ -105,7 +105,7 @@ function build_simulation_scheme(
     current_period::Union{Nothing, Int} = nothing,
 )
     simulation_scheme =
-        Array{Array{Tuple{Int, Tuple{Int, Int}}, 1}, 1}(
+        Array{Array{Tuple{Int, Tuple{Int, Int, Int}}, 1}, 1}(
             undef,
             number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
         )

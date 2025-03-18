@@ -9,23 +9,17 @@
 #############################################################################
 
 """
-    post_processing_generation(inputs::Inputs)
+    post_processing_generation(inputs::Inputs, run_time_options::RunTimeOptions)
 
 Run post-processing routines for generation.
 """
-function post_processing_generation(inputs::Inputs)
-    periods = if is_single_period(inputs)
-        1
-    else
-        number_of_periods(inputs)
-    end
-    generation = zeros(
-        5,
-        number_of_subperiods(inputs),
-        number_of_scenarios(inputs),
-        periods,
-    )
+function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOptions)
     file_suffix = ""
+    temp_path = joinpath(output_path(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+
     if is_market_clearing(inputs)
         if (construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP) ||
            (construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.BID_BASED)
@@ -37,56 +31,223 @@ function post_processing_generation(inputs::Inputs)
     if is_single_period(inputs)
         file_suffix *= "_period_$(inputs.args.period)"
     end
+
+    files = String[]
+    for file in readdir(output_path(inputs))
+        if occursin(r"generation", file)
+            push!(files, joinpath(output_path(inputs), file))
+        end
+    end
+    current_impl = _get_implementation_of_a_list_of_files(files)
+    impl = Quiver.binary
     if number_of_elements(inputs, HydroUnit) > 0
-        hydro_generation, _ = read_timeseries_file_in_outputs("hydro_generation$file_suffix", inputs)
-        generation[1, :, :, :] = if is_market_clearing(inputs)
-            mean(sum(hydro_generation; dims = 1); dims = 3)
-        else
-            sum(hydro_generation; dims = 1)
+        filename = joinpath(output_path(inputs), "hydro_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "hydro_generation$file_suffix")
+        filename_sum = joinpath(temp_path, "hydro_generation_sum$file_suffix")
+        Quiver.apply_expression_over_agents(
+            filename_sum,
+            filename,
+            sum,
+            ["hydro"],
+            impl;
+            digits = 6,
+        )
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "hydro_generation_mean$file_suffix")
+            Quiver.apply_expression_over_dimension(
+                filename_mean,
+                filename_sum,
+                mean,
+                :subscenario,
+                impl;
+                digits = 6,
+            )
+        end
+    else
+        filename_sum = joinpath(temp_path, "hydro_generation_sum$file_suffix")
+        create_zero_file(inputs, run_time_options, "hydro_generation_sum$file_suffix", ["hydro"], impl, "GWh")
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "hydro_generation_mean$file_suffix")
+            create_zero_file(inputs, run_time_options, "hydro_generation_mean$file_suffix", ["hydro"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, ThermalUnit) > 0
-        thermal_generation, _ = read_timeseries_file_in_outputs("thermal_generation$file_suffix", inputs)
-        generation[2, :, :, :] = if is_market_clearing(inputs)
-            mean(sum(thermal_generation; dims = 1); dims = 3)
-        else
-            sum(thermal_generation; dims = 1)
+        filename = joinpath(output_path(inputs), "thermal_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "thermal_generation$file_suffix")
+        filename_sum = joinpath(temp_path, "thermal_generation_sum$file_suffix")
+        Quiver.apply_expression_over_agents(
+            filename_sum,
+            filename,
+            sum,
+            ["thermal"],
+            impl;
+            digits = 6,
+        )
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "thermal_generation_mean$file_suffix")
+            Quiver.apply_expression_over_dimension(
+                filename_mean,
+                filename_sum,
+                mean,
+                :subscenario,
+                impl;
+                digits = 6,
+            )
+        end
+    else
+        filename_sum = joinpath(temp_path, "thermal_generation_sum$file_suffix")
+        create_zero_file(inputs, run_time_options, "thermal_generation_sum$file_suffix", ["thermal"], impl, "GWh")
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "thermal_generation_mean$file_suffix")
+            create_zero_file(inputs, run_time_options, "thermal_generation_mean$file_suffix", ["thermal"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, RenewableUnit) > 0
-        renewable_generation, _ = read_timeseries_file_in_outputs("renewable_generation$file_suffix", inputs)
-        generation[3, :, :, :] = if is_market_clearing(inputs)
-            mean(sum(renewable_generation; dims = 1); dims = 3)
-        else
-            sum(renewable_generation; dims = 1)
+        filename = joinpath(output_path(inputs), "renewable_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "renewable_generation$file_suffix")
+        filename_sum = joinpath(temp_path, "renewable_generation_sum$file_suffix")
+        Quiver.apply_expression_over_agents(
+            filename_sum,
+            filename,
+            sum,
+            ["renewable"],
+            impl;
+            digits = 6,
+        )
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "renewable_generation_mean$file_suffix")
+            Quiver.apply_expression_over_dimension(
+                filename_mean,
+                filename_sum,
+                mean,
+                :subscenario,
+                impl;
+                digits = 6,
+            )
+        end
+    else
+        filename_sum = joinpath(temp_path, "renewable_generation_sum$file_suffix")
+        create_zero_file(inputs, run_time_options, "renewable_generation_sum$file_suffix", ["renewable"], impl, "GWh")
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "renewable_generation_mean$file_suffix")
+            create_zero_file(
+                inputs,
+                run_time_options,
+                "renewable_generation_mean$file_suffix",
+                ["renewable"],
+                impl,
+                "GWh",
+            )
         end
     end
     if number_of_elements(inputs, BatteryUnit) > 0
-        battery_unit_generation, _ = read_timeseries_file_in_outputs("battery_generation$file_suffix", inputs)
-        generation[4, :, :, :] = if is_market_clearing(inputs)
-            mean(sum(battery_unit_generation; dims = 1); dims = 3)
-        else
-            sum(battery_unit_generation; dims = 1)
+        filename = joinpath(output_path(inputs), "battery_generation$file_suffix")
+        Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+        filename = joinpath(temp_path, "battery_generation$file_suffix")
+        filename_sum = joinpath(temp_path, "battery_generation_sum$file_suffix")
+        Quiver.apply_expression_over_agents(
+            filename_sum,
+            filename,
+            sum,
+            ["battery_unit"],
+            impl;
+            digits = 6,
+        )
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "battery_generation_mean$file_suffix")
+            Quiver.apply_expression_over_dimension(
+                filename_mean,
+                filename_sum,
+                mean,
+                :subscenario,
+                impl;
+                digits = 6,
+            )
+        end
+    else
+        filename_sum = joinpath(temp_path, "battery_generation_sum$file_suffix")
+        create_zero_file(inputs, run_time_options, "battery_generation_sum$file_suffix", ["battery_unit"], impl, "GWh")
+        if is_market_clearing(inputs)
+            filename_mean = joinpath(temp_path, "battery_generation_mean$file_suffix")
+            create_zero_file(
+                inputs,
+                run_time_options,
+                "battery_generation_mean$file_suffix",
+                ["battery_unit"],
+                impl,
+                "GWh",
+            )
         end
     end
-
-    deficit, _ = read_timeseries_file_in_outputs("deficit$file_suffix", inputs)
-    generation[5, :, :, :] = if is_market_clearing(inputs)
-        mean(sum(deficit; dims = 1); dims = 3)
-    else
-        sum(deficit; dims = 1)
+    filename = joinpath(output_path(inputs), "deficit$file_suffix")
+    Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
+    filename = joinpath(temp_path, "deficit$file_suffix")
+    filename_sum = joinpath(temp_path, "deficit_sum$file_suffix")
+    Quiver.apply_expression_over_agents(
+        filename_sum,
+        filename,
+        sum,
+        ["deficit"],
+        impl;
+        digits = 6,
+    )
+    if is_market_clearing(inputs)
+        filename_mean = joinpath(temp_path, "deficit_mean$file_suffix")
+        Quiver.apply_expression_over_dimension(
+            filename_mean,
+            filename_sum,
+            mean,
+            :subscenario,
+            impl;
+            digits = 6,
+        )
     end
 
-    write_timeseries_file(
-        joinpath(post_processing_path(inputs), "generation"),
-        generation;
-        dimensions = ["period", "scenario", "subperiod"],
-        labels = ["hydro", "thermal", "renewable", "battery_unit", "deficit"],
-        time_dimension = "period",
-        dimension_size = [periods, number_of_scenarios(inputs), number_of_subperiods(inputs)],
-        initial_date = initial_date_time(inputs),
-        unit = "GWh",
-    )
+    if current_impl == Quiver.csv
+        dir_path = temp_path
+    else
+        dir_path = post_processing_path(inputs)
+    end
+
+    if is_market_clearing(inputs)
+        Quiver.merge(
+            joinpath(dir_path, "generation$file_suffix"),
+            [
+                joinpath(temp_path, "hydro_generation_mean$file_suffix"),
+                joinpath(temp_path, "thermal_generation_mean$file_suffix"),
+                joinpath(temp_path, "renewable_generation_mean$file_suffix"),
+                joinpath(temp_path, "battery_generation_mean$file_suffix"),
+                joinpath(temp_path, "deficit_mean$file_suffix"),
+            ],
+            impl;
+            digits = 6,
+        )
+    else
+        Quiver.merge(
+            joinpath(dir_path, "generation$file_suffix"),
+            [
+                joinpath(temp_path, "hydro_generation_sum$file_suffix"),
+                joinpath(temp_path, "thermal_generation_sum$file_suffix"),
+                joinpath(temp_path, "renewable_generation_sum$file_suffix"),
+                joinpath(temp_path, "battery_generation_sum$file_suffix"),
+                joinpath(temp_path, "deficit_sum$file_suffix"),
+            ],
+            impl;
+            digits = 6,
+        )
+    end
+
+    if current_impl == Quiver.csv
+        Quiver.convert(
+            joinpath(temp_path, "generation$file_suffix"),
+            Quiver.binary,
+            Quiver.csv;
+            destination_directory = post_processing_path(inputs),
+        )
+    end
 
     return nothing
 end

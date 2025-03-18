@@ -8,20 +8,17 @@ function _write_costs_bg_file(
 )
     outputs_dir = output_path(inputs)
     post_processing_dir = post_processing_path(inputs)
-    tempdir = joinpath(path_case(inputs), "temp")
+    tempdir = joinpath(output_path(inputs), "temp")
 
     num_bidding_groups = length(inputs.collections.bidding_group)
     num_buses = length(inputs.collections.bus)
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
 
-    file_end = "_generation_$(clearing_procedure)"
-    if is_single_period(inputs)
-        file_end *= "_period_$(inputs.args.period)"
-    end
-    file_end *= ".csv"
+    suffix = "$(clearing_procedure)"
+    suffix *= run_time_file_suffixes(inputs, run_time_options)
     generation_files =
-        filter(x -> endswith(x, file_end), readdir(outputs_dir))
+        filter(x -> endswith(x, "_generation_" * suffix * ".csv"), readdir(outputs_dir))
     if isempty(generation_files)
         return
     end
@@ -56,7 +53,7 @@ function _write_costs_bg_file(
 
     total_costs_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
     for generation_technology in generation_technologies
-        costs_file = get_costs_files_from_tech(inputs, clearing_procedure, generation_technology)
+        costs_file = get_costs_files_from_tech(inputs, suffix, generation_technology)
         if isnothing(costs_file)
             continue
         end
@@ -177,11 +174,11 @@ function get_costs_files(path::String; from_ex_post::Bool)
     end
 end
 
-function get_costs_files_from_tech(inputs::Inputs, clearing_procedure::String, technology::String)
+function get_costs_files_from_tech(inputs::Inputs, suffix::String, technology::String)
     post_processing_dir = post_processing_path(inputs)
-    tempdir = joinpath(path_case(inputs), "temp")
+    tempdir = joinpath(output_path(inputs), "temp")
     costs_file = filter(
-        x -> endswith(x, clearing_procedure * ".csv") && occursin(technology, x) && occursin("total_costs", x),
+        x -> endswith(x, suffix * ".csv") && occursin(technology, x) && occursin("total_costs", x),
         readdir(tempdir),
     )
     if isempty(costs_file)
@@ -196,30 +193,37 @@ function _merge_costs_files(
     clearing_procedure::String,
 )
     outputs_dir = output_path(inputs)
-    tempdir = joinpath(path_case(inputs), "temp")
+    tempdir = joinpath(output_path(inputs), "temp")
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
     for generation_technology in generation_technologies
         costs_files = filter(
             x ->
-                (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
-                    && endswith(x, clearing_procedure * ".csv"), readdir(outputs_dir))
-
-        if isempty(costs_files)
-            costs_files = filter(
-                x ->
-                    (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
-                        && endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv"),
-                readdir(outputs_dir))
-        end
+                (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x) &&
+                    !occursin("opportunity_cost", x)
+                    &&
+                    (
+                        endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".quiv") ||
+                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") ||
+                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".quiv")
+                    ), readdir(outputs_dir))
+        impl = _get_implementation_of_a_list_of_files(costs_files)
         if isempty(costs_files)
             continue
         end
-        filename = generation_technology * "_total_costs_$(clearing_procedure).csv"
-        sum_multiple_files(
-            joinpath(tempdir, get_filename(filename)),
-            [joinpath(outputs_dir, get_filename(file)) for file in costs_files],
-            Quiver.csv,
+        if is_single_period(inputs)
+            filename = generation_technology * "_total_costs_$(clearing_procedure)_period_$(inputs.args.period)"
+        else
+            filename = generation_technology * "_total_costs_$(clearing_procedure)"
+        end
+        output_file = joinpath(tempdir, get_filename(filename))
+        files = [joinpath(outputs_dir, get_filename(file)) for file in costs_files]
+        Quiver.apply_expression(
+            output_file,
+            files,
+            +,
+            impl;
+            digits = 6,
         )
     end
     return nothing
@@ -236,8 +240,6 @@ function create_bidding_group_cost_files(
     model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    outputs_dir = output_path(inputs)
-
     num_bidding_groups = length(inputs.collections.bidding_group)
 
     if num_bidding_groups == 0
@@ -245,9 +247,20 @@ function create_bidding_group_cost_files(
     end
 
     clearing_procedures = ["ex_ante_physical", "ex_ante_commercial", "ex_post_physical", "ex_post_commercial"]
+    construction_types = [
+        construction_type_ex_ante_physical(inputs)
+        construction_type_ex_ante_commercial(inputs)
+        construction_type_ex_post_physical(inputs)
+        construction_type_ex_post_commercial(inputs)
+    ]
     is_ex_post = [false, false, true, true]
 
     for (i, clearing_procedure) in enumerate(clearing_procedures)
+        # Skip if there isn't physical data for construction type
+        if construction_types[i] in
+           [Configurations_ConstructionType.SKIP, Configurations_ConstructionType.BID_BASED]
+            continue
+        end
         _merge_costs_files(
             inputs,
             clearing_procedure,

@@ -2,11 +2,6 @@ id = "DCLine"
 icon = "lucide/spline.svg"
 label.en = "DC Line"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -21,3 +16,30 @@ tooltip.en = "Bus to of the DC line"
 id = "bus_from"
 label.en = "Bus From"
 tooltip.en = "Bus from of the DC line"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the DC line"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the DC line"
+
+[[attribute]]
+id = "capacity_to"
+label.en = "Capacity To"
+tooltip.en = "Capacity to of the DC line"
+
+[[attribute]]
+id = "capacity_from"
+label.en = "Capacity From"
+tooltip.en = "Capacity from of the DC line"

@@ -2,11 +2,6 @@ id = "BatteryUnit"
 icon = "lucide/battery-charging.svg"
 label.en = "Battery Unit"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -26,6 +21,11 @@ tooltip.en = "Bus ID of the battery unit"
 id = "biddinggroup_id"
 label.en = "Bidding Group ID"
 tooltip.en = "Bidding group ID of the battery unit"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
 
 [[attribute]]
 id = "date_time"

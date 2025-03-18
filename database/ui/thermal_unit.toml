@@ -2,11 +2,6 @@ id = "ThermalUnit"
 icon = "lucide/factory.svg"
 label.en = "Thermal Unit"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -88,3 +83,40 @@ tooltip.en = "Bidding group of the thermal unit"
 id = "commitment_initial_condition"
 label.en = "Commitment Initial Condition"
 tooltip.en = "Commitment initial condition of the thermal unit"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the thermal unit"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the thermal unit"
+
+[[attribute]]
+id = "startup_cost"
+label.en = "Startup Cost"
+tooltip.en = "Startup cost of the thermal unit"
+
+[[attribute]]
+id = "min_generation"
+label.en = "Min Generation"
+tooltip.en = "Min generation of the thermal unit"
+
+[[attribute]]
+id = "max_generation"
+label.en = "Max Generation"
+tooltip.en = "Max generation of the thermal unit"
+
+[[attribute]]
+id = "om_cost"
+label.en = "O&M Cost"
+tooltip.en = "O&M cost of the thermal unit"

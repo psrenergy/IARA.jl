@@ -2,11 +2,6 @@ id = "AssetOwner"
 icon = "lucide/building-2.svg"
 label.en = "Asset Owner"
 
-[[attribute_group]]
-id = "markup"
-label.en = "Markup"
-icon = "lucide/circle-dollar-sign.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -21,6 +16,11 @@ tooltip.en = "Price type of the asset owner"
 id = "risk_factor"
 label.en = "Risk Factor"
 tooltip.en = "Risk factor of the asset owner"
+
+[[attribute_group]]
+id = "markup"
+label.en = "Markup"
+icon = "lucide/circle-dollar-sign.svg"
 
 [[attribute]]
 id = "segment_fraction"

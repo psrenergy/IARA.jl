@@ -2,11 +2,6 @@ id = "DemandUnit"
 icon = "lucide/zap.svg"
 label.en = "Demand Unit"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -51,3 +46,20 @@ tooltip.en = "Max demand of the demand unit"
 id = "gaugingstation_downstream"
 label.en = "Gauging Station Downstream"
 tooltip.en = "Gauging station downstream of the demand unit"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the demand unit"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the demand unit"

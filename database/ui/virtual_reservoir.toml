@@ -11,3 +11,28 @@ tooltip.en = "Label of the virtual reservoir"
 id = "number_of_waveguide_points_for_file_template"
 label.en = "Number of Waveguide Points for File Template"
 tooltip.en = "Number of waveguide points for file template of the virtual reservoir"
+
+[[attribute_group]]
+id = "owner_and_allocation"
+label.en = "Owner and Allocation"
+icon = "lucide/user.svg"
+
+[[attribute]]
+id = "inflow_allocation"
+label.en = "Inflow Allocation"
+tooltip.en = "Inflow allocation of the virtual reservoir"
+
+[[attribute]]
+id = "assetowner_id"
+label.en = "Asset Owner"
+tooltip.en = "Asset owner of the virtual reservoir"
+
+[[attribute_group]]
+id = "hydro_unit"
+label.en = "Hydro Unit"
+icon = "lucide/droplet.svg"
+
+[[attribute]]
+id = "hydrounit_id"
+label.en = "Hydro Unit"
+tooltip.en = "Hydro unit of the virtual reservoir"

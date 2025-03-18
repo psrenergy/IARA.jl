@@ -2,16 +2,6 @@ id = "HydroUnit"
 icon = "lucide/dam.svg"
 label.en = "Hydro Unit"
 
-[[attribute_group]]
-id = "waveguide"
-label.en = "Waveguide"
-icon = "lucide/settings-2.svg"
-
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -63,3 +53,70 @@ tooltip.en = "Turbine to of the hydro unit"
 id = "hydrounit_spill_to"
 label.en = "Spill To"
 tooltip.en = "Spill to of the hydro unit"
+
+[[attribute_group]]
+id = "waveguide"
+label.en = "Waveguide"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "waveguide_volume"
+label.en = "Waveguide Volume"
+tooltip.en = "Waveguide volume of the hydro unit"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the hydro unit"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the hydro unit"
+
+[[attribute]]
+id = "production_factor"
+label.en = "Production Factor"
+tooltip.en = "Production factor of the hydro unit"
+
+[[attribute]]
+id = "min_generation"
+label.en = "Min Generation"
+tooltip.en = "Min generation of the hydro unit"
+
+[[attribute]]
+id = "max_generation"
+label.en = "Max Generation"
+tooltip.en = "Max generation of the hydro unit"
+
+[[attribute]]
+id = "max_turbining"
+label.en = "Max Turbining"
+tooltip.en = "Max turbining of the hydro unit"
+
+[[attribute]]
+id = "min_volume"
+label.en = "Min Volume"
+tooltip.en = "Min volume of the hydro unit"
+
+[[attribute]]
+id = "max_volume"
+label.en = "Max Volume"
+tooltip.en = "Max volume of the hydro unit"
+
+[[attribute]]
+id = "min_outflow"
+label.en = "Min Outflow"
+tooltip.en = "Min outflow of the hydro unit"
+
+[[attribute]]
+id = "om_cost"
+label.en = "O&M Cost"
+tooltip.en = "O&M cost of the hydro unit"

@@ -279,7 +279,7 @@ hide = true
 
 [[attribute]]
 id = "network_representation_ex_ante_physical"
-label.en = "Network Representation Ex Ante Physical"    
+label.en = "Network Representation Ex Ante Physical"
 tooltip.en = "Network representation ex ante physical of the configuration"
 hide = true
 
@@ -300,3 +300,23 @@ id = "network_representation_ex_post_commercial"
 label.en = "Network Representation Ex Post Commercial"
 tooltip.en = "Network representation ex post commercial of the configuration"
 hide = true
+
+[[attribute_group]]
+id = "subperiod_duration"
+label.en = "Subperiod Duration"
+icon = "lucide/clock.svg"
+
+[[attribute]]
+id = "subperiod_duration_in_hours"
+label.en = "Subperiod Duration in Hours"
+tooltip.en = "Subperiod duration in hours of the configuration"
+
+[[attribute_group]]
+id = "expected_number_of_repeats_per_node"
+label.en = "Number of Repeats"
+icon = "lucide/repeat.svg"
+
+[[attribute]]
+id = "expected_number_of_repeats_per_node"
+label.en = "Expected Number of Repeats per Node"
+tooltip.en = "Expected number of repeats per node of the configuration"

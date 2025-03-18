@@ -203,7 +203,7 @@ function _merge_costs_files(
         costs_files = filter(
             x ->
                 (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x) &&
-                !occursin("opportunity_cost", x)
+                    !occursin("opportunity_cost", x)
                     &&
                     (
                         endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".quiv") ||

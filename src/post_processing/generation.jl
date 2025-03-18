@@ -133,7 +133,14 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
         create_zero_file(inputs, run_time_options, "renewable_generation_sum$file_suffix", ["renewable"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "renewable_generation_mean$file_suffix")
-            create_zero_file(inputs, run_time_options, "renewable_generation_mean$file_suffix", ["renewable"], impl, "GWh")
+            create_zero_file(
+                inputs,
+                run_time_options,
+                "renewable_generation_mean$file_suffix",
+                ["renewable"],
+                impl,
+                "GWh",
+            )
         end
     end
     if number_of_elements(inputs, BatteryUnit) > 0
@@ -165,7 +172,14 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
         create_zero_file(inputs, run_time_options, "battery_generation_sum$file_suffix", ["battery_unit"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "battery_generation_mean$file_suffix")
-            create_zero_file(inputs, run_time_options, "battery_generation_mean$file_suffix", ["battery_unit"], impl, "GWh")
+            create_zero_file(
+                inputs,
+                run_time_options,
+                "battery_generation_mean$file_suffix",
+                ["battery_unit"],
+                impl,
+                "GWh",
+            )
         end
     end
     filename = joinpath(output_path(inputs), "deficit$file_suffix")

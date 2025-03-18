@@ -158,9 +158,21 @@ function create_zero_file(
     end
     temp_path = joinpath(output_path(inputs), "temp")
     if has_subscenarios
-        zeros_array = zeros(Float64, length(labels), number_of_subperiods(inputs), number_of_subscenarios(inputs, run_time_options), number_of_scenarios(inputs), periods)
+        zeros_array = zeros(
+            Float64,
+            length(labels),
+            number_of_subperiods(inputs),
+            number_of_subscenarios(inputs, run_time_options),
+            number_of_scenarios(inputs),
+            periods,
+        )
         dimensions = ["period", "scenario", "subscenario", "subperiod"]
-        dimension_size = [periods, number_of_scenarios(inputs), number_of_subscenarios(inputs, run_time_options), number_of_subperiods(inputs)]
+        dimension_size = [
+            periods,
+            number_of_scenarios(inputs),
+            number_of_subscenarios(inputs, run_time_options),
+            number_of_subperiods(inputs),
+        ]
     else
         zeros_array = zeros(Float64, length(labels), number_of_subperiods(inputs), number_of_scenarios(inputs), periods)
         dimensions = ["period", "scenario", "subperiod"]

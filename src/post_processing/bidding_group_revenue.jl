@@ -442,8 +442,8 @@ function _join_independent_and_profile_bid(
                 "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
                 _get_bidding_group_bus_labels(inputs),
                 impl,
-                "\$",
-                has_subscenarios = has_subscenarios
+                "\$";
+                has_subscenarios = has_subscenarios,
             )
         end
         if !has_any_profile_bids(inputs)
@@ -457,8 +457,8 @@ function _join_independent_and_profile_bid(
                 "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
                 _get_bidding_group_bus_labels(inputs),
                 impl,
-                "\$",
-                has_subscenarios = has_subscenarios
+                "\$";
+                has_subscenarios = has_subscenarios,
             )
         end
 
@@ -494,8 +494,8 @@ function _join_independent_and_profile_bid(
                 "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
                 _get_bidding_group_bus_labels(inputs),
                 impl,
-                "\$",
-                has_subscenarios = true
+                "\$";
+                has_subscenarios = true,
             )
         end
         if !has_any_profile_bids(inputs)
@@ -509,8 +509,8 @@ function _join_independent_and_profile_bid(
                 "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
                 _get_bidding_group_bus_labels(inputs),
                 impl,
-                "\$",
-                has_subscenarios = true
+                "\$";
+                has_subscenarios = true,
             )
         end
 

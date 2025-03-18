@@ -203,23 +203,26 @@ function _merge_costs_files(
         costs_files = filter(
             x ->
                 (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
-                    && endswith(x, clearing_procedure * ".csv"), readdir(outputs_dir))
-
-        if isempty(costs_files)
-            costs_files = filter(
-                x ->
-                    (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
-                        && endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv"),
-                readdir(outputs_dir))
-        end
+                    && 
+                    (endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".quiv") ||
+                    endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") ||
+                    endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".quiv")), readdir(outputs_dir))
+        impl = _get_implementation_of_a_list_of_files(costs_files)
         if isempty(costs_files)
             continue
         end
-        filename = generation_technology * "_total_costs_$(clearing_procedure).csv"
-        sum_multiple_files(
-            joinpath(tempdir, get_filename(filename)),
-            [joinpath(outputs_dir, get_filename(file)) for file in costs_files],
-            Quiver.csv,
+        if is_single_period(inputs)
+            filename = generation_technology * "_total_costs_$(clearing_procedure)_period_$(inputs.args.period)"
+        else
+            filename = generation_technology * "_total_costs_$(clearing_procedure)"
+        end
+        output_file = joinpath(tempdir, get_filename(filename))
+        files = [joinpath(outputs_dir, get_filename(file)) for file in costs_files]
+        Quiver.apply_expression(
+            output_file,
+            files,
+            +,
+            impl,
         )
     end
     return nothing

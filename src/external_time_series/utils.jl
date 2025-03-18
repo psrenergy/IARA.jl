@@ -42,6 +42,7 @@ function write_timeseries_file(
     dimension_size::Vector{Int},
     initial_date::Union{String, DateTime} = "",
     unit::String = "",
+    frequency::String = "month",
     implementation::Type{<:Quiver.Implementation} = Quiver.csv,
 ) where {T, N}
     Quiver.array_to_file(
@@ -54,6 +55,7 @@ function write_timeseries_file(
         dimension_size,
         initial_date,
         unit,
+        frequency,
         digits = 6,
     )
     return nothing

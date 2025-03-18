@@ -13,33 +13,6 @@
 
 Run post-processing routines for generation.
 """
-function create_zero_generation_file(
-    inputs::Inputs,
-    filename::String,
-    label::String,
-    impl::Type{<:Quiver.Implementation},
-)
-    periods = if is_single_period(inputs)
-        1
-    else
-        number_of_periods(inputs)
-    end
-    temp_path = joinpath(output_path(inputs), "temp")
-    zeros_array = zeros(Float64, 1, number_of_subperiods(inputs), number_of_scenarios(inputs), periods)
-    write_timeseries_file(
-        joinpath(temp_path, filename),
-        zeros_array;
-        dimensions = ["period", "scenario", "subperiod"],
-        labels = [label],
-        time_dimension = "period",
-        dimension_size = [periods, number_of_scenarios(inputs), number_of_subperiods(inputs)],
-        initial_date = initial_date_time(inputs),
-        unit = "GWh",
-        implementation = impl,
-    )
-    return nothing
-end
-
 function post_processing_generation(inputs::Inputs)
     file_suffix = ""
     temp_path = joinpath(output_path(inputs), "temp")
@@ -93,10 +66,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "hydro_generation_sum$file_suffix")
-        create_zero_generation_file(inputs, "hydro_generation_sum$file_suffix", "hydro", impl)
+        create_zero_file(inputs, "hydro_generation_sum$file_suffix", ["hydro"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "hydro_generation_mean$file_suffix")
-            create_zero_generation_file(inputs, "hydro_generation_mean$file_suffix", "hydro", impl)
+            create_zero_file(inputs, "hydro_generation_mean$file_suffix", ["hydro"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, ThermalUnit) > 0
@@ -125,10 +98,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "thermal_generation_sum$file_suffix")
-        create_zero_generation_file(inputs, "thermal_generation_sum$file_suffix", "thermal", impl)
+        create_zero_file(inputs, "thermal_generation_sum$file_suffix", ["thermal"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "thermal_generation_mean$file_suffix")
-            create_zero_generation_file(inputs, "thermal_generation_mean$file_suffix", "thermal", impl)
+            create_zero_file(inputs, "thermal_generation_mean$file_suffix", ["thermal"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, RenewableUnit) > 0
@@ -157,10 +130,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "renewable_generation_sum$file_suffix")
-        create_zero_generation_file(inputs, "renewable_generation_sum$file_suffix", "renewable", impl)
+        create_zero_file(inputs, "renewable_generation_sum$file_suffix", ["renewable"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "renewable_generation_mean$file_suffix")
-            create_zero_generation_file(inputs, "renewable_generation_mean$file_suffix", "renewable", impl)
+            create_zero_file(inputs, "renewable_generation_mean$file_suffix", ["renewable"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, BatteryUnit) > 0
@@ -189,10 +162,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "battery_generation_sum$file_suffix")
-        create_zero_generation_file(inputs, "battery_generation_sum$file_suffix", "battery", impl)
+        create_zero_file(inputs, "battery_generation_sum$file_suffix", ["battery_unit"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "battery_generation_mean$file_suffix")
-            create_zero_generation_file(inputs, "battery_generation_mean$file_suffix", "battery", impl)
+            create_zero_file(inputs, "battery_generation_mean$file_suffix", ["battery_unit"], impl, "GWh")
         end
     end
     filename = joinpath(output_path(inputs), "deficit$file_suffix")

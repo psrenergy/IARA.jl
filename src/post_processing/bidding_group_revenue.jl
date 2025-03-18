@@ -471,7 +471,7 @@ function _join_independent_and_profile_bid(
             file_revenue_ex_ante,
             [filepath_independent, filepath_profile],
             +,
-            Quiver.csv,
+            Quiver.csv;
             digits = 6,
         )
     end
@@ -524,7 +524,7 @@ function _join_independent_and_profile_bid(
             file_revenue_ex_post,
             [filepath_independent, filepath_profile],
             +,
-            impl,
+            impl;
             digits = 6,
         )
     end

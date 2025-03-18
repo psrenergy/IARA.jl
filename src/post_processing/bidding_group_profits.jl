@@ -44,7 +44,7 @@ function calculate_profits_settlement(
         file_profit,
         [file_revenue, bidding_group_costs_file],
         -,
-        Quiver.csv,
+        Quiver.csv;
         digits = 6,
     )
 

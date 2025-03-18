@@ -222,7 +222,7 @@ function _merge_costs_files(
             output_file,
             files,
             +,
-            impl,
+            impl;
             digits = 6,
         )
     end

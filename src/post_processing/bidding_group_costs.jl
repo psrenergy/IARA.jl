@@ -203,10 +203,12 @@ function _merge_costs_files(
         costs_files = filter(
             x ->
                 (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x)
-                    && 
-                    (endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".quiv") ||
-                    endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") ||
-                    endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".quiv")), readdir(outputs_dir))
+                    &&
+                    (
+                        endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".quiv") ||
+                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") ||
+                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".quiv")
+                    ), readdir(outputs_dir))
         impl = _get_implementation_of_a_list_of_files(costs_files)
         if isempty(costs_files)
             continue

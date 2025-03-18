@@ -425,7 +425,7 @@ function _join_independent_and_profile_bid(
             post_processing_dir,
             "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
         )
-        
+
         filepath_profile = joinpath(
             post_processing_dir,
             "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),

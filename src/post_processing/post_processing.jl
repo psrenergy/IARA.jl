@@ -49,7 +49,7 @@ function post_process_outputs(
     gather_outputs_separated_by_asset_owners(inputs)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
-        post_processing_generation(inputs)
+        post_processing_generation(inputs, run_time_options)
     end
     if is_market_clearing(inputs)
         create_bidding_group_generation_files(
@@ -144,10 +144,12 @@ end
 
 function create_zero_file(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     filename::String,
     labels::Vector{String},
     impl::Type{<:Quiver.Implementation},
-    unit::String,
+    unit::String;
+    has_subscenarios::Bool = false,
 )
     periods = if is_single_period(inputs)
         1
@@ -155,14 +157,22 @@ function create_zero_file(
         number_of_periods(inputs)
     end
     temp_path = joinpath(output_path(inputs), "temp")
-    zeros_array = zeros(Float64, length(labels), number_of_subperiods(inputs), number_of_scenarios(inputs), periods)
+    if has_subscenarios
+        zeros_array = zeros(Float64, length(labels), number_of_subperiods(inputs), number_of_subscenarios(inputs, run_time_options), number_of_scenarios(inputs), periods)
+        dimensions = ["period", "scenario", "subscenario", "subperiod"]
+        dimension_size = [periods, number_of_scenarios(inputs), number_of_subscenarios(inputs, run_time_options), number_of_subperiods(inputs)]
+    else
+        zeros_array = zeros(Float64, length(labels), number_of_subperiods(inputs), number_of_scenarios(inputs), periods)
+        dimensions = ["period", "scenario", "subperiod"]
+        dimension_size = [periods, number_of_scenarios(inputs), number_of_subperiods(inputs)]
+    end
     write_timeseries_file(
         joinpath(temp_path, filename),
         zeros_array;
-        dimensions = ["period", "scenario", "subperiod"],
+        dimensions = dimensions,
         labels = labels,
         time_dimension = "period",
-        dimension_size = [periods, number_of_scenarios(inputs), number_of_subperiods(inputs)],
+        dimension_size = dimension_size,
         initial_date = initial_date_time(inputs),
         unit = unit,
         implementation = impl,

@@ -9,11 +9,11 @@
 #############################################################################
 
 """
-    post_processing_generation(inputs::Inputs)
+    post_processing_generation(inputs::Inputs, run_time_options::RunTimeOptions)
 
 Run post-processing routines for generation.
 """
-function post_processing_generation(inputs::Inputs)
+function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOptions)
     file_suffix = ""
     temp_path = joinpath(output_path(inputs), "temp")
     if !isdir(temp_path)
@@ -66,10 +66,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "hydro_generation_sum$file_suffix")
-        create_zero_file(inputs, "hydro_generation_sum$file_suffix", ["hydro"], impl, "GWh")
+        create_zero_file(inputs, run_time_options, "hydro_generation_sum$file_suffix", ["hydro"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "hydro_generation_mean$file_suffix")
-            create_zero_file(inputs, "hydro_generation_mean$file_suffix", ["hydro"], impl, "GWh")
+            create_zero_file(inputs, run_time_options, "hydro_generation_mean$file_suffix", ["hydro"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, ThermalUnit) > 0
@@ -98,10 +98,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "thermal_generation_sum$file_suffix")
-        create_zero_file(inputs, "thermal_generation_sum$file_suffix", ["thermal"], impl, "GWh")
+        create_zero_file(inputs, run_time_options, "thermal_generation_sum$file_suffix", ["thermal"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "thermal_generation_mean$file_suffix")
-            create_zero_file(inputs, "thermal_generation_mean$file_suffix", ["thermal"], impl, "GWh")
+            create_zero_file(inputs, run_time_options, "thermal_generation_mean$file_suffix", ["thermal"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, RenewableUnit) > 0
@@ -130,10 +130,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "renewable_generation_sum$file_suffix")
-        create_zero_file(inputs, "renewable_generation_sum$file_suffix", ["renewable"], impl, "GWh")
+        create_zero_file(inputs, run_time_options, "renewable_generation_sum$file_suffix", ["renewable"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "renewable_generation_mean$file_suffix")
-            create_zero_file(inputs, "renewable_generation_mean$file_suffix", ["renewable"], impl, "GWh")
+            create_zero_file(inputs, run_time_options, "renewable_generation_mean$file_suffix", ["renewable"], impl, "GWh")
         end
     end
     if number_of_elements(inputs, BatteryUnit) > 0
@@ -162,10 +162,10 @@ function post_processing_generation(inputs::Inputs)
         end
     else
         filename_sum = joinpath(temp_path, "battery_generation_sum$file_suffix")
-        create_zero_file(inputs, "battery_generation_sum$file_suffix", ["battery_unit"], impl, "GWh")
+        create_zero_file(inputs, run_time_options, "battery_generation_sum$file_suffix", ["battery_unit"], impl, "GWh")
         if is_market_clearing(inputs)
             filename_mean = joinpath(temp_path, "battery_generation_mean$file_suffix")
-            create_zero_file(inputs, "battery_generation_mean$file_suffix", ["battery_unit"], impl, "GWh")
+            create_zero_file(inputs, run_time_options, "battery_generation_mean$file_suffix", ["battery_unit"], impl, "GWh")
         end
     end
     filename = joinpath(output_path(inputs), "deficit$file_suffix")

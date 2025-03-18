@@ -95,7 +95,7 @@ d_ex_post = max.(d_ex_post, 1.0)
 IARA.write_timeseries_file(
     joinpath(PATH, "h_ex_ante"),
     h_ex_ante;
-    dimensions = ["season", "scenario", "subperiod"],
+    dimensions = ["season", "sample", "subperiod"],
     labels = h_labels,
     time_dimension = "season",
     dimension_size = [number_of_seasons, number_of_scenarios, number_of_subperiods],
@@ -106,7 +106,7 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "r_ex_ante"),
     r_ex_ante;
-    dimensions = ["season", "scenario", "subperiod"],
+    dimensions = ["season", "sample", "subperiod"],
     labels = r_labels,
     time_dimension = "season",
     dimension_size = [number_of_seasons, number_of_scenarios, number_of_subperiods],
@@ -117,7 +117,7 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "d_ex_ante"),
     d_ex_ante;
-    dimensions = ["season", "scenario", "subperiod"],
+    dimensions = ["season", "sample", "subperiod"],
     labels = d_labels,
     time_dimension = "season",
     dimension_size = [number_of_seasons, number_of_scenarios, number_of_subperiods],
@@ -128,7 +128,7 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "h_ex_post"),
     h_ex_post;
-    dimensions = ["season", "scenario", "subscenario", "subperiod"],
+    dimensions = ["season", "sample", "subscenario", "subperiod"],
     labels = h_labels,
     time_dimension = "season",
     dimension_size = [number_of_seasons, number_of_scenarios, number_of_subscenarios, number_of_subperiods],
@@ -139,7 +139,7 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "r_ex_post"),
     r_ex_post;
-    dimensions = ["season", "scenario", "subscenario", "subperiod"],
+    dimensions = ["season", "sample", "subscenario", "subperiod"],
     labels = r_labels,
     time_dimension = "season",
     dimension_size = [number_of_seasons, number_of_scenarios, number_of_subscenarios, number_of_subperiods],
@@ -150,7 +150,7 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "d_ex_post"),
     d_ex_post;
-    dimensions = ["season", "scenario", "subscenario", "subperiod"],
+    dimensions = ["season", "sample", "subscenario", "subperiod"],
     labels = d_labels,
     time_dimension = "season",
     dimension_size = [number_of_seasons, number_of_scenarios, number_of_subscenarios, number_of_subperiods],

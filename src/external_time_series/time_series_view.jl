@@ -122,6 +122,10 @@ function initialize_time_series_view_from_external_file(
     if scenario_dimension_index !== nothing
         deleteat!(dimension_sizes, scenario_dimension_index)
     end
+    sample_dimension_index = findfirst(isequal(:sample), dimension_names)
+    if sample_dimension_index !== nothing
+        deleteat!(dimension_sizes, sample_dimension_index)
+    end
 
     ts.exact_dimensions_data = zeros(
         T,
@@ -211,19 +215,19 @@ function read_time_series_view_from_external_file!(
             inputs,
             ts,
         )
-    elseif ts.dimensions == [:season, :scenario, :subscenario, :subperiod]
-        read_season_scenario_subscenario_subperiod!(
+    elseif ts.dimensions == [:season, :sample, :subscenario, :subperiod]
+        read_season_sample_subscenario_subperiod!(
             inputs,
             ts;
             season = period,
-            scenario,
+            sample = scenario,
         )
-    elseif ts.dimensions == [:season, :scenario, :subperiod]
-        read_season_scenario_subperiod!(
+    elseif ts.dimensions == [:season, :sample, :subperiod]
+        read_season_sample_subperiod!(
             inputs,
             ts;
             season = period,
-            scenario,
+            sample = scenario,
         )
     else
         error("Time series with dimensions $(ts.dimensions) not supported.")
@@ -429,32 +433,32 @@ function read_inflow_period!(
     return nothing
 end
 
-function read_season_scenario_subscenario_subperiod!(
+function read_season_sample_subscenario_subperiod!(
     inputs,
     ts::TimeSeriesView{T, N};
     season::Int,
-    scenario::Int,
+    sample::Int,
 ) where {T, N}
     # Loop in subperiods
     for subperiod in 1:ts.reader.metadata.dimension_size[4],
         subscenario in 1:ts.reader.metadata.dimension_size[3]
 
-        Quiver.goto!(ts.reader; season, scenario, subscenario, subperiod)
+        Quiver.goto!(ts.reader; season, sample, subscenario, subperiod)
         ts.exact_dimensions_data[:, subperiod, subscenario] = ts.reader.data
     end
     ts.data = ts.exact_dimensions_data
     return nothing
 end
 
-function read_season_scenario_subperiod!(
+function read_season_sample_subperiod!(
     inputs,
     ts::TimeSeriesView{T, N};
     season::Int,
-    scenario::Int,
+    sample::Int,
 ) where {T, N}
     # Loop in subperiods
     for subperiod in 1:ts.reader.metadata.dimension_size[3]
-        Quiver.goto!(ts.reader; season, scenario, subperiod)
+        Quiver.goto!(ts.reader; season, sample, subperiod)
         ts.exact_dimensions_data[:, subperiod] = ts.reader.data
     end
     ts.data = ts.exact_dimensions_data

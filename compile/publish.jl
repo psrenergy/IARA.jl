@@ -33,7 +33,7 @@ function main(args::Vector{String})
     parsed_args = parse_args(args, s)
 
     package_path = dirname(@__DIR__)
-    examples_path = joinpath(package_path, "examples")
+    # examples_path = joinpath(package_path, "examples")
     documentation_path = joinpath(package_path, "docs", "build")
 
     configuration = build_configuration(;
@@ -52,7 +52,7 @@ function main(args::Vector{String})
         bundle_psrhub(;
             configuration = configuration,
             psrhub_version = PSRHUB_VERSION,
-            examples_path = examples_path,
+            # examples_path = examples_path,
             documentation_path = documentation_path,
         )
     end

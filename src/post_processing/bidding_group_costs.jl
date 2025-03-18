@@ -257,8 +257,8 @@ function create_bidding_group_cost_files(
 
     for (i, clearing_procedure) in enumerate(clearing_procedures)
         # Skip if there isn't physical data for construction type
-        if construction_types[i] in 
-            [Configurations_ConstructionType.SKIP, Configurations_ConstructionType.BID_BASED]
+        if construction_types[i] in
+           [Configurations_ConstructionType.SKIP, Configurations_ConstructionType.BID_BASED]
             continue
         end
         _merge_costs_files(

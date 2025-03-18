@@ -5,7 +5,7 @@ Pkg.instantiate()
 using ArgParse
 using PSRContinuousDeployment
 
-const PSRHUB_VERSION = "0.6.0"
+const PSRHUB_VERSION = "0.7.0-beta.2"
 const SLACK_CHANNEL = "C0893DVKPDK"
 
 const PERSONAL_ACCESS_TOKEN = ENV["PERSONAL_ACCESS_TOKEN"]
@@ -33,7 +33,7 @@ function main(args::Vector{String})
     parsed_args = parse_args(args, s)
 
     package_path = dirname(@__DIR__)
-    examples_path = joinpath(package_path, "examples")
+    # examples_path = joinpath(package_path, "examples")
     documentation_path = joinpath(package_path, "docs", "build")
 
     configuration = build_configuration(;
@@ -52,7 +52,7 @@ function main(args::Vector{String})
         bundle_psrhub(;
             configuration = configuration,
             psrhub_version = PSRHUB_VERSION,
-            examples_path = examples_path,
+            # examples_path = examples_path,
             documentation_path = documentation_path,
         )
     end

@@ -2,11 +2,6 @@ id = "BiddingGroup"
 icon = "lucide/group.svg"
 label.en = "Bidding Group"
 
-[[attribute_group]]
-id = "markup"
-label.en = "Markup"
-icon = "lucide/circle-dollar-sign.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -56,6 +51,11 @@ tooltip.en = "Complementary grouping profile of the bidding group"
 id = "minimum_activation_level_profile"
 label.en = "Minimum Activation Level Profile"
 tooltip.en = "Minimum activation level profile of the bidding group"
+
+[[attribute_group]]
+id = "markup"
+label.en = "Markup"
+icon = "lucide/circle-dollar-sign.svg"
 
 [[attribute]]
 id = "risk_factor"

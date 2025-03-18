@@ -55,6 +55,7 @@ function virtual_reservoir_correspondence_by_volume!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

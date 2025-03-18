@@ -2,11 +2,6 @@ id = "Interconnection"
 icon = "lucide/spline.svg"
 label.en = "Interconnection"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -21,3 +16,30 @@ tooltip.en = "Zone to of the interconnection"
 id = "zone_from"
 label.en = "Zone From"
 tooltip.en = "Zone from of the interconnection"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the interconnection"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the interconnection"
+
+[[attribute]]
+id = "capacity_to"
+label.en = "Capacity To"
+tooltip.en = "Capacity to of the interconnection"
+
+[[attribute]]
+id = "capacity_from"
+label.en = "Capacity From"
+tooltip.en = "Capacity from of the interconnection"

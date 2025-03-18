@@ -97,6 +97,9 @@ Configurations for the problem.
     hydro_minimum_outflow_violation_cost::Float64 = 0.0
     hydro_spillage_cost::Float64 = 0.0
     market_clearing_tiebreaker_weight::Float64 = 0.0
+
+    # Caches
+    period_season_map = Array{Float64, 3}(undef, 2, 0, 0)
 end
 
 # ---------------------------------------------------------------------
@@ -549,11 +552,6 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
        run_mode(inputs) == RunMode.INTERFACE_CALL
         if configurations.number_of_subscenarios <= 0
             @error("Number of subscenarios must be positive.")
-            num_errors += 1
-        end
-    else
-        if configurations.number_of_subscenarios != 1
-            @error("Number of subscenarios must be one for run mode $(run_mode(inputs)).")
             num_errors += 1
         end
     end
@@ -1274,11 +1272,11 @@ Return the file with the period to season map.
 period_season_map_file(inputs::AbstractInputs) = inputs.collections.configurations.period_season_map_file
 
 """
-    has_period_season_map(inputs::AbstractInputs)
+    has_period_season_map_file(inputs::AbstractInputs)
 
 Return whether the period to season map file is defined.
 """
-has_period_season_map(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
+has_period_season_map_file(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
 
 """
     hydro_balance_subperiod_resolution(inputs::AbstractInputs)
@@ -1362,3 +1360,11 @@ function network_representation(inputs::AbstractInputs, run_time_options)
         error("Not implemented")
     end
 end
+
+"""
+    period_season_map(inputs::AbstractInputs)
+
+Return the period to season map.
+"""
+period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
+    inputs.collections.configurations.period_season_map[:, scenario, period]

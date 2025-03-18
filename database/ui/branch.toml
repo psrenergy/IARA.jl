@@ -2,11 +2,6 @@ id = "Branch"
 icon = "lucide/git-branch.svg"
 label.en = "Branch"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
-
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -26,6 +21,11 @@ tooltip.en = "Bus to of the branch"
 id = "bus_from"
 label.en = "Bus From"
 tooltip.en = "Bus from of the branch"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
 
 [[attribute]]
 id = "date_time"

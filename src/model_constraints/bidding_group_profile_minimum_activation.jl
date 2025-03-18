@@ -67,6 +67,7 @@ function bidding_group_profile_minimum_activation!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

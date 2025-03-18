@@ -63,7 +63,7 @@ function thermal_startup_and_shutdown!(
     )
 
     # Startup and shutdown initial conditions
-    if model.period == 1
+    if model.node == 1
         initial_condition_indexes =
             [t for t in commitment_indexes if has_commitment_initial_condition(inputs.collections.thermal_unit, t)]
         @constraint(
@@ -149,6 +149,7 @@ function thermal_startup_and_shutdown!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

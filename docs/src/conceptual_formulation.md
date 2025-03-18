@@ -136,7 +136,7 @@ The representation of the optimization problem shown below introduces a single v
 ```math
 \begin{gather*}
     \begin{aligned}
-     &\min_{q,y,w}  \sum_{j \in \mathcal{J}^B \cup \mathcal{J}^H} {C}^{Q}_{j}({q}_{j}) + \sum_{i \in \mathcal{I}^C} {C}^{Y}_{i}({y}_{i}) + \sum_{a \in \mathcal{A}} {C}^{W}_{a}({w}_{a}) + \epsilon \cdot \sum_{i \in \mathcal{I}^H \cup \mathcal{I}^W} {C}^{Y}_{i}({y}_{i})
+     &\min_{q,y,w}  \sum_{j \in \mathcal{J}^B \cup \mathcal{J}^H} {C}^{Q}_{j}({q}_{j}) + \sum_{i \in \mathcal{I}^C} {C}^{Y}_{i}({y}_{i}) + \sum_{a \in \mathcal{A}} {C}^{W}_{a}({w}_{a}) + \epsilon \cdot \sum_{i \in \mathcal{I}^H \cup \mathcal{I}^W} {C}^{Y}_{i}({y}_{i}) \\
      &s.t. \quad {q}_{j} \in \mathcal{Q}_{j} \quad \forall j \in \mathcal{J}^B \cup \mathcal{J}^H \\
      &\quad {y}_{i} \in \mathcal{Y}_{i} \quad \forall i \in \mathcal{I}^C \cup \mathcal{I}^H \cup \mathcal{I}^W\\
      &\quad {w}_{a} \in \mathcal{W}_a \quad \forall a \in \mathcal{A}\\

@@ -82,6 +82,7 @@ pages = [
             # "Price taker problem" => "price_taker_problem.md",
             # "Strategic bid problem" => "strategic_bid_problem.md",
             "Market clearing problem" => "market_clearing_problem.md",
+            "Heuristic bids" => "heuristic_bids.md",
         ],
     ],
     "Use guides and tutorials" => [

@@ -44,7 +44,7 @@ abstract type WriteOutput <: ProblemAction end
     jump_model::JuMP.Model
     obj_exp::Union{JuMP.AffExpr, JuMP.QuadExpr} = zero(JuMP.AffExpr)
     # The QuadExpr type is necessary because of POI, with products between variables and POI.parameters (treated as variables at first)
-    period::Int
+    node::Int
 end
 
 @kwdef mutable struct ProblemModel
@@ -83,14 +83,14 @@ Build the subproblem model for the given period.
 function build_subproblem_model(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    period::Int;
+    node::Int;
     jump_model = JuMP.Model(),
 )
-    sp_model = SubproblemModel(; jump_model = jump_model, period = period)
+    sp_model = SubproblemModel(; jump_model, node)
     model_action(sp_model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, SubproblemBuild)
 
     obj_weight = if linear_policy_graph(inputs)
-        (1.0 - period_discount_rate(inputs))^(period - 1)
+        (1.0 - period_discount_rate(inputs))^(node - 1)
     else
         1.0
     end

@@ -14,13 +14,13 @@ tooltip.en = "Initial storage of the battery unit"
 
 [[attribute]]
 id = "bus_id"
-label.en = "Bus ID"
-tooltip.en = "Bus ID of the battery unit"
+label.en = "Bus"
+tooltip.en = "Bus of the battery unit"
 
 [[attribute]]
 id = "biddinggroup_id"
-label.en = "Bidding Group ID"
-tooltip.en = "Bidding group ID of the battery unit"
+label.en = "Bidding Group"
+tooltip.en = "Bidding group of the battery unit"
 
 [[attribute_group]]
 id = "parameters"

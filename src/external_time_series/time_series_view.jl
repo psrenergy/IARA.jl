@@ -124,6 +124,14 @@ function initialize_time_series_view_from_external_file(
     end
     sample_dimension_index = findfirst(isequal(:sample), dimension_names)
     if sample_dimension_index !== nothing
+        number_of_samples = dimension_sizes[sample_dimension_index]
+        if number_of_samples != number_of_scenarios(inputs) && number_of_samples != 1
+            @warn(
+                "Time series file $(file_path) has $(dimension_sizes[sample_dimension_index]) samples" *
+                ", but the problem has $(number_of_scenarios(inputs)) scenarios. " *
+                "This might lead to different samples being weighted differently.",
+            )
+        end
         deleteat!(dimension_sizes, sample_dimension_index)
     end
 

@@ -25,11 +25,8 @@ function virtual_reservoir_generation!(
     valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
     # Time series
-    placeholder_scenario = 1
-    virtual_reservoir_quantity_offer_series =
-        time_series_virtual_reservoir_quantity_offer(inputs, model.node, placeholder_scenario)
-    virtual_reservoir_price_offer_series =
-        time_series_virtual_reservoir_price_offer(inputs, model.node, placeholder_scenario)
+    placeholder_virtual_reservoir_quantity_offer_series = 0.0
+    placeholder_virtual_reservoir_price_offer_series = 0.0
 
     # Parameters
     @variable(
@@ -40,7 +37,7 @@ function virtual_reservoir_generation!(
             seg in 1:valid_segments[vr],
         ]
         in
-        MOI.Parameter(virtual_reservoir_quantity_offer_series[vr, ao, seg])
+        MOI.Parameter(placeholder_virtual_reservoir_quantity_offer_series)
     ) # MWh
     @variable(
         model.jump_model,
@@ -50,7 +47,7 @@ function virtual_reservoir_generation!(
             seg in 1:valid_segments[vr],
         ]
         in
-        MOI.Parameter(virtual_reservoir_price_offer_series[vr, ao, seg])
+        MOI.Parameter(placeholder_virtual_reservoir_price_offer_series)
     ) # $/MWh
 
     # Variables

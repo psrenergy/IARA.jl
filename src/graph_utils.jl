@@ -168,7 +168,7 @@ function seasonal_simulation_scheme(
             for period in 1:number_of_periods(inputs)
                 if has_period_season_map_file(inputs)
                     update_time_series_views_from_external_files!(inputs; period, scenario)
-                    node, simulation_sample = period_season_map_from_file(inputs)
+                    node, simulation_sample = period_season_map_from_file(inputs).data
                 else
                     node, simulation_sample = period_season_map_cache(inputs; period, scenario)
                 end
@@ -177,7 +177,7 @@ function seasonal_simulation_scheme(
         else
             if has_period_season_map_file(inputs)
                 update_time_series_views_from_external_files!(inputs; period = current_period, scenario)
-                node, simulation_sample = period_season_map_from_file(inputs)
+                node, simulation_sample = period_season_map_from_file(inputs).data
             else
                 node, simulation_sample = period_season_map_cache(inputs; period = current_period, scenario)
             end

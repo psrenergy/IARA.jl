@@ -34,12 +34,12 @@ function build_model(
             jump_model = subproblem,
         )
 
-        scenario_combinations = Tuple{Int, Int, Int}[]
+        scenario_combinations = Tuple{Int, Int, Int, Int}[]
         for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-            push!(scenario_combinations, (scenario, subscenario, node))
+            push!(scenario_combinations, (scenario, subscenario, node, scenario))
         end
 
-        SDDP.parameterize(sp_model.jump_model, scenario_combinations) do (scenario, subscenario, simulation_period)
+        SDDP.parameterize(sp_model.jump_model, scenario_combinations) do (scenario, subscenario, simulation_period, simulation_trajectory)
             update_time_series_views_from_external_files!(inputs; period = node, scenario)
             update_time_series_from_db!(inputs, node)
             model_action(
@@ -47,6 +47,7 @@ function build_model(
                 inputs,
                 run_time_options,
                 simulation_period,
+                simulation_trajectory,
                 scenario,
                 subscenario,
                 SubproblemUpdate,
@@ -105,7 +106,7 @@ function build_simulation_scheme(
     current_period::Union{Nothing, Int} = nothing,
 )
     simulation_scheme =
-        Array{Array{Tuple{Int, Tuple{Int, Int, Int}}, 1}, 1}(
+        Array{Array{Tuple{Int, Tuple{Int, Int, Int, Int}}, 1}, 1}(
             undef,
             number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
         )
@@ -116,13 +117,13 @@ function build_simulation_scheme(
             # Linear clearing
             for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
                 scheme_index += 1
-                simulation_scheme[scheme_index] = [(current_period, (scenario, subscenario, current_period))]
+                simulation_scheme[scheme_index] = [(current_period, (scenario, subscenario, current_period, scenario))]
             end
         else
             # Linear mincost
             for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
                 scheme_index += 1
-                simulation_scheme[scheme_index] = [(t, (scenario, subscenario, t)) for t in 1:number_of_periods(inputs)]
+                simulation_scheme[scheme_index] = [(t, (scenario, subscenario, t, scenario)) for t in 1:number_of_periods(inputs)]
             end
         end
     else

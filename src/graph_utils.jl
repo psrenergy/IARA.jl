@@ -94,6 +94,7 @@ end
 
 function create_period_season_map!(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     model::ProblemModel,
 )
     Random.seed!(1234)
@@ -108,8 +109,8 @@ function create_period_season_map!(
     end
     @assert all(sum(transition_probability_matrix; dims = 2) .== 1.0)
 
-    # For each trajectory and period, we sample a season and a scenario
-    period_season_map = Array{Int, 3}(undef, 2, number_of_scenarios(inputs), number_of_periods(inputs))
+    # For each trajectory and period, we sample a season, scenario and next_subscenario
+    period_season_map = Array{Int, 3}(undef, 3, number_of_scenarios(inputs), number_of_periods(inputs))
 
     for trajectory in scenarios(inputs)
         # First node
@@ -122,14 +123,26 @@ function create_period_season_map!(
             error("Policy graph type $(policy_graph_type(inputs)) not supported.")
         end
         simulation_sample = rand(1:number_of_scenarios(inputs))
+        next_subscenario = if number_of_subscenarios(inputs, run_time_options) == 1
+            1
+        else
+            rand(1:number_of_subscenarios(inputs, run_time_options))
+        end
         period_season_map[1, trajectory, t] = node
         period_season_map[2, trajectory, t] = simulation_sample
+        period_season_map[3, trajectory, t] = next_subscenario
         # Other nodes
         for t in 2:number_of_periods(inputs)
             node = sample(1:number_of_nodes(inputs), Weights(transition_probability_matrix[node, :]))
             simulation_sample = rand(1:number_of_scenarios(inputs))
+            next_subscenario = if number_of_subscenarios(inputs, run_time_options) == 1
+                1
+            else
+                rand(1:number_of_subscenarios(inputs, run_time_options))
+            end
             period_season_map[1, trajectory, t] = node
             period_season_map[2, trajectory, t] = simulation_sample
+            period_season_map[3, trajectory, t] = next_subscenario
         end
     end
 
@@ -137,7 +150,7 @@ function create_period_season_map!(
         joinpath(output_path(inputs), "period_season_map"),
         period_season_map;
         dimensions = ["period", "scenario"],
-        labels = ["season", "sample"],
+        labels = ["season", "sample", "next_subscenario"],
         time_dimension = "period",
         dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs)],
         initial_date = initial_date_time(inputs),
@@ -155,7 +168,7 @@ function seasonal_simulation_scheme(
     current_period::Union{Nothing, Int} = nothing,
 )
     simulation_scheme =
-        Array{Array{Tuple{Int, Tuple{Int, Int, Int}}, 1}, 1}(
+        Array{Array{Tuple{Int, Tuple{Int, Int, Int, Int}}, 1}, 1}(
             undef,
             number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
         )
@@ -168,22 +181,43 @@ function seasonal_simulation_scheme(
             for period in 1:number_of_periods(inputs)
                 if has_period_season_map_file(inputs)
                     update_time_series_views_from_external_files!(inputs; period, scenario)
-                    node, simulation_sample = period_season_map_from_file(inputs).data
+                    node, simulation_sample, _ = period_season_map_from_file(inputs).data
                 else
-                    node, simulation_sample = period_season_map_cache(inputs; period, scenario)
+                    node, simulation_sample, _ = period_season_map_cache(inputs; period, scenario)
                 end
-                push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, period)))
+                push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, period, scenario)))
             end
         else
             if has_period_season_map_file(inputs)
                 update_time_series_views_from_external_files!(inputs; period = current_period, scenario)
-                node, simulation_sample = period_season_map_from_file(inputs).data
+                node, simulation_sample, _ = period_season_map_from_file(inputs).data
             else
-                node, simulation_sample = period_season_map_cache(inputs; period = current_period, scenario)
+                node, simulation_sample, _ = period_season_map_cache(inputs; period = current_period, scenario)
             end
-            push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, current_period)))
+            push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, current_period, scenario)))
         end
     end
 
+    @show simulation_scheme
+
     return simulation_scheme
+end
+
+function subscenario_that_progagates_state_variables_to_next_period(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions;
+    period::Int,
+    scenario::Int,
+)
+    next_subperiod = 1
+
+    if cyclic_policy_graph(inputs) && is_ex_post_problem(run_time_options)
+        if has_period_season_map_file(inputs)
+            next_subperiod = period_season_map_from_file(inputs).data[3]
+        else
+            next_subperiod = period_season_map_cache(inputs; period, scenario)[3]
+        end
+    end
+
+    return next_subperiod
 end

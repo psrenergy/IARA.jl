@@ -127,6 +127,8 @@ function serialize_clearing_variables(
         data_to_serialize[symbol] = simulation_results.data[symbol]
     end
 
+    # @show period, scenario, data_to_serialize[:hydro_volume].data
+
     Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing
 end

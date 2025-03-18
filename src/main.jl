@@ -239,7 +239,7 @@ function simulate_all_periods_and_scenarios_of_trained_model(
 )
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
-        create_period_season_map!(inputs, model)
+        create_period_season_map!(inputs, run_time_options, model)
     end
 
     # Simulate all periods and scenarios
@@ -316,7 +316,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
-        create_period_season_map!(inputs, ex_ante_physical_model)
+        create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
     end
 
     try
@@ -431,7 +431,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
 
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
-        create_period_season_map!(inputs, ex_ante_physical_model)
+        create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
     end
 
     try
@@ -563,7 +563,10 @@ function run_clearing_simulation(
                 WriteOutput,
             )
 
-            if subscenario == 1
+            # @show "--------------------"
+            # @show subscenario, simulation_results_from_period_scenario_subscenario.data[:hydro_volume].data
+
+            if subscenario == subscenario_that_progagates_state_variables_to_next_period(inputs, run_time_options; period, scenario)
                 # Serialize the variables to be used in other clearing problems
                 serialize_clearing_variables(
                     outputs,

@@ -660,7 +660,6 @@ Return the minimum activation level profile time series.
 function time_series_minimum_activation_level_profile(
     inputs,
     period::Int,
-    scenario::Int,
 )
     if !is_market_clearing(inputs)
         error("Minimum activation level profile time series is only available for MarketClearing run mode.")
@@ -830,6 +829,6 @@ subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod
 """
     period_season_map(inputs)
 
-Return a 2-element vector with the current season and sample given the current period and scenario.
+Return a 3-element vector with the current season, sample and next_subscenario given the current period and scenario.
 """
 period_season_map_from_file(inputs) = inputs.time_series.period_season_map

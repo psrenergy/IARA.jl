@@ -64,7 +64,8 @@ function hydro_volume!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    period::Int,
+    simulation_period::Int,
+    simulation_trajectory::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},
@@ -84,7 +85,9 @@ function hydro_volume!(
     hydro_previous_period_volume = get_model_object(model, :hydro_previous_period_volume)
 
     # Data from previous period
-    previous_volume = hydro_volume_from_previous_period(inputs, period, scenario)
+    previous_volume = hydro_volume_from_previous_period(inputs, simulation_period, simulation_trajectory)
+
+    # @show simulation_period, simulation_trajectory, previous_volume
 
     for h in hydro_units_with_reservoir
         MOI.set(

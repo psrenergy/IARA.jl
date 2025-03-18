@@ -51,7 +51,6 @@ function renewable_generation!(
     )
 
     # Objective
-    # TODO: Add om_cost to documentation
     model.obj_exp = @expression(
         model.jump_model,
         model.obj_exp +

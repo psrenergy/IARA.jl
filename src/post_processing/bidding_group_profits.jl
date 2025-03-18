@@ -33,6 +33,9 @@ function calculate_profits_settlement(
 
     # The costs associated to the bgs are from the ex post settlement
     bidding_group_costs_files = get_costs_files(post_processing_dir; from_ex_post = true)
+    if length(bidding_group_costs_files) == 0
+        return nothing
+    end
     bidding_group_costs_file = get_filename(bidding_group_costs_files[1])
 
     file_profit = joinpath(

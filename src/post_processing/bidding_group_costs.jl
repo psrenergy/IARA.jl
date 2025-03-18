@@ -247,9 +247,20 @@ function create_bidding_group_cost_files(
     end
 
     clearing_procedures = ["ex_ante_physical", "ex_ante_commercial", "ex_post_physical", "ex_post_commercial"]
+    construction_types = [
+        construction_type_ex_ante_physical(inputs)
+        construction_type_ex_ante_commercial(inputs)
+        construction_type_ex_post_physical(inputs)
+        construction_type_ex_post_commercial(inputs)
+    ]
     is_ex_post = [false, false, true, true]
 
     for (i, clearing_procedure) in enumerate(clearing_procedures)
+        # Skip if there isn't physical data for construction type
+        if construction_types[i] in 
+            [Configurations_ConstructionType.SKIP, Configurations_ConstructionType.BID_BASED]
+            continue
+        end
         _merge_costs_files(
             inputs,
             clearing_procedure,

@@ -312,7 +312,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     ex_post_physical_model = build_model(inputs, run_time_options)
     run_time_options =
         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
-    ex_post_commercial_model = build_model(inputs, run_time_options) 
+    ex_post_commercial_model = build_model(inputs, run_time_options)
 
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
@@ -361,14 +361,26 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
             run_time_options =
                 RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
-            run_clearing_simulation(ex_ante_commercial_model, inputs, ex_ante_commercial_outputs, run_time_options, period)
+            run_clearing_simulation(
+                ex_ante_commercial_model,
+                inputs,
+                ex_ante_commercial_outputs,
+                run_time_options,
+                period,
+            )
 
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
             run_clearing_simulation(ex_post_physical_model, inputs, ex_post_physical_outputs, run_time_options, period)
 
             run_time_options =
                 RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
-            run_clearing_simulation(ex_post_commercial_model, inputs, ex_post_commercial_outputs, run_time_options, period)
+            run_clearing_simulation(
+                ex_post_commercial_model,
+                inputs,
+                ex_post_commercial_outputs,
+                run_time_options,
+                period,
+            )
         end
     finally
         finalize_clearing_outputs!(
@@ -415,7 +427,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
     ex_post_physical_model = build_model(inputs, run_time_options)
     run_time_options =
         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
-    ex_post_commercial_model = build_model(inputs, run_time_options) 
+    ex_post_commercial_model = build_model(inputs, run_time_options)
 
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)

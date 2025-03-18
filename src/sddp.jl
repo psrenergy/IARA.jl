@@ -118,7 +118,7 @@ function build_simulation_scheme(
                 scheme_index += 1
                 simulation_scheme[scheme_index] = [(current_period, (scenario, subscenario, current_period))]
             end
-        # Linear mincost
+            # Linear mincost
         else
             for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
                 scheme_index += 1

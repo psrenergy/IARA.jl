@@ -1366,4 +1366,5 @@ end
 
 Return the period to season map.
 """
-period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) = inputs.collections.configurations.period_season_map[:, scenario, period]
+period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
+    inputs.collections.configurations.period_season_map[:, scenario, period]

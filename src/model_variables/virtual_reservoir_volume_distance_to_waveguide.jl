@@ -53,6 +53,7 @@ function virtual_reservoir_volume_distance_to_waveguide!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

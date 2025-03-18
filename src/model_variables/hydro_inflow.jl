@@ -93,11 +93,11 @@ function hydro_inflow!(
                 inflow_multiplier[h] *
                 time_series_inflow_period_std_dev(inputs)[
                     hydro_unit_gauging_station_index(inputs, h),
-                    period_index_in_year(inputs, model.period),
+                    period_index_in_year(inputs, model.node),
                 ] +
                 time_series_inflow_period_average(inputs)[
                     hydro_unit_gauging_station_index(inputs, h),
-                    period_index_in_year(inputs, model.period),
+                    period_index_in_year(inputs, model.node),
                 ]
             )
         )
@@ -134,6 +134,7 @@ function hydro_inflow!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

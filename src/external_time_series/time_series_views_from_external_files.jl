@@ -90,7 +90,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Period season map
-    if has_period_season_map(inputs)
+    if has_period_season_map_file(inputs)
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.period_season_map,
             inputs,
@@ -99,7 +99,7 @@ function initialize_time_series_from_external_files(inputs)
             possible_expected_dimensions = [
                 [:period, :scenario],
             ],
-            labels_to_read = ["season"],
+            labels_to_read = ["season", "sample"],
         )
     end
 
@@ -107,7 +107,7 @@ function initialize_time_series_from_external_files(inputs)
     if any_elements(inputs, HydroUnit)
         if read_inflow_from_file(inputs)
             possible_dimensions = if cyclic_policy_graph(inputs)
-                [[:season, :scenario, :subperiod], [:season, :scenario, :hour]]
+                [[:season, :sample, :subperiod], [:season, :sample, :hour]]
             else
                 [[:period, :scenario, :subperiod], [:period, :scenario, :hour]]
             end
@@ -185,7 +185,7 @@ function initialize_time_series_from_external_files(inputs)
     # Demand
     if any_elements(inputs, DemandUnit) > 0
         possible_dimensions = if cyclic_policy_graph(inputs)
-            [[:season, :scenario, :subperiod]]
+            [[:season, :sample, :subperiod]]
         else
             [[:period, :scenario, :subperiod]]
         end
@@ -204,7 +204,7 @@ function initialize_time_series_from_external_files(inputs)
     # Renewable generation
     if any_elements(inputs, RenewableUnit)
         possible_dimensions = if cyclic_policy_graph(inputs)
-            [[:season, :scenario, :subperiod]]
+            [[:season, :sample, :subperiod]]
         else
             [[:period, :scenario, :subperiod]]
         end

@@ -43,13 +43,12 @@ function hydro_volume!(
             upper_bound = hydro_unit_max_volume(inputs, h),
         )
     elseif clearing_has_volume_variables(inputs, run_time_options)
-        placeholder_scenario = 1
-        previous_volume = hydro_volume_from_previous_period(inputs, model.period, placeholder_scenario)
+        placeholder_previous_volume = 0.0
         @variable(
             model.jump_model,
             hydro_previous_period_volume[h in hydro_units_with_reservoir]
             in
-            MOI.Parameter(previous_volume[h])
+            MOI.Parameter(placeholder_previous_volume)
         )
     end
 
@@ -65,6 +64,7 @@ function hydro_volume!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},
@@ -84,7 +84,7 @@ function hydro_volume!(
     hydro_previous_period_volume = get_model_object(model, :hydro_previous_period_volume)
 
     # Data from previous period
-    previous_volume = hydro_volume_from_previous_period(inputs, model.period, scenario)
+    previous_volume = hydro_volume_from_previous_period(inputs, period, scenario)
 
     for h in hydro_units_with_reservoir
         MOI.set(

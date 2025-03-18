@@ -90,7 +90,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Period season map
-    if has_period_season_map(inputs)
+    if has_period_season_map_file(inputs)
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.period_season_map,
             inputs,
@@ -99,7 +99,7 @@ function initialize_time_series_from_external_files(inputs)
             possible_expected_dimensions = [
                 [:period, :scenario],
             ],
-            labels_to_read = ["season"],
+            labels_to_read = ["season", "scenario"],
         )
     end
 

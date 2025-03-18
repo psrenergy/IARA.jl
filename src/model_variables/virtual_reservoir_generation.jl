@@ -27,9 +27,9 @@ function virtual_reservoir_generation!(
     # Time series
     placeholder_scenario = 1
     virtual_reservoir_quantity_offer_series =
-        time_series_virtual_reservoir_quantity_offer(inputs, model.period, placeholder_scenario)
+        time_series_virtual_reservoir_quantity_offer(inputs, model.node, placeholder_scenario)
     virtual_reservoir_price_offer_series =
-        time_series_virtual_reservoir_price_offer(inputs, model.period, placeholder_scenario)
+        time_series_virtual_reservoir_price_offer(inputs, model.node, placeholder_scenario)
 
     # Parameters
     @variable(
@@ -89,6 +89,7 @@ function virtual_reservoir_generation!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},
@@ -102,8 +103,8 @@ function virtual_reservoir_generation!(
 
     # Time series
     virtual_reservoir_quantity_offer_series =
-        time_series_virtual_reservoir_quantity_offer(inputs, model.period, scenario)
-    virtual_reservoir_price_offer_series = time_series_virtual_reservoir_price_offer(inputs, model.period, scenario)
+        time_series_virtual_reservoir_quantity_offer(inputs, model.node, scenario)
+    virtual_reservoir_price_offer_series = time_series_virtual_reservoir_price_offer(inputs, model.node, scenario)
 
     for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:valid_segments[vr]
         MOI.set(

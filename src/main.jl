@@ -237,6 +237,11 @@ function simulate_all_periods_and_scenarios_of_trained_model(
     outputs::Outputs,
     run_time_options::RunTimeOptions,
 )
+    # Build period-season map
+    if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
+        create_period_season_map!(inputs, model)
+    end
+
     # Simulate all periods and scenarios
     simulation_results = simulate(model, inputs, outputs, run_time_options)
 
@@ -297,6 +302,23 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     ex_post_commercial_outputs =
         build_clearing_outputs(inputs)
 
+    # Build models
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+    ex_ante_physical_model = build_model(inputs, run_time_options)
+    run_time_options =
+        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+    ex_ante_commercial_model = build_model(inputs, run_time_options)
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+    ex_post_physical_model = build_model(inputs, run_time_options)
+    run_time_options =
+        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+    ex_post_commercial_model = build_model(inputs, run_time_options) 
+
+    # Build period-season map
+    if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
+        create_period_season_map!(inputs, ex_ante_physical_model)
+    end
+
     try
         for period in 1:number_of_periods(inputs)
             @info("Running clearing for period: $period")
@@ -335,18 +357,18 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
             # Clearing problems
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-            run_clearing_simulation(inputs, ex_ante_physical_outputs, run_time_options, period)
+            run_clearing_simulation(ex_ante_physical_model, inputs, ex_ante_physical_outputs, run_time_options, period)
 
             run_time_options =
                 RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
-            run_clearing_simulation(inputs, ex_ante_commercial_outputs, run_time_options, period)
+            run_clearing_simulation(ex_ante_commercial_model, inputs, ex_ante_commercial_outputs, run_time_options, period)
 
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
-            run_clearing_simulation(inputs, ex_post_physical_outputs, run_time_options, period)
+            run_clearing_simulation(ex_post_physical_model, inputs, ex_post_physical_outputs, run_time_options, period)
 
             run_time_options =
                 RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
-            run_clearing_simulation(inputs, ex_post_commercial_outputs, run_time_options, period)
+            run_clearing_simulation(ex_post_commercial_model, inputs, ex_post_commercial_outputs, run_time_options, period)
         end
     finally
         finalize_clearing_outputs!(
@@ -382,6 +404,23 @@ function simulate_all_scenarios_of_single_period_market_clearing(
     ex_post_physical_outputs,
     ex_post_commercial_outputs =
         build_clearing_outputs(inputs)
+
+    # Build models
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+    ex_ante_physical_model = build_model(inputs, run_time_options)
+    run_time_options =
+        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+    ex_ante_commercial_model = build_model(inputs, run_time_options)
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+    ex_post_physical_model = build_model(inputs, run_time_options)
+    run_time_options =
+        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+    ex_post_commercial_model = build_model(inputs, run_time_options) 
+
+    # Build period-season map
+    if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
+        create_period_season_map!(inputs, ex_ante_physical_model)
+    end
 
     try
         period = inputs.args.period
@@ -419,18 +458,18 @@ function simulate_all_scenarios_of_single_period_market_clearing(
 
         # Clearing problems
         run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-        run_clearing_simulation(inputs, ex_ante_physical_outputs, run_time_options, period)
+        run_clearing_simulation(ex_ante_physical_model, inputs, ex_ante_physical_outputs, run_time_options, period)
 
         run_time_options =
             RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
-        run_clearing_simulation(inputs, ex_ante_commercial_outputs, run_time_options, period)
+        run_clearing_simulation(ex_ante_commercial_model, inputs, ex_ante_commercial_outputs, run_time_options, period)
 
         run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
-        run_clearing_simulation(inputs, ex_post_physical_outputs, run_time_options, period)
+        run_clearing_simulation(ex_post_physical_model, inputs, ex_post_physical_outputs, run_time_options, period)
 
         run_time_options =
             RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
-        run_clearing_simulation(inputs, ex_post_commercial_outputs, run_time_options, period)
+        run_clearing_simulation(ex_post_commercial_model, inputs, ex_post_commercial_outputs, run_time_options, period)
     finally
         finalize_clearing_outputs!(
             heuristic_bids_outputs,
@@ -446,6 +485,7 @@ end
 
 """
     run_clearing_simulation(
+        model::ProblemModel,
         inputs::Inputs,
         outputs::Outputs,
         run_time_options::RunTimeOptions,
@@ -455,6 +495,7 @@ end
 Run the clearing simulation.
 """
 function run_clearing_simulation(
+    model::ProblemModel,
     inputs::Inputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
@@ -465,7 +506,6 @@ function run_clearing_simulation(
     end
 
     @info("   Running simulation $(run_time_options.clearing_model_subproblem)")
-    model = build_model(inputs, run_time_options; current_period = period)
 
     if use_fcf_in_clearing(inputs)
         read_cuts_to_model!(model, inputs; current_period = period)

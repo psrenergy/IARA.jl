@@ -56,7 +56,7 @@ function thermal_ramp!(
     )
 
     # Initial conditions
-    if model.period == 1
+    if model.node == 1
         initial_condition_indexes =
             [t for t in ramp_indexes if !is_null(thermal_unit_generation_initial_condition(inputs, t))]
 
@@ -125,6 +125,7 @@ function thermal_ramp!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

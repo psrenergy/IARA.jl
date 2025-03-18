@@ -828,8 +828,8 @@ Return a vector of vectors, mapping each subperiod to multiple hours.
 subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod_hour_map
 
 """
-    current_season(inputs)
+    period_season_map(inputs)
 
-Return the season associated with the current period and scenario.
+Return a 2-element vector with the current season and sample given the current period and scenario.
 """
-current_season(inputs) = inputs.time_series.period_season_map[1]
+period_season_map_from_file(inputs) = inputs.time_series.hour_subperiod_mapping.period_season_map

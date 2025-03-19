@@ -12,7 +12,7 @@ unit.en = "demand unit(s)"
 query = "SELECT COUNT(*) FROM DemandUnit_time_series_parameters"
 type = "integer"
 label.en = "Modifications"
-unit.en = "records"
+unit.en = "record(s)"
 
 [[attribute]]
 id = "label"

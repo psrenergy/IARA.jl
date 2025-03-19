@@ -32,6 +32,8 @@ tooltip.en = "Has commitment of the hydro unit"
 
 [[attribute]]
 id = "operation_type"
+type = "enum"
+enum = "operation_type"
 label.en = "Operation Type"
 tooltip.en = "Operation type of the hydro unit"
 

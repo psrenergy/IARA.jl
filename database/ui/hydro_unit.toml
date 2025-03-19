@@ -3,10 +3,40 @@ icon = "lucide/dam.svg"
 label.en = "Hydro Unit"
 
 [[card]]
-query = "SELECT COUNT(*) FROM HydroUnit"
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM HydroUnit_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT COUNT(*)
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
 type = "integer"
-label.en = "Elements"
-unit.en = "hydro unit(s)"
+label.en = "Existing Elements"
+unit = "unit(s)"
+
+[[card]]
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM HydroUnit_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT SUM(max_generation) AS total_generation
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
+type = "double"
+label.en = "Total Capacity"
+unit = "MW"
+
+[[card]]
+query = "SELECT COUNT(*) FROM HydroUnit_time_series_parameters"
+type = "integer"
+label.en = "Temporal Entries"
+unit.en = "record(s)"
 
 [[attribute]]
 id = "label"
@@ -17,6 +47,7 @@ tooltip.en = "Label of the hydro unit"
 id = "initial_volume"
 label.en = "Initial Volume"
 tooltip.en = "Initial volume of the hydro unit"
+hide = true
 
 [[attribute]]
 id = "initial_volume_type"
@@ -24,6 +55,7 @@ type = "enum"
 enum = "initial_volume_type"
 label.en = "Initial Volume Type"
 tooltip.en = "Initial volume type of the hydro unit"
+hide = true
 
 [[attribute]]
 id = "has_commitment"
@@ -38,6 +70,7 @@ type = "enum"
 enum = "operation_type"
 label.en = "Operation Type"
 tooltip.en = "Operation type of the hydro unit"
+hide = true
 
 [[attribute]]
 id = "bus_id"
@@ -53,6 +86,7 @@ tooltip.en = "Bidding group of the hydro unit"
 id = "gaugingstation_id"
 label.en = "Gauging Station"
 tooltip.en = "Gauging station of the hydro unit"
+hide = true
 
 [[attribute]]
 id = "hydrounit_turbine_to"
@@ -63,16 +97,18 @@ tooltip.en = "Turbine to of the hydro unit"
 id = "hydrounit_spill_to"
 label.en = "Spill To"
 tooltip.en = "Spill to of the hydro unit"
+hide = true
 
 [[attribute_group]]
 id = "waveguide"
-label.en = "Waveguide"
+label.en = "Tiebreaker Curve"
 icon = "lucide/settings-2.svg"
 
 [[attribute]]
 id = "waveguide_volume"
-label.en = "Waveguide Volume"
-tooltip.en = "Waveguide volume of the hydro unit"
+label.en = "Tiebreaker Curve Values"
+tooltip.en = "Tiebreaker curve values of the virtual reservoir"
+unit = "GWh"
 
 [[attribute_group]]
 id = "parameters"
@@ -96,38 +132,46 @@ tooltip.en = "Existing of the hydro unit"
 id = "production_factor"
 label.en = "Production Factor"
 tooltip.en = "Production factor of the hydro unit"
+unit = "MW/m³/s"
 
 [[attribute]]
 id = "min_generation"
 label.en = "Min Generation"
 tooltip.en = "Min generation of the hydro unit"
+unit = "MW"
 
 [[attribute]]
 id = "max_generation"
 label.en = "Max Generation"
 tooltip.en = "Max generation of the hydro unit"
+unit = "MW"
 
 [[attribute]]
 id = "max_turbining"
 label.en = "Max Turbining"
 tooltip.en = "Max turbining of the hydro unit"
+unit = "m³/s"
 
 [[attribute]]
 id = "min_volume"
 label.en = "Min Volume"
 tooltip.en = "Min volume of the hydro unit"
+unit = "hm³"
 
 [[attribute]]
 id = "max_volume"
 label.en = "Max Volume"
 tooltip.en = "Max volume of the hydro unit"
+unit = "hm³"
 
 [[attribute]]
 id = "min_outflow"
 label.en = "Min Outflow"
 tooltip.en = "Min outflow of the hydro unit"
+unit = "m³/s"
 
 [[attribute]]
 id = "om_cost"
 label.en = "O&M Cost"
 tooltip.en = "O&M cost of the hydro unit"
+unit = "$/MWh"

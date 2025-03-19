@@ -3,10 +3,45 @@ icon = "lucide/spline.svg"
 label.en = "Interconnection"
 
 [[card]]
-query = "SELECT COUNT(*) FROM Interconnection"
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM Interconnection_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT COUNT(*)
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
 type = "integer"
-label.en = "Elements"
-unit.en = "interconnection(s)"
+label.en = "Existing Elements"
+unit = "unit(s)"
+
+[[card]]
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM Interconnection_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT SUM(
+           CASE 
+               WHEN capacity_to > capacity_from THEN capacity_to
+               ELSE capacity_from
+           END
+       ) AS total_capacity
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
+type = "double"
+label.en = "Total Capacity"
+unit = "MW"
+
+[[card]]
+query = "SELECT COUNT(*) FROM Interconnection_time_series_parameters"
+type = "integer"
+label.en = "Temporal Entries"
+unit.en = "record(s)"
 
 [[attribute]]
 id = "label"
@@ -45,8 +80,10 @@ tooltip.en = "Existing of the interconnection"
 id = "capacity_to"
 label.en = "Capacity To"
 tooltip.en = "Capacity to of the interconnection"
+unit = "MW"
 
 [[attribute]]
 id = "capacity_from"
 label.en = "Capacity From"
 tooltip.en = "Capacity from of the interconnection"
+unit = "MW"

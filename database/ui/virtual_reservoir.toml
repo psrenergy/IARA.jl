@@ -15,8 +15,8 @@ tooltip.en = "Label of the virtual reservoir"
 
 [[attribute]]
 id = "number_of_waveguide_points_for_file_template"
-label.en = "Number of Waveguide Points for File Template"
-tooltip.en = "Number of waveguide points for file template of the virtual reservoir"
+label.en = "Number of Points of the Tiebreaker Curve"
+tooltip.en = "Number of points of the tiebreaker curve"
 
 [[attribute_group]]
 id = "owner_and_allocation"

@@ -3,10 +3,40 @@ icon = "lucide/factory.svg"
 label.en = "Thermal Unit"
 
 [[card]]
-query = "SELECT COUNT(*) FROM ThermalUnit"
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM ThermalUnit_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT COUNT(*)
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
 type = "integer"
-label.en = "Elements"
-unit.en = "thermal unit(s)"
+label.en = "Existing Elements"
+unit = "unit(s)"
+
+[[card]]
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM ThermalUnit_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT SUM(max_generation) AS total_generation
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
+type = "double"
+label.en = "Total Capacity"
+unit = "MW"
+
+[[card]]
+query = "SELECT COUNT(*) FROM ThermalUnit_time_series_parameters"
+type = "integer"
+label.en = "Temporal Entries"
+unit.en = "record(s)"
 
 [[attribute]]
 id = "label"
@@ -24,56 +54,76 @@ tooltip.en = "Has commitment of the thermal unit"
 id = "max_ramp_up"
 label.en = "Max Ramp Up"
 tooltip.en = "Max ramp up of the thermal unit"
+unit = "MW/h"
+hide = true
 
 [[attribute]]
 id = "max_ramp_down"
 label.en = "Max Ramp Down"
 tooltip.en = "Max ramp down of the thermal unit"
+unit = "MW/h"
+hide = true
 
 [[attribute]]
 id = "min_uptime"
 label.en = "Min Uptime"
 tooltip.en = "Min uptime of the thermal unit"
+unit = "h"
+hide = true
 
 [[attribute]]
 id = "max_uptime"
 label.en = "Max Uptime"
 tooltip.en = "Max uptime of the thermal unit"
+unit = "h"
+hide = true
 
 [[attribute]]
 id = "min_downtime"
 label.en = "Min Downtime"
 tooltip.en = "Min downtime of the thermal unit"
+unit = "h"
+hide = true
 
 [[attribute]]
 id = "max_startups"
 label.en = "Max Startups"
 tooltip.en = "Max startups of the thermal unit"
+hide = true
 
 [[attribute]]
 id = "max_shutdowns"
 label.en = "Max Shutdowns"
 tooltip.en = "Max shutdowns of the thermal unit"
+hide = true
 
 [[attribute]]
 id = "shutdown_cost"
 label.en = "Shutdown Cost"
 tooltip.en = "Shutdown cost of the thermal unit"
+unit = "$/event"
+hide = true
 
 [[attribute]]
 id = "generation_initial_condition"
-label.en = "Generation Initial Condition"
-tooltip.en = "Generation initial condition of the thermal unit"
+label.en = "Generation Initial Condition For Ramping"
+tooltip.en = "Generation initial condition for ramping of the thermal unit"
+unit = "MW"
+hide = true
 
 [[attribute]]
 id = "uptime_initial_condition"
 label.en = "Uptime Initial Condition"
 tooltip.en = "Uptime initial condition of the thermal unit"
+unit = "h"
+hide = true
 
 [[attribute]]
 id = "downtime_initial_condition"
 label.en = "Downtime Initial Condition"
 tooltip.en = "Downtime initial condition of the thermal unit"
+unit = "h"
+hide = true
 
 [[attribute]]
 id = "bus_id"
@@ -91,6 +141,7 @@ type = "enum"
 enum = "commitment_initial_condition"
 label.en = "Commitment Initial Condition"
 tooltip.en = "Commitment initial condition of the thermal unit"
+hide = true
 
 [[attribute_group]]
 id = "parameters"
@@ -114,18 +165,22 @@ tooltip.en = "Existing of the thermal unit"
 id = "startup_cost"
 label.en = "Startup Cost"
 tooltip.en = "Startup cost of the thermal unit"
+unit = "$/event"
 
 [[attribute]]
 id = "min_generation"
 label.en = "Min Generation"
 tooltip.en = "Min generation of the thermal unit"
+unit = "MW"
 
 [[attribute]]
 id = "max_generation"
 label.en = "Max Generation"
 tooltip.en = "Max generation of the thermal unit"
+unit = "MW"
 
 [[attribute]]
 id = "om_cost"
 label.en = "O&M Cost"
 tooltip.en = "O&M cost of the thermal unit"
+unit = "$/MWh"

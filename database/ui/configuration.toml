@@ -257,18 +257,24 @@ hide = true
 
 [[attribute]]
 id = "renewable_scenarios_files"
+type = "enum"
+enum = "uncertainty_scenarios_files"
 label.en = "Renewable Scenarios Files"
 tooltip.en = "Renewable scenarios files of the configuration"
 hide = true
 
 [[attribute]]
 id = "inflow_scenarios_files"
+type = "enum"
+enum = "uncertainty_scenarios_files"
 label.en = "Inflow Scenarios Files"
 tooltip.en = "Inflow scenarios files of the configuration"
 hide = true
 
 [[attribute]]
 id = "demand_scenarios_files"
+type = "enum"
+enum = "uncertainty_scenarios_files"
 label.en = "Demand Scenarios Files"
 tooltip.en = "Demand scenarios files of the configuration"
 hide = true

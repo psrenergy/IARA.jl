@@ -70,6 +70,14 @@ function catch_iara_error() {
             aws s3 cp ./iara_error.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/iara_error.log
             echo "Completed."
     fi
+    
+    if [ "$IARA_COMMAND" == "single period market clearing" ]; then
+        save_iara_log "results"
+    elif [ "$IARA_COMMAND" == "heuristic bid" ]; then
+        save_iara_log "heuristic_bids"
+    elif [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
+        save_iara_log "game_summary"
+    fi
 }
 
 function get_heuristic_bid_files() {

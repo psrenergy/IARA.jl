@@ -187,7 +187,10 @@ function initialize_time_series_from_external_files(inputs)
         possible_dimensions = if cyclic_policy_graph(inputs)
             [[:season, :sample, :subperiod]]
         else
-            [[:period, :scenario, :subperiod]]
+            [
+                [:period, :scenario, :subperiod],
+                [:period, :scenario, :hour],
+            ]
         end
         num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
             inputs.time_series.demand,

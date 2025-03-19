@@ -50,13 +50,16 @@ tooltip.en = "Existing of the renewable unit"
 id = "max_generation"
 label.en = "Max Generation"
 tooltip.en = "Max generation of the renewable unit"
+unit = "MW"
 
 [[attribute]]
 id = "om_cost"
 label.en = "O&M Cost"
 tooltip.en = "O&M cost of the renewable unit"
+unit = "$/MWh"
 
 [[attribute]]
 id = "curtailment_cost"
 label.en = "Curtailment Cost"
 tooltip.en = "Curtailment cost of the renewable unit"
+unit = "$/MWh"

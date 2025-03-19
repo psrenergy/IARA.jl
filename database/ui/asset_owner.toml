@@ -15,13 +15,15 @@ tooltip.en = "Label of the asset owner"
 
 [[attribute]]
 id = "price_type"
-label.en = "Price Type"
+type = "enum"
+enum = "price_type"
+label.en = "Price Taker or Maker"
 tooltip.en = "Price type of the asset owner"
 
 [[attribute]]
 id = "risk_factor"
-label.en = "Risk Factor"
-tooltip.en = "Risk factor of the asset owner"
+label.en = "Risk Markup Factor"
+tooltip.en = "Risk factor markup of the asset owner"
 
 [[attribute_group]]
 id = "markup"

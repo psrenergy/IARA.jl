@@ -40,6 +40,7 @@ tooltip.en = "Max shift down of the demand unit"
 id = "curtailment_cost"
 label.en = "Curtailment Cost"
 tooltip.en = "Curtailment cost of the demand unit"
+unit = "$/MWh"
 
 [[attribute]]
 id = "max_curtailment"
@@ -55,6 +56,7 @@ tooltip.en = "Bus of the demand unit"
 id = "max_demand"
 label.en = "Max Demand"
 tooltip.en = "Max demand of the demand unit"
+unit = "MW"
 
 [[attribute]]
 id = "gaugingstation_downstream"

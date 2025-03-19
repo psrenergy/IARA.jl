@@ -25,41 +25,6 @@ id = "assetowner_id"
 label.en = "Asset Owner"
 tooltip.en = "Asset owner of the bidding group"
 
-[[attribute]]
-id = "quantity_offer"
-label.en = "Quantity Offer"
-tooltip.en = "Quantity offer of the bidding group"
-
-[[attribute]]
-id = "price_offer"
-label.en = "Price Offer"
-tooltip.en = "Price offer of the bidding group"
-
-[[attribute]]
-id = "quantity_offer_profile"
-label.en = "Quantity Offer Profile"
-tooltip.en = "Quantity offer profile of the bidding group"
-
-[[attribute]]
-id = "price_offer_profile"
-label.en = "Price Offer Profile"
-tooltip.en = "Price offer profile of the bidding group"
-
-[[attribute]]
-id = "parent_profile"
-label.en = "Parent Profile"
-tooltip.en = "Parent profile of the bidding group"
-
-[[attribute]]
-id = "complementary_grouping_profile"
-label.en = "Complementary Grouping Profile"
-tooltip.en = "Complementary grouping profile of the bidding group"
-
-[[attribute]]
-id = "minimum_activation_level_profile"
-label.en = "Minimum Activation Level Profile"
-tooltip.en = "Minimum activation level profile of the bidding group"
-
 [[attribute_group]]
 id = "markup"
 label.en = "Markup"
@@ -67,8 +32,8 @@ icon = "lucide/circle-dollar-sign.svg"
 
 [[attribute]]
 id = "risk_factor"
-label.en = "Risk Factor"
-tooltip.en = "Risk factor of the bidding group"
+label.en = "Risk Markup Factor"
+tooltip.en = "Risk factor markup of the bidding group"
 
 [[attribute]]
 id = "segment_fraction"

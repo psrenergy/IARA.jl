@@ -45,8 +45,10 @@ tooltip.en = "Existing of the interconnection"
 id = "capacity_to"
 label.en = "Capacity To"
 tooltip.en = "Capacity to of the interconnection"
+unit = "MW"
 
 [[attribute]]
 id = "capacity_from"
 label.en = "Capacity From"
 tooltip.en = "Capacity from of the interconnection"
+unit = "MW"

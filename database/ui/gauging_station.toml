@@ -2,6 +2,12 @@ id = "GaugingStation"
 icon = "lucide/gauge.svg"
 label.en = "Gauging Station"
 
+[[card]]
+query = "SELECT COUNT(*) FROM GaugingStation"
+type = "integer"
+label.en = "Elements"
+unit.en = "gauging station(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

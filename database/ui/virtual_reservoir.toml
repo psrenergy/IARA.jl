@@ -2,6 +2,12 @@ id = "VirtualReservoir"
 icon = "lucide/droplet.svg"
 label.en = "Virtual Reservoir"
 
+[[card]]
+query = "SELECT COUNT(*) FROM VirtualReservoir"
+type = "integer"
+label.en = "Elements"
+unit.en = "virtual reservoir(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

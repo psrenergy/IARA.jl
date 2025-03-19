@@ -2,6 +2,12 @@ id = "Branch"
 icon = "lucide/git-branch.svg"
 label.en = "Branch"
 
+[[card]]
+query = "SELECT COUNT(*) FROM Branch"
+type = "integer"
+label.en = "Elements"
+unit.en = "branch(es)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

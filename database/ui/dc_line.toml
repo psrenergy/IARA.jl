@@ -2,6 +2,12 @@ id = "DCLine"
 icon = "lucide/spline.svg"
 label.en = "DC Line"
 
+[[card]]
+query = "SELECT COUNT(*) FROM DCLine"
+type = "integer"
+label.en = "Elements"
+unit.en = "DC line(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

@@ -2,6 +2,12 @@ id = "BatteryUnit"
 icon = "lucide/battery-charging.svg"
 label.en = "Battery Unit"
 
+[[card]]
+query = "SELECT COUNT(*) FROM BatteryUnit"
+type = "integer"
+label.en = "Elements"
+unit.en = "battery unit(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

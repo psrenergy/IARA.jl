@@ -2,6 +2,12 @@ id = "RenewableUnit"
 icon = "lucide/sun.svg"
 label.en = "Renewable Unit"
 
+[[card]]
+query = "SELECT COUNT(*) FROM RenewableUnit"
+type = "integer"
+label.en = "Elements"
+unit.en = "renewable unit(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

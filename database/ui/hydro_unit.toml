@@ -2,6 +2,12 @@ id = "HydroUnit"
 icon = "lucide/dam.svg"
 label.en = "Hydro Unit"
 
+[[card]]
+query = "SELECT COUNT(*) FROM HydroUnit"
+type = "integer"
+label.en = "Elements"
+unit.en = "hydro unit(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

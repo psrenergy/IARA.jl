@@ -2,6 +2,18 @@ id = "DemandUnit"
 icon = "lucide/zap.svg"
 label.en = "Demand Unit"
 
+[[card]]
+query = "SELECT COUNT(*) FROM DemandUnit"
+type = "integer"
+label.en = "Elements"
+unit.en = "demand unit(s)"
+
+[[card]]
+query = "SELECT COUNT(*) FROM DemandUnit_time_series_parameters"
+type = "integer"
+label.en = "Modifications"
+unit.en = "records"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

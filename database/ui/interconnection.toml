@@ -2,6 +2,12 @@ id = "Interconnection"
 icon = "lucide/spline.svg"
 label.en = "Interconnection"
 
+[[card]]
+query = "SELECT COUNT(*) FROM Interconnection"
+type = "integer"
+label.en = "Elements"
+unit.en = "interconnection(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

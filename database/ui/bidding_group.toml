@@ -2,6 +2,12 @@ id = "BiddingGroup"
 icon = "lucide/group.svg"
 label.en = "Bidding Group"
 
+[[card]]
+query = "SELECT COUNT(*) FROM BiddingGroup"
+type = "integer"
+label.en = "Elements"
+unit.en = "bidding group(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

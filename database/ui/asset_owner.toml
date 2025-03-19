@@ -2,6 +2,12 @@ id = "AssetOwner"
 icon = "lucide/building-2.svg"
 label.en = "Asset Owner"
 
+[[card]]
+query = "SELECT COUNT(*) FROM AssetOwner"
+type = "integer"
+label.en = "Elements"
+unit.en = "asset owner(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

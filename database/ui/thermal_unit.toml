@@ -2,6 +2,12 @@ id = "ThermalUnit"
 icon = "lucide/factory.svg"
 label.en = "Thermal Unit"
 
+[[card]]
+query = "SELECT COUNT(*) FROM ThermalUnit"
+type = "integer"
+label.en = "Elements"
+unit.en = "thermal unit(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

@@ -47,7 +47,7 @@ tooltip.en = "Label of the hydro unit"
 id = "initial_volume"
 label.en = "Initial Volume"
 tooltip.en = "Initial volume of the hydro unit"
-unit = "hm³"
+hide = true
 
 [[attribute]]
 id = "initial_volume_type"
@@ -55,6 +55,7 @@ type = "enum"
 enum = "initial_volume_type"
 label.en = "Initial Volume Type"
 tooltip.en = "Initial volume type of the hydro unit"
+hide = true
 
 [[attribute]]
 id = "has_commitment"
@@ -69,6 +70,7 @@ type = "enum"
 enum = "operation_type"
 label.en = "Operation Type"
 tooltip.en = "Operation type of the hydro unit"
+hide = true
 
 [[attribute]]
 id = "bus_id"
@@ -84,6 +86,7 @@ tooltip.en = "Bidding group of the hydro unit"
 id = "gaugingstation_id"
 label.en = "Gauging Station"
 tooltip.en = "Gauging station of the hydro unit"
+hide = true
 
 [[attribute]]
 id = "hydrounit_turbine_to"
@@ -94,6 +97,7 @@ tooltip.en = "Turbine to of the hydro unit"
 id = "hydrounit_spill_to"
 label.en = "Spill To"
 tooltip.en = "Spill to of the hydro unit"
+hide = true
 
 [[attribute_group]]
 id = "waveguide"

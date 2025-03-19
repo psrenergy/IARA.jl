@@ -40,8 +40,8 @@ P_{i, n, \tau, k}(\omega) &= (1 + p_f) \cdot \overline{C}^T_j &\quad \forall k =
 ```
 
 Where:
-- $Q_{i, n, \tau, k}(\omega)$  represents the bid offer in segment $k$ for energy quantity in period $\tau$, calculated by multiplying the unit’s maximum generation $\overline{G}^T_j$, the duration of the subperiod $d(\tau)$, and the proportion of the risk factor $s_f$.
-- $P_{i, n, \tau, k}(\omega)$ represents the bid offer in segment $k$ for price, calculated by applying a risk factor $p_f$ to the operational cost $\overline{C}^T_j$.
+- ``Q_{i, n, \tau, k}(\omega)``  represents the bid offer in segment $k$ for energy quantity in period $\tau$, calculated by multiplying the unit’s maximum generation $\overline{G}^T_j$, the duration of the subperiod $d(\tau)$, and the proportion of the risk factor $s_f$.
+- ``P_{i, n, \tau, k}(\omega)`` represents the bid offer in segment $k$ for price, calculated by applying a risk factor $p_f$ to the operational cost $\overline{C}^T_j$.
 
 The bid offers are calculated for each thermal unit $j$ in bidding group $b$ and network node $n$ and bid segment $k$.
 Each segment represents a combination of thermal unit and risk factor, so the number of segments is the product of the number of thermal units and the number of risk factors in the bidding group.

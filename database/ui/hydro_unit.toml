@@ -4,6 +4,19 @@ label.en = "Hydro Unit"
 
 [[card]]
 query = """
+SELECT 
+    CASE
+        WHEN inflow_scenarios_files = 1 THEN 'Ex Ante Scenarios'
+        WHEN inflow_scenarios_files = 2 THEN 'Ex Post Scenarios'
+        WHEN inflow_scenarios_files = 3 THEN 'Ex Ante and Ex Post'
+        ELSE 'No Scenarios'
+    END AS inflow_scenario_type
+FROM Configuration;
+"""
+type = "string"
+
+[[card]]
+query = """
 WITH ranked_rows AS (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
     FROM HydroUnit_time_series_parameters

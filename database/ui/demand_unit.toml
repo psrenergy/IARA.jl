@@ -21,8 +21,10 @@ tooltip.en = "Label of the demand unit"
 
 [[attribute]]
 id = "demand_unit_type"
-label.en = "Demand Unit Type"
-tooltip.en = "Demand unit type of the demand unit"
+type = "enum"
+enum = "demand_type"
+label.en = "Demand Type"
+tooltip.en = "Demand type of the demand unit"
 
 [[attribute]]
 id = "max_shift_up"
@@ -68,6 +70,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the demand unit"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"

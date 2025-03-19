@@ -32,6 +32,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the interconnection"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"

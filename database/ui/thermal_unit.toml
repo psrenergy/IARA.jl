@@ -87,6 +87,8 @@ tooltip.en = "Bidding group of the thermal unit"
 
 [[attribute]]
 id = "commitment_initial_condition"
+type = "enum"
+enum = "commitment_initial_condition"
 label.en = "Commitment Initial Condition"
 tooltip.en = "Commitment initial condition of the thermal unit"
 
@@ -99,6 +101,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the thermal unit"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"

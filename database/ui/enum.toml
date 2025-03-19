@@ -1,10 +1,10 @@
-[[bool]]
+[[boolean]]
 id = 0
-label.en = "Disabled"
+label.en = "False"
 
-[[bool]]
+[[boolean]]
 id = 1
-label.en = "Enabled"
+label.en = "True"
 
 [[existing]]
 id = 0
@@ -262,19 +262,19 @@ label.en = "On"
 id = 2
 label.en = "Undefined"
 
-[[vrcurveguide_data_source]]
+[[vr_curveguide_data_source]]
 id = 0
 label.en = "Read From File"
 
-[[vrcurveguide_data_source]]
+[[vr_curveguide_data_source]]
 id = 1
 label.en = "Uniform Across Reservoirs"
 
-[[vrcurveguide_data_format]]
+[[vr_curveguide_data_format]]
 id = 0
 label.en = "CSV File"
 
-[[vrcurveguide_data_format]]
+[[vr_curveguide_data_format]]
 id = 1
 label.en = "Formatted Data"
 

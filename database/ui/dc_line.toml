@@ -2,6 +2,12 @@ id = "DCLine"
 icon = "lucide/spline.svg"
 label.en = "DC Line"
 
+[[card]]
+query = "SELECT COUNT(*) FROM DCLine"
+type = "integer"
+label.en = "Elements"
+unit.en = "DC line(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -26,6 +32,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the DC line"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"

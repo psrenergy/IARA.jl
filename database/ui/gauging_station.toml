@@ -2,6 +2,12 @@ id = "GaugingStation"
 icon = "lucide/gauge.svg"
 label.en = "Gauging Station"
 
+[[card]]
+query = "SELECT COUNT(*) FROM GaugingStation"
+type = "integer"
+label.en = "Elements"
+unit.en = "gauging station(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -21,6 +27,7 @@ icon = "lucide/chart-spline.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the gauging station"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "historical_inflow"

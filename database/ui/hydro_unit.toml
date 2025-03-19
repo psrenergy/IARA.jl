@@ -2,6 +2,12 @@ id = "HydroUnit"
 icon = "lucide/dam.svg"
 label.en = "Hydro Unit"
 
+[[card]]
+query = "SELECT COUNT(*) FROM HydroUnit"
+type = "integer"
+label.en = "Elements"
+unit.en = "hydro unit(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -14,6 +20,8 @@ tooltip.en = "Initial volume of the hydro unit"
 
 [[attribute]]
 id = "initial_volume_type"
+type = "enum"
+enum = "initial_volume_type"
 label.en = "Initial Volume Type"
 tooltip.en = "Initial volume type of the hydro unit"
 
@@ -26,6 +34,8 @@ tooltip.en = "Has commitment of the hydro unit"
 
 [[attribute]]
 id = "operation_type"
+type = "enum"
+enum = "operation_type"
 label.en = "Operation Type"
 tooltip.en = "Operation type of the hydro unit"
 
@@ -73,6 +83,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the hydro unit"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"

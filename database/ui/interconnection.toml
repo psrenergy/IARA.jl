@@ -2,6 +2,12 @@ id = "Interconnection"
 icon = "lucide/spline.svg"
 label.en = "Interconnection"
 
+[[card]]
+query = "SELECT COUNT(*) FROM Interconnection"
+type = "integer"
+label.en = "Elements"
+unit.en = "interconnection(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -26,6 +32,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the interconnection"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"

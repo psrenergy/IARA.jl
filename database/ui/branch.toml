@@ -2,6 +2,12 @@ id = "Branch"
 icon = "lucide/git-branch.svg"
 label.en = "Branch"
 
+[[card]]
+query = "SELECT COUNT(*) FROM Branch"
+type = "integer"
+label.en = "Elements"
+unit.en = "branch(es)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -31,6 +37,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the branch"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"

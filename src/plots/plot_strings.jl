@@ -89,36 +89,36 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "pt" => "Receita Total",
         ),
         "ex_ante_revenue" => Dict(
-            "en" => "Ex-ante Revenue",
-            "pt" => "Receita Ex-ante",
+            "en" => "Ex-Ante Revenue",
+            "pt" => "Receita Ex-Ante",
         ),
         "ex_post_revenue" => Dict(
-            "en" => "Ex-post Revenue",
-            "pt" => "Receita Ex-post",
+            "en" => "Ex-Post Revenue",
+            "pt" => "Receita Ex-Post",
         ),
         "total_generation" => Dict(
             "en" => "Total Generation",
             "pt" => "Geração Total",
         ),
         "ex_ante_generation" => Dict(
-            "en" => "Ex-ante Generation",
-            "pt" => "Geração Ex-ante",
+            "en" => "Ex-Ante Generation",
+            "pt" => "Geração Ex-Ante",
         ),
         "ex_post_generation" => Dict(
-            "en" => "Ex-post Generation",
-            "pt" => "Geração Ex-post",
+            "en" => "Ex-Post Generation",
+            "pt" => "Geração Ex-Post",
         ),
         "spot_price" => Dict(
             "en" => "Spot Price",
             "pt" => "Preço Spot",
         ),
         "ex_ante_spot_price" => Dict(
-            "en" => "Ex-ante Spot Price",
-            "pt" => "Preço Spot Ex-ante",
+            "en" => "Ex-Ante Spot Price",
+            "pt" => "Preço Spot Ex-Ante",
         ),
         "ex_post_spot_price" => Dict(
-            "en" => "Ex-post Spot Price",
-            "pt" => "Preço Spot Ex-post",
+            "en" => "Ex-Post Spot Price",
+            "pt" => "Preço Spot Ex-Post",
         ),
         "generation_by_technology" => Dict(
             "en" => "Generation by Technology",

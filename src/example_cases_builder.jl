@@ -16,6 +16,9 @@ import ..IARA
 const MAP_OF_CASES = Dict(
     "boto_base_01" => "case_09/base_case",
     "boto_nohydro_01" => "case_09/nohydro_case",
+    "ui_c1" => "case_14/base_case",
+    "ui_c2" => "case_14/dual_settlement",
+    "ui_c3" => "case_15/renewable",
 )
 
 """

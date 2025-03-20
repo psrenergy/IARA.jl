@@ -5,4 +5,4 @@ initial_date = "2024-01-01 00:00:00"
 time_dimension = "period"
 frequency = "monthly"
 unit = "$"
-labels = ["a - Sistema", "b - Sistema", "c - Sistema", "d - Sistema", "e - Sistema"]
+labels = ["Amarelo - Sistema", "Vermelho - Sistema", "Roxo - Sistema", "Verde - Sistema", "Azul - Sistema"]

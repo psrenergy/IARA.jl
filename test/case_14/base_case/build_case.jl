@@ -61,7 +61,7 @@ IARA.add_asset_owner!(db; label = "Agente Amarelo")
 
 IARA.add_bidding_group!(
     db;
-    label = "a",
+    label = "Vermelho",
     assetowner_id = "Agente Vermelho",
     risk_factor = [0.1],
     segment_fraction = [1.0],
@@ -69,7 +69,7 @@ IARA.add_bidding_group!(
 
 IARA.add_bidding_group!(
     db;
-    label = "b",
+    label = "Verde",
     assetowner_id = "Agente Verde",
     risk_factor = [0.1],
     segment_fraction = [1.0],
@@ -77,7 +77,7 @@ IARA.add_bidding_group!(
 
 IARA.add_bidding_group!(
     db;
-    label = "c",
+    label = "Amarelo",
     assetowner_id = "Agente Amarelo",
     risk_factor = [0.1],
     segment_fraction = [1.0],
@@ -85,7 +85,7 @@ IARA.add_bidding_group!(
 
 IARA.add_bidding_group!(
     db;
-    label = "d",
+    label = "Azul",
     assetowner_id = "Agente Azul",
     risk_factor = [0.1],
     segment_fraction = [1.0],
@@ -93,7 +93,7 @@ IARA.add_bidding_group!(
 
 IARA.add_bidding_group!(
     db;
-    label = "e",
+    label = "Roxo",
     assetowner_id = "Agente Roxo",
     risk_factor = [0.1],
     segment_fraction = [1.0],
@@ -108,7 +108,7 @@ IARA.add_thermal_unit!(
         max_generation = [60.0],
         om_cost = [40.0],
     ),
-    biddinggroup_id = "a",
+    biddinggroup_id = "Vermelho",
     bus_id = "Sistema",
 )
 
@@ -121,7 +121,7 @@ IARA.add_thermal_unit!(
         max_generation = [60.0],
         om_cost = [45.0],
     ),
-    biddinggroup_id = "b",
+    biddinggroup_id = "Verde",
     bus_id = "Sistema",
 )
 
@@ -134,7 +134,7 @@ IARA.add_thermal_unit!(
         max_generation = [60.0],
         om_cost = [60.0],
     ),
-    biddinggroup_id = "c",
+    biddinggroup_id = "Amarelo",
     bus_id = "Sistema",
 )
 
@@ -147,7 +147,7 @@ IARA.add_thermal_unit!(
         max_generation = [60.0],
         om_cost = [75.0],
     ),
-    biddinggroup_id = "d",
+    biddinggroup_id = "Azul",
     bus_id = "Sistema",
 )
 
@@ -160,7 +160,7 @@ IARA.add_thermal_unit!(
         max_generation = [60.0],
         om_cost = [80.0],
     ),
-    biddinggroup_id = "e",
+    biddinggroup_id = "Roxo",
     bus_id = "Sistema",
 )
 
@@ -235,7 +235,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "quantity_offer"),
     quantity_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["a", "b", "c", "d", "e"],
+    labels_bidding_groups = ["Vermelho", "Verde", "Amarelo", "Azul", "Roxo"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [
@@ -252,7 +252,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "price_offer"),
     price_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["a", "b", "c", "d", "e"],
+    labels_bidding_groups = ["Vermelho", "Verde", "Amarelo", "Azul", "Roxo"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [

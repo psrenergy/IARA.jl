@@ -42,9 +42,8 @@ function profile_min_activation_level!(
     end
 
     # Model parameters
-    placeholder_scenario = 1
     minimum_activation_level_profile_series =
-        time_series_minimum_activation_level_profile(inputs, model.node, placeholder_scenario)
+        time_series_minimum_activation_level_profile(inputs, model.node)
 
     @variable(
         model.jump_model,
@@ -68,7 +67,8 @@ function profile_min_activation_level!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    period::Int,
+    simulation_period::Int,
+    simulation_trajectory::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},
@@ -78,7 +78,7 @@ function profile_min_activation_level!(
         index_of_elements(inputs, BiddingGroup)
 
     minimum_activation_level_profile_series =
-        time_series_minimum_activation_level_profile(inputs, model.node, scenario)
+        time_series_minimum_activation_level_profile(inputs, model.node)
     profile_min_activation_level = get_model_object(model, :profile_min_activation_level)
 
     valid_profiles = get_maximum_valid_profiles(inputs)

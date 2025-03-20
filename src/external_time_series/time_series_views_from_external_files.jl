@@ -99,7 +99,7 @@ function initialize_time_series_from_external_files(inputs)
             possible_expected_dimensions = [
                 [:period, :scenario],
             ],
-            labels_to_read = ["season", "sample"],
+            labels_to_read = ["season", "sample", "next_subscenario"],
         )
     end
 

@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase09SeasonalMappingCase
+module TestCase09SeasonalMappingClearingCase
 
 using Test
 using IARA

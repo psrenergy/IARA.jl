@@ -10,7 +10,7 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-period_season_map = zeros(Int, 2, number_of_scenarios, number_of_periods)
+period_season_map = zeros(Int, 3, number_of_scenarios, number_of_periods)
 
 # Seasons
 period_season_map[1, 1, :] = [1, 1, 1, 2, 2, 2]
@@ -38,12 +38,14 @@ period_season_map[2, 9, :] = [7, 8, 9, 9, 8, 7]
 period_season_map[2, 10, :] = [9, 8, 7, 7, 8, 9]
 period_season_map[2, 11, :] = [10, 11, 11, 10, 12, 12]
 period_season_map[2, 12, :] = [12, 10, 10, 11, 11, 12]
+# Next subscenario
+period_season_map[3, :, :] = copy(period_season_map[1, :, :])
 
 IARA.write_timeseries_file(
     joinpath(PATH, "period_season_map"),
     period_season_map;
     dimensions = ["period", "scenario"],
-    labels = ["season", "sample"],
+    labels = ["season", "sample", "next_subscenario"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios],
     initial_date = "2020-01-01T00:00:00",

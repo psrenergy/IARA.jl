@@ -137,6 +137,7 @@ function _get_plot_ticks(
     initial_date_time::DateTime,
     time_series_step::Configurations_TimeSeriesStep.T;
     simplified_ticks::Bool = false,
+    subperiod_string::String = "Subperiod",
     kwargs...,
 )
     queried_subperiods = get(kwargs, :subperiod, nothing)
@@ -149,7 +150,7 @@ function _get_plot_ticks(
 
     if simplified_ticks
         plot_ticks = ["$i" for i in 1:num_subperiods]
-        hover_ticks = ["Subperiod $i" for i in 1:num_subperiods]
+        hover_ticks = ["$subperiod_string $i" for i in 1:num_subperiods]
     else
         if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
             for i in 0:num_periods-1
@@ -163,7 +164,7 @@ function _get_plot_ticks(
                     push!(
                         hover_ticks,
                         Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") *
-                        "<br>Subperiod $subperiod_true_index",
+                        "<br>$subperiod_string $subperiod_true_index",
                     )
                 end
             end

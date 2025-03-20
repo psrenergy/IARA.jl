@@ -198,8 +198,6 @@ function seasonal_simulation_scheme(
         end
     end
 
-    @show simulation_scheme
-
     return simulation_scheme
 end
 

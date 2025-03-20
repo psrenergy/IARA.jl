@@ -359,8 +359,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
             run_clearing_simulation(ex_ante_physical_model, inputs, ex_ante_physical_outputs, run_time_options, period)
 
-            run_time_options =
-                RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+            run_time_options = RunTimeOptions(;
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+            )
             run_clearing_simulation(
                 ex_ante_commercial_model,
                 inputs,
@@ -372,8 +373,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
             run_clearing_simulation(ex_post_physical_model, inputs, ex_post_physical_outputs, run_time_options, period)
 
-            run_time_options =
-                RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+            run_time_options = RunTimeOptions(;
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
+            )
             run_clearing_simulation(
                 ex_post_commercial_model,
                 inputs,
@@ -562,9 +564,6 @@ function run_clearing_simulation(
                 subscenario,
                 WriteOutput,
             )
-
-            # @show "--------------------"
-            # @show subscenario, simulation_results_from_period_scenario_subscenario.data[:hydro_volume].data
 
             if subscenario == subscenario_that_progagates_state_variables_to_next_period(inputs, run_time_options; period, scenario)
                 # Serialize the variables to be used in other clearing problems

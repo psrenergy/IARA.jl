@@ -87,8 +87,6 @@ function hydro_volume!(
     # Data from previous period
     previous_volume = hydro_volume_from_previous_period(inputs, simulation_period, simulation_trajectory)
 
-    # @show simulation_period, simulation_trajectory, previous_volume
-
     for h in hydro_units_with_reservoir
         MOI.set(
             model.jump_model,

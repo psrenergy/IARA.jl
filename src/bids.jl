@@ -24,6 +24,7 @@ function initialize_heuristic_bids_outputs(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_valid_units]
     )
 
     if has_any_simple_bids(inputs)
@@ -133,7 +134,7 @@ function markup_offers_for_period_scenario(
     scenario::Int,
 )
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids, has_valid_units])
-    number_of_bidding_groups = length(bidding_group_indexes)
+    number_of_bidding_groups = number_of_elements(inputs, BiddingGroup)
     number_of_buses = number_of_elements(inputs, Bus)
 
     available_energy_per_hydro_unit =
@@ -244,7 +245,7 @@ function markup_offers_for_period_scenario(
         "bidding_group_energy_offer",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(quantity_offers, (4, 1, 3, 2));
+        permutedims(quantity_offers[bidding_group_indexes, :,:,:], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
@@ -258,7 +259,7 @@ function markup_offers_for_period_scenario(
         "bidding_group_price_offer",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(price_offers, (4, 1, 3, 2));
+        permutedims(price_offers[bidding_group_indexes, :,:,:], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
@@ -273,7 +274,7 @@ function markup_offers_for_period_scenario(
         "bidding_group_no_markup_price_offer",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(no_markup_price_offers, (4, 1, 3, 2));
+        permutedims(no_markup_price_offers[bidding_group_indexes, :,:,:], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids

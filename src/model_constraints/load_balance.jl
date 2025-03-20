@@ -366,7 +366,7 @@ function nodal_bid_generation_expression(
             hydro_generation[blk, h] for
             h in hydro_units if
             hydro_unit_bus_index(inputs, h) == bus &&
-            is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h); # question
+            is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h);
             init = 0.0,
         )
     )

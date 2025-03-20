@@ -22,7 +22,7 @@ function bidding_group_generation!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    bidding_groups = index_of_elements(inputs, BiddingGroup)#; filters = [has_valid_units])
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_valid_units])
     blks = subperiods(inputs)
 
     # Time series
@@ -42,7 +42,7 @@ function bidding_group_generation!(
             bus in buses,
         ]
         in
-        MOI.Parameter(0.0)#quantity_offer_series[bg, bus, bds, blk])
+        MOI.Parameter(quantity_offer_series[bg, bus, bds, blk])
     ) # MWh
     @variable(
         model.jump_model,
@@ -53,7 +53,7 @@ function bidding_group_generation!(
             bus in buses,
         ]
         in
-        MOI.Parameter(0.0)#price_offer_series[bg, bus, bds, blk])
+        MOI.Parameter(price_offer_series[bg, bus, bds, blk])
     ) # $/MWh
 
     # Variables
@@ -164,6 +164,7 @@ function bidding_group_generation!(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_valid_units],
     )
 
     initialize!(

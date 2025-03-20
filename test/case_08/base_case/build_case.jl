@@ -148,6 +148,27 @@ IARA.write_timeseries_file(
     unit = "GWh",
 )
 
+IARA.add_bidding_group!(db;
+    label = "bidding_group_2",
+    assetowner_id = "asset_owner_2",
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
+)
+
+IARA.update_hydro_unit_relation!(db,
+    "hydro_1";
+    collection = "BiddingGroup",
+    relation_type = "id",
+    related_label = "bidding_group_2",
+)
+
+IARA.update_hydro_unit_relation!(db,
+    "hydro_2";
+    collection = "BiddingGroup",
+    relation_type = "id",
+    related_label = "bidding_group_2",
+)
+
 IARA.close_study!(db)
 
 hydro_opportunity_cost = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)

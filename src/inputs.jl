@@ -351,7 +351,7 @@ function fill_caches!(inputs::Inputs)
        run_mode(inputs) == RunMode.STRATEGIC_BID
         update_number_of_bid_segments!(inputs, 1)
     end
-    if run_mode(inputs) == RunMode.MARKET_CLEARING # is this the right condition?
+    if (is_market_clearing(inputs))
         fill_bidding_group_has_valid_units!(inputs)
     end
     return nothing

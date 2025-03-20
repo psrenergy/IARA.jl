@@ -28,6 +28,7 @@ m3_per_second_to_hm3 = (3600 / 1e6) * subperiod_duration_in_hours
 # -------------------
 
 db = IARA.create_study!(PATH;
+    language = "pt",
     number_of_periods = number_of_periods,
     number_of_scenarios = number_of_scenarios,
     number_of_subperiods = number_of_subperiods,

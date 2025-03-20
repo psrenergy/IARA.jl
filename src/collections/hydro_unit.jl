@@ -602,6 +602,7 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     gauging_stations = index_of_elements(inputs, GaugingStation)
     any_hydro_has_min_outflow = any_elements(inputs, HydroUnit; filters = [has_min_outflow])
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
     num_errors = 0
     for i in 1:length(hydro_unit)
@@ -618,13 +619,13 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if !is_null(hydro_unit.bidding_group_index[i]) &&
-           clearing_hydro_representation(inputs) ==
-           Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            @warn(
-                "Ignoring Bidding Group ID $(hydro_unit.bidding_group_index[i]) for Hydro Unit $(hydro_unit.label[i])
-              because the clearing hydro representation is set to virtual reservoirs."
-            )
+        if i in union(virtual_reservoir_hydro_unit_indices(inputs)...)
+            if is_null(hydro_unit.bidding_group_index[i])
+                @error(
+                    "Hydro Unit $(hydro_unit.label[i]) is associated with a Virtual Reservoir and must have a Bidding Group for remuneration calculations."
+                )
+                num_errors += 1
+            end
         end
         if !(hydro_unit.gauging_station_index[i] in gauging_stations)
             @error(

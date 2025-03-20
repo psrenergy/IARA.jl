@@ -91,7 +91,7 @@ function zonal_bid_generation_expression(
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup, filters = [has_valid_units])
     hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
     buses = index_of_elements(inputs, Bus)
 
@@ -99,7 +99,7 @@ function zonal_bid_generation_expression(
     bidding_group_generation_profile = if has_any_profile_bids(inputs)
         get_model_object(model, :bidding_group_generation_profile)
     end
-    bidding_group_generation = if any_elements(inputs, BiddingGroup)
+    bidding_group_generation = if any_elements(inputs, BiddingGroup; filters = [has_valid_units])
         get_model_object(model, :bidding_group_generation)
     end
     hydro_generation = if any_elements(inputs, VirtualReservoir)
@@ -315,14 +315,14 @@ function nodal_bid_generation_expression(
 )
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_valid_units])
     hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
 
     # Market Clearing Variables
     bidding_group_generation_profile = if has_any_profile_bids(inputs)
         get_model_object(model, :bidding_group_generation_profile)
     end
-    bidding_group_generation = if any_elements(inputs, BiddingGroup)
+    bidding_group_generation = if any_elements(inputs, BiddingGroup; filters = [has_valid_units])
         get_model_object(model, :bidding_group_generation)
     end
     hydro_generation = if any_elements(inputs, VirtualReservoir)
@@ -366,7 +366,7 @@ function nodal_bid_generation_expression(
             hydro_generation[blk, h] for
             h in hydro_units if
             hydro_unit_bus_index(inputs, h) == bus &&
-            is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h);
+            is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h); # question
             init = 0.0,
         )
     )

@@ -41,7 +41,7 @@ function link_offers_and_generation!(
         get_model_object(model, :battery_unit_generation)
     end
     # Offer variables
-    bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_valid_units])
 
     if has_any_profile_bids(inputs)
         bidding_group_generation_profile = get_model_object(model, :bidding_group_generation_profile)

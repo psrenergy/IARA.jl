@@ -211,8 +211,8 @@ function set_custom_hook(
         # only then solve the linear version to get the duals
         if is_market_clearing(inputs)
             optimize!(model; ignore_optimize_hook = true)
-            undo = fix_discrete_variables(model)
-            optimize!(model; ignore_optimize_hook = true)
+            # undo = fix_discrete_variables(model)
+            # optimize!(model; ignore_optimize_hook = true)
         else
             optimize!(model; ignore_optimize_hook = true)
         end

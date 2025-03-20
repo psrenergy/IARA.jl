@@ -76,9 +76,9 @@ function bidding_group_markup_units(inputs::Inputs)
 
     for bg in bidding_group_indexes
         bidding_group_number_of_risk_factors[bg] = length(bidding_group_risk_factor(inputs, bg))
-        if clearing_hydro_representation(inputs) !=
-           Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
+        bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
+        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+            filter!(x -> !is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, x), bidding_group_hydro_units[bg])
         end
         bidding_group_thermal_units[bg] = findall(isequal(bg), thermal_unit_bidding_group_index(inputs))
         bidding_group_renewable_units[bg] = findall(isequal(bg), renewable_unit_bidding_group_index(inputs))
@@ -132,14 +132,12 @@ function markup_offers_for_period_scenario(
     period::Int,
     scenario::Int,
 )
-    bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
+    bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids, has_valid_units])
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
 
     available_energy_per_hydro_unit =
-        if is_market_clearing(inputs) &&
-           clearing_hydro_representation(inputs) ==
-           Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_has_volume_variables(inputs, run_time_options)
             hydro_available_energy(inputs, run_time_options, period, scenario)
         end
     renewable_generation_series = time_series_renewable_generation(inputs, run_time_options)
@@ -250,6 +248,7 @@ function markup_offers_for_period_scenario(
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_valid_units]
     )
 
     write_bid_output(
@@ -263,6 +262,8 @@ function markup_offers_for_period_scenario(
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_valid_units]
+
     )
 
     write_bid_output(
@@ -276,6 +277,8 @@ function markup_offers_for_period_scenario(
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_valid_units]
+
     )
 
     if is_market_clearing(inputs)
@@ -429,7 +432,7 @@ function build_renewable_offers!(
 end
 
 """
-    build_hydro_offers(
+    build_hydro_offers!(
         inputs::Inputs, 
         bg_index::Int, 
         hydro_unit_indexes::Vector{Int}, 
@@ -471,8 +474,8 @@ function build_hydro_offers!(
                     continue
                 end
                 available_energy_in_segment = available_energy[hydro_unit] * segment_fraction
-                if available_energy_in_segment < sum(quantity_offers[bus, segment, :])
-                    adjusting_factor = available_energy_in_segment / sum(quantity_offers[bus, segment, :])
+                if available_energy_in_segment < sum(quantity_offers[bg_index, bus, segment, :])
+                    adjusting_factor = available_energy_in_segment / sum(quantity_offers[bg_index, bus, segment, :])
                     quantity_offers[bg_index, bus, segment, :] .*= adjusting_factor
                 end
             end

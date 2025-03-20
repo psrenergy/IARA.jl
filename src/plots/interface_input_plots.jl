@@ -39,7 +39,13 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
 
     configs = Vector{Config}()
     plot_ticks, hover_ticks =
-        _get_plot_ticks(ticks_demand, num_periods, initial_date_time(inputs), time_series_step(inputs); subperiod_string = get_name(inputs, "subperiod"))
+        _get_plot_ticks(
+            ticks_demand,
+            num_periods,
+            initial_date_time(inputs),
+            time_series_step(inputs);
+            subperiod_string = get_name(inputs, "subperiod"),
+        )
     title = get_name(inputs, demand_name)
     unit = "MW"
     color_idx = 0

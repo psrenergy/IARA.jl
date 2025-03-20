@@ -40,7 +40,13 @@ function build_ui_operator_plots(
             ex_ante_plot = true,
         )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
-        plot_operator_output(inputs, revenue_files[2], plot_path, get_name(inputs, "ex_post_revenue"); round_data = true)
+        plot_operator_output(
+            inputs,
+            revenue_files[2],
+            plot_path,
+            get_name(inputs, "ex_post_revenue");
+            round_data = true,
+        )
     else
         @assert length(revenue_files) == 1
         plot_path = joinpath(plots_path, "total_revenue")
@@ -52,7 +58,13 @@ function build_ui_operator_plots(
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(generation_files) == 2
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
-        plot_operator_output(inputs, generation_files[1], plot_path, get_name(inputs, "ex_ante_generation"); ex_ante_plot = true)
+        plot_operator_output(
+            inputs,
+            generation_files[1],
+            plot_path,
+            get_name(inputs, "ex_ante_generation");
+            ex_ante_plot = true,
+        )
         plot_path = joinpath(plots_path, "total_generation_ex_post")
         plot_operator_output(inputs, generation_files[2], plot_path, get_name(inputs, "ex_post_generation"))
     else

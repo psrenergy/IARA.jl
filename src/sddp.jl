@@ -39,7 +39,10 @@ function build_model(
             push!(scenario_combinations, (scenario, subscenario, node, scenario))
         end
 
-        SDDP.parameterize(sp_model.jump_model, scenario_combinations) do (scenario, subscenario, simulation_period, simulation_trajectory)
+        SDDP.parameterize(
+            sp_model.jump_model,
+            scenario_combinations,
+        ) do (scenario, subscenario, simulation_period, simulation_trajectory)
             update_time_series_views_from_external_files!(inputs; period = node, scenario)
             update_time_series_from_db!(inputs, node)
             model_action(
@@ -123,7 +126,8 @@ function build_simulation_scheme(
             # Linear mincost
             for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
                 scheme_index += 1
-                simulation_scheme[scheme_index] = [(t, (scenario, subscenario, t, scenario)) for t in 1:number_of_periods(inputs)]
+                simulation_scheme[scheme_index] =
+                    [(t, (scenario, subscenario, t, scenario)) for t in 1:number_of_periods(inputs)]
             end
         end
     else

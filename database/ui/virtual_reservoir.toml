@@ -2,6 +2,12 @@ id = "VirtualReservoir"
 icon = "lucide/droplet.svg"
 label.en = "Virtual Reservoir"
 
+[[card]]
+query = "SELECT COUNT(*) FROM VirtualReservoir"
+type = "integer"
+label.en = "Elements"
+unit.en = "virtual reservoir(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -9,5 +15,30 @@ tooltip.en = "Label of the virtual reservoir"
 
 [[attribute]]
 id = "number_of_waveguide_points_for_file_template"
-label.en = "Number of Waveguide Points for File Template"
-tooltip.en = "Number of waveguide points for file template of the virtual reservoir"
+label.en = "Number of Points of the Tiebreaker Curve"
+tooltip.en = "Number of points of the tiebreaker curve"
+
+[[attribute_group]]
+id = "owner_and_allocation"
+label.en = "Owner and Allocation"
+icon = "lucide/user.svg"
+
+[[attribute]]
+id = "inflow_allocation"
+label.en = "Inflow Allocation"
+tooltip.en = "Inflow allocation of the virtual reservoir"
+
+[[attribute]]
+id = "assetowner_id"
+label.en = "Asset Owner"
+tooltip.en = "Asset owner of the virtual reservoir"
+
+[[attribute_group]]
+id = "hydro_unit"
+label.en = "Hydro Unit"
+icon = "lucide/droplet.svg"
+
+[[attribute]]
+id = "hydrounit_id"
+label.en = "Hydro Unit"
+tooltip.en = "Hydro unit of the virtual reservoir"

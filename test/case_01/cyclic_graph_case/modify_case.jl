@@ -37,7 +37,7 @@ IARA.update_hydro_unit_time_series_parameter!(
 IARA.write_timeseries_file(
     joinpath(PATH, "demand"),
     demand;
-    dimensions = ["season", "scenario", "subperiod"],
+    dimensions = ["season", "sample", "subperiod"],
     labels = ["dem_1"],
     time_dimension = "season",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
@@ -48,7 +48,7 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "renewable_generation"),
     renewable_generation;
-    dimensions = ["season", "scenario", "subperiod"],
+    dimensions = ["season", "sample", "subperiod"],
     labels = ["gnd_1"],
     time_dimension = "season",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
@@ -59,7 +59,7 @@ IARA.write_timeseries_file(
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;
-    dimensions = ["season", "scenario", "subperiod"],
+    dimensions = ["season", "sample", "subperiod"],
     labels = ["hyd_1"],
     time_dimension = "season",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],

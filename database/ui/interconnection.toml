@@ -2,10 +2,46 @@ id = "Interconnection"
 icon = "lucide/spline.svg"
 label.en = "Interconnection"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
+[[card]]
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM Interconnection_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT COUNT(*)
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
+type = "integer"
+label.en = "Existing Elements"
+unit = "unit(s)"
+
+[[card]]
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM Interconnection_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT SUM(
+           CASE 
+               WHEN capacity_to > capacity_from THEN capacity_to
+               ELSE capacity_from
+           END
+       ) AS total_capacity
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
+type = "double"
+label.en = "Total Capacity"
+unit = "MW"
+
+[[card]]
+query = "SELECT COUNT(*) FROM Interconnection_time_series_parameters"
+type = "integer"
+label.en = "Temporal Entries"
+unit.en = "record(s)"
 
 [[attribute]]
 id = "label"
@@ -21,3 +57,33 @@ tooltip.en = "Zone to of the interconnection"
 id = "zone_from"
 label.en = "Zone From"
 tooltip.en = "Zone from of the interconnection"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the interconnection"
+unit = "yyyy-MM-dd HH:mm"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the interconnection"
+
+[[attribute]]
+id = "capacity_to"
+label.en = "Capacity To"
+tooltip.en = "Capacity to of the interconnection"
+unit = "MW"
+
+[[attribute]]
+id = "capacity_from"
+label.en = "Capacity From"
+tooltip.en = "Capacity from of the interconnection"
+unit = "MW"

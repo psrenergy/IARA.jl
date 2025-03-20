@@ -578,15 +578,7 @@ function time_series_quantity_offer_profile(
     if read_bids_from_file(inputs)
         return inputs.time_series.quantity_offer_profile
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer_profile,
-        price_offer_profile,
-        parent_profile,
-        complementary_grouping_profile,
-        minimum_activation_level_profile =
-            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
-        quantity_profile_view = BidsView{Float64}()
-        quantity_profile_view.data = quantity_offer_profile
-        return quantity_profile_view
+        error("Quantity offer profile time series is not available for heuristic bids.")
     else
         error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
@@ -608,15 +600,7 @@ function time_series_price_offer_profile(
     if read_bids_from_file(inputs)
         return inputs.time_series.price_offer_profile
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer_profile,
-        price_offer_profile,
-        parent_profile,
-        complementary_grouping_profile,
-        minimum_activation_level_profile =
-            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
-        price_profile_view = TimeSeriesView{Float64, 2}()
-        price_profile_view.data = price_offer_profile
-        return price_profile_view
+        error("Price offer profile time series is not available for heuristic bids.")
     else
         error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
@@ -638,15 +622,7 @@ function time_series_parent_profile(
     if read_bids_from_file(inputs)
         return inputs.time_series.parent_profile
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer_profile,
-        price_offer_profile,
-        parent_profile,
-        complementary_grouping_profile,
-        minimum_activation_level_profile =
-            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
-        parent_profile_view = TimeSeriesView{Float64, 2}()
-        parent_profile_view.data = parent_profile
-        return parent_profile_view
+        error("Parent profile time series is not available for heuristic bids.")
     else
         error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
@@ -668,15 +644,7 @@ function time_series_complementary_grouping_profile(
     if read_bids_from_file(inputs)
         return inputs.time_series.complementary_grouping_profile
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer_profile,
-        price_offer_profile,
-        parent_profile,
-        complementary_grouping_profile,
-        minimum_activation_level_profile =
-            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
-        complementary_grouping_profile_view = TimeSeriesView{Float64, 3}()
-        complementary_grouping_profile_view.data = complementary_grouping_profile
-        return complementary_grouping_profile_view
+        error("Complementary grouping profile time series is not available for heuristic bids.")
     else
         error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
@@ -699,15 +667,7 @@ function time_series_minimum_activation_level_profile(
     if read_bids_from_file(inputs)
         return inputs.time_series.minimum_activation_level_profile
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer_profile,
-        price_offer_profile,
-        parent_profile,
-        complementary_grouping_profile,
-        minimum_activation_level_profile =
-            read_serialized_heuristic_profile_bids(inputs; period = period, scenario = scenario)
-        minimum_activation_level_profile_view = TimeSeriesView{Float64, 2}()
-        minimum_activation_level_profile_view.data = minimum_activation_level_profile
-        return minimum_activation_level_profile_view
+        error("Minimum activation level profile time series is not available for heuristic bids.")
     else
         error("Unrecognized bid source: $(bid_data_source(inputs))")
     end
@@ -867,8 +827,8 @@ Return a vector of vectors, mapping each subperiod to multiple hours.
 subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod_hour_map
 
 """
-    current_season(inputs)
+    period_season_map(inputs)
 
-Return the season associated with the current period and scenario.
+Return a 2-element vector with the current season and sample given the current period and scenario.
 """
-current_season(inputs) = inputs.time_series.period_season_map[1]
+period_season_map_from_file(inputs) = inputs.time_series.period_season_map

@@ -2,10 +2,11 @@ id = "GaugingStation"
 icon = "lucide/gauge.svg"
 label.en = "Gauging Station"
 
-[[attribute_group]]
-id = "historical_inflow"
-label.en = "Historical Inflow"
-icon = "lucide/chart-spline.svg"
+[[card]]
+query = "SELECT COUNT(*) FROM GaugingStation"
+type = "integer"
+label.en = "Elements"
+unit.en = "gauging station(s)"
 
 [[attribute]]
 id = "label"
@@ -16,3 +17,20 @@ tooltip.en = "Label of the gauging station"
 id = "gaugingstation_downstream"
 label.en = "Gauging Station Downstream"
 tooltip.en = "Gauging station downstream of the gauging station"
+
+[[attribute_group]]
+id = "historical_inflow"
+label.en = "Historical Inflow"
+icon = "lucide/chart-spline.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the gauging station"
+unit = "yyyy-MM-dd HH:mm"
+
+[[attribute]]
+id = "historical_inflow"
+label.en = "Historical Inflow"
+tooltip.en = "Historical inflow of the gauging station"
+unit = "m³/s"

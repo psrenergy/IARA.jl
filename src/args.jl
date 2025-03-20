@@ -40,7 +40,7 @@ end
 function Args(
     path::String,
     run_mode::RunMode.T;
-    output_path::String = joinpath(path, "outputs"),
+    output_path::String = joinpath(abspath(path), "outputs"),
     delete_output_folder_before_execution::Bool = false,
     write_lp::Bool = false,
     plot_outputs::Bool = true,
@@ -79,14 +79,14 @@ function finish_path(path::String)
         return path
     end
     if isfile(path)
-        return normpath(path)
+        return abspath(path)
     end
     if Sys.islinux() && path[end] != '/'
-        return normpath(path * "/")
+        return abspath(path * "/")
     elseif Sys.iswindows() && path[end] != '\\'
-        return normpath(path * "\\")
+        return abspath(path * "\\")
     else
-        return normpath(path)
+        return abspath(path)
     end
 end
 

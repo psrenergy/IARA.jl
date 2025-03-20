@@ -24,8 +24,8 @@
 set -e
 
 # Script variables
-S3_BUCKET="meta-ccee-iara-artifacts"
-CASE_PATH="iara-case"
+export S3_BUCKET="meta-ccee-iara-artifacts"
+export CASE_PATH="iara-case"
 
 function download_and_unzip_case () {
     echo "Downloading input data..."
@@ -45,7 +45,7 @@ function download_bids_and_move_to_case () {
     echo $S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip 
     aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip ./bids.zip  
     unzip -qo bids.zip -d $CASE_PATH
-    rm -f bids.zip
+	rm -f bids.zip
     echo "Completed."
 }
 
@@ -69,6 +69,14 @@ function catch_iara_error() {
             echo "Uploading error log to S3..."
             aws s3 cp ./iara_error.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/iara_error.log
             echo "Completed."
+    fi
+    
+    if [ "$IARA_COMMAND" == "single period market clearing" ]; then
+        save_iara_log "results"
+    elif [ "$IARA_COMMAND" == "heuristic bid" ]; then
+        save_iara_log "heuristic_bids"
+    elif [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
+        save_iara_log "game_summary"
     fi
 }
 

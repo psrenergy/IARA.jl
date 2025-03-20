@@ -9,24 +9,11 @@
 #############################################################################
 
 """
-    build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothing)
+    build_graph(inputs::Inputs)
 
 Builds a graph based on the inputs.
 """
-function build_graph(inputs::Inputs; current_period::Union{Nothing, Int} = nothing)
-    # For the market clearing problem type, we simulate each period individually
-    if is_market_clearing(inputs)
-        if isnothing(current_period)
-            error("current_period must be provided for the MARKET_CLEARING run mode")
-        end
-        if cyclic_policy_graph(inputs)
-            error("Cyclic policy graph not implemented for MARKET_CLEARING run mode")
-        end
-        graph = SDDP.Graph(0)
-        SDDP.add_node(graph, current_period)
-        SDDP.add_edge(graph, 0 => current_period, 1.0)
-        return graph
-    end
+function build_graph(inputs::Inputs)
     if linear_policy_graph(inputs)
         graph_size = number_of_periods(inputs)
         return SDDP.LinearGraph(graph_size)
@@ -105,10 +92,9 @@ function node_repetition_probability(inputs::Inputs)
     return 1 .- (1 ./ expected_number_of_repeats_per_node(inputs))
 end
 
-function seasonal_simulation_scheme(
-    model::ProblemModel,
+function create_period_season_map!(
     inputs::Inputs,
-    run_time_options::RunTimeOptions,
+    model::ProblemModel,
 )
     Random.seed!(1234)
     prob_end = node_termination_probability(inputs)
@@ -122,16 +108,12 @@ function seasonal_simulation_scheme(
     end
     @assert all(sum(transition_probability_matrix; dims = 2) .== 1.0)
 
-    simulation_scheme =
-        Array{Array{Tuple{Int, Tuple{Int, Int}}, 1}, 1}(
-            undef,
-            number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
-        )
-    scheme_index = 0
+    # For each trajectory and period, we sample a season and a scenario
+    period_season_map = Array{Int, 3}(undef, 2, number_of_scenarios(inputs), number_of_periods(inputs))
 
-    for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-        scheme_index += 1
+    for trajectory in scenarios(inputs)
         # First node
+        t = 1
         node = if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT
             1
         elseif policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT
@@ -139,11 +121,67 @@ function seasonal_simulation_scheme(
         else
             error("Policy graph type $(policy_graph_type(inputs)) not supported.")
         end
-        simulation_scheme[scheme_index] = [(node, (scenario, subscenario))]
+        simulation_sample = rand(1:number_of_scenarios(inputs))
+        period_season_map[1, trajectory, t] = node
+        period_season_map[2, trajectory, t] = simulation_sample
         # Other nodes
         for t in 2:number_of_periods(inputs)
             node = sample(1:number_of_nodes(inputs), Weights(transition_probability_matrix[node, :]))
-            push!(simulation_scheme[scheme_index], (node, (scenario, subscenario)))
+            simulation_sample = rand(1:number_of_scenarios(inputs))
+            period_season_map[1, trajectory, t] = node
+            period_season_map[2, trajectory, t] = simulation_sample
+        end
+    end
+
+    write_timeseries_file(
+        joinpath(output_path(inputs), "period_season_map"),
+        period_season_map;
+        dimensions = ["period", "scenario"],
+        labels = ["season", "sample"],
+        time_dimension = "period",
+        dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs)],
+        initial_date = initial_date_time(inputs),
+        unit = " ",
+    )
+
+    inputs.collections.configurations.period_season_map = period_season_map
+
+    return nothing
+end
+
+function seasonal_simulation_scheme(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions;
+    current_period::Union{Nothing, Int} = nothing,
+)
+    simulation_scheme =
+        Array{Array{Tuple{Int, Tuple{Int, Int, Int}}, 1}, 1}(
+            undef,
+            number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
+        )
+    scheme_index = 0
+
+    for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
+        scheme_index += 1
+        simulation_scheme[scheme_index] = []
+        if isnothing(current_period)
+            for period in 1:number_of_periods(inputs)
+                if has_period_season_map_file(inputs)
+                    update_time_series_views_from_external_files!(inputs; period, scenario)
+                    node, simulation_sample = period_season_map_from_file(inputs).data
+                else
+                    node, simulation_sample = period_season_map_cache(inputs; period, scenario)
+                end
+                push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, period)))
+            end
+        else
+            if has_period_season_map_file(inputs)
+                update_time_series_views_from_external_files!(inputs; period = current_period, scenario)
+                node, simulation_sample = period_season_map_from_file(inputs).data
+            else
+                node, simulation_sample = period_season_map_cache(inputs; period = current_period, scenario)
+            end
+            push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, current_period)))
         end
     end
 

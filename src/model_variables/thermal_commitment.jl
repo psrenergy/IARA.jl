@@ -89,6 +89,7 @@ function thermal_commitment!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

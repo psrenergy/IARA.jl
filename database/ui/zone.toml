@@ -2,6 +2,12 @@ id = "Zone"
 icon = "lucide/map-pinned.svg"
 label.en = "Zone"
 
+[[card]]
+query = "SELECT COUNT(*) FROM Zone"
+type = "integer"
+label.en = "Elements"
+unit.en = "zone(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

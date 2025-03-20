@@ -35,7 +35,7 @@ function bidding_group_profile_complementary_profile!(
     # Model parameters
     placeholder_scenario = 1
     complementary_grouping_profile_series =
-        time_series_complementary_grouping_profile(inputs, model.period, placeholder_scenario)
+        time_series_complementary_grouping_profile(inputs, model.node, placeholder_scenario)
 
     maximum_complementary_grouping_profile = size(complementary_grouping_profile_series)[2]
     complementary_grouping_profile_sets = zeros(Int,
@@ -87,6 +87,7 @@ function bidding_group_profile_complementary_profile!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

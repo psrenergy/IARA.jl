@@ -2,10 +2,41 @@ id = "RenewableUnit"
 icon = "lucide/sun.svg"
 label.en = "Renewable Unit"
 
-[[attribute_group]]
-id = "parameters"
-label.en = "Parameters"
-icon = "lucide/settings-2.svg"
+[[card]]
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM RenewableUnit_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT COUNT(*)
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
+type = "integer"
+label.en = "Existing Elements"
+unit = "unit(s)"
+
+[[card]]
+query = """
+WITH ranked_rows AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY date_time DESC) AS row_num
+    FROM RenewableUnit_time_series_parameters
+    WHERE date_time < (SELECT initial_date_time FROM Configuration LIMIT 1)
+)
+SELECT SUM(max_generation) AS total_generation
+FROM ranked_rows
+WHERE row_num = 1 AND existing = 1;
+"""
+type = "double"
+label.en = "Total Capacity"
+unit = "MW"
+
+[[card]]
+query = "SELECT COUNT(*) FROM RenewableUnit_time_series_parameters"
+type = "integer"
+label.en = "Temporal Entries"
+unit.en = "record(s)"
 
 [[attribute]]
 id = "label"
@@ -26,3 +57,39 @@ tooltip.en = "Bus of the renewable unit"
 id = "biddinggroup_id"
 label.en = "Bidding Group"
 tooltip.en = "Bidding group of the renewable unit"
+
+[[attribute_group]]
+id = "parameters"
+label.en = "Parameters"
+icon = "lucide/settings-2.svg"
+
+[[attribute]]
+id = "date_time"
+label.en = "Date Time"
+tooltip.en = "Date time of the renewable unit"
+unit = "yyyy-MM-dd HH:mm"
+
+[[attribute]]
+id = "existing"
+type = "enum"
+enum = "existing"
+label.en = "Existing"
+tooltip.en = "Existing of the renewable unit"
+
+[[attribute]]
+id = "max_generation"
+label.en = "Max Generation"
+tooltip.en = "Max generation of the renewable unit"
+unit = "MW"
+
+[[attribute]]
+id = "om_cost"
+label.en = "O&M Cost"
+tooltip.en = "O&M cost of the renewable unit"
+unit = "$/MWh"
+
+[[attribute]]
+id = "curtailment_cost"
+label.en = "Curtailment Cost"
+tooltip.en = "Curtailment cost of the renewable unit"
+unit = "$/MWh"

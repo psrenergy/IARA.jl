@@ -427,13 +427,7 @@ function hybrid_market_clearing_model_action(args...)
         hydro_generation!(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
-        if any_valid_elements(
-            inputs,
-            run_time_options,
-            HydroUnit,
-            action;
-            filters = [has_commitment, is_associated_with_some_virtual_reservoir],
-        )
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
@@ -520,25 +514,14 @@ function hybrid_market_clearing_model_action(args...)
             parp!(args...)
         end
 
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
+            hydro_generation_bound_by_commitment!(args...)
+        end
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_min_outflow])
+            hydro_minimum_outflow!(args...)
+        end
+
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            if any_valid_elements(
-                inputs,
-                run_time_options,
-                HydroUnit,
-                action;
-                filters = [has_commitment, is_associated_with_some_virtual_reservoir],
-            )
-                hydro_generation_bound_by_commitment!(args...)
-            end
-            if any_valid_elements(
-                inputs,
-                run_time_options,
-                HydroUnit,
-                action;
-                filters = [has_min_outflow, is_associated_with_some_virtual_reservoir],
-            )
-                hydro_minimum_outflow!(args...)
-            end
             if virtual_reservoir_correspondence_type(inputs) ==
                Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
                 virtual_reservoir_correspondence_by_volume!(args...)

@@ -207,6 +207,7 @@ function bidding_group_generation!(
         subscenario,
         multiply_by = MW_to_GW(),
         has_profile_bids = false,
+        filters = [has_valid_units],
     )
 
     return nothing

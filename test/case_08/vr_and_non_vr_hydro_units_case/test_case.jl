@@ -26,7 +26,7 @@ finally
     end
 end
 
-IARA.market_clearing(PATH; plot_outputs = false, delete_output_folder_before_execution = true, write_lp = true)
+IARA.market_clearing(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

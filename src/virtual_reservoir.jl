@@ -50,7 +50,7 @@ function additional_energy_from_inflows(
     inflow_as_volume::Vector{Float64},
     volume::Vector{Float64},
 )
-    hydro_units = index_of_elements(inputs, HydroUnit)
+    hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
     for h in virtual_reservoir_order_to_spill_excess_of_inflow(inputs, vr)
         inflow_excess =
             max(inflow_as_volume[h] - (volume[h] - hydro_unit_min_volume(inputs, h)), 0)

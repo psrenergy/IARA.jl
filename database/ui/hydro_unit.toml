@@ -42,6 +42,7 @@ FROM ranked_rows
 WHERE row_num = 1 AND existing = 1;
 """
 type = "double"
+format = "{:.1f}"
 label.en = "Total Capacity"
 unit = "MW"
 

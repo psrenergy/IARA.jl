@@ -25,7 +25,6 @@ Collection representing the virtual reservoir.
     initial_energy_stock::Vector{Vector{Float64}} = [] # TODO: rethink the name "stock"
     waveguide_points::Vector{Matrix{Float64}} = []
     water_to_energy_factors::Vector{Vector{Float64}} = []
-    order_to_spill_excess_of_inflow::Vector{Vector{Int}} = []
     _maximum_number_of_virtual_reservoir_bidding_segments::Vector{Int} = Int[]
 end
 
@@ -59,8 +58,6 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
         [zeros(Float64, length(virtual_reservoir.hydro_unit_indices[vr]), 0) for vr in 1:num_virtual_reservoirs]
     virtual_reservoir.water_to_energy_factors =
         [zeros(Float64, length(index_of_elements(inputs, HydroUnit))) for vr in 1:num_virtual_reservoirs]
-    virtual_reservoir.order_to_spill_excess_of_inflow =
-        [zeros(Int, length(virtual_reservoir.hydro_unit_indices[vr])) for vr in 1:num_virtual_reservoirs]
 
     update_time_series_from_db!(virtual_reservoir, inputs.db, initial_date_time(inputs))
 
@@ -236,6 +233,12 @@ function virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs
     @assert ao in virtual_reservoir_asset_owner_indices(inputs, vr)
     ao_index_among_asset_owners = findfirst(inputs.collections.virtual_reservoir.asset_owner_indices[vr] .== ao)
     return inputs.collections.virtual_reservoir.asset_owners_inflow_allocation[vr][ao_index_among_asset_owners]
+end
+
+function virtual_reservoir_water_to_energy_factors(inputs::AbstractInputs, vr::Int, h::Int)
+    @assert h in virtual_reservoir_hydro_unit_indices(inputs, vr)
+    h_index_among_hydro_units = findfirst(inputs.collections.virtual_reservoir.hydro_unit_indices[vr] .== h)
+    return inputs.collections.virtual_reservoir.water_to_energy_factors[vr][h_index_among_hydro_units]
 end
 
 """

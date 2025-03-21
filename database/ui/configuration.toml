@@ -4,8 +4,9 @@ label.en = "Configuration"
 
 [[card]]
 query = "SELECT initial_date_time FROM Configuration"
-type = "string"
-label.en = "Initial Date Time"
+type = "datetime"
+format = "yyyy-MM-dd"
+label.en = "Initial Date"
 
 [[attribute]]
 id = "label"

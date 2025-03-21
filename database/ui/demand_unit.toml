@@ -20,6 +20,7 @@ unit = "unit(s)"
 [[card]]
 query = "SELECT SUM(max_demand) FROM DemandUnit;"
 type = "double"
+format = "{:.1f}"
 label.en = "Max Demand"
 unit = "MW"
 

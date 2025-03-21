@@ -465,7 +465,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 
             main_configuration = Config(;
                 title = title,
-                xaxis = Dict("title" => "$(get_name(inputs, "quantity")) [MWh]"),
+                xaxis = Dict("title" => "$(get_name(inputs, "quantity")) [MW]"),
                 yaxis = Dict("title" => "$(get_name(inputs, "price")) [\$/MWh]"),
             )
 

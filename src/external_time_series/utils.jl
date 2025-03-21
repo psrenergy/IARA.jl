@@ -122,6 +122,16 @@ function get_quiver_file_path(file_path::String)
     end
 end
 
+# Function to check if any of the files in the list exist
+function find_file(file_paths::Vector{String})
+    for path in file_paths
+        if quiver_file_exists(path)
+            return path
+        end
+    end
+    return nothing
+end
+
 function delete_temp_files(inputs)
     directories_to_delete = String[]
     for (root, dirs, files) in walkdir(path_case(inputs))

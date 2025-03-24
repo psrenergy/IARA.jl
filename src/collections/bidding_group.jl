@@ -35,7 +35,7 @@ Collection representing the bidding groups in the system.
     complementary_grouping_profile_file::String = ""
     minimum_activation_level_profile_file::String = ""
     # caches
-    has_valid_units::Vector{Bool} = []
+    has_generation_besides_virtual_reservoirs::Vector{Bool} = []
 end
 
 # ---------------------------------------------------------------------
@@ -89,7 +89,7 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
     bidding_group.minimum_activation_level_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
-    bidding_group.has_valid_units = zeros(Bool, num_bidding_groups)
+    bidding_group.has_generation_besides_virtual_reservoirs = zeros(Bool, num_bidding_groups)
 
     update_time_series_from_db!(bidding_group, inputs.db, initial_date_time(inputs))
 
@@ -333,7 +333,7 @@ function update_number_of_complementary_grouping!(inputs::AbstractInputs, values
     return nothing
 end
 
-function fill_bidding_group_has_valid_units!(inputs::AbstractInputs)
+function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::AbstractInputs)
     # A bidding group has no variables if all of its units are hydro units associated with virtual reservoirs
 
     number_of_units = zeros(Int, number_of_elements(inputs, BiddingGroup))
@@ -373,9 +373,9 @@ function fill_bidding_group_has_valid_units!(inputs::AbstractInputs)
 
     for i in 1:number_of_elements(inputs, BiddingGroup)
         if number_of_units[i] > 0
-            inputs.collections.bidding_group.has_valid_units[i] = true
+            inputs.collections.bidding_group.has_generation_besides_virtual_reservoirs[i] = true
         elseif number_of_hydro_units_in_virtual_reservoirs[i] == 0
-            inputs.collections.bidding_group.has_valid_units[i] = true
+            inputs.collections.bidding_group.has_generation_besides_virtual_reservoirs[i] = true
         end
     end
 
@@ -393,7 +393,7 @@ Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.MARKUP_HE
 """
 markup_heuristic_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.MARKUP_HEURISTIC
 
-has_valid_units(bg::BiddingGroup, i::Int) = bg.has_valid_units[i]
+has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg.has_generation_besides_virtual_reservoirs[i]
 
 """
     optimize_bids(bg::BiddingGroup, i::Int)

@@ -51,7 +51,8 @@ function post_process_outputs(
        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
         post_processing_generation(inputs)
     end
-    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup; filters = [has_valid_units])
+    if is_market_clearing(inputs) &&
+       any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
         create_bidding_group_generation_files(
             inputs,
             outputs_post_processing,

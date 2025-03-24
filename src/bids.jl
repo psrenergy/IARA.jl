@@ -24,7 +24,7 @@ function initialize_heuristic_bids_outputs(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_valid_units],
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
     )
 
     if has_any_simple_bids(inputs)
@@ -136,7 +136,11 @@ function markup_offers_for_period_scenario(
     period::Int,
     scenario::Int,
 )
-    bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids, has_valid_units])
+    bidding_group_indexes = index_of_elements(
+        inputs,
+        BiddingGroup;
+        filters = [markup_heuristic_bids, has_generation_besides_virtual_reservoirs],
+    )
     number_of_bidding_groups = number_of_elements(inputs, BiddingGroup)
     number_of_buses = number_of_elements(inputs, Bus)
 
@@ -252,7 +256,7 @@ function markup_offers_for_period_scenario(
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_valid_units],
+        filters = [has_generation_besides_virtual_reservoirs],
     )
 
     write_bid_output(
@@ -266,7 +270,7 @@ function markup_offers_for_period_scenario(
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_valid_units])
+        filters = [has_generation_besides_virtual_reservoirs])
 
     write_bid_output(
         outputs,
@@ -279,7 +283,7 @@ function markup_offers_for_period_scenario(
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_valid_units])
+        filters = [has_generation_besides_virtual_reservoirs])
 
     if is_market_clearing(inputs)
         serialize_heuristic_bids(

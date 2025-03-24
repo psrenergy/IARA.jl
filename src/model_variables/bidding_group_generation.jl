@@ -22,7 +22,7 @@ function bidding_group_generation!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_valid_units])
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
     # Time series
@@ -110,7 +110,7 @@ function bidding_group_generation!(
     ::Type{SubproblemUpdate},
 )
     buses = index_of_elements(inputs, Bus)
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_valid_units])
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
     # Model parameters
@@ -164,7 +164,7 @@ function bidding_group_generation!(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_valid_units],
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
     )
 
     initialize!(
@@ -207,7 +207,7 @@ function bidding_group_generation!(
         subscenario,
         multiply_by = MW_to_GW(),
         has_profile_bids = false,
-        filters = [has_valid_units],
+        filters = [has_generation_besides_virtual_reservoirs],
     )
 
     return nothing

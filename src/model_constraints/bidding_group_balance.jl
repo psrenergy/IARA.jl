@@ -128,7 +128,7 @@ function bidding_group_balance!(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_valid_units],
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
     )
 
     initialize!(

@@ -389,13 +389,20 @@ function build_plot_output(
     inputs::Inputs,
     plots_path::String,
     outputs_path::String,
+    post_processing_path::String,
     plot_config::PlotConfig,
 )
     file_path_without_extension = joinpath(outputs_path, plot_config.filename)
-    if !quiver_file_exists(file_path_without_extension)
+    file_path_without_extension_pp = joinpath(post_processing_path, plot_config.filename)
+
+    # Check if either of the files exist and select the appropriate path
+    file_path_without_extension = find_file([file_path_without_extension, file_path_without_extension_pp])
+
+    if file_path_without_extension === nothing
         @debug("Tried to build plot output for $(plot_config.filename) but no Quiver file found.")
         return nothing
     end
+
     file_path = get_quiver_file_path(file_path_without_extension)
     output_data, metadata = read_timeseries_file(file_path)
     output_labels = metadata.labels
@@ -689,7 +696,7 @@ function build_plots(
     end
 
     for plot_config in plot_configs
-        build_plot_output(inputs, plots_path, output_path(inputs), plot_config)
+        build_plot_output(inputs, plots_path, output_path(inputs), post_processing_path(inputs), plot_config)
     end
 
     return nothing

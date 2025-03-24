@@ -51,7 +51,7 @@ function post_process_outputs(
        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
         post_processing_generation(inputs)
     end
-    if is_market_clearing(inputs)
+    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup; filters = [has_valid_units])
         create_bidding_group_generation_files(
             inputs,
             outputs_post_processing,
@@ -64,8 +64,7 @@ function post_process_outputs(
             model_outputs_time_serie,
             run_time_options,
         )
-        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE &&
-           any_elements(inputs, BiddingGroup)
+        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
             post_processing_bidding_group_revenue(
                 inputs,
                 outputs_post_processing,

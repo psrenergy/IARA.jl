@@ -619,12 +619,14 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if i in union(virtual_reservoir_hydro_unit_indices(inputs)...)
-            if is_null(hydro_unit.bidding_group_index[i])
-                @error(
-                    "Hydro Unit $(hydro_unit.label[i]) is associated with a Virtual Reservoir and must have a Bidding Group for remuneration calculations."
-                )
-                num_errors += 1
+        if any_elements(inputs, VirtualReservoir)
+            if i in union(virtual_reservoir_hydro_unit_indices(inputs)...)
+                if is_null(hydro_unit.bidding_group_index[i])
+                    @error(
+                        "Hydro Unit $(hydro_unit.label[i]) is associated with a Virtual Reservoir and must have a Bidding Group for remuneration calculations."
+                    )
+                    num_errors += 1
+                end
             end
         end
         if !(hydro_unit.gauging_station_index[i] in gauging_stations)

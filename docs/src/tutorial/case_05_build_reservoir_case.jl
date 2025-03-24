@@ -22,6 +22,8 @@
 
 # Also, the hydro units will be in a cascade relationship, where the first hydro unit will be able to turbine and spill water to the second hydro unit.
 
+# It is necessary to associate each hydro unit with a bidding group. In this case, we will use the same bidding group for both hydro units.
+
 # ## Creating the case
 
 # We'll start by importing the necessary packages.
@@ -146,6 +148,31 @@ IARA.add_virtual_reservoir!(db;
     inflow_allocation = [0.4, 0.6],
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
+
+# ## Bidding Group
+
+# Let's add a bidding group to our case. Both hydro units will be linked to this bidding group.
+
+IARA.add_bidding_group!(db;
+    label = "bidding_group_1",
+    assetowner_id = "asset_owner_1",
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
+)
+
+IARA.update_hydro_unit_relation!(db,
+    "hydro_1";
+    collection = "BiddingGroup",
+    relation_type = "id",
+    related_label = "bidding_group_1",
+)
+
+IARA.update_hydro_unit_relation!(db,
+    "hydro_2";
+    collection = "BiddingGroup",
+    relation_type = "id",
+    related_label = "bidding_group_1",
+)   
 
 # ## Demand
 

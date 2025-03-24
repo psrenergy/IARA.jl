@@ -422,8 +422,8 @@ function _join_independent_and_profile_bid(
     impl = Quiver.csv
     # If there are no independent or profile bids, generate a zero file.
     # Check for the existence of ex ante files, which are present if the settlement type is ex ante or dual.
-    if settlement_type(inputs) in 
-        [IARA.Configurations_SettlementType.EX_ANTE, IARA.Configurations_SettlementType.DUAL]
+    if settlement_type(inputs) in
+       [IARA.Configurations_SettlementType.EX_ANTE, IARA.Configurations_SettlementType.DUAL]
         # For ex ante settlement type, the final revenue is calculated as the product of ex_post generation and ex_ante spot price.
         # For dual settlement type, the ex_ante revenue is the product of ex_ante generation and ex_ante spot price.
         has_subscenarios = settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE

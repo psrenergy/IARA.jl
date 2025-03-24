@@ -334,9 +334,10 @@ function update_number_of_complementary_grouping!(inputs::AbstractInputs, values
 end
 
 function fill_bidding_group_has_valid_units!(inputs::AbstractInputs)
-    if !is_market_clearing(inputs)
-        inputs.collections.bidding_group.has_valid_units = ones(Bool, number_of_elements(inputs, BiddingGroup))
-    end
+    # A bidding group has no variables if all of its units are hydro units associated with virtual reservoirs
+
+    number_of_units = zeros(Int, number_of_elements(inputs, BiddingGroup))
+    number_of_hydro_units_in_virtual_reservoirs = zeros(Int, number_of_elements(inputs, BiddingGroup))
 
     # Should I check for batteries and demands and something else?
     hydro_units = index_of_elements(inputs, HydroUnit)
@@ -347,11 +348,11 @@ function fill_bidding_group_has_valid_units!(inputs::AbstractInputs)
         bg_index = hydro_unit_bidding_group_index(inputs, h)
         if !is_null(bg_index)
             if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-                if !is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
-                    inputs.collections.bidding_group.has_valid_units[bg_index] = true
+                if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
+                    number_of_hydro_units_in_virtual_reservoirs[bg_index] += 1
                 end
             else
-                inputs.collections.bidding_group.has_valid_units[bg_index] = true
+                number_of_units[bg_index] += 1
             end
         end
     end
@@ -359,14 +360,22 @@ function fill_bidding_group_has_valid_units!(inputs::AbstractInputs)
     for t in thermal_units
         bg_index = thermal_unit_bidding_group_index(inputs, t)
         if !is_null(bg_index)
-            inputs.collections.bidding_group.has_valid_units[bg_index] = true
+            number_of_units[bg_index] += 1
         end
     end
 
     for r in renewable_units
         bg_index = renewable_unit_bidding_group_index(inputs, r)
         if !is_null(bg_index)
-            inputs.collections.bidding_group.has_valid_units[bg_index] = true
+            number_of_units[bg_index] += 1
+        end
+    end
+
+    for i in 1:number_of_elements(inputs, BiddingGroup)
+        if number_of_units[i] > 0
+            inputs.collections.bidding_group.has_valid_units[i] = true
+        elseif number_of_hydro_units_in_virtual_reservoirs[i] == 0
+            inputs.collections.bidding_group.has_valid_units[i] = true
         end
     end
 

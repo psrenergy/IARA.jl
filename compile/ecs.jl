@@ -30,6 +30,8 @@ function main(args::Vector{String})
         constant = false        
         default = false
         eval_arg = true
+        "--os"
+        arg_type = String        
     end
     #! format: on
     parsed_args = parse_args(args, s)
@@ -42,9 +44,17 @@ function main(args::Vector{String})
         version_suffix = parsed_args["version_suffix"],
     )
 
+    os = parsed_args["os"]
+    memory_in_gb = if os == "linux"
+        32
+    else
+        16
+    end
+
     return start_ecs_task_and_watch(;
         configuration = configuration,
-        memory_in_gb = 32,
+        os = os,
+        memory_in_gb = memory_in_gb,
         overwrite = parsed_args["overwrite"],
     )
 end

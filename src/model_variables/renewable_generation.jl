@@ -51,7 +51,6 @@ function renewable_generation!(
     )
 
     # Objective
-    # TODO: Add om_cost to documentation
     model.obj_exp = @expression(
         model.jump_model,
         model.obj_exp +
@@ -91,6 +90,7 @@ function renewable_generation!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

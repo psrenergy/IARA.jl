@@ -43,7 +43,7 @@ function bidding_group_profile_precedence!(
     placeholder_scenario = 1
     for (i_bg, bg) in enumerate(bidding_groups), profile in 1:valid_profiles[bg]
         parent_profile_bids[bg, profile] =
-            time_series_parent_profile(inputs, model.period, placeholder_scenario)[i_bg, profile]
+            time_series_parent_profile(inputs, model.node, placeholder_scenario)[i_bg, profile]
         if parent_profile_bids[bg, profile] == profile
             error("Bidding group $bg profile $profile is its own parent")
         end
@@ -73,6 +73,7 @@ function bidding_group_profile_precedence!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

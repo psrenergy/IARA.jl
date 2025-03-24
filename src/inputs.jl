@@ -341,7 +341,6 @@ function fill_caches!(inputs::Inputs)
             fill_waveguide_points!(inputs, vr)
             fill_water_to_energy_factors!(inputs, vr)
             fill_initial_energy_stock!(inputs, vr)
-            fill_order_to_spill_excess_of_inflow!(inputs, vr)
         end
     end
     for h in index_of_elements(inputs, HydroUnit)
@@ -354,6 +353,7 @@ function fill_caches!(inputs::Inputs)
     if (is_market_clearing(inputs))
         fill_bidding_group_has_valid_units!(inputs)
     end
+    fill_plot_strings_dict!(inputs)
     return nothing
 end
 
@@ -831,8 +831,8 @@ Return a vector of vectors, mapping each subperiod to multiple hours.
 subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod_hour_map
 
 """
-    current_season(inputs)
+    period_season_map(inputs)
 
-Return the season associated with the current period and scenario.
+Return a 2-element vector with the current season and sample given the current period and scenario.
 """
-current_season(inputs) = inputs.time_series.period_season_map[1]
+period_season_map_from_file(inputs) = inputs.time_series.period_season_map

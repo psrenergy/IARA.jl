@@ -44,7 +44,7 @@ abstract type WriteOutput <: ProblemAction end
     jump_model::JuMP.Model
     obj_exp::Union{JuMP.AffExpr, JuMP.QuadExpr} = zero(JuMP.AffExpr)
     # The QuadExpr type is necessary because of POI, with products between variables and POI.parameters (treated as variables at first)
-    period::Int
+    node::Int
 end
 
 @kwdef mutable struct ProblemModel
@@ -83,14 +83,14 @@ Build the subproblem model for the given period.
 function build_subproblem_model(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    period::Int;
+    node::Int;
     jump_model = JuMP.Model(),
 )
-    sp_model = SubproblemModel(; jump_model = jump_model, period = period)
+    sp_model = SubproblemModel(; jump_model, node)
     model_action(sp_model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, SubproblemBuild)
 
     obj_weight = if linear_policy_graph(inputs)
-        (1.0 - period_discount_rate(inputs))^(period - 1)
+        (1.0 - period_discount_rate(inputs))^(node - 1)
     else
         1.0
     end
@@ -427,13 +427,7 @@ function hybrid_market_clearing_model_action(args...)
         hydro_generation!(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
-        if any_valid_elements(
-            inputs,
-            run_time_options,
-            HydroUnit,
-            action;
-            filters = [has_commitment, is_associated_with_some_virtual_reservoir],
-        )
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
@@ -520,25 +514,14 @@ function hybrid_market_clearing_model_action(args...)
             parp!(args...)
         end
 
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
+            hydro_generation_bound_by_commitment!(args...)
+        end
+        if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_min_outflow])
+            hydro_minimum_outflow!(args...)
+        end
+
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            if any_valid_elements(
-                inputs,
-                run_time_options,
-                HydroUnit,
-                action;
-                filters = [has_commitment, is_associated_with_some_virtual_reservoir],
-            )
-                hydro_generation_bound_by_commitment!(args...)
-            end
-            if any_valid_elements(
-                inputs,
-                run_time_options,
-                HydroUnit,
-                action;
-                filters = [has_min_outflow, is_associated_with_some_virtual_reservoir],
-            )
-                hydro_minimum_outflow!(args...)
-            end
             if virtual_reservoir_correspondence_type(inputs) ==
                Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
                 virtual_reservoir_correspondence_by_volume!(args...)

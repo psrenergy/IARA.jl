@@ -18,6 +18,7 @@ Configurations for the problem.
 """
 @kwdef mutable struct Configurations <: AbstractCollection
     path_case::String = ""
+    language::String = "en"
     number_of_periods::Int = 0
     number_of_scenarios::Int = 0
     number_of_subperiods::Int = 0
@@ -97,6 +98,10 @@ Configurations for the problem.
     hydro_minimum_outflow_violation_cost::Float64 = 0.0
     hydro_spillage_cost::Float64 = 0.0
     market_clearing_tiebreaker_weight::Float64 = 0.0
+
+    # Caches
+    period_season_map = Array{Float64, 3}(undef, 2, 0, 0)
+    plot_strings_dict::Dict{String, String} = Dict()
 end
 
 # ---------------------------------------------------------------------
@@ -110,6 +115,7 @@ Initialize the Configurations collection from the database.
 """
 function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.path_case = path_case(inputs.db)
+    configurations.language = PSRI.get_parms(inputs.db, "Configuration", "language")[1]
     configurations.number_of_periods =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_periods")[1]
     configurations.number_of_scenarios =
@@ -366,6 +372,10 @@ Validate the Configurations' parameters. Return the number of errors found.
 """
 function validate(configurations::Configurations)
     num_errors = 0
+    if !(configurations.language in ["en", "pt"])
+        @error("Language must be either \"en\" or \"pt\".")
+        num_errors += 1
+    end
     if configurations.number_of_periods <= 0
         @error("Number of periods must be positive.")
         num_errors += 1
@@ -551,11 +561,6 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             @error("Number of subscenarios must be positive.")
             num_errors += 1
         end
-    else
-        if configurations.number_of_subscenarios != 1
-            @error("Number of subscenarios must be one for run mode $(run_mode(inputs)).")
-            num_errors += 1
-        end
     end
     if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
        !any_elements(inputs, VirtualReservoir)
@@ -610,6 +615,13 @@ end
 Return the path to the case.
 """
 path_case(inputs::AbstractInputs) = inputs.collections.configurations.path_case
+
+"""
+    language(inputs::AbstractInputs)
+
+Return the language of the case.
+"""
+language(inputs::AbstractInputs) = inputs.collections.configurations.language
 
 """
     path_parp(inputs::AbstractInputs)
@@ -1274,11 +1286,11 @@ Return the file with the period to season map.
 period_season_map_file(inputs::AbstractInputs) = inputs.collections.configurations.period_season_map_file
 
 """
-    has_period_season_map(inputs::AbstractInputs)
+    has_period_season_map_file(inputs::AbstractInputs)
 
 Return whether the period to season map file is defined.
 """
-has_period_season_map(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
+has_period_season_map_file(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
 
 """
     hydro_balance_subperiod_resolution(inputs::AbstractInputs)
@@ -1362,3 +1374,11 @@ function network_representation(inputs::AbstractInputs, run_time_options)
         error("Not implemented")
     end
 end
+
+"""
+    period_season_map(inputs::AbstractInputs)
+
+Return the period to season map.
+"""
+period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
+    inputs.collections.configurations.period_season_map[:, scenario, period]

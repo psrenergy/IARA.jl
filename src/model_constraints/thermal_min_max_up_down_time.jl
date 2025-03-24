@@ -37,7 +37,7 @@ function thermal_min_max_up_down_time!(
     minimum_up_time_indicator = zeros(number_of_subperiods(inputs), length(minimum_up_time_indexes))
     minimum_down_time_indicator = zeros(number_of_subperiods(inputs), length(minimum_down_time_indexes))
     maximum_up_time_counter = zeros(number_of_subperiods(inputs), length(maximum_up_time_indexes))
-    if model.period == 1
+    if model.node == 1
         # Minimum uptime initial conditions
         for (i, plant_idx) in enumerate(minimum_up_time_indexes)
             uptime_initial_condition = thermal_unit_uptime_initial_condition(inputs, plant_idx)
@@ -301,6 +301,7 @@ function thermal_min_max_up_down_time!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},

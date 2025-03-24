@@ -27,8 +27,8 @@ function bidding_group_profile_energy_offer!(
     blks = subperiods(inputs)
 
     placeholder_scenario = 1
-    quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.period, placeholder_scenario)
-    price_offer_profile_series = time_series_price_offer_profile(inputs, model.period, placeholder_scenario)
+    quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.node, placeholder_scenario)
+    price_offer_profile_series = time_series_price_offer_profile(inputs, model.node, placeholder_scenario)
     valid_profiles = get_maximum_valid_profiles(inputs)
 
     # Variables
@@ -101,6 +101,7 @@ function bidding_group_profile_energy_offer!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
+    period::Int,
     scenario::Int,
     subscenario::Int,
     ::Type{SubproblemUpdate},
@@ -110,8 +111,8 @@ function bidding_group_profile_energy_offer!(
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     blks = subperiods(inputs)
 
-    quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.period, scenario)
-    price_offer_profile_series = time_series_price_offer_profile(inputs, model.period, scenario)
+    quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.node, scenario)
+    price_offer_profile_series = time_series_price_offer_profile(inputs, model.node, scenario)
 
     bidding_group_price_offer_profile = get_model_object(model, :bidding_group_price_offer_profile)
     bidding_group_quantity_offer_profile = get_model_object(model, :bidding_group_quantity_offer_profile)

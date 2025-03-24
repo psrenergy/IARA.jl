@@ -17,42 +17,65 @@ IARA.update_configuration!(
     settlement_type = IARA.Configurations_SettlementType.DUAL,
 )
 
-IARA.update_bidding_group_relation!(
+IARA.update_thermal_unit_relation!(
     db,
-    "a";
-    collection = "AssetOwner",
+    "Termica 1";
+    collection = "BiddingGroup",
     relation_type = "id",
-    related_label = "Agente Azul",
+    related_label = "Azul",
 )
 
-IARA.update_bidding_group_relation!(
+IARA.update_thermal_unit_relation!(
     db,
-    "b";
-    collection = "AssetOwner",
+    "Termica 2";
+    collection = "BiddingGroup",
     relation_type = "id",
-    related_label = "Agente Roxo",
+    related_label = "Roxo",
 )
 
-IARA.update_bidding_group_relation!(
+IARA.update_thermal_unit_relation!(
     db,
-    "c";
-    collection = "AssetOwner",
+    "Termica 3";
+    collection = "BiddingGroup",
     relation_type = "id",
-    related_label = "Agente Verde",
+    related_label = "Verde",
 )
 
-IARA.update_bidding_group_relation!(
+IARA.update_thermal_unit_relation!(
     db,
-    "d";
-    collection = "AssetOwner",
+    "Termica 4";
+    collection = "BiddingGroup",
     relation_type = "id",
-    related_label = "Agente Amarelo",
+    related_label = "Amarelo",
 )
 
-IARA.update_bidding_group_relation!(
+IARA.update_thermal_unit_relation!(
     db,
-    "e";
-    collection = "AssetOwner",
+    "Termica 5";
+    collection = "BiddingGroup",
     relation_type = "id",
-    related_label = "Agente Vermelho",
+    related_label = "Vermelho",
+)
+
+price_offer[1, :, :, :, :, :] .= 80.0
+price_offer[2, :, :, :, :, :] .= 60.0
+price_offer[3, :, :, :, :, :] .= 75.0
+price_offer[4, :, :, :, :, :] .= 40.0
+price_offer[5, :, :, :, :, :] .= 45.0
+
+IARA.write_bids_time_series_file(
+    joinpath(PATH, "price_offer"),
+    price_offer;
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+    labels_bidding_groups = ["Vermelho", "Verde", "Amarelo", "Azul", "Roxo"],
+    labels_buses = ["Sistema"],
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_subperiods,
+        maximum_number_of_bidding_segments,
+    ],
+    initial_date = "2024-01-01T00:00:00",
+    unit = "\$/MWh",
 )

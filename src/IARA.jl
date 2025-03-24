@@ -108,6 +108,7 @@ include("plots/time_series_stacked_mean.jl")
 include("plots/relation_plot.jl")
 include("plots/custom_plot.jl")
 include("plots/utils.jl")
+include("plots/plot_strings.jl")
 
 include("utils.jl")
 include("mathematical_model.jl")

@@ -40,7 +40,7 @@ end
 function Args(
     path::String,
     run_mode::RunMode.T;
-    output_path::String = joinpath(path, "outputs"),
+    output_path::String = joinpath(abspath(path), "outputs"),
     delete_output_folder_before_execution::Bool = false,
     write_lp::Bool = false,
     plot_outputs::Bool = true,
@@ -131,7 +131,7 @@ function parse_commandline(args)
     parsed_args = ArgParse.parse_args(args, s)
 
     # Possibly fix paths and apply the normpath method
-    parsed_args["path"] = finish_path(parsed_args["path"])
+    parsed_args["path"] = abspath(finish_path(parsed_args["path"]))
     if !isdir(parsed_args["path"])
         error("The directory " * parsed_args["path"] * " does not exist.")
     end

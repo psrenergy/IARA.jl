@@ -24,7 +24,7 @@ function build_ui_operator_plots(
     # Profit
     profit_file_path = get_profit_file(inputs)
     plot_path = joinpath(plots_path, "total_profit")
-    plot_operator_output(inputs, profit_file_path, plot_path, "Total Profit"; round_data = true)
+    plot_operator_output(inputs, profit_file_path, plot_path, get_name(inputs, "total_profit"); round_data = true)
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
@@ -35,16 +35,22 @@ function build_ui_operator_plots(
             inputs,
             revenue_files[1],
             plot_path,
-            "Total Revenue Ex-Ante";
+            get_name(inputs, "ex_ante_revenue");
             round_data = true,
             ex_ante_plot = true,
         )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
-        plot_operator_output(inputs, revenue_files[2], plot_path, "Total Revenue Ex-Post"; round_data = true)
+        plot_operator_output(
+            inputs,
+            revenue_files[2],
+            plot_path,
+            get_name(inputs, "ex_post_revenue");
+            round_data = true,
+        )
     else
         @assert length(revenue_files) == 1
         plot_path = joinpath(plots_path, "total_revenue")
-        plot_operator_output(inputs, revenue_files[1], plot_path, "Total Revenue"; round_data = true)
+        plot_operator_output(inputs, revenue_files[1], plot_path, get_name(inputs, "total_revenue"); round_data = true)
     end
 
     # Generation
@@ -52,13 +58,19 @@ function build_ui_operator_plots(
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(generation_files) == 2
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
-        plot_operator_output(inputs, generation_files[1], plot_path, "Total Generation Ex-Ante"; ex_ante_plot = true)
+        plot_operator_output(
+            inputs,
+            generation_files[1],
+            plot_path,
+            get_name(inputs, "ex_ante_generation");
+            ex_ante_plot = true,
+        )
         plot_path = joinpath(plots_path, "total_generation_ex_post")
-        plot_operator_output(inputs, generation_files[2], plot_path, "Total Generation Ex-Post")
+        plot_operator_output(inputs, generation_files[2], plot_path, get_name(inputs, "ex_post_generation"))
     else
         @assert length(generation_files) == 1
         plot_path = joinpath(plots_path, "total_generation")
-        plot_operator_output(inputs, generation_files[1], plot_path, "Total Generation")
+        plot_operator_output(inputs, generation_files[1], plot_path, get_name(inputs, "total_generation"))
     end
 
     return nothing
@@ -75,7 +87,7 @@ function build_ui_agents_plots(
     if isfile(profit_file_path)
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - Profit"
+            title = "$ao_label - $(get_name(inputs, "total_profit"))"
             plot_path = joinpath(plots_path, "profit_$ao_label.html")
             plot_agent_output(inputs, profit_file_path, plot_path, asset_owner_index, title; round_data = true)
         end
@@ -87,7 +99,7 @@ function build_ui_agents_plots(
         @assert length(revenue_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - Revenue Ex-Ante"
+            title = "$ao_label - $(get_name(inputs, "ex_ante_revenue"))"
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
             plot_agent_output(
                 inputs,
@@ -101,7 +113,7 @@ function build_ui_agents_plots(
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - Revenue Ex-Post"
+            title = "$ao_label - $(get_name(inputs, "ex_post_revenue"))"
             plot_path = joinpath(plots_path, "revenue_ex_post_$ao_label.html")
             plot_agent_output(inputs, revenue_files[2], plot_path, asset_owner_index, title; round_data = true)
         end
@@ -109,7 +121,7 @@ function build_ui_agents_plots(
         @assert length(revenue_files) == 1
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - Revenue"
+            title = "$ao_label - $(get_name(inputs, "total_revenue"))"
             plot_path = joinpath(plots_path, "revenue_$ao_label.html")
             plot_agent_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
         end
@@ -121,13 +133,13 @@ function build_ui_agents_plots(
         @assert length(generation_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - Generation Ex-Ante"
+            title = "$ao_label - $(get_name(inputs, "ex_ante_generation"))"
             plot_path = joinpath(plots_path, "generation_ex_ante_$ao_label.html")
             plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title; ex_ante_plot = true)
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - Generation Ex-Post"
+            title = "$ao_label - $(get_name(inputs, "ex_post_generation"))"
             plot_path = joinpath(plots_path, "generation_ex_post_$ao_label.html")
             plot_agent_output(inputs, generation_files[2], plot_path, asset_owner_index, title)
         end
@@ -135,7 +147,7 @@ function build_ui_agents_plots(
         @assert length(generation_files) == 1
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - Generation"
+            title = "$ao_label - $(get_name(inputs, "total_generation"))"
             plot_path = joinpath(plots_path, "generation_$ao_label.html")
             plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title)
         end
@@ -154,25 +166,28 @@ function build_ui_general_plots(
     files = get_load_marginal_cost_files(inputs)
     if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
         @assert length(files) == 2
-        plot_general_output(;
+        plot_general_output(
+            inputs;
             file_path = files[1],
             plot_path = joinpath(plots_path, "spot_price_ex_ante"),
-            title = "Spot Price Ex-Ante",
+            title = get_name(inputs, "ex_ante_spot_price"),
             round_data = true,
             ex_ante_plot = true,
         )
-        plot_general_output(;
+        plot_general_output(
+            inputs;
             file_path = files[2],
             plot_path = joinpath(plots_path, "spot_price_ex_post"),
-            title = "Spot Price Ex-Post",
+            title = get_name(inputs, "ex_post_spot_price"),
             round_data = true,
         )
     else
         @assert length(files) == 1
-        plot_general_output(;
+        plot_general_output(
+            inputs;
             file_path = files[1],
             plot_path = joinpath(plots_path, "spot_price"),
-            title = "Spot Price",
+            title = get_name(inputs, "spot_price"),
             round_data = true,
         )
     end
@@ -181,18 +196,20 @@ function build_ui_general_plots(
     generation_file_path = joinpath(post_processing_path(inputs), "generation.csv")
     if isfile(generation_file_path)
         # Generation
-        plot_general_output(;
+        plot_general_output(
+            inputs;
             file_path = generation_file_path,
             plot_path = joinpath(plots_path, "generation_by_technology"),
-            title = "Generation by Technology",
+            title = get_name(inputs, "generation_by_technology"),
             agent_labels = ["hydro", "thermal", "renewable", "battery_unit"], # Does not include deficit
             stack = true,
         )
         # Deficit
-        plot_general_output(;
+        plot_general_output(
+            inputs;
             file_path = generation_file_path,
             plot_path = joinpath(plots_path, "deficit"),
-            title = "Deficit",
+            title = get_name(inputs, "deficit"),
             agent_labels = ["deficit"],
         )
     end
@@ -341,28 +358,39 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 
             configs = Vector{Config}()
 
-            title = "Available Offers - Subperiod $subperiod"
+            title = get_name(inputs, "available_offers")
+            if num_subperiods > 1
+                title *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
             color_idx = 0
             for bus in 1:num_buses
                 color_idx += 1
+                name = get_name(inputs, "offers")
+                if num_buses > 1
+                    name *= " - $(bus_label(inputs, bus))"
+                end
                 push!(
                     configs,
                     Config(;
                         x = quantity_data_to_plot[bus],
                         y = price_data_to_plot[bus],
-                        name = bus_label(inputs, bus),
+                        name = name,
                         line = Dict("color" => _get_plot_color(color_idx)),
                         type = "line",
                     ),
                 )
                 if plot_no_markup_price
                     color_idx += 1
+                    name = get_name(inputs, "operating_cost")
+                    if num_buses > 1
+                        name *= " - $(bus_label(inputs, bus))"
+                    end
                     push!(
                         configs,
                         Config(;
                             x = no_markup_quantity_data_to_plot[bus],
                             y = no_markup_price_data_to_plot[bus],
-                            name = bus_label(inputs, bus) * " - Recommended Offer",
+                            name = name,
                             line = Dict("color" => _get_plot_color(color_idx)),
                             type = "line",
                         ),
@@ -377,7 +405,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs)
                 ex_ante_demand = ex_ante_demand .- ex_ante_generation
                 ex_post_demand = ex_post_demand .- ex_post_generation
-                demand_name = "net demand"
+                demand_name = "net_demand"
             end
             ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
             ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
@@ -395,7 +423,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                         length = 100,
                     ),
                     y = y_axis_range,
-                    name = "Ex-post minimum $demand_name",
+                    name = get_name(inputs, "minimum_$demand_name"),
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -409,7 +437,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 Config(;
                     x = range(ex_ante_demand[demand_time_index], ex_ante_demand[demand_time_index]; length = 100),
                     y = y_axis_range,
-                    name = "Ex-ante $demand_name",
+                    name = get_name(inputs, "average_$demand_name"),
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -427,7 +455,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                         length = 100,
                     ),
                     y = y_axis_range,
-                    name = "Ex-post maximum $demand_name",
+                    name = get_name(inputs, "maximum_$demand_name"),
                     line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
                     type = "line",
                     mode = "lines",
@@ -437,8 +465,8 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 
             main_configuration = Config(;
                 title = title,
-                xaxis = Dict("title" => "Quantity [MWh]"),
-                yaxis = Dict("title" => "Price [\$/MWh]"),
+                xaxis = Dict("title" => "$(get_name(inputs, "quantity")) [MW]"),
+                yaxis = Dict("title" => "$(get_name(inputs, "price")) [\$/MWh]"),
             )
 
             _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "offer_curve_subperiod_$subperiod.html"))
@@ -469,6 +497,10 @@ function plot_agent_output(
         metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
     end
 
+    if occursin("generation", file_path)
+        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
+    end
+
     has_subscenarios = :subscenario in metadata.dimensions
 
     if has_subscenarios
@@ -484,9 +516,9 @@ function plot_agent_output(
     end
 
     if num_scenarios > 1 && asset_owner_index == first(index_of_elements(inputs, AssetOwner))
-        @warn "Plotting asset owner total profit for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
+        @warn "Plotting asset owner $title for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
     end
-    @assert num_periods == 1 "Total profit plot only implemented for single period run mode. Number of periods: $num_periods"
+    @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
 
     labels_to_read = String[]
     for bg in bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
@@ -516,7 +548,7 @@ function plot_agent_output(
                 Config(;
                     x = 1:num_subperiods,
                     y = reshaped_data[:, subscenario],
-                    name = "Subscenario $subscenario",
+                    name = "$(get_name(inputs, "subscenario")) $subscenario",
                     line = Dict("color" => _get_plot_color(subscenario)),
                     type = "line",
                 ),
@@ -526,7 +558,7 @@ function plot_agent_output(
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" => "Subperiod",
+                "title" => get_name(inputs, "subperiod"),
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),
@@ -540,25 +572,30 @@ function plot_agent_output(
                 Config(;
                     x = 1:num_subscenarios,
                     y = reshaped_data[subperiod, :],
-                    name = "Subperiod $subperiod",
+                    name = "$(get_name(inputs, "subperiod")) $subperiod",
                     line = Dict("color" => _get_plot_color(subperiod)),
                     type = "bar",
                 ),
             )
         end
 
-        x_axis_title = if ex_ante_plot
-            "Scenario"
+        if ex_ante_plot
+            x_axis_title = ""
+            x_axis_tickvals = []
+            x_axis_ticktext = []
         else
-            "Subscenario"
+            # This is actually the subscenario, with a simplified name for UI cases
+            x_axis_title = get_name(inputs, "scenario")
+            x_axis_tickvals = 1:num_subscenarios
+            x_axis_ticktext = string.(1:num_subscenarios)
         end
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
                 "title" => x_axis_title,
                 "tickmode" => "array",
-                "tickvals" => 1:num_subscenarios,
-                "ticktext" => string.(1:num_subscenarios),
+                "tickvals" => x_axis_tickvals,
+                "ticktext" => x_axis_ticktext,
             ),
             yaxis = Dict("title" => "$(metadata.unit)"),
         )
@@ -589,6 +626,10 @@ function plot_operator_output(
         metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
     end
 
+    if occursin("generation", file_path)
+        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
+    end
+
     has_subscenarios = :subscenario in metadata.dimensions
 
     if has_subscenarios
@@ -604,9 +645,9 @@ function plot_operator_output(
     end
 
     if num_scenarios > 1
-        @warn "Plotting total profit for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
+        @warn "Plotting $title for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
     end
-    @assert num_periods == 1 "Total profit plot only implemented for single period run mode. Number of periods: $num_periods"
+    @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
 
     asset_onwer_indexes = index_of_elements(inputs, AssetOwner)
     reshaped_data = Array{Float64, 3}(undef, length(asset_onwer_indexes), num_subperiods, num_subscenarios)
@@ -646,9 +687,9 @@ function plot_operator_output(
             end
 
             main_configuration = Config(;
-                title = title * " - Subscenario $subscenario",
+                title = title * " - $(get_name(inputs, "subscenario")) $subscenario",
                 xaxis = Dict(
-                    "title" => "Subperiod",
+                    "title" => get_name(inputs, "subperiod"),
                     "tickmode" => "array",
                     "tickvals" => 1:num_subperiods,
                     "ticktext" => string.(1:num_subperiods),
@@ -675,20 +716,29 @@ function plot_operator_output(
                 )
             end
 
-            x_axis_title = if ex_ante_plot
-                "Scenario"
+            if ex_ante_plot
+                x_axis_title = ""
+                x_axis_tickvals = []
+                x_axis_ticktext = []
             else
-                "Subscenario"
+                # This is actually the subscenario, with a simplified name for UI cases
+                x_axis_title = get_name(inputs, "scenario")
+                x_axis_tickvals = 1:num_subscenarios
+                x_axis_ticktext = string.(1:num_subscenarios)
+            end
+            plot_title = title
+            if num_subperiods > 1
+                plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
             main_configuration = Config(;
-                title = title * " - Subperiod $subperiod",
+                title = plot_title,
                 xaxis = Dict(
                     "title" => x_axis_title,
                     "tickmode" => "array",
-                    "tickvals" => 1:num_subscenarios,
-                    "ticktext" => string.(1:num_subscenarios),
+                    "tickvals" => x_axis_tickvals,
+                    "ticktext" => x_axis_ticktext,
                 ),
-                yaxis = Dict("title" => metadata.unit),
+                yaxis = Dict("title" => "$(metadata.unit)"),
             )
 
             _save_plot(Plot(configs, main_configuration), plot_path * "_subperiod_$subperiod.html")
@@ -698,7 +748,8 @@ function plot_operator_output(
     return nothing
 end
 
-function plot_general_output(;
+function plot_general_output(
+    inputs::AbstractInputs;
     file_path::String,
     plot_path::String,
     title::String,
@@ -717,6 +768,10 @@ function plot_general_output(;
     else
         number_of_agents = length(agent_labels)
         agent_indexes = [findfirst(isequal(agent), metadata.labels) for agent in agent_labels]
+    end
+
+    if occursin("generation", file_path)
+        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
     end
 
     has_subscenarios = :subscenario in metadata.dimensions
@@ -755,7 +810,7 @@ function plot_general_output(;
 
     if subperiod_on_x_axis && num_subperiods != 1
         for agent in 1:number_of_agents, subscenario in 1:num_subscenarios
-            label = agent_labels[agent] * " - Subscenario $subscenario"
+            label = agent_labels[agent] * " - $(get_name(inputs, "subscenario")) $subscenario"
             color_idx += 1
             push!(
                 configs,
@@ -772,7 +827,7 @@ function plot_general_output(;
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
-                "title" => "Subperiod",
+                "title" => get_name(inputs, "subperiod"),
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string(1:num_subperiods),
@@ -781,7 +836,10 @@ function plot_general_output(;
         )
     else
         for agent in 1:number_of_agents, subperiod in 1:num_subperiods
-            label = agent_labels[agent] * " - Subperiod $subperiod"
+            label = agent_labels[agent]
+            if num_subperiods > 1
+                label *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
             color_idx += 1
             push!(
                 configs,
@@ -795,20 +853,26 @@ function plot_general_output(;
                 ),
             )
         end
-        x_axis_title = if ex_ante_plot
-            "Scenario"
+
+        if ex_ante_plot
+            x_axis_title = ""
+            x_axis_tickvals = []
+            x_axis_ticktext = []
         else
-            "Subscenario"
+            # This is actually the subscenario, with a simplified name for UI cases
+            x_axis_title = get_name(inputs, "scenario")
+            x_axis_tickvals = 1:num_subscenarios
+            x_axis_ticktext = string.(1:num_subscenarios)
         end
         main_configuration = Config(;
             title = title,
             xaxis = Dict(
                 "title" => x_axis_title,
                 "tickmode" => "array",
-                "tickvals" => 1:num_subscenarios,
-                "ticktext" => string.(1:num_subscenarios),
+                "tickvals" => x_axis_tickvals,
+                "ticktext" => x_axis_ticktext,
             ),
-            yaxis = Dict("title" => metadata.unit),
+            yaxis = Dict("title" => "$(metadata.unit)"),
         )
     end
 

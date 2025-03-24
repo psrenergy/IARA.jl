@@ -1,3 +1,3 @@
-period,scenario,subperiod,bid_segment,a - Sistema,b - Sistema,c - Sistema,d - Sistema,e - Sistema
+period,scenario,subperiod,bid_segment,Amarelo - Sistema,Vermelho - Sistema,Roxo - Sistema,Verde - Sistema,Azul - Sistema
 1,1,1,1,0.06,0.05,0.0,0.0,0.0
 1,1,2,1,0.06,0.06,0.06,0.01,0.0

@@ -2,6 +2,12 @@ id = "BatteryUnit"
 icon = "lucide/battery-charging.svg"
 label.en = "Battery Unit"
 
+[[card]]
+query = "SELECT COUNT(*) FROM BatteryUnit"
+type = "integer"
+label.en = "Elements"
+unit.en = "battery unit(s)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -31,6 +37,7 @@ icon = "lucide/settings-2.svg"
 id = "date_time"
 label.en = "Date Time"
 tooltip.en = "Date time of the battery unit"
+unit = "yyyy-MM-dd HH:mm"
 
 [[attribute]]
 id = "existing"
@@ -58,3 +65,4 @@ tooltip.en = "Max capacity of the battery unit"
 id = "om_cost"
 label.en = "OM Cost"
 tooltip.en = "OM cost of the battery unit"
+unit = "$/MWh"

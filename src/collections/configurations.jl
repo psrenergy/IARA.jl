@@ -18,6 +18,7 @@ Configurations for the problem.
 """
 @kwdef mutable struct Configurations <: AbstractCollection
     path_case::String = ""
+    language::String = "en"
     number_of_periods::Int = 0
     number_of_scenarios::Int = 0
     number_of_subperiods::Int = 0
@@ -100,6 +101,7 @@ Configurations for the problem.
 
     # Caches
     period_season_map = Array{Float64, 3}(undef, 2, 0, 0)
+    plot_strings_dict::Dict{String, String} = Dict()
 end
 
 # ---------------------------------------------------------------------
@@ -113,6 +115,7 @@ Initialize the Configurations collection from the database.
 """
 function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.path_case = path_case(inputs.db)
+    configurations.language = PSRI.get_parms(inputs.db, "Configuration", "language")[1]
     configurations.number_of_periods =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_periods")[1]
     configurations.number_of_scenarios =
@@ -369,6 +372,10 @@ Validate the Configurations' parameters. Return the number of errors found.
 """
 function validate(configurations::Configurations)
     num_errors = 0
+    if !(configurations.language in ["en", "pt"])
+        @error("Language must be either \"en\" or \"pt\".")
+        num_errors += 1
+    end
     if configurations.number_of_periods <= 0
         @error("Number of periods must be positive.")
         num_errors += 1
@@ -608,6 +615,13 @@ end
 Return the path to the case.
 """
 path_case(inputs::AbstractInputs) = inputs.collections.configurations.path_case
+
+"""
+    language(inputs::AbstractInputs)
+
+Return the language of the case.
+"""
+language(inputs::AbstractInputs) = inputs.collections.configurations.language
 
 """
     path_parp(inputs::AbstractInputs)

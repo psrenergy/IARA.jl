@@ -341,7 +341,6 @@ function fill_caches!(inputs::Inputs)
             fill_waveguide_points!(inputs, vr)
             fill_water_to_energy_factors!(inputs, vr)
             fill_initial_energy_stock!(inputs, vr)
-            fill_order_to_spill_excess_of_inflow!(inputs, vr)
         end
     end
     for h in index_of_elements(inputs, HydroUnit)
@@ -351,6 +350,7 @@ function fill_caches!(inputs::Inputs)
        run_mode(inputs) == RunMode.STRATEGIC_BID
         update_number_of_bid_segments!(inputs, 1)
     end
+    fill_plot_strings_dict!(inputs)
     return nothing
 end
 

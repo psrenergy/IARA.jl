@@ -2,6 +2,12 @@ id = "Bus"
 icon = "lucide/circle-small.svg"
 label.en = "Bus"
 
+[[card]]
+query = "SELECT COUNT(*) FROM Bus"
+type = "integer"
+label.en = "Elements"
+unit.en = "bus(es)"
+
 [[attribute]]
 id = "label"
 label.en = "Label"

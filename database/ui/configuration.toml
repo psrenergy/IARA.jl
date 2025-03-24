@@ -2,6 +2,12 @@ id = "Configuration"
 icon = "lucide/settings.svg"
 label.en = "Configuration"
 
+[[card]]
+query = "SELECT initial_date_time FROM Configuration"
+type = "datetime"
+format = "yyyy-MM-dd"
+label.en = "Initial Date"
+
 [[attribute]]
 id = "label"
 label.en = "Label"
@@ -29,6 +35,7 @@ hide = true
 id = "initial_date_time"
 label.en = "Initial Date Time"
 tooltip.en = "Initial date time of the configuration"
+unit = "yyyy-MM-dd HH:mm"
 hide = true
 
 [[attribute]]
@@ -87,6 +94,8 @@ hide = true
 
 [[attribute]]
 id = "bid_data_source"
+type = "enum"
+enum = "bid_data_source"
 label.en = "Bid Data Source"
 tooltip.en = "Bid data source of the configuration"
 hide = true
@@ -153,6 +162,8 @@ hide = true
 
 [[attribute]]
 id = "use_fcf_in_clearing"
+type = "enum"
+enum = "boolean"
 label.en = "Use FCF in Clearing"
 tooltip.en = "Use FCF in clearing of the configuration"
 hide = true
@@ -201,12 +212,16 @@ hide = true
 
 [[attribute]]
 id = "vr_curveguide_data_source"
+type = "enum"
+enum = "vr_curveguide_data_source"
 label.en = "VR Curveguide Data Source"
 tooltip.en = "VR curveguide data source of the configuration"
 hide = true
 
 [[attribute]]
 id = "vr_curveguide_data_format"
+type = "enum"
+enum = "vr_curveguide_data_format"
 label.en = "VR Curveguide Data Format"
 tooltip.en = "VR curveguide data format of the configuration"
 hide = true
@@ -243,18 +258,24 @@ hide = true
 
 [[attribute]]
 id = "renewable_scenarios_files"
+type = "enum"
+enum = "uncertainty_scenarios_files"
 label.en = "Renewable Scenarios Files"
 tooltip.en = "Renewable scenarios files of the configuration"
 hide = true
 
 [[attribute]]
 id = "inflow_scenarios_files"
+type = "enum"
+enum = "uncertainty_scenarios_files"
 label.en = "Inflow Scenarios Files"
 tooltip.en = "Inflow scenarios files of the configuration"
 hide = true
 
 [[attribute]]
 id = "demand_scenarios_files"
+type = "enum"
+enum = "uncertainty_scenarios_files"
 label.en = "Demand Scenarios Files"
 tooltip.en = "Demand scenarios files of the configuration"
 hide = true
@@ -279,18 +300,24 @@ hide = true
 
 [[attribute]]
 id = "network_representation_ex_ante_physical"
+type = "enum"
+enum = "network_representation"
 label.en = "Network Representation Ex Ante Physical"
 tooltip.en = "Network representation ex ante physical of the configuration"
 hide = true
 
 [[attribute]]
 id = "network_representation_ex_ante_commercial"
+type = "enum"
+enum = "network_representation"
 label.en = "Network Representation Ex Ante Commercial"
 tooltip.en = "Network representation ex ante commercial of the configuration"
 hide = true
 
 [[attribute]]
 id = "network_representation_ex_post_physical"
+type = "enum"
+enum = "network_representation"
 label.en = "Network Representation Ex Post Physical"
 tooltip.en = "Network representation ex post physical of the configuration"
 hide = true
@@ -298,6 +325,8 @@ hide = true
 [[attribute]]
 id = "network_representation_ex_post_commercial"
 label.en = "Network Representation Ex Post Commercial"
+type = "enum"
+enum = "network_representation"
 tooltip.en = "Network representation ex post commercial of the configuration"
 hide = true
 

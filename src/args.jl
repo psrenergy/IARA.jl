@@ -79,14 +79,14 @@ function finish_path(path::String)
         return path
     end
     if isfile(path)
-        return abspath(path)
+        return normpath(path)
     end
     if Sys.islinux() && path[end] != '/'
-        return abspath(path * "/")
+        return normpath(path * "/")
     elseif Sys.iswindows() && path[end] != '\\'
-        return abspath(path * "\\")
+        return normpath(path * "\\")
     else
-        return abspath(path)
+        return normpath(path)
     end
 end
 
@@ -131,7 +131,7 @@ function parse_commandline(args)
     parsed_args = ArgParse.parse_args(args, s)
 
     # Possibly fix paths and apply the normpath method
-    parsed_args["path"] = finish_path(parsed_args["path"])
+    parsed_args["path"] = abspath(finish_path(parsed_args["path"]))
     if !isdir(parsed_args["path"])
         error("The directory " * parsed_args["path"] * " does not exist.")
     end

@@ -45,8 +45,12 @@ function main(args::Vector{String})
     )
 
     os = parsed_args["os"]
-    memory_in_gb = if os == "linux" 32 else 16 end
-    
+    memory_in_gb = if os == "linux"
+        32
+    else
+        16
+    end
+
     return start_ecs_task_and_watch(;
         configuration = configuration,
         os = os,

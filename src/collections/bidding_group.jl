@@ -349,7 +349,7 @@ function fill_bidding_group_has_valid_units!(inputs::AbstractInputs)
             else
                 inputs.collections.bidding_group.has_valid_units[bg_index] = true
             end
-        end 
+        end
     end
 
     for t in thermal_units

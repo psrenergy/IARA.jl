@@ -24,7 +24,7 @@ function initialize_heuristic_bids_outputs(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_valid_units]
+        filters_to_apply_in_first_collection = [has_valid_units],
     )
 
     if has_any_simple_bids(inputs)
@@ -79,7 +79,10 @@ function bidding_group_markup_units(inputs::Inputs)
         bidding_group_number_of_risk_factors[bg] = length(bidding_group_risk_factor(inputs, bg))
         bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            filter!(x -> !is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, x), bidding_group_hydro_units[bg])
+            filter!(
+                x -> !is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, x),
+                bidding_group_hydro_units[bg],
+            )
         end
         bidding_group_thermal_units[bg] = findall(isequal(bg), thermal_unit_bidding_group_index(inputs))
         bidding_group_renewable_units[bg] = findall(isequal(bg), renewable_unit_bidding_group_index(inputs))
@@ -245,11 +248,11 @@ function markup_offers_for_period_scenario(
         "bidding_group_energy_offer",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(quantity_offers[bidding_group_indexes, :,:,:], (4, 1, 3, 2));
+        permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_valid_units]
+        filters = [has_valid_units],
     )
 
     write_bid_output(
@@ -259,13 +262,11 @@ function markup_offers_for_period_scenario(
         "bidding_group_price_offer",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(price_offers[bidding_group_indexes, :,:,:], (4, 1, 3, 2));
+        permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_valid_units]
-
-    )
+        filters = [has_valid_units])
 
     write_bid_output(
         outputs,
@@ -274,13 +275,11 @@ function markup_offers_for_period_scenario(
         "bidding_group_no_markup_price_offer",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(no_markup_price_offers[bidding_group_indexes, :,:,:], (4, 1, 3, 2));
+        permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_valid_units]
-
-    )
+        filters = [has_valid_units])
 
     if is_market_clearing(inputs)
         serialize_heuristic_bids(

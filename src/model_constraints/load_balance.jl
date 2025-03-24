@@ -91,7 +91,7 @@ function zonal_bid_generation_expression(
 )
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
-    bidding_groups = index_of_elements(inputs, BiddingGroup, filters = [has_valid_units])
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_valid_units])
     hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
     buses = index_of_elements(inputs, Bus)
 

@@ -10,7 +10,7 @@ function _write_costs_bg_file(
     post_processing_dir = post_processing_path(inputs)
     tempdir = joinpath(path_case(inputs), "temp")
 
-    num_bidding_groups = number_of_elements(inputs, BiddingGroup, filters = [has_valid_units])
+    num_bidding_groups = number_of_elements(inputs, BiddingGroup; filters = [has_valid_units])
     num_buses = length(inputs.collections.bus)
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
@@ -42,7 +42,7 @@ function _write_costs_bg_file(
         inputs.collections.bidding_group,
         inputs.collections.bus;
         index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_valid_units]
+        filters_to_apply_in_first_collection = [has_valid_units],
     )
 
     initialize!(
@@ -102,7 +102,9 @@ function _write_costs_bg_file(
                             num_units = length(labels)
 
                             for unit in 1:num_units
-                                if collection == "HydroUnit" && clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                                if collection == "HydroUnit" &&
+                                   clearing_hydro_representation(inputs) ==
+                                   Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
                                     if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, unit)
                                         continue
                                     end
@@ -138,7 +140,9 @@ function _write_costs_bg_file(
                         num_units = length(labels)
 
                         for unit in 1:num_units
-                            if collection == "HydroUnit" && clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                            if collection == "HydroUnit" &&
+                               clearing_hydro_representation(inputs) ==
+                               Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
                                 if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, unit)
                                     continue
                                 end
@@ -257,7 +261,7 @@ function create_bidding_group_cost_files(
 )
     outputs_dir = output_path(inputs)
 
-    num_bidding_groups = any_elements(inputs, BiddingGroup, filters = [has_valid_units])
+    num_bidding_groups = any_elements(inputs, BiddingGroup; filters = [has_valid_units])
 
     if num_bidding_groups == 0
         return

@@ -32,8 +32,9 @@ function water_to_energy_factors(inputs::AbstractInputs, hydro_units_indices::Ve
     return water_to_energy_factors
 end
 
-function order_to_spill_excess_of_inflow(inputs::AbstractInputs, hydro_units_indices::Vector{Int})
-    remaining_indices = copy(hydro_units_indices)
+function order_to_spill_excess_of_inflow(inputs::AbstractInputs)
+    hydro_units = index_of_elements(inputs, HydroUnit)
+    remaining_indices = copy(hydro_units)
     ordered_indices = []
     while !isempty(remaining_indices)
         ready_for_calculations_indices =
@@ -46,22 +47,29 @@ end
 
 function additional_energy_from_inflows(
     inputs::AbstractInputs,
-    vr::Int,
     inflow_as_volume::Vector{Float64},
     volume::Vector{Float64},
 )
-    hydro_units = index_of_elements(inputs, HydroUnit)
-    for h in virtual_reservoir_order_to_spill_excess_of_inflow(inputs, vr)
-        inflow_excess =
-            max(inflow_as_volume[h] - (volume[h] - hydro_unit_min_volume(inputs, h)), 0)
+    hydro_units = order_to_spill_excess_of_inflow(inputs)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    for h in hydro_units
+        max_turbining =
+            hydro_unit_max_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
+            sum(subperiod_duration_in_hours(inputs))
+        inflow_excess = max(volume[h] + inflow_as_volume[h] - (hydro_unit_max_volume(inputs, h) + max_turbining), 0)
         inflow_as_volume[h] -= inflow_excess
         h_downstream = hydro_unit_spill_to(inputs, h)
-        if !is_null(h_downstream) && (h_downstream in virtual_reservoir_order_to_spill_excess_of_inflow(inputs, vr))
+        if !is_null(h_downstream)
             inflow_as_volume[h_downstream] += inflow_excess
         end
     end
-    additional_energy =
-        sum(inflow_as_volume[h] * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] for h in hydro_units)
+    additional_energy = zeros(length(virtual_reservoirs))
+    for vr in virtual_reservoirs
+        additional_energy[vr] = sum(
+            inflow_as_volume[h] * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
+            h in virtual_reservoir_hydro_unit_indices(inputs, vr)
+        )
+    end
     return additional_energy
 end
 
@@ -89,7 +97,7 @@ end
 function fill_initial_energy_stock!(inputs::AbstractInputs, vr::Int)
     hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
     total_energy_stock = sum(
-        hydro_unit_initial_volume(inputs, h) * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] for
+        hydro_unit_initial_volume(inputs, h) * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
         h in hydro_units
     )
     inputs.collections.virtual_reservoir.initial_energy_stock[vr] =
@@ -170,7 +178,7 @@ function post_process_virtual_reservoirs!(
     energy_stock_at_beginning_of_period =
         virtual_reservoir_energy_stock_from_previous_period(inputs, period, scenario)
 
-    subscenario = 1
+    subscenario = 1 # Is this still correct?
     inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
     inflow_as_volume = [
         sum(
@@ -178,21 +186,21 @@ function post_process_virtual_reservoirs!(
             subperiod_duration_in_hours(inputs, b) for b in subperiods(inputs)
         ) for h in hydro_units
     ]
+    energy_arrival = additional_energy_from_inflows(inputs, inflow_as_volume, volume_at_beginning_of_period)
 
     virtual_reservoir_post_processed_energy_stock =
         [zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr))) for vr in virtual_reservoirs]
     for vr in virtual_reservoirs
-        energy_arrival = additional_energy_from_inflows(inputs, vr, inflow_as_volume, volume_at_beginning_of_period)
         pre_processed_energy_stock = zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr)))
 
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            pre_processed_energy_stock[ao] =
-                energy_stock_at_beginning_of_period[vr][ao] +
-                energy_arrival * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao) -
+        for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
+            pre_processed_energy_stock[i] =
+                energy_stock_at_beginning_of_period[vr][i] +
+                energy_arrival[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao) -
                 sum(virtual_reservoir_generation[vr, ao, :]) # sum over bid_segment dimension
         end
         total_actual_energy_stock = sum(
-            hydro_volume[end, h] * virtual_reservoir_water_to_energy_factors(inputs, vr)[h] for
+            hydro_volume[end, h] * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
             h in virtual_reservoir_hydro_unit_indices(inputs, vr)
         )
         if sum(pre_processed_energy_stock) == 0
@@ -200,7 +208,7 @@ function post_process_virtual_reservoirs!(
                 virtual_reservoir_post_processed_energy_stock[vr] .= 0.0
             else
                 @warn("The total actual energy stock is not zero, but the pre-processed energy stock is zero.")
-                virtual_reservoir_post_processed_energy_stock[vr] =
+                virtual_reservoir_post_processed_energy_stock[vr] .=
                     virtual_reservoir_asset_owners_inflow_allocation(inputs, vr) *
                     total_actual_energy_stock
             end
@@ -213,13 +221,6 @@ function post_process_virtual_reservoirs!(
         virtual_reservoir_post_processed_energy_stock
     add_symbol_to_serialize!(outputs, :virtual_reservoir_post_processed_energy_stock)
 
-    return nothing
-end
-
-function fill_order_to_spill_excess_of_inflow!(inputs::AbstractInputs, vr::Int)
-    hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
-    inputs.collections.virtual_reservoir.order_to_spill_excess_of_inflow[vr] .=
-        order_to_spill_excess_of_inflow(inputs, hydro_units)
     return nothing
 end
 

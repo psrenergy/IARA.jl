@@ -338,6 +338,9 @@ function clearing_has_volume_variables(inputs::Inputs, run_time_options::RunTime
     if !is_market_clearing(inputs)
         return false
     end
+    if number_of_elements(inputs, HydroUnit) == 0
+        return false
+    end
     return construction_type(inputs, run_time_options) != Configurations_ConstructionType.BID_BASED
 end
 

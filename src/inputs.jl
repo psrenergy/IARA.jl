@@ -350,9 +350,7 @@ function fill_caches!(inputs::Inputs)
        run_mode(inputs) == RunMode.STRATEGIC_BID
         update_number_of_bid_segments!(inputs, 1)
     end
-    if (is_market_clearing(inputs))
-        fill_bidding_group_has_valid_units!(inputs)
-    end
+    fill_bidding_group_has_valid_units!(inputs)
     fill_plot_strings_dict!(inputs)
     return nothing
 end

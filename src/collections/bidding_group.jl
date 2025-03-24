@@ -89,7 +89,7 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
     bidding_group.minimum_activation_level_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
-    bidding_group.has_valid_units = ones(Bool, num_bidding_groups)
+    bidding_group.has_valid_units = zeros(Bool, num_bidding_groups)
 
     update_time_series_from_db!(bidding_group, inputs.db, initial_date_time(inputs))
 
@@ -334,6 +334,10 @@ function update_number_of_complementary_grouping!(inputs::AbstractInputs, values
 end
 
 function fill_bidding_group_has_valid_units!(inputs::AbstractInputs)
+    if !is_market_clearing(inputs)
+        inputs.collections.bidding_group.has_valid_units = ones(Bool, number_of_elements(inputs, BiddingGroup))
+    end
+
     # Should I check for batteries and demands and something else?
     hydro_units = index_of_elements(inputs, HydroUnit)
     thermal_units = index_of_elements(inputs, ThermalUnit)

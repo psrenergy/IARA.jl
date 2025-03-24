@@ -89,7 +89,7 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
     bidding_group.minimum_activation_level_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
-    bidding_group.has_valid_units = zeros(Bool, num_bidding_groups)
+    bidding_group.has_valid_units = ones(Bool, num_bidding_groups)
 
     update_time_series_from_db!(bidding_group, inputs.db, initial_date_time(inputs))
 

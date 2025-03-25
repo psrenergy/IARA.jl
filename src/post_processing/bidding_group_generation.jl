@@ -45,22 +45,6 @@ function generic_unit_bus_index(inputs::Inputs, collection::String, unit_index::
     end
 end
 
-function _get_bidding_group_bus_index(bg_index::Int, bus_index::Int, number_of_buses::Int)
-    return (bg_index - 1) * number_of_buses + bus_index
-end
-
-function _get_bidding_group_bus_labels(inputs::Inputs)
-    bus_labels = bus_label(inputs)
-    bidding_group_labels = bidding_group_label(inputs)
-    labels = Vector{String}()
-    for bg_label in bidding_group_labels
-        for bus_label in bus_labels
-            push!(labels, bg_label * " - " * bus_label)
-        end
-    end
-    return labels
-end
-
 function _write_generation_bg_file(
     inputs::Inputs,
     outputs_post_processing::Outputs,
@@ -102,6 +86,15 @@ function _write_generation_bg_file(
         dimensions = ["period", "scenario", "subperiod", "bid_segment"]
     end
 
+    bidding_group_bus_labels = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.bidding_group,
+        inputs.collections.bus;
+        index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+    )
+
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -109,7 +102,7 @@ function _write_generation_bg_file(
         output_name = "bidding_group_generation_$(clearing_procedure)",
         dimensions = dimensions,
         unit = "GWh",
-        labels = _get_bidding_group_bus_labels(inputs),
+        labels = bidding_group_bus_labels,
         run_time_options,
         dir_path = post_processing_dir,
     )
@@ -162,8 +155,8 @@ function _write_generation_bg_file(
                                 if is_null(bidding_group_index) || is_null(bus_index)
                                     continue
                                 end
-                                bidding_group_bus_index =
-                                    _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
+                                bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
+                                bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
                                 bidding_group_generation[bidding_group_bus_index] += generation_reader.data[unit]
                             end
                         end
@@ -194,8 +187,8 @@ function _write_generation_bg_file(
                             if is_null(bidding_group_index) || is_null(bus_index)
                                 continue
                             end
-                            bidding_group_bus_index =
-                                _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
+                            bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
+                            bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
                             bidding_group_generation[bidding_group_bus_index] +=
                                 generation_reader.data[unit]
                         end

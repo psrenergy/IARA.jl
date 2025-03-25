@@ -156,7 +156,8 @@ function _write_generation_bg_file(
                                     continue
                                 end
                                 bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
-                                bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
+                                bidding_group_bus_index =
+                                    findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
                                 bidding_group_generation[bidding_group_bus_index] += generation_reader.data[unit]
                             end
                         end
@@ -188,7 +189,8 @@ function _write_generation_bg_file(
                                 continue
                             end
                             bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
-                            bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
+                            bidding_group_bus_index =
+                                findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
                             bidding_group_generation[bidding_group_bus_index] +=
                                 generation_reader.data[unit]
                         end

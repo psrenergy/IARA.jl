@@ -172,7 +172,7 @@ IARA.update_hydro_unit_relation!(db,
     collection = "BiddingGroup",
     relation_type = "id",
     related_label = "bidding_group_1",
-)   
+)
 
 # ## Demand
 

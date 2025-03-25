@@ -207,6 +207,7 @@ function write_bids_time_series_file(
     dimension_size::Vector{Int},
     initial_date::Union{String, DateTime} = "",
     unit::String = "",
+    frequency::String = "month",
 ) where {T}
 
     # It expects to receive 6d arrays with the following dimensions:
@@ -253,6 +254,7 @@ function write_bids_time_series_file(
         dimension_size,
         initial_date,
         unit,
+        frequency,
         digits = 6,
     )
     return nothing

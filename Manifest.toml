@@ -2,7 +2,7 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "ba6ea3e47c3a6fe55407ef812d9ea6e7f29f4a9f"
+project_hash = "5d373ee23ea722355d3418df633c1a8abd34c03b"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -638,9 +638,9 @@ version = "2.11.1"
 
 [[deps.Quiver]]
 deps = ["CSV", "DataFrames", "Dates", "OrderedCollections", "TOML", "Tables"]
-git-tree-sha1 = "feebdd333d23a5bf029b8ce8636895814dde94d4"
+git-tree-sha1 = "601441ccfea8fdcc54f12a06b9b6bd58fb445533"
 uuid = "cdbb3f72-2527-4dbd-9d0e-93533a5519ac"
-version = "0.1.7"
+version = "0.1.9"
 weakdeps = ["PSRClassesInterface"]
 
     [deps.Quiver.extensions]

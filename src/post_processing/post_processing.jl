@@ -49,7 +49,7 @@ function post_process_outputs(
     gather_outputs_separated_by_asset_owners(inputs)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
-        post_processing_generation(inputs)
+        post_processing_generation(inputs, run_time_options)
     end
     if is_market_clearing(inputs) &&
        any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
@@ -74,8 +74,6 @@ function post_process_outputs(
             )
             _join_independent_and_profile_bid(
                 inputs,
-                outputs_post_processing,
-                model_outputs_time_serie,
                 run_time_options,
             )
             if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
@@ -88,8 +86,6 @@ function post_process_outputs(
             end
             calculate_profits_settlement(
                 inputs,
-                outputs_post_processing,
-                model_outputs_time_serie,
                 run_time_options,
             )
         end
@@ -133,59 +129,6 @@ function get_filename(filename::String)
     return splitext(filename)[1]
 end
 
-# TODO: This should be on Quiver.jl
-function sum_multiple_files(
-    output_filename::String,
-    filenames::Vector{String},
-    impl::Type{<:Quiver.Implementation};
-    digits::Union{Int, Nothing} = nothing,
-)
-    readers = [Quiver.Reader{impl}(filename) for filename in filenames]
-    all_labels = [reader.metadata.labels for reader in readers]
-    # Find the reader with the most labels
-    maximum_labels_idx = argmax(length.(all_labels))
-    metadata = readers[maximum_labels_idx].metadata
-    labels = metadata.labels
-
-    writer = Quiver.Writer{impl}(
-        output_filename;
-        labels = labels,
-        dimensions = string.(metadata.dimensions),
-        time_dimension = string(metadata.time_dimension),
-        dimension_size = metadata.dimension_size,
-        initial_date = metadata.initial_date,
-        unit = metadata.unit,
-    )
-
-    num_labels = length(metadata.labels)
-    data = zeros(num_labels)
-    for dims in Iterators.product([1:size for size in reverse(metadata.dimension_size)]...)
-        dim_kwargs = OrderedDict(metadata.dimensions .=> reverse(dims))
-        fill!(data, 0)
-        for reader in readers
-            Quiver.goto!(reader; dim_kwargs...)
-            if length(reader.data) != length(data)
-                # If this happens, it means that the reader has less labels than the writer
-                # We need to match the labels of the reader with the writer
-                all_labels = metadata.labels
-                current_labels = reader.metadata.labels
-                index_of_file_in_sum = [findfirst(isequal(x), all_labels) for x in current_labels]
-                data[index_of_file_in_sum] .+= reader.data
-            else
-                data .+= reader.data
-            end
-        end
-        Quiver.write!(writer, Quiver.round_digits(data, digits); dim_kwargs...)
-    end
-
-    for reader in readers
-        Quiver.close!(reader)
-    end
-
-    Quiver.close!(writer)
-    return nothing
-end
-
 """
     read_timeseries_file_in_outputs(filename::String, inputs::Inputs)
 
@@ -197,4 +140,55 @@ function read_timeseries_file_in_outputs(filename, inputs)
     filepath_quiv = joinpath(output_dir, filename * ".quiv")
     filepath = isfile(filepath_quiv) ? filepath_quiv : filepath_csv
     return read_timeseries_file(filepath)
+end
+
+function create_zero_file(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    filename::String,
+    labels::Vector{String},
+    impl::Type{<:Quiver.Implementation},
+    unit::String;
+    has_subscenarios::Bool = false,
+)
+    periods = if is_single_period(inputs)
+        1
+    else
+        number_of_periods(inputs)
+    end
+    temp_path = joinpath(output_path(inputs), "temp")
+    if has_subscenarios
+        zeros_array = zeros(
+            Float64,
+            length(labels),
+            number_of_subperiods(inputs),
+            number_of_subscenarios(inputs, run_time_options),
+            number_of_scenarios(inputs),
+            periods,
+        )
+        dimensions = ["period", "scenario", "subscenario", "subperiod"]
+        dimension_size = [
+            periods,
+            number_of_scenarios(inputs),
+            number_of_subscenarios(inputs, run_time_options),
+            number_of_subperiods(inputs),
+        ]
+    else
+        zeros_array = zeros(Float64, length(labels), number_of_subperiods(inputs), number_of_scenarios(inputs), periods)
+        dimensions = ["period", "scenario", "subperiod"]
+        dimension_size = [periods, number_of_scenarios(inputs), number_of_subperiods(inputs)]
+    end
+    write_timeseries_file(
+        joinpath(temp_path, filename),
+        zeros_array;
+        dimensions = dimensions,
+        labels = labels,
+        time_dimension = "period",
+        dimension_size = dimension_size,
+        initial_date = initial_date_time(inputs),
+        unit = unit,
+        implementation = impl,
+        frequency = period_type_string(inputs.collections.configurations.time_series_step),
+    )
+    return nothing
 end

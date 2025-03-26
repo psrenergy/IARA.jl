@@ -36,7 +36,12 @@ function download_and_unzip_complete_case () {
     unzip -qo ./$IARA_CASE/bids/bids.zip -d $CASE_PATH
     
     # unzip heuristic bids 
-    unzip -qo ./$IARA_CASE/heuristic_bids/heuristic_bids.zip -d $CASE_PATH
+    unzip -qo ./$IARA_CASE/heuristic_bids/heuristic_bids.zip -d $CASE_PATH/heuristic_bids
+
+    mv $CASE_PATH/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv $CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv 
+    mv $CASE_PATH/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml $CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml
+    mv $CASE_PATH/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.csv $CASE_PATH/bidding_group_no_markup_energy_offer_period_$IARA_GAME_ROUND.csv
+    mv $CASE_PATH/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.toml $CASE_PATH/bidding_group_no_markup_energy_offer_period_$IARA_GAME_ROUND.toml
 
     echo "Completed."
 }
@@ -95,7 +100,7 @@ function save_iara_case_to_next_round() {
 
     echo "Zipping case..."
     cd $CASE_PATH
-    zip -r ../$CASE_PATH.zip ./*
+    zip -r ../$CASE_PATH.zip ./* -x "heuristic_bids/*" -x "results/*" 
     cd -
 
     echo "Uploading results to S3..."

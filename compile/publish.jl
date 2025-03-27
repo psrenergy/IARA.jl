@@ -5,7 +5,7 @@ Pkg.instantiate()
 using ArgParse
 using PSRContinuousDeployment
 
-const PSRHUB_VERSION = "0.7.0-beta.1"
+const PSRHUB_VERSION = "0.7.0-beta.4"
 const SLACK_CHANNEL = "C0893DVKPDK"
 
 const PERSONAL_ACCESS_TOKEN = ENV["PERSONAL_ACCESS_TOKEN"]

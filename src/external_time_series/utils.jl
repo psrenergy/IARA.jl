@@ -42,17 +42,20 @@ function write_timeseries_file(
     dimension_size::Vector{Int},
     initial_date::Union{String, DateTime} = "",
     unit::String = "",
+    frequency::String = "month",
+    implementation::Type{<:Quiver.Implementation} = Quiver.csv,
 ) where {T, N}
     Quiver.array_to_file(
         file_path,
         data,
-        Quiver.csv; # TODO currently it only writes csv 
+        implementation;
         dimensions,
         labels,
         time_dimension,
         dimension_size,
         initial_date,
         unit,
+        frequency,
         digits = 6,
     )
     return nothing
@@ -120,6 +123,16 @@ function get_quiver_file_path(file_path::String)
     elseif isfile(file_path * ".csv")
         return file_path * ".csv"
     end
+end
+
+# Function to check if any of the files in the list exist
+function find_file(file_paths::Vector{String})
+    for path in file_paths
+        if quiver_file_exists(path)
+            return path
+        end
+    end
+    return nothing
 end
 
 function delete_temp_files(inputs)

@@ -378,194 +378,6 @@ function get_load_marginal_files(path::String; from_ex_post::Bool)
     end
 end
 
-function _average_ex_post_over_subscenarios(
-    temp_writer::Quiver.Writer,
-    ex_post_reader::Quiver.Reader,
-)
-    num_bidding_groups_times_buses = length(ex_post_reader.metadata.labels)
-    num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
-
-    for period in 1:num_periods
-        for scenario in 1:num_scenarios
-            summed_vals = zeros(num_subperiods, num_bidding_groups_times_buses)
-            for subscenario in 1:num_subscenarios
-                for subperiod in 1:num_subperiods
-                    Quiver.goto!(
-                        ex_post_reader;
-                        period,
-                        scenario,
-                        subscenario = subscenario,
-                        subperiod = subperiod,
-                    )
-                    summed_vals[subperiod, :] += ex_post_reader.data
-                end
-            end
-            for subperiod in 1:num_subperiods
-                # Average over subscenarios
-                Quiver.write!(
-                    temp_writer,
-                    summed_vals[subperiod, :] ./ num_subscenarios;
-                    period,
-                    scenario,
-                    subperiod = subperiod,
-                )
-            end
-        end
-    end
-    Quiver.close!(temp_writer)
-    Quiver.close!(ex_post_reader)
-    return
-end
-
-function _total_independent_profile_without_subscenarios(
-    temp_writer::Quiver.Writer,
-    independent_reader::Union{Quiver.Reader, Nothing},
-    profile_reader::Union{Quiver.Reader, Nothing},
-    merged_labels::Vector{String},
-)
-    if isnothing(independent_reader)
-        num_periods, num_scenarios, num_subperiods = profile_reader.metadata.dimension_size
-    else
-        num_periods, num_scenarios, num_subperiods = independent_reader.metadata.dimension_size
-    end
-    num_bidding_groups = length(merged_labels)
-
-    for period in 1:num_periods
-        for scenario in 1:num_scenarios
-            for subperiod in 1:num_subperiods
-                if !isnothing(independent_reader)
-                    Quiver.goto!(
-                        independent_reader;
-                        period = period,
-                        scenario = scenario,
-                        subperiod = subperiod,
-                    )
-                end
-                if !isnothing(profile_reader)
-                    Quiver.goto!(
-                        profile_reader;
-                        period = period,
-                        scenario = scenario,
-                        subperiod = subperiod,
-                    )
-                end
-
-                bg_indices_independent = Dict{Int, Float64}()
-                bg_indices_profile = Dict{Int, Float64}()
-
-                for bg_bus_i in eachindex(merged_labels)
-                    bg_label = merged_labels[bg_bus_i]
-                    if !isnothing(independent_reader) && bg_label in independent_reader.metadata.labels
-                        bg_indices_independent[bg_bus_i] =
-                            independent_reader.data[findfirst(x -> x == bg_label, independent_reader.metadata.labels)]
-                    end
-                    if !isnothing(profile_reader) && bg_label in profile_reader.metadata.labels
-                        bg_indices_profile[bg_bus_i] =
-                            profile_reader.data[findfirst(x -> x == bg_label, profile_reader.metadata.labels)]
-                    end
-                end
-
-                summed_vals = zeros(num_bidding_groups)
-                for bg_bus_i in eachindex(merged_labels)
-                    summed_vals[bg_bus_i] +=
-                        get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
-                end
-
-                Quiver.write!(temp_writer, summed_vals; period, scenario, subperiod = subperiod)
-            end
-        end
-    end
-    Quiver.close!(temp_writer)
-    if !isnothing(independent_reader)
-        Quiver.close!(independent_reader)
-    end
-    if !isnothing(profile_reader)
-        Quiver.close!(profile_reader)
-    end
-    return
-end
-
-function _total_independent_profile_with_subscenarios(
-    temp_writer::Quiver.Writer,
-    independent_reader::Union{Quiver.Reader, Nothing},
-    profile_reader::Union{Quiver.Reader, Nothing},
-    merged_labels::Vector{String},
-)
-    if !isnothing(independent_reader)
-        num_periods, num_scenarios, num_subscenarios, num_subperiods = independent_reader.metadata.dimension_size
-    else
-        num_periods, num_scenarios, num_subscenarios, num_subperiods = profile_reader.metadata.dimension_size
-    end
-    num_bidding_groups = length(merged_labels)
-    for period in 1:num_periods
-        for scenario in 1:num_scenarios
-            for subscenario in 1:num_subscenarios
-                for subperiod in 1:num_subperiods
-                    if !isnothing(independent_reader)
-                        Quiver.goto!(
-                            independent_reader;
-                            period = period,
-                            scenario = scenario,
-                            subscenario = subscenario,
-                            subperiod = subperiod,
-                        )
-                    end
-                    if !isnothing(profile_reader)
-                        Quiver.goto!(
-                            profile_reader;
-                            period = period,
-                            scenario = scenario,
-                            subscenario = subscenario,
-                            subperiod = subperiod,
-                        )
-                    end
-
-                    bg_indices_independent = Dict{Int, Float64}()
-                    bg_indices_profile = Dict{Int, Float64}()
-
-                    for bg_bus_i in eachindex(merged_labels)
-                        bg_label = merged_labels[bg_bus_i]
-                        if !isnothing(independent_reader) && bg_label in independent_reader.metadata.labels
-                            bg_indices_independent[bg_bus_i] =
-                                independent_reader.data[findfirst(
-                                    x -> x == bg_label,
-                                    independent_reader.metadata.labels,
-                                )]
-                        end
-                        if !isnothing(profile_reader) && bg_label in profile_reader.metadata.labels
-                            bg_indices_profile[bg_bus_i] =
-                                profile_reader.data[findfirst(x -> x == bg_label, profile_reader.metadata.labels)]
-                        end
-                    end
-
-                    summed_vals = zeros(num_bidding_groups)
-                    for bg_bus_i in eachindex(merged_labels)
-                        summed_vals[bg_bus_i] +=
-                            get(bg_indices_independent, bg_bus_i, 0) + get(bg_indices_profile, bg_bus_i, 0)
-                    end
-
-                    Quiver.write!(
-                        temp_writer,
-                        summed_vals;
-                        period,
-                        scenario,
-                        subscenario = subscenario,
-                        subperiod = subperiod,
-                    )
-                end
-            end
-        end
-    end
-    Quiver.close!(temp_writer)
-    if !isnothing(independent_reader)
-        Quiver.close!(independent_reader)
-    end
-    if !isnothing(profile_reader)
-        Quiver.close!(profile_reader)
-    end
-    return
-end
-
 function _total_revenue(
     total_revenue_writer::Quiver.Writer,
     ex_ante_reader::Quiver.Reader,
@@ -602,143 +414,124 @@ end
 
 function _join_independent_and_profile_bid(
     inputs::Inputs,
-    outputs_post_processing::Outputs,
-    model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    outputs_dir = output_path(inputs)
     post_processing_dir = post_processing_path(inputs)
-    temp_dir = joinpath(path_case(inputs), "temp")
+    temp_dir = joinpath(output_path(inputs), "temp")
 
-    run_time_file_suffixes(inputs, run_time_options)
-
-    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
-        if has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs)
-            revenue_ex_ante_independent_reader = open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                joinpath(
-                    post_processing_dir,
-                    "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
-                ),
-            )
-            labels_independent = revenue_ex_ante_independent_reader.metadata.labels
-        else
-            revenue_ex_ante_independent_reader = nothing
-            labels_independent = String[]
-        end
-        if has_any_profile_bids(inputs)
-            revenue_ex_ante_profile_reader = open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                joinpath(
-                    post_processing_dir,
-                    "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
-                ),
-            )
-            labels_profile = revenue_ex_ante_profile_reader.metadata.labels
-        else
-            revenue_ex_ante_profile_reader = nothing
-            labels_profile = String[]
-        end
-
-        merged_labels =
-            unique(vcat(labels_independent, labels_profile))
-
-        # If the settlement type is dual, the subscenario dimension is not present in the ex-ante revenue file
-        if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-            dimensions = ["period", "scenario", "subperiod"]
-        else
-            dimensions = ["period", "scenario", "subscenario", "subperiod"]
-        end
-
-        initialize!(
-            QuiverOutput,
-            outputs_post_processing;
-            inputs,
-            output_name = "bidding_group_revenue_ex_ante",
-            dimensions = dimensions,
-            unit = "\$",
-            labels = merged_labels,
-            run_time_options,
-            dir_path = post_processing_dir,
+    impl = Quiver.csv
+    # If there are no independent or profile bids, generate a zero file.
+    # Check for the existence of ex ante files, which are present if the settlement type is ex ante or dual.
+    if settlement_type(inputs) in
+       [IARA.Configurations_SettlementType.EX_ANTE, IARA.Configurations_SettlementType.DUAL]
+        # For ex ante settlement type, the final revenue is calculated as the product of ex_post generation and ex_ante spot price.
+        # For dual settlement type, the ex_ante revenue is the product of ex_ante generation and ex_ante spot price.
+        has_subscenarios = settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+        filepath_independent = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
         )
-        revenue_ex_ante_writer =
-            get_writer(
-                outputs_post_processing,
+
+        filepath_profile = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+        )
+        if !(has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs))
+            filepath_independent = joinpath(
+                temp_dir,
+                "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+            )
+            create_zero_file(
                 inputs,
                 run_time_options,
-                "bidding_group_revenue_ex_ante",
-            )
-
-        if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
-            _total_independent_profile_without_subscenarios(
-                revenue_ex_ante_writer,
-                revenue_ex_ante_independent_reader,
-                revenue_ex_ante_profile_reader,
-                merged_labels,
-            )
-        else
-            _total_independent_profile_with_subscenarios(
-                revenue_ex_ante_writer,
-                revenue_ex_ante_independent_reader,
-                revenue_ex_ante_profile_reader,
-                merged_labels,
+                "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+                _get_bidding_group_bus_labels(inputs),
+                impl,
+                "\$";
+                has_subscenarios = has_subscenarios,
             )
         end
-    end
-    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_ANTE
-        if has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs)
-            revenue_ex_post_indepedent_reader = open_time_series_output(
+        if !has_any_profile_bids(inputs)
+            filepath_profile = joinpath(
+                temp_dir,
+                "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+            )
+            create_zero_file(
                 inputs,
-                model_outputs_time_serie,
-                joinpath(
-                    post_processing_dir,
-                    "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
-                ),
+                run_time_options,
+                "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
+                _get_bidding_group_bus_labels(inputs),
+                impl,
+                "\$";
+                has_subscenarios = has_subscenarios,
             )
-            labels_independent = revenue_ex_post_indepedent_reader.metadata.labels
-        else
-            revenue_ex_post_indepedent_reader = nothing
-            labels_independent = String[]
-        end
-        if has_any_profile_bids(inputs)
-            revenue_ex_post_profile_reader = open_time_series_output(
-                inputs,
-                model_outputs_time_serie,
-                joinpath(
-                    post_processing_dir,
-                    "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
-                ),
-            )
-            labels_profile = revenue_ex_post_profile_reader.metadata.labels
-        else
-            revenue_ex_post_profile_reader = nothing
-            labels_profile = String[]
         end
 
-        merged_labels =
-            unique(vcat(labels_independent, labels_profile))
-
-        initialize!(
-            QuiverOutput,
-            outputs_post_processing;
-            inputs,
-            output_name = "bidding_group_revenue_ex_post",
-            dimensions = ["period", "scenario", "subscenario", "subperiod"],
-            unit = "\$",
-            labels = merged_labels,
-            run_time_options,
-            dir_path = post_processing_dir,
+        file_revenue_ex_ante = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
         )
-        revenue_ex_post_writer =
-            get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_revenue_ex_post")
 
-        _total_independent_profile_with_subscenarios(
-            revenue_ex_post_writer,
-            revenue_ex_post_indepedent_reader,
-            revenue_ex_post_profile_reader,
-            merged_labels,
+        Quiver.apply_expression(
+            file_revenue_ex_ante,
+            [filepath_independent, filepath_profile],
+            +,
+            Quiver.csv;
+            digits = 6,
+        )
+    end
+    # Check for the existence of ex_post files, which are present if the settlement type is ex post or dual.
+    if settlement_type(inputs) in [IARA.Configurations_SettlementType.EX_POST, IARA.Configurations_SettlementType.DUAL]
+        filepath_independent = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+        )
+        filepath_profile = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+        )
+        if !(has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs))
+            filepath_independent = joinpath(
+                temp_dir,
+                "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+            )
+            create_zero_file(
+                inputs,
+                run_time_options,
+                "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+                _get_bidding_group_bus_labels(inputs),
+                impl,
+                "\$";
+                has_subscenarios = true,
+            )
+        end
+        if !has_any_profile_bids(inputs)
+            filepath_profile = joinpath(
+                temp_dir,
+                "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+            )
+            create_zero_file(
+                inputs,
+                run_time_options,
+                "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+                _get_bidding_group_bus_labels(inputs),
+                impl,
+                "\$";
+                has_subscenarios = true,
+            )
+        end
+
+        file_revenue_ex_post = joinpath(
+            post_processing_dir,
+            "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options),
+        )
+
+        Quiver.apply_expression(
+            file_revenue_ex_post,
+            [filepath_independent, filepath_profile],
+            +,
+            impl;
+            digits = 6,
         )
     end
 

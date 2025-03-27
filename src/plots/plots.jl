@@ -137,6 +137,7 @@ function _get_plot_ticks(
     initial_date_time::DateTime,
     time_series_step::Configurations_TimeSeriesStep.T;
     simplified_ticks::Bool = false,
+    subperiod_string::String = "Subperiod",
     kwargs...,
 )
     queried_subperiods = get(kwargs, :subperiod, nothing)
@@ -149,7 +150,7 @@ function _get_plot_ticks(
 
     if simplified_ticks
         plot_ticks = ["$i" for i in 1:num_subperiods]
-        hover_ticks = ["Subperiod $i" for i in 1:num_subperiods]
+        hover_ticks = ["$subperiod_string $i" for i in 1:num_subperiods]
     else
         if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
             for i in 0:num_periods-1
@@ -163,7 +164,7 @@ function _get_plot_ticks(
                     push!(
                         hover_ticks,
                         Dates.format(initial_date_time + Dates.Month(i), "yyyy/mm") *
-                        "<br>Subperiod $subperiod_true_index",
+                        "<br>$subperiod_string $subperiod_true_index",
                     )
                 end
             end
@@ -388,13 +389,20 @@ function build_plot_output(
     inputs::Inputs,
     plots_path::String,
     outputs_path::String,
+    post_processing_path::String,
     plot_config::PlotConfig,
 )
     file_path_without_extension = joinpath(outputs_path, plot_config.filename)
-    if !quiver_file_exists(file_path_without_extension)
+    file_path_without_extension_pp = joinpath(post_processing_path, plot_config.filename)
+
+    # Check if either of the files exist and select the appropriate path
+    file_path_without_extension = find_file([file_path_without_extension, file_path_without_extension_pp])
+
+    if file_path_without_extension === nothing
         @debug("Tried to build plot output for $(plot_config.filename) but no Quiver file found.")
         return nothing
     end
+
     file_path = get_quiver_file_path(file_path_without_extension)
     output_data, metadata = read_timeseries_file(file_path)
     output_labels = metadata.labels
@@ -688,7 +696,7 @@ function build_plots(
     end
 
     for plot_config in plot_configs
-        build_plot_output(inputs, plots_path, output_path(inputs), plot_config)
+        build_plot_output(inputs, plots_path, output_path(inputs), post_processing_path(inputs), plot_config)
     end
 
     return nothing

@@ -217,7 +217,7 @@ function consult_period_season_map(
 )
     if has_period_season_map_file(inputs)
         update_time_series_views_from_external_files!(inputs; period, scenario)
-        node, simulation_sample, next_subperiod = period_season_map_from_file(inputs).data
+        node, simulation_sample, next_subperiod = Int.(period_season_map_from_file(inputs).data)
     else
         node, simulation_sample, next_subperiod = period_season_map_cache(inputs; period, scenario)
     end

@@ -100,8 +100,6 @@ function simulate(
 )
     simulation_scheme = build_simulation_scheme(model, inputs, run_time_options; current_period)
 
-    @show simulation_scheme
-
     simulations = SDDP.simulate(
         # The trained model to simulate.
         model.policy_graph,
@@ -128,21 +126,20 @@ function build_simulation_scheme(
     )
 
     if linear_policy_graph(inputs)
-        if current_period !== nothing
-            # Linear clearing
-            for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-                trajectory = trajectory_index_from_scenario_subscenario(
-                    inputs,
-                    run_time_options,
-                    scenario,
-                    subscenario,
-                )
+        # Linear SDDP
+        for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
+            trajectory = trajectory_index_from_scenario_subscenario(
+                inputs,
+                run_time_options,
+                scenario,
+                subscenario,
+            )
+            if current_period !== nothing
+                # Linear clearing
                 simulation_scheme[trajectory] = [(current_period, (current_period, trajectory))]
-            end
-        else
-            # Linear mincost
-            for scenario in scenarios(inputs)
-                simulation_scheme[trajectory] = [(t, (t, scenario)) for t in 1:number_of_periods(inputs)]
+            else
+                # Linear mincost
+                simulation_scheme[trajectory] = [(t, (t, trajectory)) for t in 1:number_of_periods(inputs)]
             end
         end
     else

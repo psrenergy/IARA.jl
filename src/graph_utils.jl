@@ -114,16 +114,16 @@ function create_period_season_map!(
 
     for trajectory in scenarios(inputs)
         for t in periods(inputs)
-            if t == 1
+            node = if t == 1
                 if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT
-                    node = 1
+                    1
                 elseif policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT
-                    node = rand(1:number_of_nodes(inputs))
+                    rand(1:number_of_nodes(inputs))
                 else
                     error("Policy graph type $(policy_graph_type(inputs)) not supported.")
                 end
             else
-                node = sample(1:number_of_nodes(inputs), Weights(transition_probability_matrix[node, :]))
+                sample(1:number_of_nodes(inputs), Weights(transition_probability_matrix[node, :]))
             end
 
             simulation_sample = rand(1:number_of_scenarios(inputs))
@@ -187,7 +187,7 @@ function seasonal_simulation_scheme(
     return simulation_scheme
 end
 
-function subscenario_that_progagates_state_variables_to_next_period(
+function subscenario_that_propagates_state_variables_to_next_period(
     inputs::Inputs,
     run_time_options::RunTimeOptions;
     period::Int,

@@ -566,7 +566,7 @@ function run_clearing_simulation(
             )
 
             if subscenario ==
-               subscenario_that_progagates_state_variables_to_next_period(inputs, run_time_options; period, scenario)
+               subscenario_that_propagates_state_variables_to_next_period(inputs, run_time_options; period, scenario)
                 # Serialize the variables to be used in other clearing problems
                 serialize_clearing_variables(
                     outputs,

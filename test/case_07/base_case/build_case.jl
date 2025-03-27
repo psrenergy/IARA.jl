@@ -111,6 +111,27 @@ IARA.add_virtual_reservoir!(db;
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 
+IARA.add_bidding_group!(db;
+    label = "empty_bidding_group",
+    assetowner_id = "asset_owner_1",
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
+)
+
+IARA.update_hydro_unit_relation!(db,
+    "hydro_1";
+    collection = "BiddingGroup",
+    relation_type = "id",
+    related_label = "empty_bidding_group",
+)
+
+IARA.update_hydro_unit_relation!(db,
+    "hydro_2";
+    collection = "BiddingGroup",
+    relation_type = "id",
+    related_label = "empty_bidding_group",
+)
+
 demand = zeros(1, number_of_subperiods, number_of_scenarios, number_of_periods)
 demand[1, :, 1, :] .= 150.0
 demand[1, :, 2, :] .= 200.0

@@ -419,6 +419,15 @@ function _join_independent_and_profile_bid(
     post_processing_dir = post_processing_path(inputs)
     temp_dir = joinpath(output_path(inputs), "temp")
 
+    bidding_group_bus_labels = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.bidding_group,
+        inputs.collections.bus;
+        index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+    )
+
     impl = Quiver.csv
     # If there are no independent or profile bids, generate a zero file.
     # Check for the existence of ex ante files, which are present if the settlement type is ex ante or dual.
@@ -445,7 +454,7 @@ function _join_independent_and_profile_bid(
                 inputs,
                 run_time_options,
                 "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
-                _get_bidding_group_bus_labels(inputs),
+                bidding_group_bus_labels,
                 impl,
                 "\$";
                 has_subscenarios = has_subscenarios,
@@ -460,7 +469,7 @@ function _join_independent_and_profile_bid(
                 inputs,
                 run_time_options,
                 "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
-                _get_bidding_group_bus_labels(inputs),
+                bidding_group_bus_labels,
                 impl,
                 "\$";
                 has_subscenarios = has_subscenarios,
@@ -499,7 +508,7 @@ function _join_independent_and_profile_bid(
                 inputs,
                 run_time_options,
                 "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
-                _get_bidding_group_bus_labels(inputs),
+                bidding_group_bus_labels,
                 impl,
                 "\$";
                 has_subscenarios = true,
@@ -514,7 +523,7 @@ function _join_independent_and_profile_bid(
                 inputs,
                 run_time_options,
                 "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
-                _get_bidding_group_bus_labels(inputs),
+                bidding_group_bus_labels,
                 impl,
                 "\$";
                 has_subscenarios = true,

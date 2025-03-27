@@ -116,22 +116,17 @@ function build_simulation_scheme(
 
     scheme_index = 0
     if linear_policy_graph(inputs)
-        if current_period !== nothing
-            # Linear clearing
-            for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-                scheme_index += 1
-                simulation_scheme[scheme_index] = [(current_period, (scenario, subscenario, current_period, scenario))]
-            end
+        periods_to_simulate = if isnothing(current_period)
+            1:number_of_periods(inputs)
         else
-            # Linear mincost
-            for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-                scheme_index += 1
-                simulation_scheme[scheme_index] =
-                    [(t, (scenario, subscenario, t, scenario)) for t in 1:number_of_periods(inputs)]
-            end
+            [current_period]
+        end
+        for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
+            scheme_index += 1
+            simulation_scheme[scheme_index] =
+                [(t, (scenario, subscenario, t, scenario)) for t in periods_to_simulate]
         end
     else
-        # Cyclic SDDP
         simulation_scheme = seasonal_simulation_scheme(inputs, run_time_options; current_period)
     end
 

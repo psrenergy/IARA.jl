@@ -113,33 +113,27 @@ function create_period_season_map!(
     period_season_map = Array{Int, 3}(undef, 3, number_of_scenarios(inputs), number_of_periods(inputs))
 
     for trajectory in scenarios(inputs)
-        # First node
-        t = 1
-        node = if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT
-            1
-        elseif policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT
-            rand(1:number_of_nodes(inputs))
-        else
-            error("Policy graph type $(policy_graph_type(inputs)) not supported.")
-        end
-        simulation_sample = rand(1:number_of_scenarios(inputs))
-        next_subscenario = if number_of_subscenarios(inputs, run_time_options) == 1
-            1
-        else
-            rand(1:number_of_subscenarios(inputs, run_time_options))
-        end
-        period_season_map[1, trajectory, t] = node
-        period_season_map[2, trajectory, t] = simulation_sample
-        period_season_map[3, trajectory, t] = next_subscenario
-        # Other nodes
-        for t in 2:number_of_periods(inputs)
-            node = sample(1:number_of_nodes(inputs), Weights(transition_probability_matrix[node, :]))
+        for t in periods(inputs)
+            if t == 1
+                if policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT
+                    node = 1
+                elseif policy_graph_type(inputs) == Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT
+                    node = rand(1:number_of_nodes(inputs))
+                else
+                    error("Policy graph type $(policy_graph_type(inputs)) not supported.")
+                end
+            else
+                node = sample(1:number_of_nodes(inputs), Weights(transition_probability_matrix[node, :]))
+            end
+
             simulation_sample = rand(1:number_of_scenarios(inputs))
+
             next_subscenario = if number_of_subscenarios(inputs, run_time_options) == 1
                 1
             else
                 rand(1:number_of_subscenarios(inputs, run_time_options))
             end
+
             period_season_map[1, trajectory, t] = node
             period_season_map[2, trajectory, t] = simulation_sample
             period_season_map[3, trajectory, t] = next_subscenario
@@ -177,24 +171,16 @@ function seasonal_simulation_scheme(
     for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
         scheme_index += 1
         simulation_scheme[scheme_index] = []
-        if isnothing(current_period)
+        periods_to_simulate = if isnothing(current_period)
+            1:number_of_periods(inputs)
+        else
+            [current_period]
+        end
+        for period in periods_to_simulate
             for period in 1:number_of_periods(inputs)
-                if has_period_season_map_file(inputs)
-                    update_time_series_views_from_external_files!(inputs; period, scenario)
-                    node, simulation_sample, _ = period_season_map_from_file(inputs).data
-                else
-                    node, simulation_sample, _ = period_season_map_cache(inputs; period, scenario)
-                end
+                node, simulation_sample, _ = consult_period_season_map(inputs; period, scenario)
                 push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, period, scenario)))
             end
-        else
-            if has_period_season_map_file(inputs)
-                update_time_series_views_from_external_files!(inputs; period = current_period, scenario)
-                node, simulation_sample, _ = period_season_map_from_file(inputs).data
-            else
-                node, simulation_sample, _ = period_season_map_cache(inputs; period = current_period, scenario)
-            end
-            push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, current_period, scenario)))
         end
     end
 
@@ -210,12 +196,30 @@ function subscenario_that_progagates_state_variables_to_next_period(
     next_subperiod = 1
 
     if cyclic_policy_graph(inputs) && is_ex_post_problem(run_time_options)
-        if has_period_season_map_file(inputs)
-            next_subperiod = period_season_map_from_file(inputs).data[3]
-        else
-            next_subperiod = period_season_map_cache(inputs; period, scenario)[3]
-        end
+        next_subperiod = consult_period_season_map(inputs; period, scenario, index = 3)
     end
 
     return next_subperiod
+end
+
+function consult_period_season_map(
+    inputs::Inputs;
+    period::Int,
+    scenario::Int,
+    index::Union{Nothing, Int} = nothing,
+)
+    if has_period_season_map_file(inputs)
+        update_time_series_views_from_external_files!(inputs; period, scenario)
+        node, simulation_sample, next_subperiod = Int.(period_season_map_from_file(inputs).data)
+    else
+        node, simulation_sample, next_subperiod = period_season_map_cache(inputs; period, scenario)
+    end
+
+    map_info = node, simulation_sample, next_subperiod
+
+    if isnothing(index)
+        return map_info
+    end
+
+    return map_info[index]
 end

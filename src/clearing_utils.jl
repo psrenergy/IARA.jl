@@ -360,3 +360,32 @@ function clearing_has_physical_variables(inputs::Inputs)
         return false
     end
 end
+
+function trajectory_index_from_scenario_subscenario(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    scenario::Int,
+    subscenario::Int,
+)
+    trajectory = (scenario - 1) * number_of_subscenarios(inputs, run_time_options) + subscenario
+    return trajectory
+end
+
+function scenario_subscenario_from_trajectory_index(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    trajectory_index::Int;
+    period::Union{Nothing, Int} = nothing,
+)
+    scenario = div(trajectory_index - 1, number_of_subscenarios(inputs, run_time_options)) + 1
+    subscenario = rem(trajectory_index - 1, number_of_subscenarios(inputs, run_time_options)) + 1
+
+    if cyclic_policy_graph(inputs) && is_ex_post_problem(run_time_options)
+        if isnothing(period)
+            error("period must be provided when using cyclic policy graph")
+        end
+        scenario = consult_period_season_map(inputs; period, scenario, index = 2)
+    end
+
+    return scenario, subscenario
+end

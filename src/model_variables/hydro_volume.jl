@@ -85,7 +85,8 @@ function hydro_volume!(
     hydro_previous_period_volume = get_model_object(model, :hydro_previous_period_volume)
 
     # Data from previous period
-    previous_volume = hydro_volume_from_previous_period(inputs, simulation_period, simulation_trajectory)
+    trajectory_scenario = div(simulation_trajectory - 1, number_of_subscenarios(inputs, run_time_options)) + 1 # TODO: remove this
+    previous_volume = hydro_volume_from_previous_period(inputs, simulation_period, trajectory_scenario)
 
     for h in hydro_units_with_reservoir
         MOI.set(

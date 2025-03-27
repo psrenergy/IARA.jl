@@ -61,9 +61,10 @@ function virtual_reservoir_energy_stock!(
             subperiod_duration_in_hours(inputs, b) for b in subperiods(inputs)
         ) for h in hydro_units
     ]
+    trajectory_scenario = div(simulation_trajectory - 1, number_of_subscenarios(inputs, run_time_options)) + 1 # TODO: remove this
     virtual_reservoir_energy_stock_at_beginning_of_period =
-        virtual_reservoir_energy_stock_from_previous_period(inputs, simulation_period, simulation_trajectory)
-    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, simulation_period, simulation_trajectory)
+        virtual_reservoir_energy_stock_from_previous_period(inputs, simulation_period, trajectory_scenario)
+    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, simulation_period, trajectory_scenario)
     energy_arrival = additional_energy_from_inflows(inputs, inflow_as_volume, volume_at_beginning_of_period)
     virtual_reservoir_energy_stock = get_model_object(model, :virtual_reservoir_energy_stock)
     for vr in virtual_reservoirs

@@ -167,34 +167,27 @@ function seasonal_simulation_scheme(
     run_time_options::RunTimeOptions;
     current_period::Union{Nothing, Int} = nothing,
 )
-    simulation_scheme =
-        Array{Array{Tuple{Int, Tuple{Int, Int, Int, Int}}, 1}, 1}(
-            undef,
-            number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
-        )
-    scheme_index = 0
+    simulation_scheme = Array{Array{Tuple{Int, Tuple{Int, Int}}, 1}, 1}(
+        undef,
+        number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
+    )
 
     for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-        scheme_index += 1
-        simulation_scheme[scheme_index] = []
-        if isnothing(current_period)
-            for period in 1:number_of_periods(inputs)
-                if has_period_season_map_file(inputs)
-                    update_time_series_views_from_external_files!(inputs; period, scenario)
-                    node, simulation_sample, _ = period_season_map_from_file(inputs).data
-                else
-                    node, simulation_sample, _ = period_season_map_cache(inputs; period, scenario)
-                end
-                push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, period, scenario)))
-            end
+        trajectory = trajectory_index_from_scenario_subscenario(
+            inputs,
+            run_time_options,
+            scenario,
+            subscenario,
+        )
+        simulation_scheme[trajectory] = []
+        periods_to_simulate = if isnothing(current_period)
+            1:number_of_periods(inputs)
         else
-            if has_period_season_map_file(inputs)
-                update_time_series_views_from_external_files!(inputs; period = current_period, scenario)
-                node, simulation_sample, _ = period_season_map_from_file(inputs).data
-            else
-                node, simulation_sample, _ = period_season_map_cache(inputs; period = current_period, scenario)
-            end
-            push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, current_period, scenario)))
+            [current_period]
+        end
+        for period in periods_to_simulate
+            node = consult_period_season_map(inputs; period, scenario, index = 1)
+            push!(simulation_scheme[trajectory], (node, (period, trajectory)))
         end
     end
 
@@ -210,12 +203,30 @@ function subscenario_that_progagates_state_variables_to_next_period(
     next_subperiod = 1
 
     if cyclic_policy_graph(inputs) && is_ex_post_problem(run_time_options)
-        if has_period_season_map_file(inputs)
-            next_subperiod = period_season_map_from_file(inputs).data[3]
-        else
-            next_subperiod = period_season_map_cache(inputs; period, scenario)[3]
-        end
+        next_subperiod = consult_period_season_map(inputs; period, scenario, index = 3)
     end
 
     return next_subperiod
+end
+
+function consult_period_season_map(
+    inputs::Inputs;
+    period::Int,
+    scenario::Int,
+    index::Union{Nothing, Int} = nothing,
+)
+    if has_period_season_map_file(inputs)
+        update_time_series_views_from_external_files!(inputs; period, scenario)
+        node, simulation_sample, next_subperiod = period_season_map_from_file(inputs).data
+    else
+        node, simulation_sample, next_subperiod = period_season_map_cache(inputs; period, scenario)
+    end
+
+    map_info = node, simulation_sample, next_subperiod
+
+    if isnothing(index)
+        return map_info
+    end
+
+    return map_info[index]
 end

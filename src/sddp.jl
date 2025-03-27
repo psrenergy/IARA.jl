@@ -34,15 +34,27 @@ function build_model(
             jump_model = subproblem,
         )
 
-        scenario_combinations = Tuple{Int, Int, Int, Int}[]
+        scenario_combinations = Tuple{Int, Int}[]
         for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-            push!(scenario_combinations, (scenario, subscenario, node, scenario))
+            trajectory = trajectory_index_from_scenario_subscenario(
+                inputs,
+                run_time_options,
+                scenario,
+                subscenario,
+            )
+            push!(scenario_combinations, (node, trajectory))
         end
 
         SDDP.parameterize(
             sp_model.jump_model,
             scenario_combinations,
-        ) do (scenario, subscenario, simulation_period, simulation_trajectory)
+        ) do (simulation_period, simulation_trajectory)
+            scenario, subscenario = scenario_subscenario_from_trajectory_index(
+                inputs,
+                run_time_options,
+                simulation_trajectory;
+                period = simulation_period,
+            )
             update_time_series_views_from_external_files!(inputs; period = node, scenario)
             update_time_series_from_db!(inputs, node)
             model_action(
@@ -88,6 +100,8 @@ function simulate(
 )
     simulation_scheme = build_simulation_scheme(model, inputs, run_time_options; current_period)
 
+    @show simulation_scheme
+
     simulations = SDDP.simulate(
         # The trained model to simulate.
         model.policy_graph,
@@ -108,26 +122,27 @@ function build_simulation_scheme(
     run_time_options::RunTimeOptions;
     current_period::Union{Nothing, Int} = nothing,
 )
-    simulation_scheme =
-        Array{Array{Tuple{Int, Tuple{Int, Int, Int, Int}}, 1}, 1}(
-            undef,
-            number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
-        )
+    simulation_scheme = Array{Array{Tuple{Int, Tuple{Int, Int}}, 1}, 1}(
+        undef,
+        number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
+    )
 
-    scheme_index = 0
     if linear_policy_graph(inputs)
         if current_period !== nothing
             # Linear clearing
             for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-                scheme_index += 1
-                simulation_scheme[scheme_index] = [(current_period, (scenario, subscenario, current_period, scenario))]
+                trajectory = trajectory_index_from_scenario_subscenario(
+                    inputs,
+                    run_time_options,
+                    scenario,
+                    subscenario,
+                )
+                simulation_scheme[trajectory] = [(current_period, (current_period, trajectory))]
             end
         else
             # Linear mincost
-            for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-                scheme_index += 1
-                simulation_scheme[scheme_index] =
-                    [(t, (scenario, subscenario, t, scenario)) for t in 1:number_of_periods(inputs)]
+            for scenario in scenarios(inputs)
+                simulation_scheme[trajectory] = [(t, (t, scenario)) for t in 1:number_of_periods(inputs)]
             end
         end
     else

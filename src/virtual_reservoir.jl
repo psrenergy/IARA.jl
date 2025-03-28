@@ -178,7 +178,7 @@ function post_process_virtual_reservoirs!(
     energy_stock_at_beginning_of_period =
         virtual_reservoir_energy_stock_from_previous_period(inputs, period, scenario)
 
-    subscenario = 1 # Is this still correct?
+    subscenario = subscenario_that_propagates_state_variables_to_next_period(inputs, run_time_options; period, scenario)
     inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
     inflow_as_volume = [
         sum(

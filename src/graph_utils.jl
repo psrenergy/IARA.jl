@@ -111,6 +111,7 @@ function create_period_season_map!(
 
     # For each trajectory and period, we sample a season, scenario and next_subscenario
     period_season_map = Array{Int, 3}(undef, 3, number_of_scenarios(inputs), number_of_periods(inputs))
+    node = 1
 
     for trajectory in scenarios(inputs)
         for t in periods(inputs)
@@ -177,10 +178,8 @@ function seasonal_simulation_scheme(
             [current_period]
         end
         for period in periods_to_simulate
-            for period in 1:number_of_periods(inputs)
-                node, simulation_sample, _ = consult_period_season_map(inputs; period, scenario)
-                push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, period, scenario)))
-            end
+            node, simulation_sample, _ = consult_period_season_map(inputs; period, scenario)
+            push!(simulation_scheme[scheme_index], (node, (simulation_sample, subscenario, period, scenario)))
         end
     end
 

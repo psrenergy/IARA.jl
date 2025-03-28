@@ -34,12 +34,15 @@ function build_model(
             jump_model = subproblem,
         )
 
-        scenario_combinations = Tuple{Int, Int, Int}[]
+        scenario_combinations = Tuple{Int, Int, Int, Int}[]
         for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-            push!(scenario_combinations, (scenario, subscenario, node))
+            push!(scenario_combinations, (scenario, subscenario, node, scenario))
         end
 
-        SDDP.parameterize(sp_model.jump_model, scenario_combinations) do (scenario, subscenario, simulation_period)
+        SDDP.parameterize(
+            sp_model.jump_model,
+            scenario_combinations,
+        ) do (scenario, subscenario, simulation_period, simulation_trajectory)
             update_time_series_views_from_external_files!(inputs; period = node, scenario)
             update_time_series_from_db!(inputs, node)
             model_action(
@@ -47,6 +50,7 @@ function build_model(
                 inputs,
                 run_time_options,
                 simulation_period,
+                simulation_trajectory,
                 scenario,
                 subscenario,
                 SubproblemUpdate,
@@ -105,28 +109,24 @@ function build_simulation_scheme(
     current_period::Union{Nothing, Int} = nothing,
 )
     simulation_scheme =
-        Array{Array{Tuple{Int, Tuple{Int, Int, Int}}, 1}, 1}(
+        Array{Array{Tuple{Int, Tuple{Int, Int, Int, Int}}, 1}, 1}(
             undef,
             number_of_scenarios(inputs) * number_of_subscenarios(inputs, run_time_options),
         )
 
     scheme_index = 0
     if linear_policy_graph(inputs)
-        if current_period !== nothing
-            # Linear clearing
-            for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-                scheme_index += 1
-                simulation_scheme[scheme_index] = [(current_period, (scenario, subscenario, current_period))]
-            end
+        periods_to_simulate = if isnothing(current_period)
+            1:number_of_periods(inputs)
         else
-            # Linear mincost
-            for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
-                scheme_index += 1
-                simulation_scheme[scheme_index] = [(t, (scenario, subscenario, t)) for t in 1:number_of_periods(inputs)]
-            end
+            [current_period]
+        end
+        for scenario in scenarios(inputs), subscenario in subscenarios(inputs, run_time_options)
+            scheme_index += 1
+            simulation_scheme[scheme_index] =
+                [(t, (scenario, subscenario, t, scenario)) for t in periods_to_simulate]
         end
     else
-        # Cyclic SDDP
         simulation_scheme = seasonal_simulation_scheme(inputs, run_time_options; current_period)
     end
 

@@ -239,7 +239,7 @@ function simulate_all_periods_and_scenarios_of_trained_model(
 )
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
-        create_period_season_map!(inputs, model)
+        create_period_season_map!(inputs, run_time_options, model)
     end
 
     # Simulate all periods and scenarios
@@ -316,7 +316,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
-        create_period_season_map!(inputs, ex_ante_physical_model)
+        create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
     end
 
     try
@@ -359,8 +359,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
             run_clearing_simulation(ex_ante_physical_model, inputs, ex_ante_physical_outputs, run_time_options, period)
 
-            run_time_options =
-                RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+            run_time_options = RunTimeOptions(;
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+            )
             run_clearing_simulation(
                 ex_ante_commercial_model,
                 inputs,
@@ -372,8 +373,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
             run_clearing_simulation(ex_post_physical_model, inputs, ex_post_physical_outputs, run_time_options, period)
 
-            run_time_options =
-                RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+            run_time_options = RunTimeOptions(;
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
+            )
             run_clearing_simulation(
                 ex_post_commercial_model,
                 inputs,
@@ -431,7 +433,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
 
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
-        create_period_season_map!(inputs, ex_ante_physical_model)
+        create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
     end
 
     try
@@ -563,7 +565,8 @@ function run_clearing_simulation(
                 WriteOutput,
             )
 
-            if subscenario == 1
+            if subscenario ==
+               subscenario_that_propagates_state_variables_to_next_period(inputs, run_time_options; period, scenario)
                 # Serialize the variables to be used in other clearing problems
                 serialize_clearing_variables(
                     outputs,

@@ -100,7 +100,7 @@ Configurations for the problem.
     market_clearing_tiebreaker_weight::Float64 = 0.0
 
     # Caches
-    period_season_map = Array{Float64, 3}(undef, 2, 0, 0)
+    period_season_map = Array{Float64, 3}(undef, 3, 0, 0)
     plot_strings_dict::Dict{String, String} = Dict()
 end
 

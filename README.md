@@ -14,9 +14,12 @@
 [docs-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-url]: https://psrenergy.github.io/IARA.jl/dev/
 
-| **Build Status** | **Documentation** |
-|:-----------------:|:-----------------:|
-| [![Build Status][build-img]][build-url] | [![][docs-img]][docs-url] |
+[codecov-img]: https://codecov.io/gh/psrenergy/IARA.jl/coverage.svg?branch=main
+[codecov-url]: https://codecov.io/gh/psrenergy/IARA.jl?branch=main
+
+| **Build Status** | **Coverage** | **Documentation** |
+|:-----------------:|:-----------------:|:-----------------:|
+| [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] | [![][docs-img]][docs-url] |
 
 #### IARA: Interaction Assessment of Regulator and Agents
 

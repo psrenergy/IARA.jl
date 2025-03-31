@@ -48,14 +48,19 @@ function download_and_unzip_complete_case () {
 
 function download_and_unzip_case () {
     echo "Downloading input data..."
-    if [ "$IARA_GAME_ROUND" -eq 1 ] || [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
-        echo "Downloading input data from case creation..."
-        aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_inputs.zip ./$IARA_CASE.zip  
+    if [ "$VOLUME_PATH" ]; then
+        echo "Using volume path $VOLUME_PATH"
+        unzip -qo $VOLUME_PATH/game_inputs.zip -d $CASE_PATH
     else
-        echo "Downloading input data from previous round..."
-        aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip ./$IARA_CASE.zip
+        if [ "$IARA_GAME_ROUND" -eq 1 ] || [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
+            echo "Downloading input data from case creation..."
+            aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_inputs.zip ./$IARA_CASE.zip  
+        else
+            echo "Downloading input data from previous round..."
+            aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip ./$IARA_CASE.zip
+        fi
+        unzip -qo $IARA_CASE.zip -d $CASE_PATH
     fi
-    unzip -qo $IARA_CASE.zip -d $CASE_PATH
     echo "Completed."
 }
 

@@ -62,6 +62,7 @@ keywords:
 - `outputs_path::String`. Path to the outputs. default = joinpath(path, "outputs")
 - `plot_outputs::Bool`. Plot all outputs after the run. default = true
 - `write_lp::Bool`. Write the LP files. default = false
+- `delete_output_folder_before_execution::Bool`. Delete the output folder before execution. default = false
 """
 
 """

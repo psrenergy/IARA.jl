@@ -48,7 +48,7 @@ function download_and_unzip_complete_case () {
 
 function download_and_unzip_case () {
     echo "Downloading input data..."
-    if [ "$VOLUME_PATH" ]; then
+    if [ "$VOLUME_PATH" ] && [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
         echo "Using volume path $VOLUME_PATH"
         unzip -qo $VOLUME_PATH/game_inputs.zip -d $CASE_PATH
     else

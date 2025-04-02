@@ -607,7 +607,7 @@ function iara_log_configurations(inputs::AbstractInputs)
             run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
             iara_log(inputs, run_time_options)
         end
-    else
+    elseif is_mincost(inputs)
         run_time_options = RunTimeOptions()
         _integer_variable_representation = integer_variable_representation(inputs, run_time_options)
         _network_representation = network_representation(inputs, run_time_options)

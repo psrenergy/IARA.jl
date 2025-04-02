@@ -26,6 +26,10 @@ cp(PATH_ORIGINAL, PATH_CENTRALIZED; force = true);</code></pre><pre class="docum
 [ Info:    scenarios: 12
 [ Info:    subperiods: 1
 [ Info:
+[ Info: Min cost Subproblems:
+[ Info:
+[ Info: Integer variables: CALCULATE_NORMALLY
+[ Info: Network representation: NODAL
 [ Info:
 [ Info: Collections
 [ Info:    RenewableUnit: 1 element(s)
@@ -72,14 +76,14 @@ numerical stability report
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
-         1   7.988205e+01  7.999601e+01  2.024889e-02        26   1
-        20   8.195482e+01  7.999601e+01  1.485920e-01       720   1
+         1   7.990017e+01  7.999601e+01  2.059913e-02        26   1
+        20   5.403720e+01  7.999601e+01  1.519032e-01       720   1
 -------------------------------------------------------------------
 status         : simulation_stopping
-total time (s) : 1.485920e-01
+total time (s) : 1.519032e-01
 total solves   : 720
 best bound     :  7.999601e+01
-simulation ci  :  8.954266e+01 ± 6.061743e+00
+simulation ci  :  7.371566e+01 ± 6.948654e+00
 numeric issues : 0
 -------------------------------------------------------------------
 
@@ -145,11 +149,11 @@ IARA.close_study!(db)</code></pre><p>Now, let&#39;s run the case with <a href=".
 [ Info:
 [ Info: Market Clearing Subproblems:
 [ Info:
-[ Info:  Subproblem           Execution Mode       Integer Variables
-[ Info:  EX_ANTE_PHYSICAL     HYBRID               CALCULATE_NORMALLY
-[ Info:  EX_ANTE_COMMERCIAL   HYBRID               CALCULATE_NORMALLY
-[ Info:  EX_POST_PHYSICAL     HYBRID               CALCULATE_NORMALLY
-[ Info:  EX_POST_COMMERCIAL   HYBRID               CALCULATE_NORMALLY
+[ Info:  Subproblem           Execution Mode       Integer Variables    Network Representation
+[ Info:  EX_ANTE_PHYSICAL     HYBRID               CALCULATE_NORMALLY   NODAL
+[ Info:  EX_ANTE_COMMERCIAL   HYBRID               CALCULATE_NORMALLY   NODAL
+[ Info:  EX_POST_PHYSICAL     HYBRID               CALCULATE_NORMALLY   NODAL
+[ Info:  EX_POST_COMMERCIAL   HYBRID               CALCULATE_NORMALLY   NODAL
 [ Info:
 [ Info: Collections
 [ Info:    RenewableUnit: 1 element(s)
@@ -194,4 +198,4 @@ IARA.close_study!(db)</code></pre><p>Now, let&#39;s run the case with <a href=".
 └ @ Quiver ~/.julia/packages/Quiver/QQM2F/src/operations.jl:109
 ┌ Warning: Dimension subscenario is not the last dimension. This not the most efficient way to operate over dimensions.
 └ @ Quiver ~/.julia/packages/Quiver/QQM2F/src/operations.jl:109
-[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 1 April 2025 15:01">Tuesday 1 April 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Wednesday 2 April 2025 19:49">Wednesday 2 April 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

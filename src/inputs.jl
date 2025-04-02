@@ -56,7 +56,7 @@ end
 
 Required arguments:
 
-  - `PATH::String`: the path where the study will be created
+  - `case_path::String`: the path where the study will be created
   - `cycle_discount_rate::Float64`: the cycle discount rate
   - `subperiod_duration_in_hours::Vector{Float64}`: subperiod duration in hours (one entry for each subperiod)
 Conditionally required arguments:
@@ -107,11 +107,22 @@ Required arguments:
   - `read_only::Bool`: Whether the database should be opened in read-only mode. Default is `true`.
 """
 function load_study(case_path::String; read_only::Bool = true)
-    return PSRI.load_study(
-        PSRI.PSRDatabaseSQLiteInterface(),
-        joinpath(case_path, "study.iara");
-        read_only,
-    )
+    if read_only
+        return PSRI.load_study(
+            PSRI.PSRDatabaseSQLiteInterface(),
+            joinpath(case_path, "study.iara");
+            read_only,
+        )
+    else
+        # If the database is not read-only, we need to provide the migrations directory
+        # and possibly apply the migrations so that users can run with this version of IARA.
+        path_migrations = migrations_directory()
+        return PSRI.load_study(
+            PSRI.PSRDatabaseSQLiteInterface(),
+            joinpath(case_path, "study.iara"),
+            path_migrations,
+        )
+    end
 end
 
 """

@@ -292,6 +292,11 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_post_physical")[1],
             Configurations_NetworkRepresentation.T,
         )
+    configurations.network_representation_ex_post_commercial =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_post_commercial")[1],
+            Configurations_NetworkRepresentation.T,
+        )
     configurations.spot_price_floor = PSRI.get_parms(inputs.db, "Configuration", "spot_price_floor")[1]
     configurations.spot_price_cap = PSRI.get_parms(inputs.db, "Configuration", "spot_price_cap")[1]
     configurations.virtual_reservoir_correspondence_type =
@@ -595,11 +600,19 @@ function iara_log_configurations(inputs::AbstractInputs)
     if is_market_clearing(inputs)
         @info("Market Clearing Subproblems:")
         @info("")
-        @info(Printf.@sprintf " %-20s %-20s %-20s" "Subproblem" "Execution Mode" "Integer Variables")
+        @info(Printf.@sprintf " %-20s %-20s %-20s %-20s" "Subproblem" "Execution Mode" "Integer Variables" "Network Representation")
         for clearing_model_subproblem in instances(RunTime_ClearingSubproblem.T)
             run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
             iara_log(inputs, run_time_options)
         end
+    else
+        run_time_options = RunTimeOptions()
+        _integer_variable_representation = integer_variable_representation(inputs, run_time_options)
+        _network_representation = network_representation(inputs, run_time_options)
+        @info("Min cost Subproblems:")
+        @info("")
+        @info("Integer variables: $(enum_name_to_string(_integer_variable_representation))")
+        @info("Network representation: $(enum_name_to_string(_network_representation))")
     end
 
     return nothing

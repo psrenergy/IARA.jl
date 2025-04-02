@@ -449,6 +449,9 @@ function hybrid_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
+    if any_valid_elements(inputs, run_time_options, Interconnection, action)
+        interconnection_flow!(args...)
+    end
     if any_valid_elements(inputs, run_time_options, Branch, action)
         branch_flow!(args...)
         if some_branch_does_not_have_dc_flag(inputs)
@@ -602,6 +605,9 @@ function cost_based_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
+    if any_valid_elements(inputs, run_time_options, Interconnection, action)
+        interconnection_flow!(args...)
+    end
     if any_valid_elements(inputs, run_time_options, Branch, action)
         branch_flow!(args...)
         if some_branch_does_not_have_dc_flag(inputs)
@@ -717,6 +723,9 @@ function bid_based_market_clearing_model_action(args...)
     end
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
+    end
+    if any_valid_elements(inputs, run_time_options, Interconnection, action)
+        interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
         branch_flow!(args...)

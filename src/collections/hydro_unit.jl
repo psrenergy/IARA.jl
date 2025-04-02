@@ -814,9 +814,14 @@ Get the hydro volume from the previous period.
 If the period is the first one, the initial volume is returned. Otherwise, it is read from the serialized results of the previous stage.
 """
 function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
+    previous_volume = zeros(Float64, length(inputs.collections.hydro_unit))
     if period == 1
-        return inputs.collections.hydro_unit.initial_volume
+        for h in existing_hydro_units
+            previous_volume[h] = hydro_unit_initial_volume(inputs, h)
+        end
     else
+        # The volume at the end of the period is the first subperiod of the next period
         volume = read_serialized_clearing_variable(
             inputs,
             RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
@@ -824,9 +829,11 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, 
             period = period - 1,
             scenario = scenario,
         )
-        # The volume at the end of the period is the first subperiod of the next period
-        return volume.data[end, :]
+        for (i, h) in enumerate(existing_hydro_units)
+            previous_volume[h] = volume.data[end, i]
+        end
     end
+    return previous_volume
 end
 
 function hydro_unit_zone_index(inputs::AbstractInputs, idx::Int)

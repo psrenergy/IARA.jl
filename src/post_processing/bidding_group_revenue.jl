@@ -418,6 +418,9 @@ function _join_independent_and_profile_bid(
 )
     post_processing_dir = post_processing_path(inputs)
     temp_dir = joinpath(output_path(inputs), "temp")
+    if !isdir(temp_dir)
+        mkpath(temp_dir)
+    end
 
     impl = Quiver.csv
     # If there are no independent or profile bids, generate a zero file.

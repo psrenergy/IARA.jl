@@ -600,7 +600,9 @@ function iara_log_configurations(inputs::AbstractInputs)
     if is_market_clearing(inputs)
         @info("Market Clearing Subproblems:")
         @info("")
-        @info(Printf.@sprintf " %-20s %-20s %-20s %-20s" "Subproblem" "Execution Mode" "Integer Variables" "Network Representation")
+        @info(
+            Printf.@sprintf " %-20s %-20s %-20s %-20s" "Subproblem" "Execution Mode" "Integer Variables" "Network Representation"
+        )
         for clearing_model_subproblem in instances(RunTime_ClearingSubproblem.T)
             run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
             iara_log(inputs, run_time_options)

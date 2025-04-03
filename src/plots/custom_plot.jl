@@ -104,7 +104,7 @@ Example:
 
 ```julia
 path = "path/to/file.csv"
-IARA.custom_plot(path, PlotTimeSeriesMean; subperiod = 1:10, agents=["hydro"])
+IARA.custom_plot(path, PlotTimeSeriesQuantiles; subperiod = 1:10, agents=["hydro"])
 ```
 """
 function custom_plot(
@@ -288,8 +288,8 @@ path_1 = "path/to/file.csv"
 path_2 = "path/to/another_file.csv"
 
 
-plot_1 = IARA.custom_plot(path_1, IARA.PlotTimeSeriesMean; subperiod = 1:10, agents=["hydro"])
-plot_2 = IARA.custom_plot(path_2, IARA.PlotTimeSeriesMean; subperiod = 1:10, agents=["thermal"])
+plot_1 = IARA.custom_plot(path_1, IARA.PlotTimeSeriesQuantiles; subperiod = 1:10, agents=["hydro"])
+plot_2 = IARA.custom_plot(path_2, IARA.PlotTimeSeriesQuantiles; subperiod = 1:10, agents=["thermal"])
 
 IARA.custom_plot(plot_1, plot_2; title = "Custom Plot")
 ```

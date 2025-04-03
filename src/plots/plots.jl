@@ -16,13 +16,6 @@ Abstract type for a plot type.
 abstract type PlotType end
 
 """
-    RelationPlotType
-
-Abstract type for a plot type.
-"""
-abstract type RelationPlotType <: PlotType end
-
-"""
     plot_data(::Type{<:PlotType}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
 
 Plot the data for a specific plot type.
@@ -448,7 +441,6 @@ function build_plots(
             "Hydro Initial Volume",
             "hydro_initial_volume",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -464,7 +456,6 @@ function build_plots(
             "Hydro Final Volume",
             "hydro_final_volume",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -481,7 +472,6 @@ function build_plots(
             "Hydro Turbining",
             "hydro_turbining",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -498,7 +488,6 @@ function build_plots(
             "Hydro Inflow",
             "inflow",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -515,7 +504,6 @@ function build_plots(
             "Hydro Generation",
             "hydro_generation",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -532,7 +520,6 @@ function build_plots(
             "Hydro Spillage",
             "hydro_spillage",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -551,7 +538,6 @@ function build_plots(
             "Thermal Generation",
             "thermal_generation",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -570,7 +556,6 @@ function build_plots(
             "Renewable Generation",
             "renewable_generation",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -587,7 +572,6 @@ function build_plots(
             "Renewable Curtailment",
             "renewable_curtailment",
             [
-                PlotTimeSeriesMean,
                 PlotTimeSeriesAll,
                 PlotTimeSeriesQuantiles,
                 PlotTechnologyHistogram,
@@ -607,7 +591,7 @@ function build_plots(
         plot_config_dc_flow = PlotConfig(
             "DC Line Flow",
             "dc_flow",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_dc_flow)
@@ -619,7 +603,7 @@ function build_plots(
         plot_config_deficit = PlotConfig(
             "Deficit",
             "deficit",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_deficit)
@@ -628,7 +612,7 @@ function build_plots(
         plot_config_demand = PlotConfig(
             "DemandUnit",
             "demand",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_demand)
@@ -637,7 +621,7 @@ function build_plots(
         plot_config_generation = PlotConfig(
             "Generation",
             "generation",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles, PlotTimeSeriesStackedMean],
+            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles, PlotTimeSeriesStackedMean],
             inputs,
         )
         push!(plot_configs, plot_config_generation)
@@ -648,7 +632,7 @@ function build_plots(
         plot_config_load_marginal_cost = PlotConfig(
             "Load Marginal Cost",
             "load_marginal_cost",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_load_marginal_cost)
@@ -659,7 +643,7 @@ function build_plots(
         plot_config_energy = PlotConfig(
             "Energy Offer per Bidding Group",
             "bidding_group_energy_offer",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_energy)
@@ -668,7 +652,7 @@ function build_plots(
         plot_config_price = PlotConfig(
             "Price Offer per Bidding Group",
             "bidding_group_price_offer",
-            [PlotTimeSeriesMean, PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_price)
@@ -686,7 +670,7 @@ function build_plots(
                 plot_config_clearing = PlotConfig(
                     final_file_name,
                     split(file, ".")[1],
-                    [PlotTimeSeriesQuantiles, PlotTimeSeriesMean, PlotTimeSeriesAll],
+                    [PlotTimeSeriesQuantiles, PlotTimeSeriesAll],
                     initial_date_time(inputs),
                     time_series_step(inputs),
                 )

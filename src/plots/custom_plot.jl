@@ -104,7 +104,7 @@ Example:
 
 ```julia
 path = "path/to/file.csv"
-IARA.custom_plot(path, PlotTimeSeriesMean; subperiod = 1:10, agents=["hydro"])
+IARA.custom_plot(path, PlotTimeSeriesQuantiles; subperiod = 1:10, agents=["hydro"])
 ```
 """
 function custom_plot(
@@ -163,117 +163,6 @@ function custom_plot(
 end
 
 """
-    IARA.custom_plot(
-        filepath_x::String, 
-        filepath_y::String, 
-        plot_type::Type{<:IARA.RelationPlotType}; 
-        plot_path::String = "",
-        agent_x::String, 
-        agent_y::String, 
-        title::String = "Plot", 
-        x_label::String, 
-        y_label::String, 
-        flip_x::Bool = false, 
-        flip_y::Bool = false, 
-        trace_mode::String = "markers", 
-        kwargs...
-    )
-
-Create a customized plot relating the values for two agents in two different time series files.
-
-- It requires a plot type [`IARA.RelationPlotType`] and a file path to a time series file. 
-- The `plot_path` argument is used to set the path where the plot will be saved. If it is not provided, the plot will not be saved.
-- The `agent_x` and `agent_y` arguments are used to filter the agents to be plotted, in the x and y axis.
-- The `title` argument is used to set the title of the plot, which is "Plot" by default.
-- The `x_label` and `y_label` arguments are used to set the labels of the x and y axis.
-- The `flip_x` and `flip_y` arguments are used to reverse the x and y axis, respectively.
-- The `trace_mode` argument is used to set the trace mode of the plot, which is "markers" by default. 
-- The `kwargs` arguments are used to filter the time series by its dimensions.
-
-Example:
-
-```julia
-path_x = "path/to/file.csv"
-path_y = "path/to/another_file.csv"
-IARA.custom_plot(path_x, path_y, IARA.PlotRelationAll; agent_x = "hydro_1", agent_y = "hydro_1", x_label = "volume", y_label = "turbining", flip_x = true, trace_mode= "line")
-```
-"""
-function custom_plot(
-    filepath_x::String,
-    filepath_y::String,
-    plot_type::Type{<:RelationPlotType};
-    plot_path::String = "",
-    agent_x::String,
-    agent_y::String,
-    title::String = "Plot",
-    x_label::String,
-    y_label::String,
-    flip_x::Bool = false,
-    flip_y::Bool = false,
-    trace_mode::String = "markers",
-    kwargs...,
-)
-    # kwargs contains the dimensions
-    queried_dimensions = keys(kwargs)
-
-    data_1, metadata_1 = read_timeseries_file(filepath_x)
-    data_2, metadata_2 = read_timeseries_file(filepath_y)
-
-    @assert metadata_1.dimensions == metadata_2.dimensions "The dimensions of the two files must be the same"
-    @assert metadata_1.initial_date == metadata_2.initial_date "The initial date of the two files must be the same"
-    @assert metadata_1.frequency == metadata_2.frequency "The frequency of the two files must be the same"
-
-    for dimension in queried_dimensions
-        if !(dimension in metadata_1.dimensions) || !(dimension in metadata_2.dimensions)
-            error("Queried dimension $dimension is not in this files' dimensions")
-        end
-    end
-
-    if !(agent_x in metadata_1.labels)
-        error("Agent $agent_x not found in the first file's labels")
-    end
-    if !(agent_y in metadata_2.labels)
-        error("Agent $agent_y not found in the second file's labels")
-    end
-
-    filtered_data_1 = _filter_time_series(data_1, metadata_1, [agent_x]; kwargs...)
-    filtered_data_2 = _filter_time_series(data_2, metadata_2, [agent_y]; kwargs...)
-
-    time_series_step = if metadata_1.frequency == "month" || metadata_1.frequency == "monthly"
-        Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
-    end
-
-    queried_period = get(kwargs, :period, nothing)
-
-    initial_date = if !isnothing(queried_period)
-        _get_adjusted_date_time(DateTime(metadata_1.initial_date), time_series_step, queried_period)
-    else
-        DateTime(metadata_1.initial_date)
-    end
-
-    return plot_data(
-        plot_type,
-        filtered_data_1,
-        filtered_data_2,
-        agent_x,
-        agent_y,
-        String.(metadata_1.dimensions);
-        title = title,
-        unit_x = metadata_1.unit,
-        unit_y = metadata_2.unit,
-        file_path = plot_path,
-        initial_date = initial_date,
-        time_series_step = time_series_step,
-        x_label = x_label,
-        y_label = y_label,
-        flip_x = flip_x,
-        flip_y = flip_y,
-        trace_mode = trace_mode,
-        kwargs...,
-    )
-end
-
-"""
     IARA.custom_plot(plot_a::Plot, plot_b::Plot; title::String = "Plot")
 
 Create a customized plot from two plots.
@@ -288,8 +177,8 @@ path_1 = "path/to/file.csv"
 path_2 = "path/to/another_file.csv"
 
 
-plot_1 = IARA.custom_plot(path_1, IARA.PlotTimeSeriesMean; subperiod = 1:10, agents=["hydro"])
-plot_2 = IARA.custom_plot(path_2, IARA.PlotTimeSeriesMean; subperiod = 1:10, agents=["thermal"])
+plot_1 = IARA.custom_plot(path_1, IARA.PlotTimeSeriesQuantiles; subperiod = 1:10, agents=["hydro"])
+plot_2 = IARA.custom_plot(path_2, IARA.PlotTimeSeriesQuantiles; subperiod = 1:10, agents=["thermal"])
 
 IARA.custom_plot(plot_1, plot_2; title = "Custom Plot")
 ```

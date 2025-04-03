@@ -16,7 +16,7 @@ IARA.market_clearing(
 
 lmc_name = "load_marginal_cost_ex_post_physical.csv"
 lmc_path = joinpath(compilation_case_01, "outputs", lmc_name)
-IARA.custom_plot(lmc_path, IARA.PlotTimeSeriesMean);
+IARA.custom_plot(lmc_path, IARA.PlotTimeSeriesQuantiles);
 
 compilation_case_02 = joinpath(compile_path, "compilation_case_2")
 case_name = "ui_c3"

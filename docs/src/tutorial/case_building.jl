@@ -69,6 +69,6 @@ IARA.market_clearing(
 
 cmg_name2 = "load_marginal_cost_ex_post_physical.csv"
 cmg_path2 = joinpath(path02_edit_unit, cmg_name2)
-IARA.custom_plot(cmg_path2, IARA.PlotTimeSeriesMean)
+IARA.custom_plot(cmg_path2, IARA.PlotTimeSeriesQuantiles)
 
 # Moving forward with the sequence of tutorial, click [here](clearing_executions.md) to understand how to modify market clearing configurations in an existing case.

@@ -77,7 +77,7 @@ IARA.market_clearing(case_path; output_path = path01_first_execution);
 
 cmg_name = "load_marginal_cost_ex_post_physical.csv"
 cmg_path = joinpath(path01_first_execution, cmg_name)
-IARA.custom_plot(cmg_path, IARA.PlotTimeSeriesMean)
+IARA.custom_plot(cmg_path, IARA.PlotTimeSeriesQuantiles)
 
 # Because the `boto_base_01` example case has 2 buses, there are 2 sets of marginal costs data represented, corresponding respectively to the Eastern and Western buses.
 # On the horizontal axis, we have 6 periods represented sequentially (summer, winter, winter, winter, summer, summer), with each period broken down into 3 subperiods 

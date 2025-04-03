@@ -23,6 +23,7 @@ RUN curl -o iara.zip $IARA_URL \
     && ln -s /IARA/iara_model/share/julia/artifacts/ /root/.julia/  
 
 ENV IARA_PATH=/IARA/iara_model/bin
+ENV IARA_VOLUME=/IARA/iara_volume
 
 RUN chmod +x IARA_ecs.sh
 

@@ -16,13 +16,6 @@ Abstract type for a plot type.
 abstract type PlotType end
 
 """
-    RelationPlotType
-
-Abstract type for a plot type.
-"""
-abstract type RelationPlotType <: PlotType end
-
-"""
     plot_data(::Type{<:PlotType}, data::Array{<:AbstractFloat, N}, agent_names::Vector{String}, dimensions::Vector{String}; kwargs...)
 
 Plot the data for a specific plot type.

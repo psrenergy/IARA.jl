@@ -17,7 +17,6 @@ using IARA
 # - [`IARA.PlotTechnologyHistogramSubperiod`](@ref)
 # - [`IARA.PlotTechnologyHistogramPeriod`](@ref)
 # - [`IARA.PlotTechnologyHistogramPeriodSubperiod`](@ref)
-# - [`IARA.PlotRelationAll`](@ref)
 # ## Creating a custom plot
 # Before anything, we need to define the path to the time series that we are going to plot.
 path_volume = joinpath(@__DIR__, "data", "plot", "hydro_initial_volume.csv")

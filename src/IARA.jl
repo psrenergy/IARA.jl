@@ -55,6 +55,7 @@ end
 
 include("version.jl")
 
+include("optimizer_interface.jl")
 include("enumx.jl")
 include("run_time_options.jl")
 include("revenue_convex_hull.jl")

@@ -230,41 +230,8 @@ function set_custom_hook(
         return nothing
     end
 
-    if inputs.args.write_lp
-        filename = lp_filename(inputs, run_time_options, t, scen, subscenario)
-        function write_lp_hook(model)
-            optimize!(model; ignore_optimize_hook = true)
-            optimizer = JuMP.backend(model).optimizer.model.optimizer
-            # We make this statement because when using ParametricOptInterface the 
-            # written might not pass all parameters to the file.
-            # Writing directly from the lower leve API will ensure that exactly the 
-            # model being solved is written.
-            _pass_names_to_solver(optimizer)
-            HiGHS.Highs_writeModel(optimizer.inner, filename)
-            return nothing
-        end
-
-        if JuMP.solver_name(subproblem) != "Parametric Optimizer with HiGHS attached"
-            JuMP.write_to_file(subproblem, filename)
-        end
-    else
-        function treat_infeasibilities(model)
-            JuMP.optimize!(model; ignore_optimize_hook = true)
-            status = JuMP.termination_status(model)
-            if status == MOI.INFEASIBLE
-                optimizer = JuMP.backend(model).optimizer.model.optimizer
-                filename = lp_filename(inputs, run_time_options, t, scen, subscenario)
-
-                # We make this statement because when using ParametricOptInterface the 
-                # written might not pass all parameters to the file.
-                # Writing directly from the lower leve API will ensure that exactly the 
-                # model being solved is written.
-                _pass_names_to_solver(optimizer)
-                HiGHS.Highs_writeModel(optimizer.inner, filename)
-            end
-            return nothing
-        end
-    end
+    # Definition of what should be the name of the lp file in case we wish to write it.
+    lp_file = lp_filename(inputs, run_time_options, t, scen, subscenario)
 
     function all_optimize_hooks(model)
         if integer_variable_representation(inputs, run_time_options) ==
@@ -279,12 +246,16 @@ function set_custom_hook(
         else
             error("Invalid integer variable representation.")
         end
+
+        # Optimize the model
+        JuMP.optimize!(model; ignore_optimize_hook = true)
+
         if inputs.args.write_lp
             if JuMP.solver_name(subproblem) == "Parametric Optimizer with HiGHS attached"
-                write_lp_hook(model)
+                inputs.args.optimizer.write_lp_hook(model, lp_file)
             end
         else
-            treat_infeasibilities(model)
+            inputs.args.optimizer.treat_infeasibilities_hook(model, lp_file)
         end
         return nothing
     end

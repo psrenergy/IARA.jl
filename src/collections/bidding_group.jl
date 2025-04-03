@@ -34,6 +34,8 @@ Collection representing the bidding groups in the system.
     parent_profile_file::String = ""
     complementary_grouping_profile_file::String = ""
     minimum_activation_level_profile_file::String = ""
+    # caches
+    has_generation_besides_virtual_reservoirs::Vector{Bool} = []
 end
 
 # ---------------------------------------------------------------------
@@ -87,6 +89,7 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
     bidding_group.minimum_activation_level_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
+    bidding_group.has_generation_besides_virtual_reservoirs = zeros(Bool, num_bidding_groups)
 
     update_time_series_from_db!(bidding_group, inputs.db, initial_date_time(inputs))
 
@@ -297,10 +300,6 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     return num_errors
 end
 
-# ---------------------------------------------------------------------
-# Collection getters
-# ---------------------------------------------------------------------
-
 function update_number_of_bid_segments!(inputs::AbstractInputs, value::Int)
     value_array = fill(value, length(index_of_elements(inputs, BiddingGroup)))
     update_number_of_bid_segments!(inputs, value_array)
@@ -334,12 +333,73 @@ function update_number_of_complementary_grouping!(inputs::AbstractInputs, values
     return nothing
 end
 
+function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::AbstractInputs)
+    # A bidding group has no variables if all of its units are hydro units associated with virtual reservoirs
+
+    number_of_units = zeros(Int, number_of_elements(inputs, BiddingGroup))
+    number_of_hydro_units_in_virtual_reservoirs = zeros(Int, number_of_elements(inputs, BiddingGroup))
+
+    hydro_units = index_of_elements(inputs, HydroUnit)
+    thermal_units = index_of_elements(inputs, ThermalUnit)
+    renewable_units = index_of_elements(inputs, RenewableUnit)
+    battery_units = index_of_elements(inputs, BatteryUnit)
+
+    for h in hydro_units
+        bg_index = hydro_unit_bidding_group_index(inputs, h)
+        if !is_null(bg_index)
+            number_of_units[bg_index] += 1
+            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+               is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
+                number_of_hydro_units_in_virtual_reservoirs[bg_index] += 1
+            end
+        end
+    end
+
+    for t in thermal_units
+        bg_index = thermal_unit_bidding_group_index(inputs, t)
+        if !is_null(bg_index)
+            number_of_units[bg_index] += 1
+        end
+    end
+
+    for r in renewable_units
+        bg_index = renewable_unit_bidding_group_index(inputs, r)
+        if !is_null(bg_index)
+            number_of_units[bg_index] += 1
+        end
+    end
+
+    for b in battery_units
+        bg_index = battery_unit_bidding_group_index(inputs, b)
+        if !is_null(bg_index)
+            number_of_units[bg_index] += 1
+        end
+    end
+
+    for i in 1:number_of_elements(inputs, BiddingGroup)
+        if number_of_units[i] == 0
+            inputs.collections.bidding_group.has_generation_besides_virtual_reservoirs[i] = true
+        elseif number_of_units[i] - number_of_hydro_units_in_virtual_reservoirs[i] > 0
+            inputs.collections.bidding_group.has_generation_besides_virtual_reservoirs[i] = true
+        end
+        # If the bidding group has a positive number of units but all of them are hydro units associated with virtual reservoirs, the generation is all guided by the virtual reservoirs
+    end
+
+    return nothing
+end
+
+# ---------------------------------------------------------------------
+# Collection getters
+# ---------------------------------------------------------------------
+
 """
     markup_heuristic_bids(bg::BiddingGroup, i::Int)
 
 Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.MARKUP_HEURISTIC` bids.
 """
 markup_heuristic_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.MARKUP_HEURISTIC
+
+has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg.has_generation_besides_virtual_reservoirs[i]
 
 """
     optimize_bids(bg::BiddingGroup, i::Int)

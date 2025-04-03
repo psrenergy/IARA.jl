@@ -10,7 +10,7 @@ function _write_costs_bg_file(
     post_processing_dir = post_processing_path(inputs)
     tempdir = joinpath(output_path(inputs), "temp")
 
-    num_bidding_groups = length(inputs.collections.bidding_group)
+    num_bidding_groups = number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     num_buses = length(inputs.collections.bus)
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
@@ -33,6 +33,15 @@ function _write_costs_bg_file(
         dimensions = ["period", "scenario", "subperiod", "bid_segment"]
     end
 
+    labels_by_pairs = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.bidding_group,
+        inputs.collections.bus;
+        index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+    )
+
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -41,7 +50,7 @@ function _write_costs_bg_file(
         # Remove bid_segment dimension for costs
         dimensions = dimensions[1:end-1],
         unit = "\$",
-        labels = _get_bidding_group_bus_labels(inputs),
+        labels = labels_by_pairs,
         run_time_options,
         dir_path = post_processing_dir,
     )
@@ -90,13 +99,21 @@ function _write_costs_bg_file(
                             num_units = length(labels)
 
                             for unit in 1:num_units
+                                if collection == "HydroUnit" &&
+                                   clearing_hydro_representation(inputs) ==
+                                   Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                                    if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, unit)
+                                        # The cost of this unit is written within the virtual reservoir scope
+                                        continue
+                                    end
+                                end
                                 bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
                                 bus_index = generic_unit_bus_index(inputs, collection, unit)
                                 if is_null(bidding_group_index) || is_null(bus_index)
                                     continue
                                 end
-                                bidding_group_bus_index =
-                                    _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
+                                bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
+                                bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, labels_by_pairs)
                                 bidding_group_costs[bidding_group_bus_index] += costs_reader.data[unit]
                             end
                         end
@@ -121,13 +138,20 @@ function _write_costs_bg_file(
                         num_units = length(labels)
 
                         for unit in 1:num_units
+                            if collection == "HydroUnit" &&
+                               clearing_hydro_representation(inputs) ==
+                               Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                                if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, unit)
+                                    continue
+                                end
+                            end
                             bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
                             bus_index = generic_unit_bus_index(inputs, collection, unit)
                             if is_null(bidding_group_index) || is_null(bus_index)
                                 continue
                             end
-                            bidding_group_bus_index =
-                                _get_bidding_group_bus_index(bidding_group_index, bus_index, num_buses)
+                            bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
+                            bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, labels_by_pairs)
                             bidding_group_costs[bidding_group_bus_index] += costs_reader.data[unit]
                         end
                     end
@@ -240,7 +264,7 @@ function create_bidding_group_cost_files(
     model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    num_bidding_groups = length(inputs.collections.bidding_group)
+    num_bidding_groups = any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
 
     if num_bidding_groups == 0
         return

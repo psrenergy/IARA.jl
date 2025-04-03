@@ -430,7 +430,8 @@ function write_bid_output(
     end
 
     # TODO: This function deserves a refactor
-    all_bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
+    all_bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
     bidding_groups_filtered = index_of_elements(
         inputs,
         BiddingGroup;

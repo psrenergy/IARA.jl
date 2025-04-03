@@ -75,7 +75,7 @@ cmg_name_exante = "load_marginal_cost_ex_ante_physical.csv"
 cmg_path_expost = joinpath(path03_edit_clearing, cmg_name_expost)
 cmg_path_exante = joinpath(path03_edit_clearing, cmg_name_exante)
 ; #hide
-IARA.custom_plot(cmg_path_expost, IARA.PlotTimeSeriesMean)
-IARA.custom_plot(cmg_path_exante, IARA.PlotTimeSeriesMean)
+IARA.custom_plot(cmg_path_expost, IARA.PlotTimeSeriesQuantiles)
+IARA.custom_plot(cmg_path_exante, IARA.PlotTimeSeriesQuantiles)
 
 # The next step of this `Getting started` tutorial describes the (heuristic bid pre-processing) applied to dispatches executed in bid-based mode.

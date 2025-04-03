@@ -51,7 +51,7 @@ hydro_final_volume_all =
     joinpath(PATH_LINEAR_2, "outputs", "hydro_final_volume.csv") # hide
 IARA.custom_plot(
     hydro_final_volume_all,
-    IARA.PlotTimeSeriesMean;
+    IARA.PlotTimeSeriesQuantiles;
     title = "Reservoir Final Volume",
     agents = ["Hydro1"],
     period = 1:2,
@@ -110,7 +110,7 @@ hydro_final_volume_all =
     joinpath(PATH_LINEAR_10, "outputs", "hydro_final_volume.csv") # hide
 IARA.custom_plot(
     hydro_final_volume_all,
-    IARA.PlotTimeSeriesMean;
+    IARA.PlotTimeSeriesQuantiles;
     title = "Reservoir Final Volume",
     agents = ["Hydro1"],
     period = 1:2,
@@ -121,7 +121,7 @@ IARA.custom_plot(
 
 IARA.custom_plot(
     hydro_final_volume_all,
-    IARA.PlotTimeSeriesMean;
+    IARA.PlotTimeSeriesQuantiles;
     title = "Reservoir Final Volume",
     agents = ["Hydro1"],
     period = 3:10,
@@ -182,7 +182,7 @@ hydro_final_volume_all =
     joinpath(PATH_CYCLIC_2, "outputs", "hydro_final_volume.csv") # hide
 IARA.custom_plot(
     hydro_final_volume_all,
-    IARA.PlotTimeSeriesMean;
+    IARA.PlotTimeSeriesQuantiles;
     title = "Reservoir Final Volume",
     agents = ["Hydro1"],
     period = 1:2,

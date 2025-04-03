@@ -11,15 +11,12 @@ using IARA
 # ## Plot types overview
 # The `IARA.custom_plot` function can generate the following types of plots:
 # - [`IARA.PlotTimeSeriesAll`](@ref)
-# - [`IARA.PlotTimeSeriesMean`](@ref)
 # - [`IARA.PlotTimeSeriesStackedMean`](@ref)
 # - [`IARA.PlotTimeSeriesQuantiles`](@ref)
 # - [`IARA.PlotTechnologyHistogram`](@ref)
 # - [`IARA.PlotTechnologyHistogramSubperiod`](@ref)
 # - [`IARA.PlotTechnologyHistogramPeriod`](@ref)
 # - [`IARA.PlotTechnologyHistogramPeriodSubperiod`](@ref)
-# - [`IARA.PlotRelationAll`](@ref)
-# - [`IARA.PlotRelationMean`](@ref)
 # ## Creating a custom plot
 # Before anything, we need to define the path to the time series that we are going to plot.
 path_volume = joinpath(@__DIR__, "data", "plot", "hydro_initial_volume.csv")
@@ -49,8 +46,8 @@ IARA.custom_plot(path_volume, IARA.PlotTimeSeriesAll; agents = ["FURNAS"])
 
 # Now we can see the volume of the Hydro Unit `FURNAS` in all scenarios. This is a bit more clear, but we can still improve it.
 # Let's say that we are only interested in the mean volume of the Hydro Unit `FURNAS` in all scenarios.
-# We can use the `IARA.PlotTimeSeriesMean` plot type to generate this plot.
-IARA.custom_plot(path_volume, IARA.PlotTimeSeriesMean; agents = ["FURNAS"])
+# We can use the `IARA.PlotTimeSeriesQuantiles` plot type to generate this plot.
+IARA.custom_plot(path_volume, IARA.PlotTimeSeriesQuantiles; agents = ["FURNAS"])
 
 #
 #
@@ -61,7 +58,7 @@ IARA.custom_plot(path_volume, IARA.PlotTimeSeriesMean; agents = ["FURNAS"])
 # let's try to plot the first 10 periods.
 IARA.custom_plot(
     path_volume,
-    IARA.PlotTimeSeriesMean;
+    IARA.PlotTimeSeriesQuantiles;
     agents = ["FURNAS"],
     period = 1:10,
 )
@@ -74,27 +71,8 @@ IARA.custom_plot(
 # Let's put a more specific title to the plot.
 IARA.custom_plot(
     path_volume,
-    IARA.PlotTimeSeriesMean;
+    IARA.PlotTimeSeriesQuantiles;
     agents = ["FURNAS"],
     period = 1:10,
     title = "Volume of FURNAS in the first 10 periods",
-)
-
-#
-#
-#
-
-# ## Advanced: Relation Plots
-# The `IARA.custom_plot` function can also generate relation plots between two variables.
-# Let's say that we are interested in finding the relation between the available volume and the turbining of the Hydro Unit `FURNAS`.
-# We will pass the path to the volume time series first, because we want it to be in the x axis.
-IARA.custom_plot(
-    path_volume,
-    path_turbining,
-    IARA.PlotRelationMean;
-    agent_x = "FURNAS",
-    agent_y = "FURNAS",
-    x_label = "Volume",
-    y_label = "Turbining",
-    title = "Relation between Volume and Turbining of FURNAS",
 )

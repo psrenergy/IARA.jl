@@ -25,13 +25,19 @@ function hydro_volume!(
     hydro_units_with_reservoir =
         index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_with_reservoir])
     hydro_blks = hydro_subperiods(inputs)
+    hydro_blks_not_1 = hydro_blks[2:end]
 
     @variable(
         model.jump_model,
         hydro_volume[b in hydro_blks, h in hydro_units],
-        lower_bound = hydro_unit_min_volume(inputs, h),
-        upper_bound = hydro_unit_max_volume(inputs, h),
     )
+
+    for h in hydro_units
+        for b in hydro_blks_not_1
+            set_lower_bound(hydro_volume[b, h], hydro_unit_min_volume(inputs, h))
+            set_upper_bound(hydro_volume[b, h], hydro_unit_max_volume(inputs, h))
+        end
+    end
 
     if !is_market_clearing(inputs)
         @variable(
@@ -39,8 +45,6 @@ function hydro_volume!(
             hydro_volume_state[h in hydro_units_with_reservoir],
             SDDP.State,
             initial_value = hydro_unit_initial_volume(inputs, h),
-            lower_bound = hydro_unit_min_volume(inputs, h),
-            upper_bound = hydro_unit_max_volume(inputs, h),
         )
     elseif clearing_has_volume_variables(inputs, run_time_options)
         placeholder_previous_volume = 0.0

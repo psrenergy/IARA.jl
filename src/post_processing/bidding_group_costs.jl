@@ -103,6 +103,7 @@ function _write_costs_bg_file(
                                    clearing_hydro_representation(inputs) ==
                                    Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
                                     if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, unit)
+                                        # The cost of this unit is written within the virtual reservoir scope
                                         continue
                                     end
                                 end
@@ -263,8 +264,6 @@ function create_bidding_group_cost_files(
     model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    outputs_dir = output_path(inputs)
-
     num_bidding_groups = any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
 
     if num_bidding_groups == 0

@@ -339,20 +339,18 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
     number_of_units = zeros(Int, number_of_elements(inputs, BiddingGroup))
     number_of_hydro_units_in_virtual_reservoirs = zeros(Int, number_of_elements(inputs, BiddingGroup))
 
-    # Should I check for batteries and demands and something else?
     hydro_units = index_of_elements(inputs, HydroUnit)
     thermal_units = index_of_elements(inputs, ThermalUnit)
     renewable_units = index_of_elements(inputs, RenewableUnit)
+    battery_units = index_of_elements(inputs, BatteryUnit)
 
     for h in hydro_units
         bg_index = hydro_unit_bidding_group_index(inputs, h)
         if !is_null(bg_index)
-            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-                if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
-                    number_of_hydro_units_in_virtual_reservoirs[bg_index] += 1
-                end
-            else
-                number_of_units[bg_index] += 1
+            number_of_units[bg_index] += 1
+            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+               is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
+                number_of_hydro_units_in_virtual_reservoirs[bg_index] += 1
             end
         end
     end
@@ -371,12 +369,20 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
         end
     end
 
+    for b in battery_units
+        bg_index = battery_unit_bidding_group_index(inputs, b)
+        if !is_null(bg_index)
+            number_of_units[bg_index] += 1
+        end
+    end
+
     for i in 1:number_of_elements(inputs, BiddingGroup)
-        if number_of_units[i] > 0
+        if number_of_units[i] == 0
             inputs.collections.bidding_group.has_generation_besides_virtual_reservoirs[i] = true
-        elseif number_of_hydro_units_in_virtual_reservoirs[i] == 0
+        elseif number_of_units[i] - number_of_hydro_units_in_virtual_reservoirs[i] > 0
             inputs.collections.bidding_group.has_generation_besides_virtual_reservoirs[i] = true
         end
+        # If the bidding group has a positive number of units but all of them are hydro units associated with virtual reservoirs, the generation is all guided by the virtual reservoirs
     end
 
     return nothing

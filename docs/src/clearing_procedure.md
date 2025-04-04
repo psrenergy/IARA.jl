@@ -24,13 +24,15 @@ In this problem, the Market Clearing is calculated with all integer variables, a
 
 ### Ex-Ante Commercial
 
-The Ex-Ante Commercial step is responsible for calculating the clearing prices of the day-ahead market.
+The Ex-Ante Commercial step is responsible for determining the clearing prices of the day-ahead market.
 
-To calculate the prices there are three options:
+There are three approaches to calculate these prices:
 
-1. MIP that fixes variables and then runs with them fixed.
-2. LP that receives variables to be fixed from a previous problem: it can only receive the binary variables from the ex-ante physical problem.
-3. LP that runs relaxed.
+1. **Post-MIP Solution Approach**: After solving the Mixed-Integer Program (MIP), the binary variables are fixed according to the solution, and the resulting Linear Program (LP) is solved. The dual solution of this LP provides the clearing prices.
+
+2. **LP with Fixed Binary Variables**: This approach involves solving the LP that is derived by fixing the binary variables to specific values. Currently, the values of the binary variables are taken from the solution of the ex-ante physical problem.
+
+3. **Relaxation of Integrality Constraints**: In this method, the integrality constraints of the MIP are relaxed, and the resulting LP is solved to determine the clearing prices.
 
 ### Ex-Post
 
@@ -42,23 +44,29 @@ At a given period, the Virtual Reservoir balance is added to the ex-post inflow 
 
 ### Ex-Post Physical
 
-The Ex-Post Physical step is responsible for calculating the physical generation amount that will be dispatched in real-time. The physical units are calculated based on the bids submitted by the agents and the constraints of the system. In the Virtual Reservoir, the allocation of inflows for this agent is added to its balance.
+The Ex-Post Physical step is responsible for calculating the physical generation amount that will be dispatched in real-time. The physical units are determined based on the bids submitted by the agents and the system's constraints. In the Virtual Reservoir, the allocation of inflows for the agent is added to its balance.
 
-The binary variable can be treated as follows:
+The binary variable can be handled in the following ways:
 
-1. MIP that fixes variables and then runs with them fixed.
-2. LP that receives variables to be fixed from a previous problem: the binary variables from the ex-ante physical or commercial problem.
-3. LP that runs relaxed.
+1. **Post-MIP Solution Approach**: The Mixed-Integer Program (MIP) fixes the binary variables, and then the program is run with these variables fixed.
+
+2. **LP with Fixed Binary Variables**: The Linear Program (LP) uses binary variables that are fixed based on the solution from a prior problem, such as the ex-ante physical or commercial problem.
+
+3. **Relaxation of Integrality Constraints**: The LP is run with relaxed integrality constraints, allowing for continuous variables instead of discrete binary variables.
 
 ### Ex-Post Commercial
 
+Ex-Post Commercial
+
 The Ex-Post Commercial step is responsible for calculating the clearing prices of the real-time market.
 
-To calculate the prices there are three options:
+There are three approaches to calculate these prices:
 
-1. MIP that fixes variables and then runs with them fixed.
-2. LP that receives variables to be fixed from a previous problem: it can receive the binary variables from the ex-ante or ex-post physical problems.
-3. LP that runs relaxed.
+1. **Post-MIP Solution Approach**: The Mixed-Integer Program (MIP) fixes the variables, and then the program is run with these variables fixed.
+
+2. **LP with Fixed Binary Variables**: The Linear Program (LP) receives binary variables that are fixed based on the solution of a prior problem. These variables can come from either the ex-ante or ex-post physical problems.
+
+3. **Relaxation of Integrality Constraints**: The LP is run with relaxed integrality constraints, allowing for continuous variables instead of binary ones.
 
 In all procedures, it's possible to add the FCF from the MinCost module and a wave-guide curve as a tie-break for the Virtual Reservoir bids.
 

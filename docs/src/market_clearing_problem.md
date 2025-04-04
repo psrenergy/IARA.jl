@@ -4,7 +4,7 @@ This problem is defined at period $t$ and scenario $\omega$.
 
 ## Sets
 
-Lists new sets, not present in the centralized operation or price taker subproblems.
+Lists new sets, not present in the centralized operation subproblems.
 
 - ``K(i, n)``: Set of segment offers at node $n$ for the asset owner $i$.
 - ``K^M(i)``: Set of bid profiles for the asset owner $i$.
@@ -40,7 +40,7 @@ We add the following parameters to the list of parameters of the strategic subpr
 
 ## Variables
 
-Lists new variables, not present in the centralized operation or price taker subproblems.
+Lists new variables, not present in the centralized operation subproblems.
 
 ### Flexible Bids
 
@@ -59,7 +59,7 @@ Lists new variables, not present in the centralized operation or price taker sub
 - ``\lambda^{WG}_{r, p}``: Convex combination coefficients for the waveguide point $p$ of virtual reservoir $r$.
 
 ## Expressions
-Lists new expressions, not present in the centralized operation or price taker subproblems.
+Lists new expressions, not present in the centralized operation subproblems.
 
 ### Virtual Reservoirs
 - ``\delta^{WG}_{r, h}``: Hydro $h$ volume distance to waveguide points of virtual reservoir $r$.

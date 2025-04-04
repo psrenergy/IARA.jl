@@ -25,8 +25,8 @@ function interconnection_flow!(
     @variable(
         model.jump_model,
         interconnection_flow[b in subperiods(inputs), l in interconnections],
-        lower_bound = -interconnection_capacity_from(inputs, l),
-        upper_bound = interconnection_capacity_to(inputs, l),
+        lower_bound = -interconnection_capacity_from(inputs, l) * subperiod_duration_in_hours(inputs, b),
+        upper_bound = interconnection_capacity_to(inputs, l) * subperiod_duration_in_hours(inputs, b),
     )
 
     return nothing

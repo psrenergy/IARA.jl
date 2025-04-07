@@ -514,7 +514,9 @@ function hydro_available_energy(
     available_water = zeros(length(hydro_units))
     total_inflow_in_period = zeros(length(hydro_units))
     for h in existing_hydro_units, blk in 1:number_of_subperiods(inputs)
-        total_inflow_in_period[h] += inflow[hydro_unit_gauging_station_index(inputs, h), blk] * m3_per_second_to_hm3_per_hour() * subperiod_duration_in_hours(inputs, blk)
+        total_inflow_in_period[h] +=
+            inflow[hydro_unit_gauging_station_index(inputs, h), blk] * m3_per_second_to_hm3_per_hour() *
+            subperiod_duration_in_hours(inputs, blk)
     end
     available_water_ignoring_upstream_plants =
         hydro_volume_from_previous_period(inputs, period, scenario) .+ total_inflow_in_period

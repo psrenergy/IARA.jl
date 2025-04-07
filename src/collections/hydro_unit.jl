@@ -824,7 +824,7 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, 
     for h in existing_hydro_units
         previous_volume[h] = hydro_unit_initial_volume(inputs, h)
     end
-    
+
     if period != 1
         # The volume at the end of the period is the first subperiod of the next period
         volume = read_serialized_clearing_variable(

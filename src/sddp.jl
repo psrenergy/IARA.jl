@@ -253,11 +253,10 @@ function set_custom_hook(
         # Optimize the model
         JuMP.optimize!(model; ignore_optimize_hook = true)
 
-    if inputs.args.write_lp
-
-        inputs.args.optimizer.write_lp_hook(model, lp_file)
-    end
-    inputs.args.optimizer.treat_infeasibilities_hook(model, lp_file)
+        if inputs.args.write_lp
+            inputs.args.optimizer.write_lp_hook(model, lp_file)
+        end
+        inputs.args.optimizer.treat_infeasibilities_hook(model, lp_file)
         return nothing
     end
     set_optimize_hook(subproblem, all_optimize_hooks)

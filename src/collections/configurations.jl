@@ -483,7 +483,7 @@ function validate(configurations::Configurations)
 end
 
 function _validate_cost_based_representation_must_have_fcf_cuts_file(
-    configurations::Configurations
+    configurations::Configurations,
 )
     num_errors = 0
     has_fcf_cuts_file = !isempty(configurations.fcf_cuts_file)

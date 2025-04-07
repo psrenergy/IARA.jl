@@ -117,7 +117,8 @@ Initialize the Configurations collection from the database.
 function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.path_case = path_case(inputs.db)
     configurations.language = PSRI.get_parms(inputs.db, "Configuration", "language")[1]
-    configurations.train_mincost_time_limit_sec = PSRI.get_parms(inputs.db, "Configuration", "train_mincost_time_limit_sec")[1]
+    configurations.train_mincost_time_limit_sec =
+        PSRI.get_parms(inputs.db, "Configuration", "train_mincost_time_limit_sec")[1]
     configurations.number_of_periods =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_periods")[1]
     configurations.number_of_scenarios =

@@ -24,8 +24,8 @@ Configurations for the problem.
     number_of_subperiods::Int = 0
     number_of_nodes::Int = 0
     number_of_subscenarios::Int = 0
-    iteration_limit::Int = 0
-    time_limit::Float64 = 0.0
+    train_mincost_iteration_limit::Int = 0
+    train_mincost_time_limit_sec::Float64 = 0.0
     initial_date_time::DateTime = DateTime(0)
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
@@ -117,7 +117,7 @@ Initialize the Configurations collection from the database.
 function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.path_case = path_case(inputs.db)
     configurations.language = PSRI.get_parms(inputs.db, "Configuration", "language")[1]
-    configurations.time_limit = PSRI.get_parms(inputs.db, "Configuration", "time_limit")[1]
+    configurations.train_mincost_time_limit_sec = PSRI.get_parms(inputs.db, "Configuration", "train_mincost_time_limit_sec")[1]
     configurations.number_of_periods =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_periods")[1]
     configurations.number_of_scenarios =
@@ -128,8 +128,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "number_of_nodes")[1]
     configurations.number_of_subscenarios =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_subscenarios")[1]
-    configurations.iteration_limit =
-        PSRI.get_parms(inputs.db, "Configuration", "iteration_limit")[1]
+    configurations.train_mincost_iteration_limit =
+        PSRI.get_parms(inputs.db, "Configuration", "train_mincost_iteration_limit")[1]
     configurations.initial_date_time = DateTime(
         PSRI.get_parms(inputs.db, "Configuration", "initial_date_time")[1],
         "yyyy-mm-ddTHH:MM:SS",
@@ -383,8 +383,8 @@ function validate(configurations::Configurations)
         @error("Language must be either \"en\" or \"pt\".")
         num_errors += 1
     end
-    if configurations.time_limit < 0
-        @error("time_limit must be non-negative.")
+    if configurations.train_mincost_time_limit_sec < 0
+        @error("train_mincost_time_limit_sec must be non-negative.")
         num_errors += 1
     end
     if configurations.number_of_periods <= 0
@@ -645,10 +645,10 @@ Return the language of the case.
 language(inputs::AbstractInputs) = inputs.collections.configurations.language
 
 """
-    time_limit(inputs::AbstractInputs)
+    train_mincost_time_limit_sec(inputs::AbstractInputs)
 Return the time limit for the case.
 """
-time_limit(inputs::AbstractInputs) = inputs.collections.configurations.time_limit
+train_mincost_time_limit_sec(inputs::AbstractInputs) = inputs.collections.configurations.train_mincost_time_limit_sec
 
 """
     path_parp(inputs::AbstractInputs)
@@ -734,15 +734,15 @@ Return all subscenarios to simulate.
 subscenarios(inputs::AbstractInputs, run_time_options) = collect(1:number_of_subscenarios(inputs, run_time_options))
 
 """
-    iteration_limit(inputs::AbstractInputs)
+    train_mincost_iteration_limit(inputs::AbstractInputs)
 
 Return the iteration limit.
 """
-function iteration_limit(inputs::AbstractInputs)
-    if is_null(inputs.collections.configurations.iteration_limit)
+function train_mincost_iteration_limit(inputs::AbstractInputs)
+    if is_null(inputs.collections.configurations.train_mincost_iteration_limit)
         return nothing
     else
-        return inputs.collections.configurations.iteration_limit
+        return inputs.collections.configurations.train_mincost_iteration_limit
     end
 end
 

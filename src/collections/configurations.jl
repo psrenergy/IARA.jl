@@ -478,43 +478,6 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
-    num_errors += _validate_cost_based_representation_must_have_fcf_cuts_file(configurations)
-    return num_errors
-end
-
-function _validate_cost_based_representation_must_have_fcf_cuts_file(
-    configurations::Configurations,
-)
-    num_errors = 0
-    has_fcf_cuts_file = !isempty(configurations.fcf_cuts_file)
-    if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.COST_BASED &&
-       !has_fcf_cuts_file
-        @error(
-            "Ex-ante physical construction type is COST_BASED, but no FCF cuts file is defined."
-        )
-        num_errors += 1
-    end
-    if configurations.construction_type_ex_ante_commercial == Configurations_ConstructionType.COST_BASED &&
-       !has_fcf_cuts_file
-        @error(
-            "Ex-ante commercial construction type is COST_BASED, but no FCF cuts file is defined."
-        )
-        num_errors += 1
-    end
-    if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.COST_BASED &&
-       !has_fcf_cuts_file
-        @error(
-            "Ex-post physical construction type is COST_BASED, but no FCF cuts file is defined."
-        )
-        num_errors += 1
-    end
-    if configurations.construction_type_ex_post_commercial == Configurations_ConstructionType.COST_BASED &&
-       !has_fcf_cuts_file
-        @error(
-            "Ex-post commercial construction type is COST_BASED, but no FCF cuts file is defined."
-        )
-        num_errors += 1
-    end
     return num_errors
 end
 

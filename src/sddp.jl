@@ -13,7 +13,7 @@ function build_model(
     run_time_options::RunTimeOptions,
 )
     optimizer = optimizer_with_attributes(
-        () -> POI.Optimizer(HiGHS.Optimizer()),
+        () -> POI.Optimizer(inputs.args.optimizer.optimizer()),
         MOI.Silent() => true,
     )
 

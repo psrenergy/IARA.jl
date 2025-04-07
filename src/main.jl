@@ -522,9 +522,12 @@ function run_clearing_simulation(
 
     @info("   Running simulation $(run_time_options.clearing_model_subproblem)")
 
-    if use_fcf_in_clearing(inputs)
-        read_cuts_to_model!(model, inputs; current_period = period)
-    end
+    read_cuts_into_clearing_model!(
+        model,
+        inputs,
+        run_time_options,
+        period,
+    )
 
     simulation_results = simulate(model, inputs, outputs, run_time_options; current_period = period)
 

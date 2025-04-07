@@ -330,6 +330,71 @@ function is_physical_problem(run_time_options::RunTimeOptions)
 end
 
 """
+    clearing_has_state_variables(inputs::Inputs, run_time_options::RunTimeOptions)
+
+Check if the clearing has any representation that requires state variables.
+"""
+function clearing_has_state_variables(inputs::Inputs, run_time_options::RunTimeOptions)
+    n_volume_states = number_of_elements(inputs, HydroUnit; filters = [operates_with_reservoir])
+    if n_volume_states > 0
+        return true
+    end
+    n_battery_states = number_of_elements(inputs, BatteryUnit)
+    if n_battery_states > 0
+        return true
+    end
+    return false
+end
+
+"""
+    read_cuts_into_clearing_model!(
+        model::ProblemModel, 
+        inputs::Inputs, 
+        run_time_options::RunTimeOptions, 
+        period::Int
+    )
+
+Check if the clearing representation must read cuts. If so, it reads them.
+"""
+function read_cuts_into_clearing_model!(
+    model::ProblemModel,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    period::Int,
+)
+    # We could choose to add cuts to the model as a user
+    if use_fcf_in_clearing(inputs)
+        read_cuts_to_model!(model, inputs; current_period = period)
+        # some combinations have to read cuts
+    elseif clearing_representation_must_read_cuts(inputs, run_time_options)
+        if !has_fcf_cuts_to_read(inputs)
+            error("Construction type is COST_BASED, the problem has state variables and no cuts file was provided.")
+        end
+        read_cuts_to_model!(model, inputs; current_period = period)
+    end
+    return nothing
+end
+
+"""
+    clearing_representation_must_read_cuts(
+        inputs::Inputs, 
+        run_time_options::RunTimeOptions
+    )
+
+Check if the clearing representation must read cuts.
+"""
+function clearing_representation_must_read_cuts(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+)
+    if construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED &&
+       clearing_has_state_variables(inputs, run_time_options)
+        return true
+    end
+    return false
+end
+
+"""
     clearing_has_volume_variables(inputs::Inputs, run_time_options::RunTimeOptions)
 
 Check if the clearing has volume variables.

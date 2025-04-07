@@ -146,28 +146,31 @@ function read_cuts_to_model!(
     fcf_cuts_path_case = joinpath(path_case(inputs), fcf_cuts_file(inputs))
     fcf_cuts_path_output = joinpath(output_path(inputs), fcf_cuts_file(inputs))
     fcf_cuts_path = isfile(fcf_cuts_path_case) ? fcf_cuts_path_case : fcf_cuts_path_output
+    if !isfile(fcf_cuts_path)
+        error("FCF cuts file not found: $fcf_cuts_path")
+    end
 
     # When current_period is provided, we read the cuts for that period only
     if current_period !== nothing
-        @nospecialize(function node_name_parser(::Type{Int}, name::String)
+        function current_period_node_name_parser(::Type{Int}, name::String)
             node = parse(Int, name)
             if node != current_period
                 return nothing
             else
                 return node
             end
-        end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser)
+        end
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser = current_period_node_name_parser)
         return model
     end
 
     # Otherwise, for linear policy graphs, we read the cuts for all periods
     if linear_policy_graph(inputs)
-        function node_name_parser(::Type{Int}, name::String)
+        function all_periods_node_name_parser(::Type{Int}, name::String)
             return parse(Int, name)
         end
 
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser = all_periods_node_name_parser)
         return model
     end
 
@@ -250,13 +253,11 @@ function set_custom_hook(
         # Optimize the model
         JuMP.optimize!(model; ignore_optimize_hook = true)
 
-        if inputs.args.write_lp
-            if JuMP.solver_name(subproblem) == "Parametric Optimizer with HiGHS attached"
-                inputs.args.optimizer.write_lp_hook(model, lp_file)
-            end
-        else
-            inputs.args.optimizer.treat_infeasibilities_hook(model, lp_file)
-        end
+    if inputs.args.write_lp
+
+        inputs.args.optimizer.write_lp_hook(model, lp_file)
+    end
+    inputs.args.optimizer.treat_infeasibilities_hook(model, lp_file)
         return nothing
     end
     set_optimize_hook(subproblem, all_optimize_hooks)

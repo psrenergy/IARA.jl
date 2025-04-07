@@ -30,11 +30,12 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 MemoizedSerialization = "0.5.3"
+PlotlyLight = "0.11"
 Printf = "1.11.0"
 Quiver = "0.1.9"
+SDDP = "=1.8.1"
 Statistics = "1.11.1"
 StatsBase = "0.34.4"
-SDDP = "=1.8.1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

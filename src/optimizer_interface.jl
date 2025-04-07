@@ -77,7 +77,7 @@ function _pass_constraint_names_to_solver(optimizer; warn::Bool = true)
 end
 
 function default_optimizer()
-    optimizer = HiGHS.Optimizer()
+    optimizer = HiGHS.Optimizer
     write_lp_hook = function _write_lp_hook(model, lp_filename)
         optimizer = JuMP.backend(model).optimizer.model.optimizer
         # We make this statement because when using ParametricOptInterface the 

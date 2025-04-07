@@ -507,20 +507,21 @@ function hydro_available_energy(
     period::Int,
     scenario::Int,
 )
-    hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
+    hydro_units = index_of_elements(inputs, HydroUnit)
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
     inflow = time_series_inflow(inputs, run_time_options)
 
     available_water = zeros(length(hydro_units))
-    total_inflow_in_period = [
-        sum(
-            inflow[h, blk] * m3_per_second_to_hm3_per_hour() * subperiod_duration_in_hours(inputs, blk) for
-            blk in 1:number_of_subperiods(inputs)
-        ) for h in hydro_units
-    ]
+    total_inflow_in_period = zeros(length(hydro_units))
+    for h in existing_hydro_units, blk in 1:number_of_subperiods(inputs)
+        total_inflow_in_period[h] +=
+            inflow[hydro_unit_gauging_station_index(inputs, h), blk] * m3_per_second_to_hm3_per_hour() *
+            subperiod_duration_in_hours(inputs, blk)
+    end
     available_water_ignoring_upstream_plants =
         hydro_volume_from_previous_period(inputs, period, scenario) .+ total_inflow_in_period
 
-    for h in hydro_units
+    for h in existing_hydro_units
         current_hydro = h
         # Sum 'available_water_ignoring_upstream_plants' of plant 'h' to 'available_water' in all its downstream plants
         while !is_null(current_hydro)

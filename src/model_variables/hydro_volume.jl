@@ -33,7 +33,7 @@ function hydro_volume!(
         upper_bound = hydro_unit_max_volume(inputs, h),
     )
 
-    if !is_market_clearing(inputs)
+    if is_mincost(inputs) || clearing_has_volume_variables(inputs, run_time_options)
         @variable(
             model.jump_model,
             hydro_volume_state[h in hydro_units_with_reservoir],
@@ -42,7 +42,9 @@ function hydro_volume!(
             lower_bound = hydro_unit_min_volume(inputs, h),
             upper_bound = hydro_unit_max_volume(inputs, h),
         )
-    elseif clearing_has_volume_variables(inputs, run_time_options)
+    end
+
+    if clearing_has_volume_variables(inputs, run_time_options)
         placeholder_previous_volume = 0.0
         @variable(
             model.jump_model,
@@ -139,10 +141,6 @@ function hydro_volume!(
         labels = hydro_unit_label(inputs)[hydro_units],
         run_time_options,
     )
-
-    if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
-        add_symbol_to_serialize!(outputs, :hydro_volume)
-    end
 
     return nothing
 end

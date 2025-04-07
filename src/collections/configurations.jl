@@ -25,6 +25,7 @@ Configurations for the problem.
     number_of_nodes::Int = 0
     number_of_subscenarios::Int = 0
     iteration_limit::Int = 0
+    time_limit::Float64 = 0.0
     initial_date_time::DateTime = DateTime(0)
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
@@ -116,6 +117,7 @@ Initialize the Configurations collection from the database.
 function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.path_case = path_case(inputs.db)
     configurations.language = PSRI.get_parms(inputs.db, "Configuration", "language")[1]
+    configurations.time_limit = PSRI.get_parms(inputs.db, "Configuration", "time_limit")[1]
     configurations.number_of_periods =
         PSRI.get_parms(inputs.db, "Configuration", "number_of_periods")[1]
     configurations.number_of_scenarios =
@@ -381,6 +383,10 @@ function validate(configurations::Configurations)
         @error("Language must be either \"en\" or \"pt\".")
         num_errors += 1
     end
+    if configurations.time_limit < 0
+        @error("time_limit must be non-negative.")
+        num_errors += 1
+    end
     if configurations.number_of_periods <= 0
         @error("Number of periods must be positive.")
         num_errors += 1
@@ -637,6 +643,12 @@ path_case(inputs::AbstractInputs) = inputs.collections.configurations.path_case
 Return the language of the case.
 """
 language(inputs::AbstractInputs) = inputs.collections.configurations.language
+
+"""
+    time_limit(inputs::AbstractInputs)
+Return the time limit for the case.
+"""
+time_limit(inputs::AbstractInputs) = inputs.collections.configurations.time_limit
 
 """
     path_parp(inputs::AbstractInputs)

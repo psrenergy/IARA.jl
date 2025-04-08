@@ -619,9 +619,8 @@ function iara_log_configurations(inputs::AbstractInputs)
         _integer_variable_representation = integer_variable_representation(inputs, run_time_options)
         _network_representation = network_representation(inputs, run_time_options)
         @info("Min cost Subproblems:")
-        @info("")
-        @info("Integer variables: $(enum_name_to_string(_integer_variable_representation))")
-        @info("Network representation: $(enum_name_to_string(_network_representation))")
+        @info("   Integer variables: $(enum_name_to_string(_integer_variable_representation))")
+        @info("   Network representation: $(enum_name_to_string(_network_representation))")
     end
 
     return nothing
@@ -1305,6 +1304,13 @@ has_hour_subperiod_map(inputs::AbstractInputs) = hour_subperiod_map_file(inputs)
 Return the file with the FCF cuts.
 """
 fcf_cuts_file(inputs::AbstractInputs) = inputs.collections.configurations.fcf_cuts_file
+
+"""
+    fcf_cuts_path(inputs::AbstractInputs)
+
+Return the path to the FCF cuts file.
+"""
+fcf_cuts_path(inputs::AbstractInputs) = joinpath(path_case(inputs), fcf_cuts_file(inputs))
 
 """
     has_fcf_cuts(inputs::AbstractInputs)

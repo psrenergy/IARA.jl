@@ -70,8 +70,6 @@ function train_model!(model::ProblemModel, inputs::Inputs)
         model.policy_graph;
         stopping_rules = [
             SDDP.SimulationStoppingRule(),
-            # Stop if for 10 iterations the bound had not changed more than 1e-2
-            SDDP.BoundStalling(10, 1e-2),
         ],
         iteration_limit = train_mincost_iteration_limit(inputs),
         time_limit = train_mincost_time_limit_sec(inputs),
@@ -147,11 +145,9 @@ function read_cuts_to_model!(
     end
 
     # Check if the file exists in the case or output directory
-    fcf_cuts_path_case = joinpath(path_case(inputs), fcf_cuts_file(inputs))
-    fcf_cuts_path_output = joinpath(output_path(inputs), fcf_cuts_file(inputs))
-    fcf_cuts_path = isfile(fcf_cuts_path_case) ? fcf_cuts_path_case : fcf_cuts_path_output
-    if !isfile(fcf_cuts_path)
-        error("FCF cuts file not found: $fcf_cuts_path")
+    fcf_cuts_filepath = fcf_cuts_path(inputs)
+    if !isfile(fcf_cuts_filepath)
+        error("FCF cuts file not found: $fcf_cuts_filepath")
     end
 
     # When current_period is provided, we read the cuts for that period only
@@ -164,7 +160,7 @@ function read_cuts_to_model!(
                 return node
             end
         end
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser = current_period_node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser = current_period_node_name_parser)
         return model
     end
 
@@ -174,7 +170,7 @@ function read_cuts_to_model!(
             return parse(Int, name)
         end
 
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser = all_periods_node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser = all_periods_node_name_parser)
         return model
     end
 
@@ -185,7 +181,7 @@ function read_cuts_to_model!(
         @nospecialize(function node_name_parser(::Type{Int}, name::String)
             return parse(Int, name) + policy_node_to_simulation_node
         end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser)
     end
 
     return model

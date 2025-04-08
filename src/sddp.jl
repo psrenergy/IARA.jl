@@ -160,7 +160,11 @@ function read_cuts_to_model!(
                 return node
             end
         end
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser = current_period_node_name_parser)
+        SDDP.read_cuts_from_file(
+            model.policy_graph,
+            fcf_cuts_filepath;
+            node_name_parser = current_period_node_name_parser,
+        )
         return model
     end
 

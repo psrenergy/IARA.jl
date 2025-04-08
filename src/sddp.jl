@@ -252,9 +252,7 @@ function set_custom_hook(
                     list_of_conflicting_constraints = ConstraintRef[]
                     for (F, S) in list_of_constraint_types(model)
                         for con in all_constraints(model, F, S)
-                            constraint_conflict_status = get_attribute(con, MOI.ConstraintConflictStatus())
-                            if constraint_conflict_status == MOI.IN_CONFLICT ||
-                               constraint_conflict_status == MOI.MAYBE_IN_CONFLICT
+                            if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
                                 push!(list_of_conflicting_constraints, con)
                             end
                         end

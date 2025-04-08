@@ -77,7 +77,12 @@ function flexible_demand!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    flexible_demands = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_flexible])
+    flexible_demands = index_of_elements_that_appear_at_some_point_in_study_horizon(
+        inputs,
+        DemandUnit;
+        run_time_options,
+        filters = [is_flexible],
+    )
 
     add_symbol_to_query_from_subproblem_result!(outputs, [:attended_flexible_demand, :demand_curtailment])
 

@@ -109,7 +109,7 @@ function thermal_commitment!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    thermal_units_with_commitment = index_of_elements(
+    thermal_units_with_commitment = index_of_elements_that_appear_at_some_point_in_study_horizon(
         inputs,
         ThermalUnit;
         run_time_options,

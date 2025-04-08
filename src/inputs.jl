@@ -328,7 +328,7 @@ function log_inputs(inputs::Inputs)
     @info("")
     @info("Cuts file:")
     if has_fcf_cuts_to_read(inputs)
-        @info("  $(fcf_cuts_file(inputs))")
+        @info("   $(fcf_cuts_file(inputs))")
     else
         @info("   No cuts file")
     end

@@ -13,7 +13,7 @@ function build_model(
     run_time_options::RunTimeOptions,
 )
     optimizer = optimizer_with_attributes(
-        () -> POI.Optimizer(inputs.args.optimizer.optimizer()),
+        () -> POI.Optimizer(inputs.args.optimizer()),
         MOI.Silent() => true,
     )
 
@@ -68,9 +68,11 @@ end
 function train_model!(model::ProblemModel, inputs::Inputs)
     SDDP.train(
         model.policy_graph;
-        stopping_rules = [SDDP.SimulationStoppingRule()],
-        time_limit = time_limit(inputs),
-        iteration_limit = iteration_limit(inputs),
+        stopping_rules = [
+            SDDP.SimulationStoppingRule(),
+        ],
+        iteration_limit = train_mincost_iteration_limit(inputs),
+        time_limit = train_mincost_time_limit_sec(inputs),
         log_file = joinpath(output_path(inputs), "sddp.log"),
     )
 
@@ -143,11 +145,9 @@ function read_cuts_to_model!(
     end
 
     # Check if the file exists in the case or output directory
-    fcf_cuts_path_case = joinpath(path_case(inputs), fcf_cuts_file(inputs))
-    fcf_cuts_path_output = joinpath(output_path(inputs), fcf_cuts_file(inputs))
-    fcf_cuts_path = isfile(fcf_cuts_path_case) ? fcf_cuts_path_case : fcf_cuts_path_output
-    if !isfile(fcf_cuts_path)
-        error("FCF cuts file not found: $fcf_cuts_path")
+    fcf_cuts_filepath = fcf_cuts_path(inputs)
+    if !isfile(fcf_cuts_filepath)
+        error("FCF cuts file not found: $fcf_cuts_filepath")
     end
 
     # When current_period is provided, we read the cuts for that period only
@@ -160,7 +160,11 @@ function read_cuts_to_model!(
                 return node
             end
         end
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser = current_period_node_name_parser)
+        SDDP.read_cuts_from_file(
+            model.policy_graph,
+            fcf_cuts_filepath;
+            node_name_parser = current_period_node_name_parser,
+        )
         return model
     end
 
@@ -170,7 +174,7 @@ function read_cuts_to_model!(
             return parse(Int, name)
         end
 
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser = all_periods_node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser = all_periods_node_name_parser)
         return model
     end
 
@@ -181,7 +185,7 @@ function read_cuts_to_model!(
         @nospecialize(function node_name_parser(::Type{Int}, name::String)
             return parse(Int, name) + policy_node_to_simulation_node
         end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_path; node_name_parser)
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser)
     end
 
     return model
@@ -235,6 +239,46 @@ function set_custom_hook(
 
     # Definition of what should be the name of the lp file in case we wish to write it.
     lp_file = lp_filename(inputs, run_time_options, t, scen, subscenario)
+    function write_lp_hook(model::JuMP.Model, filename::String)
+        return JuMP.write_to_file(model, filename)
+    end
+
+    function treat_infeasibilities_hook(model::JuMP.Model, filename::String)
+        status = JuMP.termination_status(model)
+        if JuMP.termination_status(model) == MOI.INFEASIBLE
+            try
+                compute_conflict!(model)
+                if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
+                    list_of_conflicting_constraints = ConstraintRef[]
+                    for (F, S) in list_of_constraint_types(model)
+                        for con in all_constraints(model, F, S)
+                            if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
+                                push!(list_of_conflicting_constraints, con)
+                            end
+                        end
+                    end
+                    if length(list_of_conflicting_constraints) > 0
+                        conflict_file_path = filename * ".iis"
+                        @info("Conflicting constraints found! Writing to file: $conflict_file_path")
+                        # Write the conflicting constraints to a file
+                        open(conflict_file_path, "w") do io
+                            for con in list_of_conflicting_constraints
+                                println(io, con)
+                            end
+                        end
+                    end
+                else
+                    @info("No conflicting constraints found.")
+                end
+            catch e
+                @info("Model was infeasible but unable to compute conflict due to: $e")
+                @info("Writing the model to file: $filename")
+                JuMP.write_to_file(model, filename)
+            end
+            error("Model is infeasible.")
+        end
+        return nothing
+    end
 
     function all_optimize_hooks(model)
         if integer_variable_representation(inputs, run_time_options) ==
@@ -254,9 +298,9 @@ function set_custom_hook(
         JuMP.optimize!(model; ignore_optimize_hook = true)
 
         if inputs.args.write_lp
-            inputs.args.optimizer.write_lp_hook(model, lp_file)
+            write_lp_hook(model, lp_file)
         end
-        inputs.args.optimizer.treat_infeasibilities_hook(model, lp_file)
+        treat_infeasibilities_hook(model, lp_file)
         return nothing
     end
     set_optimize_hook(subproblem, all_optimize_hooks)

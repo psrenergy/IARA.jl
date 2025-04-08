@@ -649,7 +649,14 @@ language(inputs::AbstractInputs) = inputs.collections.configurations.language
     train_mincost_time_limit_sec(inputs::AbstractInputs)
 Return the time limit for the case.
 """
-train_mincost_time_limit_sec(inputs::AbstractInputs) = inputs.collections.configurations.train_mincost_time_limit_sec
+function train_mincost_time_limit_sec(inputs::AbstractInputs)
+    if is_null(inputs.collections.configurations.train_mincost_time_limit_sec) ||
+         inputs.collections.configurations.train_mincost_time_limit_sec == 0
+        return nothing
+    else
+        return inputs.collections.configurations.train_mincost_time_limit_sec
+    end
+end
 
 """
     path_parp(inputs::AbstractInputs)

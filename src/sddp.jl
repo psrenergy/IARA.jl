@@ -70,11 +70,11 @@ function train_model!(model::ProblemModel, inputs::Inputs)
         model.policy_graph;
         stopping_rules = [
             SDDP.SimulationStoppingRule(),
-            SDDP.TimeLimit(train_mincost_time_limit_sec(inputs)),
-            SDDP.IterationLimit(train_mincost_iteration_limit(inputs)),
             # Stop if for 10 iterations the bound had not changed more than 1e-2
             SDDP.BoundStalling(10, 1e-2),
         ],
+        iteration_limit = train_mincost_iteration_limit(inputs),
+        time_limit = train_mincost_time_limit_sec(inputs),
         log_file = joinpath(output_path(inputs), "sddp.log"),
     )
 

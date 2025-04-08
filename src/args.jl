@@ -23,7 +23,7 @@ mutable struct Args
     # This is passed only when using the package.
     # It is not possible to pass it through the ARGS
     # constant.
-    optimizer::IARAOptimizer
+    optimizer::Any
 end
 
 function Args(args::Vector{String})
@@ -51,7 +51,7 @@ function Args(
     plot_outputs::Bool = true,
     plot_ui_outputs::Bool = false,
     period::Int = -1,
-    optimizer::IARAOptimizer = default_optimizer(),
+    optimizer::Any = HiGHS.Optimizer,
 )
     if (run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
        period <= 0

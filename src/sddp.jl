@@ -13,7 +13,7 @@ function build_model(
     run_time_options::RunTimeOptions,
 )
     optimizer = optimizer_with_attributes(
-        () -> POI.Optimizer(inputs.args.optimizer.optimizer()),
+        () -> POI.Optimizer(inputs.args.optimizer()),
         MOI.Silent() => true,
     )
 
@@ -68,9 +68,13 @@ end
 function train_model!(model::ProblemModel, inputs::Inputs)
     SDDP.train(
         model.policy_graph;
-        stopping_rules = [SDDP.SimulationStoppingRule()],
-        time_limit = train_mincost_time_limit_sec(inputs),
-        iteration_limit = train_mincost_iteration_limit(inputs),
+        stopping_rules = [
+            SDDP.SimulationStoppingRule(),
+            SDDP.TimeLimit(train_mincost_time_limit_sec(inputs)),
+            SDDP.IterationLimit(train_mincost_iteration_limit(inputs)),
+            # Stop if for 10 iterations the bound had not changed more than 1e-2
+            SDDP.BoundStalling(10, 1e-2),
+        ],
         log_file = joinpath(output_path(inputs), "sddp.log"),
     )
 
@@ -235,6 +239,48 @@ function set_custom_hook(
 
     # Definition of what should be the name of the lp file in case we wish to write it.
     lp_file = lp_filename(inputs, run_time_options, t, scen, subscenario)
+    function write_lp_hook(model::JuMP.Model, filename::String)
+        return JuMP.write_to_file(model, filename)
+    end
+
+    function treat_infeasibilities_hook(model::JuMP.Model, filename::String)
+        status = JuMP.termination_status(model)
+        if JuMP.termination_status(model) == MOI.INFEASIBLE
+            try
+                compute_conflict!(model)
+                if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
+                    list_of_conflicting_constraints = ConstraintRef[]
+                    for (F, S) in list_of_constraint_types(model)
+                        for con in all_constraints(model, F, S)
+                            constraint_conflict_status = get_attribute(con, MOI.ConstraintConflictStatus())
+                            if constraint_conflict_status == MOI.IN_CONFLICT ||
+                               constraint_conflict_status == MOI.MAYBE_IN_CONFLICT
+                                push!(list_of_conflicting_constraints, con)
+                            end
+                        end
+                    end
+                    if length(list_of_conflicting_constraints) > 0
+                        conflict_file_path = filename * ".iis"
+                        @info("Conflicting constraints found! Writing to file: $conflict_file_path")
+                        # Write the conflicting constraints to a file
+                        open(conflict_file_path, "w") do io
+                            for con in list_of_conflicting_constraints
+                                println(io, con)
+                            end
+                        end
+                    end
+                else
+                    @info("No conflicting constraints found.")
+                end
+            catch e
+                @info("Model was infeasible but unable to compute conflict due to: $e")
+                @info("Writing the model to file: $filename")
+                JuMP.write_to_file(model, filename)
+            end
+            error("Model is infeasible.")
+        end
+        return nothing
+    end
 
     function all_optimize_hooks(model)
         if integer_variable_representation(inputs, run_time_options) ==
@@ -254,9 +300,9 @@ function set_custom_hook(
         JuMP.optimize!(model; ignore_optimize_hook = true)
 
         if inputs.args.write_lp
-            inputs.args.optimizer.write_lp_hook(model, lp_file)
+            write_lp_hook(model, lp_file)
         end
-        inputs.args.optimizer.treat_infeasibilities_hook(model, lp_file)
+        treat_infeasibilities_hook(model, lp_file)
         return nothing
     end
     set_optimize_hook(subproblem, all_optimize_hooks)

@@ -651,7 +651,7 @@ Return the time limit for the case.
 """
 function train_mincost_time_limit_sec(inputs::AbstractInputs)
     if is_null(inputs.collections.configurations.train_mincost_time_limit_sec) ||
-         inputs.collections.configurations.train_mincost_time_limit_sec == 0
+       inputs.collections.configurations.train_mincost_time_limit_sec == 0
         return nothing
     else
         return inputs.collections.configurations.train_mincost_time_limit_sec

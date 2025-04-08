@@ -200,7 +200,7 @@ function hydro_generation!(
             ],
         )
 
-        hydro_units_with_minimum_outflow = index_of_elements(
+        hydro_units_with_minimum_outflow = index_of_elements_that_appear_at_some_point_in_study_horizon(
             inputs,
             HydroUnit;
             run_time_options,

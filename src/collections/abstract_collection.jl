@@ -114,3 +114,39 @@ function iara_log(@nospecialize(collection::C)) where {C <: AbstractCollection}
         @info("   $(nameof(C)): $(length(collection)) element(s)")
     end
 end
+
+function index_of_elements_that_appear_at_some_point_in_study_horizon(
+    inputs,
+    collection::Type{<:AbstractCollection};
+    run_time_options::RunTimeOptions = RunTimeOptions(),
+    @nospecialize(filters::Vector{<:Function} = Function[]),
+)
+    # In order to initialize the outputs we have to take the filters at every period.
+    # There could be a new hydro with minimum outflow that will only be considered in 
+    # the study after a few years. This is the function to use to correctly 
+    # initialize the outputs when we need any kind of filters.
+    c = get_collection(inputs, collection)
+    element_indexes = Int[]
+    for period in 1:number_of_periods(inputs)
+        period_date_time = date_time_from_period(inputs, period)
+        # Update the collection at this point in time
+        update_time_series_from_db!(c, inputs.db, period_date_time)
+        idxs = index_of_elements(
+            inputs,
+            collection;
+            run_time_options,
+            filters,
+        )
+        for idx in idxs
+            if idx in element_indexes
+                continue
+            end
+            push!(element_indexes, idx)
+        end
+    end
+    # Reset the collection to the first period
+    period_date_time = date_time_from_period(inputs, 1)
+    update_time_series_from_db!(c, inputs.db, period_date_time)
+    sort!(element_indexes)
+    return element_indexes
+end

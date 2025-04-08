@@ -64,7 +64,12 @@ function hydro_commitment!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    hydro_units_with_commitment = index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_commitment])
+    hydro_units_with_commitment = index_of_elements_that_appear_at_some_point_in_study_horizon(
+        inputs,
+        HydroUnit;
+        run_time_options,
+        filters = [has_commitment],
+    )
 
     if run_time_options.clearing_model_subproblem != RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
         add_symbol_to_query_from_subproblem_result!(outputs, [:hydro_commitment])

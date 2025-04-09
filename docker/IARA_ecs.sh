@@ -171,7 +171,7 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_summary/ --recursive  
     echo "Uploading game_inputs.zip to game_round_1 folder..."
-    aws s3 cp $IARA_VOLUME/game_inputs.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_1/game_inputs.zip
+    aws s3 cp $IARA_VOLUME/$IARA_CASE/game_inputs.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_1/game_inputs.zip
     echo "Completed."    
     exit 0
 fi

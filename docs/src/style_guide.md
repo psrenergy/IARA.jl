@@ -7,7 +7,7 @@ In this document we will cover some specific guidelines for IARA.jl.
 
 ## Code Formatting
 
-To ensure uniform formatting, the project uses `JuliaFormatter.jl`. You can format your code just by running the following commands:
+To ensure uniform formatting, this project uses `JuliaFormatter.jl`. You can format your code just by running the following commands:
 
 ```bash
 julia --project=format 'format/format.jl'

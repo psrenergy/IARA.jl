@@ -253,6 +253,9 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
     aws s3 cp $IARA_VOLUME/$IARA_CASE/bids_round_$IARA_GAME_ROUND.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip
+    echo "Removing temp dir $IARA_VOLUME/$IARA_CASE..."
+    rm -rf $IARA_VOLUME/$IARA_CASE
+    echo "$IARA_VOLUME/$IARA_CASE successfully removed"
     save_iara_case_to_next_round
 
     echo "Completed."    

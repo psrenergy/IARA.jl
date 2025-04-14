@@ -55,8 +55,8 @@ function download_and_unzip_case () {
         echo "Using volume path"
         unzip -qo $IARA_VOLUME/$IARA_CASE/game_inputs.zip -d $CASE_PATH
     else
-        if ! wait_for_s3_file; then
-            echo "Erro: arquivo game_inputs.zip não encontrado no S3."
+        if ! wait_for_game_inputs_file; then
+            echo "Erro: file game_inputs.zip not found on S3."
             exit 1
         fi
         
@@ -137,19 +137,19 @@ function save_iara_log() {
     echo "Completed."
 }
 
-function wait_for_s3_file () {
+function wait_for_game_inputs_file () {
     local timeout=60
     local interval=2
     local elapsed=0
 
-    echo "Aguardando o arquivo da rodada anterior (timeout: ${timeout}s)..."
+    echo "Waiting for previous round file (timeout: ${timeout}s)..."
 
     while ! aws s3 ls s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip > /dev/null 2>&1; do
         if [ "$elapsed" -ge "$timeout" ]; then
-            echo "Timeout: Arquivo não encontrado"
+            echo "Timeout: File not found"
             return 1
         fi
-        echo "Arquivo não encontrado. Aguardando..."
+        echo "File not found. Waiting..."
         sleep $interval
         elapsed=$((elapsed + 5))
     done

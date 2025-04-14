@@ -35,7 +35,7 @@ function download_and_unzip_complete_case () {
 
     # unzip bids
     echo "Using volume path"
-    unzip -qo $IARA_VOLUME/$IARA_CASE/bids.zip -d $CASE_PATH
+    unzip -qo $IARA_VOLUME/$IARA_CASE/bids_round_$IARA_GAME_ROUND.zip -d $CASE_PATH
 
     
     # unzip heuristic bids 
@@ -252,7 +252,7 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
 
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
-    aws s3 cp $IARA_VOLUME/$IARA_CASE/bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip
+    aws s3 cp $IARA_VOLUME/$IARA_CASE/bids_round_$IARA_GAME_ROUND.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip
     save_iara_case_to_next_round
 
     echo "Completed."    

@@ -217,6 +217,17 @@ function set_custom_hook(
         return nothing
     end
 
+    function bellman_term_hook(model::JuMP.Model)
+        # This is the hook to be called at market clearing to make a tiebreaker weight
+        # to the fcf.
+        if use_fcf_in_clearing(inputs) || clearing_representation_must_read_cuts(inputs, run_time_options)
+            node = SDDP.get_node(model)
+            bellman_term = SDDP.bellman_term(node.bellman_function)
+            JuMP.set_objective_coefficient(model, bellman_term, market_clearing_tiebreaker_weight(inputs))
+        end
+        return nothing
+    end
+
     function fix_integer_variables_hook(model::JuMP.Model)
         # On min cost and other we can use it as an SDDiP.
         # On market clearing we would like to solve, fix and 
@@ -293,6 +304,8 @@ function set_custom_hook(
         else
             error("Invalid integer variable representation.")
         end
+
+        bellman_term_hook(model)
 
         # Optimize the model
         JuMP.optimize!(model; ignore_optimize_hook = true)

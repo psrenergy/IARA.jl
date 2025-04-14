@@ -154,7 +154,7 @@ function wait_for_game_inputs_file () {
         elapsed=$((elapsed + 5))
     done
 
-    echo "Arquivo encontrado."
+    echo "File found."
     return 0
 }
 

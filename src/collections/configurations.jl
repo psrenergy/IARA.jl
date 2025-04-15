@@ -30,7 +30,7 @@ Configurations for the problem.
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
-    expected_number_of_repeats_per_node::Vector{Int} = []
+    expected_number_of_repeats_per_node::Vector{Float64} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =

@@ -50,7 +50,7 @@ function get_revenue_files(inputs::AbstractInputs)
         ["bidding_group_revenue_ex_ante"]
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
         ["bidding_group_revenue_ex_post"]
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
         ["bidding_group_revenue_ex_ante", "bidding_group_revenue_ex_post"]
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
         [""]
@@ -66,7 +66,7 @@ function get_profit_file(inputs::AbstractInputs)
         "bidding_group_profit_ex_ante"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
         "bidding_group_profit_ex_post"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
         "bidding_group_profit_total"
     elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
         ""
@@ -84,7 +84,7 @@ function get_load_marginal_cost_files(inputs::AbstractInputs)
 
     filenames = String[]
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
         ex_ante_suffixes = ["_ex_ante_commercial", "_ex_ante_physical"]
         ex_post_suffixes = ["_ex_post_commercial", "_ex_post_physical"]
 
@@ -129,7 +129,7 @@ function get_generation_files(inputs::AbstractInputs)
 
     filenames = String[]
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
         ex_ante_suffixes = ["_ex_ante_physical", "_ex_ante_commercial"]
         ex_post_suffixes = ["_ex_post_physical", "_ex_post_commercial"]
 

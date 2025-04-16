@@ -220,7 +220,8 @@ function set_custom_hook(
     function bellman_term_hook(model::JuMP.Model)
         # This is the hook to be called at market clearing to make a tiebreaker weight
         # to the fcf.
-        if use_fcf_in_clearing(inputs) || clearing_representation_must_read_cuts(inputs, run_time_options)
+        if use_fcf_in_clearing(inputs) && construction_type(inputs, run_time_options) ==  Configurations_ConstructionType.HYBRID &&
+            clearing_has_state_variables(inputs, run_time_options)
             node = SDDP.get_node(model)
             bellman_term = SDDP.bellman_term(node.bellman_function)
             JuMP.set_objective_coefficient(model, bellman_term, market_clearing_tiebreaker_weight(inputs))

@@ -493,7 +493,8 @@ function _join_independent_and_profile_bid(
         )
     end
     # Check for the existence of ex_post files, which are present if the settlement type is ex post or dual.
-    if settlement_type(inputs) in [IARA.Configurations_SettlementType.EX_POST, IARA.Configurations_SettlementType.DOUBLE]
+    if settlement_type(inputs) in
+       [IARA.Configurations_SettlementType.EX_POST, IARA.Configurations_SettlementType.DOUBLE]
         filepath_independent = joinpath(
             post_processing_dir,
             "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),

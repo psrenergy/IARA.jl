@@ -117,7 +117,7 @@ function _write_revenue_with_subscenarios(
                                 subperiod = subperiod,
                                 Symbol(dim_name) => bid_segment,
                             )
-                            # In the dual settlement, the ex-post generation is the difference between the ex-post and ex-ante generation
+                            # In the double settlement, the ex-post generation is the difference between the ex-post and ex-ante generation
                             # The total revenue is the sum of the ex-ante and ex-post revenue
                             sum_generation .+= generation_ex_post_reader.data .- generation_ex_ante_reader.data
                         else
@@ -437,7 +437,7 @@ function _join_independent_and_profile_bid(
     if settlement_type(inputs) in
        [IARA.Configurations_SettlementType.EX_ANTE, IARA.Configurations_SettlementType.DOUBLE]
         # For ex ante settlement type, the final revenue is calculated as the product of ex_post generation and ex_ante spot price.
-        # For dual settlement type, the ex_ante revenue is the product of ex_ante generation and ex_ante spot price.
+        # For double settlement type, the ex_ante revenue is the product of ex_ante generation and ex_ante spot price.
         has_subscenarios = settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
         filepath_independent = joinpath(
             post_processing_dir,
@@ -572,7 +572,7 @@ function post_processing_bidding_group_total_revenue(
         ""
     end
 
-    # Summing ex_ante and ex_post for dual settlement
+    # Summing ex_ante and ex_post for double settlement
 
     revenue_ex_ante_reader = open_time_series_output(
         inputs,

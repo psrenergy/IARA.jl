@@ -148,49 +148,11 @@ end
 
 Add a Thermal Unit to the database.
 
-Required arguments:
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "ThermalUnit"))
 
-  - `label::String`: label of the Thermal Unit.
-  - `has_commitment::Int`: commitment status (0 -> false, 1 -> true)
-    - _Default set to_ `0`
-  - `shutdown_cost::Float64`: shutdown cost `[\$]`
-    - _Default set to_ `0.0`
-  - `bus_id::String`: Bus label for the thermal unit (only if the Bus already exists)
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-  - `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-    - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
-
-    
-Optional arguments:
-  - `max_ramp_up::Float64`: maximum ramp up rate. `[MW/min]`
-  - `max_ramp_down::Float64`: maximum ramp down rate. `[MW/min]`
-  - `min_uptime::Float64`: minimum uptime `[hours]`
-  - `max_uptime::Float64`: maximum uptime `[hours]`
-  - `min_downtime::Float64`: minimum downtime `[hours]`
-  - `max_startups::Int`: maximum startups
-  - `max_shutdowns::Int`: maximum shutdowns
-  - `commitment_initial_condition::Int`: Initial condition of the commitment of the thermal unit
-  - `generation_initial_condition::Float64`: Initial condition of the generation of the thermal unit
-  - `uptime_initial_condition::Float64`: Initial condition of the uptime of the thermal unit `[subperiods]`
-  - `downtime_initial_condition::Float64`: Initial condition of the downtime of the thermal unit `[subperiods]`
-
----
-
-**Time Series Parameters**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns:
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: existing status of the thermal unit (0 -> false, 1 -> true)
-  - `max_generation::Vector{Float64}`: maximum generation `[MWh]`
-  - `om_cost::Vector{Float64}`
-  - `startup_cost::Vector{Float64}`: startup cost `[\$/MWh]`
-    - _Mandatory if_ `has_commitment` _is set to_ `1`
-  
-Optional columns:
-  - `min_generation::Vector{Float64}`: minimum generation `[MWh]`
-    - _Ignored if_ `has_commitment` _is set to_ `0`
+!!! note "Note"
+    - `biddinggroup_id` is required if `IARA.RunMode` is not set to `TRAIN_MIN_COST`.
+    -  `min_generation` is ignored if `has_commitment` is set to `0`.
 
 Example:
 ```julia

@@ -89,26 +89,10 @@ end
 
 Add a Gauging Station to the database.
 
-Required arguments:
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "GaugingStation"))
 
-  - `label::String`: Hydro Unit label.
-  - `inflow::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-
-Optional arguments:
-
-  - `gaugingstation_downstream::String`: Downstream gauging station label (only if the Gauging Station already exists).
-
---- 
-
-**Time Series inflow**
-
-The `inflow` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-
-Required columns
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `historical_inflow::Vector{Float64}`: Historical inflow data. `[hm³/s]`
-    - _Mandatory if_ `Configuration.inflow_scenarios_files` _is set to_ `NONE`
+!!! note "Note"
+    - `historical_inflow` is required if `Configuration.inflow_scenarios_files` _is set to_ `NONE`
 
 Example:
 ```julia

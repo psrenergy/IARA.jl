@@ -103,32 +103,7 @@ end
 
 Add a Demand to the database.
 
-Required arguments:
-
-  - `label::String`: Demand label
-  - `demand_unit_type::DemandUnit_DemandType.T`: Demand type ([`IARA.DemandUnit_DemandType`](@ref))
-    - _Default set to_ `DemandUnit_DemandType.INELASTIC`
-  - `bus_id::String`: Bus label (only if the Bus already exists).
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-
-Optional arguments:
-
-  - `max_shift_up::Float64`: Maximum shift up `[MWh]`
-  - `max_shift_down::Float64`: Maximum shift down `[MWh]`
-  - `curtailment_cost::Float64`: Curtailment cost `[\$/MWh]`
-  - `max_curtailment::Float64`: Maximum curtailment `[MWh]`
-  - `max_demand::Float64`: Maximum demand `[MW]`
-  
---- 
-
-**Time Series**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns: 
-
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the demand is existing or not (0 -> not existing, 1 -> existing)
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "DemandUnit"))
 
 Example:
 ```julia

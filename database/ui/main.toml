@@ -14,7 +14,7 @@ collections = [
     "bus",
     "zone",
     "branch",
-    "dc_line",
+    "d_c_line",
     "interconnection",
     # separator
     "battery_unit",

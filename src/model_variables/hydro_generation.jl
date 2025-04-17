@@ -82,11 +82,13 @@ function hydro_generation!(
     model.obj_exp +=
         money_to_thousand_money() * sum(
             hydro_minimum_outflow_violation_cost_expression[b, h] for b in subperiods(inputs),
-            h in existing_hydro_units_with_min_outflow;
-            init = 0.0,
-        ) +
-        money_to_thousand_money() *
-        sum(hydro_spillage_penalty[:, existing_hydro_units_out_of_virtual_reservoirs]; init = 0.0)
+            h in existing_hydro_units_with_min_outflow; init = 0.0
+        )
+
+    if !isempty(existing_hydro_units_out_of_virtual_reservoirs)
+        model.obj_exp +=
+            money_to_thousand_money() * sum(hydro_spillage_penalty[:, existing_hydro_units_out_of_virtual_reservoirs])
+    end
 
     @expression(
         model.jump_model,
@@ -100,10 +102,12 @@ function hydro_generation!(
             model.obj_exp +=
                 money_to_thousand_money() *
                 sum(hydro_om_cost_expression[:, existing_hydro_units_associated_with_some_virtual_reservoir])
-            model.obj_exp +=
-                money_to_thousand_money() *
-                sum(hydro_om_cost_expression[:, existing_hydro_units_out_of_virtual_reservoirs]; init = 0.0) *
-                market_clearing_tiebreaker_weight(inputs)
+            if !isempty(existing_hydro_units_out_of_virtual_reservoirs)
+                model.obj_exp +=
+                    money_to_thousand_money() *
+                    sum(hydro_om_cost_expression[:, existing_hydro_units_out_of_virtual_reservoirs]) *
+                    market_clearing_tiebreaker_weight(inputs)
+            end
         else
             model.obj_exp +=
                 money_to_thousand_money() * sum(hydro_om_cost_expression) * market_clearing_tiebreaker_weight(inputs)

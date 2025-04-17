@@ -82,7 +82,7 @@ function hydro_generation!(
     model.obj_exp +=
         money_to_thousand_money() * sum(
             hydro_minimum_outflow_violation_cost_expression[b, h] for b in subperiods(inputs),
-            h in existing_hydro_units_with_min_outflow; init = 0.0
+            h in existing_hydro_units_with_min_outflow; init = 0.0,
         )
 
     if !isempty(existing_hydro_units_out_of_virtual_reservoirs)

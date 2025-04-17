@@ -54,33 +54,7 @@ end
 
 `create_study!` creates a new study and returns a `PSRClassesInterface.PSRDatabaseSQLite.DatabaseSQLite` object.
 
-Required arguments:
-
-  - `case_path::String`: the path where the study will be created
-  - `cycle_discount_rate::Float64`: the cycle discount rate
-  - `subperiod_duration_in_hours::Vector{Float64}`: subperiod duration in hours (one entry for each subperiod)
-Conditionally required arguments:
-
-  - `number_of_nodes::Int`: the number of nodes in the study. Required for cyclic policy graphs.
-  - `expected_number_of_repeats_per_node::Vector{Int}`: expected number of repeats per node (one entry for each node). Required for cyclic policy graphs.
-Optional arguments:
-
-  - `number_of_periods::Int`: the number of periods in the study
-  - `number_of_scenarios::Int`: the number of scenarios in the study
-  - `number_of_subscenarios::Int`: the number of subscenarios in the study
-  - `number_of_subperiods::Int`: the number of subperiods in the study
-  - `demand_deficit_cost::Float64`: the cost of demand deficit in `R\$\\MWh`
-  - `time_series_step::Int`: the type of the period
-  - `loop_subperiods_for_thermal_constraints::Int`
-  - `iteration_limit::Int`: the maximum number of iterations of SDDP algorithm
-  - `initial_date_time::Dates.DateTime`: the initial `Dates.DateTime` of the study
-  - `run_mode::Int`
-  - `policy_graph_type::Configurations_PolicyGraphType`: the the policy graph, of type [`IARA.Configurations_PolicyGraphType`](@ref)
-  - `cycle_duration_in_hours::Float64`: the duration of a cycle in the policy graph, in hours
-  - `hydro_minimum_outflow_violation_cost::Float64`: the cost of hydro minimum outflow violation in `[\$/m³/s]`
-  - `hydro_spillage_cost::Float64`: the cost of hydro spillage in `[\$/hm³]`
-  - `aggregate_buses_for_strategic_bidding::Int`: whether to aggregate buses for strategic bidding (0 or 1)
-  - `parp_max_lags::Int`: the maximum number of lags in the PAR(p) model
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Configuration"))
 """
 function create_study!(case_path::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)

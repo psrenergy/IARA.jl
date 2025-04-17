@@ -17,13 +17,105 @@ Note that, in case the heuristic bid alternative is chosen, bid files will be ge
 
 ## Price and quantity parameter data files
 
-All three types of bid in IARA involve "price" and "quantity" information that can be expressed by a [time series file](build_a_case_from_scratch.md#building-external-data-structures), and which can be linked using the function `link_time_series_to_file`. The particulars of the time series that characterize each type of bid, however, are slightly different, particularly with regards to the representation of the [subperiod](key_features.md#glossary) dimension:
+All three types of bid in IARA involve "price" and "quantity" information that can be expressed by a [time series file](build_a_case_from_scratch.md#building-external-data-structures), and which can be linked using the function [`IARA.link_time_series_to_file`](@ref).
 
-- `independent bids` have both quantities and prices varying per subperiod, as decisions are indeed individualized per subperiod. Independent bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer = "q", price_offer = "p")`
-- `profile bids` have quantities varying per subperiod but prices not: the decision on whether or not to activate the profile bid is made only once in the period (and therefore it is sufficient to represent the associated cost with a single price parameter), but potentially affects all subperiods. Profile bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer_profile = "q", price_offer_profile = "p")`
-- `virtual reservoir bids` have neither quantities nor prices varying per subperiod, as the decisions associated with the virtual reservoir bids are intended to drive the target reservoir storage level at the end of the period (for which it is not necessary to include per-subperiod granularity). Virtual reservoir bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; virtual_reservoir_quantity_offer = "q", virtual_reservoir_price_offer = "p")`
 
-Note that in the examples above we assume that the quantity file `"q"` and the price file `"p"` follow the correct structure specified above for each bid type. It is also worth highlighting that all three types of bid also have their time series varying per [period, scenario, and segment](key_features.md#glossary), in addition to potentially varying per subperiod.
+All three types of bids 
+The particulars of the time series that characterize each type of bid, however, are slightly different, particularly with regards to the representation of the [subperiod](key_features.md#glossary) dimension:
+
+### Independent bids:
+
+`independent_bids` have both quantities and prices varying per subperiod, as decisions are indeed individualized per subperiod. Independent bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer = "q", price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the following tables:
+
+
+#### Price offer
+<div align="center">
+
+| period | scenario | subperiod | bid_segment | bg_1 - bus_1 | bg_1 - bus_2 | bg_2 - bus_1 | bg_2 - bus_2 |
+|:------:|:--------:|:---------:|:-----------:|:------------:|:------------:|:------------:|:------------:|
+|   1    |    1     |     1     |      1      |    100.0     |     80.0     |     90.0     |     70.0     |
+|   1    |    1     |     2     |      1      |    100.0     |     80.0     |     90.0     |     70.0     |
+|   1    |    2     |     1     |      1      |    100.0     |     80.0     |     90.0     |     70.0     |
+|   1    |    2     |     2     |      1      |    100.0     |     80.0     |     90.0     |     70.0     |
+
+</div>
+
+
+#### Quantity offer
+<div align="center">
+
+| period | scenario | subperiod | bid_segment | bg_1 - bus_1 | bg_1 - bus_2 | bg_2 - bus_1 | bg_2 - bus_2 |
+|:------:|:--------:|:---------:|:-----------:|:------------:|:------------:|:------------:|:------------:|
+|   1    |    1     |     1     |      1      |     5.0      |     1.0      |     5.0      |     2.0      |
+|   1    |    1     |     2     |      1      |     5.0      |     1.0      |     5.0      |     2.0      |
+|   1    |    2     |     1     |      1      |     4.0      |     1.5      |     4.0      |     3.0      |
+|   1    |    2     |     2     |      1      |     4.0      |     1.5      |     4.0      |     3.0      |
+
+</div>
+
+### Profile bids:
+
+`profile bids` have quantities varying per subperiod but prices not: the decision on whether or not to activate the profile bid is made only once in the period (and therefore it is sufficient to represent the associated cost with a single price parameter), but potentially affects all subperiods. Profile bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer_profile = "q", price_offer_profile = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively.
+
+#### Price offer
+<div align="center">
+
+| period | scenario | profile | bg_1 | bg_2 |
+|:------:|:--------:|:-------:|:----:|:----:|
+|   1    |    1     |    1    | 0.0  | 45.0 |
+|   1    |    1     |    2    | 0.0  | 35.0 |
+|   1    |    2     |    1    | 0.0  | 45.0 |
+|   1    |    2     |    2    | 0.0  | 35.0 |
+
+</div>
+
+#### Quantity offer
+
+<div align="center">
+
+| period | scenario | subperiod | profile | bg_1 - bus_1 | bg_1 - bus_2 | bg_2 - bus_1 | bg_2 - bus_2 |
+|:------:|:--------:|:---------:|:-------:|:------------:|:------------:|:------------:|:------------:|
+|   1    |    1     |     1     |    1    |     0.0      |     0.0      |     4.0      |     4.0      |
+|   1    |    1     |     1     |    2    |     0.0      |     0.0      |     4.0      |     4.0      |
+|   1    |    1     |     2     |    1    |     0.0      |     0.0      |     4.0      |     4.0      |
+|   1    |    1     |     2     |    2    |     0.0      |     0.0      |     4.0      |     4.0      |
+|   1    |    2     |     1     |    1    |     0.0      |     0.0      |     4.0      |     4.0      |
+|   1    |    2     |     1     |    2    |     0.0      |     0.0      |     4.0      |     4.0      |
+|   1    |    2     |     2     |    1    |     0.0      |     0.0      |     4.0      |     4.0      |
+|   1    |    2     |     2     |    2    |     0.0      |     0.0      |     4.0      |     4.0      |
+
+</div>
+
+### Virtual reservoir bids:
+`virtual reservoir bids` have neither quantities nor prices varying per subperiod, as the decisions associated with the virtual reservoir bids are intended to drive the target reservoir storage level at the end of the period (for which it is not necessary to include per-subperiod granularity). Virtual reservoir bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; virtual_reservoir_quantity_offer = "q", virtual_reservoir_price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the table below:
+
+#### Price offer
+<div align="center">
+
+| period | scenario | bid_segment | virtual_reservoir_1 - asset_owner_1 | virtual_reservoir_1 - asset_owner_2 |
+|:------:|:--------:|:-----------:|:----------------------------------:|:----------------------------------:|
+|   1    |    1     |      1      |             491.198334            |             491.198334            |
+|   1    |    2     |      1      |             368.398743            |             368.398743            |
+
+</div>
+
+#### Quantity offer
+<div align="center">
+
+| period | scenario | bid_segment | virtual_reservoir_1 - asset_owner_1 | virtual_reservoir_1 - asset_owner_2 |
+|:------:|:--------:|:-----------:|:----------------------------------:|:----------------------------------:|
+|   1    |    1     |      1      |               1.5                 |               6.0                 |
+|   1    |    2     |      1      |               1.5                 |               6.0                 |
+
+</div>
+
+## Segmented bids
+
+As seen in `independent bids` and `virtual reservoir bids`, there is an entry for `bid_segment`, which allows for the bid offer to be broken down into segments. This is useful for representing a single bid divided into multiple offers, each with its own price and quantity.
+
+!!! note "Note"
+    Although each `bid_segment` counts as a separate offer, for the same subperiod, the total quantity of its segments cannot exceed the maximum quantity of the bidding group. 
+
 
 ## Complex profile bids
 

@@ -193,49 +193,11 @@ end
     
 Add a Hydro Unit to the database.
     
-Required arguments:
-    
-  - `label::String`: Hydro Unit label.
-  - `bus_id::String`: Bus label of the Hydro Unit (only if the bus already exists).
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-  - `gaugingstation_id::String`: Gauging station of the hydro unit (only if the gauging station already exists).
-  - `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-    - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
-  - `operation_type::HydroUnit_OperationType.T`: Operation type of the Hydro Unit ([`IARA.HydroUnit_OperationType`](@ref)).
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "HydroUnit"))
 
-Optional arguments:
-  
-  - `initial_volume::Float64`: Initial volume of the Hydro Unit.
-  - `initial_volume_type::HydroUnit_InitialVolumeType.T`: Initial volume type of the Hydro Unit ([`IARA.HydroUnit_InitialVolumeType`](@ref)).
-    - _Default is_ `HydroUnit_InitialVolumeType.VOLUME`.
-  - `has_commitment::Int`: Whether the Hydro Unit has commitment (0 -> false, 1 -> true).
-    - _Default is_ `0`.
-  - `hydrounit_turbine_to::String`: Downstream plant for turbining (only if the Hydro Unit already exists).
-  - `hydrounit_spill_to::String`: Downstream plant for spillage (only if the Hydro Unit already exists).
-
----
-
-**Time Series Parameters**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-
-Required columns:
-
-  - `date_time::Vector{DateTime}`: Date and time of the Hydro Unit time series data.
-  - `min_generation::Vector{Float64}`: Minimum generation of the Hydro Unit `[MWh]`
-   - _Required if_ `has_commitment` _is set to_ `1`. _Ignored otherwise._
-  - `existing::Vector{Int}`: Whether the hydro unit is existing or not (0 -> not existing, 1 -> existing)
-  - `production_factor::Vector{Float64}`: Production factor of the Hydro Unit `[MWh/m³/s]`
-  - `max_generation::Vector{Float64}`: Maximum generation of the Hydro Unit `[MWh]`
-  - `min_volume::Vector{Float64}`: Minimum volume of the Hydro Unit `[hm³]`
-  - `max_volume::Vector{Float64}`: Maximum volume of the Hydro Unit `[hm³]`
-  - `max_turbining::Vector{Float64}`: Maximum turbining of the Hydro Unit `[hm³/s]`
-
-Optional columns:
-  - `min_outflow::Vector{Float64}`: Minimum outflow of the Hydro Unit `[hm³/s]`
-  - `om_cost::Vector{Float64}`: Operation and maintenance cost of the hydro unit `[\$/MWh]`
-
+!!! note "Note"
+    - `bidding_group_id` is required if the run mode is not set to `TRAIN_MIN_COST`.
+    - `min_generation` is required if `has_commitment` is set to `1`.
 
 Example:
 ```julia

@@ -91,27 +91,7 @@ end
 
 Add a DC Line to the database.
 
-Required arguments:
-  - `label::String`: DC Line label
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-
-Optional arguments
-
-  - `bus_to::String`: Bus To label (only if Bus is already in the database)
-  - `bus_from::String`: Bus From label (only if Bus is already in the database)
-
----
-
-**Time Series**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns:
-
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the renewable unit is existing or not (0 -> not existing, 1 -> existing)
-  - `capacity_to::Vector{Float64}`: Maximum power flow in the 'to' direction `[MWh]`
-  - `capacity_from::Vector{Float64}`: Maximum power flow in the 'from' direction `[MWh]`
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "DCLine"))
 
 Example:
 ```julia

@@ -24,6 +24,15 @@ function hydro_generation!(
     existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
     existing_hydro_units_with_min_outflow =
         index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, has_min_outflow])
+    existing_hydro_units_associated_with_some_virtual_reservoir =
+        index_of_elements(
+            inputs,
+            HydroUnit;
+            run_time_options,
+            filters = [is_existing, is_associated_with_some_virtual_reservoir],
+        )
+    existing_hydro_units_out_of_virtual_reservoirs =
+        setdiff(existing_hydro_units, existing_hydro_units_associated_with_some_virtual_reservoir)
 
     # Variables
     @variable(
@@ -75,7 +84,7 @@ function hydro_generation!(
             hydro_minimum_outflow_violation_cost_expression[b, h] for b in subperiods(inputs),
             h in existing_hydro_units_with_min_outflow;
             init = 0.0,
-        ) + money_to_thousand_money() * sum(hydro_spillage_penalty)
+        ) + money_to_thousand_money() * sum(hydro_spillage_penalty[:, existing_hydro_units_out_of_virtual_reservoirs])
 
     @expression(
         model.jump_model,
@@ -83,10 +92,20 @@ function hydro_generation!(
         hydro_generation[b, h] * hydro_unit_om_cost(inputs, h)
     )
 
-    # Generation costs are used as a penalty in the clearing problem
+    # Generation costs are used as a penalty in the clearing problem if the hydro unit is not associated with a virtual reservoir
     if is_market_clearing(inputs)
-        model.obj_exp +=
-            money_to_thousand_money() * sum(hydro_om_cost_expression) * market_clearing_tiebreaker_weight(inputs)
+        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+            model.obj_exp +=
+                money_to_thousand_money() *
+                sum(hydro_om_cost_expression[:, existing_hydro_units_associated_with_some_virtual_reservoir])
+            model.obj_exp +=
+                money_to_thousand_money() *
+                sum(hydro_om_cost_expression[:, existing_hydro_units_out_of_virtual_reservoirs]) *
+                market_clearing_tiebreaker_weight(inputs)
+        else
+            model.obj_exp +=
+                money_to_thousand_money() * sum(hydro_om_cost_expression) * market_clearing_tiebreaker_weight(inputs)
+        end
     else
         model.obj_exp += money_to_thousand_money() * sum(hydro_om_cost_expression)
     end

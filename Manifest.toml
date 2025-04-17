@@ -2,7 +2,7 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "db30d69a306caafa5468416a3833790e902295c4"
+project_hash = "fcdd4f7d73de11085865b571ceddc60df9086d1d"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -537,11 +537,9 @@ version = "0.6.0"
 
 [[deps.PSRClassesInterface]]
 deps = ["DBInterface", "DataFrames", "Dates", "Encodings", "JSON", "OrderedCollections", "Random", "SQLite", "TOML", "Tables"]
-git-tree-sha1 = "2e1b50a865f72f3485c30499353aa548e7b6a2a3"
-repo-rev = "pr/docstringer"
-repo-url = "https://github.com/psrenergy/PSRClassesInterface.jl.git"
+git-tree-sha1 = "44a0623ed32ddf06a42e09ef17565909126cf5c0"
 uuid = "1eab49e5-27d8-4905-b9f6-327b6ea666c4"
-version = "0.17.7"
+version = "0.17.8"
 
 [[deps.ParametricOptInterface]]
 deps = ["MathOptInterface"]

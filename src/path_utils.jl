@@ -13,7 +13,6 @@ function migrations_directory()
     return path
 end
 
-
 """
     model_directory()
 

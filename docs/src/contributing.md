@@ -26,6 +26,7 @@ If you encounter a bug or have a feature request, please file an issue on our [G
 
 When filing a bug report, please include:
 - A clear and descriptive title.
+- A link (google drive, dropbox, etc.) to the files of the case you are working on.
 - Steps to reproduce the issue.
 - The expected behavior and what actually happens.
 - Any relevant error messages or stack traces.

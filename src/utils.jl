@@ -171,8 +171,6 @@ end
 
 Links a time series to a file in the database.
 
-All time series file need to be a CSV file, accompanied by a .toml file with the same name.
-
 Each collection in the database can be linked to different time series files.
 
 The possible files for each collection are:

@@ -128,7 +128,7 @@ In the following table we show an example of a segmented bid for `independent bi
 
 
 
-## Complex profile bids
+## Multi-hour profile bids
 
 Although the representation introduced earlier of independent bids, profile bids, and virtual reservoir bids is quite powerful, it is insufficient for properly representing all possible types of interdependence between the decisions at multiple subperiods that would be needed to actually emulate realistic constraints of various types of physical units. In order to extend the model and truly allow for all types of interplay (synergies and anti-synergies) between possible dispatch choices at different hours, we introduce three additional features tied to the profile bids structure: precedence constraints, complementarity constraints, and minimum activation constraints.
 All three of these features work with a coefficient $ 0 \leq \lambda \leq 1$ that indicates the fraction of the profile bid that was accepted.

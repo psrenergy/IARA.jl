@@ -100,3 +100,31 @@ type = "enum"
 enum = "existing"
 label.en = "Existing"
 tooltip.en = "Existing of the demand unit"
+
+[[attribute]]
+id = "elastic_demand_price"
+label.en = "Elastic Demand Price"
+tooltip.en = "Elastic demand price data"
+unit.en = "$/MWh"
+hide = true
+
+[[attribute]]
+id = "demand_window"
+label.en = "Demand Window"
+tooltip.en = "Window of demand"
+unit.en = "h"
+hide = true
+
+[[attribute]]
+id = "demand_ex_ante"
+label.en = "Demand Ex-Ante"
+tooltip.en = "Demand data for the model in ex-ante, also used in the min cost module"
+unit.en = "p.u."
+hide = true
+
+[[attribute]]
+id = "demand_ex_post"
+label.en = "Demand Ex-Post"
+tooltip.en = "Demand data for the model in ex-post"
+unit.en = "p.u."
+hide = true

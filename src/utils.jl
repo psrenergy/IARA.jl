@@ -179,6 +179,8 @@ The possible files for each collection are:
 
 $(PSRDatabaseSQLite.time_series_files_docstrings(model_directory()))
 
+For more information about these files, please refer to the [Input Files](https://psrenergy.github.io/IARA.jl/dev/input_files.html) documentation.
+
 """
 function link_time_series_to_file(
     db::DatabaseSQLite,

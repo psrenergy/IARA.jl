@@ -42,3 +42,17 @@ icon = "lucide/droplet.svg"
 id = "hydrounit_id"
 label.en = "Hydro Unit"
 tooltip.en = "Hydro unit of the virtual reservoir"
+
+[[attribute]]
+id = "quantity_offer"
+label.en = "Quantity Offer"
+tooltip.en = "Quantity of offers for virtual reservoirs"
+unit.en = "GWh"
+hide = true
+
+[[attribute]]
+id = "price_offer"
+label.en = "Price Offer"
+tooltip.en = "Price of offers for virtual reservoirs"
+unit.en = "$/MWh"
+hide = true

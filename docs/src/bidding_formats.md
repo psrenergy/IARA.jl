@@ -19,13 +19,11 @@ Note that, in case the heuristic bid alternative is chosen, bid files will be ge
 
 All three types of bid in IARA involve "price" and "quantity" information that can be expressed by a [time series file](build_a_case_from_scratch.md#building-external-data-structures), and which can be linked using the function [`IARA.link_time_series_to_file`](@ref).
 
-
-All three types of bids 
-The particulars of the time series that characterize each type of bid, however, are slightly different, particularly with regards to the representation of the [subperiod](key_features.md#glossary) dimension:
+However, there are some differences in the way that these time series files are structured, depending on the type of bid. The following sections describe the expected structure of the time series files for each type of bid.
 
 ### Independent bids:
 
-`independent_bids` have both quantities and prices varying per subperiod, as decisions are indeed individualized per subperiod. Independent bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer = "q", price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the following tables:
+`independent_bids` have both quantities and prices varying per [subperiod](key_features.md#glossary), as decisions are indeed individualized per subperiod. Independent bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer = "q", price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the following tables:
 
 
 #### Price offer
@@ -116,14 +114,96 @@ As seen in `independent bids` and `virtual reservoir bids`, there is an entry fo
 !!! note "Note"
     Although each `bid_segment` counts as a separate offer, for the same subperiod, the total quantity of its segments cannot exceed the maximum quantity of the bidding group. 
 
+In the following table we show an example of a segmented bid for `independent bids` quantity offers, where the maximum generation of the bidding group is 100 MW.
+
+<div align="center">
+
+| period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
+|:------:|:--------:|:---------:|:-----------:|:------------:|
+|   1    |    1     |     1     |      1      |    50.0      |
+|   1    |    1     |     1     |      2      |    50.0      |
+|   1    |    1     |     2     |      1      |    50.0      |
+|   1    |    1     |     2     |      2      |    50.0      |
+
+</div>
+
 
 ## Complex profile bids
 
-Although the representation introduced earlier of independent bids, profile bids, and virtual reservoir bids is quite powerful, it is insufficient for properly representing all possible types of interdependence between the decisions at multiple subperiods that would be needed to actually emulate realistic constraints of various types of physical units. In order to extend the model and truly allow for all types of interplay (synergies and anti-synergies) between possible dispatch choices at different hours, we introduce three additional features tied to the profile bids structure:
+Although the representation introduced earlier of independent bids, profile bids, and virtual reservoir bids is quite powerful, it is insufficient for properly representing all possible types of interdependence between the decisions at multiple subperiods that would be needed to actually emulate realistic constraints of various types of physical units. In order to extend the model and truly allow for all types of interplay (synergies and anti-synergies) between possible dispatch choices at different hours, we introduce three additional features tied to the profile bids structure: precedence constraints, complementarity constraints, and minimum activation constraints.
+All three of these features work with a coefficient $ 0 \leq \lambda \leq 1$ that indicates the fraction of the profile bid that was accepted.
+We will now describe these three constraints in more detail.
 
-- **Precedence constraints**, modeled in the form $\lambda_A \leq \lambda_B$, and represented in the database by the `parent_profile` time series parameter
-- **Complementarity constraints**, modeled in the form $\lambda_A + \lambda_B \leq 1$, and represented in the database by the `complementary_grouping_profile` time series parameter (with any number of segments being potentially included in a complementarity grouping for the purpose of defining these constraints)
-- **Minimum activation constraints**, modeled with the introduction of an additional binary variable and by imposing that $\lambda_A > 0 \Rightarrow \lambda_A \geq L_A$, and represented in the database by the `minimum_activation_level_profile` time series parameter (with any number of segments being potentially included in a complementarity grouping for the purpose of defining these constraints)
+### Precedence constraints
+
+It is possible to model precedence constraints between two profile bids, which are constraints that impose that the activation of one profile bid (say, $A$) is a necessary condition for the activation of another profile bid (say, $B$). Thus if $B$ has $A$ as a predecessor, then the constraint $\lambda_B \leq \lambda_A$ must hold. This is represented in the database by the `parent_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function. 
+
+In the following example of a `parent_profile.csv` file, we have have bids for the Bidding Groups `bg_1` and `bg_2`, with three profiles each. 
+For `bg_2`, its first profile is a predecessor of its second profile, while for `bg_1`, its second profile is a predecessor of its third profile. 
+
+<div align="center">
+
+| period | profile |  bg_1  |  bg_2  |
+|:------:|:-------:|:------:|:------:|
+|   1    |    1    |  0.0   |  0.0   |
+|   1    |    2    |  0.0   |  1.0   |
+|   1    |    3    |  2.0   |  0.0   |
+|   2    |    1    |  0.0   |  0.0   |
+|   2    |    2    |  0.0   |  1.0   |
+|   2    |    3    |  2.0   |  0.0   |
+
+</div>
+
+
+### Complementarity constraints
+
+Complementarity constraints impose that the sum of the activation coefficients of a complementary group must be less than or equal to 1. 
+This is represented in the database by the `complementary_grouping_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function.
+
+
+In the following example of a `complementary_grouping_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with three profiles each.
+The columns `bg_1` and `bg_2` contain boolean values that indicate whether the profile is part of the complementary group or not.
+
+Observing the table, we can draw the following conclusions:
+- The first profile of `bg_2` is part of the complementary group 1, along with its second profile.
+- The first profile of  `bg_2` is also part of the complementary group 2, but no other profile is part of this group.
+- The second profile of `bg_2` is part of the complementary group 3, with no other profile being part of this group.
+- No profile of `bg_1` is part of any complementary group.
+
+If a profile is not part of any complementary group, its coefficient keeps its original constraint of being between 0 and 1.
+The same applies for profiles that are the only ones in a complementary group.
+
+
+<div align="center">
+
+| period | profile | complementary_group |  bg_1  |  bg_2  |
+|:------:|:-------:|:-------------------:|:------:|:------:|
+|   1    |    1    |          1          |  0.0   |  1.0   |
+|   1    |    1    |          2          |  0.0   |  1.0   |
+|   1    |    1    |          3          |  0.0   |  0.0   |
+|   1    |    2    |          1          |  0.0   |  1.0   |
+|   1    |    2    |          2          |  0.0   |  0.0   |
+|   1    |    2    |          3          |  0.0   |  1.0   |
+
+</div>
+
+
+### Minimum activation constraints
+
+Minimum activation constraints impose that, if a profile bid is accepted, then its coefficient must be greater than or equal to a certain threshold.
+This is represented in the database by the `minimum_activation_level_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function.
+
+In the following example of a `minimum_activation_level_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with two profiles each.
+All profiles of both bidding groups have a minimum activation level of 0.8, except for the first profile of `bg_1`, which has a minimum activation level of 0.0.
+
+<div align="center">
+
+| period | scenario | profile | bg_1 | bg_2 |
+|:------:|:--------:|:-------:|:----:|:----:|
+|   1    |    1     |    1    | 0.0  | 0.8  |
+|   1    |    1     |    2    | 0.0  | 0.8  |
+
+</div>
 
 These three types of constraints associated with the profile bids are analogous to the "block bid" functionalities extensively used in Europe, and they represent a technology-neutral way to express any possible technological feature leading to interdependence relations between the operational choices at different hours. It is possible to demonstrate that, with only the three types of constraints above and assuming that the number of profiles and constraints that can be used is sufficiently large, it is possible to represent virtually any possible shape of interdependencies.
 

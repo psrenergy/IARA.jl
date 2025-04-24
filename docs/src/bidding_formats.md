@@ -27,7 +27,7 @@ However, there are some differences in the way that these time series files are 
 
 
 #### Price offer
-<div align="center">
+
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 | bg_1 - bus_2 | bg_2 - bus_1 | bg_2 - bus_2 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|:------------:|:------------:|:------------:|
@@ -36,11 +36,11 @@ However, there are some differences in the way that these time series files are 
 |   1    |    2     |     1     |      1      |    100.0     |     80.0     |     90.0     |     70.0     |
 |   1    |    2     |     2     |      1      |    100.0     |     80.0     |     90.0     |     70.0     |
 
-</div>
+
 
 
 #### Quantity offer
-<div align="center">
+
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 | bg_1 - bus_2 | bg_2 - bus_1 | bg_2 - bus_2 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|:------------:|:------------:|:------------:|
@@ -49,14 +49,14 @@ However, there are some differences in the way that these time series files are 
 |   1    |    2     |     1     |      1      |     4.0      |     1.5      |     4.0      |     3.0      |
 |   1    |    2     |     2     |      1      |     4.0      |     1.5      |     4.0      |     3.0      |
 
-</div>
+
 
 ### Profile bids:
 
 `profile bids` have quantities varying per subperiod but prices not: the decision on whether or not to activate the profile bid is made only once in the period (and therefore it is sufficient to represent the associated cost with a single price parameter), but potentially affects all subperiods. Profile bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer_profile = "q", price_offer_profile = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively.
 
 #### Price offer
-<div align="center">
+
 
 | period | scenario | profile | bg_1 | bg_2 |
 |:------:|:--------:|:-------:|:----:|:----:|
@@ -65,11 +65,11 @@ However, there are some differences in the way that these time series files are 
 |   1    |    2     |    1    | 0.0  | 45.0 |
 |   1    |    2     |    2    | 0.0  | 35.0 |
 
-</div>
+
 
 #### Quantity offer
 
-<div align="center">
+
 
 | period | scenario | subperiod | profile | bg_1 - bus_1 | bg_1 - bus_2 | bg_2 - bus_1 | bg_2 - bus_2 |
 |:------:|:--------:|:---------:|:-------:|:------------:|:------------:|:------------:|:------------:|
@@ -82,30 +82,30 @@ However, there are some differences in the way that these time series files are 
 |   1    |    2     |     2     |    1    |     0.0      |     0.0      |     4.0      |     4.0      |
 |   1    |    2     |     2     |    2    |     0.0      |     0.0      |     4.0      |     4.0      |
 
-</div>
+
 
 ### Virtual reservoir bids:
 `virtual reservoir bids` have neither quantities nor prices varying per subperiod, as the decisions associated with the virtual reservoir bids are intended to drive the target reservoir storage level at the end of the period (for which it is not necessary to include per-subperiod granularity). Virtual reservoir bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; virtual_reservoir_quantity_offer = "q", virtual_reservoir_price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the table below:
 
 #### Price offer
-<div align="center">
+
 
 | period | scenario | bid_segment | virtual_reservoir_1 - asset_owner_1 | virtual_reservoir_1 - asset_owner_2 |
 |:------:|:--------:|:-----------:|:----------------------------------:|:----------------------------------:|
 |   1    |    1     |      1      |             491.198334            |             491.198334            |
 |   1    |    2     |      1      |             368.398743            |             368.398743            |
 
-</div>
+
 
 #### Quantity offer
-<div align="center">
+
 
 | period | scenario | bid_segment | virtual_reservoir_1 - asset_owner_1 | virtual_reservoir_1 - asset_owner_2 |
 |:------:|:--------:|:-----------:|:----------------------------------:|:----------------------------------:|
 |   1    |    1     |      1      |               1.5                 |               6.0                 |
 |   1    |    2     |      1      |               1.5                 |               6.0                 |
 
-</div>
+
 
 ## Segmented bids
 
@@ -116,7 +116,7 @@ As seen in `independent bids` and `virtual reservoir bids`, there is an entry fo
 
 In the following table we show an example of a segmented bid for `independent bids` quantity offers, where the maximum generation of the bidding group is 100 MW.
 
-<div align="center">
+
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|
@@ -125,7 +125,7 @@ In the following table we show an example of a segmented bid for `independent bi
 |   1    |    1     |     2     |      1      |    50.0      |
 |   1    |    1     |     2     |      2      |    50.0      |
 
-</div>
+
 
 
 ## Complex profile bids
@@ -141,7 +141,7 @@ It is possible to model precedence constraints between two profile bids, which a
 In the following example of a `parent_profile.csv` file, we have have bids for the Bidding Groups `bg_1` and `bg_2`, with three profiles each. 
 For `bg_2`, its first profile is a predecessor of its second profile, while for `bg_1`, its second profile is a predecessor of its third profile. 
 
-<div align="center">
+
 
 | period | profile |  bg_1  |  bg_2  |
 |:------:|:-------:|:------:|:------:|
@@ -152,7 +152,7 @@ For `bg_2`, its first profile is a predecessor of its second profile, while for 
 |   2    |    2    |  0.0   |  1.0   |
 |   2    |    3    |  2.0   |  0.0   |
 
-</div>
+
 
 
 ### Complementarity constraints
@@ -174,7 +174,7 @@ If a profile is not part of any complementary group, its coefficient keeps its o
 The same applies for profiles that are the only ones in a complementary group.
 
 
-<div align="center">
+
 
 | period | profile | complementary_group |  bg_1  |  bg_2  |
 |:------:|:-------:|:-------------------:|:------:|:------:|
@@ -185,7 +185,7 @@ The same applies for profiles that are the only ones in a complementary group.
 |   1    |    2    |          2          |  0.0   |  0.0   |
 |   1    |    2    |          3          |  0.0   |  1.0   |
 
-</div>
+
 
 
 ### Minimum activation constraints
@@ -196,16 +196,23 @@ This is represented in the database by the `minimum_activation_level_profile` ti
 In the following example of a `minimum_activation_level_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with two profiles each.
 All profiles of both bidding groups have a minimum activation level of 0.8, except for the first profile of `bg_1`, which has a minimum activation level of 0.0.
 
-<div align="center">
+
 
 | period | scenario | profile | bg_1 | bg_2 |
 |:------:|:--------:|:-------:|:----:|:----:|
 |   1    |    1     |    1    | 0.0  | 0.8  |
 |   1    |    1     |    2    | 0.0  | 0.8  |
 
-</div>
+
 
 These three types of constraints associated with the profile bids are analogous to the "block bid" functionalities extensively used in Europe, and they represent a technology-neutral way to express any possible technological feature leading to interdependence relations between the operational choices at different hours. It is possible to demonstrate that, with only the three types of constraints above and assuming that the number of profiles and constraints that can be used is sufficiently large, it is possible to represent virtually any possible shape of interdependencies.
+
+## Heuristic bids
+
+As mentioned above, during the market clearing process, IARA can automatically generate bids for the decision-making agents using a heuristic approach. 
+
+The heuristic bids are calculated using 
+
 
 ## Practical examples
 

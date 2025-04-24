@@ -73,14 +73,8 @@ end
 
 Add an asset owner to the database.
 
-Required arguments:
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "AssetOwner"))
 
-  - `label::String`: Asset owner label
-  - `price_type::AssetOwner_PriceType.T`: Asset owner price type ([`AssetOwner_PriceType`](@ref))
-    - _Default set to_ `AssetOwner_PriceType.PRICE_TAKER`
-  - `risk_factor::Vector{Float64}`: risk factor of the asset owner.
-  - `segment_fraction::Vector{Float64}`: fraction of the segment.
-  
 Example:
 
 ```julia

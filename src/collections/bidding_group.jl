@@ -110,15 +110,7 @@ end
 
 Add a BiddingGroup to the database.
 
-Required arguments:
-
-  - `label::String`: label of the Thermal Unit.
-  - `bid_type::BiddingGroup_BidType.T`: [`IARA.BiddingGroup_BidType`](@ref) of the bidding group.
-    - _Default_ is `BiddingGroup_BidType.MARKUP_HEURISTIC`
-  - `assetowner_id::String`: Label of the AssetOwner to which the bidding group belongs (only if the AssetOwner is already in the database).
-  - `risk_factor::Vector{Float64}`: risk factor of the bidding group.
-  - `segment_fraction::Vector{Float64}`: fraction of the segment.	
-
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "BiddingGroup"))
 
 Example:
 ```julia

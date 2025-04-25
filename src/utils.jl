@@ -179,6 +179,15 @@ $(PSRDatabaseSQLite.time_series_files_docstrings(model_directory()))
 
 For more information about these files, please refer to the [Input Files](https://psrenergy.github.io/IARA.jl/dev/input_files.html) documentation.
 
+
+Example:
+```julia
+IARA.link_time_series_to_file(
+    db,
+    "RenewableUnit";
+    generation_ex_ante = "solar_generation",
+)
+```
 """
 function link_time_series_to_file(
     db::DatabaseSQLite,

@@ -211,7 +211,39 @@ These three types of constraints associated with the profile bids are analogous 
 
 As mentioned above, during the market clearing process, IARA can automatically generate bids for the decision-making agents using a heuristic approach. 
 
-The heuristic bids are calculated using 
+The heuristic bid generation differs based on the type of assets that an agent's bidding group contains.
+In this section, we will describe how this calculation is performed for different configurations.
+
+### Only thermal units
+
+When considering a bidding group with only thermal units, the heuristic bid is evaluated based on the operational cost of the assets that compose it.
+
+The resulting bid will divided into segments, where the price for each segment corresponds to the operational cost of a thermal unit in the bidding group, always orderd from the cheapest to the most expensive, and the quantity for each segment corresponds to the maximum generation of the thermal unit in the bidding group.
+
+For instance, consider that we have two thermal units witht the following characteristics:
+
+| Thermal Unit | Max Generation (MW) | Operational Cost ($/MWh) |
+|:------------:|:-------------------:|:------------------------:|
+|     T1       |         50          |           30.0           |
+|     T2       |         100         |           50.0           |
+
+The heuristic bid will have the following structure:
+
+#### Price offer
+
+| period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
+|:------:|:--------:|:---------:|:-----------:|:------------:|
+|   1    |    1     |     1     |      1      |    30.0     |
+|   1    |    1     |     1     |      2      |    50.0     |
+
+
+#### Quantity offer
+
+| period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
+|:------:|:--------:|:---------:|:-----------:|:------------:|
+|   1    |    1     |     1     |      1      |     50      |
+|   1    |    1     |     1     |      2      |     100      |
+
 
 
 ## Practical examples

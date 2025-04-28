@@ -128,7 +128,7 @@ In the following table we show an example of a segmented bid for `independent bi
 
 
 
-## Multi-hour profile bids
+## Profile bids
 
 Although the representation introduced earlier of independent bids, profile bids, and virtual reservoir bids is quite powerful, it is insufficient for properly representing all possible types of interdependence between the decisions at multiple subperiods that would be needed to actually emulate realistic constraints of various types of physical units. In order to extend the model and truly allow for all types of interplay (synergies and anti-synergies) between possible dispatch choices at different hours, we introduce three additional features tied to the profile bids structure: precedence constraints, complementarity constraints, and minimum activation constraints.
 All three of these features work with a coefficient $ 0 \leq \lambda \leq 1$ that indicates the fraction of the profile bid that was accepted.
@@ -212,11 +212,12 @@ These three types of constraints associated with the profile bids are analogous 
 As mentioned above, during the market clearing process, IARA can automatically generate bids for the decision-making agents using a heuristic approach. 
 
 The heuristic bid generation differs based on the type of assets that an agent's bidding group contains.
-In this section, we will describe how this calculation is performed for different configurations.
+In this documentation we provide [examples](heuristic_bid_examples.md) of how the heuristic bid is generated.
+For the mathematical formulation of the heuristic bid, please refer to the [Heuristic Bid](heuristic_bids.md) chapter.
 
 ### Only thermal units
 
-When considering a bidding group with only thermal units, the heuristic bid is evaluated based on the operational cost of the assets that compose it.
+When considering a bidding group with only thermal units, the heuristic bid is evaluated based on the operational cost and maximum generation of the assets that compose it.
 
 The resulting bid will divided into segments, where the price for each segment corresponds to the operational cost of a thermal unit in the bidding group, always orderd from the cheapest to the most expensive, and the quantity for each segment corresponds to the maximum generation of the thermal unit in the bidding group.
 
@@ -225,7 +226,7 @@ For instance, consider that we have two thermal units witht the following charac
 | Thermal Unit | Max Generation (MW) | Operational Cost ($/MWh) |
 |:------------:|:-------------------:|:------------------------:|
 |     T1       |         50          |           30.0           |
-|     T2       |         100         |           50.0           |
+|     T2       |         100         |           40.0           |
 
 The heuristic bid will have the following structure:
 
@@ -234,7 +235,7 @@ The heuristic bid will have the following structure:
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|
 |   1    |    1     |     1     |      1      |    30.0     |
-|   1    |    1     |     1     |      2      |    50.0     |
+|   1    |    1     |     1     |      2      |    40.0     |
 
 
 #### Quantity offer
@@ -245,6 +246,9 @@ The heuristic bid will have the following structure:
 |   1    |    1     |     1     |      2      |     100      |
 
 
+### Only renewable units
+
+When considering a bidding group with only renewable units, the heuristic bid is evaluated based on the maximum generation and operational cost of the assets that compose it.
 
 ## Practical examples
 

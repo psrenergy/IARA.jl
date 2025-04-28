@@ -90,6 +90,7 @@ pages = [
         ],
         "Manipulating bid data" => [
             "Introduction" => "bidding_formats.md",
+            "Heuristic bids examples" => "heuristic_bids_examples.md",
             "Profile bids example" => "tutorial/case_03_build_profile_base_case.md",
             "Minimum activation bids example" => "tutorial/case_04_build_multi_min_activation.md",
             "Virtual reservoir example" => "tutorial/case_05_build_reservoir_case.md",

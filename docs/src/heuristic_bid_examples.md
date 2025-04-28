@@ -78,6 +78,17 @@ The heuristic bid will have the following structure:
 |   1    |    1     |     1     |      4      |    60.0 (T2) |
 
 
+!!! note "Code snippet"
+    In order to create a bidding group with markup bids, you can use the following code example:
+    ```julia
+    IARA.add_bidding_group!(
+        db;
+        label = "Thermal Owner",
+        assetowner_id = "Thermal Owner",
+        risk_factor = [0.2, 0.3],
+        segment_fraction = [0.4, 0.6],
+    )
+    ```
 
 
 ## Only renewable units

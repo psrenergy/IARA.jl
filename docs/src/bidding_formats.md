@@ -4,9 +4,9 @@
 
 Being able to describe agents' strategies in a bid-based market is one of IARA's [key features](key_features.md). IARA has three main types of bid that can be submitted by decision-making agents:
 
-- `independent bids` refer to price-quantity offers that are associated to a single subperiod, and which can be accepted or rejected in a fully independent manner
-- `profile bids` refer to price-quantity offers that represent an interdependence between different subperiods, with a single decision potentially affecting output in multiple subperiods
-- `virtual reservoir bids` refer to price-quantity offers tied to [virtual reservoir accounts](build_a_case_from_scratch.md#building-the-ownership-structure), designed to combat the [externality issues involved in hydro cascades](hydro_challenges.md).
+- independent bids refer to price-quantity offers that are associated to a single subperiod, and which can be accepted or rejected in a fully independent manner
+- profile bids refer to price-quantity offers that represent an interdependence between different subperiods, with a single decision potentially affecting output in multiple subperiods
+- virtual reservoir bids refer to price-quantity offers tied to [virtual reservoir accounts](build_a_case_from_scratch.md#building-the-ownership-structure), designed to combat the [externality issues involved in hydro cascades](hydro_challenges.md).
 
 For all three types of bid, there are two possible options for managing this bid data: 
 
@@ -23,7 +23,7 @@ However, there are some differences in the way that these time series files are 
 
 ### Independent bids:
 
-`independent_bids` have both quantities and prices varying per [subperiod](key_features.md#glossary), as decisions are indeed individualized per subperiod. Independent bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer = "q", price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the following tables:
+Independent bids have both quantities and prices varying per [subperiod](key_features.md#glossary), as decisions are indeed individualized per subperiod. Independent bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer = "q", price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the following tables:
 
 
 #### Price offer
@@ -53,7 +53,8 @@ However, there are some differences in the way that these time series files are 
 
 ### Profile bids:
 
-`profile bids` have quantities varying per subperiod but prices not: the decision on whether or not to activate the profile bid is made only once in the period (and therefore it is sufficient to represent the associated cost with a single price parameter), but potentially affects all subperiods. Profile bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer_profile = "q", price_offer_profile = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively.
+Profile bids have quantities varying per subperiod but prices not: the decision on whether or not to activate the profile bid is made only once in the period (and therefore it is sufficient to represent the associated cost with a single price parameter). 
+Profile bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer_profile = "q", price_offer_profile = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price profile offers, respectively.
 
 #### Price offer
 
@@ -85,7 +86,7 @@ However, there are some differences in the way that these time series files are 
 
 
 ### Virtual reservoir bids:
-`virtual reservoir bids` have neither quantities nor prices varying per subperiod, as the decisions associated with the virtual reservoir bids are intended to drive the target reservoir storage level at the end of the period (for which it is not necessary to include per-subperiod granularity). Virtual reservoir bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; virtual_reservoir_quantity_offer = "q", virtual_reservoir_price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the table below:
+Virtual Reservoir bids have neither quantities nor prices varying per subperiod, as the decisions associated with the virtual reservoir bids are intended to drive the target reservoir storage level at the end of the period (for which it is not necessary to include per-subperiod granularity). Virtual reservoir bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; virtual_reservoir_quantity_offer = "q", virtual_reservoir_price_offer = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price offers, respectively. The expected structure of these files is shown in the table below:
 
 #### Price offer
 
@@ -107,14 +108,14 @@ However, there are some differences in the way that these time series files are 
 
 
 
-## Segmented bids
+## Bid segments
 
-As seen in `independent bids` and `virtual reservoir bids`, there is an entry for `bid_segment`, which allows for the bid offer to be broken down into segments. This is useful for representing a single bid divided into multiple offers, each with its own price and quantity.
+As seen in independent bids and virtual reservoir bids` there is an entry for `bid_segment`, which allows for the bid offer to be broken down into segments. This is useful for representing a single bid divided into multiple offers, each with its own price and quantity.
 
 !!! note "Note"
-    Although each `bid_segment` counts as a separate offer, for the same subperiod, the total quantity of its segments cannot exceed the maximum quantity of the bidding group. 
+    Although each bid segment counts as a separate offer, for the same subperiod, the total quantity of its segments cannot exceed the maximum quantity of the bidding group. 
 
-In the following table we show an example of a segmented bid for `independent bids` quantity offers, where the maximum generation of the bidding group is 100 MW.
+In the following table we show an example of a segmented bid for independent bids quantity offers, where the maximum generation of the bidding group is 100 MW.
 
 
 
@@ -161,7 +162,7 @@ Complementarity constraints impose that the sum of the activation coefficients o
 This is represented in the database by the `complementary_grouping_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function.
 
 
-In the following example of a `complementary_grouping_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with three profiles each.
+In the following example of a `complementary_grouping_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with 2 profiles and 3 complementary groups each.
 The columns `bg_1` and `bg_2` contain boolean values that indicate whether the profile is part of the complementary group or not.
 
 Observing the table, we can draw the following conclusions:
@@ -190,7 +191,7 @@ The same applies for profiles that are the only ones in a complementary group.
 
 ### Minimum activation constraints
 
-Minimum activation constraints impose that, if a profile bid is accepted, then its coefficient must be greater than or equal to a certain threshold.
+Minimum activation constraints establish that, for a profile bid to be accepted, the offered quantity must be at least a certain threshold, expressed as a percentage of the total bid volume.
 This is represented in the database by the `minimum_activation_level_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function.
 
 In the following example of a `minimum_activation_level_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with two profiles each.

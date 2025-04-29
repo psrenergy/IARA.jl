@@ -52,7 +52,7 @@ Using the same example as before, consider that we have the following markup fac
 |      2      |        60.0       |   30.0          |
 
 
-Then, for example, T1 will be offering 40% of its generation in the first segment for a price of 36.0 \$/MWh and 60\% of its generation in the second segment for a price of 39.0 \$/MWh.
+Then, for example, T1 will be offering 40% of its generation in the first segment for a price of 36.0 \$/MWh and 60%  of its generation in the second segment for a price of 39.0 \$/MWh.
 
 
 The heuristic bid will have the following structure:

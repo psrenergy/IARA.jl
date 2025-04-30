@@ -51,47 +51,118 @@ function post_process_outputs(
        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
         post_processing_generation(inputs, run_time_options)
     end
-    if is_market_clearing(inputs) &&
-       any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-        create_bidding_group_generation_files(
-            inputs,
-            outputs_post_processing,
-            model_outputs_time_serie,
-            run_time_options,
-        )
-        create_bidding_group_cost_files(
-            inputs,
-            outputs_post_processing,
-            model_outputs_time_serie,
-            run_time_options,
-        )
-        if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
-            post_processing_bidding_group_revenue(
+    if is_market_clearing(inputs)
+        if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+            create_bidding_group_generation_files(
                 inputs,
                 outputs_post_processing,
                 model_outputs_time_serie,
                 run_time_options,
             )
-            _join_independent_and_profile_bid(
+            create_bidding_group_cost_files(
                 inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
                 run_time_options,
             )
-            if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
-                post_processing_bidding_group_total_revenue(
+            if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
+                post_processing_bidding_group_revenue(
                     inputs,
                     outputs_post_processing,
                     model_outputs_time_serie,
                     run_time_options,
                 )
+                _join_independent_and_profile_bid(
+                    inputs,
+                    run_time_options,
+                )
+                if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+                    post_processing_bidding_group_total_revenue(
+                        inputs,
+                        outputs_post_processing,
+                        model_outputs_time_serie,
+                        run_time_options,
+                    )
+                end
+                calculate_profits_settlement(
+                    inputs,
+                    run_time_options,
+                )
             end
-            calculate_profits_settlement(
-                inputs,
-                run_time_options,
-            )
+        end
+        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+            physical_variables_suffix = if construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
+                "_ex_post_commercial"
+            else
+                "_ex_post_physical"
+            end
+            if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+                commercial_variables_suffix = if construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+                    "_ex_ante_physical"
+                else
+                    "_ex_ante_commercial"
+                end
+
+                post_processing_virtual_reservoirs(
+                    inputs,
+                    outputs_post_processing,
+                    model_outputs_time_serie,
+                    run_time_options;
+                    physical_variables_suffix = physical_variables_suffix,
+                    commercial_variables_suffix = commercial_variables_suffix,
+                    output_suffix = "_ex_ante",
+                )
+            elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+                commercial_variables_suffix = if construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+                    "_ex_post_physical"
+                else
+                    "_ex_post_commercial"
+                end
+
+                post_processing_virtual_reservoirs(
+                    inputs,
+                    outputs_post_processing,
+                    model_outputs_time_serie,
+                    run_time_options;
+                    physical_variables_suffix = physical_variables_suffix,
+                    commercial_variables_suffix = commercial_variables_suffix,
+                    output_suffix = "_ex_post",
+                )
+            elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+                ex_post_physical_suffix = is_skiped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
+                ex_post_commercial_suffix = is_skiped(inputs, "ex_post_commercial") ? "_ex_post_physical" : "_ex_post_commercial"
+                ex_ante_physical_suffix = is_skiped(inputs, "ex_ante_physical") ? "_ex_ante_commercial" : "_ex_ante_physical"
+                ex_ante_commercial_suffix = is_skiped(inputs, "ex_ante_commercial") ? "_ex_ante_physical" : "_ex_ante_commercial"
+
+                post_processing_virtual_reservoirs_double_settlement(
+                    inputs,
+                    outputs_post_processing,
+                    model_outputs_time_serie,
+                    run_time_options;
+                    ex_post_physical_suffix = ex_post_physical_suffix,
+                    ex_ante_physical_suffix = ex_ante_physical_suffix,
+                    ex_post_commercial_suffix = ex_post_commercial_suffix,
+                    ex_ante_commercial_suffix = ex_ante_commercial_suffix,
+                )
+            end
         end
     end
 
     return nothing
+end
+
+function is_skiped(inputs::Inputs, construction_type::String)
+    if construction_type == "ex_post_physical"
+        return construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_post_commercial"
+        return construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_physical"
+        return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_commercial"
+        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+    else
+        error("Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".")
+    end
 end
 
 function open_time_series_output(

@@ -1416,6 +1416,21 @@ function network_representation(inputs::AbstractInputs, run_time_options)
     end
 end
 
+function network_representation(inputs::AbstractInputs, suffix::String)
+    clearing_model_subproblem = if suffix == "_ex_ante_commercial"
+        RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL
+    elseif suffix == "_ex_ante_physical"
+        RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
+    elseif suffix == "_ex_post_commercial"
+        RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
+    elseif suffix == "_ex_post_physical"
+        RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+    end
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
+
+    return network_representation(inputs, run_time_options)
+end
+
 """
     period_season_map(inputs::AbstractInputs)
 

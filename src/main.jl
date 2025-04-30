@@ -540,8 +540,7 @@ function run_clearing_simulation(
                     subscenario,
                 )
 
-            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-               run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
                 post_process_virtual_reservoirs!(
                     inputs,
                     run_time_options,
@@ -549,6 +548,7 @@ function run_clearing_simulation(
                     outputs,
                     period,
                     scenario,
+                    subscenario,
                 )
             end
             # Write in the files the output of a specific period and scenario

@@ -807,3 +807,11 @@ end
 function hydro_unit_zone_index(inputs::AbstractInputs, idx::Int)
     return bus_zone_index(inputs, hydro_unit_bus_index(inputs, idx))
 end
+
+function hydro_unit_virtual_reservoir_index(inputs::AbstractInputs, h::Int)
+    vr = findfirst(
+        vr -> h in virtual_reservoir_hydro_unit_indices(inputs, vr),
+        index_of_elements(inputs, VirtualReservoir),
+    )
+    return vr
+end

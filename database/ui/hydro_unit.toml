@@ -193,13 +193,13 @@ unit = "$/MWh"
 [[attribute]]
 id = "inflow_ex_ante"
 label.en = "Inflow Ex Ante"
-tooltip.en = "Inflow data for the model in ex-ante, also used in the min cost module"
-unit = "hm³"
+tooltip.en = "Inflow data for the model in ex-ante"
+unit = "m³/s"
 hide = true
 
 [[attribute]]
 id = "inflow_ex_post"
 label.en = "Inflow Ex Post"
-tooltip.en = "Inflow data for the model in ex-post, also used in the min cost module"
-unit = "hm³"
+tooltip.en = "Inflow data for the model in ex-post"
+unit = "m³/s"
 hide = true

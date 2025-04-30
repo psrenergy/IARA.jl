@@ -111,7 +111,7 @@ hide = true
 [[attribute]]
 id = "demand_window"
 label.en = "Demand Window"
-tooltip.en = "Window of demand"
+tooltip.en = "Window available for shifting the elastic demand"
 unit.en = "h"
 hide = true
 

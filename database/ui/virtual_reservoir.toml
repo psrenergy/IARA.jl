@@ -47,7 +47,7 @@ tooltip.en = "Hydro unit of the virtual reservoir"
 id = "quantity_offer"
 label.en = "Quantity Offer"
 tooltip.en = "Quantity of offers for virtual reservoirs"
-unit.en = "GWh"
+unit.en = "MWh"
 hide = true
 
 [[attribute]]

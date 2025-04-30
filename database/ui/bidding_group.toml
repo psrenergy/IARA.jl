@@ -70,17 +70,17 @@ hide = true
 [[attribute]]
 id = "parent_profile"
 label.en = "Parent Profile"
-tooltip.en = "Parent profile of profile k"
+tooltip.en = "Parent profile of this offer profile"
 hide = true
 
 [[attribute]]
 id = "complementary_grouping_profile"
 label.en = "Complementary Grouping Profile"
-tooltip.en = "Complementary grouping m for the asset owner i"
+tooltip.en = "Complementary grouping for the asset owner's profile bids"
 hide = true
 
 [[attribute]]
 id = "minimum_activation_level_profile"
 label.en = "Minimum Activation Level Profile"
-tooltip.en = "Minimum activation level of profile k"
+tooltip.en = "Minimum activation level of profile"
 hide = true

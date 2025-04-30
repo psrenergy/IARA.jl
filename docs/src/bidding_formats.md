@@ -53,7 +53,8 @@ Independent bids have both quantities and prices varying per [subperiod](key_fea
 
 ### Profile bids:
 
-Profile bids have quantities varying per subperiod but prices not: the decision on whether or not to activate the profile bid is made only once in the period (and therefore it is sufficient to represent the associated cost with a single price parameter). 
+Profile bids have quantities varying per subperiod.
+However, the prices for each offer do not vary, as the decision on whether or not to activate the profile bid is made only once in the period (and therefore it is sufficient to represent the associated cost with a single price parameter). 
 Profile bids can be parameterized using the following syntax: `link_time_series_to_file(db,"BiddingGroup"; quantity_offer_profile = "q", price_offer_profile = "p")`, where `"q"` and `"p"` are the names of the CSV files containing the time series data for the quantity and price profile offers, respectively.
 
 #### Price offer
@@ -110,7 +111,7 @@ Virtual Reservoir bids have neither quantities nor prices varying per subperiod,
 
 ## Bid segments
 
-As seen in independent bids and virtual reservoir bids` there is an entry for `bid_segment`, which allows for the bid offer to be broken down into segments. This is useful for representing a single bid divided into multiple offers, each with its own price and quantity.
+As seen in independent bids and virtual reservoir bids there is an entry for `bid_segment`, which allows for the bid offer to be broken down into segments. This is useful for representing a single bid divided into multiple offers, each with its own price and quantity.
 
 !!! note "Note"
     Although each bid segment counts as a separate offer, for the same subperiod, the total quantity of its segments cannot exceed the maximum quantity of the bidding group. 
@@ -137,10 +138,10 @@ We will now describe these three constraints in more detail.
 
 ### Precedence constraints
 
-It is possible to model precedence constraints between two profile bids, which are constraints that impose that the activation of one profile bid (say, $A$) is a necessary condition for the activation of another profile bid (say, $B$). Thus if $B$ has $A$ as a predecessor, then the constraint $\lambda_B \leq \lambda_A$ must hold. This is represented in the database by the `parent_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function. 
+It is possible to model precedence constraints between two profile bids, which are constraints that impose that the activation of one profile bid (say, $A$) is a necessary condition for the activation of another profile bid (say, $B$). Thus if $B$ has $A$ as a _parent_, then the constraint $\lambda_B \leq \lambda_A$ must hold. This is represented in the database by the `parent_profile` time series file, which can be attached to the case using the [`IARA.link_time_series_to_file`](@ref) function. 
 
 In the following example of a `parent_profile.csv` file, we have have bids for the Bidding Groups `bg_1` and `bg_2`, with three profiles each. 
-For `bg_2`, its first profile is a predecessor of its second profile, while for `bg_1`, its second profile is a predecessor of its third profile. 
+For `bg_2`, its first profile is a _parent_ of its second profile, while for `bg_1`, its second profile is a _parent_ of its third profile. 
 
 
 
@@ -159,7 +160,7 @@ For `bg_2`, its first profile is a predecessor of its second profile, while for 
 ### Complementarity constraints
 
 Complementarity constraints impose that the sum of the activation coefficients of a complementary group must be less than or equal to 1. 
-This is represented in the database by the `complementary_grouping_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function.
+This is represented in the database by the `complementary_grouping_profile` time series file, which can be attached to the case using the [`IARA.link_time_series_to_file`](@ref) function.
 
 
 In the following example of a `complementary_grouping_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with 2 profiles and 3 complementary groups each.
@@ -192,10 +193,10 @@ The same applies for profiles that are the only ones in a complementary group.
 ### Minimum activation constraints
 
 Minimum activation constraints establish that, for a profile bid to be accepted, the offered quantity must be at least a certain threshold, expressed as a percentage of the total bid volume.
-This is represented in the database by the `minimum_activation_level_profile` time series file, which can be attached to the case using the `[IARA.link_time_series_to_file](@ref)` function.
+This is represented in the database by the `minimum_activation_level_profile` time series file, which can be attached to the case using the [`IARA.link_time_series_to_file`](@ref) function.
 
 In the following example of a `minimum_activation_level_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with two profiles each.
-All profiles of both bidding groups have a minimum activation level of 0.8, except for the first profile of `bg_1`, which has a minimum activation level of 0.0.
+All `bg_2` profiles have a minimum activation level of 0.8, while `bg_1` has a minimum activation level of 0.0 for both profiles.
 
 
 
@@ -215,41 +216,6 @@ As mentioned above, during the market clearing process, IARA can automatically g
 The heuristic bid generation differs based on the type of assets that an agent's bidding group contains.
 In this documentation we provide [examples](heuristic_bid_examples.md) of how the heuristic bid is generated.
 For the mathematical formulation of the heuristic bid, please refer to the [Heuristic Bid](heuristic_bids.md) chapter.
-
-### Only thermal units
-
-When considering a bidding group with only thermal units, the heuristic bid is evaluated based on the operational cost and maximum generation of the assets that compose it.
-
-The resulting bid will divided into segments, where the price for each segment corresponds to the operational cost of a thermal unit in the bidding group, always orderd from the cheapest to the most expensive, and the quantity for each segment corresponds to the maximum generation of the thermal unit in the bidding group.
-
-For instance, consider that we have two thermal units witht the following characteristics:
-
-| Thermal Unit | Max Generation (MW) | Operational Cost ($/MWh) |
-|:------------:|:-------------------:|:------------------------:|
-|     T1       |         50          |           30.0           |
-|     T2       |         100         |           40.0           |
-
-The heuristic bid will have the following structure:
-
-#### Price offer
-
-| period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
-|:------:|:--------:|:---------:|:-----------:|:------------:|
-|   1    |    1     |     1     |      1      |    30.0     |
-|   1    |    1     |     1     |      2      |    40.0     |
-
-
-#### Quantity offer
-
-| period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
-|:------:|:--------:|:---------:|:-----------:|:------------:|
-|   1    |    1     |     1     |      1      |     50      |
-|   1    |    1     |     1     |      2      |     100      |
-
-
-### Only renewable units
-
-When considering a bidding group with only renewable units, the heuristic bid is evaluated based on the maximum generation and operational cost of the assets that compose it.
 
 ## Practical examples
 

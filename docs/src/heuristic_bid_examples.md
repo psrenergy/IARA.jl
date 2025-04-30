@@ -39,7 +39,7 @@ The heuristic bid will have the following structure:
 
 ## Using markup factors
 
-When using markup factors, the price offer is calculated by multiplying the operational cost of the thermal unit by the markup factor. 
+When using markup factors, the price offer is calculated by increasing the operational cost of the thermal unit by the markup factor (_cost * (1 + markup factor)_). 
 The markup factor is a global parameter for all assets in a bidding group.
 It can be used to make more complex bidding strategies, by dividing the offers originated from a single asset into multiple segments, each with a different markup factor.
 Also, each segment is assigned a different portion of the generation, which is used to calculate the quantity offer.
@@ -115,10 +115,25 @@ Also, consider the following characteristics of the renewable units:
 |     R2        |         100          |           40.0           |
 
 
-As seen in the previous example for thermal units, the heuristic bid for this case will also be divided into segments, where the price for each segment corresponds to the operational cost of a renewable unit in the bidding group, always orderd from the cheapest to the most expensive, and the quantity for each segment corresponds to the expected generation of the renewable unit (in p.u.) multiplied by the maximum generation of the renewable unit.
+As seen in the previous example for thermal units, the heuristic bid for this case will also be divided into segments, where the price for each segment corresponds to the operational cost of a renewable unit in the bidding group, always ordered from the cheapest to the most expensive, and the quantity for each segment corresponds to the expected generation of the renewable unit (in p.u.) multiplied by the maximum generation of the renewable unit.
 
 
 #### Price offer
+
+
+| period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
+|:------:|:--------:|:---------:|:-----------:|:------------:|
+|   1    |    1     |     1     |      1      |     30      |
+|   1    |    1     |     1     |      2      |     40      |
+|   1    |    1     |     2     |      1      |     30      |
+|   1    |    1     |     2     |      2      |     40      |
+|   1    |    2     |     1     |      1      |     30      |
+|   1    |    2     |     1     |      2      |     40      |
+|   1    |    2     |     2     |      1      |     30      |
+|   1    |    2     |     2     |      2      |     40      |
+
+
+#### Quantity offer
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|
@@ -131,17 +146,3 @@ As seen in the previous example for thermal units, the heuristic bid for this ca
 |   1    |    2     |     2     |      1      |    30.0     |
 |   1    |    2     |     2     |      2      |    50.0     |
 
-
-
-#### Quantity offer
-
-| period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
-|:------:|:--------:|:---------:|:-----------:|:------------:|
-|   1    |    1     |     1     |      1      |     30      |
-|   1    |    1     |     1     |      2      |     40      |
-|   1    |    1     |     2     |      1      |     30      |
-|   1    |    1     |     2     |      2      |     40      |
-|   1    |    2     |     1     |      1      |     30      |
-|   1    |    2     |     1     |      2      |     40      |
-|   1    |    2     |     2     |      1      |     30      |
-|   1    |    2     |     2     |      2      |     40      |

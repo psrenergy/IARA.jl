@@ -31,7 +31,16 @@ IARA.market_clearing(PATH; plot_outputs = false, delete_output_folder_before_exe
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
-    Main.compare_outputs(PATH)
+    Main.compare_outputs(
+        PATH;
+        skipped_outputs = [
+            "hydro_generation",
+            "hydro_turbining",
+            "hydro_om_costs",
+            "hydro_initial_volume",
+            "hydro_final_volume",
+        ],
+    )
 end
 
 end

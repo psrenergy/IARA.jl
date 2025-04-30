@@ -208,6 +208,7 @@ All `bg_2` profiles have a minimum activation level of 0.8, while `bg_1` has a m
 
 
 These three types of constraints associated with the profile bids are analogous to the "block bid" functionalities extensively used in Europe, and they represent a technology-neutral way to express any possible technological feature leading to interdependence relations between the operational choices at different hours. It is possible to demonstrate that, with only the three types of constraints above and assuming that the number of profiles and constraints that can be used is sufficiently large, it is possible to represent virtually any possible shape of interdependencies.
+Also, it is worth noting that, once a profile bid is accepted, the quantities for each subperiod are proportional to the activation coefficient $\lambda$ and the quantity offer of the profile bid. 
 
 ## Heuristic bids
 

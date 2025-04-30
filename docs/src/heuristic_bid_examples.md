@@ -115,7 +115,7 @@ Also, consider the following characteristics of the renewable units:
 |     R2        |         100          |           40.0           |
 
 
-As seen in the previous example for thermal units, the heuristic bid for this case will also be divided into segments, where the price for each segment corresponds to the operational cost of a renewable unit in the bidding group, always ordered from the cheapest to the most expensive, and the quantity for each segment corresponds to the expected generation of the renewable unit (in p.u.) multiplied by the maximum generation of the renewable unit.
+As seen in the previous example for thermal units, the heuristic bid for this case will also be divided into segments, where the price for each segment corresponds to the operational cost of a renewable unit in the bidding group and the quantity for each segment corresponds to the expected generation of the renewable unit (in p.u.) multiplied by the maximum generation of the renewable unit.
 
 
 #### Price offer

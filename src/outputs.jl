@@ -113,7 +113,6 @@ function initialize_virtual_reservoir_post_processing_outputs!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
-
     initialize!(
         QuiverOutput,
         outputs;

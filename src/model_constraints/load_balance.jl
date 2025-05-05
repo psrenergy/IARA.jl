@@ -462,16 +462,20 @@ function nodal_demand_expression(
             d in inelastic_demands if demand_unit_bus_index(inputs, d) == bus;
             init = 0.0,
         ) +
-        sum(
-            attended_elastic_demand[blk, d] for
-            d in elastic_demands if demand_unit_bus_index(inputs, d) == bus;
-            init = 0.0,
-        ) +
-        sum(
-            attended_flexible_demand[blk, d]
-            for d in flexible_demands if demand_unit_bus_index(inputs, d) == bus;
-            init = 0.0,
-        )
+        if !is_market_clearing(inputs)
+            sum(
+                attended_elastic_demand[blk, d] for
+                d in elastic_demands if demand_unit_bus_index(inputs, d) == bus;
+                init = 0.0,
+            ) +
+            sum(
+                attended_flexible_demand[blk, d]
+                for d in flexible_demands if demand_unit_bus_index(inputs, d) == bus;
+                init = 0.0,
+            )
+        else
+            0.0
+        end
     )
 
     return net_demand

@@ -250,6 +250,7 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     hydro_units = index_of_elements(inputs, HydroUnit)
     renewable_units = index_of_elements(inputs, RenewableUnit)
     battery_units = index_of_elements(inputs, BatteryUnit)
+    demand_units = index_of_elements(inputs, DemandUnit)
     number_of_units_per_bidding_group = zeros(Int, length(bidding_group))
     for t in thermal_units
         bg_index = thermal_unit_bidding_group_index(inputs, t)
@@ -271,6 +272,12 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     end
     for b in battery_units
         bg_index = battery_unit_bidding_group_index(inputs, b)
+        if !is_null(bg_index)
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
+    end
+    for d in demand_units
+        bg_index = demand_unit_bidding_group_index(inputs, d)
         if !is_null(bg_index)
             number_of_units_per_bidding_group[bg_index] += 1
         end
@@ -335,6 +342,7 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
     thermal_units = index_of_elements(inputs, ThermalUnit)
     renewable_units = index_of_elements(inputs, RenewableUnit)
     battery_units = index_of_elements(inputs, BatteryUnit)
+    demand_units = index_of_elements(inputs, DemandUnit)
 
     for h in hydro_units
         bg_index = hydro_unit_bidding_group_index(inputs, h)
@@ -363,6 +371,13 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
 
     for b in battery_units
         bg_index = battery_unit_bidding_group_index(inputs, b)
+        if !is_null(bg_index)
+            number_of_units[bg_index] += 1
+        end
+    end
+
+    for d in demand_units
+        bg_index = demand_unit_bidding_group_index(inputs, d)
         if !is_null(bg_index)
             number_of_units[bg_index] += 1
         end

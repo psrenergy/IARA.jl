@@ -789,9 +789,12 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
         segments = 1:dimension_dict[:bid_segment]
     end
 
+    tol = 1e-6
+
     for bg in 1:number_elements
         for segment in reverse(segments)
-            if any(bids_view.data[bg, :, segment, :] .> 0)
+            if any(bids_view.data[bg, :, segment, :] .> tol) ||
+               any(bids_view.data[bg, :, segment, :] .< -tol)
                 valid_segments_per_timeseries[bg] = segment
                 break
             end

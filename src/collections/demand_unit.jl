@@ -28,6 +28,9 @@ DemandUnit collection definition.
     max_demand::Vector{Float64} = []
     # index of the bus to which the thermal unit belongs in the collection Bus
     bus_index::Vector{Int} = []
+    # index of the bidding_group to which the thermal unit belongs in the collection BiddingGroup
+    bidding_group_index::Vector{Int} = []
+
     demand_ex_ante_file::String = ""
     demand_ex_post_file::String = ""
     elastic_demand_price_file::String = ""
@@ -64,6 +67,7 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
     demand_unit.curtailment_cost = PSRI.get_parms(inputs.db, "DemandUnit", "curtailment_cost")
     demand_unit.max_curtailment = PSRI.get_parms(inputs.db, "DemandUnit", "max_curtailment")
     demand_unit.bus_index = PSRI.get_map(inputs.db, "DemandUnit", "Bus", "id")
+    demand_unit.bidding_group_index = PSRI.get_map(inputs.db, "DemandUnit", "BiddingGroup", "id")
     demand_unit.max_demand = PSRI.get_parms(inputs.db, "DemandUnit", "max_demand")
 
     demand_unit.demand_ex_ante_file = PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand_ex_ante")
@@ -159,9 +163,6 @@ function update_demand_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    if collection == "BiddingGroup"
-        error("It's not possible to relate a DemandUnit to a Bidding Group.")
-    end
     PSRI.set_related!(
         db,
         "DemandUnit",

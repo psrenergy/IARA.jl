@@ -69,7 +69,7 @@ function accepted_offers_revenue(
 
                 number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_ao_generation = zeros(number_of_pairs)
-                for bid_segment in maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+                for bid_segment in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
                     if has_subscenario(vr_generation_reader)
                         Quiver.goto!(
                             vr_generation_reader;
@@ -210,7 +210,7 @@ function inflow_shareholder_revenue(
 
                 number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_generation = zeros(number_of_pairs)
-                for bid_segment in maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+                for bid_segment in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
                     if has_subscenario(vr_generation_reader)
                         Quiver.goto!(
                             vr_generation_reader;
@@ -223,12 +223,10 @@ function inflow_shareholder_revenue(
                         Quiver.goto!(vr_generation_reader; period, scenario, bid_segment = bid_segment)
                     end
                     segment_generation = vr_generation_reader.data
-
                     if is_double_settlement_ex_post
                         Quiver.goto!(vr_generation_ex_ante_reader; period, scenario, bid_segment = bid_segment)
                         segment_generation = segment_generation - vr_generation_ex_ante_reader.data
                     end
-
                     vr_generation = vr_generation + segment_generation
                 end
 

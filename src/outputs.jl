@@ -113,6 +113,10 @@ function initialize_virtual_reservoir_post_processing_outputs!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
+    if construction_type(inputs, run_time_options) == Configurations_ConstructionType.SKIP
+        return nothing
+    end
+
     initialize!(
         QuiverOutput,
         outputs;

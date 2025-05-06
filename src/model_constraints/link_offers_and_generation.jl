@@ -118,7 +118,7 @@ function link_offers_and_generation!(
             &&
             battery_unit_bidding_group_index(inputs, bat) == bg;
             init = 0.0,
-        ) 
+        )
         # Elastic and flexible demand bids are represented as negative quantities (-MW) because they indicate:
         #   - Potential load reduction (if the bid price is met)
         #   - Or shiftable demand that can be moved to a different time period
@@ -142,7 +142,7 @@ function link_offers_and_generation!(
             )
         else
             0.0
-        end 
+        end
         -
         if any_elements(inputs, DemandUnit; filters = [is_existing, is_flexible])
             sum(

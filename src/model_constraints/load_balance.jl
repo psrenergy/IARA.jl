@@ -467,15 +467,16 @@ function nodal_demand_expression(
                 attended_elastic_demand[blk, d] for
                 d in elastic_demands if demand_unit_bus_index(inputs, d) == bus;
                 init = 0.0,
-            ) +
-            sum(
-                attended_flexible_demand[blk, d]
-                for d in flexible_demands if demand_unit_bus_index(inputs, d) == bus;
-                init = 0.0,
             )
         else
             0.0
         end
+        +
+        sum(
+            attended_flexible_demand[blk, d]
+            for d in flexible_demands if demand_unit_bus_index(inputs, d) == bus;
+            init = 0.0,
+        )
     )
 
     return net_demand

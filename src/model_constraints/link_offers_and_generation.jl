@@ -44,9 +44,6 @@ function link_offers_and_generation!(
     attended_elastic_demand = if any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
         get_model_object(model, :attended_elastic_demand)
     end
-    attended_flexible_demand = if any_elements(inputs, DemandUnit; filters = [is_existing, is_flexible])
-        get_model_object(model, :attended_flexible_demand)
-    end
     # Offer variables
     bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
@@ -119,34 +116,21 @@ function link_offers_and_generation!(
             battery_unit_bidding_group_index(inputs, bat) == bg;
             init = 0.0,
         )
-        # Elastic and flexible demand bids are represented as negative quantities (-MW) because they indicate:
+        # Elastic demand bids are represented as negative quantities (-MW) because they indicate:
         #   - Potential load reduction (if the bid price is met)
-        #   - Or shiftable demand that can be moved to a different time period
         #
         # In a bid group that consists only of flexible demand:
-        #   Total Bid Quantity = Σ(Flexible Demand Bids)
+        #   Total Bid Quantity = Σ(Elastic Demand Bids)
         #                       = Σ(- MW offers)
         #
         # Example:
-        #   - Factory A offers a flexible demand of 20 MW (attended flexible demand)
-        #   - Factory B offers a flexible demand of 30 MW (attended flexible demand)
+        #   - Factory A offers a elastic demand of 20 MW
+        #   - Factory B offers a elastic demand of 30 MW
         #   → The total bid quantity for the group = -50 MW (representing the total load reduction)
         -
         if any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
             sum(
                 attended_elastic_demand[blk, d] for d in demand_units
-                if demand_unit_bus_index(inputs, d) == bus
-                &&
-                    demand_unit_bidding_group_index(inputs, d) == bg;
-                init = 0.0,
-            )
-        else
-            0.0
-        end
-        -
-        if any_elements(inputs, DemandUnit; filters = [is_existing, is_flexible])
-            sum(
-                attended_flexible_demand[blk, d] for d in demand_units
                 if demand_unit_bus_index(inputs, d) == bus
                 &&
                     demand_unit_bidding_group_index(inputs, d) == bg;

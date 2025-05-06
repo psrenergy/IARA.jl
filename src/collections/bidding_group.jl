@@ -276,11 +276,26 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             number_of_units_per_bidding_group[bg_index] += 1
         end
     end
+    has_bg_with_elastic_demand = false
     for d in demand_units
         bg_index = demand_unit_bidding_group_index(inputs, d)
         if !is_null(bg_index)
+            has_bg_with_elastic_demand = true
             number_of_units_per_bidding_group[bg_index] += 1
         end
+        if is_market_clearing(inputs)
+            if !is_null(bg_index) && is_flexible(inputs.collections.demand_unit, d)
+                @error("Demand unit $(d) is flexible and this is not allowed for bidding groups.")
+            end
+            if is_elastic(inputs.collections.demand_unit, d) && is_null(bg_index)
+                @error("Elastic demand unit $(d) is not assigned to any bidding group.")
+            end
+        end
+    end
+    if has_bg_with_elastic_demand && demand_unit_elastic_demand_price_file(inputs) != "" && is_market_clearing(inputs)
+        @warn(
+            "Elastic demand units are assigned to bidding groups, but the elastic demand price file is not empty. This file will be ignored."
+        )
     end
     if any(number_of_units_per_bidding_group .== 0)
         if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID

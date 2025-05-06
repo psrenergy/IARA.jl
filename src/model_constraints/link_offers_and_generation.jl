@@ -118,7 +118,20 @@ function link_offers_and_generation!(
             &&
             battery_unit_bidding_group_index(inputs, bat) == bg;
             init = 0.0,
-        ) +
+        ) 
+        # Elastic and flexible demand bids are represented as negative quantities (-MW) because they indicate:
+        #   - Potential load reduction (if the bid price is met)
+        #   - Or shiftable demand that can be moved to a different time period
+        #
+        # In a bid group that consists only of flexible demand:
+        #   Total Bid Quantity = Σ(Flexible Demand Bids)
+        #                       = Σ(- MW offers)
+        #
+        # Example:
+        #   - Factory A offers a flexible demand of 20 MW (attended flexible demand)
+        #   - Factory B offers a flexible demand of 30 MW (attended flexible demand)
+        #   → The total bid quantity for the group = -50 MW (representing the total load reduction)
+        -
         if any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
             sum(
                 attended_elastic_demand[blk, d] for d in demand_units
@@ -129,7 +142,8 @@ function link_offers_and_generation!(
             )
         else
             0.0
-        end +
+        end 
+        -
         if any_elements(inputs, DemandUnit; filters = [is_existing, is_flexible])
             sum(
                 attended_flexible_demand[blk, d] for d in demand_units

@@ -93,6 +93,8 @@ Configurations for the problem.
     spot_price_cap::Float64 = 0.0
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
+    virtual_reservoirs_initial_energy_stock_source::Configurations_VirtualReservoirInitialEnergyStockSource.T =
+        Configurations_VirtualReservoirInitialEnergyStockSource.CALCULATED_ACCORDING_TO_INFLOW_ALLOCATION
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -307,7 +309,11 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
             Configurations_VirtualReservoirCorrespondenceType.T,
         )
-
+    configurations.virtual_reservoirs_initial_energy_stock_source = 
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoirs_initial_energy_stock_source")[1],
+            Configurations_VirtualReservoirInitialEnergyStockSource.T,
+        )
     # Load vectors
     configurations.subperiod_duration_in_hours =
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]

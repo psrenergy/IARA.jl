@@ -1,7 +1,7 @@
-period,scenario,virtual_reservoir_1 - asset_owner_1,virtual_reservoir_1 - asset_owner_2
-1,1,-0.0,-0.0
-1,2,-0.0,-0.0
-2,1,-0.0,-0.0
-2,2,-0.0,-0.0
-3,1,0.0,0.0
-3,2,-0.0,-0.0
+period,scenario,subscenario,virtual_reservoir_1 - asset_owner_1,virtual_reservoir_1 - asset_owner_2
+1,1,1,-0.0,-0.0
+1,2,1,-0.0,-0.0
+2,1,1,-0.0,-0.0
+2,2,1,-0.0,-0.0
+3,1,1,0.0,0.0
+3,2,1,-0.0,-0.0

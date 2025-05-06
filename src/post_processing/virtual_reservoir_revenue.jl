@@ -1,7 +1,3 @@
-# tenho que me preocupar com ex ante ex post?
-# preço zonal, nodal?
-# subscenarios?
-
 function accepted_offers_revenue(
     inputs::Inputs,
     outputs_post_processing::Outputs,
@@ -12,6 +8,7 @@ function accepted_offers_revenue(
     output_suffix::String,
     is_double_settlement_ex_post::Bool,
     ex_ante_physical_suffix::String,
+    output_has_subscenario::Bool,
 )
     outputs_dir = output_path(inputs)
     output_name = "virtual_reservoirs_accepted_offers_revenue" * output_suffix
@@ -35,7 +32,7 @@ function accepted_offers_revenue(
         )
     end
 
-    dimensions = output_suffix == "_ex_ante" ? ["period", "scenario"] : ["period", "scenario", "subscenario"]
+    dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -99,10 +96,10 @@ function accepted_offers_revenue(
                 end
                 @assert idx == length(vr_ao_generation)
 
-                if output_suffix == "_ex_ante"
-                    Quiver.write!(writer, revenue; period, scenario)
-                else
+                if output_has_subscenario
                     Quiver.write!(writer, revenue; period, scenario, subscenario = subscenario)
+                else
+                    Quiver.write!(writer, revenue; period, scenario)
                 end
             end
         end
@@ -128,6 +125,7 @@ function inflow_shareholder_revenue(
     output_suffix::String,
     is_double_settlement_ex_post::Bool,
     ex_ante_physical_suffix::String,
+    output_has_subscenario::Bool,
 )
     outputs_dir = output_path(inputs)
     output_name = "virtual_reservoirs_inflow_shareholder_revenue" * output_suffix
@@ -176,7 +174,7 @@ function inflow_shareholder_revenue(
         )
     end
 
-    dimensions = output_suffix == "_ex_ante" ? ["period", "scenario"] : ["period", "scenario", "subscenario"]
+    dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -316,10 +314,10 @@ function inflow_shareholder_revenue(
                     end
                 end
 
-                if output_suffix == "_ex_ante"
-                    Quiver.write!(writer, vr_ao_revenue; period, scenario)
-                else
+                if output_has_subscenario
                     Quiver.write!(writer, vr_ao_revenue; period, scenario, subscenario = subscenario)
+                else
+                    Quiver.write!(writer, vr_ao_revenue; period, scenario)
                 end
             end
         end
@@ -350,6 +348,7 @@ function offeror_revenue(
     output_suffix::String,
     is_double_settlement_ex_post::Bool,
     ex_ante_physical_suffix::String,
+    output_has_subscenario::Bool,
 )
     outputs_dir = output_path(inputs)
     output_name = "virtual_reservoirs_offeror_revenue" * output_suffix
@@ -383,7 +382,7 @@ function offeror_revenue(
         )
     end
 
-    dimensions = output_suffix == "_ex_ante" ? ["period", "scenario"] : ["period", "scenario", "subscenario"]
+    dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -491,10 +490,10 @@ function offeror_revenue(
                 end
                 @assert idx == length(vr_ao_spilled_energy_cost)
 
-                if output_suffix == "_ex_ante"
-                    Quiver.write!(writer, vr_ao_spilled_energy_cost; period, scenario)
-                else
+                if output_has_subscenario
                     Quiver.write!(writer, vr_ao_spilled_energy_cost; period, scenario, subscenario = subscenario)
+                else
+                    Quiver.write!(writer, vr_ao_spilled_energy_cost; period, scenario)
                 end
             end
         end
@@ -522,6 +521,7 @@ function post_processing_virtual_reservoirs(
     output_suffix::String,
     is_double_settlement_ex_post::Bool = false,
     ex_ante_physical_suffix::String = "",
+    output_has_subscenario::Bool = true,
 )
     @assert !(is_double_settlement_ex_post && isempty(ex_ante_physical_suffix))
     accepted_offers_revenue_file = accepted_offers_revenue(
@@ -534,6 +534,7 @@ function post_processing_virtual_reservoirs(
         output_suffix,
         is_double_settlement_ex_post,
         ex_ante_physical_suffix,
+        output_has_subscenario,
     )
     inflow_shareholder_revenue_file = inflow_shareholder_revenue(
         inputs,
@@ -545,6 +546,7 @@ function post_processing_virtual_reservoirs(
         output_suffix,
         is_double_settlement_ex_post,
         ex_ante_physical_suffix,
+        output_has_subscenario,
     )
     offeror_revenue_file = offeror_revenue(
         inputs,
@@ -556,6 +558,7 @@ function post_processing_virtual_reservoirs(
         output_suffix,
         is_double_settlement_ex_post,
         ex_ante_physical_suffix,
+        output_has_subscenario,
     )
 
     total_revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoirs_total_revenue" * output_suffix)
@@ -587,6 +590,7 @@ function post_processing_virtual_reservoirs_double_settlement(
         physical_variables_suffix = ex_ante_physical_suffix,
         commercial_variables_suffix = ex_ante_commercial_suffix,
         output_suffix = "_ex_ante",
+        output_has_subscenario = false,
     )
 
     ex_post_revenue_files = post_processing_virtual_reservoirs(

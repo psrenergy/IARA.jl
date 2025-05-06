@@ -1,6 +1,5 @@
 PRAGMA user_version = 8;
 PRAGMA foreign_keys = OFF;
-BEGIN TRANSACTION;
 CREATE TABLE DemandUnit_new (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     label TEXT UNIQUE NOT NULL,
@@ -42,6 +41,5 @@ DROP TABLE DemandUnit;
 ALTER TABLE DemandUnit_new
     RENAME TO DemandUnit;
 PRAGMA foreign_key_check;
-COMMIT;
 -- Enable foreign key constraints
 PRAGMA foreign_keys = ON;

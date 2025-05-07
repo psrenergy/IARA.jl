@@ -47,7 +47,8 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
         PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "inflow_allocation")
     virtual_reservoir.number_of_waveguide_points_for_file_template =
         PSRI.get_parms(inputs.db, "VirtualReservoir", "number_of_waveguide_points_for_file_template")
-    virtual_reservoir.asset_owners_initial_energy_stock_share = PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "initial_energy_stock_share")
+    virtual_reservoir.asset_owners_initial_energy_stock_share =
+        PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "initial_energy_stock_share")
     # Load time series files
     virtual_reservoir.quantity_offer_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "quantity_offer")
@@ -104,11 +105,11 @@ function validate(virtual_reservoir::VirtualReservoir)
                 num_errors += 1
             end
             if virtual_reservoir.asset_owners_initial_energy_stock_share[i][j] < 0 ||
-                virtual_reservoir.asset_owners_initial_energy_stock_share[i][j] > 1
-                 @error(
-                     "Initial energy stock share for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero and less than or equal to one."
-                 )
-                 num_errors += 1
+               virtual_reservoir.asset_owners_initial_energy_stock_share[i][j] > 1
+                @error(
+                    "Initial energy stock share for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero and less than or equal to one."
+                )
+                num_errors += 1
             end
         end
         if sum(virtual_reservoir.asset_owners_inflow_allocation[i]) != 1
@@ -159,8 +160,10 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
             @warn("Hydro unit $(hydro_unit_label) is not associated with any virtual reservoir.")
         end
     end
-    virtual_reservoirs_initial_energy_stock_source = inputs.collections.configurations.virtual_reservoirs_initial_energy_stock_source
-    if virtual_reservoirs_initial_energy_stock_source == Configurations_VirtualReservoirInitialEnergyStockSource.USER_DEFINED
+    virtual_reservoirs_initial_energy_stock_source =
+        inputs.collections.configurations.virtual_reservoirs_initial_energy_stock_source
+    if virtual_reservoirs_initial_energy_stock_source ==
+       Configurations_VirtualReservoirInitialEnergyStockSource.USER_DEFINED
         for i in 1:length(virtual_reservoir)
             virtual_reservoir_label = virtual_reservoir.label[i]
             if any(is_null, virtual_reservoir.asset_owners_initial_energy_stock_share[i])
@@ -258,7 +261,8 @@ function virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs
 end
 
 function virtual_reservoir_asset_owners_initial_energy_stock_share(inputs::AbstractInputs, vr::Int, ao::Int)
-    if virtual_reservoirs_initial_energy_stock_source(inputs) == Configurations_VirtualReservoirInitialEnergyStockSource.CALCULATED_ACCORDING_TO_INFLOW_ALLOCATION
+    if virtual_reservoirs_initial_energy_stock_source(inputs) ==
+       Configurations_VirtualReservoirInitialEnergyStockSource.CALCULATED_ACCORDING_TO_INFLOW_ALLOCATION
         return virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs, vr::Int, ao::Int)
     else
         @assert ao in virtual_reservoir_asset_owner_indices(inputs, vr)

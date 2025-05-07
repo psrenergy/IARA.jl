@@ -309,7 +309,7 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
             Configurations_VirtualReservoirCorrespondenceType.T,
         )
-    configurations.virtual_reservoirs_initial_energy_stock_source = 
+    configurations.virtual_reservoirs_initial_energy_stock_source =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoirs_initial_energy_stock_source")[1],
             Configurations_VirtualReservoirInitialEnergyStockSource.T,
@@ -1370,6 +1370,9 @@ Return the type of physical-virtual correspondence for the virtual reservoirs.
 """
 virtual_reservoir_correspondence_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_correspondence_type
+
+virtual_reservoirs_initial_energy_stock_source(inputs) =
+    inputs.collections.configurations.virtual_reservoirs_initial_energy_stock_source
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

@@ -292,9 +292,10 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             end
         end
     end
-    if has_bg_with_elastic_demand && demand_unit_elastic_demand_price_file(inputs) != "" && is_market_clearing(inputs)
+    if has_bg_with_elastic_demand && demand_unit_elastic_demand_price_file(inputs) != "" &&
+       is_market_clearing(inputs) && read_bids_from_file(inputs)
         @warn(
-            "Elastic demand units are assigned to bidding groups, but the elastic demand price file is not empty. This file will be ignored."
+            "Elastic demand units are assigned to bidding groups, but the elastic demand price file is not empty and the bids are read from file. This file will be ignored."
         )
     end
     if any(number_of_units_per_bidding_group .== 0)

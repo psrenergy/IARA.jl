@@ -522,3 +522,8 @@ end
     STANDARD_CORRESPONDENCE_CONSTRAINT = 1
     DELTA_CORRESPONDENCE_CONSTRAINT = 2
 end
+
+@enumx Configurations_VirtualReservoirInitialEnergyStockSource begin
+    CALCULATED_ACCORDING_TO_INFLOW_ALLOCATION = 0
+    USER_DEFINED = 1
+end

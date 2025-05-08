@@ -104,7 +104,7 @@ function fill_initial_energy_stock!(inputs::AbstractInputs, vr::Int)
         [NaN for ao in 1:length(index_of_elements(inputs, AssetOwner))]
     for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
         inputs.collections.virtual_reservoir.initial_energy_stock[vr][ao] =
-            total_energy_stock * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
+            total_energy_stock * virtual_reservoir_asset_owners_initial_energy_stock_share(inputs, vr, ao)
     end
     return nothing
 end

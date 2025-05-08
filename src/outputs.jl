@@ -123,7 +123,7 @@ function initialize_virtual_reservoir_post_processing_outputs!(
         inputs,
         output_name = "virtual_reservoir_final_energy_stock",
         dimensions = ["period", "scenario"],
-        unit = "MWh",
+        unit = "GWh",
         labels = labels_for_output_by_pair_of_agents(
             inputs,
             run_time_options,
@@ -694,7 +694,7 @@ function write_virtual_reservoir_post_processed_outputs(
     for vr in virtual_reservoirs
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             pair_index += 1
-            treated_output[pair_index] = energy_stock[vr][ao]
+            treated_output[pair_index] = energy_stock[vr][ao] * MW_to_GW()
         end
     end
 

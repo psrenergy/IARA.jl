@@ -418,6 +418,7 @@ function offeror_revenue(
                     Quiver.goto!(vr_energy_stock_ex_ante_reader; period, scenario)
                     vr_energy_stock = vr_energy_stock_reader.data - vr_energy_stock_ex_ante_reader.data
                 end
+                vr_energy_stock = vr_energy_stock / MW_to_GW()
 
                 vr_spilled_energy_cost = zeros(number_of_elements(inputs, VirtualReservoir))
                 for subperiod in subperiods(inputs)
@@ -623,46 +624,3 @@ function post_processing_virtual_reservoirs_double_settlement(
 
     return nothing
 end
-
-function create_temporary_file_with_subscenario_dimension(
-    inputs::Inputs,
-    model_outputs_time_serie::OutputReaders,
-    filename::String;
-)
-    tempdir = joinpath(output_path(inputs), "temp")
-    treated_filename = joinpath(tempdir, basename(filename))
-
-    reader = Quiver.Reader{Quiver.csv}(filename)
-    @assert reader.metadata.dimensions == [:period, :scenario]
-
-    number_of_subscenarios = inputs.collections.configurations.number_of_subscenarios
-    dimension_size = [reader.metadata.dimension_size..., number_of_subscenarios]
-
-    writer = Quiver.Writer{Quiver.csv}(
-        treated_filename;
-        dimensions = ["period", "scenario", "subscenario"],
-        labels = reader.metadata.labels,
-        time_dimension = String(reader.metadata.time_dimension),
-        dimension_size = dimension_size,
-        frequency = reader.metadata.frequency,
-        initial_date = reader.metadata.initial_date,
-        unit = reader.metadata.unit,
-    )
-
-    for period in 1:dimension_size[1]
-        for scenario in 1:dimension_size[2]
-            Quiver.goto!(reader; period, scenario)
-            data = reader.data
-            for subscenario in 1:number_of_subscenarios
-                Quiver.write!(writer, data; period, scenario, subscenario = subscenario)
-            end
-        end
-    end
-
-    Quiver.close!(reader)
-    Quiver.close!(writer)
-
-    return treated_filename
-end
-
-has_subscenario(reader::Quiver.Reader) = :subscenario in reader.metadata.dimensions

@@ -466,7 +466,8 @@ function offeror_revenue(
                     end
                 end
 
-                vr_ao_spilled_energy_cost = zeros(sum(length.(virtual_reservoir_asset_owner_indices(inputs))))
+                number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
+                vr_ao_spilled_energy_cost = zeros(number_of_pairs)
                 idx = 0
                 for vr in index_of_elements(inputs, VirtualReservoir)
                     first_ao = idx + 1

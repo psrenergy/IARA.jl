@@ -92,11 +92,11 @@ function post_process_outputs(
         end
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             physical_variables_suffix =
-                is_skiped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
+                is_skipped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
 
             if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
                 commercial_variables_suffix =
-                    is_skiped(inputs, "ex_ante_commercial") ? "_ex_ante_physical" : "_ex_ante_commercial"
+                    is_skipped(inputs, "ex_ante_commercial") ? "_ex_ante_physical" : "_ex_ante_commercial"
 
                 post_processing_virtual_reservoirs(
                     inputs,
@@ -109,7 +109,7 @@ function post_process_outputs(
                 )
             elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
                 commercial_variables_suffix =
-                    is_skiped(inputs, "ex_post_commercial") ? "_ex_post_physical" : "_ex_post_commercial"
+                    is_skipped(inputs, "ex_post_commercial") ? "_ex_post_physical" : "_ex_post_commercial"
 
                 post_processing_virtual_reservoirs(
                     inputs,
@@ -122,13 +122,13 @@ function post_process_outputs(
                 )
             elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
                 ex_post_physical_suffix =
-                    is_skiped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
+                    is_skipped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
                 ex_post_commercial_suffix =
-                    is_skiped(inputs, "ex_post_commercial") ? "_ex_post_physical" : "_ex_post_commercial"
+                    is_skipped(inputs, "ex_post_commercial") ? "_ex_post_physical" : "_ex_post_commercial"
                 ex_ante_physical_suffix =
-                    is_skiped(inputs, "ex_ante_physical") ? "_ex_ante_commercial" : "_ex_ante_physical"
+                    is_skipped(inputs, "ex_ante_physical") ? "_ex_ante_commercial" : "_ex_ante_physical"
                 ex_ante_commercial_suffix =
-                    is_skiped(inputs, "ex_ante_commercial") ? "_ex_ante_physical" : "_ex_ante_commercial"
+                    is_skipped(inputs, "ex_ante_commercial") ? "_ex_ante_physical" : "_ex_ante_commercial"
 
                 post_processing_virtual_reservoirs_double_settlement(
                     inputs,
@@ -145,22 +145,6 @@ function post_process_outputs(
     end
 
     return nothing
-end
-
-function is_skiped(inputs::Inputs, construction_type::String)
-    if construction_type == "ex_post_physical"
-        return construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
-    elseif construction_type == "ex_post_commercial"
-        return construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP
-    elseif construction_type == "ex_ante_physical"
-        return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
-    elseif construction_type == "ex_ante_commercial"
-        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
-    else
-        error(
-            "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",
-        )
-    end
 end
 
 function open_time_series_output(

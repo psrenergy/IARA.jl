@@ -98,14 +98,14 @@ reduced_test_list = Dict(
 #     "case_07/skip_case/test_case.jl",
 #     "case_07/virtual_reservoir_and_thermal/test_case.jl",
 #     "case_07/ex_post_settlement_case/test_case.jl",
-#     "case_07/dual_settlement_case/test_case.jl",
+#     "case_07/double_settlement_case/test_case.jl",
 # ],
 # "case_08" => [
 #     "case_08/base_case/test_case.jl",
 #     "case_08/physical_virtual_correspondence_by_volume_case/test_case.jl",
 #     "case_08/vr_and_non_vr_hydro_units_case/test_case.jl",
 #     "case_08/ex_post_settlement_case/test_case.jl",
-#     "case_08/dual_settlement_case/test_case.jl",
+#     "case_08/double_settlement_case/test_case.jl",
 # ],
 # "case_09" => [
 #     "case_09/base_case/test_case.jl",

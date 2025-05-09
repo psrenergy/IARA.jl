@@ -1438,3 +1438,19 @@ Return the period to season map.
 """
 period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
     inputs.collections.configurations.period_season_map[:, scenario, period]
+
+function is_skipped(inputs::Inputs, construction_type::String)
+    if construction_type == "ex_post_physical"
+        return construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_post_commercial"
+        return construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_physical"
+        return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_commercial"
+        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+    else
+        error(
+            "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",
+        )
+    end
+end

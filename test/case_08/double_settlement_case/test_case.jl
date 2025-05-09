@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase07DualSettlementCase
+module TestCase08DoubleSettlementCase
 
 using Test
 using IARA

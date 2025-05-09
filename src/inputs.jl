@@ -327,9 +327,10 @@ function fill_caches!(inputs::Inputs)
             fill_water_to_energy_factors!(inputs, vr)
             fill_initial_energy_stock!(inputs, vr)
         end
-    end
-    for h in index_of_elements(inputs, HydroUnit)
-        fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
+        for h in index_of_elements(inputs, HydroUnit)
+            fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
+            fill_hydro_unit_virtual_reservoir_index!(inputs, h)
+        end
     end
     if run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
        run_mode(inputs) == RunMode.STRATEGIC_BID

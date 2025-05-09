@@ -370,7 +370,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Elastic demand price
-    if any_elements(inputs, DemandUnit; filters = [is_elastic])
+    if any_elements(inputs, DemandUnit; filters = [is_elastic]) && need_demand_price_input_data(inputs)
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.elastic_demand_price,
             inputs,

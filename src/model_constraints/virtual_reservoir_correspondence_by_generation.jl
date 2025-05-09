@@ -21,7 +21,7 @@ function virtual_reservoir_correspondence_by_generation!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    number_of_virtual_reservoirs = number_of_elements(inputs, VirtualReservoir)
 
     # Model variables
     virtual_reservoir_generation = get_model_object(model, :virtual_reservoir_generation)
@@ -32,7 +32,7 @@ function virtual_reservoir_correspondence_by_generation!(
     # Model constraints
     @constraint(
         model.jump_model,
-        virtual_reservoir_generation_balance[vr in virtual_reservoirs],
+        virtual_reservoir_generation_balance[vr in 1:number_of_virtual_reservoirs],
         sum(
             (hydro_turbining[b, h] + hydro_spillage[b, h]) * hydro_unit_production_factor(inputs, h) /
             m3_per_second_to_hm3_per_hour()
@@ -65,6 +65,22 @@ function virtual_reservoir_correspondence_by_generation!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
+    add_custom_recorder_to_query_from_subproblem_result!(
+        outputs,
+        :virtual_reservoir_marginal_cost,
+        constraint_dual_recorder(:virtual_reservoir_generation_balance),
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "virtual_reservoir_marginal_cost",
+        dimensions = ["period", "scenario"],
+        unit = "\$/MWh",
+        labels = virtual_reservoir_label(inputs),
+        run_time_options,
+    )
     return nothing
 end
 
@@ -78,5 +94,21 @@ function virtual_reservoir_correspondence_by_generation!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
+    virtual_reservoir_marginal_cost = simulation_results.data[:virtual_reservoir_marginal_cost]
+
+    output = outputs.outputs["virtual_reservoir_marginal_cost"*run_time_file_suffixes(inputs, run_time_options)]
+    if is_ex_post_problem(run_time_options)
+        Quiver.write!(
+            output.writer,
+            -round_output(virtual_reservoir_marginal_cost) / money_to_thousand_money();
+            period, scenario, subscenario,
+        )
+    else
+        Quiver.write!(
+            output.writer,
+            -round_output(virtual_reservoir_marginal_cost) / money_to_thousand_money();
+            period, scenario,
+        )
+    end
     return nothing
 end

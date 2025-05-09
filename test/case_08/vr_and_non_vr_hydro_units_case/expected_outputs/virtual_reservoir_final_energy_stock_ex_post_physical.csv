@@ -1,0 +1,7 @@
+period,scenario,subscenario,virtual_reservoir_1 - asset_owner_1,virtual_reservoir_1 - asset_owner_2
+1,1,1,0.00246,0.00984
+1,2,1,0.00264,0.01056
+2,1,1,0.00114,0.00456
+2,2,1,0.00132,0.00528
+3,1,1,0.00057,0.00228
+3,2,1,0.00058,0.00232

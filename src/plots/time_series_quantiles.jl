@@ -71,9 +71,15 @@ function reshape_time_series!(
         time_series, agent_names =
             agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
         return time_series, agent_names
+    elseif "subscenario" in dimensions
+        time_series, modified_scenario_names =
+            merge_scenario_subscenario(data, agent_names; kwargs...)
+        time_series, modified_agent_names =
+            agent_quantile_in_scenarios(PlotTimeSeriesQuantiles, time_series, agent_names; kwargs...)
+        return time_series, modified_agent_names
     else
         error(
-            "A time series output with 4 dimensions should have either 'bid_segment' or 'subperiod' as a dimension.",
+            "A time series output with 4 dimensions should have either 'bid_segment', 'subperiod' or 'subscenario' as a dimension.",
         )
     end
 end

@@ -223,11 +223,17 @@ function zonal_demand_expression(
             d in inelastic_demands if demand_unit_zone_index(inputs, d) == zone;
             init = 0.0,
         ) +
-        sum(
-            attended_elastic_demand[blk, d] for
-            d in elastic_demands if demand_unit_zone_index(inputs, d) == zone;
-            init = 0.0,
-        ) +
+        # The attended elastic demand is considered a bid offer in the market clearing case.
+        if is_mincost(inputs) ||
+           construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
+            sum(
+                attended_elastic_demand[blk, d] for
+                d in elastic_demands if demand_unit_zone_index(inputs, d) == zone;
+                init = 0.0,
+            )
+        else
+            0.0
+        end +
         sum(
             attended_flexible_demand[blk, d]
             for d in flexible_demands if demand_unit_zone_index(inputs, d) == zone;
@@ -462,10 +468,12 @@ function nodal_demand_expression(
             d in inelastic_demands if demand_unit_bus_index(inputs, d) == bus;
             init = 0.0,
         ) +
-        if !is_market_clearing(inputs)
+        # The attended elastic demand is considered a bid offer in the market clearing case.
+        if is_mincost(inputs) ||
+           construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
             sum(
                 attended_elastic_demand[blk, d] for
-                d in elastic_demands if demand_unit_bus_index(inputs, d) == bus;
+                d in elastic_demands if demand_unit_zone_index(inputs, d) == zone;
                 init = 0.0,
             )
         else

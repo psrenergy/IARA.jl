@@ -276,11 +276,11 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             number_of_units_per_bidding_group[bg_index] += 1
         end
     end
-    has_bg_with_elastic_demand = false
+    has_demand_with_bidding_group = false
     for d in demand_units
         bg_index = demand_unit_bidding_group_index(inputs, d)
         if !is_null(bg_index)
-            has_bg_with_elastic_demand = true
+            has_demand_with_bidding_group = true
             number_of_units_per_bidding_group[bg_index] += 1
         end
         if is_market_clearing(inputs)
@@ -292,11 +292,12 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             end
         end
     end
-    if has_bg_with_elastic_demand && demand_unit_elastic_demand_price_file(inputs) != "" &&
+    if has_demand_with_bidding_group && demand_unit_elastic_demand_price_file(inputs) != "" &&
        is_market_clearing(inputs) && read_bids_from_file(inputs)
-        @warn(
-            "Elastic demand units are assigned to bidding groups, but the elastic demand price file is not empty and the bids are read from file. This file will be ignored."
-        )
+        @warn("""
+          Elastic demand price file ignored - demand bids are already provided via bidding groups.
+          (Bidding group prices take precedence over the file. Remove the file link to avoid this warning.)
+          """)
     end
     if any(number_of_units_per_bidding_group .== 0)
         if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID

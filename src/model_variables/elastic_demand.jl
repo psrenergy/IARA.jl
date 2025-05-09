@@ -35,8 +35,9 @@ function elastic_demand!(
 
     # Parameters
 
-    if is_mincost(inputs)
-        # This is only used in the mincost case, when in market clearing mode
+    if is_mincost(inputs) ||
+       construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
+        # This is only used in pure physical problems, when in bid-based problems
         # the price offer is set by the bidding group
 
         @variable(
@@ -79,7 +80,10 @@ function elastic_demand!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    if !is_mincost(inputs)
+    if !(
+        is_mincost(inputs) ||
+        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
+    )
         return nothing
     end
     existing_elastic_demand = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])

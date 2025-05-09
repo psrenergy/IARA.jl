@@ -26,9 +26,9 @@ DemandUnit collection definition.
     curtailment_cost::Vector{Float64} = []
     max_curtailment::Vector{Float64} = []
     max_demand::Vector{Float64} = []
-    # index of the bus to which the thermal unit belongs in the collection Bus
+    # index of the bus to which the demand unit belongs in the collection Bus
     bus_index::Vector{Int} = []
-    # index of the bidding_group to which the thermal unit belongs in the collection BiddingGroup
+    # index of the bidding_group to which the demand unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
 
     demand_ex_ante_file::String = ""

@@ -793,8 +793,7 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
 
     for bg in 1:number_elements
         for segment in reverse(segments)
-            if any(bids_view.data[bg, :, segment, :] .> tol) ||
-               any(bids_view.data[bg, :, segment, :] .< -tol)
+            if any(isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
                 valid_segments_per_timeseries[bg] = segment
                 break
             end

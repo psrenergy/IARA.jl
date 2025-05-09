@@ -473,7 +473,7 @@ function nodal_demand_expression(
            construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
             sum(
                 attended_elastic_demand[blk, d] for
-                d in elastic_demands if demand_unit_zone_index(inputs, d) == zone;
+                d in elastic_demands if demand_unit_bus_index(inputs, d) == bus;
                 init = 0.0,
             )
         else

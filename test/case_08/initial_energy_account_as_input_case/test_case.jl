@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase08InitialEnergyStockAsInputCase
+module TestCase08InitialEnergyAccountAsInputCase
 
 using Test
 using IARA

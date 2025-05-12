@@ -102,7 +102,7 @@ reduced_test_list = Dict(
 #     "case_08/base_case/test_case.jl",
 #     "case_08/physical_virtual_correspondence_by_volume_case/test_case.jl",
 #     "case_08/vr_and_non_vr_hydro_units_case/test_case.jl",
-#     "case_08/initial_energy_stock_as_input_case/test_case.jl",
+#     "case_08/initial_energy_account_as_input_case/test_case.jl",
 # ],
 # "case_09" => [
 #     "case_09/base_case/test_case.jl",

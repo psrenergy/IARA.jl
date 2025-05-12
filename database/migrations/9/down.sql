@@ -1,0 +1,6 @@
+PRAGMA user_version = 8;
+PRAGMA foreign_keys = ON;
+
+ALTER TABLE Configuration DROP COLUMN virtual_reservoir_initial_energy_account_share;
+ALTER TABLE VirtualReservoir_vector_asset_owner_and_parameters RENAME TO VirtualReservoir_vector_owner_and_allocation;
+ALTER TABLE VirtualReservoir_vector_owner_and_allocation DROP COLUMN initial_energy_account_share;

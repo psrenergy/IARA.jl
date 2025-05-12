@@ -523,7 +523,7 @@ end
     DELTA_CORRESPONDENCE_CONSTRAINT = 2
 end
 
-@enumx Configurations_VirtualReservoirInitialEnergyStockSource begin
-    CALCULATED_ACCORDING_TO_INFLOW_ALLOCATION = 0
-    USER_DEFINED = 1
+@enumx Configurations_VirtualReservoirInitialEnergyAccount begin
+    CALCULATED_USING_INFLOW_SHARES = 0
+    CALCULATED_USING_ENERGY_ACCOUNT_SHARES = 1
 end

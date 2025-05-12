@@ -26,8 +26,11 @@ DemandUnit collection definition.
     curtailment_cost::Vector{Float64} = []
     max_curtailment::Vector{Float64} = []
     max_demand::Vector{Float64} = []
-    # index of the bus to which the thermal unit belongs in the collection Bus
+    # index of the bus to which the demand unit belongs in the collection Bus
     bus_index::Vector{Int} = []
+    # index of the bidding_group to which the demand unit belongs in the collection BiddingGroup
+    bidding_group_index::Vector{Int} = []
+
     demand_ex_ante_file::String = ""
     demand_ex_post_file::String = ""
     elastic_demand_price_file::String = ""
@@ -64,6 +67,7 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
     demand_unit.curtailment_cost = PSRI.get_parms(inputs.db, "DemandUnit", "curtailment_cost")
     demand_unit.max_curtailment = PSRI.get_parms(inputs.db, "DemandUnit", "max_curtailment")
     demand_unit.bus_index = PSRI.get_map(inputs.db, "DemandUnit", "Bus", "id")
+    demand_unit.bidding_group_index = PSRI.get_map(inputs.db, "DemandUnit", "BiddingGroup", "id")
     demand_unit.max_demand = PSRI.get_parms(inputs.db, "DemandUnit", "max_demand")
 
     demand_unit.demand_ex_ante_file = PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand_ex_ante")
@@ -103,32 +107,7 @@ end
 
 Add a Demand to the database.
 
-Required arguments:
-
-  - `label::String`: Demand label
-  - `demand_unit_type::DemandUnit_DemandType.T`: Demand type ([`IARA.DemandUnit_DemandType`](@ref))
-    - _Default set to_ `DemandUnit_DemandType.INELASTIC`
-  - `bus_id::String`: Bus label (only if the Bus already exists).
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-
-Optional arguments:
-
-  - `max_shift_up::Float64`: Maximum shift up `[MWh]`
-  - `max_shift_down::Float64`: Maximum shift down `[MWh]`
-  - `curtailment_cost::Float64`: Curtailment cost `[\$/MWh]`
-  - `max_curtailment::Float64`: Maximum curtailment `[MWh]`
-  - `max_demand::Float64`: Maximum demand `[MW]`
-  
---- 
-
-**Time Series**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns: 
-
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the demand is existing or not (0 -> not existing, 1 -> existing)
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "DemandUnit"))
 
 Example:
 ```julia
@@ -184,9 +163,6 @@ function update_demand_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    if collection == "BiddingGroup"
-        error("It's not possible to relate a DemandUnit to a Bidding Group.")
-    end
     PSRI.set_related!(
         db,
         "DemandUnit",

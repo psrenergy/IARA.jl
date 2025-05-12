@@ -59,13 +59,7 @@ end
 
 Add a bus to the database.
 
-Required arguments:
-
-  - `label::String`: Bus label
-
-Optional arguments:
-
-  - `zone_id::String`: Zone label (only if the zone is already in the database)
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Bus"))
 
 Example:
 ```julia

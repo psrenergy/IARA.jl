@@ -53,7 +53,14 @@ function initialize(args)
     return nothing
 end
 
+const COMPILED = Ref{Bool}(false)
+
+function is_compiled()::Bool
+    return COMPILED[]
+end
+
 include("version.jl")
+include("path_utils.jl")
 
 include("enumx.jl")
 include("run_time_options.jl")

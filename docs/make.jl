@@ -90,6 +90,7 @@ pages = [
         ],
         "Manipulating bid data" => [
             "Introduction" => "bidding_formats.md",
+            "Heuristic bids examples" => "heuristic_bid_examples.md",
             "Profile bids example" => "tutorial/case_03_build_profile_base_case.md",
             "Minimum activation bids example" => "tutorial/case_04_build_multi_min_activation.md",
             "Virtual reservoir example" => "tutorial/case_05_build_reservoir_case.md",
@@ -108,9 +109,10 @@ pages = [
         "Input files" => "input_files.md",
         "Output files" => "output_files.md",
     ],
-    "Contributing" => [
-        "How to contribute" => "contributing.md",
-        "Developer guides" => "development_guides.md",
+    "Developer Docs" => [
+        "Contributing" => "contributing.md",
+        "Style guide" => "style_guide.md",
+        "Development guides" => "development_guides.md",
     ],
     "API Reference" => "api_reference.md",
 ]

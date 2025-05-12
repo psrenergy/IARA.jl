@@ -238,7 +238,6 @@ function renewable_generation!(
         period,
         scenario,
         subscenario,
-        multiply_by = 1 / money_to_thousand_money(),
         indices_of_elements_in_output,
     )
 

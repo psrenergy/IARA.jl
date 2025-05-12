@@ -114,29 +114,7 @@ end
 
 Add a Renewable Unit to the database.
 
-Required arguments:
-  - `label::String`: Renewable Unit label
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-  - `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-    - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
-  - `bus_id::String`: Bus label (only if the bus is already in the database)
-
-Optional arguments:
-  - `technology_type::Int`: Renewable Unit technology type (0 -> Solar, 1 -> Wind)  
-
----
-
-**Time Series**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns:
-
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the renewable unit is existing or not (0 -> not existing, 1 -> existing)
-  - `max_generation::Vector{Float64}`: Maximum generation of the renewable unit. `[MWh]`
-  - `om_cost::Vector{Float64}`: O&M cost of the renewable unit. `[\$/MWh]`
-  - `curtailment_cost::Vector{Float64}`: Curtailment cost of the renewable unit. `[\$/MWh]`
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "RenewableUnit"))
 
 Example:
 ```julia

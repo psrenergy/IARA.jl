@@ -76,7 +76,7 @@ function post_process_outputs(
                 inputs,
                 run_time_options,
             )
-            if settlement_type(inputs) == IARA.Configurations_SettlementType.DUAL
+            if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
                 post_processing_bidding_group_total_revenue(
                     inputs,
                     outputs_post_processing,

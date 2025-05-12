@@ -97,30 +97,10 @@ end
 
 Add a Branch to the database.
 
-Required arguments: 
-  - `label::String`: Branch label
-  - `line_model::Branch_LineModel.T`: Line model (Branch_LineModel.AC or Branch_LineModel.DC)
-    - _Default is_ `Branch_LineModel.AC`
-  
-Optional arguments:
-  - `bus_to::String`: Bus label (only if the bus is already in the database)
-  - `bus_from::String`: Bus label (only if the bus is already in the database)
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Branch"))
 
---- 
-
-**Time Series**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns:
-
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the branch is existing or not (0 -> not existing, 1 -> existing)
-  - `capacity::Vector{Float64}`: Branch capacity `[MWh]`
-  - `reactance::Vector{Float64}`: Branch reactance `[p.u.]`
-    - _Ignored if_ [`IARA.Branch_LineModel`](@ref) _is set to_ `DC`
-
+!!! note "Note"
+    - `reactance` is ignored if the `line_model` is set to `DC`.
 
 Example:
 ```julia

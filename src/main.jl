@@ -206,7 +206,7 @@ function load_cuts_and_run_simulation(
     run_time_options::RunTimeOptions,
 )
     model = build_model(inputs, run_time_options)
-    read_cuts_to_model!(model, inputs)
+    read_cuts_to_model!(model, inputs, run_time_options)
     outputs = initialize_outputs(inputs, run_time_options)
     try
         simulate_all_periods_and_scenarios_of_trained_model(model, inputs, outputs, run_time_options)

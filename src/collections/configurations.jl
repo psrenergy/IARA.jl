@@ -30,7 +30,7 @@ Configurations for the problem.
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
-    expected_number_of_repeats_per_node::Vector{Int} = []
+    expected_number_of_repeats_per_node::Vector{Float64} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
@@ -541,7 +541,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 )
                 num_errors += 1
             end
-            if settlement_type(inputs) in [Configurations_SettlementType.DUAL, Configurations_SettlementType.EX_ANTE]
+            if settlement_type(inputs) in [Configurations_SettlementType.DOUBLE, Configurations_SettlementType.EX_ANTE]
                 if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
                    configurations.construction_type_ex_ante_commercial == Configurations_ConstructionType.SKIP
                     @error(
@@ -551,7 +551,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 end
             end
             if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
-               settlement_type(inputs) == Configurations_SettlementType.DUAL
+               settlement_type(inputs) == Configurations_SettlementType.DOUBLE
                 @warn(
                     "The ex-ante physical clearing model is skipped. " *
                     "Instead, generation data for revenue calculation will be sourced from the ex-ante commercial clearing model. " *
@@ -1097,6 +1097,19 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
         return false
     end
     return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.PRICETAKER_HEURISTICS
+end
+
+function is_any_construction_type_cost_based(inputs::AbstractInputs)
+    return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
+           construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.COST_BASED ||
+           construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
+           construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.COST_BASED
+end
+
+function need_demand_price_input_data(inputs::AbstractInputs)
+    return is_mincost(inputs) ||
+           (is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)) ||
+           (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs))
 end
 
 """

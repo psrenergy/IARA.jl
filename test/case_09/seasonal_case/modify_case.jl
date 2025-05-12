@@ -24,7 +24,7 @@ IARA.update_configuration!(db;
     number_of_scenarios = number_of_scenarios,
     number_of_subscenarios = number_of_subscenarios,
     number_of_nodes = number_of_seasons,
-    expected_number_of_repeats_per_node = [3, 3],
+    expected_number_of_repeats_per_node = [3.0, 3.0],
     policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
 )

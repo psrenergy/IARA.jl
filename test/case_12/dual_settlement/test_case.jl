@@ -8,6 +8,7 @@ const PATH = @__DIR__
 db = nothing
 try
     include("../base_case/build_case.jl")
+    include("../different_cvus/modify_case.jl")
     include("./modify_case.jl")
 finally
     if db !== nothing

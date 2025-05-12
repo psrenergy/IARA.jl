@@ -91,27 +91,7 @@ end
 
 Add a Interconnection to the database.
 
-Required arguments:
-  - `label::String`: Interconnection label
-  - `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-
-Optional arguments
-
-  - `zone_to::String`: Zone To label (only if Zone is already in the database)
-  - `zone_from::String`: Zone From label (only if Zone is already in the database)
-
----
-
-**Time Series**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns:
-
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the renewable unit is existing or not (0 -> not existing, 1 -> existing)
-  - `capacity_to::Vector{Float64}`: Maximum power flow in the 'to' direction `[MWh]`
-  - `capacity_from::Vector{Float64}`: Maximum power flow in the 'from' direction `[MWh]`
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Interconnection"))
 
 Example:
 ```julia

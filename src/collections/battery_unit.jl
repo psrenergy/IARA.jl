@@ -109,31 +109,10 @@ end
 
 Add a Battery Unit to the database.
 
-Required arguments:
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "BatteryUnit"))
 
-- `label::String`: Battery Unit label
-- `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
-- `bus_id::String`: Bus label (only if the bus is already in the database)
-- `biddinggroup_id::String`: Bidding Group label (only if the BiddingGroup already exists)
-  - _Required if_ [`IARA.RunMode`](@ref) _is not set to_ `TRAIN_MIN_COST`
-
-Optional arguments:
-- `initial_storage::Float64`: Initial storage `[MWh]`
-
---- 
-
-**Time Series parameters**
-
-The `parameters` dataframe has columns that may be mandatory or not, depending on some configurations about the case.
-
-Required columns:
-
-  - `date_time::Vector{DateTime}`: date and time of the time series data.
-  - `existing::Vector{Int}`: Whether the battery_unit is existing or not (0 -> not existing, 1 -> existing)
-  - `min_storage::Vector{Float64}`: Minimum storage `[MWh]`
-  - `max_storage::Vector{Float64}`: Maximum storage `[MWh]`
-  - `max_capacity::Vector{Float64}`: Maximum capacity `[MWh]`
-  - `om_cost::Vector{Float64}`: O&M cost `[\$/MWh]`
+!!! note "Note"
+    - `biddinggroup_id` is ignored if the `IARA.RunMode` is set to `TRAIN_MIN_COST`.
 
 Example:
 ```julia

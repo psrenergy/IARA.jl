@@ -8,21 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-"""
-    migrations_directory()
-
-Return the path to the migration directory.
-"""
-function migrations_directory()
-    path = if is_compiled()
-        joinpath(Sys.BINDIR, "database", "migrations")
-    else
-        joinpath(dirname(@__DIR__), "database", "migrations")
-    end
-    @assert isdir(path)
-    return path
-end
-
 function locate_inputs_in_args(args...)
     for arg in args
         if arg isa Inputs
@@ -185,6 +170,24 @@ end
     link_time_series_to_file(db::DatabaseSQLite, table_name::String; kwargs...)
 
 Links a time series to a file in the database.
+
+Each collection in the database can be linked to different time series files.
+
+The possible files for each collection are:
+
+$(PSRDatabaseSQLite.time_series_files_docstrings(model_directory()))
+
+For more information about these files, please refer to the [Input Files](https://psrenergy.github.io/IARA.jl/dev/input_files.html) documentation.
+
+
+Example:
+```julia
+IARA.link_time_series_to_file(
+    db,
+    "RenewableUnit";
+    generation_ex_ante = "solar_generation",
+)
+```
 """
 function link_time_series_to_file(
     db::DatabaseSQLite,

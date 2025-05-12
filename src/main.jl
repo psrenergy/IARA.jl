@@ -8,12 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-const COMPILED = Ref{Bool}(false)
-
-function is_compiled()::Bool
-    return COMPILED[]
-end
-
 function main(args::Args)
     initialize(args)
     inputs = load_inputs(args)

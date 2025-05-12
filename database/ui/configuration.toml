@@ -349,3 +349,21 @@ icon = "lucide/repeat.svg"
 id = "expected_number_of_repeats_per_node"
 label.en = "Expected Number of Repeats per Node"
 tooltip.en = "Expected number of repeats per node of the configuration"
+
+[[attribute]]
+id = "hour_subperiod_map"
+label.en = "Hour Subperiod Map"
+tooltip.en = "Mapping of hours to subperiods"
+hide = true
+
+[[attribute]]
+id = "fcf_cuts"
+label.en = "FCF Cuts"
+tooltip.en = "FCF cuts for the model, it's a file read from SDDP.jl in JSON format"
+hide = true
+
+[[attribute]]
+id = "period_season_map"
+label.en = "Period Season Map"
+tooltip.en = "Mapping of periods to seasons"
+hide = true

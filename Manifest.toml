@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.3"
+julia_version = "1.11.2"
 manifest_format = "2.0"
 project_hash = "fcdd4f7d73de11085865b571ceddc60df9086d1d"
 
@@ -158,9 +158,9 @@ version = "1.11.0"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "0b4190661e8a4e51a842070e7dd4fae440ddb7f4"
+git-tree-sha1 = "6d8b535fd38293bc54b88455465a1386f8ac1c3c"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.118"
+version = "0.25.119"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -536,10 +536,10 @@ uuid = "c616c425-6d4e-4525-9781-0810509229d1"
 version = "0.6.0"
 
 [[deps.PSRClassesInterface]]
-deps = ["DBInterface", "DataFrames", "Dates", "Encodings", "JSON", "OrderedCollections", "Random", "SQLite", "Tables"]
-git-tree-sha1 = "174aaeb82e4678177c454f9577f4bff7d065be93"
+deps = ["DBInterface", "DataFrames", "Dates", "Encodings", "JSON", "OrderedCollections", "Random", "SQLite", "TOML", "Tables"]
+git-tree-sha1 = "09b538741d8bcd3af98b65c7c3cb7e3b4b737d20"
 uuid = "1eab49e5-27d8-4905-b9f6-327b6ea666c4"
-version = "0.17.7"
+version = "0.17.9"
 
 [[deps.ParametricOptInterface]]
 deps = ["MathOptInterface"]
@@ -549,9 +549,9 @@ version = "0.11.1"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
+git-tree-sha1 = "44f6c1f38f77cafef9450ff93946c53bd9ca16ff"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.8.1"
+version = "2.8.2"
 
 [[deps.PeriodicAutoregressive]]
 deps = ["GLM", "LinearAlgebra", "Random", "Statistics", "StatsBase"]
@@ -723,9 +723,9 @@ version = "1.11.0"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "64cca0c26b4f31ba18f13f6c12af7c85f478cfde"
+git-tree-sha1 = "41852b8679f78c8d8961eeadc8f62cef861a52e3"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.5.0"
+version = "2.5.1"
 
     [deps.SpecialFunctions.extensions]
     SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"

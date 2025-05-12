@@ -164,13 +164,7 @@ end
 
 Add a VirtualReservoir to the database.
 
-Required arguments:
-
-- `label::String`: Label of the VirtualReservoir.
-- `quantity_offer::String`: File name of the quantity offer time series.
-- `price_offer::String`: File name of the price offer time series.
-- `inflow_allocation::Vector{Float64}`: Inflow allocation for each asset owner.
-- `hydroplant_id::Vector{Int}`: Hydro plant indices that compose the VirtualReservoir.
+$(PSRDatabaseSQLite.collection_docstring(model_directory(), "VirtualReservoir"))
 
 Example:
 ```julia

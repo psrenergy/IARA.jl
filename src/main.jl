@@ -314,6 +314,15 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
     end
 
+    if is_any_construction_type_hybrid(inputs) && market_clearing_tiebreaker_weight(inputs) > 0 &&
+        use_fcf_in_clearing(inputs)
+        cuts_file = fcf_cuts_file(inputs)
+        scaled_cuts_file = "scaled_$(cuts_file)"
+        cuts_path = joinpath(path_case(inputs), cuts_file)
+        scaled_cuts_path = joinpath(path_case(inputs), scaled_cuts_file)
+        scale_cuts(cuts_path, scaled_cuts_path, market_clearing_tiebreaker_weight(inputs))
+    end
+
     try
         for period in 1:number_of_periods(inputs)
             @info("Running clearing for period: $period")

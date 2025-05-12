@@ -1112,6 +1112,13 @@ function need_demand_price_input_data(inputs::AbstractInputs)
            (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs))
 end
 
+function is_any_construction_type_hybrid(inputs::AbstractInputs)
+    return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.HYBRID ||
+           construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.HYBRID ||
+           construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.HYBRID ||
+           construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.HYBRID
+end
+
 """
     bid_data_source(inputs::AbstractInputs)
 

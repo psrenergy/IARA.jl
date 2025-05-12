@@ -94,3 +94,18 @@ id = "curtailment_cost"
 label.en = "Curtailment Cost"
 tooltip.en = "Curtailment cost of the renewable unit"
 unit = "$/MWh"
+
+
+[[attribute]]
+id = "generation_ex_ante"
+label.en = "Generation Ex-Ante"
+tooltip.en = "Realized generation for the model in ex-ante, also used in the min cost module"
+unit.en = "p.u."
+hide = true
+
+[[attribute]]
+id = "generation_ex_post"
+label.en = "Generation Ex-Post"
+tooltip.en = "Realized generation for the model in ex-post"
+unit.en = "p.u."
+hide = true

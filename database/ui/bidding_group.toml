@@ -39,3 +39,48 @@ tooltip.en = "Risk factor markup of the bidding group"
 id = "segment_fraction"
 label.en = "Segment Fraction"
 tooltip.en = "Segment fraction of the bidding group"
+
+[[attribute]]
+id = "quantity_offer"
+label.en = "Quantity Offer"
+tooltip.en = "Quantity of offers for independent segement bids"
+unit.en = "GWh"
+hide = true
+
+[[attribute]]
+id = "price_offer"
+label.en = "Price Offer"
+tooltip.en = "Price of offers for independent segement bids"
+unit.en = "$/MWh"
+
+[[attribute]]
+id = "quantity_offer_profile"
+label.en = "Quantity Offer Profile"
+tooltip.en = "Quantity of offers for profile bids"
+unit.en = "GWh"
+hide = true
+
+[[attribute]]
+id = "price_offer_profile"
+label.en = "Price Offer Profile"
+tooltip.en = "Price of offers for profile bids"
+unit.en = "$/MWh"
+hide = true
+
+[[attribute]]
+id = "parent_profile"
+label.en = "Parent Profile"
+tooltip.en = "Parent profile of this offer profile"
+hide = true
+
+[[attribute]]
+id = "complementary_grouping_profile"
+label.en = "Complementary Grouping Profile"
+tooltip.en = "Complementary grouping for the asset owner's profile bids"
+hide = true
+
+[[attribute]]
+id = "minimum_activation_level_profile"
+label.en = "Minimum Activation Level Profile"
+tooltip.en = "Minimum activation level of profile"
+hide = true

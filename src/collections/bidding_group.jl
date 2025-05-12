@@ -188,6 +188,29 @@ function update_bidding_group_relation!(
 end
 
 """
+    update_bidding_group_vectors!(db::DatabaseSQLite, label::String; kwargs...)
+
+Update the vectors of the Bidding Group named 'label' in the database.
+"""
+function update_bidding_group_vectors!(
+    db::DatabaseSQLite,
+    label::String;
+    kwargs...,
+)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
+        PSRDatabaseSQLite.update_vector_parameters!(
+            db,
+            "BiddingGroup",
+            string(attribute),
+            label,
+            value,
+        )
+    end
+    return db
+end
+
+"""
     validate(bidding_group::BiddingGroup)
 
 Validate the BiddingGroup's parameters. Returns the number of errors found.

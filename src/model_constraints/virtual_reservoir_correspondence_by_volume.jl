@@ -106,7 +106,7 @@ function virtual_reservoir_correspondence_by_volume!(
         inputs,
         run_time_options,
         "virtual_reservoir_marginal_cost",
-        virtual_reservoir_marginal_cost,
+        virtual_reservoir_marginal_cost;
         period = period,
         scenario = scenario,
         subscenario = subscenario,

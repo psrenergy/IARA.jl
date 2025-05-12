@@ -440,7 +440,7 @@ function write_output_without_subperiod!(
         Quiver.write!(
             output.writer,
             round_output(data);
-            period, scenario, 
+            period, scenario,
         )
     end
 end
@@ -526,7 +526,6 @@ function treat_output_for_writing_by_pairs_of_agents(
     # of index1 in first collection.
     index_getter::Function,
 ) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
-
     number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
     treated_output = zeros(number_of_pairs)
 

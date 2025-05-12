@@ -816,4 +816,5 @@ function fill_hydro_unit_virtual_reservoir_index!(inputs::AbstractInputs, idx::I
         index_of_elements(inputs, VirtualReservoir),
     )
     inputs.collections.hydro_unit.virtual_reservoir_index[idx] = vr
+    return nothing
 end

@@ -201,7 +201,7 @@ function inflow_shareholder_revenue(
                 for vr in index_of_elements(inputs, VirtualReservoir)
                     for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                         idx += 1
-                        accepted_offers_revenue[vr] += vr_accepted_offers_revenue[idx] 
+                        accepted_offers_revenue[vr] += vr_accepted_offers_revenue[idx]
                     end
                 end
 

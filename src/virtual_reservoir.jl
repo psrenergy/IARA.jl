@@ -216,14 +216,14 @@ function post_process_virtual_reservoirs!(
         inputs,
         run_time_options,
         "hydro_turbinable_spilled_energy",
-        hydro_spilled_energy,
+        hydro_spilled_energy;
         period = period,
         scenario = scenario,
         subscenario = subscenario,
     )
 
     treated_energy_stock = treat_output_for_writing_by_pairs_of_agents(
-        inputs, 
+        inputs,
         run_time_options,
         energy_stock,
         inputs.collections.virtual_reservoir,
@@ -236,7 +236,7 @@ function post_process_virtual_reservoirs!(
         inputs,
         run_time_options,
         "virtual_reservoir_final_energy_stock",
-        treated_energy_stock,
+        treated_energy_stock;
         period = period,
         scenario = scenario,
         subscenario = subscenario,

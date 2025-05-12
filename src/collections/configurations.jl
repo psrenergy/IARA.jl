@@ -94,7 +94,7 @@ Configurations for the problem.
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
     virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
-        Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_ACCORDING_TO_INFLOW_ALLOCATION
+        Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0

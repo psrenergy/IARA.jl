@@ -163,7 +163,7 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
     virtual_reservoir_initial_energy_account_share =
         inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
     if virtual_reservoir_initial_energy_account_share ==
-       Configurations_VirtualReservoirInitialEnergyAccount.USER_DEFINED
+       Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_ENERGY_ACCOUNT_SHARES
         for i in 1:length(virtual_reservoir)
             virtual_reservoir_label = virtual_reservoir.label[i]
             if any(is_null, virtual_reservoir.asset_owners_initial_energy_account_share[i])
@@ -262,7 +262,7 @@ end
 
 function virtual_reservoir_asset_owners_initial_energy_account_share(inputs::AbstractInputs, vr::Int, ao::Int)
     if virtual_reservoir_initial_energy_account_share(inputs) ==
-       Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_ACCORDING_TO_INFLOW_ALLOCATION
+       Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
         return virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs, vr::Int, ao::Int)
     else
         @assert ao in virtual_reservoir_asset_owner_indices(inputs, vr)

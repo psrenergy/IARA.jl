@@ -1,7 +1,7 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    virtual_reservoir_initial_energy_account_share = IARA.Configurations_VirtualReservoirInitialEnergyAccount.USER_DEFINED,
+    virtual_reservoir_initial_energy_account_share = IARA.Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_ENERGY_ACCOUNT_SHARES,
 )
 
 IARA.PSRDatabaseSQLite.update_vector_parameters!(

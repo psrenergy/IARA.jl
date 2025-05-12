@@ -130,16 +130,6 @@ function inflow_shareholder_revenue(
     outputs_dir = output_path(inputs)
     output_name = "virtual_reservoirs_inflow_shareholder_revenue" * output_suffix
 
-    vr_generation_reader = open_time_series_output(
-        inputs,
-        model_outputs_time_serie,
-        joinpath(outputs_dir, "virtual_reservoir_generation" * physical_variables_suffix),
-    )
-    vr_marginal_cost_reader = open_time_series_output(
-        inputs,
-        model_outputs_time_serie,
-        joinpath(outputs_dir, "virtual_reservoir_marginal_cost" * commercial_variables_suffix),
-    )
     load_marginal_cost_reader = open_time_series_output(
         inputs,
         model_outputs_time_serie,
@@ -155,13 +145,13 @@ function inflow_shareholder_revenue(
         model_outputs_time_serie,
         joinpath(outputs_dir, "hydro_turbinable_spilled_energy" * physical_variables_suffix),
     )
+    vr_accepted_offers_revenue_reader = open_time_series_output(
+        inputs,
+        model_outputs_time_serie,
+        joinpath(post_processing_path(inputs), "virtual_reservoirs_accepted_offers_revenue" * output_suffix),
+    )
 
     if is_double_settlement_ex_post
-        vr_generation_ex_ante_reader = open_time_series_output(
-            inputs,
-            model_outputs_time_serie,
-            joinpath(outputs_dir, "virtual_reservoir_generation" * ex_ante_physical_suffix),
-        )
         hydro_generation_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
@@ -199,41 +189,19 @@ function inflow_shareholder_revenue(
     for period in 1:num_periods
         for scenario in scenarios(inputs)
             for subscenario in subscenarios(inputs, run_time_options)
-                if has_subscenario(vr_marginal_cost_reader)
-                    Quiver.goto!(vr_marginal_cost_reader; period, scenario, subscenario = subscenario)
+                if has_subscenario(vr_accepted_offers_revenue_reader)
+                    Quiver.goto!(vr_accepted_offers_revenue_reader; period, scenario, subscenario = subscenario)
                 else
-                    Quiver.goto!(vr_marginal_cost_reader; period, scenario)
+                    Quiver.goto!(vr_accepted_offers_revenue_reader; period, scenario)
                 end
-                vr_price = vr_marginal_cost_reader.data
-
-                number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
-                vr_generation = zeros(number_of_pairs)
-                for bid_segment in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
-                    if has_subscenario(vr_generation_reader)
-                        Quiver.goto!(
-                            vr_generation_reader;
-                            period,
-                            scenario,
-                            subscenario = subscenario,
-                            bid_segment = bid_segment,
-                        )
-                    else
-                        Quiver.goto!(vr_generation_reader; period, scenario, bid_segment = bid_segment)
-                    end
-                    segment_generation = vr_generation_reader.data
-                    if is_double_settlement_ex_post
-                        Quiver.goto!(vr_generation_ex_ante_reader; period, scenario, bid_segment = bid_segment)
-                        segment_generation = segment_generation - vr_generation_ex_ante_reader.data
-                    end
-                    vr_generation = vr_generation + segment_generation
-                end
+                vr_accepted_offers_revenue = vr_accepted_offers_revenue_reader.data
 
                 accepted_offers_revenue = zeros(number_of_elements(inputs, VirtualReservoir))
                 idx = 0
                 for vr in index_of_elements(inputs, VirtualReservoir)
                     for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                         idx += 1
-                        accepted_offers_revenue[vr] += vr_generation[idx] * vr_price[vr] / MW_to_GW()
+                        accepted_offers_revenue[vr] += vr_accepted_offers_revenue[idx] 
                     end
                 end
 
@@ -261,7 +229,7 @@ function inflow_shareholder_revenue(
                         Quiver.goto!(turbinable_spillage_reader; period, scenario, subperiod = subperiod)
                     end
 
-                    if has_subscenario(vr_marginal_cost_reader)
+                    if has_subscenario(load_marginal_cost_reader)
                         Quiver.goto!(
                             load_marginal_cost_reader;
                             period,
@@ -302,6 +270,7 @@ function inflow_shareholder_revenue(
                 end
 
                 vr_total_revenue = physical_generation_revenue .- accepted_offers_revenue .- om_cost
+                number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_ao_revenue = zeros(number_of_pairs)
                 idx = 0
                 for vr in index_of_elements(inputs, VirtualReservoir)
@@ -324,13 +293,11 @@ function inflow_shareholder_revenue(
     end
 
     Quiver.close!(writer)
-    Quiver.close!(vr_generation_reader)
-    Quiver.close!(vr_marginal_cost_reader)
     Quiver.close!(load_marginal_cost_reader)
     Quiver.close!(hydro_generation_reader)
     Quiver.close!(turbinable_spillage_reader)
+    Quiver.close!(vr_accepted_offers_revenue_reader)
     if is_double_settlement_ex_post
-        Quiver.close!(vr_generation_ex_ante_reader)
         Quiver.close!(hydro_generation_ex_ante_reader)
         Quiver.close!(turbinable_spillage_ex_ante_reader)
     end

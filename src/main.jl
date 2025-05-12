@@ -315,7 +315,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     end
 
     if is_any_construction_type_hybrid(inputs) && market_clearing_tiebreaker_weight(inputs) > 0 &&
-        use_fcf_in_clearing(inputs)
+       use_fcf_in_clearing(inputs)
         cuts_file = fcf_cuts_file(inputs)
         scaled_cuts_file = "scaled_$(cuts_file)"
         cuts_path = joinpath(path_case(inputs), cuts_file)

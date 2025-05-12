@@ -437,10 +437,10 @@ and save the result to output_file.
 function scale_cuts(input_file::String, output_file::String, factor::Float64)
     # Read the JSON file
     data = SDDP.JSON.parsefile(input_file)
-    
+
     # Make a deep copy to avoid modifying the original data
     scaled_data = deepcopy(data)
-    
+
     # Iterate through all nodes
     for node_data in scaled_data
         # Scale single cuts
@@ -450,7 +450,7 @@ function scale_cuts(input_file::String, output_file::String, factor::Float64)
                 cut["coefficients"][var] = coef * factor
             end
         end
-        
+
         # Scale multi cuts if they exist
         for cut in get(node_data, "multi_cuts", [])
             cut["intercept"] *= factor
@@ -458,7 +458,7 @@ function scale_cuts(input_file::String, output_file::String, factor::Float64)
                 cut["coefficients"][var] = coef * factor
             end
         end
-        
+
         # Scale risk set cuts if they exist
         for cut in get(node_data, "risk_set_cuts", [])
             cut["intercept"] *= factor
@@ -467,11 +467,11 @@ function scale_cuts(input_file::String, output_file::String, factor::Float64)
             end
         end
     end
-    
+
     # Write the scaled data to the output file
     open(output_file, "w") do f
-        SDDP.JSON.print(f, scaled_data, 4)
+        return SDDP.JSON.print(f, scaled_data, 4)
     end
-    
+
     return scaled_data
 end

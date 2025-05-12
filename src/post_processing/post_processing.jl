@@ -286,5 +286,3 @@ function create_temporary_file_with_subscenario_dimension(
 
     return treated_filename
 end
-
-has_subscenario(reader::Quiver.Reader) = :subscenario in reader.metadata.dimensions

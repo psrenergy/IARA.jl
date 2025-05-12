@@ -237,3 +237,5 @@ function create_empty_time_series_if_necessary(
     )
     return file_created
 end
+
+has_subscenario(reader::Quiver.Reader) = :subscenario in reader.metadata.dimensions

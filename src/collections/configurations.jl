@@ -1439,7 +1439,7 @@ Return the period to season map.
 period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
     inputs.collections.configurations.period_season_map[:, scenario, period]
 
-function is_skipped(inputs::Inputs, construction_type::String)
+function is_skipped(inputs::AbstractInputs, construction_type::String)
     if construction_type == "ex_post_physical"
         return construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
     elseif construction_type == "ex_post_commercial"

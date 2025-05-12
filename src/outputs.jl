@@ -384,6 +384,67 @@ function write_output_per_subperiod!(
     return nothing
 end
 
+function write_output_without_subperiod!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    vector_of_results::Vector{T};
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+    multiply_by::Float64 = 1.0,
+    indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
+) where {T}
+
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    # Create a vector of zeros based on the number of time series
+    num_time_series = output.writer.metadata.number_of_time_series
+    data = zeros(num_time_series)
+
+    # Validate that the indices of the outputs match the jump_container
+    if indices_of_elements_in_output === nothing
+        @assert length(vector_of_results) == num_time_series
+    else
+        @assert length(indices_of_elements_in_output) == size(vector_of_results, 2)
+    end
+
+    vector_to_write = vector_of_results * multiply_by
+    if indices_of_elements_in_output === nothing
+        # Write in all indices without filtering
+        for (idx, value) in enumerate(vector_to_write)
+            data[idx] = value
+        end
+    else
+        # Write only the filtered indices that are in the output file
+        for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
+            data[idx_in_output] = vector_to_write[idx]
+        end
+    end
+    if is_ex_post_problem(run_time_options)
+        Quiver.write!(
+            output.writer,
+            round_output(data);
+            period,
+            scenario,
+            subscenario,
+        )
+    else
+        Quiver.write!(
+            output.writer,
+            round_output(data);
+            period, scenario, 
+        )
+    end
+end
+
 function all_buses(inputs::Inputs, index1::Int)
     return 1:number_of_elements(inputs, Bus)
 end
@@ -446,6 +507,35 @@ function treat_output_for_writing_by_pairs_of_agents(
             for segment in 1:valid_segments[index1]
                 treated_output[number_of_pairs_fullfiled, segment] = raw_output[index1, index2, segment]
             end
+        end
+    end
+
+    @assert number_of_pairs_fullfiled == number_of_pairs
+
+    return treated_output
+end
+
+function treat_output_for_writing_by_pairs_of_agents(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    raw_output::Vector{Vector{Float64}},
+    first_collection::T1,
+    second_collection::T2;
+    # index_getter is a function that receives the inputs and the index of the first collection
+    # and returns the indices of the second collection that are associated with the elements 
+    # of index1 in first collection.
+    index_getter::Function,
+) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
+
+    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
+    treated_output = zeros(number_of_pairs)
+
+    number_of_pairs_fullfiled = 0
+    for index1 in index_of_elements(inputs, T1; run_time_options)
+        @assert length(index_getter(inputs, index1)) == length(raw_output[index1])
+        for index2 in eachindex(raw_output[index1])
+            number_of_pairs_fullfiled += 1
+            treated_output[number_of_pairs_fullfiled] = raw_output[index1][index2]
         end
     end
 
@@ -644,77 +734,6 @@ function write_virtual_reservoir_bid_output(
             )
         end
     end
-end
-
-function write_virtual_reservoir_post_processed_outputs(
-    outputs::Outputs,
-    inputs::Inputs,
-    run_time_options::RunTimeOptions,
-    energy_stock::Vector{Vector{Float64}},
-    hydro_spilled_energy::Array{Float64, 2},
-    period::Int,
-    scenario::Int,
-    subscenario::Int,
-)
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options)
-    asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
-    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
-
-    @assert size(hydro_spilled_energy, 1) == length(hydro_units)
-    @assert size(hydro_spilled_energy, 2) == number_of_subperiods(inputs)
-    @assert length(energy_stock) == length(virtual_reservoirs)
-    for vr in virtual_reservoirs
-        @assert length(energy_stock[vr]) == length(virtual_reservoir_asset_owner_indices(inputs, vr))
-    end
-
-    output_hydro_spilled_energy =
-        outputs.outputs["hydro_turbinable_spilled_energy"*run_time_file_suffixes(inputs, run_time_options)]
-    for subperiod in subperiods(inputs)
-        if is_ex_post_problem(run_time_options)
-            Quiver.write!(
-                output_hydro_spilled_energy.writer,
-                round_output(hydro_spilled_energy[:, subperiod]) * MW_to_GW();
-                period, scenario, subscenario, subperiod = subperiod,
-            )
-        else
-            Quiver.write!(
-                output_hydro_spilled_energy.writer,
-                round_output(hydro_spilled_energy[:, subperiod]) * MW_to_GW();
-                period, scenario, subperiod = subperiod,
-            )
-        end
-    end
-
-    output_energy_stock =
-        outputs.outputs["virtual_reservoir_final_energy_stock"*run_time_file_suffixes(inputs, run_time_options)]
-    number_of_asset_owners_per_virtual_reservoir = length.(virtual_reservoir_asset_owner_indices(inputs))
-    treated_output = zeros(sum(number_of_asset_owners_per_virtual_reservoir))
-
-    pair_index = 0
-    for vr in virtual_reservoirs
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            pair_index += 1
-            treated_output[pair_index] = energy_stock[vr][ao] * MW_to_GW()
-        end
-    end
-
-    @assert pair_index == sum(number_of_asset_owners_per_virtual_reservoir)
-
-    if is_ex_post_problem(run_time_options)
-        Quiver.write!(
-            output_energy_stock.writer,
-            round_output(treated_output);
-            period, scenario, subscenario,
-        )
-    else
-        Quiver.write!(
-            output_energy_stock.writer,
-            round_output(treated_output);
-            period, scenario,
-        )
-    end
-
-    return nothing
 end
 
 function run_time_file_suffixes(inputs::Inputs, run_time_options::RunTimeOptions)

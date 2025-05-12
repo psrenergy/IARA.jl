@@ -59,7 +59,7 @@ function energy_from_inflows(
     ]
 
     hydro_unit_additional_energy = zeros(length(hydro_units), number_of_subperiods(inputs))
-    hydro_unit_non_turbinable_inflow_energy = zeros(length(hydro_units), number_of_subperiods(inputs))
+    hydro_unit_non_turbinable_inflow_energy = zeros(number_of_subperiods(inputs), length(hydro_units))
 
     for b in subperiods(inputs)
         for h in hydro_units
@@ -71,7 +71,7 @@ function energy_from_inflows(
 
             vr = hydro_unit_virtual_reservoir_index(inputs, h)
             if !isnothing(vr)
-                hydro_unit_non_turbinable_inflow_energy[h, b] =
+                hydro_unit_non_turbinable_inflow_energy[b, h] =
                     spillage * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
                 hydro_unit_additional_energy[h, b] =
                     (inflow_as_volume[h, b] - spillage) * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
@@ -211,17 +211,37 @@ function post_process_virtual_reservoirs!(
         )
     end
 
-    write_virtual_reservoir_post_processed_outputs(
+    write_output_per_subperiod!(
         outputs,
         inputs,
         run_time_options,
-        energy_stock,
+        "hydro_turbinable_spilled_energy",
         hydro_spilled_energy,
-        period,
-        scenario,
-        subscenario,
+        period = period,
+        scenario = scenario,
+        subscenario = subscenario,
     )
 
+    treated_energy_stock = treat_output_for_writing_by_pairs_of_agents(
+        inputs, 
+        run_time_options,
+        energy_stock,
+        inputs.collections.virtual_reservoir,
+        inputs.collections.asset_owner;
+        index_getter = virtual_reservoir_asset_owner_indices,
+    )
+
+    write_output_without_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "virtual_reservoir_final_energy_stock",
+        treated_energy_stock,
+        period = period,
+        scenario = scenario,
+        subscenario = subscenario,
+        multiply_by = MW_to_GW(),
+    )
     return nothing
 end
 

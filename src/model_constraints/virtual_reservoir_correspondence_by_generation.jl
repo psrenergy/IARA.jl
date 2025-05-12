@@ -96,19 +96,17 @@ function virtual_reservoir_correspondence_by_generation!(
 )
     virtual_reservoir_marginal_cost = simulation_results.data[:virtual_reservoir_marginal_cost]
 
-    output = outputs.outputs["virtual_reservoir_marginal_cost"*run_time_file_suffixes(inputs, run_time_options)]
-    if is_ex_post_problem(run_time_options)
-        Quiver.write!(
-            output.writer,
-            -round_output(virtual_reservoir_marginal_cost) / money_to_thousand_money();
-            period, scenario, subscenario,
-        )
-    else
-        Quiver.write!(
-            output.writer,
-            -round_output(virtual_reservoir_marginal_cost) / money_to_thousand_money();
-            period, scenario,
-        )
-    end
+    write_output_without_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "virtual_reservoir_marginal_cost",
+        virtual_reservoir_marginal_cost,
+        period = period,
+        scenario = scenario,
+        subscenario = subscenario,
+        multiply_by = -1 / money_to_thousand_money(),
+    )
+
     return nothing
 end

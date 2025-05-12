@@ -666,7 +666,8 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     # AO in VR
     energy_share_of_asset_owner_in_virtual_reservoir = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
 
-    energy_account_at_beginning_of_period = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    energy_account_at_beginning_of_period =
+        virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
     for vr in virtual_reservoir_indices
         total_virtual_reservoir_energy_account = sum(energy_account_at_beginning_of_period[vr])
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)

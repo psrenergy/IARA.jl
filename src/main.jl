@@ -206,7 +206,7 @@ function load_cuts_and_run_simulation(
     run_time_options::RunTimeOptions,
 )
     model = build_model(inputs, run_time_options)
-    read_cuts_to_model!(model, inputs)
+    read_cuts_to_model!(model, inputs, run_time_options)
     outputs = initialize_outputs(inputs, run_time_options)
     try
         simulate_all_periods_and_scenarios_of_trained_model(model, inputs, outputs, run_time_options)
@@ -312,6 +312,15 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
         create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
+    end
+
+    if is_any_construction_type_hybrid(inputs) && market_clearing_tiebreaker_weight(inputs) > 0 &&
+       use_fcf_in_clearing(inputs)
+        cuts_file = fcf_cuts_file(inputs)
+        scaled_cuts_file = "scaled_$(cuts_file)"
+        cuts_path = joinpath(path_case(inputs), cuts_file)
+        scaled_cuts_path = joinpath(path_case(inputs), scaled_cuts_file)
+        scale_cuts(cuts_path, scaled_cuts_path, market_clearing_tiebreaker_weight(inputs))
     end
 
     try

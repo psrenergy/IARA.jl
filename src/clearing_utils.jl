@@ -470,7 +470,7 @@ function scale_cuts(input_file::String, output_file::String, factor::Float64)
 
     # Write the scaled data to the output file
     open(output_file, "w") do f
-        return SDDP.JSON.print(f, scaled_data, 4)
+        return SDDP.JSON.print(f, scaled_data)
     end
 
     return scaled_data

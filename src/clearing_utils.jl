@@ -364,13 +364,12 @@ function read_cuts_into_clearing_model!(
 )
     # We could choose to add cuts to the model as a user
     if use_fcf_in_clearing(inputs)
-        read_cuts_to_model!(model, inputs; current_period = period)
-        # some combinations have to read cuts
+        read_cuts_to_model!(model, inputs, run_time_options; current_period = period)
     elseif clearing_representation_must_read_cuts(inputs, run_time_options)
         if !has_fcf_cuts_to_read(inputs)
             error("Construction type is COST_BASED, the problem has state variables and no cuts file was provided.")
         end
-        read_cuts_to_model!(model, inputs; current_period = period)
+        read_cuts_to_model!(model, inputs, run_time_options; current_period = period)
     end
     return nothing
 end
@@ -427,4 +426,52 @@ function clearing_has_physical_variables(inputs::Inputs)
     else
         return false
     end
+end
+
+"""
+    scale_cuts(input_file::String, output_file::String, factor::Float64)
+
+Read FCF cuts from input_file, multiply all intercepts and coefficients by factor (preserving states),
+and save the result to output_file.
+"""
+function scale_cuts(input_file::String, output_file::String, factor::Float64)
+    # Read the JSON file
+    data = SDDP.JSON.parsefile(input_file)
+
+    # Make a deep copy to avoid modifying the original data
+    scaled_data = deepcopy(data)
+
+    # Iterate through all nodes
+    for node_data in scaled_data
+        # Scale single cuts
+        for cut in get(node_data, "single_cuts", [])
+            cut["intercept"] *= factor
+            for (var, coef) in cut["coefficients"]
+                cut["coefficients"][var] = coef * factor
+            end
+        end
+
+        # Scale multi cuts if they exist
+        for cut in get(node_data, "multi_cuts", [])
+            cut["intercept"] *= factor
+            for (var, coef) in cut["coefficients"]
+                cut["coefficients"][var] = coef * factor
+            end
+        end
+
+        # Scale risk set cuts if they exist
+        for cut in get(node_data, "risk_set_cuts", [])
+            cut["intercept"] *= factor
+            for (var, coef) in cut["coefficients"]
+                cut["coefficients"][var] = coef * factor
+            end
+        end
+    end
+
+    # Write the scaled data to the output file
+    open(output_file, "w") do f
+        return SDDP.JSON.print(f, scaled_data)
+    end
+
+    return scaled_data
 end

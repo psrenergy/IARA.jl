@@ -74,6 +74,7 @@ function bidding_group_markup_units(inputs::Inputs)
     bidding_group_hydro_units = [Int[] for _ in 1:number_of_bidding_groups]
     bidding_group_thermal_units = [Int[] for _ in 1:number_of_bidding_groups]
     bidding_group_renewable_units = [Int[] for _ in 1:number_of_bidding_groups]
+    bidding_group_demand_units = [Int[] for _ in 1:number_of_bidding_groups]
 
     for bg in bidding_group_indexes
         bidding_group_number_of_risk_factors[bg] = length(bidding_group_risk_factor(inputs, bg))
@@ -86,9 +87,10 @@ function bidding_group_markup_units(inputs::Inputs)
         end
         bidding_group_thermal_units[bg] = findall(isequal(bg), thermal_unit_bidding_group_index(inputs))
         bidding_group_renewable_units[bg] = findall(isequal(bg), renewable_unit_bidding_group_index(inputs))
+        bidding_group_demand_units[bg] = findall(isequal(bg), demand_unit_bidding_group_index(inputs))
     end
     return bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_thermal_units, bidding_group_renewable_units
+    bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units
 end
 
 function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
@@ -96,7 +98,8 @@ function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
     bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
+    bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units =
+        bidding_group_markup_units(inputs)
 
     number_of_hydro_units_per_bidding_group_and_bus =
         get_number_of_units_per_bus_and_bg(inputs, bidding_group_hydro_units, hydro_unit_bus_index)
@@ -104,11 +107,14 @@ function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
         get_number_of_units_per_bus_and_bg(inputs, bidding_group_thermal_units, thermal_unit_bus_index)
     number_of_renewable_units_per_bidding_group_and_bus =
         get_number_of_units_per_bus_and_bg(inputs, bidding_group_renewable_units, renewable_unit_bus_index)
+    number_of_demand_units_per_bidding_group_and_bus =
+        get_number_of_units_per_bus_and_bg(inputs, bidding_group_demand_units, demand_unit_bus_index)
 
     number_of_units_per_bidding_group_and_bus =
         number_of_hydro_units_per_bidding_group_and_bus .+
         number_of_thermal_units_per_bidding_group_and_bus .+
-        number_of_renewable_units_per_bidding_group_and_bus
+        number_of_renewable_units_per_bidding_group_and_bus .+
+        number_of_demand_units_per_bidding_group_and_bus
 
     maximum_number_of_units_per_bidding_group =
         dropdims(maximum(number_of_units_per_bidding_group_and_bus; dims = 2, init = 0); dims = 2)
@@ -151,7 +157,8 @@ function markup_offers_for_period_scenario(
     renewable_generation_series = time_series_renewable_generation(inputs, run_time_options)
 
     bidding_group_number_of_risk_factors, bidding_group_hydro_units,
-    bidding_group_thermal_units, bidding_group_renewable_units = bidding_group_markup_units(inputs)
+    bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units =
+        bidding_group_markup_units(inputs)
 
     maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
 
@@ -200,6 +207,13 @@ function markup_offers_for_period_scenario(
             renewable_unit_bus_index,
         )
 
+        demand_unit_indexes_per_bus = get_unit_index_by_bus(
+            inputs,
+            bidding_group_demand_units,
+            bg,
+            demand_unit_bus_index,
+        )
+
         build_thermal_offers!(
             inputs,
             bg,
@@ -233,6 +247,18 @@ function markup_offers_for_period_scenario(
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
             available_energy_per_hydro_unit,
+        )
+
+        build_demand_offers!(
+            inputs,
+            bg,
+            quantity_offers,
+            price_offers,
+            no_markup_price_offers,
+            demand_unit_indexes_per_bus,
+            bidding_group_number_of_risk_factors[bg],
+            segment_offset_per_bus,
+            time_series_demand(inputs, run_time_options),
         )
 
         # Number of segments per per "bidding group - bus" pair must always be less than or equal to the maximum number of offer segments
@@ -382,6 +408,64 @@ function build_thermal_offers!(
     end
 
     segment_offset_per_bus .+= length.(thermal_unit_indexes_per_bus) .* number_of_risk_factors
+
+    return nothing
+end
+
+"""
+    build_demand_offers!(
+        inputs::Inputs, 
+        bg_index::Int, 
+        quantity_offers::Array{Float64, 4},
+        price_offers::Array{Float64, 4},
+        no_markup_price_offers::Array{Float64, 4},
+        demand_unit_indexes_per_bus::Vector{Vector{Int}},
+        number_of_risk_factors::Int,
+        segment_offset_per_bus::Vector{Int},
+    )
+
+Build the quantity and price offers for demand units associated with a bidding group.
+"""
+function build_demand_offers!(
+    inputs::Inputs,
+    bg_index::Int,
+    quantity_offers::Array{Float64, 4},
+    price_offers::Array{Float64, 4},
+    no_markup_price_offers::Array{Float64, 4},
+    demand_unit_indexes_per_bus::Vector{Vector{Int}},
+    number_of_risk_factors::Int,
+    segment_offset_per_bus::Vector{Int},
+    demand_series::Array{Float64, 2},
+)
+    buses = index_of_elements(inputs, Bus)
+
+    for bus in buses
+        for (unit_idx, demand_unit) in enumerate(demand_unit_indexes_per_bus[bus])
+            # We use both demand_unit index to acess the demand series and elastic_demand_index to access the price series
+            elastic_demand_index = index_among_elastic_demands(inputs, demand_unit)
+            for risk_idx in 1:number_of_risk_factors
+                segment = (unit_idx - 1) * number_of_risk_factors + risk_idx + segment_offset_per_bus[bus]
+                # bg parameters
+                segment_fraction = bidding_group_segment_fraction(inputs, bg_index)[risk_idx]
+                risk_factor = bidding_group_risk_factor(inputs, bg_index)[risk_idx]
+                for subperiod in 1:number_of_subperiods(inputs)
+                    # demand is negative because it is a consumption
+                    quantity_offers[bg_index, bus, segment, subperiod] =
+                        demand_unit_max_demand(inputs, demand_unit) *
+                        demand_series[demand_unit, subperiod] *
+                        subperiod_duration_in_hours(inputs, subperiod) *
+                        segment_fraction *
+                        (-1)
+                    price_offers[bg_index, bus, segment, subperiod] =
+                        time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod] * (1 + risk_factor)
+                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                        time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod]
+                end
+            end
+        end
+    end
+
+    segment_offset_per_bus .+= length.(demand_unit_indexes_per_bus) .* number_of_risk_factors
 
     return nothing
 end
@@ -789,9 +873,11 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
         segments = 1:dimension_dict[:bid_segment]
     end
 
+    tol = 1e-6
+
     for bg in 1:number_elements
         for segment in reverse(segments)
-            if any(bids_view.data[bg, :, segment, :] .> 0)
+            if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
                 valid_segments_per_timeseries[bg] = segment
                 break
             end

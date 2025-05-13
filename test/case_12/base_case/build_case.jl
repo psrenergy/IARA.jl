@@ -45,6 +45,8 @@ db = IARA.create_study!(PATH;
     settlement_type = IARA.Configurations_SettlementType.EX_POST,
     bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
+    language = "pt",
+    market_clearing_tiebreaker_weight = 0.0,
 )
 
 # Add collection elements
@@ -52,26 +54,26 @@ db = IARA.create_study!(PATH;
 IARA.add_zone!(db; label = "Zone 1")
 IARA.add_bus!(db; label = "Bus 1", zone_id = "Zone 1")
 
-IARA.add_asset_owner!(db; label = "Thermal Owner 1")
-IARA.add_asset_owner!(db; label = "Thermal Owner 2")
-IARA.add_asset_owner!(db; label = "Thermal Owner 3")
+IARA.add_asset_owner!(db; label = "Agente 1")
+IARA.add_asset_owner!(db; label = "Agente 2")
+IARA.add_asset_owner!(db; label = "Agente 3")
 
 IARA.add_bidding_group!(
     db;
     label = "Bidding Group 1",
-    assetowner_id = "Thermal Owner 1",
+    assetowner_id = "Agente 1",
 )
 
 IARA.add_bidding_group!(
     db;
     label = "Bidding Group 2",
-    assetowner_id = "Thermal Owner 2",
+    assetowner_id = "Agente 2",
 )
 
 IARA.add_bidding_group!(
     db;
     label = "Bidding Group 3",
-    assetowner_id = "Thermal Owner 3",
+    assetowner_id = "Agente 3",
 )
 
 IARA.add_thermal_unit!(

@@ -23,7 +23,7 @@ function bidding_group_profile_energy_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     # Define the bidding groups
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
     placeholder_scenario = 1
@@ -109,7 +109,7 @@ function bidding_group_profile_energy_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     # Define the bidding groups
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
     quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.node, scenario)

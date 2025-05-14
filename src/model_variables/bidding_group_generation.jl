@@ -197,12 +197,14 @@ function bidding_group_generation!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+
     write_bid_output(
         outputs,
         inputs,
         run_time_options,
         "bidding_group_generation",
-        simulation_results.data[:bidding_group_generation].data;
+        simulation_results.data[:bidding_group_generation].data; # Is this a normal array or DenseArray?
         period,
         scenario,
         subscenario,

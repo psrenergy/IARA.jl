@@ -283,7 +283,7 @@ Prepare the output data vector by either copying all values or mapping to specif
 function _prepare_output_data(
     vector_to_write::Vector{T},
     data::Vector{Float64},
-    indices_of_elements_in_output::Union{Vector{Int}, Nothing}
+    indices_of_elements_in_output::Union{Vector{Int}, Nothing},
 ) where {T}
     if indices_of_elements_in_output === nothing
         # Write in all indices without filtering
@@ -317,14 +317,14 @@ function _write_quiver_data(
     scenario::Int,
     blk::Int,
     run_time_options::RunTimeOptions;
-    subscenario::Union{Int, Nothing} = nothing
+    subscenario::Union{Int, Nothing} = nothing,
 )
     kwargs = (; period, scenario, subperiod = blk)
     if is_ex_post_problem(run_time_options)
         kwargs = (; kwargs..., subscenario = something(subscenario, 1))
     end
-    
-    Quiver.write!(writer, round_output(data); kwargs...)
+
+    return Quiver.write!(writer, round_output(data); kwargs...)
 end
 
 """
@@ -374,13 +374,13 @@ function write_output_per_subperiod!(
     period = is_single_period(inputs) ? 1 : period
 
     # Get the output writer and validate dimensions
-    output = outputs.outputs[output_name * run_time_file_suffixes(inputs, run_time_options)]
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
     num_time_series = output.writer.metadata.number_of_time_series
-    
+
     # Validate dimensions
-    expected_size = indices_of_elements_in_output === nothing ? 
-        num_time_series : 
-        length(indices_of_elements_in_output)
+    expected_size = indices_of_elements_in_output === nothing ?
+                    num_time_series :
+                    length(indices_of_elements_in_output)
     @assert size(matrix_of_results, 2) == expected_size "Output dimension mismatch: expected $expected_size, got $(size(matrix_of_results, 2))"
 
     # Prepare data buffer
@@ -396,7 +396,7 @@ function write_output_per_subperiod!(
 
         # Prepare the output data
         _prepare_output_data(vector_to_write, data, indices_of_elements_in_output)
-        
+
         # Write the data
         _write_quiver_data(
             output.writer,
@@ -405,7 +405,7 @@ function write_output_per_subperiod!(
             scenario,
             blk,
             run_time_options;
-            subscenario
+            subscenario,
         )
     end
     return nothing
@@ -552,7 +552,7 @@ function write_bid_output(
         valid_items = get_maximum_valid_segments(inputs)
         item_name = :bid_segment
     end
-    
+
     # Get common data structures
     blks = subperiods(inputs)
     buses = index_of_elements(inputs, Bus)
@@ -562,9 +562,9 @@ function write_bid_output(
     # Validate data dimensions if it's a 4D array
     if isa(data, Array{Float64, 4})
         validate_data_dimensions(
-            data, 
+            data,
             (length(blks), length(all_bidding_groups), num_items, num_buses),
-            ["subperiods", "bidding groups", "bid items", "buses"]
+            ["subperiods", "bidding groups", "bid items", "buses"],
         )
     end
 
@@ -612,18 +612,17 @@ Validate that the dimensions of the input data array match the expected dimensio
 - `AssertionError` if dimensions don't match
 """
 function validate_data_dimensions(
-    data::AbstractArray, 
+    data::AbstractArray,
     expected_dims::Tuple,
-    dim_names::Vector{String}
+    dim_names::Vector{String},
 )
     actual_dims = size(data)
     @assert length(actual_dims) == length(expected_dims) "Dimension count mismatch: expected $(length(expected_dims)), got $(length(actual_dims))"
-    
+
     for (i, (actual, expected, name)) in enumerate(zip(actual_dims, expected_dims, dim_names))
         @assert actual == expected "$name dimension mismatch: expected $expected, got $actual"
     end
 end
-
 
 """
     get_output_writer(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, output_name::String)
@@ -753,7 +752,7 @@ function write_bid_data(
     # Scale and round the data, then write
     scaled_data = data .* multiply_by
     rounded_data = round_output(scaled_data)
-    
+
     return Quiver.write!(writer, rounded_data; kwargs...)
 end
 
@@ -806,7 +805,7 @@ function write_virtual_reservoir_bid_output(
     validate_data_dimensions(
         data,
         (n_vrs, n_aos, size(data, 3)),
-        ["virtual reservoirs", "asset owners", "bid segments"]
+        ["virtual reservoirs", "asset owners", "bid segments"],
     )
 
     # Get the output writer and prepare the output array

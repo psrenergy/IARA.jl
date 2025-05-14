@@ -137,7 +137,8 @@ end
 
 function read_cuts_to_model!(
     model::ProblemModel,
-    inputs::Inputs;
+    inputs::Inputs,
+    run_time_options::RunTimeOptions;
     current_period::Union{Nothing, Int} = nothing,
 )
     if !has_fcf_cuts_to_read(inputs)
@@ -145,7 +146,14 @@ function read_cuts_to_model!(
     end
 
     # Check if the file exists in the case or output directory
-    fcf_cuts_filepath = fcf_cuts_path(inputs)
+    if construction_type(inputs, run_time_options) == Configurations_ConstructionType.HYBRID &&
+       clearing_has_state_variables(inputs, run_time_options) &&
+       market_clearing_tiebreaker_weight(inputs) > 0
+        fcf_cuts_filepath = joinpath(path_case(inputs), "scaled_" * fcf_cuts_file(inputs))
+    else
+        fcf_cuts_filepath = fcf_cuts_path(inputs)
+    end
+
     if !isfile(fcf_cuts_filepath)
         error("FCF cuts file not found: $fcf_cuts_filepath")
     end

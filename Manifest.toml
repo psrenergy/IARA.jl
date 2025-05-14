@@ -537,9 +537,9 @@ version = "0.6.0"
 
 [[deps.PSRClassesInterface]]
 deps = ["DBInterface", "DataFrames", "Dates", "Encodings", "JSON", "OrderedCollections", "Random", "SQLite", "TOML", "Tables"]
-git-tree-sha1 = "44a0623ed32ddf06a42e09ef17565909126cf5c0"
+git-tree-sha1 = "09b538741d8bcd3af98b65c7c3cb7e3b4b737d20"
 uuid = "1eab49e5-27d8-4905-b9f6-327b6ea666c4"
-version = "0.17.8"
+version = "0.17.9"
 
 [[deps.ParametricOptInterface]]
 deps = ["MathOptInterface"]

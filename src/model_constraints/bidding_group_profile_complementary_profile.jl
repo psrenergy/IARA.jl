@@ -27,7 +27,8 @@ function bidding_group_profile_complementary_profile!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
     maximum_bidding_profiles = maximum_number_of_bidding_profiles(inputs)
     # Model variables
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)

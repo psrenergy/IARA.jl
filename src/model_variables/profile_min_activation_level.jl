@@ -22,7 +22,8 @@ function profile_min_activation_level!(
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
 
     valid_profiles = get_maximum_valid_profiles(inputs)
 

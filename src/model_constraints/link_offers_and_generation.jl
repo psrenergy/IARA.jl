@@ -24,13 +24,15 @@ function link_offers_and_generation!(
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
     # Generation variables
-    hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing, !is_associated_with_some_virtual_reservoir])
+    hydro_units =
+        index_of_elements(inputs, HydroUnit; filters = [is_existing, !is_associated_with_some_virtual_reservoir])
     thermal_units = index_of_elements(inputs, ThermalUnit; filters = [is_existing])
     renewable_units = index_of_elements(inputs, RenewableUnit; filters = [is_existing])
     battery_units = index_of_elements(inputs, BatteryUnit; filters = [is_existing])
-    hydro_generation = if any_elements(inputs, HydroUnit; filters = [is_existing, !is_associated_with_some_virtual_reservoir])
-        get_model_object(model, :hydro_generation)
-    end
+    hydro_generation =
+        if any_elements(inputs, HydroUnit; filters = [is_existing, !is_associated_with_some_virtual_reservoir])
+            get_model_object(model, :hydro_generation)
+        end
     thermal_generation = if any_elements(inputs, ThermalUnit; filters = [is_existing])
         get_model_object(model, :thermal_generation)
     end

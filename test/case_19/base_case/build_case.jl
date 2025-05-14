@@ -29,7 +29,6 @@ db = IARA.create_study!(PATH;
     bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    # market_clearing_tiebreaker_weight = 0.01,
 )
 
 IARA.add_zone!(db; label = "zone_1")
@@ -162,7 +161,7 @@ IARA.add_demand_unit!(db;
 
 # Time Series
 inflow = zeros(4, number_of_subperiods, number_of_scenarios, number_of_periods)
-inflow .= 0.5 / m3_per_second_to_hm3 # vai chegar 0.5 hm3 a cada subperiodo, que rende 300 MWh por RV. 
+inflow .= 0.5 / m3_per_second_to_hm3
 
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow_ex_ante"),
@@ -202,9 +201,7 @@ IARA.link_time_series_to_file(
     "DemandUnit";
     demand_ex_post = "demand_ex_post",
 )
-# 750.0 faz despachar a térmica mas não dar déficit. 
-# LIMPAR COMENTARIOS
-# ofertas
+
 number_of_bg_segments = 1
 number_of_bidding_groups = 1
 number_of_buses = 1

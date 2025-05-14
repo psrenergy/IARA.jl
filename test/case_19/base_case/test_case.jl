@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase18BaseCase
+module TestCase19BaseCase
 
 using Test
 using IARA

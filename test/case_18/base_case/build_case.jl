@@ -209,23 +209,25 @@ number_of_bg_segments = 1
 number_of_bidding_groups = 1
 number_of_buses = 1
 
-bg_quantity_offer = zeros(
-    number_of_bidding_groups,
-    number_of_buses,
-    number_of_bg_segments,
-    number_of_subperiods,
-    number_of_scenarios,
-    number_of_periods,
-) .+ 100.0
+bg_quantity_offer =
+    zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        number_of_bg_segments,
+        number_of_subperiods,
+        number_of_scenarios,
+        number_of_periods,
+    ) .+ 100.0
 
-bg_price_offer = zeros(
-    number_of_bidding_groups,
-    number_of_buses,
-    number_of_bg_segments,
-    number_of_subperiods,
-    number_of_scenarios,
-    number_of_periods,
-) .+ 120.0
+bg_price_offer =
+    zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        number_of_bg_segments,
+        number_of_subperiods,
+        number_of_scenarios,
+        number_of_periods,
+    ) .+ 120.0
 
 IARA.write_bids_time_series_file(
     joinpath(PATH, "bg_quantity_offer"),
@@ -272,8 +274,20 @@ number_of_virtual_reservoirs = 2
 number_of_asset_owners = 2
 number_of_vr_segments = 2
 
-vr_quantity_offer = zeros(number_of_virtual_reservoirs, number_of_asset_owners, number_of_vr_segments, number_of_scenarios, number_of_periods) 
-vr_price_offer = zeros(number_of_virtual_reservoirs, number_of_asset_owners, number_of_vr_segments, number_of_scenarios, number_of_periods)
+vr_quantity_offer = zeros(
+    number_of_virtual_reservoirs,
+    number_of_asset_owners,
+    number_of_vr_segments,
+    number_of_scenarios,
+    number_of_periods,
+)
+vr_price_offer = zeros(
+    number_of_virtual_reservoirs,
+    number_of_asset_owners,
+    number_of_vr_segments,
+    number_of_scenarios,
+    number_of_periods,
+)
 
 # VR 1, AO 1
 vr_quantity_offer[1, 1, 1, :, :] .= 420.0

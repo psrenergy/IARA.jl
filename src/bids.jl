@@ -814,7 +814,7 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         inputs,
         run_time_options,
         "virtual_reservoir_energy_offer",
-        quantity_offers,
+        quantity_offers;
         period,
         scenario,
     )
@@ -824,7 +824,7 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         inputs,
         run_time_options,
         "virtual_reservoir_price_offer",
-        price_offers,
+        price_offers;
         period,
         scenario,
     )

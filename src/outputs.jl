@@ -411,6 +411,36 @@ function treat_output_for_writing_by_pairs_of_agents(
     return treated_output
 end
 
+"""
+    write_bid_output(
+        outputs::Outputs,
+        inputs::Inputs,
+        run_time_options::RunTimeOptions,
+        output_name::String,
+        data::Union{Array{Float64, 4}, OrderedDict{NTuple{4, Int64}, Float64}};
+        period::Int,
+        scenario::Int,
+        subscenario::Int,
+        multiply_by::Float64 = 1.0,
+        has_profile_bids::Bool = false,
+        @nospecialize(filters::Vector{<:Function} = Function[])
+    )
+
+Write bid output data to the specified output file.
+
+# Arguments
+- `outputs`: The outputs struct containing the output writers
+- `inputs`: The inputs struct containing model data
+- `run_time_options`: Runtime options for the model
+- `output_name`: Base name of the output file
+- `data`: 4D array or OrderedDict containing the bid data
+- `period`: Current period
+- `scenario`: Current scenario
+- `subscenario`: Current subscenario
+- `multiply_by`: Scaling factor for the output data
+- `has_profile_bids`: Whether the bids are profile-based
+- `filters`: Filters to apply to the bidding groups
+"""
 function write_bid_output(
     outputs::Outputs,
     inputs::Inputs,
@@ -424,181 +454,335 @@ function write_bid_output(
     has_profile_bids::Bool = false,
     @nospecialize(filters::Vector{<:Function} = Function[])
 )
-    # Quiver file dimensions are always 1:N, so we need to set the period to 1
-    if is_single_period(inputs)
-        period = 1
-    end
+    # Adjust period for single period case
+    period = is_single_period(inputs) ? 1 : period
 
-    # TODO: This function deserves a refactor
-    all_bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
+    # Get bidding groups and filter them
+    all_bidding_groups = index_of_elements(
+        inputs,
+        BiddingGroup;
+        run_time_options,
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
+
     bidding_groups_filtered = index_of_elements(
         inputs,
         BiddingGroup;
         run_time_options,
         filters = filters,
     )
+
+    # Initialize bid segments or profiles based on bid type
     if has_profile_bids
-        bid_profiles = bidding_profiles(inputs)
-        valid_profiles = get_maximum_valid_profiles(inputs)
+        bid_items = bidding_profiles(inputs)
+        valid_items = get_maximum_valid_profiles(inputs)
+        item_name = :profile
     else
-        bid_segments = bidding_segments(inputs)
-        valid_segments = get_maximum_valid_segments(inputs)
+        bid_items = bidding_segments(inputs)
+        valid_items = get_maximum_valid_segments(inputs)
+        item_name = :bid_segment
     end
+
+    # Get common data structures
     blks = subperiods(inputs)
     buses = index_of_elements(inputs, Bus)
     num_buses = length(buses)
-    size_segments = has_profile_bids ? length(bid_profiles) : length(bid_segments)
-    # 4D array with dimensions: subperiod, bidding_group, bid_segment, bus
-    # We use the function write_bid_output for both writing the output of the
-    # optimization problem and the heuristic bids.
-    # This is to check only the heuristic bids dimensions.
+    num_items = length(bid_items)
+
+    # Validate data dimensions if it's a 4D array
     if isa(data, Array{Float64, 4})
-        # TODO: think of a better way to do this
-        @assert size(data, 1) == length(blks)
-        @assert size(data, 2) == length(all_bidding_groups)
-        @assert size(data, 3) == size_segments
-        @assert size(data, 4) == length(buses)
+        validate_data_dimensions(data, length(blks), length(all_bidding_groups), num_items, length(buses))
     end
 
-    # Pick the correct output based on the run time options
-    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+    # Get the output writer
+    output = get_output_writer(outputs, inputs, run_time_options, output_name)
 
-    treated_output = zeros(length(blks), size_segments, length(bidding_groups_filtered) * length(buses))
+    # Process and write the data
+    treated_output = zeros(length(blks), num_items, length(bidding_groups_filtered) * num_buses)
 
     for blk in blks
-        if has_profile_bids
-            for prf in bid_profiles
-                for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    if prf > valid_profiles[bg]
-                        continue
-                    end
-                    # If the data is a OrderedDict (value of a JuMP.Variable) we can acess
-                    # directly the index (blk, bg, prf, bus) to get the value.
-                    data_bg = if isa(data, Array{Float64, 4})
-                        data[blk, i_bg, prf, bus]
-                    else
-                        data[blk, bg, prf, bus]
-                    end
-                    treated_output[blk, prf, (i_bg-1)*(num_buses)+bus] = data_bg
-                end
-                if is_ex_post_problem(run_time_options)
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, prf, :] * multiply_by);
-                        period,
-                        scenario,
-                        subscenario,
-                        subperiod = blk,
-                        profile = prf,
-                    )
-                else
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, prf, :] * multiply_by);
-                        period,
-                        scenario,
-                        subperiod = blk,
-                        profile = prf,
-                    )
-                end
-            end
-        else
-            for bds in bid_segments
-                for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    if bds > valid_segments[bg]
-                        continue
-                    end
-                    # If the data is a OrderedDict (value of a JuMP.Variable) we can acess
-                    # directly the index (blk, bg, prf, bus) to get the value.
-                    data_bg = if isa(data, Array{Float64, 4})
-                        data[blk, i_bg, bds, bus]
-                    else
-                        data[blk, bg, bds, bus]
-                    end
-                    treated_output[blk, bds, (i_bg-1)*(num_buses)+bus] = data_bg
-                end
-                if is_ex_post_problem(run_time_options)
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, bds, :] * multiply_by);
-                        period,
-                        scenario,
-                        subscenario,
-                        subperiod = blk,
-                        bid_segment = bds,
-                    )
-                else
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, bds, :] * multiply_by);
-                        period,
-                        scenario,
-                        subperiod = blk,
-                        bid_segment = bds,
-                    )
-                end
-            end
+        for (item_idx, item) in enumerate(bid_items)
+            process_bids_for_item!(
+                treated_output, data, blk, item_idx, item, valid_items,
+                bidding_groups_filtered, buses, has_profile_bids, num_buses,
+            )
+
+            # Write the processed data
+            write_bid_data(
+                output.writer,
+                view(treated_output, blk, item_idx, :),
+                period,
+                scenario,
+                subscenario,
+                item,
+                run_time_options,
+                multiply_by;
+                subperiod = blk,
+                (has_profile_bids ? :profile : :bid_segment) => item,
+            )
         end
     end
 end
 
+"""
+    validate_data_dimensions(data::Array{Float64, 4}, n_blks::Int, n_bgs::Int, n_items::Int, n_buses::Int)
+
+Validate that the dimensions of the input data array match the expected dimensions.
+"""
+function validate_data_dimensions(data::Array{Float64, 4}, n_blks::Int, n_bgs::Int, n_items::Int, n_buses::Int)
+    dims = size(data)
+    @assert dims[1] == n_blks "First dimension (subperiods) mismatch: expected $n_blks, got $(dims[1])"
+    @assert dims[2] == n_bgs "Second dimension (bidding groups) mismatch: expected $n_bgs, got $(dims[2])"
+    @assert dims[3] == n_items "Third dimension (bid items) mismatch: expected $n_items, got $(dims[3])"
+    @assert dims[4] == n_buses "Fourth dimension (buses) mismatch: expected $n_buses, got $(dims[4])"
+end
+
+"""
+    get_output_writer(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, output_name::String)
+
+Get the appropriate output writer based on the output name and runtime options.
+"""
+function get_output_writer(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, output_name::String)
+    full_output_name = output_name * run_time_file_suffixes(inputs, run_time_options)
+    return outputs.outputs[full_output_name]
+end
+
+"""
+    process_bids_for_item!(
+        treated_output::Array{Float64, 3},
+        data::Union{Array{Float64, 4}, OrderedDict{NTuple{4, Int64}, Float64}},
+        blk::Int,
+        item_idx::Int,
+        item::Int,
+        valid_items::AbstractVector{Int},
+        bidding_groups_filtered::Vector{Int},
+        buses::Vector{Int},
+        has_profile_bids::Bool,
+        num_buses::Int
+    )
+
+Process bids for a specific item (segment or profile) and update the treated output array.
+"""
+function process_bids_for_item!(
+    treated_output::Array{Float64, 3},
+    data::Union{Array{Float64, 4}, OrderedDict{NTuple{4, Int64}, Float64}},
+    blk::Int,
+    item_idx::Int,
+    item::Int,
+    valid_items::AbstractVector{Int},
+    bidding_groups_filtered::Vector{Int},
+    buses::Vector{Int},
+    has_profile_bids::Bool,
+    num_buses::Int,
+)
+    for (i_bg, bg) in enumerate(bidding_groups_filtered), (bus_idx, bus) in enumerate(buses)
+        # Skip if the current item is not valid for this bidding group
+        item > valid_items[bg] && continue
+
+        # Get the data point, handling both array and OrderedDict inputs
+        data_point = if isa(data, Array{Float64, 4})
+            data[blk, i_bg, item, bus]
+        else
+            data[blk, bg, item, bus]
+        end
+
+        # Calculate the index in the flattened output array
+        output_idx = (i_bg - 1) * num_buses + bus_idx
+        treated_output[blk, item_idx, output_idx] = data_point
+    end
+end
+
+"""
+    write_bid_data(
+        writer,
+        data::AbstractVector{Float64},
+        period::Int,
+        scenario::Int,
+        subscenario::Int,
+        item::Int,
+        run_time_options::RunTimeOptions,
+        multiply_by::Float64;
+        subperiod::Union{Int, Nothing} = nothing,
+        bid_segment::Union{Int, Nothing} = nothing,
+        profile::Union{Int, Nothing} = nothing
+    )
+
+Write the processed bid data to the output file. This function handles both regular bids and virtual reservoir bids.
+
+# Arguments
+- `writer`: The Quiver writer object
+- `data`: Vector of data points to write
+- `period`: Current period
+- `scenario`: Current scenario
+- `subscenario`: Current subscenario
+- `item`: The item number (segment or profile)
+- `run_time_options`: Runtime options for the model
+- `multiply_by`: Scaling factor for the output data
+- `subperiod`: The subperiod (for regular bids, optional)
+- `bid_segment`: The bid segment (for virtual reservoir bids, optional)
+- `profile`: The profile (for profile bids, optional)
+
+# Notes
+- If `subperiod` is provided, it's a regular bid`
+- Otherwise, it's a virtual reservoir bid
+"""
+function write_bid_data(
+    writer,
+    data::AbstractVector{Float64},
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+    item::Int,
+    run_time_options::RunTimeOptions,
+    multiply_by::Float64;
+    subperiod::Union{Int, Nothing} = nothing,
+    bid_segment::Union{Int, Nothing} = nothing,
+    profile::Union{Int, Nothing} = nothing,
+)
+    # If subperiod is provided, it's a regular bid
+    if subperiod !== nothing
+        kwargs = (
+            period = period,
+            scenario = scenario,
+            subperiod = subperiod,
+            (profile !== nothing ? :profile : :bid_segment) => item,
+        )
+    else
+        # If subperiod is not provided, it's a virtual reservoir bid
+        kwargs = (
+            period = period,
+            scenario = scenario,
+            bid_segment = item,
+        )
+    end
+
+    # Add subscenario if this is an ex-post problem
+    if is_ex_post_problem(run_time_options)
+        kwargs = (kwargs..., subscenario = subscenario)
+    end
+
+    # Write the data
+    return Quiver.write!(writer, round_output(data .* multiply_by); kwargs...)
+end
+
+"""
+    write_virtual_reservoir_bid_output(
+        outputs::Outputs,
+        inputs::Inputs,
+        run_time_options::RunTimeOptions,
+        output_name::String,
+        data::Array{Float64, 3};
+        period::Int,
+        scenario::Int;
+        subscenario::Int = 1,
+        multiply_by::Float64 = 1.0
+    )
+
+Write virtual reservoir bid output data to the specified output file.
+
+# Arguments
+- `outputs`: The outputs struct containing the output writers
+- `inputs`: The inputs struct containing model data
+- `run_time_options`: Runtime options for the model
+- `output_name`: Base name of the output file
+- `data`: 3D array containing the virtual reservoir bid data with dimensions [virtual_reservoir, asset_owner, bid_segment]
+- `period`: Current period
+- `scenario`: Current scenario
+- `subscenario`: Current subscenario (default: 1)
+- `multiply_by`: Scaling factor for the output data (default: 1.0)
+"""
 function write_virtual_reservoir_bid_output(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     output_name::String,
-    data::Array{Float64, 3}, #Union{Array{Float64, 3}, OrderedDict{NTuple{3, Int64}, Float64}};
+    data::Array{Float64, 3};
     period::Int,
-    scenario::Int;
+    scenario::Int,
     subscenario::Int = 1,
     multiply_by::Float64 = 1.0,
-    # @nospecialize(filters::Vector{<:Function} = Function[])
 )
-    # Quiver file dimensions are always 1:N, so we need to set the period to 1
-    if is_single_period(inputs)
-        period = 1
-    end
+    # Adjust period for single period case
+    period = is_single_period(inputs) ? 1 : period
 
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options) # why run_time_options?
+    # Get virtual reservoirs and asset owners
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options)
     asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
-
-    # 3D array with dimensions: virtual_reservoir, asset_owner, bid_segment
-    @assert size(data, 1) == length(virtual_reservoirs)
-    @assert size(data, 2) == length(asset_owners)
     number_of_segments = size(data, 3)
 
-    # Pick the correct output based on the run time options
-    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+    # Validate input data dimensions
+    validate_vr_data_dimensions(data, length(virtual_reservoirs), length(asset_owners))
 
-    number_of_asset_owners_per_virtual_reservoir = length.(virtual_reservoir_asset_owner_indices(inputs))
-    treated_output = zeros(number_of_segments, sum(number_of_asset_owners_per_virtual_reservoir))
+    # Get the output writer and prepare the output array
+    output = get_output_writer(outputs, inputs, run_time_options, output_name)
+    treated_output = prepare_vr_output_array(inputs, virtual_reservoirs, number_of_segments)
 
+    # Process and write data for each segment
     for seg in 1:number_of_segments
-        pair_index = 0
-        for vr in virtual_reservoirs
-            for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-                pair_index += 1
-                treated_output[seg, pair_index] = data[vr, ao, seg]
-            end
-        end
-        if is_ex_post_problem(run_time_options)
-            Quiver.write!(
-                output.writer,
-                round_output(treated_output[seg, :] * multiply_by);
-                period,
-                scenario,
-                subscenario,
-                bid_segment = seg,
-            )
-        else
-            Quiver.write!(
-                output.writer,
-                round_output(treated_output[seg, :] * multiply_by);
-                period,
-                scenario,
-                bid_segment = seg,
-            )
+        process_vr_bids_for_segment!(
+            treated_output, data, seg, virtual_reservoirs, inputs,
+        )
+
+        # Write the processed data
+        write_bid_data(
+            output.writer,
+            view(treated_output, seg, :),
+            period,
+            scenario,
+            subscenario,
+            seg,
+            run_time_options,
+            multiply_by;
+            bid_segment = seg,
+        )
+    end
+end
+
+"""
+    validate_vr_data_dimensions(data::Array{Float64, 3}, n_vrs::Int, n_aos::Int)
+
+Validate that the dimensions of the input virtual reservoir data array match the expected dimensions.
+"""
+function validate_vr_data_dimensions(data::Array{Float64, 3}, n_vrs::Int, n_aos::Int)
+    dims = size(data)
+    @assert dims[1] == n_vrs "First dimension (virtual reservoirs) mismatch: expected $n_vrs, got $(dims[1])"
+    @assert dims[2] == n_aos "Second dimension (asset owners) mismatch: expected $n_aos, got $(dims[2])"
+end
+
+"""
+    prepare_vr_output_array(inputs::Inputs, virtual_reservoirs::Vector{Int}, n_segments::Int)
+
+Prepare the output array for virtual reservoir bid data.
+"""
+function prepare_vr_output_array(inputs::Inputs, virtual_reservoirs::Vector{Int}, n_segments::Int)
+    number_of_asset_owners_per_vr = length.(virtual_reservoir_asset_owner_indices(inputs))
+    total_pairs = sum(number_of_asset_owners_per_vr)
+    return zeros(n_segments, total_pairs)
+end
+
+"""
+    process_vr_bids_for_segment!(
+        treated_output::Matrix{Float64},
+        data::Array{Float64, 3},
+        seg::Int,
+        virtual_reservoirs::Vector{Int},
+        inputs::Inputs
+    )
+
+Process virtual reservoir bids for a specific segment and update the treated output array.
+"""
+function process_vr_bids_for_segment!(
+    treated_output::Matrix{Float64},
+    data::Array{Float64, 3},
+    seg::Int,
+    virtual_reservoirs::Vector{Int},
+    inputs::Inputs,
+)
+    pair_index = 0
+    for vr in virtual_reservoirs
+        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+            pair_index += 1
+            treated_output[seg, pair_index] = data[vr, ao, seg]
         end
     end
 end

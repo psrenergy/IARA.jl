@@ -25,8 +25,8 @@ IARA.update_configuration!(db;
 
 # Move existing demand file to _ex_ante suffix
 if isfile(joinpath(PATH, "demand.csv"))
-    mv(joinpath(PATH, "demand.csv"), joinpath(PATH, "demand_ex_ante.csv"), force=true)
-    mv(joinpath(PATH, "demand.toml"), joinpath(PATH, "demand_ex_ante.toml"), force=true)
+    mv(joinpath(PATH, "demand.csv"), joinpath(PATH, "demand_ex_ante.csv"); force = true)
+    mv(joinpath(PATH, "demand.toml"), joinpath(PATH, "demand_ex_ante.toml"); force = true)
 end
 
 # Create demand ex-post scenarios
@@ -40,7 +40,7 @@ demand_ex_post = zeros(
     number_of_subperiods,
     number_of_subscenarios,
     number_of_scenarios,
-    number_of_periods
+    number_of_periods,
 )
 
 # First subscenario: decrease demand by 10%

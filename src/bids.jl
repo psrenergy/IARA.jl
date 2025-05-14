@@ -1227,14 +1227,15 @@ function sum_units_energy_ub_per_bg(
     # TODO: Implement hydro energy upper bound
     hydro_energy_ub = 0.0
 
-    demand_energy_ub = - sum(
-        demand_unit_max_demand(inputs, d) * subperiod_duration_in_hours(inputs, subperiod) *
-        time_series_demand(inputs, run_time_options; subscenario)[d, subperiod]
-        for d in demand_units
-        if demand_unit_bus_index(inputs, d) == bus &&
-        demand_unit_bidding_group_index(inputs, d) == bg;
-        init = 0.0,
-    )
+    demand_energy_ub =
+        -sum(
+            demand_unit_max_demand(inputs, d) * subperiod_duration_in_hours(inputs, subperiod) *
+            time_series_demand(inputs, run_time_options; subscenario)[d, subperiod]
+            for d in demand_units
+            if demand_unit_bus_index(inputs, d) == bus &&
+            demand_unit_bidding_group_index(inputs, d) == bg;
+            init = 0.0,
+        )
 
     return thermal_energy_ub + renewable_energy_ub + battery_energy_ub + hydro_energy_ub + demand_energy_ub
 end

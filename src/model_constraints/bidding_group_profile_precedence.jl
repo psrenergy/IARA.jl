@@ -29,7 +29,7 @@ function bidding_group_profile_precedence!(
     # Model variables
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)
     bidding_groups =
-        index_of_elements(inputs, BiddingGroup; run_time_options, folters = [has_generation_besides_virtual_reservoirs])
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
     maximum_bidding_profiles = maximum_number_of_bidding_profiles(inputs)
 
     parent_profile_bids = zeros(Int,

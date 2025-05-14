@@ -130,6 +130,11 @@ end
 function is_null(value)
     return PSRI.PSRDatabaseSQLite._is_null_in_db(value)
 end
+
+function null_value(type)
+    return PSRDatabaseSQLite._psrdatabasesqlite_null_value(type)
+end
+
 """
     build_sql_typed_kwargs(kwargs::Dict{Symbol, T}) where T
 

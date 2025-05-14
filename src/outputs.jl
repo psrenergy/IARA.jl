@@ -413,7 +413,7 @@ function write_output_without_subperiod!(
     if indices_of_elements_in_output === nothing
         @assert length(vector_of_results) == num_time_series
     else
-        @assert length(indices_of_elements_in_output) == size(vector_of_results, 2)
+        @assert length(indices_of_elements_in_output) == length(vector_of_results)
     end
 
     vector_to_write = vector_of_results * multiply_by
@@ -476,37 +476,27 @@ end
 function treat_output_for_writing_by_pairs_of_agents(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    raw_output,
+    raw_output::AbstractArray{Float64, 3},
     first_collection::T1,
     second_collection::T2;
     # index_getter is a function that receives the inputs and the index of the first collection
     # and returns the indices of the second collection that are associated with the elements 
     # of index1 in first collection.
     index_getter::Function,
-    output_varies_per_subperiod::Bool = true,
+    dimension_size::Vector{Int},
 ) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
-    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
-    blks = subperiods(inputs)
-    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
-    number_of_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    # This function receives model outputs, and is compatible with SparseAxisArrays.
 
-    treated_output = if output_varies_per_subperiod
-        zeros(number_of_subperiods(inputs), number_of_pairs)
-    else # assumes outout varies per segment (VR bids)
-        zeros(number_of_pairs, number_of_segments)
-    end
+    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
+    treated_output = zeros(number_of_pairs, dimension_size...)
+    ranges = (1:n for n in dimension_size)
 
     number_of_pairs_fullfiled = 0
     for index1 in index_of_elements(inputs, T1; run_time_options), index2 in index_getter(inputs, index1)
         number_of_pairs_fullfiled += 1
-        if output_varies_per_subperiod
-            for blk in blks
-                treated_output[blk, number_of_pairs_fullfiled] = raw_output[blk, index1, index2]
-            end
-        else # assumes outout varies per segment (VR bids)
-            for segment in 1:valid_segments[index1]
-                treated_output[number_of_pairs_fullfiled, segment] = raw_output[index1, index2, segment]
-            end
+        for dimension_indices in Iterators.product(ranges...)
+            treated_output[number_of_pairs_fullfiled, dimension_indices...] =
+                raw_output[index1, index2, dimension_indices...]
         end
     end
 

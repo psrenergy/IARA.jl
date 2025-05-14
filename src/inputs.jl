@@ -322,6 +322,7 @@ function fill_caches!(inputs::Inputs)
         fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs)
     end
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        fill_hydro_unit_virtual_reservoir_index!(inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)
             fill_waveguide_points!(inputs, vr)
             fill_water_to_energy_factors!(inputs, vr)
@@ -329,7 +330,6 @@ function fill_caches!(inputs::Inputs)
         end
         for h in index_of_elements(inputs, HydroUnit)
             fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
-            fill_hydro_unit_virtual_reservoir_index!(inputs, h)
         end
     end
     if run_mode(inputs) == RunMode.PRICE_TAKER_BID ||

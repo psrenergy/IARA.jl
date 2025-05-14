@@ -70,7 +70,7 @@ function energy_from_inflows(
             spillage = max(volume[h] + inflow_as_volume[h, b] - (hydro_unit_max_volume(inputs, h) + max_turbining), 0)
 
             vr = hydro_unit_virtual_reservoir_index(inputs, h)
-            if !isnothing(vr)
+            if !is_null(vr)
                 hydro_unit_non_turbinable_inflow_energy[b, h] =
                     spillage * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
                 hydro_unit_additional_energy[h, b] =

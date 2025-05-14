@@ -31,18 +31,18 @@ if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
     Main.compare_outputs(PATH;
-    test_only_subperiod_sum = [
-        "bidding_group_generation",
-        "hydro_generation",
-        "hydro_om_costs",
-        "hydro_turbining",
-        "thermal_generation",
-        "thermal_om_costs",
-    ],
-    skipped_outputs = [
-        "hydro_final_volume",
-        "hydro_initial_volume",
-    ]
+        test_only_subperiod_sum = [
+            "bidding_group_generation",
+            "hydro_generation",
+            "hydro_om_costs",
+            "hydro_turbining",
+            "thermal_generation",
+            "thermal_om_costs",
+        ],
+        skipped_outputs = [
+            "hydro_final_volume",
+            "hydro_initial_volume",
+        ],
     )
 end
 

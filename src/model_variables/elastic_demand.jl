@@ -35,27 +35,32 @@ function elastic_demand!(
 
     # Parameters
 
-    @variable(
-        model.jump_model,
-        elastic_demand_price[b in subperiods(inputs), d in existing_elastic_demand]
-        in
-        MOI.Parameter(
-            elastic_demand_price_series[
-                index_among_elastic_demands(inputs, d),
-                b,
-            ],
-        )
-    ) # $/MWh
+    if is_mincost(inputs) ||
+       construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
+        # This is only used in pure physical problems, when in bid-based problems
+        # the price offer is set by the bidding group
 
-    # Objective function
-    model.obj_exp = @expression(
-        model.jump_model,
-        model.obj_exp -
-        money_to_thousand_money() * sum(
-            attended_elastic_demand[b, d] * elastic_demand_price[b, d]
-            for b in subperiods(inputs), d in existing_elastic_demand
-        ),
-    )
+        @variable(
+            model.jump_model,
+            elastic_demand_price[b in subperiods(inputs), d in existing_elastic_demand]
+            in
+            MOI.Parameter(
+                elastic_demand_price_series[
+                    index_among_elastic_demands(inputs, d),
+                    b,
+                ],
+            )
+        ) # $/MWh
+
+        model.obj_exp = @expression(
+            model.jump_model,
+            model.obj_exp -
+            money_to_thousand_money() * sum(
+                attended_elastic_demand[b, d] * elastic_demand_price[b, d]
+                for b in subperiods(inputs), d in existing_elastic_demand
+            ),
+        )
+    end
 
     return nothing
 end
@@ -75,6 +80,12 @@ function elastic_demand!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
+    if !(
+        is_mincost(inputs) ||
+        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
+    )
+        return nothing
+    end
     existing_elastic_demand = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
 
     # Model parameters

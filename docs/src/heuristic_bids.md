@@ -11,6 +11,7 @@ Bid offers are calculated using predefined formulas that incorporate operational
 - ``J^T(b, n)``: Set of thermal units of bidding group $b$ and network node $n$.
 - ``J^H(b, n)``: Set of hydro units of bidding group $b$ and network node $n$.
 - ``J^R(b, n)``: Set of renewable units of bidding group $b$ and network node $n$.
+- ``J^{DE}(b, n)``: Set of elastic demand units of bidding group $b$ and network node $n$.
 - ``J^{VR}``: Set of virtual reservoirs.
 - ``J^H_{VR}(r)``: Set of hydro units associated with virtual reservoir $r$.
 - ``I_{VR}(r)``: Set of asset owners associated with virtual reservoir $r$.
@@ -60,6 +61,17 @@ P_{i, n, \tau, k}(\omega) &= (1 + p_f) \cdot \overline{C}^R_j &\quad \forall k =
 ```
 
 The renewable unit bid offers follows the same structure as thermal units, with the exception that the energy quantity is calculated using the realized generation $G^R_{j, \tau}(\omega)$ instead of the maximum generation.
+
+## Demand Units
+
+Demand unit bid offers are derived from the elastic demand $d^E_{j, \tau}$ and the demand price $P_{j, \tau}(\omega)$ are converted into bids by using the following formula:
+
+```math
+\begin{align}
+Q_{i, n, \tau, k}(\omega) &= s_f \cdot d^E_{j, \tau}(\omega) &\quad \forall k = (j - 1) \cdot |F(b)| + f, f \in F(b), j \in J^{DE}(b, n)  \\
+P_{i, n, \tau, k}(\omega) &= (1 + p_f) \cdot P_{j, \tau}(\omega) &\quad \forall k = (j - 1) \cdot |F(b)| + f, f \in F(b), j \in J^{DE}(b, n)
+\end{align}
+```
 
 ## Hydro Units
 

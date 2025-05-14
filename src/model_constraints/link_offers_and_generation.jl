@@ -33,6 +33,7 @@ function link_offers_and_generation!(
         if any_elements(inputs, HydroUnit; filters = [is_existing, !is_associated_with_some_virtual_reservoir])
             get_model_object(model, :hydro_generation)
         end
+    demand_units = index_of_elements(inputs, DemandUnit; filters = [is_existing])
     thermal_generation = if any_elements(inputs, ThermalUnit; filters = [is_existing])
         get_model_object(model, :thermal_generation)
     end
@@ -41,6 +42,9 @@ function link_offers_and_generation!(
     end
     battery_unit_generation = if any_elements(inputs, BatteryUnit; filters = [is_existing])
         get_model_object(model, :battery_unit_generation)
+    end
+    attended_elastic_demand = if any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
+        get_model_object(model, :attended_elastic_demand)
     end
     # Offer variables
     bidding_groups =
@@ -114,6 +118,29 @@ function link_offers_and_generation!(
             battery_unit_bidding_group_index(inputs, bat) == bg;
             init = 0.0,
         )
+        # Elastic demand bids are represented as negative quantities (-MW) because they indicate:
+        #   - Potential load reduction (if the bid price is met)
+        #
+        # In a bid group that consists only of flexible demand:
+        #   Total Bid Quantity = Σ(Elastic Demand Bids)
+        #                       = Σ(- MW offers)
+        #
+        # Example:
+        #   - Factory A offers a elastic demand of 20 MW
+        #   - Factory B offers a elastic demand of 30 MW
+        #   → The total bid quantity for the group = -50 MW (representing the total load reduction)
+        -
+        if any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
+            sum(
+                attended_elastic_demand[blk, d] for d in demand_units
+                if demand_unit_bus_index(inputs, d) == bus
+                &&
+                    demand_unit_bidding_group_index(inputs, d) == bg;
+                init = 0.0,
+            )
+        else
+            0.0
+        end
     )
     return nothing
 end

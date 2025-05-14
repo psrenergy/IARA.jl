@@ -1094,6 +1094,26 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
     return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.PRICETAKER_HEURISTICS
 end
 
+function is_any_construction_type_cost_based(inputs::AbstractInputs)
+    return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
+           construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.COST_BASED ||
+           construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
+           construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.COST_BASED
+end
+
+function need_demand_price_input_data(inputs::AbstractInputs)
+    return is_mincost(inputs) ||
+           (is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)) ||
+           (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs))
+end
+
+function is_any_construction_type_hybrid(inputs::AbstractInputs)
+    return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.HYBRID ||
+           construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.HYBRID ||
+           construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.HYBRID ||
+           construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.HYBRID
+end
+
 """
     bid_data_source(inputs::AbstractInputs)
 

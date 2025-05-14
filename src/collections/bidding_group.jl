@@ -188,6 +188,29 @@ function update_bidding_group_relation!(
 end
 
 """
+    update_bidding_group_vectors!(db::DatabaseSQLite, label::String; kwargs...)
+
+Update the vectors of the Bidding Group named 'label' in the database.
+"""
+function update_bidding_group_vectors!(
+    db::DatabaseSQLite,
+    label::String;
+    kwargs...,
+)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
+        PSRDatabaseSQLite.update_vector_parameters!(
+            db,
+            "BiddingGroup",
+            string(attribute),
+            label,
+            value,
+        )
+    end
+    return db
+end
+
+"""
     validate(bidding_group::BiddingGroup)
 
 Validate the BiddingGroup's parameters. Returns the number of errors found.
@@ -250,6 +273,7 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     hydro_units = index_of_elements(inputs, HydroUnit)
     renewable_units = index_of_elements(inputs, RenewableUnit)
     battery_units = index_of_elements(inputs, BatteryUnit)
+    demand_units = index_of_elements(inputs, DemandUnit)
     number_of_units_per_bidding_group = zeros(Int, length(bidding_group))
     for t in thermal_units
         bg_index = thermal_unit_bidding_group_index(inputs, t)
@@ -274,6 +298,29 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
         if !is_null(bg_index)
             number_of_units_per_bidding_group[bg_index] += 1
         end
+    end
+    has_demand_with_bidding_group = false
+    for d in demand_units
+        bg_index = demand_unit_bidding_group_index(inputs, d)
+        if !is_null(bg_index)
+            has_demand_with_bidding_group = true
+            number_of_units_per_bidding_group[bg_index] += 1
+        end
+        if is_market_clearing(inputs)
+            if !is_null(bg_index) && is_flexible(inputs.collections.demand_unit, d)
+                @error("Demand unit $(d) is flexible and this is not allowed for bidding groups.")
+            end
+            if is_elastic(inputs.collections.demand_unit, d) && is_null(bg_index)
+                @error("Elastic demand unit $(d) is not assigned to any bidding group.")
+            end
+        end
+    end
+    if has_demand_with_bidding_group && demand_unit_elastic_demand_price_file(inputs) != "" &&
+       is_market_clearing(inputs) && read_bids_from_file(inputs)
+        @warn("""
+          Elastic demand price file ignored - demand bids are already provided via bidding groups.
+          (Bidding group prices take precedence over the file. Remove the file link to avoid this warning.)
+          """)
     end
     if any(number_of_units_per_bidding_group .== 0)
         if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
@@ -335,6 +382,7 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
     thermal_units = index_of_elements(inputs, ThermalUnit)
     renewable_units = index_of_elements(inputs, RenewableUnit)
     battery_units = index_of_elements(inputs, BatteryUnit)
+    demand_units = index_of_elements(inputs, DemandUnit)
 
     for h in hydro_units
         bg_index = hydro_unit_bidding_group_index(inputs, h)
@@ -363,6 +411,13 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
 
     for b in battery_units
         bg_index = battery_unit_bidding_group_index(inputs, b)
+        if !is_null(bg_index)
+            number_of_units[bg_index] += 1
+        end
+    end
+
+    for d in demand_units
+        bg_index = demand_unit_bidding_group_index(inputs, d)
         if !is_null(bg_index)
             number_of_units[bg_index] += 1
         end

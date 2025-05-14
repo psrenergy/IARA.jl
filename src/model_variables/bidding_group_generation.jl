@@ -64,7 +64,6 @@ function bidding_group_generation!(
             bds in 1:valid_segments[bg],
             bus in buses,
         ],
-        lower_bound = 0.0,
     ) # MWh
     @variable(
         model.jump_model,

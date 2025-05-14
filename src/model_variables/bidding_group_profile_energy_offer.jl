@@ -62,7 +62,6 @@ function bidding_group_profile_energy_offer!(
             prf in 1:valid_profiles[bg],
             bus in buses,
         ],
-        lower_bound = 0.0,
     ) # MWh
     @variable(
         model.jump_model,

@@ -437,7 +437,7 @@ and save the result to output_file.
 function scale_cuts(input_file::String, output_file::String, factor::Float64)
     # Read the JSON file
     data = open(input_file, "r") do f
-        SDDP.JSON.parse(f)
+        return SDDP.JSON.parse(f)
     end
 
     # Make a deep copy to avoid modifying the original data

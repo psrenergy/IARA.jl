@@ -50,7 +50,9 @@ function _extract_bus_idx(gen_label, bus_collection)
     bus_label = _extract_bus_label(gen_label)
 
     return get(bus_label_to_index, bus_label) do
-        error("Bus '$bus_label' not found in bus collection. Available buses: $(join(bus_collection.label, ", "))")
+        return error(
+            "Bus '$bus_label' not found in bus collection. Available buses: $(join(bus_collection.label, ", "))",
+        )
     end
 end
 
@@ -71,23 +73,23 @@ Get spot prices for all bidding groups based on the network representation.
 function get_spot_prices(reader, bus_collection, generation_labels, network_representation)
     # Pre-allocate array for spot prices
     spot_prices = similar(reader.data, length(generation_labels))
-    
+
     # Process each bidding group
     for (i, gen_label) in enumerate(generation_labels)
         # Extract bus label and get its index
         bus_idx = _extract_bus_idx(gen_label, bus_collection)
-        
+
         # Get the appropriate location index based on network representation
         location_idx = if network_representation == Configurations_NetworkRepresentation.ZONAL
             bus_collection.zone_index[bus_idx]  # Zonal: use zone index
         else
             bus_idx                             # Nodal: use bus index directly
         end
-        
+
         # Store the spot price
         spot_prices[i] = reader.data[location_idx]
     end
-    
+
     return spot_prices
 end
 
@@ -129,16 +131,16 @@ function _write_revenue_without_subscenarios(
 
                 # Position the reader for the current period/scenario/subperiod
                 Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
-                
+
                 # Get network representation type once
                 net_rep = network_representation_ex_ante_commercial(inputs)
-                
+
                 # Get spot prices for all bidding groups based on network representation
                 spot_price_data = get_spot_prices(
                     spot_ex_ante_reader,
                     inputs.collections.bus,
                     generation_labels,
-                    net_rep
+                    net_rep,
                 )
 
                 Quiver.write!(
@@ -214,7 +216,13 @@ function _write_revenue_with_subscenarios(
                         current_reader = spot_ex_ante_reader
                         net_rep = network_representation_ex_ante_commercial(inputs)
                     else
-                        Quiver.goto!(spot_ex_post_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
+                        Quiver.goto!(
+                            spot_ex_post_reader;
+                            period,
+                            scenario,
+                            subscenario = subscenario,
+                            subperiod = subperiod,
+                        )
                         current_reader = spot_ex_post_reader
                         net_rep = network_representation_ex_post_commercial(inputs)
                     end
@@ -224,7 +232,7 @@ function _write_revenue_with_subscenarios(
                         current_reader,
                         inputs.collections.bus,
                         generation_labels,
-                        net_rep
+                        net_rep,
                     )
 
                     Quiver.write!(

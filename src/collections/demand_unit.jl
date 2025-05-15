@@ -253,6 +253,18 @@ function validate(demand_unit::DemandUnit)
             end
         end
     end
+    if any(isequal(DemandUnit_DemandType.FLEXIBLE), demand_unit.demand_unit_type)
+        if isempty(demand_unit.window_file)
+            @error("Demand Unit $(demand_unit.label) Window File must be defined for flexible demands.")
+            num_errors += 1
+        end
+    end
+    if any(isequal(DemandUnit_DemandType.ELASTIC), demand_unit.demand_unit_type)
+        if isempty(demand_unit.elastic_demand_price_file)
+            @error("Demand Unit $(demand_unit.label) Elastic Demand Price File must be defined for elastic demands.")
+            num_errors += 1
+        end
+    end
     return num_errors
 end
 

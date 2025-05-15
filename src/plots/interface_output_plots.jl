@@ -289,7 +289,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 
             for segment in 1:num_bid_segments
                 for label_index in 1:num_labels
-                    bus_index = _get_bus_index(quantity_metadata.labels[label_index], bus_label(inputs))
+                    bus_index = _extract_bus_idx(quantity_metadata.labels[label_index], inputs.collections.bus)
                     # mean across scenarios
                     quantity = mean(quantity_data[label_index, segment, subperiod, :])
                     price = mean(price_data[label_index, segment, subperiod, :])
@@ -302,7 +302,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             if plot_no_markup_price
                 for segment in 1:num_bid_segments_no_markup
                     for label_index in 1:num_labels
-                        bus_index = _get_bus_index(quantity_metadata.labels[label_index], bus_label(inputs))
+                        bus_index = _extract_bus_idx(quantity_metadata.labels[label_index], inputs.collections.bus)
                         # mean across scenarios
                         no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
                         no_markup_quantity = mean(no_markup_quantity_data[label_index, segment, subperiod, :])

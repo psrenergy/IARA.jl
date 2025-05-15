@@ -289,6 +289,10 @@ function is_mincost(inputs::Inputs)
     return run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
 end
 
+function is_reference_curve(inputs::Inputs)
+    return run_mode(inputs) == RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE
+end
+
 """
     is_ex_post_problem(run_time_options::RunTimeOptions)
 

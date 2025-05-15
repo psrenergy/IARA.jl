@@ -31,6 +31,7 @@ Configurations for the problem.
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Float64} = []
+    reference_curve_demand_multipliers::Vector{Float64} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
@@ -319,6 +320,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
         PSRI.get_vectors(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
+    reference_curve_demand_multipliers = 
+        PSRI.get_vectors(inputs.db, "Configuration", "reference_curve_demand_multipliers")[1]
 
     # Load time series files
     configurations.hour_subperiod_map_file =
@@ -601,6 +604,13 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
         end
     end
 
+    if is_reference_curve(inputs)
+        if isempty(configurations.reference_curve_demand_multipliers)
+            @error("Reference curve demand multipliers must be defined when calculating the hydro reference curve.")
+            num_errors += 1
+        end
+    end
+
     return num_errors
 end
 
@@ -880,6 +890,14 @@ function expected_number_of_repeats_per_node(inputs::AbstractInputs, node::Int)
         return inputs.collections.configurations.expected_number_of_repeats_per_node[node]
     end
 end
+
+"""
+    reference_curve_demand_multipliers(inputs::AbstractInputs)
+
+Return the reference curve demand multipliers.
+"""
+reference_curve_demand_multipliers(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_demand_multipliers
 
 """
     use_binary_variables(inputs::AbstractInputs, run_time_options)

@@ -65,6 +65,39 @@ function initialize_heuristic_bids_outputs(
     return nothing
 end
 
+function markup_offers_for_period_scenario(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    period::Int,
+    scenario::Int;
+    outputs::Union{Outputs, Nothing} = nothing,
+)
+    if isnothing(outputs)
+        @assert is_reference_curve(inputs)
+    end
+    if any_elements(inputs, BiddingGroup)
+        bidding_group_markup_offers_for_period_scenario(
+            inputs,
+            run_time_options,
+            period,
+            scenario;
+            outputs,
+        )
+    end
+    if clearing_hydro_representation(inputs) ==
+       Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        virtual_reservoir_markup_offers_for_period_scenario(
+            inputs,
+            run_time_options,
+            period,
+            scenario;
+            outputs,
+        )
+    end
+
+    return nothing
+end
+
 function bidding_group_markup_units(inputs::Inputs)
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
     number_of_bidding_groups = length(bidding_group_indexes)
@@ -126,7 +159,7 @@ function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
 end
 
 """
-    markup_offers_for_period_scenario(
+    bidding_group_markup_offers_for_period_scenario(
         inputs::Inputs, outputs::Outputs, 
         run_time_options::RunTimeOptions, 
         period::Int, 
@@ -135,12 +168,12 @@ end
 
 Generate heuristic bids for the bidding groups and write them to the output files.
 """
-function markup_offers_for_period_scenario(
+function bidding_group_markup_offers_for_period_scenario(
     inputs::Inputs,
-    outputs::Outputs,
     run_time_options::RunTimeOptions,
     period::Int,
-    scenario::Int,
+    scenario::Int;
+    outputs::Union{Outputs, Nothing} = nothing,
 )
     bidding_group_indexes = index_of_elements(
         inputs,
@@ -271,45 +304,47 @@ function markup_offers_for_period_scenario(
 
     @assert number_of_segments_validation_flag
 
-    write_bid_output(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_energy_offer",
-        # We have to permutate the dimensions because the function expects the dimensions in the order
-        # subperiod, bidding_group, bid_segments, bus
-        permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-        period,
-        scenario,
-        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_generation_besides_virtual_reservoirs],
-    )
+    if !isnothing(outputs)
+        write_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "bidding_group_energy_offer",
+            # We have to permutate the dimensions because the function expects the dimensions in the order
+            # subperiod, bidding_group, bid_segments, bus
+            permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+            period,
+            scenario,
+            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+            filters = [has_generation_besides_virtual_reservoirs],
+        )
 
-    write_bid_output(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_price_offer",
-        # We have to permutate the dimensions because the function expects the dimensions in the order
-        # subperiod, bidding_group, bid_segments, bus
-        permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-        period,
-        scenario,
-        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_generation_besides_virtual_reservoirs])
+        write_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "bidding_group_price_offer",
+            # We have to permutate the dimensions because the function expects the dimensions in the order
+            # subperiod, bidding_group, bid_segments, bus
+            permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+            period,
+            scenario,
+            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+            filters = [has_generation_besides_virtual_reservoirs])
 
-    write_bid_output(
-        outputs,
-        inputs,
-        run_time_options,
-        "bidding_group_no_markup_price_offer",
-        # We have to permutate the dimensions because the function expects the dimensions in the order
-        # subperiod, bidding_group, bid_segments, bus
-        permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-        period,
-        scenario,
-        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-        filters = [has_generation_besides_virtual_reservoirs])
+        write_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "bidding_group_no_markup_price_offer",
+            # We have to permutate the dimensions because the function expects the dimensions in the order
+            # subperiod, bidding_group, bid_segments, bus
+            permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+            period,
+            scenario,
+            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+            filters = [has_generation_besides_virtual_reservoirs])
+    end
 
     if is_market_clearing(inputs)
         serialize_heuristic_bids(
@@ -719,10 +754,10 @@ Generate heuristic bids for the virtual reservoirs and write them to the output 
 """
 function virtual_reservoir_markup_offers_for_period_scenario(
     inputs::Inputs,
-    outputs::Outputs,
     run_time_options::RunTimeOptions,
     period::Int,
-    scenario::Int,
+    scenario::Int;
+    outputs::Union{Outputs, Nothing} = nothing,
 )
     # Indexes
     virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
@@ -810,33 +845,35 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         end
     end
 
-    write_virtual_reservoir_bid_output(
-        outputs,
-        inputs,
-        run_time_options,
-        "virtual_reservoir_energy_offer",
-        quantity_offers,
-        period,
-        scenario,
-    )
+    if !isnothing(outputs)
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_energy_offer",
+            quantity_offers,
+            period,
+            scenario,
+        )
 
-    write_virtual_reservoir_bid_output(
-        outputs,
-        inputs,
-        run_time_options,
-        "virtual_reservoir_price_offer",
-        price_offers,
-        period,
-        scenario,
-    )
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_price_offer",
+            price_offers,
+            period,
+            scenario,
+        )
 
-    serialize_virtual_reservoir_heuristic_bids(
-        inputs,
-        quantity_offers,
-        price_offers;
-        period,
-        scenario,
-    )
+        serialize_virtual_reservoir_heuristic_bids(
+            inputs,
+            quantity_offers,
+            price_offers;
+            period,
+            scenario,
+        )
+    end
 
     return nothing
 end

@@ -103,7 +103,7 @@ function compare_files(
         dimension_size = output_reader.metadata.dimension_size
 
         # Compare the outputs
-        if output_name in test_only_subperiod_sum
+        if any(startswith.(output_name, test_only_subperiod_sum))
             if dimension_names == [:period, :scenario, :subperiod]
                 for period in 1:dimension_size[1], scenario in 1:dimension_size[2]
                     sum_in_subperiods_calculated_output = 0.0

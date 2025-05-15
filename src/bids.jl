@@ -647,7 +647,11 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     end
     # Hydro representation
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        return true
+        if generate_heuristic_bids_for_clearing(inputs)
+            return true
+        else
+            return false
+        end
     elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
         bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
         if isempty(bidding_group_indexes)
@@ -843,7 +847,7 @@ end
 
 function calculate_maximum_valid_segments_or_profiles_per_timeseries(
     inputs::AbstractInputs,
-    bids_view::IARA.BidsView{Float64};
+    bids_view::Union{IARA.BidsView{Float64}, IARA.VirtualReservoirBidsView{Float64}};
     has_profile_bids::Bool = false,
     is_virtual_reservoir = false,
 )
@@ -895,6 +899,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         output_path(inputs),
         "bidding_group_energy_offer" * period_suffix,
     )
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     initialize_bids_view_from_external_file!(
         inputs.time_series.quantity_offer,
         inputs,
@@ -903,7 +908,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 
@@ -919,7 +924,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 
@@ -935,7 +940,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 

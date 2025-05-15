@@ -459,11 +459,6 @@ function validate(configurations::Configurations)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
         num_errors += 1
     end
-    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
-        @error("Virtual reservoirs cannot be used with clearing bid source READ_FROM_FILE.")
-        num_errors += 1
-    end
     if configurations.integer_variable_representation_ex_ante_physical ==
        Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
         @error(

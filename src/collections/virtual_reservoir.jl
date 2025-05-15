@@ -231,7 +231,7 @@ end
 
 function virtual_reservoir_water_to_energy_factors(inputs::AbstractInputs, vr::Int, h::Int)
     @assert h in virtual_reservoir_hydro_unit_indices(inputs, vr)
-    # the water_to_energy_factors field contains indices of all hydro units, fulfilled with NaN for the ones not
+    # the water_to_energy_factors field contains indices of all hydro units, filled with NaN for the ones not
     # associated with vr. It follows a different rule from virtual_reservoir_asset_owners_inflow_allocation, it should be
     # changed to be the same.
     return inputs.collections.virtual_reservoir.water_to_energy_factors[vr][h]

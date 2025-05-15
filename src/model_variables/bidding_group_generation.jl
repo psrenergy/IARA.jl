@@ -203,7 +203,7 @@ function bidding_group_generation!(
         inputs,
         run_time_options,
         "bidding_group_generation",
-        simulation_results.data[:bidding_group_generation].data; # Is this a normal array or DenseArray?
+        simulation_results.data[:bidding_group_generation].data;
         period,
         scenario,
         subscenario,

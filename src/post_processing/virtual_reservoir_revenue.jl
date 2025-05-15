@@ -578,7 +578,7 @@ function post_processing_virtual_reservoirs_double_settlement(
         create_temporary_file_with_subscenario_dimension(inputs, model_outputs_time_serie, ex_ante_revenue_file)
 
     revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoirs_total_revenue")
-    
+
     Quiver.apply_expression(
         revenue_file,
         [treated_ex_ante_revenue_file, ex_post_revenue_file],

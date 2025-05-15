@@ -326,7 +326,7 @@ function fill_caches!(inputs::Inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)
             fill_waveguide_points!(inputs, vr)
             fill_water_to_energy_factors!(inputs, vr)
-            fill_initial_energy_stock!(inputs, vr)
+            fill_initial_energy_account!(inputs, vr)
         end
         for h in index_of_elements(inputs, HydroUnit)
             fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)

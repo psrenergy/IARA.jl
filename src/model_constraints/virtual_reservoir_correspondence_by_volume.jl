@@ -29,7 +29,7 @@ function virtual_reservoir_correspondence_by_volume!(
     number_of_virtual_reservoirs = number_of_elements(inputs, VirtualReservoir)
 
     hydro_volume = get_model_object(model, :hydro_volume)
-    virtual_reservoir_energy_stock = get_model_object(model, :virtual_reservoir_energy_stock)
+    virtual_reservoir_energy_account = get_model_object(model, :virtual_reservoir_energy_account)
     virtual_reservoir_generation = get_model_object(model, :virtual_reservoir_generation)
     valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
@@ -42,7 +42,7 @@ function virtual_reservoir_correspondence_by_volume!(
         )
         ==
         sum(
-            virtual_reservoir_energy_stock[vr, ao] -
+            virtual_reservoir_energy_account[vr, ao] -
             sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:valid_segments[vr]) for
             ao in virtual_reservoir_asset_owner_indices(inputs, vr)
         )

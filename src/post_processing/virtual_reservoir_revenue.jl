@@ -538,7 +538,7 @@ function post_processing_virtual_reservoirs(
         Quiver.csv,
     )
 
-    return accepted_offers_revenue_file, inflow_shareholder_revenue_file, offeror_revenue_file, total_revenue_file
+    return total_revenue_file
 end
 
 function post_processing_virtual_reservoirs_double_settlement(
@@ -551,7 +551,7 @@ function post_processing_virtual_reservoirs_double_settlement(
     ex_post_commercial_suffix::String,
     ex_ante_commercial_suffix::String,
 )
-    ex_ante_revenue_files = post_processing_virtual_reservoirs(
+    ex_ante_revenue_file = post_processing_virtual_reservoirs(
         inputs,
         outputs_post_processing,
         model_outputs_time_serie,
@@ -562,7 +562,7 @@ function post_processing_virtual_reservoirs_double_settlement(
         output_has_subscenario = false,
     )
 
-    ex_post_revenue_files = post_processing_virtual_reservoirs(
+    ex_post_revenue_file = post_processing_virtual_reservoirs(
         inputs,
         outputs_post_processing,
         model_outputs_time_serie,
@@ -574,21 +574,17 @@ function post_processing_virtual_reservoirs_double_settlement(
         ex_ante_physical_suffix = ex_ante_physical_suffix,
     )
 
-    treated_ex_ante_revenue_files = [
-        create_temporary_file_with_subscenario_dimension(inputs, model_outputs_time_serie, file) for
-        file in ex_ante_revenue_files
-    ]
+    treated_ex_ante_revenue_file =
+        create_temporary_file_with_subscenario_dimension(inputs, model_outputs_time_serie, ex_ante_revenue_file)
 
-    for i in eachindex(ex_post_revenue_files)
-        new_filename = split(ex_post_revenue_files[i], "_ex_")[1]
-
-        Quiver.apply_expression(
-            String(new_filename),
-            [treated_ex_ante_revenue_files[i], ex_post_revenue_files[i]],
-            +,
-            Quiver.csv,
-        )
-    end
+    revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoirs_total_revenue")
+    
+    Quiver.apply_expression(
+        revenue_file,
+        [treated_ex_ante_revenue_file, ex_post_revenue_file],
+        +,
+        Quiver.csv,
+    )
 
     return nothing
 end

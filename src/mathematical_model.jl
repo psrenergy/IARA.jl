@@ -433,7 +433,7 @@ function hybrid_market_clearing_model_action(args...)
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             virtual_reservoir_generation!(args...)
             virtual_reservoir_volume_distance_to_waveguide!(args...)
-            virtual_reservoir_energy_stock!(args...)
+            virtual_reservoir_energy_account!(args...)
         end
     end
 

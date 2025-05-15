@@ -1445,6 +1445,21 @@ function network_representation(inputs::AbstractInputs, run_time_options)
     end
 end
 
+function network_representation(inputs::AbstractInputs, suffix::String)
+    clearing_model_subproblem = if suffix == "_ex_ante_commercial"
+        RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL
+    elseif suffix == "_ex_ante_physical"
+        RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
+    elseif suffix == "_ex_post_commercial"
+        RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
+    elseif suffix == "_ex_post_physical"
+        RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+    end
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
+
+    return network_representation(inputs, run_time_options)
+end
+
 """
     period_season_map(inputs::AbstractInputs)
 
@@ -1452,3 +1467,19 @@ Return the period to season map.
 """
 period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
     inputs.collections.configurations.period_season_map[:, scenario, period]
+
+function is_skipped(inputs::AbstractInputs, construction_type::String)
+    if construction_type == "ex_post_physical"
+        return construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_post_commercial"
+        return construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_physical"
+        return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_commercial"
+        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+    else
+        error(
+            "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",
+        )
+    end
+end

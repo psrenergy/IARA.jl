@@ -26,7 +26,7 @@ function virtual_reservoir_correspondence_by_volume!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    number_of_virtual_reservoirs = number_of_elements(inputs, VirtualReservoir)
 
     hydro_volume = get_model_object(model, :hydro_volume)
     virtual_reservoir_energy_account = get_model_object(model, :virtual_reservoir_energy_account)
@@ -35,7 +35,7 @@ function virtual_reservoir_correspondence_by_volume!(
 
     @constraint(
         model.jump_model,
-        virtual_reservoir_volume_balance[vr in virtual_reservoirs],
+        virtual_reservoir_volume_balance[vr in 1:number_of_virtual_reservoirs],
         sum(
             hydro_volume[end, h] * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
             h in virtual_reservoir_hydro_unit_indices(inputs, vr)
@@ -70,6 +70,22 @@ function virtual_reservoir_correspondence_by_volume!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
+    add_custom_recorder_to_query_from_subproblem_result!(
+        outputs,
+        :virtual_reservoir_marginal_cost,
+        constraint_dual_recorder(:virtual_reservoir_volume_balance),
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "virtual_reservoir_marginal_cost",
+        dimensions = ["period", "scenario"],
+        unit = "\$/MWh",
+        labels = virtual_reservoir_label(inputs),
+        run_time_options,
+    )
     return nothing
 end
 
@@ -83,5 +99,19 @@ function virtual_reservoir_correspondence_by_volume!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
+    virtual_reservoir_marginal_cost = simulation_results.data[:virtual_reservoir_marginal_cost]
+
+    write_output_without_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "virtual_reservoir_marginal_cost",
+        virtual_reservoir_marginal_cost;
+        period = period,
+        scenario = scenario,
+        subscenario = subscenario,
+        multiply_by = 1 / money_to_thousand_money(),
+    )
+
     return nothing
 end

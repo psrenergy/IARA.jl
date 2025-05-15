@@ -259,12 +259,6 @@ function validate(demand_unit::DemandUnit)
             num_errors += 1
         end
     end
-    if any(isequal(DemandUnit_DemandType.ELASTIC), demand_unit.demand_unit_type)
-        if isempty(demand_unit.elastic_demand_price_file)
-            @error("Demand Unit $(demand_unit.label) Elastic Demand Price File must be defined for elastic demands.")
-            num_errors += 1
-        end
-    end
     return num_errors
 end
 
@@ -304,6 +298,12 @@ function advanced_validations(inputs::AbstractInputs, demand_unit::DemandUnit)
         @warn(
             "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), " *
             "but an ex_post demand file was linked. This file will be ignored.")
+    end
+    if any(isequal(DemandUnit_DemandType.ELASTIC), demand_unit.demand_unit_type) && need_demand_price_input_data(inputs)
+        if isempty(demand_unit.elastic_demand_price_file)
+            @error("Demand Unit $(demand_unit.label) Elastic Demand Price File must be defined for elastic demands.")
+            num_errors += 1
+        end
     end
     return num_errors
 end

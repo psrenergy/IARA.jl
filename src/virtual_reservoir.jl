@@ -190,7 +190,7 @@ function post_process_virtual_reservoirs!(
     scenario::Int,
     subscenario::Int,
 )
-    energy_stock, hydro_spilled_energy = calculate_energy_stock_and_spilled_energy!(
+    energy_account, hydro_spilled_energy = calculate_energy_account_and_spilled_energy!(
         inputs,
         run_time_options,
         simulation_results,
@@ -203,9 +203,9 @@ function post_process_virtual_reservoirs!(
        subscenario ==
        subscenario_that_propagates_state_variables_to_next_period(inputs, run_time_options; period, scenario)
         # The result that goes to the next period
-        serialize_virtual_reservoir_energy_stock(
+        serialize_virtual_reservoir_energy_account(
             inputs,
-            energy_stock,
+            energy_account,
             period,
             scenario,
         )
@@ -222,10 +222,10 @@ function post_process_virtual_reservoirs!(
         subscenario = subscenario,
     )
 
-    treated_energy_stock = treat_output_for_writing_by_pairs_of_agents(
+    treated_energy_account = treat_output_for_writing_by_pairs_of_agents(
         inputs,
         run_time_options,
-        energy_stock,
+        energy_account,
         inputs.collections.virtual_reservoir,
         inputs.collections.asset_owner;
         index_getter = virtual_reservoir_asset_owner_indices,
@@ -235,8 +235,8 @@ function post_process_virtual_reservoirs!(
         outputs,
         inputs,
         run_time_options,
-        "virtual_reservoir_final_energy_stock",
-        treated_energy_stock;
+        "virtual_reservoir_final_energy_account",
+        treated_energy_account;
         period = period,
         scenario = scenario,
         subscenario = subscenario,
@@ -245,7 +245,7 @@ function post_process_virtual_reservoirs!(
     return nothing
 end
 
-function calculate_energy_stock_and_spilled_energy!(
+function calculate_energy_account_and_spilled_energy!(
     inputs::AbstractInputs,
     run_time_options::RunTimeOptions,
     simulation_results::SimulationResultsFromPeriodScenario,
@@ -301,14 +301,14 @@ function calculate_energy_stock_and_spilled_energy!(
         end
     end
 
-    return virtual_reservoir_post_processed_energy_stock, hydro_spilled_energy
+    return virtual_reservoir_post_processed_energy_account, hydro_spilled_energy
 end
 
 function virtual_reservoir_energy_account_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
     if period == 1
         return inputs.collections.virtual_reservoir.initial_energy_account
     else
-        return read_serialized_virtual_reservoir_energy_stock(inputs, period - 1, scenario)
+        return read_serialized_virtual_reservoir_energy_account(inputs, period - 1, scenario)
     end
 end
 

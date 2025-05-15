@@ -13,7 +13,7 @@ function virtual_reservoir_energy_account! end
 """
     virtual_reservoir_energy_account!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
 
-Add the virtual reservoir energy stock variables to the model.
+Add the virtual reservoir energy account variables to the model.
 """
 function virtual_reservoir_energy_account!(
     model::SubproblemModel,
@@ -40,7 +40,7 @@ end
 """
     virtual_reservoir_energy_account!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, scenario, subscenario, ::Type{SubproblemUpdate})
 
-Update the virtual reservoir energy stock variables in the model.
+Update the virtual reservoir energy account variables in the model.
 """
 function virtual_reservoir_energy_account!(
     model::SubproblemModel,
@@ -57,20 +57,20 @@ function virtual_reservoir_energy_account!(
 
     inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
 
-    virtual_reservoir_energy_stock_at_beginning_of_period =
+    virtual_reservoir_energy_account_at_beginning_of_period =
         virtual_reservoir_energy_account_from_previous_period(inputs, simulation_period, simulation_trajectory)
     volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, simulation_period, simulation_trajectory)
 
     vr_energy_arrival, _ = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
 
-    virtual_reservoir_energy_stock = get_model_object(model, :virtual_reservoir_energy_account)
+    virtual_reservoir_energy_account = get_model_object(model, :virtual_reservoir_energy_account)
     for vr in virtual_reservoirs
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             MOI.set(
                 model.jump_model,
                 POI.ParameterValue(),
-                virtual_reservoir_energy_stock[vr, ao],
-                virtual_reservoir_energy_stock_at_beginning_of_period[vr][ao] +
+                virtual_reservoir_energy_account[vr, ao],
+                virtual_reservoir_energy_account_at_beginning_of_period[vr][ao] +
                 vr_energy_arrival[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao),
             )
         end

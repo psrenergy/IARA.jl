@@ -330,10 +330,10 @@ function offeror_revenue(
         model_outputs_time_serie,
         joinpath(outputs_dir, "hydro_turbinable_spilled_energy" * physical_variables_suffix),
     )
-    vr_energy_stock_reader = open_time_series_output(
+    vr_energy_account_reader = open_time_series_output(
         inputs,
         model_outputs_time_serie,
-        joinpath(outputs_dir, "virtual_reservoir_final_energy_stock" * physical_variables_suffix),
+        joinpath(outputs_dir, "virtual_reservoir_final_energy_account" * physical_variables_suffix),
     )
 
     if is_double_settlement_ex_post
@@ -342,10 +342,10 @@ function offeror_revenue(
             model_outputs_time_serie,
             joinpath(outputs_dir, "hydro_turbinable_spilled_energy" * ex_ante_physical_suffix),
         )
-        vr_energy_stock_ex_ante_reader = open_time_series_output(
+        vr_energy_account_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
-            joinpath(outputs_dir, "virtual_reservoir_final_energy_stock" * ex_ante_physical_suffix),
+            joinpath(outputs_dir, "virtual_reservoir_final_energy_account" * ex_ante_physical_suffix),
         )
     end
 
@@ -374,18 +374,18 @@ function offeror_revenue(
     for period in 1:num_periods
         for scenario in scenarios(inputs)
             for subscenario in subscenarios(inputs, run_time_options)
-                if has_subscenario(vr_energy_stock_reader)
-                    Quiver.goto!(vr_energy_stock_reader; period, scenario, subscenario = subscenario)
+                if has_subscenario(vr_energy_account_reader)
+                    Quiver.goto!(vr_energy_account_reader; period, scenario, subscenario = subscenario)
                 else
-                    Quiver.goto!(vr_energy_stock_reader; period, scenario)
+                    Quiver.goto!(vr_energy_account_reader; period, scenario)
                 end
-                vr_energy_stock = vr_energy_stock_reader.data
+                vr_energy_account = vr_energy_account_reader.data
 
                 if is_double_settlement_ex_post
-                    Quiver.goto!(vr_energy_stock_ex_ante_reader; period, scenario)
-                    vr_energy_stock = vr_energy_stock_reader.data - vr_energy_stock_ex_ante_reader.data
+                    Quiver.goto!(vr_energy_account_ex_ante_reader; period, scenario)
+                    vr_energy_account = vr_energy_account_reader.data - vr_energy_account_ex_ante_reader.data
                 end
-                vr_energy_stock = vr_energy_stock / MW_to_GW()
+                vr_energy_account = vr_energy_account / MW_to_GW()
 
                 vr_spilled_energy_cost = zeros(number_of_elements(inputs, VirtualReservoir))
                 for subperiod in subperiods(inputs)
@@ -439,12 +439,12 @@ function offeror_revenue(
                 for vr in index_of_elements(inputs, VirtualReservoir)
                     first_pair = idx + 1
                     last_pair = idx + length(virtual_reservoir_asset_owner_indices(inputs, vr))
-                    total_energy_stock = sum(vr_energy_stock[first_pair:last_pair])
+                    total_energy_account = sum(vr_energy_account[first_pair:last_pair])
                     for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                         idx += 1
-                        if total_energy_stock == 0.0
+                        if total_energy_account == 0.0
                             if vr_spilled_energy_cost[vr] > 0.0
-                                @warn "Virtual reservoir $vr spilled energy cost is positive, but the total energy stock is zero. The cost will be allocated according to inflow allocation instead."
+                                @warn "Virtual reservoir $vr spilled energy cost is positive, but the total energy account is zero. The cost will be allocated according to inflow allocation instead."
                                 vr_ao_spilled_energy_cost[idx] =
                                     -vr_spilled_energy_cost[vr] *
                                     virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
@@ -453,7 +453,7 @@ function offeror_revenue(
                             end
                         else
                             vr_ao_spilled_energy_cost[idx] =
-                                -vr_spilled_energy_cost[vr] * vr_energy_stock[idx] / total_energy_stock
+                                -vr_spilled_energy_cost[vr] * vr_energy_account[idx] / total_energy_account
                         end
                     end
                 end
@@ -471,10 +471,10 @@ function offeror_revenue(
     Quiver.close!(writer)
     Quiver.close!(spilled_energy_reader)
     Quiver.close!(load_marginal_cost_reader)
-    Quiver.close!(vr_energy_stock_reader)
+    Quiver.close!(vr_energy_account_reader)
     if is_double_settlement_ex_post
         Quiver.close!(spilled_energy_ex_ante_reader)
-        Quiver.close!(vr_energy_stock_ex_ante_reader)
+        Quiver.close!(vr_energy_account_ex_ante_reader)
     end
 
     return joinpath(post_processing_path(inputs), output_name)

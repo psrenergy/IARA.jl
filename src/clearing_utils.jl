@@ -428,9 +428,9 @@ function clearing_has_physical_variables(inputs::Inputs)
     end
 end
 
-function serialize_virtual_reservoir_energy_stock(
+function serialize_virtual_reservoir_energy_account(
     inputs::Inputs,
-    energy_stock::Vector{Vector{Float64}},
+    energy_account::Vector{Vector{Float64}},
     period::Int,
     scenario::Int,
 )
@@ -439,22 +439,22 @@ function serialize_virtual_reservoir_energy_stock(
         mkdir(temp_path)
     end
     serialized_file_name =
-        joinpath(temp_path, "virtual_reservoir_energy_stock_period_$(period)_scenario_$(scenario).json")
+        joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
 
-    data_to_serialize = energy_stock
+    data_to_serialize = energy_account
 
     Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing
 end
 
-function read_serialized_virtual_reservoir_energy_stock(inputs::Inputs, period::Int, scenario::Int)
+function read_serialized_virtual_reservoir_energy_account(inputs::Inputs, period::Int, scenario::Int)
     temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
         path_case(inputs)
     else
         joinpath(path_case(inputs), "temp")
     end
     serialized_file_name =
-        joinpath(temp_path, "virtual_reservoir_energy_stock_period_$(period)_scenario_$(scenario).json")
+        joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
 
     if !isfile(serialized_file_name)
         error_message = "File $serialized_file_name not found."

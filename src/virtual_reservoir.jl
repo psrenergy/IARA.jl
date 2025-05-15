@@ -207,7 +207,7 @@ function post_process_virtual_reservoirs!(
             if total_actual_energy_account == 0
                 virtual_reservoir_post_processed_energy_account[vr] .= 0.0
             else
-                @warn("The total actual energy stock is not zero, but the pre-processed energy stock is zero.")
+                @warn("The total actual energy account is not zero, but the pre-processed energy account is zero.")
                 virtual_reservoir_post_processed_energy_account[vr] .=
                     virtual_reservoir_asset_owners_inflow_allocation(inputs, vr) *
                     total_actual_energy_account

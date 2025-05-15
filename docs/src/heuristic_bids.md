@@ -15,7 +15,7 @@ Bid offers are calculated using predefined formulas that incorporate operational
 - ``J^H_{VR}(r)``: Set of hydro units associated with virtual reservoir $r$.
 - ``I_{VR}(r)``: Set of asset owners associated with virtual reservoir $r$.
 - ``K^{VR}(r, i)``: Set of segment offers at virtual reservoir $r$ for the asset owner $i$.
-- ``E^{VR}_{r,i}(\omega)``: Energy stock of asset owner $i$ on virtual reservoir $r$ at scenario $\omega$.
+- ``E^{VR}_{r,i}(\omega)``: Energy account of asset owner $i$ on virtual reservoir $r$ at scenario $\omega$.
 - ``F(b)`` Set of risk factors for bidding group $b$.
 - ``F^{AO}(i)`` Set of risk factors for asset owner $i$.
 - ``p_f``: Risk factor.
@@ -90,7 +90,7 @@ P^{VR}_{r, i, k}(\omega) &= (1 + p_f) \cdot  \frac{1}{\sum_{\tau \in B(t)} d(\ta
 \end{align}
 ```
 
-In the Virtual Reservoir approach, the energy stock of asset owner $i$ in virtual reservoir $r$ is used to calculate the participation $e_{r,i}$, which represents the proportion of the total energy stock that the asset owner controls.
+In the Virtual Reservoir approach, the energy account of asset owner $i$ in virtual reservoir $r$ is used to calculate the participation $e_{r,i}$, which represents the proportion of the total energy account that the asset owner controls.
 
 Using this participation factor, the asset owner $i$ can submit bid energy offers for segment $k$, which are based on the generation outputs $g^H_{j, \tau}(\omega)$ for all hydro units in the virtual reservoir and across all risk factors $F^{AO}(i)$ of the asset owner.
 The energy bid offer is scaled according to the asset owner's participation factor, $e_{r,i}$, in the virtual reservoir.

@@ -107,7 +107,7 @@ function validate(virtual_reservoir::VirtualReservoir)
             if virtual_reservoir.asset_owners_initial_energy_account_share[i][j] < 0 ||
                virtual_reservoir.asset_owners_initial_energy_account_share[i][j] > 1
                 @error(
-                    "Initial energy stock share for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero and less than or equal to one."
+                    "Initial energy account share for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero and less than or equal to one."
                 )
                 num_errors += 1
             end
@@ -121,7 +121,7 @@ function validate(virtual_reservoir::VirtualReservoir)
         sum_of_initial_energy_account_share = sum(virtual_reservoir.asset_owners_initial_energy_account_share[i])
         if !is_null(sum_of_initial_energy_account_share) && sum_of_initial_energy_account_share != 1
             @error(
-                "Sum of initial energy stock share for virtual reservoir $(virtual_reservoir_label) must be equal to one. Found $(sum(virtual_reservoir.asset_owners_initial_energy_account_share[i]))."
+                "Sum of initial energy account share for virtual reservoir $(virtual_reservoir_label) must be equal to one. Found $(sum(virtual_reservoir.asset_owners_initial_energy_account_share[i]))."
             )
             num_errors += 1
         end
@@ -168,7 +168,7 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
             virtual_reservoir_label = virtual_reservoir.label[i]
             if any(is_null, virtual_reservoir.asset_owners_initial_energy_account_share[i])
                 @error(
-                    "Initial energy stock share for virtual reservoir $(virtual_reservoir_label) must be defined for all asset owners."
+                    "Initial energy account share for virtual reservoir $(virtual_reservoir_label) must be defined for all asset owners."
                 )
                 num_errors += 1
             end
@@ -263,7 +263,7 @@ end
 function virtual_reservoir_asset_owners_initial_energy_account_share(inputs::AbstractInputs, vr::Int, ao::Int)
     if virtual_reservoir_initial_energy_account_share(inputs) ==
        Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
-        return virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs, vr::Int, ao::Int)
+        return virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
     else
         @assert ao in virtual_reservoir_asset_owner_indices(inputs, vr)
         ao_index_among_asset_owners = findfirst(inputs.collections.virtual_reservoir.asset_owner_indices[vr] .== ao)

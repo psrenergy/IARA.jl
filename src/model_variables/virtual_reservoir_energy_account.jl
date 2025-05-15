@@ -8,8 +8,6 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-# TODO: Rename the file virtual_reservoir_energy_stock.jl to virtual_reservoir_energy_account.jl
-
 function virtual_reservoir_energy_account! end
 
 """

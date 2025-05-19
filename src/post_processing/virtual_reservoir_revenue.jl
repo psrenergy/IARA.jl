@@ -530,7 +530,7 @@ function post_processing_virtual_reservoirs(
         output_has_subscenario,
     )
 
-    total_revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoirs_total_revenue" * output_suffix)
+    total_revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoir_total_revenue" * output_suffix)
     Quiver.apply_expression(
         total_revenue_file,
         [accepted_offer_revenue_file, inflow_shareholder_residual_revenue_file, spilled_responsibility_revenue_file],
@@ -577,7 +577,7 @@ function post_processing_virtual_reservoirs_double_settlement(
     treated_ex_ante_revenue_file =
         create_temporary_file_with_subscenario_dimension(inputs, model_outputs_time_serie, ex_ante_revenue_file)
 
-    revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoirs_total_revenue")
+    revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoir_total_revenue")
 
     Quiver.apply_expression(
         revenue_file,

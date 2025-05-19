@@ -676,12 +676,15 @@ function single_period_reference_hydro_supply_curve(
     # Update the time series in the database to the current period
     period = inputs.args.period
     update_time_series_from_db!(inputs, period)
-    
+
     @info("Calculating the reference hydro supply curve for period: $period")
     for demand_multiplier in reference_curve_demand_multipliers(inputs)
         # Update the demand multiplier
         run_time_options =
-            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL, demand_multiplier)
+            RunTimeOptions(;
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+                demand_multiplier,
+            )
         # Rebuild the model with the new demand multiplier
         model = build_model(inputs, run_time_options)
         # Run simulation

@@ -320,7 +320,7 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
         PSRI.get_vectors(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
-    reference_curve_demand_multipliers = 
+    reference_curve_demand_multipliers =
         PSRI.get_vectors(inputs.db, "Configuration", "reference_curve_demand_multipliers")[1]
 
     # Load time series files

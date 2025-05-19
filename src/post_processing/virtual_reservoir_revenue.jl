@@ -1,4 +1,4 @@
-function accepted_offers_revenue(
+function accepted_offer_revenue(
     inputs::Inputs,
     outputs_post_processing::Outputs,
     model_outputs_time_serie::OutputReaders,
@@ -11,7 +11,7 @@ function accepted_offers_revenue(
     output_has_subscenario::Bool,
 )
     outputs_dir = output_path(inputs)
-    output_name = "virtual_reservoirs_accepted_offers_revenue" * output_suffix
+    output_name = "virtual_reservoir_accepted_offer_revenue" * output_suffix
 
     vr_generation_reader = open_time_series_output(
         inputs,
@@ -115,7 +115,7 @@ function accepted_offers_revenue(
     return joinpath(post_processing_path(inputs), output_name)
 end
 
-function inflow_shareholder_revenue(
+function inflow_shareholder_residual_revenue(
     inputs::Inputs,
     outputs_post_processing::Outputs,
     model_outputs_time_serie::OutputReaders,
@@ -128,7 +128,7 @@ function inflow_shareholder_revenue(
     output_has_subscenario::Bool,
 )
     outputs_dir = output_path(inputs)
-    output_name = "virtual_reservoirs_inflow_shareholder_revenue" * output_suffix
+    output_name = "virtual_reservoir_inflow_shareholder_residual_revenue" * output_suffix
 
     load_marginal_cost_reader = open_time_series_output(
         inputs,
@@ -145,10 +145,10 @@ function inflow_shareholder_revenue(
         model_outputs_time_serie,
         joinpath(outputs_dir, "hydro_turbinable_spilled_energy" * physical_variables_suffix),
     )
-    vr_accepted_offers_revenue_reader = open_time_series_output(
+    vr_accepted_offer_revenue_reader = open_time_series_output(
         inputs,
         model_outputs_time_serie,
-        joinpath(post_processing_path(inputs), "virtual_reservoirs_accepted_offers_revenue" * output_suffix),
+        joinpath(post_processing_path(inputs), "virtual_reservoir_accepted_offer_revenue" * output_suffix),
     )
 
     if is_double_settlement_ex_post
@@ -189,19 +189,19 @@ function inflow_shareholder_revenue(
     for period in 1:num_periods
         for scenario in scenarios(inputs)
             for subscenario in subscenarios(inputs, run_time_options)
-                if has_subscenario(vr_accepted_offers_revenue_reader)
-                    Quiver.goto!(vr_accepted_offers_revenue_reader; period, scenario, subscenario = subscenario)
+                if has_subscenario(vr_accepted_offer_revenue_reader)
+                    Quiver.goto!(vr_accepted_offer_revenue_reader; period, scenario, subscenario = subscenario)
                 else
-                    Quiver.goto!(vr_accepted_offers_revenue_reader; period, scenario)
+                    Quiver.goto!(vr_accepted_offer_revenue_reader; period, scenario)
                 end
-                vr_accepted_offers_revenue = vr_accepted_offers_revenue_reader.data
+                vr_accepted_offer_revenue = vr_accepted_offer_revenue_reader.data
 
-                accepted_offers_revenue = zeros(number_of_elements(inputs, VirtualReservoir))
+                accepted_offer_revenue = zeros(number_of_elements(inputs, VirtualReservoir))
                 idx = 0
                 for vr in index_of_elements(inputs, VirtualReservoir)
                     for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                         idx += 1
-                        accepted_offers_revenue[vr] += vr_accepted_offers_revenue[idx]
+                        accepted_offer_revenue[vr] += vr_accepted_offer_revenue[idx]
                     end
                 end
 
@@ -269,7 +269,7 @@ function inflow_shareholder_revenue(
                     end
                 end
 
-                vr_total_revenue = physical_generation_revenue .- accepted_offers_revenue .- om_cost
+                vr_total_revenue = physical_generation_revenue .- accepted_offer_revenue .- om_cost
                 number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_ao_revenue = zeros(number_of_pairs)
                 idx = 0
@@ -296,7 +296,7 @@ function inflow_shareholder_revenue(
     Quiver.close!(load_marginal_cost_reader)
     Quiver.close!(hydro_generation_reader)
     Quiver.close!(turbinable_spillage_reader)
-    Quiver.close!(vr_accepted_offers_revenue_reader)
+    Quiver.close!(vr_accepted_offer_revenue_reader)
     if is_double_settlement_ex_post
         Quiver.close!(hydro_generation_ex_ante_reader)
         Quiver.close!(turbinable_spillage_ex_ante_reader)
@@ -305,7 +305,7 @@ function inflow_shareholder_revenue(
     return joinpath(post_processing_path(inputs), output_name)
 end
 
-function offeror_revenue(
+function spilled_responsibility_revenue(
     inputs::Inputs,
     outputs_post_processing::Outputs,
     model_outputs_time_serie::OutputReaders,
@@ -318,7 +318,7 @@ function offeror_revenue(
     output_has_subscenario::Bool,
 )
     outputs_dir = output_path(inputs)
-    output_name = "virtual_reservoirs_offeror_revenue" * output_suffix
+    output_name = "virtual_reservoir_spilled_responsibility_revenue" * output_suffix
 
     load_marginal_cost_reader = open_time_series_output(
         inputs,
@@ -493,7 +493,7 @@ function post_processing_virtual_reservoirs(
     output_has_subscenario::Bool = true,
 )
     @assert !(is_double_settlement_ex_post && isempty(ex_ante_physical_suffix))
-    accepted_offers_revenue_file = accepted_offers_revenue(
+    accepted_offer_revenue_file = accepted_offer_revenue(
         inputs,
         outputs_post_processing,
         model_outputs_time_serie,
@@ -505,7 +505,7 @@ function post_processing_virtual_reservoirs(
         ex_ante_physical_suffix,
         output_has_subscenario,
     )
-    inflow_shareholder_revenue_file = inflow_shareholder_revenue(
+    inflow_shareholder_residual_revenue_file = inflow_shareholder_residual_revenue(
         inputs,
         outputs_post_processing,
         model_outputs_time_serie,
@@ -517,7 +517,7 @@ function post_processing_virtual_reservoirs(
         ex_ante_physical_suffix,
         output_has_subscenario,
     )
-    offeror_revenue_file = offeror_revenue(
+    spilled_responsibility_revenue_file = spilled_responsibility_revenue(
         inputs,
         outputs_post_processing,
         model_outputs_time_serie,
@@ -530,10 +530,10 @@ function post_processing_virtual_reservoirs(
         output_has_subscenario,
     )
 
-    total_revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoirs_total_revenue" * output_suffix)
+    total_revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoir_total_revenue" * output_suffix)
     Quiver.apply_expression(
         total_revenue_file,
-        [accepted_offers_revenue_file, inflow_shareholder_revenue_file, offeror_revenue_file],
+        [accepted_offer_revenue_file, inflow_shareholder_residual_revenue_file, spilled_responsibility_revenue_file],
         +,
         Quiver.csv,
     )
@@ -577,7 +577,7 @@ function post_processing_virtual_reservoirs_double_settlement(
     treated_ex_ante_revenue_file =
         create_temporary_file_with_subscenario_dimension(inputs, model_outputs_time_serie, ex_ante_revenue_file)
 
-    revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoirs_total_revenue")
+    revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoir_total_revenue")
 
     Quiver.apply_expression(
         revenue_file,

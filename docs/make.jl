@@ -80,6 +80,7 @@ pages = [
             "Conceptual formulations" => "conceptual_formulation.md",
             "Centralized operation problem" => "centralized_operation_problem.md",
             "Market clearing problem" => "market_clearing_problem.md",
+            "Post processing virtual reservoirs" => "post_processing_virtual_reservoirs.md",
             "Heuristic bids" => "heuristic_bids.md",
         ],
     ],

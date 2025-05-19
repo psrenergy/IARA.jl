@@ -75,7 +75,7 @@ function markup_offers_for_period_scenario(
     if isnothing(outputs)
         @assert is_reference_curve(inputs)
     end
-    if any_elements(inputs, BiddingGroup)
+    if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
         bidding_group_markup_offers_for_period_scenario(
             inputs,
             run_time_options,

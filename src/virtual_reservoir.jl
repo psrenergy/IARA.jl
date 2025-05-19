@@ -264,13 +264,8 @@ function calculate_energy_account_and_spilled_energy!(
         virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
 
     inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
-    inflow_as_volume = [
-        inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
-        subperiod_duration_in_hours(inputs, b) for h in hydro_units, b in subperiods(inputs)
-    ]
     vr_energy_arrival, hydro_spilled_energy =
-        energy_from_inflows(inputs, inflow_as_volume, volume_at_beginning_of_period)
-
+        energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
     virtual_reservoir_post_processed_energy_account =
         [zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr))) for vr in virtual_reservoirs]
     for vr in virtual_reservoirs

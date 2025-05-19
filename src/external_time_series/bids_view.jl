@@ -127,7 +127,7 @@ function initialize_bids_view_from_external_file!(
         update_number_of_bid_segments!(inputs, bid_segments)
     end
 
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    all_bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
     bid_segments = bidding_segments(inputs)
     segments_or_profile = bid_segments
@@ -139,7 +139,7 @@ function initialize_bids_view_from_external_file!(
 
     ts.data = zeros(
         T,
-        length(bidding_groups),
+        length(all_bidding_groups),
         length(buses),
         length(segments_or_profile),
         length(blks),
@@ -164,7 +164,7 @@ function read_bids_view_from_external_file!(
     scenario::Int,
     has_profile_bids::Bool = false,
 ) where {T}
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     buses = index_of_elements(inputs, Bus)
 
     if has_profile_bids
@@ -180,15 +180,15 @@ function read_bids_view_from_external_file!(
         if has_profile_bids
             for prf in bid_profiles
                 Quiver.goto!(ts.reader; period, scenario, subperiod = blk, profile = prf)
-                for bg in bidding_groups, bus in buses
-                    ts.data[bg, bus, prf, blk] = ts.reader.data[(bg-1)*(num_buses)+bus]
+                for (i, bg) in enumerate(bidding_groups), bus in buses
+                    ts.data[bg, bus, prf, blk] = ts.reader.data[(i-1)*(num_buses)+bus]
                 end
             end
         else
             for bds in bid_segments
                 Quiver.goto!(ts.reader; period, scenario, subperiod = blk, bid_segment = bds)
-                for bg in bidding_groups, bus in buses
-                    ts.data[bg, bus, bds, blk] = ts.reader.data[(bg-1)*(num_buses)+bus]
+                for (i, bg) in enumerate(bidding_groups), bus in buses
+                    ts.data[bg, bus, bds, blk] = ts.reader.data[(i-1)*(num_buses)+bus]
                 end
             end
         end

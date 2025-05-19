@@ -45,16 +45,19 @@ function compare_outputs(
     case_path::String;
     test_only_subperiod_sum::Vector{String} = String[],
     test_only_first_subperiod::Vector{String} = String[],
-    skipped_outputs::Vector{String} = [
+    skipped_outputs::Vector{String} = String[],
+)
+    outputs_folder = joinpath(case_path, "outputs")
+    expected_outputs_folder = joinpath(case_path, "expected_outputs")
+
+    default_skipped_outputs = [
         "load_marginal_cost",
         "hydro_opportunity_cost",
         "generation",
         "bidding_group_revenue",
         "bidding_group_total_revenue",
-    ],
-)
-    outputs_folder = joinpath(case_path, "outputs")
-    expected_outputs_folder = joinpath(case_path, "expected_outputs")
+    ]
+    skipped_outputs = union(skipped_outputs, default_skipped_outputs)
 
     # For each file in the expected_outputs_folder, load the output and the expected outputs and compare them
     list_of_outputs = get_list_of_expected_outputs(expected_outputs_folder, skipped_outputs)
@@ -100,7 +103,7 @@ function compare_files(
         dimension_size = output_reader.metadata.dimension_size
 
         # Compare the outputs
-        if output_name in test_only_subperiod_sum
+        if any(startswith.(output_name, test_only_subperiod_sum))
             if dimension_names == [:period, :scenario, :subperiod]
                 for period in 1:dimension_size[1], scenario in 1:dimension_size[2]
                     sum_in_subperiods_calculated_output = 0.0

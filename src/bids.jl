@@ -647,7 +647,11 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     end
     # Hydro representation
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        return true
+        if generate_heuristic_bids_for_clearing(inputs)
+            return true
+        else
+            return false
+        end
     elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
         bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
         if isempty(bidding_group_indexes)
@@ -750,12 +754,13 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     # AO in VR
     energy_share_of_asset_owner_in_virtual_reservoir = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
 
-    energy_stock_at_beginning_of_period = virtual_reservoir_energy_stock_from_previous_period(inputs, period, scenario)
+    energy_account_at_beginning_of_period =
+        virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
     for vr in virtual_reservoir_indices
-        total_virtual_reservoir_energy_stock = sum(energy_stock_at_beginning_of_period[vr])
+        total_virtual_reservoir_energy_account = sum(energy_account_at_beginning_of_period[vr])
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             energy_share_of_asset_owner_in_virtual_reservoir[vr, ao] =
-                energy_stock_at_beginning_of_period[vr][ao] / total_virtual_reservoir_energy_stock
+                energy_account_at_beginning_of_period[vr][ao] / total_virtual_reservoir_energy_account
         end
     end
 
@@ -842,7 +847,7 @@ end
 
 function calculate_maximum_valid_segments_or_profiles_per_timeseries(
     inputs::AbstractInputs,
-    bids_view::IARA.BidsView{Float64};
+    bids_view::Union{IARA.BidsView{Float64}, IARA.VirtualReservoirBidsView{Float64}};
     has_profile_bids::Bool = false,
     is_virtual_reservoir = false,
 )
@@ -894,6 +899,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         output_path(inputs),
         "bidding_group_energy_offer" * period_suffix,
     )
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     initialize_bids_view_from_external_file!(
         inputs.time_series.quantity_offer,
         inputs,
@@ -902,7 +908,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 
@@ -918,7 +924,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 
@@ -934,7 +940,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 

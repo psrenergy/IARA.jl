@@ -93,7 +93,8 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     end
 
     dimensions = ts.reader.metadata.dimensions
-    vr_bidding_segments = dimensions[:bid_segment]
+    dimension_size = ts.reader.metadata.dimension_size
+    vr_bidding_segments = dimension_size[3]
     update_number_of_virtual_reservoir_bidding_segments!(inputs, vr_bidding_segments)
 
     # Validate if the dimensions are as expected
@@ -172,6 +173,7 @@ function write_virtual_reservoir_bids_time_series_file(
     dimension_size::Vector{Int},
     initial_date::Union{String, DateTime} = "",
     unit::String = "",
+    frequency::String = "month",
 ) where {T}
 
     # It expects to receive 5d arrays with the following dimensions:
@@ -197,7 +199,7 @@ function write_virtual_reservoir_bids_time_series_file(
             if labels_asset_owners[ao] in virtual_reservoirs_to_asset_owners_map[labels_virtual_reservoirs[vr]]
                 number_of_pairs += 1
                 if iszero(data[vr, ao, :, :, :])
-                    @error(
+                    @warn(
                         "Asset owner $(labels_asset_owners[ao]) is in the map for virtual reservoir $(labels_virtual_reservoirs[vr]), but the data is zero for all bid segment, scenario and period.",
                     )
                 end
@@ -255,6 +257,7 @@ function write_virtual_reservoir_bids_time_series_file(
         dimension_size,
         initial_date,
         unit,
+        frequency,
         digits = 6,
     )
     return nothing

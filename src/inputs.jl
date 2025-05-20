@@ -317,10 +317,6 @@ Store pre-calculated values for the collections.
 """
 
 function fill_caches!(inputs::Inputs)
-    if (is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
-       clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs)
-    end
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         fill_hydro_unit_virtual_reservoir_index!(inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)

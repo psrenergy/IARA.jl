@@ -434,6 +434,7 @@ function hybrid_market_clearing_model_action(args...)
             virtual_reservoir_generation!(args...)
             virtual_reservoir_volume_distance_to_waveguide!(args...)
             virtual_reservoir_energy_account!(args...)
+            virtual_reservoir_generation_bounds_values!(args...)
         end
     end
 

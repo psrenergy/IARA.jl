@@ -93,6 +93,40 @@ function bidding_group_markup_units(inputs::Inputs)
     bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units
 end
 
+function maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::AbstractInputs)
+    # Indexes
+    virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
+    asset_owner_indices = index_of_elements(inputs, AssetOwner)
+
+    # Sizes
+    number_of_virtual_reservoirs = length(virtual_reservoir_indices)
+    number_of_asset_owners = length(asset_owner_indices)
+
+    # AO
+    asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
+    for ao in asset_owner_indices
+        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor(inputs, ao))
+    end
+
+    # VR
+    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
+    number_of_hydro_units_per_virtual_reservoir = length.(virtual_reservoir_hydro_units)
+
+    # Offer segments
+    number_of_offer_segments_per_asset_owner_and_virtual_reservoir =
+        zeros(Int, number_of_asset_owners, number_of_virtual_reservoirs)
+    for vr in virtual_reservoir_indices
+        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+            number_of_offer_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
+                asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
+        end
+    end
+    maximum_number_of_offer_segments = maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir)
+    update_number_of_virtual_reservoir_bidding_segments!(inputs, maximum_number_of_offer_segments)
+
+    return nothing
+end
+
 function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
     number_of_bidding_groups = length(bidding_group_indexes)
@@ -880,11 +914,22 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
 
     tol = 1e-6
 
-    for bg in 1:number_elements
-        for segment in reverse(segments)
-            if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
-                valid_segments_per_timeseries[bg] = segment
-                break
+    if is_virtual_reservoir
+        for vr in 1:number_elements
+            for segment in reverse(segments)
+                if any(bids_view.data[vr, :, segment] != 0.0) # VR can bid negative values
+                    valid_segments_per_timeseries[vr] = segment
+                    break
+                end
+            end
+        end
+    else
+        for bg in 1:number_elements
+            for segment in reverse(segments)
+                if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
+                    valid_segments_per_timeseries[bg] = segment
+                    break
+                end
             end
         end
     end

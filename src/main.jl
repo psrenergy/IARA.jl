@@ -284,8 +284,12 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
         update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
 
+        maximum_number_of_virtual_reservoir_offer_segments = maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_virtual_reservoir_bid_segments!(inputs, maximum_number_of_virtual_reservoir_offer_segments)
+
         @info("Heuristic bids")
-        @info("   Number of segments: $maximum_number_of_offer_segments")
+        @info("   Number of bidding group segments: $maximum_number_of_offer_segments")
+        @info("   Number of virtual reservoir segments: $maximum_number_of_virtual_reservoir_offer_segments")
         @info("")
     end
 

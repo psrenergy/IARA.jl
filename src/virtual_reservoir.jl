@@ -130,40 +130,6 @@ function fill_initial_energy_account!(inputs::AbstractInputs, vr::Int)
     return nothing
 end
 
-function fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs::AbstractInputs)
-    # Indexes
-    virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
-    asset_owner_indices = index_of_elements(inputs, AssetOwner)
-
-    # Sizes
-    number_of_virtual_reservoirs = length(virtual_reservoir_indices)
-    number_of_asset_owners = length(asset_owner_indices)
-
-    # AO
-    asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
-    for ao in asset_owner_indices
-        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor(inputs, ao))
-    end
-
-    # VR
-    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
-    number_of_hydro_units_per_virtual_reservoir = length.(virtual_reservoir_hydro_units)
-
-    # Offer segments
-    number_of_offer_segments_per_asset_owner_and_virtual_reservoir =
-        zeros(Int, number_of_asset_owners, number_of_virtual_reservoirs)
-    for vr in virtual_reservoir_indices
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            number_of_offer_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
-                asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
-        end
-    end
-    maximum_number_of_offer_segments = maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir)
-    update_number_of_virtual_reservoir_bidding_segments!(inputs, maximum_number_of_offer_segments)
-
-    return nothing
-end
-
 function update_number_of_virtual_reservoir_bidding_segments!(inputs::AbstractInputs, value::Int)
     values_array = fill(value, length(index_of_elements(inputs, VirtualReservoir)))
     update_number_of_virtual_reservoir_bidding_segments!(inputs, values_array)

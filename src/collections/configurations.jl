@@ -93,6 +93,8 @@ Configurations for the problem.
     spot_price_cap::Float64 = 0.0
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
+    virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
+        Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -307,7 +309,11 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
             Configurations_VirtualReservoirCorrespondenceType.T,
         )
-
+    configurations.virtual_reservoir_initial_energy_account_share =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_initial_energy_account_share")[1],
+            Configurations_VirtualReservoirInitialEnergyAccount.T,
+        )
     # Load vectors
     configurations.subperiod_duration_in_hours =
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
@@ -451,11 +457,6 @@ function validate(configurations::Configurations)
     if configurations.inflow_scenarios_files == Configurations_UncertaintyScenariosFiles.NONE &&
        is_null(configurations.parp_max_lags)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
-        num_errors += 1
-    end
-    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
-        @error("Virtual reservoirs cannot be used with clearing bid source READ_FROM_FILE.")
         num_errors += 1
     end
     if configurations.integer_variable_representation_ex_ante_physical ==
@@ -1385,6 +1386,9 @@ Return the type of physical-virtual correspondence for the virtual reservoirs.
 virtual_reservoir_correspondence_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_correspondence_type
 
+virtual_reservoir_initial_energy_account_share(inputs) =
+    inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
+
 """
     integer_variable_representation(inputs::Inputs, run_time_options)
 
@@ -1436,6 +1440,21 @@ function network_representation(inputs::AbstractInputs, run_time_options)
     end
 end
 
+function network_representation(inputs::AbstractInputs, suffix::String)
+    clearing_model_subproblem = if suffix == "_ex_ante_commercial"
+        RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL
+    elseif suffix == "_ex_ante_physical"
+        RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
+    elseif suffix == "_ex_post_commercial"
+        RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
+    elseif suffix == "_ex_post_physical"
+        RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+    end
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
+
+    return network_representation(inputs, run_time_options)
+end
+
 """
     period_season_map(inputs::AbstractInputs)
 
@@ -1443,3 +1462,19 @@ Return the period to season map.
 """
 period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
     inputs.collections.configurations.period_season_map[:, scenario, period]
+
+function is_skipped(inputs::AbstractInputs, construction_type::String)
+    if construction_type == "ex_post_physical"
+        return construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_post_commercial"
+        return construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_physical"
+        return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_commercial"
+        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+    else
+        error(
+            "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",
+        )
+    end
+end

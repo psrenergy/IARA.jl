@@ -102,7 +102,50 @@ Initialize the outputs struct.
 function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
     outputs = Outputs()
     model_action(outputs, inputs, run_time_options, InitializeOutput)
+    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        initialize_virtual_reservoir_post_processing_outputs!(outputs, inputs, run_time_options)
+    end
     return outputs
+end
+
+function initialize_virtual_reservoir_post_processing_outputs!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+)
+    if construction_type(inputs, run_time_options) == Configurations_ConstructionType.SKIP
+        return nothing
+    end
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "virtual_reservoir_final_energy_account",
+        dimensions = ["period", "scenario"],
+        unit = "GWh",
+        labels = labels_for_output_by_pair_of_agents(
+            inputs,
+            run_time_options,
+            inputs.collections.virtual_reservoir,
+            inputs.collections.asset_owner;
+            index_getter = virtual_reservoir_asset_owner_indices,
+        ),
+        run_time_options,
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "hydro_turbinable_spilled_energy",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "GWh",
+        labels = hydro_unit_label(inputs),
+        run_time_options,
+    )
+
+    return nothing
 end
 
 function initialize_output_dir(args::Args)
@@ -341,6 +384,67 @@ function write_output_per_subperiod!(
     return nothing
 end
 
+function write_output_without_subperiod!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    vector_of_results::Vector{T};
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+    multiply_by::Float64 = 1.0,
+    indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
+) where {T}
+
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    # Create a vector of zeros based on the number of time series
+    num_time_series = output.writer.metadata.number_of_time_series
+    data = zeros(num_time_series)
+
+    # Validate that the indices of the outputs match the jump_container
+    if indices_of_elements_in_output === nothing
+        @assert length(vector_of_results) == num_time_series
+    else
+        @assert length(indices_of_elements_in_output) == length(vector_of_results)
+    end
+
+    vector_to_write = vector_of_results * multiply_by
+    if indices_of_elements_in_output === nothing
+        # Write in all indices without filtering
+        for (idx, value) in enumerate(vector_to_write)
+            data[idx] = value
+        end
+    else
+        # Write only the filtered indices that are in the output file
+        for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
+            data[idx_in_output] = vector_to_write[idx]
+        end
+    end
+    if is_ex_post_problem(run_time_options)
+        Quiver.write!(
+            output.writer,
+            round_output(data);
+            period,
+            scenario,
+            subscenario,
+        )
+    else
+        Quiver.write!(
+            output.writer,
+            round_output(data);
+            period, scenario,
+        )
+    end
+end
+
 function all_buses(inputs::Inputs, index1::Int)
     return 1:number_of_elements(inputs, Bus)
 end
@@ -372,37 +476,55 @@ end
 function treat_output_for_writing_by_pairs_of_agents(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    raw_output,
+    raw_output::AbstractArray{Float64, 3},
     first_collection::T1,
     second_collection::T2;
     # index_getter is a function that receives the inputs and the index of the first collection
     # and returns the indices of the second collection that are associated with the elements 
     # of index1 in first collection.
     index_getter::Function,
-    output_varies_per_subperiod::Bool = true,
+    dimension_size::Vector{Int},
 ) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
-    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
-    blks = subperiods(inputs)
-    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
-    number_of_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    # This function receives model outputs, and is compatible with SparseAxisArrays.
 
-    treated_output = if output_varies_per_subperiod
-        zeros(number_of_subperiods(inputs), number_of_pairs)
-    else # assumes outout varies per segment (VR bids)
-        zeros(number_of_pairs, number_of_segments)
-    end
+    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
+    treated_output = zeros(number_of_pairs, dimension_size...)
+    ranges = (1:n for n in dimension_size)
 
     number_of_pairs_fullfiled = 0
     for index1 in index_of_elements(inputs, T1; run_time_options), index2 in index_getter(inputs, index1)
         number_of_pairs_fullfiled += 1
-        if output_varies_per_subperiod
-            for blk in blks
-                treated_output[blk, number_of_pairs_fullfiled] = raw_output[blk, index1, index2]
-            end
-        else # assumes outout varies per segment (VR bids)
-            for segment in 1:valid_segments[index1]
-                treated_output[number_of_pairs_fullfiled, segment] = raw_output[index1, index2, segment]
-            end
+        for dimension_indices in Iterators.product(ranges...)
+            treated_output[number_of_pairs_fullfiled, dimension_indices...] =
+                raw_output[index1, index2, dimension_indices...]
+        end
+    end
+
+    @assert number_of_pairs_fullfiled == number_of_pairs
+
+    return treated_output
+end
+
+function treat_output_for_writing_by_pairs_of_agents(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    raw_output::Vector{Vector{Float64}},
+    first_collection::T1,
+    second_collection::T2;
+    # index_getter is a function that receives the inputs and the index of the first collection
+    # and returns the indices of the second collection that are associated with the elements 
+    # of index1 in first collection.
+    index_getter::Function,
+) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
+    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
+    treated_output = zeros(number_of_pairs)
+
+    number_of_pairs_fullfiled = 0
+    for index1 in index_of_elements(inputs, T1; run_time_options)
+        @assert length(index_getter(inputs, index1)) == length(raw_output[index1])
+        for index2 in eachindex(raw_output[index1])
+            number_of_pairs_fullfiled += 1
+            treated_output[number_of_pairs_fullfiled] = raw_output[index1][index2]
         end
     end
 

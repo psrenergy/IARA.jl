@@ -310,6 +310,9 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             if !is_null(bg_index) && is_flexible(inputs.collections.demand_unit, d)
                 @error("Demand unit $(d) is flexible and this is not allowed for bidding groups.")
             end
+            if !is_null(bg_index) && is_inelastic(inputs.collections.demand_unit, d)
+                @error("Demand unit $(d) is inelastic and this is not allowed for bidding groups.")
+            end
             if is_elastic(inputs.collections.demand_unit, d) && is_null(bg_index)
                 @error("Elastic demand unit $(d) is not assigned to any bidding group.")
             end

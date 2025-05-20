@@ -247,6 +247,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Offers
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     if run_mode(inputs) == RunMode.STRATEGIC_BID ||
        (
         is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&
@@ -262,7 +263,7 @@ function initialize_time_series_from_external_files(inputs)
                 [:period, :scenario, :subperiod, :profile],
                 [:period, :scenario, :subperiod, :bid_segment],
             ],
-            bidding_groups_to_read = bidding_group_label(inputs),
+            bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
             buses_to_read = bus_label(inputs),
         )
 
@@ -276,7 +277,7 @@ function initialize_time_series_from_external_files(inputs)
                 [:period, :scenario, :subperiod, :profile],
                 [:period, :scenario, :subperiod, :bid_segment],
             ],
-            bidding_groups_to_read = bidding_group_label(inputs),
+            bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
             buses_to_read = bus_label(inputs),
         )
     end
@@ -294,7 +295,7 @@ function initialize_time_series_from_external_files(inputs)
                 [:period, :scenario, :subperiod, :profile],
                 [:period, :scenario, :subperiod, :bid_segment],
             ],
-            bidding_groups_to_read = bidding_group_label(inputs),
+            bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
             buses_to_read = bus_label(inputs),
             has_profile_bids = true,
         )

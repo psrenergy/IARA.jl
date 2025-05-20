@@ -28,7 +28,7 @@ function bidding_group_profile_generation_bound_by_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     # Define the bidding groups
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
     # Model variables

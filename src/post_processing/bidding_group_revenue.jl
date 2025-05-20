@@ -24,7 +24,9 @@ Extract the bus label from a generation label.
 """
 function _extract_bus_label(gen_label::String)
     parts = split(gen_label, " - ")
-    length(parts) == 2 || error("Invalid generation label format: $gen_label. Expected format: 'bg_X - bus_Y'")
+    if length(parts) != 2
+        error("Invalid generation label format: $gen_label. Expected format: 'bg_X - bus_Y'")
+    end
     return parts[2]  # This is the "bus_Y" part
 end
 
@@ -44,16 +46,12 @@ Get the index of a bus given its label.
 - Error if the bus label is not found
 """
 function _extract_bus_idx(gen_label, bus_collection)
-    # Create a mapping from bus label to its index for O(1) lookups
-    bus_label_to_index = Dict(label => i for (i, label) in enumerate(bus_collection.label))
-
     bus_label = _extract_bus_label(gen_label)
-
-    return get(bus_label_to_index, bus_label) do
-        return error(
-            "Bus '$bus_label' not found in bus collection. Available buses: $(join(bus_collection.label, ", "))",
-        )
+    bus_index = findfirst(x -> x == bus_label, bus_collection.label)
+    if bus_index === nothing
+        error("Bus '$bus_label' not found in bus collection. Available buses: $(join(bus_collection.label, ", "))")
     end
+    return bus_index
 end
 
 """

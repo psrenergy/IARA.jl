@@ -14,24 +14,17 @@ PATH_BASE_CASE = joinpath(PATH, "..", "base_case")
 
 # Define files to copy (base_name, extension)
 files_to_copy = [
-    ("cuts", ".json"),
-    ("hydro_generation", ".csv"),
-    ("hydro_opportunity_cost", ".csv"),
-    ("hydro_generation", ".toml"),
-    ("hydro_opportunity_cost", ".toml"),
+    "cuts",
+    "hydro_generation",
+    "hydro_opportunity_cost",
+    "hydro_generation",
+    "hydro_opportunity_cost",
 ]
 
 # Copy all files from base_case/outputs to current directory
-for (base, ext) in files_to_copy
-    src = joinpath(PATH_BASE_CASE, "outputs", base * ext)
-    dst = joinpath(PATH, base * ext)
-    if isfile(src)
-        cp(src, dst; force = true)
-        @info "Copied $(basename(src)) to $(dirname(dst))"
-    else
-        @warn "Source file not found: $src"
-    end
-end
+files_filter = x -> any(occursin.(files_to_copy, x))
+outputs_base_case = joinpath(PATH_BASE_CASE, "outputs")
+Main.copy_files(outputs_base_case, PATH, files_filter)
 
 IARA.link_time_series_to_file(
     db,

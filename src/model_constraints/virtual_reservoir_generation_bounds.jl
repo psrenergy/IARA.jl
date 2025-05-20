@@ -25,8 +25,10 @@ function virtual_reservoir_generation_bounds!(
 
     # Model variables
     virtual_reservoir_generation = get_model_object(model, :virtual_reservoir_generation)
-    virtual_reservoir_generation_upper_bound_value = get_model_object(model, :virtual_reservoir_generation_upper_bound_value)
-    virtual_reservoir_generation_lower_bound_value = get_model_object(model, :virtual_reservoir_generation_lower_bound_value)
+    virtual_reservoir_generation_upper_bound_value =
+        get_model_object(model, :virtual_reservoir_generation_upper_bound_value)
+    virtual_reservoir_generation_lower_bound_value =
+        get_model_object(model, :virtual_reservoir_generation_lower_bound_value)
 
     # Model parameters
     virtual_reservoir_energy_account = get_model_object(model, :virtual_reservoir_energy_account)
@@ -38,7 +40,7 @@ function virtual_reservoir_generation_bounds!(
         virtual_reservoir_generation_upper_bound_constraint[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:valid_segments[vr]
+            seg in 1:valid_segments[vr],
         ],
         virtual_reservoir_generation[vr, ao, seg] <=
         virtual_reservoir_generation_upper_bound_value[vr, ao, seg]
@@ -49,7 +51,7 @@ function virtual_reservoir_generation_bounds!(
         virtual_reservoir_generation_lower_bound_constraint[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:valid_segments[vr]
+            seg in 1:valid_segments[vr],
         ],
         virtual_reservoir_generation[vr, ao, seg] >=
         virtual_reservoir_generation_lower_bound_value[vr, ao, seg]

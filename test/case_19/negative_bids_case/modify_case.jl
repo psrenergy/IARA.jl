@@ -55,11 +55,11 @@ vr_price_offer[2, 2, 2, :, :] .= 110.0
 
 # Extra segment with negative bids
 # VR 1, AO 1, period 5
-vr_quantity_offer[1,1,3,:,5] .= -10.0
-vr_price_offer[1,1,3,:,5] .= 40.0
+vr_quantity_offer[1, 1, 3, :, 5] .= -10.0
+vr_price_offer[1, 1, 3, :, 5] .= 40.0
 # VR 2, AO 1, period 5
-vr_quantity_offer[2,1,3,:,5] .= -5.0
-vr_price_offer[2,1,3,:,5] .= 35.0
+vr_quantity_offer[2, 1, 3, :, 5] .= -5.0
+vr_price_offer[2, 1, 3, :, 5] .= 35.0
 
 map = Dict(
     "VR 1" => ["AO 1", "AO 2"],

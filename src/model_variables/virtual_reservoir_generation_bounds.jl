@@ -43,7 +43,7 @@ function virtual_reservoir_generation_bounds_values!(
         in
         MOI.Parameter(placeholder_lower_bound)
     ) # MWh
-    
+
     return nothing
 end
 
@@ -65,9 +65,10 @@ function virtual_reservoir_generation_bounds_values!(
         time_series_virtual_reservoir_quantity_offer(inputs, model.node, scenario)
 
     # Variables
-    virtual_reservoir_generation_upper_bound_value = get_model_object(model, :virtual_reservoir_generation_upper_bound_value)
-    virtual_reservoir_generation_lower_bound_value = get_model_object(model, :virtual_reservoir_generation_lower_bound_value)
-
+    virtual_reservoir_generation_upper_bound_value =
+        get_model_object(model, :virtual_reservoir_generation_upper_bound_value)
+    virtual_reservoir_generation_lower_bound_value =
+        get_model_object(model, :virtual_reservoir_generation_lower_bound_value)
 
     for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:valid_segments[vr]
         if virtual_reservoir_quantity_offer_series[vr, ao, seg] >= 0.0
@@ -120,6 +121,5 @@ function virtual_reservoir_generation_bounds_values!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    
     return nothing
 end

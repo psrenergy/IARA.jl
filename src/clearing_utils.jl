@@ -432,6 +432,47 @@ function clearing_has_physical_variables(inputs::Inputs)
     end
 end
 
+function serialize_virtual_reservoir_energy_account(
+    inputs::Inputs,
+    energy_account::Vector{Vector{Float64}},
+    period::Int,
+    scenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+    serialized_file_name =
+        joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
+
+    data_to_serialize = energy_account
+
+    Serialization.serialize(serialized_file_name, data_to_serialize)
+    return nothing
+end
+
+function read_serialized_virtual_reservoir_energy_account(inputs::Inputs, period::Int, scenario::Int)
+    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+        path_case(inputs)
+    else
+        joinpath(path_case(inputs), "temp")
+    end
+    serialized_file_name =
+        joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
+
+    if !isfile(serialized_file_name)
+        error_message = "File $serialized_file_name not found."
+        if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+            error_message *= " In single period market clearing, make sure the previous period has been solved, and the .json files have been copied from the previous execution's output directory."
+        end
+        error(error_message)
+    end
+
+    data = Serialization.deserialize(serialized_file_name)
+
+    return data
+end
+
 """
     scale_cuts(input_file::String, output_file::String, factor::Float64)
 
@@ -440,7 +481,9 @@ and save the result to output_file.
 """
 function scale_cuts(input_file::String, output_file::String, factor::Float64)
     # Read the JSON file
-    data = SDDP.JSON.parsefile(input_file)
+    data = open(input_file, "r") do f
+        return SDDP.JSON.parse(f)
+    end
 
     # Make a deep copy to avoid modifying the original data
     scaled_data = deepcopy(data)

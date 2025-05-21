@@ -196,6 +196,8 @@ function bidding_group_generation!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+
     write_bid_output(
         outputs,
         inputs,

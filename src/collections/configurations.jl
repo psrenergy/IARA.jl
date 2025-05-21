@@ -462,11 +462,6 @@ function validate(configurations::Configurations)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
         num_errors += 1
     end
-    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
-        @error("Virtual reservoirs cannot be used with clearing bid source READ_FROM_FILE.")
-        num_errors += 1
-    end
     if configurations.integer_variable_representation_ex_ante_physical ==
        Configurations_IntegerVariableRepresentation.FROM_EX_ANTE_PHYSICAL
         @error(
@@ -1463,6 +1458,21 @@ function network_representation(inputs::AbstractInputs, run_time_options)
     end
 end
 
+function network_representation(inputs::AbstractInputs, suffix::String)
+    clearing_model_subproblem = if suffix == "_ex_ante_commercial"
+        RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL
+    elseif suffix == "_ex_ante_physical"
+        RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
+    elseif suffix == "_ex_post_commercial"
+        RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
+    elseif suffix == "_ex_post_physical"
+        RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+    end
+    run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
+
+    return network_representation(inputs, run_time_options)
+end
+
 """
     period_season_map(inputs::AbstractInputs)
 
@@ -1470,3 +1480,19 @@ Return the period to season map.
 """
 period_season_map_cache(inputs::AbstractInputs; period::Int, scenario::Int) =
     inputs.collections.configurations.period_season_map[:, scenario, period]
+
+function is_skipped(inputs::AbstractInputs, construction_type::String)
+    if construction_type == "ex_post_physical"
+        return construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_post_commercial"
+        return construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_physical"
+        return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
+    elseif construction_type == "ex_ante_commercial"
+        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+    else
+        error(
+            "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",
+        )
+    end
+end

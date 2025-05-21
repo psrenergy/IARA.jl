@@ -317,19 +317,16 @@ Store pre-calculated values for the collections.
 """
 
 function fill_caches!(inputs::Inputs)
-    if (is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
-       clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        fill_maximum_number_of_virtual_reservoir_bidding_segments!(inputs)
-    end
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        fill_hydro_unit_virtual_reservoir_index!(inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)
             fill_waveguide_points!(inputs, vr)
             fill_water_to_energy_factors!(inputs, vr)
             fill_initial_energy_account!(inputs, vr)
         end
-    end
-    for h in index_of_elements(inputs, HydroUnit)
-        fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
+        for h in index_of_elements(inputs, HydroUnit)
+            fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
+        end
     end
     if run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
        run_mode(inputs) == RunMode.STRATEGIC_BID

@@ -47,6 +47,7 @@ Hydro units are high-level data structures that represent hydro electricity gene
 
     # caches
     is_associated_with_some_virtual_reservoir::Vector{Bool} = []
+    virtual_reservoir_index::Vector{Int} = []
 end
 
 # ---------------------------------------------------------------------
@@ -96,6 +97,7 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow_ex_post")
 
     hydro_unit.is_associated_with_some_virtual_reservoir = zeros(Bool, num_hydro_units)
+    hydro_unit.virtual_reservoir_index = fill(null_value(Int), num_hydro_units)
 
     update_time_series_from_db!(hydro_unit, inputs.db, initial_date_time(inputs))
 
@@ -806,4 +808,13 @@ end
 
 function hydro_unit_zone_index(inputs::AbstractInputs, idx::Int)
     return bus_zone_index(inputs, hydro_unit_bus_index(inputs, idx))
+end
+
+function fill_hydro_unit_virtual_reservoir_index!(inputs::AbstractInputs)
+    for vr in index_of_elements(inputs, VirtualReservoir)
+        for h in virtual_reservoir_hydro_unit_indices(inputs, vr)
+            inputs.collections.hydro_unit.virtual_reservoir_index[h] = vr
+        end
+    end
+    return nothing
 end

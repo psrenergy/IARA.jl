@@ -297,15 +297,7 @@ Simulate all periods and scenarios of the market clearing.
 function simulate_all_periods_and_scenarios_of_market_clearing(
     inputs::Inputs,
 )
-    # Update the number of offer segments for the heuristic bids
-    if generate_heuristic_bids_for_clearing(inputs)
-        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
-
-        @info("Heuristic bids")
-        @info("   Number of segments: $maximum_number_of_offer_segments")
-        @info("")
-    end
+    update_number_of_segments_for_heuristic_bids!(inputs)
 
     # Initialize the outputs
     heuristic_bids_outputs,
@@ -425,11 +417,7 @@ Simulate all periods and scenarios of the market clearing.
 function simulate_all_scenarios_of_single_period_market_clearing(
     inputs::Inputs,
 )
-    # Update the number of offer segments for the heuristic bids
-    if generate_heuristic_bids_for_clearing(inputs)
-        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
-    end
+    update_number_of_segments_for_heuristic_bids!(inputs)
 
     # Initialize the outputs
     heuristic_bids_outputs,
@@ -582,8 +570,7 @@ function run_clearing_simulation(
                     subscenario,
                 )
 
-            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-               run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
                 post_process_virtual_reservoirs!(
                     inputs,
                     run_time_options,
@@ -591,6 +578,7 @@ function run_clearing_simulation(
                     outputs,
                     period,
                     scenario,
+                    subscenario,
                 )
             end
             # Write in the files the output of a specific period and scenario

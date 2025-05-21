@@ -126,6 +126,39 @@ function bidding_group_markup_units(inputs::Inputs)
     bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units
 end
 
+function maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::AbstractInputs)
+    # Indexes
+    virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
+    asset_owner_indices = index_of_elements(inputs, AssetOwner)
+
+    # Sizes
+    number_of_virtual_reservoirs = length(virtual_reservoir_indices)
+    number_of_asset_owners = length(asset_owner_indices)
+
+    # AO
+    asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
+    for ao in asset_owner_indices
+        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor(inputs, ao))
+    end
+
+    # VR
+    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
+    number_of_hydro_units_per_virtual_reservoir = length.(virtual_reservoir_hydro_units)
+
+    # Offer segments
+    number_of_offer_segments_per_asset_owner_and_virtual_reservoir =
+        zeros(Int, number_of_asset_owners, number_of_virtual_reservoirs)
+    for vr in virtual_reservoir_indices
+        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+            number_of_offer_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
+                asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
+        end
+    end
+    maximum_number_of_offer_segments = maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir; init = 0)
+
+    return maximum_number_of_offer_segments
+end
+
 function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
     number_of_bidding_groups = length(bidding_group_indexes)
@@ -682,7 +715,11 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     end
     # Hydro representation
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        return true
+        if generate_heuristic_bids_for_clearing(inputs)
+            return true
+        else
+            return false
+        end
     elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
         bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
         if isempty(bidding_group_indexes)
@@ -880,7 +917,7 @@ end
 
 function calculate_maximum_valid_segments_or_profiles_per_timeseries(
     inputs::AbstractInputs,
-    bids_view::IARA.BidsView{Float64};
+    bids_view::Union{IARA.BidsView{Float64}, IARA.VirtualReservoirBidsView{Float64}};
     has_profile_bids::Bool = false,
     is_virtual_reservoir = false,
 )
@@ -913,11 +950,22 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
 
     tol = 1e-6
 
-    for bg in 1:number_elements
-        for segment in reverse(segments)
-            if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
-                valid_segments_per_timeseries[bg] = segment
-                break
+    if is_virtual_reservoir
+        for vr in 1:number_elements
+            for segment in reverse(segments)
+                if any(bids_view.data[vr, :, segment] != 0.0) # VR can bid negative values
+                    valid_segments_per_timeseries[vr] = segment
+                    break
+                end
+            end
+        end
+    else
+        for bg in 1:number_elements
+            for segment in reverse(segments)
+                if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
+                    valid_segments_per_timeseries[bg] = segment
+                    break
+                end
             end
         end
     end
@@ -932,6 +980,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         output_path(inputs),
         "bidding_group_energy_offer" * period_suffix,
     )
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     initialize_bids_view_from_external_file!(
         inputs.time_series.quantity_offer,
         inputs,
@@ -940,7 +989,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 
@@ -956,7 +1005,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 
@@ -972,7 +1021,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],
-        bidding_groups_to_read = bidding_group_label(inputs),
+        bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
         buses_to_read = bus_label(inputs),
     )
 
@@ -1235,6 +1284,7 @@ function sum_units_energy_ub_per_bg(
     renewable_units = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
     battery_units = index_of_elements(inputs, BatteryUnit; run_time_options, filters = [is_existing])
     hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    demand_units = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing])
 
     thermal_energy_ub = sum(
         thermal_unit_max_generation(inputs, t) *
@@ -1264,5 +1314,32 @@ function sum_units_energy_ub_per_bg(
     # TODO: Implement hydro energy upper bound
     hydro_energy_ub = 0.0
 
-    return thermal_energy_ub + renewable_energy_ub + battery_energy_ub + hydro_energy_ub
+    demand_energy_ub =
+        -sum(
+            demand_unit_max_demand(inputs, d) * subperiod_duration_in_hours(inputs, subperiod) *
+            time_series_demand(inputs, run_time_options; subscenario)[d, subperiod]
+            for d in demand_units
+            if demand_unit_bus_index(inputs, d) == bus &&
+            demand_unit_bidding_group_index(inputs, d) == bg;
+            init = 0.0,
+        )
+
+    return thermal_energy_ub + renewable_energy_ub + battery_energy_ub + hydro_energy_ub + demand_energy_ub
+end
+
+function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
+    if generate_heuristic_bids_for_clearing(inputs)
+        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+
+        maximum_number_of_virtual_reservoir_offer_segments =
+            maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_virtual_reservoir_bidding_segments!(inputs, maximum_number_of_virtual_reservoir_offer_segments)
+
+        @info("Heuristic bids")
+        @info("   Number of bidding group segments: $maximum_number_of_offer_segments")
+        @info("   Number of virtual reservoir segments: $maximum_number_of_virtual_reservoir_offer_segments")
+        @info("")
+    end
+    return nothing
 end

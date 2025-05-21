@@ -58,7 +58,6 @@ function virtual_reservoir_generation!(
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
             seg in 1:valid_segments[vr],
         ],
-        lower_bound = 0.0,
     ) # MWh
 
     # Objective function
@@ -176,7 +175,7 @@ function virtual_reservoir_generation!(
         inputs.collections.virtual_reservoir,
         inputs.collections.asset_owner;
         index_getter = virtual_reservoir_asset_owner_indices,
-        output_varies_per_subperiod = false,
+        dimension_size = [number_of_segments],
     )
 
     output = outputs.outputs["virtual_reservoir_generation"*run_time_file_suffixes(inputs, run_time_options)]

@@ -27,7 +27,7 @@ function bidding_group_profile_minimum_activation!(
     ::Type{SubproblemBuild},
 )
     bidding_groups =
-        index_of_elements(inputs, BiddingGroup)
+        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
 
     # Model variables
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)

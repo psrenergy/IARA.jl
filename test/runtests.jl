@@ -145,6 +145,16 @@ reduced_test_list = Dict(
 #     "case_15/base_case/test_case.jl",
 #     "case_15/renewable/test_case.jl",
 # ],
+# "case_16" => [
+#     "case_16/base_case/test_case.jl",
+#     "case_16/market_fcf_tiebeaker/test_case.jl",
+# ],
+# "case_17" => [
+#     "case_17/base_case/test_case.jl",
+# ],
+# "case_18" => [
+#     "case_18/base_case/test_case.jl",
+#     "case_18/heuristic_elastic_demand/test_case.jl",
 # "case_19" => [
 #     "case_19/base_case/test_case.jl",
 # ],

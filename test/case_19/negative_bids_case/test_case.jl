@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase16MarketFCFTiebeaker
+module TestCase19NegativeBidsCase
 
 using Test
 using IARA

@@ -279,15 +279,7 @@ Simulate all periods and scenarios of the market clearing.
 function simulate_all_periods_and_scenarios_of_market_clearing(
     inputs::Inputs,
 )
-    # Update the number of offer segments for the heuristic bids
-    if generate_heuristic_bids_for_clearing(inputs)
-        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
-
-        @info("Heuristic bids")
-        @info("   Number of segments: $maximum_number_of_offer_segments")
-        @info("")
-    end
+    update_number_of_segments_for_heuristic_bids!(inputs)
 
     # Initialize the outputs
     heuristic_bids_outputs,
@@ -409,11 +401,7 @@ Simulate all periods and scenarios of the market clearing.
 function simulate_all_scenarios_of_single_period_market_clearing(
     inputs::Inputs,
 )
-    # Update the number of offer segments for the heuristic bids
-    if generate_heuristic_bids_for_clearing(inputs)
-        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
-    end
+    update_number_of_segments_for_heuristic_bids!(inputs)
 
     # Initialize the outputs
     heuristic_bids_outputs,

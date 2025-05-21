@@ -58,7 +58,6 @@ function virtual_reservoir_generation!(
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
             seg in 1:valid_segments[vr],
         ],
-        lower_bound = 0.0,
     ) # MWh
 
     # Objective function

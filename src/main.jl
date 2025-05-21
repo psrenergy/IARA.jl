@@ -123,6 +123,8 @@ end
     single_period_market_clearing(path::String; kwargs...)
 
 Run the model with the single period market clearing strategy.
+
+$ARGS_KEYWORDS
 """
 function single_period_market_clearing(path::String; kwargs...)
     args = Args(path, RunMode.SINGLE_PERIOD_MARKET_CLEARING; kwargs...)
@@ -133,9 +135,23 @@ end
     single_period_heuristic_bid(path::String; kwargs...)
 
 Generate heuristic bids for a single period.
+    
+$ARGS_KEYWORDS
 """
 function single_period_heuristic_bid(path::String; kwargs...)
     args = Args(path, RunMode.SINGLE_PERIOD_HEURISTIC_BID; kwargs...)
+    return main(args)
+end
+
+"""
+    single_period_hydro_supply_reference_curve(path::String; kwargs...)
+
+Generate heuristic bids for a single period.
+    
+$ARGS_KEYWORDS
+"""
+function single_period_hydro_supply_reference_curve(path::String; kwargs...)
+    args = Args(path, RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE; kwargs...)
     return main(args)
 end
 
@@ -170,6 +186,8 @@ function run_algorithms(inputs)
         simulate_all_scenarios_of_single_period_market_clearing(inputs)
     elseif run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
         single_period_heuristic_bid(inputs)
+    elseif run_mode(inputs) == RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE
+        single_period_hydro_supply_reference_curve(inputs)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
     end
@@ -660,9 +678,19 @@ function single_period_heuristic_bid(
     return nothing
 end
 
-function single_period_reference_hydro_supply_curve(
+function single_period_hydro_supply_reference_curve(
     inputs::Inputs,
 )
+    # Update the number of offer segments for the heuristic bids
+    if generate_heuristic_bids_for_clearing(inputs)
+        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+
+        @info("Heuristic bids")
+        @info("   Number of segments: $maximum_number_of_offer_segments")
+        @info("")
+    end
+
     # Build model
     run_time_options =
         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
@@ -676,6 +704,21 @@ function single_period_reference_hydro_supply_curve(
     # Update the time series in the database to the current period
     period = inputs.args.period
     update_time_series_from_db!(inputs, period)
+
+    # Heuristic bids
+    if generate_heuristic_bids_for_clearing(inputs)
+        run_time_options = RunTimeOptions()
+        for scenario in 1:number_of_scenarios(inputs)
+            # Update the time series in the external files to the current period and scenario
+            update_time_series_views_from_external_files!(inputs; period, scenario)
+            markup_offers_for_period_scenario(
+                inputs,
+                run_time_options,
+                period,
+                scenario;
+            )
+        end
+    end
 
     @info("Calculating the reference hydro supply curve for period: $period")
     for demand_multiplier in reference_curve_demand_multipliers(inputs)
@@ -698,6 +741,9 @@ function single_period_reference_hydro_supply_curve(
                 period,
                 scenario,
             )
+
+            @show simulation_results_from_period_scenario.data[:virtual_reservoir_generation]
+            @show simulation_results_from_period_scenario.data[:load_marginal_cost]
         end
     end
 

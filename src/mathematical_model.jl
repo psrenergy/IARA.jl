@@ -116,6 +116,8 @@ function model_action(args...)
         strategic_bid_model_action(args...)
     elseif is_market_clearing(inputs)
         market_clearing_model_action(args...)
+    elseif is_reference_curve(inputs)
+        market_clearing_model_action(args...)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
     end

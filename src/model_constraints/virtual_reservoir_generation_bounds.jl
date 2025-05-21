@@ -65,7 +65,7 @@ function virtual_reservoir_generation_bounds!(
         ],
         sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:valid_segments[vr]) <=
         virtual_reservoir_energy_account[vr, ao]
-    ) 
+    )
     return nothing
 end
 

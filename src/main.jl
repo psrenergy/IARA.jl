@@ -279,7 +279,6 @@ Simulate all periods and scenarios of the market clearing.
 function simulate_all_periods_and_scenarios_of_market_clearing(
     inputs::Inputs,
 )
-
     update_number_of_segments_for_heuristic_bids!(inputs)
 
     # Initialize the outputs

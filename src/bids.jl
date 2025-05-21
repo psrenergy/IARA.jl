@@ -1289,3 +1289,20 @@ function sum_units_energy_ub_per_bg(
 
     return thermal_energy_ub + renewable_energy_ub + battery_energy_ub + hydro_energy_ub + demand_energy_ub
 end
+
+function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
+    if generate_heuristic_bids_for_clearing(inputs)
+        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+
+        maximum_number_of_virtual_reservoir_offer_segments =
+            maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_virtual_reservoir_bidding_segments!(inputs, maximum_number_of_virtual_reservoir_offer_segments)
+
+        @info("Heuristic bids")
+        @info("   Number of bidding group segments: $maximum_number_of_offer_segments")
+        @info("   Number of virtual reservoir segments: $maximum_number_of_virtual_reservoir_offer_segments")
+        @info("")
+    end
+    return nothing
+end

@@ -8,20 +8,96 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function _get_bus_index(bg_bus_combination::String, bus_labels::Vector{String})
-    for (i, bus) in enumerate(bus_labels)
-        if occursin(bus, bg_bus_combination)
-            return i
-        end
+"""
+    _extract_bus_label(gen_label::String) -> String
+
+Extract the bus label from a generation label.
+
+# Arguments
+- `gen_label`: Generation label in format "bg_X - bus_Y"
+
+# Returns
+- The bus label (e.g., "bus_Y")
+
+# Throws
+- Error if the generation label format is invalid
+"""
+function _extract_bus_label(gen_label::String)
+    parts = split(gen_label, " - ")
+    if length(parts) != 2
+        error("Invalid generation label format: $gen_label. Expected format: 'bg_X - bus_Y'")
     end
-    return nothing
+    return parts[2]  # This is the "bus_Y" part
 end
 
+"""
+    _extract_bus_idx(bus_label::String, bus_collection) -> Int
+
+Get the index of a bus given its label.
+
+# Arguments
+- `bus_label`: The bus label to look up
+- `bus_collection`: The bus collection containing labels and indices
+
+# Returns
+- The index of the bus in the collection
+
+# Throws
+- Error if the bus label is not found
+"""
+function _extract_bus_idx(gen_label, bus_collection)
+    bus_label = _extract_bus_label(gen_label)
+    bus_index = findfirst(x -> x == bus_label, bus_collection.label)
+    if bus_index === nothing
+        error("Bus '$bus_label' not found in bus collection. Available buses: $(join(bus_collection.label, ", "))")
+    end
+    return bus_index
+end
+
+"""
+    get_spot_prices(reader, bus_collection, generation_labels, network_representation)
+
+Get spot prices for all bidding groups based on the network representation.
+
+# Arguments
+- `reader`: The reader containing spot price data
+- `bus_collection`: The bus collection with zone indices and labels
+- `generation_labels`: Array of generation labels in format "bg_X - bus_Y"
+- `network_representation`: The network representation type (ZONAL or NODAL)
+
+# Returns
+- Vector of spot prices corresponding to each generation label
+"""
+function get_spot_prices(reader, bus_collection, generation_labels, network_representation)
+    # Pre-allocate array for spot prices
+    spot_prices = similar(reader.data, length(generation_labels))
+
+    # Process each bidding group
+    for (i, gen_label) in enumerate(generation_labels)
+        # Extract bus label and get its index
+        bus_idx = _extract_bus_idx(gen_label, bus_collection)
+
+        # Get the appropriate location index based on network representation
+        location_idx = if network_representation == Configurations_NetworkRepresentation.ZONAL
+            bus_collection.zone_index[bus_idx]  # Zonal: use zone index
+        else
+            bus_idx                             # Nodal: use bus index directly
+        end
+
+        # Store the spot price
+        spot_prices[i] = reader.data[location_idx]
+    end
+
+    return spot_prices
+end
+
+# Helper functions for price bounds
 _check_floor(price::Real, floor::Real) = !is_null(floor) ? max(price, floor) : price
 _check_cap(price::Real, cap::Real) = !is_null(cap) ? min(price, cap) : price
 
 function _write_revenue_without_subscenarios(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     writer_without_subscenarios::Quiver.Writer,
     generation_ex_ante_reader::Quiver.Reader,
     spot_ex_ante_reader::Quiver.Reader,
@@ -51,13 +127,19 @@ function _write_revenue_without_subscenarios(
                     sum_generation .+= generation_ex_ante_reader.data
                 end
 
-                spot_price_data = zeros(num_bidding_groups_times_buses)
-                for bg_bus_i in 1:num_bidding_groups_times_buses
-                    bus_i = _get_bus_index(generation_labels[bg_bus_i], spot_price_labels)
+                # Position the reader for the current period/scenario/subperiod
+                Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
 
-                    Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
-                    spot_price_data[bg_bus_i] = spot_ex_ante_reader.data[bus_i]
-                end
+                # Get network representation type once
+                net_rep = network_representation_ex_ante_commercial(inputs)
+
+                # Get spot prices for all bidding groups based on network representation
+                spot_price_data = get_spot_prices(
+                    spot_ex_ante_reader,
+                    inputs.collections.bus,
+                    generation_labels,
+                    net_rep,
+                )
 
                 Quiver.write!(
                     writer_without_subscenarios,
@@ -78,6 +160,7 @@ end
 
 function _write_revenue_with_subscenarios(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     writer_with_subscenarios::Quiver.Writer,
     generation_ex_ante_reader::Union{Quiver.Reader, Nothing},
     generation_ex_post_reader::Quiver.Reader,
@@ -125,24 +208,30 @@ function _write_revenue_with_subscenarios(
                         end
                     end
 
-                    spot_price_data = zeros(num_bidding_groups_times_buses)
-                    for bg_bus_i in 1:num_bidding_groups_times_buses
-                        bus_i = _get_bus_index(generation_labels[bg_bus_i], spot_price_labels)
-
-                        if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
-                            Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
-                            spot_price_data[bg_bus_i] = spot_ex_ante_reader.data[bus_i]
-                        else
-                            Quiver.goto!(
-                                spot_ex_post_reader;
-                                period,
-                                scenario,
-                                subscenario = subscenario,
-                                subperiod = subperiod,
-                            )
-                            spot_price_data[bg_bus_i] = spot_ex_post_reader.data[bus_i]
-                        end
+                    # Select the appropriate reader based on settlement type
+                    if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+                        Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
+                        current_reader = spot_ex_ante_reader
+                        net_rep = network_representation_ex_ante_commercial(inputs)
+                    else
+                        Quiver.goto!(
+                            spot_ex_post_reader;
+                            period,
+                            scenario,
+                            subscenario = subscenario,
+                            subperiod = subperiod,
+                        )
+                        current_reader = spot_ex_post_reader
+                        net_rep = network_representation_ex_post_commercial(inputs)
                     end
+
+                    # Get spot prices for all bidding groups based on network representation
+                    spot_price_data = get_spot_prices(
+                        current_reader,
+                        inputs.collections.bus,
+                        generation_labels,
+                        net_rep,
+                    )
 
                     Quiver.write!(
                         writer_with_subscenarios,
@@ -272,6 +361,7 @@ function post_processing_bidding_group_revenue(
 
         _write_revenue_with_subscenarios(
             inputs,
+            run_time_options,
             writer_with_subscenarios,
             geneneration_ex_ante_reader,
             geneneration_ex_post_reader,
@@ -304,6 +394,7 @@ function post_processing_bidding_group_revenue(
 
             _write_revenue_without_subscenarios(
                 inputs,
+                run_time_options,
                 writer_without_subscenarios,
                 geneneration_ex_ante_reader,
                 spot_price_ex_ante_reader,

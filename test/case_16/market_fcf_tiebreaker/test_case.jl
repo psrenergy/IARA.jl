@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase16MarketFCFTiebeaker
+module TestCase16MarketFCFTiebreaker
 
 using Test
 using IARA

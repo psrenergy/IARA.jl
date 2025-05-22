@@ -26,7 +26,8 @@ Collection representing the virtual reservoir.
     initial_energy_account::Vector{Vector{Float64}} = []
     waveguide_points::Vector{Matrix{Float64}} = []
     water_to_energy_factors::Vector{Vector{Float64}} = []
-    _maximum_number_of_virtual_reservoir_bidding_segments::Vector{Int} = Int[]
+    _number_of_valid_bidding_segments::Vector{Int} = Int[]
+    _maximum_number_of_bidding_segments::Int = 0
 end
 
 """
@@ -279,19 +280,33 @@ function virtual_reservoir_water_to_energy_factors(inputs::AbstractInputs, vr::I
     return inputs.collections.virtual_reservoir.water_to_energy_factors[vr][h]
 end
 
-"""
-    maximum_number_of_virtual_reservoir_bidding_segments(inputs::AbstractInputs)
+function maximum_number_of_vr_bidding_segments(inputs::AbstractInputs) 
+    return inputs.collections.virtual_reservoir._maximum_number_of_bidding_segments
+end
 
-Return the maximum number of virtual reservoir bidding segments.
-"""
-maximum_number_of_virtual_reservoir_bidding_segments(inputs::AbstractInputs) =
-    maximum(inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments; init = 0)
+function number_of_vr_valid_bidding_segments(inputs::AbstractInputs, vr::Int) 
+    return inputs.collections.virtual_reservoir._number_of_valid_bidding_segments[vr]
+end
 
-"""
-    get_maximum_valid_virtual_reservoir_segments(inputs::AbstractInputs)
+function update_maximum_number_of_vr_bidding_segments!(inputs::AbstractInputs, value::Int)
+    previous_value = inputs.collections.virtual_reservoir._maximum_number_of_bidding_segments
+    if previous_value == 0          
+        inputs.collections.virtual_reservoir._maximum_number_of_bidding_segments = value
+    elseif previous_value != value
+        @warn(
+            "The maximum number of bidding segments for virtual reservoirs is already set to $(previous_value). It will not be updated to $(value)."
+        )
+    end
+    return nothing
+end
 
-    Return the maximum number of valid virtual reservoir segments.
-"""
-function get_maximum_valid_virtual_reservoir_segments(inputs::AbstractInputs)
-    return inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments
+function update_number_of_vr_valid_bidding_segments!(inputs::AbstractInputs, values::Vector{Int})
+    if length(inputs.collections.virtual_reservoir._number_of_valid_bidding_segments) == 0
+        inputs.collections.virtual_reservoir._number_of_valid_bidding_segments = zeros(
+            Int,
+            length(index_of_elements(inputs, VirtualReservoir)),
+        )
+    end
+    inputs.collections.virtual_reservoir._number_of_valid_bidding_segments .= values
+    return nothing
 end

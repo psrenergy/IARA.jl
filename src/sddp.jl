@@ -45,6 +45,7 @@ function build_model(
         ) do (scenario, subscenario, simulation_period, simulation_trajectory)
             update_time_series_views_from_external_files!(inputs; period = node, scenario)
             update_time_series_from_db!(inputs, node)
+            update_segments_profile_dimensions!(inputs, node)
             model_action(
                 sp_model,
                 inputs,

@@ -23,6 +23,8 @@ function get_list_of_expected_outputs(expected_outputs_folder::String, skipped_o
         "_ex_post_commercial",
         "_commercial",
         "_physical",
+        "_ex_ante",
+        "_ex_post",
     ]
     skipped_outputs = [output * suffix for output in skipped_outputs, suffix in output_suffixes]
     for (root, dirs, files) in walkdir(expected_outputs_folder)

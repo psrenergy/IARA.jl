@@ -93,7 +93,7 @@ function bidding_group_markup_units(inputs::Inputs)
     bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units
 end
 
-function maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::AbstractInputs)
+function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::AbstractInputs)
     # Indexes
     virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
     asset_owner_indices = index_of_elements(inputs, AssetOwner)
@@ -121,9 +121,9 @@ function maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(i
                 asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
         end
     end
-    maximum_number_of_offer_segments = maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir; init = 0)
-
-    return maximum_number_of_offer_segments
+    number_per_virtual_reservoir = [maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir[:, vr]) for vr in virtual_reservoir_indices]
+        
+    return number_per_virtual_reservoir
 end
 
 function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
@@ -797,7 +797,7 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         end
     end
 
-    maximum_number_of_offer_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    maximum_number_of_offer_segments = maximum_number_of_vr_bidding_segments(inputs)
 
     # Offers
     quantity_offers = zeros(
@@ -916,7 +916,7 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
     if is_virtual_reservoir
         for vr in 1:number_elements
             for segment in reverse(segments)
-                if any(bids_view.data[vr, :, segment] != 0.0) # VR can bid negative values
+                if any(.!isapprox.(bids_view.data[vr, :, segment], 0.0; atol = tol))
                     valid_segments_per_timeseries[vr] = segment
                     break
                 end
@@ -1127,9 +1127,7 @@ function write_individual_virtual_reservoir_bids_files(
 
     filename = "$(asset_owner_label(inputs, asset_owner_index))_virtual_reservoir_bids_period_$(inputs.args.period).csv"
 
-    df_length =
-        length(virtual_reservoirs) * number_of_scenarios(inputs) *
-        maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    df_length = length(virtual_reservoirs) * number_of_scenarios(inputs) * maximum_number_of_vr_bidding_segments(inputs)
 
     period_column = ones(Int, df_length) * inputs.args.period
     scenario_column = zeros(Int, df_length)
@@ -1154,7 +1152,7 @@ function write_individual_virtual_reservoir_bids_files(
             scenario,
         )
 
-        for segment in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+        for segment in 1:maximum_number_of_vr_bidding_segments(inputs)
             for vr in virtual_reservoirs
                 line_index += 1
                 scenario_column[line_index] = scenario
@@ -1295,13 +1293,14 @@ function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
         maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
         update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
 
-        maximum_number_of_virtual_reservoir_offer_segments =
-            maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_virtual_reservoir_bidding_segments!(inputs, maximum_number_of_virtual_reservoir_offer_segments)
+        number_of_virtual_reservoir_offer_segments =
+            number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_vr_valid_bidding_segments!(inputs, number_of_virtual_reservoir_offer_segments)
+        update_maximum_number_of_vr_bidding_segments!(inputs, maximum(number_of_virtual_reservoir_offer_segments))
 
         @info("Heuristic bids")
         @info("   Number of bidding group segments: $maximum_number_of_offer_segments")
-        @info("   Number of virtual reservoir segments: $maximum_number_of_virtual_reservoir_offer_segments")
+        @info("   Number of virtual reservoir segments: $(maximum(number_of_virtual_reservoir_offer_segments))")
         @info("")
     end
     return nothing

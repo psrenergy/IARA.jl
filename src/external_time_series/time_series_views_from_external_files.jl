@@ -565,7 +565,7 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
 
     update_number_of_bid_segments!(inputs, total_valid_segments_per_period)
     update_number_of_bid_profiles!(inputs, total_valid_profiles_per_period)
-    update_number_of_virtual_reservoir_bidding_segments!(inputs, total_valid_vr_segments_per_period)
+    update_number_of_vr_valid_bidding_segments!(inputs, total_valid_vr_segments_per_period)
 
     return nothing
 end

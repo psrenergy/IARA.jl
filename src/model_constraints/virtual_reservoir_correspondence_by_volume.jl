@@ -42,7 +42,8 @@ function virtual_reservoir_correspondence_by_volume!(
         ==
         sum(
             virtual_reservoir_energy_account[vr, ao] -
-            sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)) for
+            sum(virtual_reservoir_generation[vr, ao, seg] for seg in 1:number_of_vr_valid_bidding_segments(inputs, vr))
+            for
             ao in virtual_reservoir_asset_owner_indices(inputs, vr)
         )
     )

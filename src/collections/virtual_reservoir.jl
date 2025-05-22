@@ -280,17 +280,17 @@ function virtual_reservoir_water_to_energy_factors(inputs::AbstractInputs, vr::I
     return inputs.collections.virtual_reservoir.water_to_energy_factors[vr][h]
 end
 
-function maximum_number_of_vr_bidding_segments(inputs::AbstractInputs) 
+function maximum_number_of_vr_bidding_segments(inputs::AbstractInputs)
     return inputs.collections.virtual_reservoir._maximum_number_of_bidding_segments
 end
 
-function number_of_vr_valid_bidding_segments(inputs::AbstractInputs, vr::Int) 
+function number_of_vr_valid_bidding_segments(inputs::AbstractInputs, vr::Int)
     return inputs.collections.virtual_reservoir._number_of_valid_bidding_segments[vr]
 end
 
 function update_maximum_number_of_vr_bidding_segments!(inputs::AbstractInputs, value::Int)
     previous_value = inputs.collections.virtual_reservoir._maximum_number_of_bidding_segments
-    if previous_value == 0          
+    if previous_value == 0
         inputs.collections.virtual_reservoir._maximum_number_of_bidding_segments = value
     elseif previous_value != value
         @warn(

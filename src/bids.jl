@@ -121,8 +121,11 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
                 asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
         end
     end
-    number_per_virtual_reservoir = [maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir[:, vr]) for vr in virtual_reservoir_indices]
-        
+    number_per_virtual_reservoir = [
+        maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir[:, vr]) for
+        vr in virtual_reservoir_indices
+    ]
+
     return number_per_virtual_reservoir
 end
 

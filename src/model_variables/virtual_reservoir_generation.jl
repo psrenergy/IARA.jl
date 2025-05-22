@@ -101,7 +101,9 @@ function virtual_reservoir_generation!(
         time_series_virtual_reservoir_quantity_offer(inputs, model.node, scenario)
     virtual_reservoir_price_offer_series = time_series_virtual_reservoir_price_offer(inputs, model.node, scenario)
 
-    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
+    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr),
+        seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
+
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),

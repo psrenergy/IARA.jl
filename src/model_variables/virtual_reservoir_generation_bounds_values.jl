@@ -68,7 +68,9 @@ function virtual_reservoir_generation_bounds_values!(
     virtual_reservoir_generation_lower_bound_value =
         get_model_object(model, :virtual_reservoir_generation_lower_bound_value)
 
-    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
+    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr),
+        seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
+
         if virtual_reservoir_quantity_offer_series[vr, ao, seg] >= 0.0
             MOI.set(
                 model.jump_model,

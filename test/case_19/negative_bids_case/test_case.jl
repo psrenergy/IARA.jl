@@ -47,7 +47,7 @@ else
             "bidding_group_costs",
             "bidding_group_profit",
             "bidding_group_revenue_independent",
-        ],)
+        ])
 end
 
 end

@@ -1299,11 +1299,12 @@ function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
         number_of_virtual_reservoir_offer_segments =
             number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
         update_number_of_vr_valid_bidding_segments!(inputs, number_of_virtual_reservoir_offer_segments)
-        update_maximum_number_of_vr_bidding_segments!(inputs, maximum(number_of_virtual_reservoir_offer_segments))
+        maximum_number_of_vr_offer_segments = maximum(number_of_virtual_reservoir_offer_segments; init = 0)
+        update_maximum_number_of_vr_bidding_segments!(inputs, maximum_number_of_vr_offer_segments)
 
         @info("Heuristic bids")
         @info("   Number of bidding group segments: $maximum_number_of_offer_segments")
-        @info("   Number of virtual reservoir segments: $(maximum(number_of_virtual_reservoir_offer_segments))")
+        @info("   Number of virtual reservoir segments: $maximum_number_of_vr_offer_segments")
         @info("")
     end
     return nothing

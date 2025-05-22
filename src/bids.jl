@@ -1241,13 +1241,15 @@ function adjust_quantity_offer_for_ex_post!(
                             if total_energy_ex_ante == 0.0
                                 quantity_offer_series.data[bg, bus, bds, blk] = 0.0
                             else
-                                quantity_offer_series.data[bg, bus, bds, blk] *= total_energy_ex_post / total_energy_ex_ante
+                                quantity_offer_series.data[bg, bus, bds, blk] *=
+                                    total_energy_ex_post / total_energy_ex_ante
                             end
                         elseif quantity_offer_series.data[bg, bus, bds, blk] < 0.0
                             if total_demand_ex_ante == 0.0
                                 quantity_offer_series.data[bg, bus, bds, blk] = 0.0
                             else
-                                quantity_offer_series.data[bg, bus, bds, blk] *= total_demand_ex_post / total_demand_ex_ante
+                                quantity_offer_series.data[bg, bus, bds, blk] *=
+                                    total_demand_ex_post / total_demand_ex_ante
                             end
                         end
                     end

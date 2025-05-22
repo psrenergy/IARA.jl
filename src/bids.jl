@@ -1211,6 +1211,14 @@ function adjust_quantity_offer_for_ex_post!(
                             blk,
                             subscenario,
                         )
+                        total_demand_ex_ante = sum_demand_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
                         run_time_options =
                             RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
                         total_energy_ex_post = sum_units_energy_ub_per_bg(
@@ -1221,10 +1229,26 @@ function adjust_quantity_offer_for_ex_post!(
                             blk,
                             subscenario,
                         )
-                        if total_energy_ex_ante == 0.0
-                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
-                        else
-                            quantity_offer_series.data[bg, bus, bds, blk] *= total_energy_ex_post / total_energy_ex_ante
+                        total_demand_ex_post = sum_demand_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
+                        if quantity_offer_series.data[bg, bus, bds, blk] > 0.0
+                            if total_energy_ex_ante == 0.0
+                                quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            else
+                                quantity_offer_series.data[bg, bus, bds, blk] *= total_energy_ex_post / total_energy_ex_ante
+                            end
+                        elseif quantity_offer_series.data[bg, bus, bds, blk] < 0.0
+                            if total_demand_ex_ante == 0.0
+                                quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            else
+                                quantity_offer_series.data[bg, bus, bds, blk] *= total_demand_ex_post / total_demand_ex_ante
+                            end
                         end
                     end
                 end
@@ -1247,7 +1271,6 @@ function sum_units_energy_ub_per_bg(
     renewable_units = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
     battery_units = index_of_elements(inputs, BatteryUnit; run_time_options, filters = [is_existing])
     hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
-    demand_units = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing])
 
     thermal_energy_ub = sum(
         thermal_unit_max_generation(inputs, t) *
@@ -1277,7 +1300,20 @@ function sum_units_energy_ub_per_bg(
     # TODO: Implement hydro energy upper bound
     hydro_energy_ub = 0.0
 
-    demand_energy_ub =
+    return thermal_energy_ub + renewable_energy_ub + battery_energy_ub + hydro_energy_ub
+end
+
+function sum_demand_per_bg(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    bg::Int,
+    bus::Int,
+    subperiod::Int,
+    subscenario::Int;
+)
+    demand_units = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing])
+
+    total_demand =
         -sum(
             demand_unit_max_demand(inputs, d) * subperiod_duration_in_hours(inputs, subperiod) *
             time_series_demand(inputs, run_time_options; subscenario)[d, subperiod]
@@ -1287,7 +1323,7 @@ function sum_units_energy_ub_per_bg(
             init = 0.0,
         )
 
-    return thermal_energy_ub + renewable_energy_ub + battery_energy_ub + hydro_energy_ub + demand_energy_ub
+    return total_demand
 end
 
 function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)

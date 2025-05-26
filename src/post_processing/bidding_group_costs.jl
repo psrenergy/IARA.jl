@@ -23,14 +23,10 @@ function _write_costs_bg_file(
         return
     end
 
-    number_of_bid_segments = maximum_number_of_bidding_segments(inputs)
-    # Set number of bidding segments to 1 to add the cost based generation only in the first segment
-    update_number_of_bid_segments!(inputs, 1)
-
     if is_ex_post
-        dimensions = ["period", "scenario", "subscenario", "subperiod", "bid_segment"]
+        dimensions = ["period", "scenario", "subscenario", "subperiod"]
     else
-        dimensions = ["period", "scenario", "subperiod", "bid_segment"]
+        dimensions = ["period", "scenario", "subperiod"]
     end
 
     labels_by_pairs = labels_for_output_by_pair_of_agents(
@@ -47,8 +43,7 @@ function _write_costs_bg_file(
         outputs_post_processing;
         inputs,
         output_name = "bidding_group_costs_$(clearing_procedure)",
-        # Remove bid_segment dimension for costs
-        dimensions = dimensions[1:end-1],
+        dimensions = dimensions,
         unit = "\$",
         labels = labels_by_pairs,
         run_time_options,
@@ -57,8 +52,6 @@ function _write_costs_bg_file(
 
     bidding_group_costs_writer =
         get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_costs_$(clearing_procedure)")
-
-    update_number_of_bid_segments!(inputs, number_of_bid_segments)
 
     total_costs_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
     for generation_technology in generation_technologies

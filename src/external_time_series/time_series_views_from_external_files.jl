@@ -462,10 +462,9 @@ function update_segments_profile_dimensions!(inputs, period)
         return nothing
     end
     if run_mode(inputs) in [RunMode.STRATEGIC_BID, RunMode.PRICE_TAKER_BID]
-        inputs.collections.bidding_group._bidding_group_max_segments_period = ones(
-            Int,
-            length(index_of_elements(inputs, BiddingGroup)),
-        )
+        # Isso é necessário? Já não foi inicializado com 1?
+        update_number_of_bg_valid_bidding_segments!(inputs, ones(Int, number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])))
+        update_maximum_number_of_bg_bidding_segments!(inputs, 1)
         return nothing
     end
     if is_market_clearing(inputs)
@@ -563,7 +562,7 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
         end
     end
 
-    update_number_of_bid_segments!(inputs, total_valid_segments_per_period)
+    update_number_of_bg_valid_bidding_segments!(inputs, total_valid_segments_per_period)
     update_number_of_bid_profiles!(inputs, total_valid_profiles_per_period)
     update_number_of_vr_valid_bidding_segments!(inputs, total_valid_vr_segments_per_period)
 

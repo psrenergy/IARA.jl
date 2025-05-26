@@ -238,7 +238,7 @@ function get_outputs_dimension_size(
             if occursin("virtual_reservoir", output_name)
                 push!(dimension_size, maximum_number_of_vr_bidding_segments(inputs))
             else
-                push!(dimension_size, maximum_number_of_bidding_segments(inputs))
+                push!(dimension_size, maximum_number_of_bg_bidding_segments(inputs))
             end
         elseif dimension == "profile"
             push!(dimension_size, maximum_number_of_bidding_profiles(inputs))
@@ -258,6 +258,7 @@ function initialize!(
     run_time_options::RunTimeOptions,
     output_name::String,
     dir_path::String = output_path(inputs),
+    consider_one_segment = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -278,6 +279,12 @@ function initialize!(
 
     file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
+    if "bid_segment" in dimensions && consider_one_segment
+        # This is a temporary solution. In the next PR, the outputs with the number of segments artificially set to 1
+        # will lose the "bid_segment" dimension.
+        idx = findfirst(isequal("bid_segment"), dimensions)
+        dimension_size[idx] = 1
+    end
 
     writer = Quiver.Writer{output_type}(
         file;
@@ -556,14 +563,11 @@ function write_bid_output(
     if has_profile_bids
         bid_profiles = bidding_profiles(inputs)
         valid_profiles = get_maximum_valid_profiles(inputs)
-    else
-        bid_segments = bidding_segments(inputs)
-        valid_segments = get_maximum_valid_segments(inputs)
     end
     blks = subperiods(inputs)
     buses = index_of_elements(inputs, Bus)
     num_buses = length(buses)
-    size_segments = has_profile_bids ? length(bid_profiles) : length(bid_segments)
+    size_segments = has_profile_bids ? length(bid_profiles) : maximum_number_of_bg_bidding_segments(inputs)
     # 4D array with dimensions: subperiod, bidding_group, bid_segment, bus
     # We use the function write_bid_output for both writing the output of the
     # optimization problem and the heuristic bids.
@@ -619,9 +623,9 @@ function write_bid_output(
                 end
             end
         else
-            for bds in bid_segments
+            for bds in 1:maximum_number_of_bg_bidding_segments(inputs)
                 for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    if bds > valid_segments[bg]
+                    if bds > number_of_bg_valid_bidding_segments(inputs, bg)
                         continue
                     end
                     # If the data is a OrderedDict (value of a JuMP.Variable) we can acess

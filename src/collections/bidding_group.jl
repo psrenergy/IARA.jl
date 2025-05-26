@@ -1,4 +1,4 @@
-#  Copyright (c) 2024: PSR, CCEE (Câmara de Comercialização de Energia  
+#  Copyright (c) 2024: PSR, CCEE (Câmara de Comercialização de Energia
 #      Elétrica), and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,7 +22,6 @@ Collection representing the bidding groups in the system.
     bid_type::Vector{BiddingGroup_BidType.T} = []
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
-    _bidding_group_max_segments_period::Vector{Int} = Int[]
     _bidding_group_max_profiles_period::Vector{Int} = Int[]
     _bidding_group_max_complementary_grouping_period::Vector{Int} = Int[]
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
@@ -36,6 +35,10 @@ Collection representing the bidding groups in the system.
     minimum_activation_level_profile_file::String = ""
     # caches
     has_generation_besides_virtual_reservoirs::Vector{Bool} = []
+    _number_of_valid_bidding_segments::Vector{Int} = Int[]
+    _maximum_number_of_bidding_segments::Int = 0
+    _number_of_valid_profiles::Vector{Int} = Int[]
+    _maximum_number_of_profiles::Int = 0
 end
 
 # ---------------------------------------------------------------------
@@ -122,7 +125,7 @@ IARA.add_bidding_group!(
     segment_fraction = [1.0],
     independent_bid_max_segments = 2,
 )
-```	
+```
 """
 function add_bidding_group!(db::DatabaseSQLite; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
@@ -342,12 +345,6 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     return num_errors
 end
 
-function update_number_of_bid_segments!(inputs::AbstractInputs, value::Int)
-    value_array = fill(value, length(index_of_elements(inputs, BiddingGroup)))
-    update_number_of_bid_segments!(inputs, value_array)
-    return nothing
-end
-
 function update_number_of_bid_profiles!(inputs::AbstractInputs, value::Int)
     value_array = fill(value, length(index_of_elements(inputs, BiddingGroup)))
     update_number_of_bid_profiles!(inputs, value_array)
@@ -357,11 +354,6 @@ end
 function update_number_of_complementary_grouping!(inputs::AbstractInputs, value::Int)
     value_array = fill(value, length(index_of_elements(inputs, BiddingGroup)))
     update_number_of_complementary_grouping!(inputs, value_array)
-    return nothing
-end
-
-function update_number_of_bid_segments!(inputs::AbstractInputs, values::Array{Int})
-    inputs.collections.bidding_group._bidding_group_max_segments_period = copy(values)
     return nothing
 end
 
@@ -459,14 +451,6 @@ Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.OPTIMIZE`
 optimize_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.OPTIMIZE
 
 """
-    maximum_bidding_segments(inputs)
-
-Return the maximum number of bidding segments.
-"""
-maximum_number_of_bidding_segments(inputs::AbstractInputs) =
-    maximum(inputs.collections.bidding_group._bidding_group_max_segments_period; init = 0)
-
-"""
     maximum_bidding_profiles(inputs)
 
 Return the maximum number of bidding profiles.
@@ -498,26 +482,6 @@ function bidding_profiles(inputs::AbstractInputs)
     end
 end
 
-function bidding_segments(inputs::AbstractInputs)
-    if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
-        maximum_bid_segment = maximum_number_of_bidding_segments(inputs)
-        return collect(1:maximum_bid_segment)
-    elseif run_mode(inputs) in [RunMode.STRATEGIC_BID, RunMode.PRICE_TAKER_BID]
-        return [1]
-    else
-        error("Querying the `bidding_segment` does not make sense in Run mode $(run_mode(inputs)).")
-    end
-end
-
-"""
-    get_maximum_valid_segments(inputs::AbstractInputs)
-
-Return the maximum number of bidding segments for each bidding group.
-"""
-function get_maximum_valid_segments(inputs::AbstractInputs)
-    return inputs.collections.bidding_group._bidding_group_max_segments_period
-end
-
 """
     get_maximum_valid_profiles(inputs::AbstractInputs)
 
@@ -537,7 +501,7 @@ function get_maximum_valid_complementary_grouping(inputs::AbstractInputs)
 end
 
 function has_any_simple_bids(inputs::AbstractInputs)
-    return maximum_number_of_bidding_segments(inputs) > 0
+    return maximum_number_of_bg_bidding_segments(inputs) > 0
 end
 
 function has_any_profile_bids(inputs::AbstractInputs)
@@ -546,7 +510,7 @@ end
 
 """
     has_any_profile_complex_bids(inputs::AbstractInputs)
-    
+
 Return true if the bidding group has any profile complex input files.
 """
 function has_any_profile_complex_bids(inputs::AbstractInputs)
@@ -568,11 +532,42 @@ end
 
 """
     has_any_profile_complex_input_files(inputs::AbstractInputs)
-    
+
 Return true if the bidding group has any profile complex input files.
 """
 function has_any_profile_complex_input_files(inputs::AbstractInputs)
     return bidding_group_parent_profile_file(inputs) != "" &&
            bidding_group_complementary_grouping_profile_file(inputs) != "" &&
            bidding_group_minimum_activation_level_profile_file(inputs) != ""
+end
+
+function maximum_number_of_bg_bidding_segments(inputs::AbstractInputs)
+    return inputs.collections.bidding_group._maximum_number_of_bidding_segments
+end
+
+function number_of_bg_valid_bidding_segments(inputs::AbstractInputs, bg::Int)
+    return inputs.collections.bidding_group._number_of_valid_bidding_segments[bg]
+end
+
+function update_maximum_number_of_bg_bidding_segments!(inputs::AbstractInputs, value::Int)
+    previous_value = inputs.collections.bidding_group._maximum_number_of_bidding_segments
+    if previous_value == 0
+        inputs.collections.bidding_group._maximum_number_of_bidding_segments = value
+    elseif previous_value != value
+        @warn(
+            "The maximum number of bidding segments for bidding groups is already set to $(previous_value). It will not be updated to $(value)."
+        )
+    end
+    return nothing
+end
+
+function update_number_of_bg_valid_bidding_segments!(inputs::AbstractInputs, values::Vector{Int})
+    if length(inputs.collections.bidding_group._number_of_valid_bidding_segments) == 0
+        inputs.collections.bidding_group._number_of_valid_bidding_segments = zeros(
+            Int,
+            length(index_of_elements(inputs, BiddingGroup)),
+        )
+    end
+    inputs.collections.bidding_group._number_of_valid_bidding_segments .= values
+    return nothing
 end

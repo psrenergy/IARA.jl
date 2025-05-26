@@ -23,7 +23,6 @@ function bidding_group_energy_offer!(
 )
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
-    bid_segments = bidding_segments(inputs)
     blks = subperiods(inputs)
 
     # Variables
@@ -32,7 +31,7 @@ function bidding_group_energy_offer!(
         bidding_group_energy_offer[
             blk in blks,
             bg in bidding_groups,
-            bds in bid_segments,
+            bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ],
     )
@@ -50,7 +49,7 @@ function bidding_group_energy_offer!(
         bidding_group_revenue[
             blk in blks,
             bg in bidding_groups,
-            bds in bid_segments,
+            bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ],
         -bidding_group_energy_offer[blk, bg, bds, bus] * spot_price_series[bus, blk],
@@ -61,7 +60,7 @@ function bidding_group_energy_offer!(
             bidding_group_revenue[blk, bg, bds, bus]
             for blk in blks,
             bg in bidding_groups,
-            bds in bid_segments,
+            bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses;
             init = 0,
         ) * money_to_thousand_money()
@@ -86,7 +85,6 @@ function bidding_group_energy_offer!(
 )
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
     buses = index_of_elements(inputs, Bus)
-    bid_segments = bidding_segments(inputs)
     blks = subperiods(inputs)
 
     if run_mode(inputs) == RunMode.STRATEGIC_BID
@@ -99,7 +97,7 @@ function bidding_group_energy_offer!(
     # Time series
     spot_price_series = time_series_spot_price(inputs)
 
-    for blk in blks, bg in bidding_groups, bds in bid_segments, bus in buses
+    for blk in blks, bg in bidding_groups, bds in 1:number_of_bg_valid_bidding_segments(inputs, bg), bus in buses
         set_objective_coefficient(
             model.jump_model,
             bidding_group_energy_offer[blk, bg, bds, bus],

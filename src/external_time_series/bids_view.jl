@@ -124,13 +124,11 @@ function initialize_bids_view_from_external_file!(
     else
         bid_segments = dimension_dict[:bid_segment]
         segments_or_profile = 1:bid_segments
-        update_number_of_bid_segments!(inputs, bid_segments)
+        update_maximum_number_of_bg_bidding_segments!(inputs, bid_segments)
     end
 
     all_bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
-    bid_segments = bidding_segments(inputs)
-    segments_or_profile = bid_segments
     if has_profile_bids
         bid_profiles = bidding_profiles(inputs)
         segments_or_profile = bid_profiles
@@ -167,25 +165,20 @@ function read_bids_view_from_external_file!(
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     buses = index_of_elements(inputs, Bus)
 
-    if has_profile_bids
-        bid_profiles = bidding_profiles(inputs)
-    else
-        bid_segments = bidding_segments(inputs)
-    end
     blks = subperiods(inputs)
     num_buses = length(buses)
 
     for blk in blks
         # TODO: Generic form?
         if has_profile_bids
-            for prf in bid_profiles
+            for prf in bidding_profiles(inputs)
                 Quiver.goto!(ts.reader; period, scenario, subperiod = blk, profile = prf)
                 for (i, bg) in enumerate(bidding_groups), bus in buses
                     ts.data[bg, bus, prf, blk] = ts.reader.data[(i-1)*(num_buses)+bus]
                 end
             end
         else
-            for bds in bid_segments
+            for bds in 1:maximum_number_of_bg_bidding_segments(inputs)
                 Quiver.goto!(ts.reader; period, scenario, subperiod = blk, bid_segment = bds)
                 for (i, bg) in enumerate(bidding_groups), bus in buses
                     ts.data[bg, bus, bds, blk] = ts.reader.data[(i-1)*(num_buses)+bus]

@@ -22,7 +22,6 @@ Collection representing the bidding groups in the system.
     bid_type::Vector{BiddingGroup_BidType.T} = []
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
-    _bidding_group_max_complementary_grouping_period::Vector{Int} = Int[]
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
     quantity_offer_file::String = ""
@@ -344,17 +343,6 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     return num_errors
 end
 
-function update_number_of_complementary_grouping!(inputs::AbstractInputs, value::Int)
-    value_array = fill(value, length(index_of_elements(inputs, BiddingGroup)))
-    update_number_of_complementary_grouping!(inputs, value_array)
-    return nothing
-end
-
-function update_number_of_complementary_grouping!(inputs::AbstractInputs, values::Array{Int})
-    inputs.collections.bidding_group._bidding_group_max_complementary_grouping_period = copy(values)
-    return nothing
-end
-
 function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::AbstractInputs)
     # A bidding group has no variables if all of its units are hydro units associated with virtual reservoirs
 
@@ -437,23 +425,6 @@ has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg._has_ge
 Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.OPTIMIZE` bids.
 """
 optimize_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.OPTIMIZE
-
-"""
-    maximum_complementary_grouping(inputs)
-
-Return the maximum number of complementary grouping.
-"""
-maximum_number_of_complementary_grouping(inputs::AbstractInputs) =
-    maximum(inputs.collections.bidding_group._bidding_group_max_complementary_grouping_period; init = 0)
-
-"""
-    get_maximum_valid_complementary_grouping(inputs::AbstractInputs)
-
-Return the maximum number of complementary grouping for each bidding group.
-"""
-function get_maximum_valid_complementary_grouping(inputs::AbstractInputs)
-    return inputs.collections.bidding_group._bidding_group_max_complementary_grouping_period
-end
 
 function has_any_simple_bids(inputs::AbstractInputs)
     return maximum_number_of_bg_bidding_segments(inputs) > 0

@@ -242,8 +242,6 @@ function get_outputs_dimension_size(
             end
         elseif dimension == "profile"
             push!(dimension_size, maximum_number_of_profiles(inputs))
-        elseif dimension == "complementary_group"
-            push!(dimension_size, maximum_number_of_complementary_grouping(inputs))
         else
             error("Dimension $dimension not recognized")
         end

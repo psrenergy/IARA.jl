@@ -55,15 +55,13 @@ function bidding_group_energy_offer!(
         -bidding_group_energy_offer[blk, bg, bds, bus] * spot_price_series[bus, blk],
     )
 
-    model.obj_exp +=
-        sum(
-            bidding_group_revenue[blk, bg, bds, bus]
-            for blk in blks,
-            bg in bidding_groups,
-            bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
-            bus in buses;
-            init = 0,
-        ) * money_to_thousand_money()
+    for bg in bidding_groups
+        for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
+            model.obj_exp +=
+                sum(bidding_group_revenue[blk, bg, bds, bus] for blk in blks, bus in buses; init = 0) *
+                money_to_thousand_money()
+        end
+    end
 
     return nothing
 end

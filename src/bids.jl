@@ -1188,7 +1188,8 @@ function adjust_quantity_offer_for_ex_post!(
     quantity_offer_series::IARA.BidsView{Float64},
     subscenario::Int,
 )
-    if !is_market_clearing(inputs) || is_ex_ante_problem(run_time_options) || !read_ex_post_renewable_file(inputs) || maximum_number_of_bg_bidding_segments(inputs) == 0
+    if !is_market_clearing(inputs) || is_ex_ante_problem(run_time_options) || !read_ex_post_renewable_file(inputs) ||
+       maximum_number_of_bg_bidding_segments(inputs) == 0
         return nothing
     end
 

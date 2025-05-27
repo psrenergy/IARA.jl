@@ -463,7 +463,10 @@ function update_segments_profile_dimensions!(inputs, period)
     end
     if run_mode(inputs) in [RunMode.STRATEGIC_BID, RunMode.PRICE_TAKER_BID]
         # Isso é necessário? Já não foi inicializado com 1?
-        update_number_of_bg_valid_bidding_segments!(inputs, ones(Int, number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])))
+        update_number_of_bg_valid_bidding_segments!(
+            inputs,
+            ones(Int, number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])),
+        )
         update_maximum_number_of_bg_bidding_segments!(inputs, 1)
         return nothing
     end

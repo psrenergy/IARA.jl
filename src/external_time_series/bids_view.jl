@@ -120,7 +120,7 @@ function initialize_bids_view_from_external_file!(
     if has_profile_bids
         bid_profiles = dimension_dict[:profile]
         segments_or_profile = 1:bid_profiles
-        update_number_of_bid_profiles!(inputs, bid_profiles)
+        update_maximum_number_of_profiles!(inputs, bid_profiles)
     else
         bid_segments = dimension_dict[:bid_segment]
         segments_or_profile = 1:bid_segments
@@ -129,10 +129,6 @@ function initialize_bids_view_from_external_file!(
 
     all_bidding_groups = index_of_elements(inputs, BiddingGroup)
     buses = index_of_elements(inputs, Bus)
-    if has_profile_bids
-        bid_profiles = bidding_profiles(inputs)
-        segments_or_profile = bid_profiles
-    end
     blks = subperiods(inputs)
 
     ts.data = zeros(
@@ -171,7 +167,7 @@ function read_bids_view_from_external_file!(
     for blk in blks
         # TODO: Generic form?
         if has_profile_bids
-            for prf in bidding_profiles(inputs)
+            for prf in 1:maximum_number_of_profiles(inputs)
                 Quiver.goto!(ts.reader; period, scenario, subperiod = blk, profile = prf)
                 for (i, bg) in enumerate(bidding_groups), bus in buses
                     ts.data[bg, bus, prf, blk] = ts.reader.data[(i-1)*(num_buses)+bus]

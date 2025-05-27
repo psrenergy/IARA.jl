@@ -29,7 +29,6 @@ function bidding_group_profile_energy_offer!(
     placeholder_scenario = 1
     quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.node, placeholder_scenario)
     price_offer_profile_series = time_series_price_offer_profile(inputs, model.node, placeholder_scenario)
-    valid_profiles = get_maximum_valid_profiles(inputs)
 
     # Variables
     @variable(
@@ -37,7 +36,7 @@ function bidding_group_profile_energy_offer!(
         bidding_group_quantity_offer_profile[
             blk in blks,
             bg in bidding_groups,
-            prf in 1:valid_profiles[bg],
+            prf in 1:number_of_valid_profiles(inputs, bg),
             bus in buses,
         ]
         in
@@ -47,7 +46,7 @@ function bidding_group_profile_energy_offer!(
         model.jump_model,
         bidding_group_price_offer_profile[
             bg in bidding_groups,
-            prf in 1:valid_profiles[bg],
+            prf in 1:number_of_valid_profiles(inputs, bg),
         ]
         in
         MOI.Parameter(price_offer_profile_series[bg, prf])
@@ -59,7 +58,7 @@ function bidding_group_profile_energy_offer!(
         bidding_group_generation_profile[
             blk in blks,
             bg in bidding_groups,
-            prf in 1:valid_profiles[bg],
+            prf in 1:number_of_valid_profiles(inputs, bg),
             bus in buses,
         ],
     ) # MWh
@@ -67,7 +66,7 @@ function bidding_group_profile_energy_offer!(
         model.jump_model,
         linear_combination_bid_segments_profile[
             bg in bidding_groups,
-            prf in 1:valid_profiles[bg],
+            prf in 1:number_of_valid_profiles(inputs, bg),
         ],
         lower_bound = 0.0,
         upper_bound = 1.0,
@@ -79,7 +78,7 @@ function bidding_group_profile_energy_offer!(
         accepted_offers_profile_cost[
             blk in blks,
             bg in bidding_groups,
-            prf in 1:valid_profiles[bg],
+            prf in 1:number_of_valid_profiles(inputs, bg),
             bus in buses,
         ],
         bidding_group_generation_profile[blk, bg, prf, bus] *
@@ -117,9 +116,7 @@ function bidding_group_profile_energy_offer!(
     bidding_group_price_offer_profile = get_model_object(model, :bidding_group_price_offer_profile)
     bidding_group_quantity_offer_profile = get_model_object(model, :bidding_group_quantity_offer_profile)
 
-    valid_profiles = get_maximum_valid_profiles(inputs)
-
-    for bg in bidding_groups, prf in 1:valid_profiles[bg]
+    for bg in bidding_groups, prf in 1:number_of_valid_profiles(inputs, bg)
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
@@ -127,7 +124,7 @@ function bidding_group_profile_energy_offer!(
             price_offer_profile_series[bg, prf],
         )
     end
-    for blk in blks, bg in bidding_groups, prf in 1:valid_profiles[bg], bus in buses
+    for blk in blks, bg in bidding_groups, prf in 1:number_of_valid_profiles(inputs, bg), bus in buses
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),

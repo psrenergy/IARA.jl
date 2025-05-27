@@ -241,7 +241,7 @@ function get_outputs_dimension_size(
                 push!(dimension_size, maximum_number_of_bg_bidding_segments(inputs))
             end
         elseif dimension == "profile"
-            push!(dimension_size, maximum_number_of_bidding_profiles(inputs))
+            push!(dimension_size, maximum_number_of_profiles(inputs))
         elseif dimension == "complementary_group"
             push!(dimension_size, maximum_number_of_complementary_grouping(inputs))
         else
@@ -560,14 +560,11 @@ function write_bid_output(
         run_time_options,
         filters = filters,
     )
-    if has_profile_bids
-        bid_profiles = bidding_profiles(inputs)
-        valid_profiles = get_maximum_valid_profiles(inputs)
-    end
     blks = subperiods(inputs)
     buses = index_of_elements(inputs, Bus)
     num_buses = length(buses)
-    size_segments = has_profile_bids ? length(bid_profiles) : maximum_number_of_bg_bidding_segments(inputs)
+    size_segments =
+        has_profile_bids ? maximum_number_of_profiles(inputs) : maximum_number_of_bg_bidding_segments(inputs)
     # 4D array with dimensions: subperiod, bidding_group, bid_segment, bus
     # We use the function write_bid_output for both writing the output of the
     # optimization problem and the heuristic bids.
@@ -587,9 +584,9 @@ function write_bid_output(
 
     for blk in blks
         if has_profile_bids
-            for prf in bid_profiles
+            for prf in 1:maximum_number_of_profiles(inputs)
                 for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    if prf > valid_profiles[bg]
+                    if prf > number_of_valid_profiles(inputs, bg)
                         continue
                     end
                     # If the data is a OrderedDict (value of a JuMP.Variable) we can acess

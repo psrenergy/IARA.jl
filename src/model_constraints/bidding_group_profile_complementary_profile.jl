@@ -29,7 +29,6 @@ function bidding_group_profile_complementary_profile!(
     buses = index_of_elements(inputs, Bus)
     bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
-    maximum_bidding_profiles = maximum_number_of_bidding_profiles(inputs)
     # Model variables
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)
 
@@ -42,12 +41,10 @@ function bidding_group_profile_complementary_profile!(
     complementary_grouping_profile_sets = zeros(Int,
         length(bidding_groups),
         maximum_complementary_grouping_profile,
-        maximum_bidding_profiles,
+        maximum_number_of_profiles(inputs),
     )
 
-    valid_profiles = get_maximum_valid_profiles(inputs)
-
-    for (i_bg, bg) in enumerate(bidding_groups), prf in 1:valid_profiles[bg],
+    for (i_bg, bg) in enumerate(bidding_groups), prf in 1:number_of_valid_profiles(inputs, bg),
         cp_idx in 1:maximum_complementary_grouping_profile
 
         complementary_group = complementary_grouping_profile_series[i_bg, cp_idx, prf]
@@ -66,7 +63,7 @@ function bidding_group_profile_complementary_profile!(
         ],
         sum(
             linear_combination_bid_segments_profile[bg, prf]
-            for prf in 1:valid_profiles[bg]
+            for prf in 1:number_of_valid_profiles(inputs, bg)
             if complementary_grouping_profile_sets[bg, cp_idx, prf] == 1;
             init = 0,
         ) <= 1,

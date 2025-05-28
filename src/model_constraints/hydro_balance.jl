@@ -330,7 +330,6 @@ function hydro_balance!(
 )
     hydro_units = index_of_elements(inputs, HydroUnit; run_time_options)
     existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
-    number_of_existing_hydro_units = length(existing_hydro_units)
 
     indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
         elements_in_output_file = hydro_units,
@@ -338,38 +337,11 @@ function hydro_balance!(
     )
 
     water_marginal_cost = simulation_results.data[:water_marginal_cost] * (-1)
-    hydro_opportunity_cost = zeros(number_of_subperiods(inputs), number_of_existing_hydro_units)
-
-    for (idx, h) in enumerate(existing_hydro_units)
-        if hydro_unit_production_factor(inputs, h) == 0
-            continue
-        end
-        marginal_cost_to_opportunity_cost =
-            m3_per_second_to_hm3_per_hour() / hydro_unit_production_factor(inputs, h) / money_to_thousand_money()
-        if hydro_balance_subperiod_resolution(inputs) ==
-           Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
-            for blk in subperiods(inputs)
-                hydro_opportunity_cost[blk, idx] = water_marginal_cost[blk, h] * marginal_cost_to_opportunity_cost
-                downstream_idx = hydro_unit_turbine_to(inputs, h)
-                if !is_null(downstream_idx) && downstream_idx in existing_hydro_units
-                    hydro_opportunity_cost[blk, idx] -=
-                        water_marginal_cost[blk, downstream_idx] * marginal_cost_to_opportunity_cost
-                end
-            end
-        elseif hydro_balance_subperiod_resolution(inputs) ==
-               Configurations_HydroBalanceSubperiodResolution.AGGREGATED_SUBPERIODS
-            for blk in subperiods(inputs)
-                hydro_opportunity_cost[blk, idx] = water_marginal_cost[h] * marginal_cost_to_opportunity_cost
-                downstream_idx = hydro_unit_turbine_to(inputs, h)
-                if !is_null(downstream_idx) && downstream_idx in existing_hydro_units
-                    hydro_opportunity_cost[blk, idx] -=
-                        water_marginal_cost[downstream_idx] * marginal_cost_to_opportunity_cost
-                end
-            end
-        else
-            error("Hydro balance subperiod resolution $(hydro_balance_subperiod_resolution(inputs)) not implemented.")
-        end
-    end
+    hydro_opportunity_cost = marginal_cost_to_opportunity_cost(
+        inputs,
+        water_marginal_cost,
+        existing_hydro_units,
+    )
 
     write_output_per_subperiod!(
         outputs,

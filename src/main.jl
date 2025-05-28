@@ -550,8 +550,7 @@ function run_clearing_simulation(
 
     simulation_results = simulate(model, inputs, outputs, run_time_options; current_period = period)
 
-    if isnothing(outputs)
-        @assert is_reference_curve(inputs)
+    if is_reference_curve(inputs)
         return simulation_results
     end
 
@@ -669,70 +668,71 @@ end
 function single_period_hydro_supply_reference_curve(
     inputs::Inputs,
 )
-    # Update the number of offer segments for the heuristic bids
-    if generate_heuristic_bids_for_clearing(inputs)
-        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
-
-        @info("Heuristic bids")
-        @info("   Number of segments: $maximum_number_of_offer_segments")
-        @info("")
-    end
-
     # Build model
     run_time_options =
         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
     model = build_model(inputs, run_time_options)
+
+    # Build outputs
+    outputs = initialize_reference_curve_outputs(
+        inputs,
+        run_time_options,
+    )
 
     # Build period-season map
     if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
         create_period_season_map!(inputs, run_time_options, model)
     end
 
-    # Update the time series in the database to the current period
-    period = inputs.args.period
-    update_time_series_from_db!(inputs, period)
-
-    # Heuristic bids
-    if generate_heuristic_bids_for_clearing(inputs)
-        run_time_options = RunTimeOptions()
-        for scenario in 1:number_of_scenarios(inputs)
-            # Update the time series in the external files to the current period and scenario
-            update_time_series_views_from_external_files!(inputs; period, scenario)
-            markup_offers_for_period_scenario(
-                inputs,
-                run_time_options,
-                period,
-                scenario;
-            )
-        end
+    # Scale cuts if necessary
+    if (market_clearing_tiebreaker_weight(inputs) > 0) && clearing_has_state_variables(inputs, run_time_options)
+        cuts_file = fcf_cuts_file(inputs)
+        scaled_cuts_file = "scaled_$(cuts_file)"
+        cuts_path = joinpath(path_case(inputs), cuts_file)
+        scaled_cuts_path = joinpath(path_case(inputs), scaled_cuts_file)
+        scale_cuts(cuts_path, scaled_cuts_path, market_clearing_tiebreaker_weight(inputs))
     end
 
-    @info("Calculating the reference hydro supply curve for period: $period")
-    for demand_multiplier in reference_curve_demand_multipliers(inputs)
-        # Update the demand multiplier
-        run_time_options =
-            RunTimeOptions(;
-                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
-                demand_multiplier,
-            )
-        # Rebuild the model with the new demand multiplier
-        model = build_model(inputs, run_time_options)
-        # Run simulation
-        simulation_results = run_clearing_simulation(model, inputs, run_time_options, period)
-        # Get results
-        for scenario in 1:number_of_scenarios(inputs)
-            # Update the time series in the external files to the current period and scenario
-            update_time_series_views_from_external_files!(inputs; period, scenario)
-            simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
-                simulation_results,
-                period,
-                scenario,
-            )
+    try
+        # Update the time series in the database to the current period
+        period = inputs.args.period
+        update_time_series_from_db!(inputs, period)
 
-            @show simulation_results_from_period_scenario.data[:virtual_reservoir_generation]
-            @show simulation_results_from_period_scenario.data[:load_marginal_cost]
+        @info("Calculating the reference hydro supply curve for period: $period")
+        for (reference_curve_segment, demand_multiplier) in enumerate(reference_curve_demand_multipliers(inputs))
+            # Update the demand multiplier
+            run_time_options =
+                RunTimeOptions(;
+                    clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+                    demand_multiplier,
+                )
+            # Rebuild the model with the new demand multiplier
+            model = build_model(inputs, run_time_options)
+            # Run simulation
+            simulation_results = run_clearing_simulation(model, inputs, run_time_options, period; outputs)
+            # Get results
+            for scenario in 1:number_of_scenarios(inputs)
+                # Update the time series in the external files to the current period and scenario
+                update_time_series_views_from_external_files!(inputs; period, scenario)
+                simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
+                    simulation_results,
+                    period,
+                    scenario,
+                )
+
+                write_reference_curve_outputs(
+                    inputs,
+                    outputs,
+                    run_time_options,
+                    simulation_results_from_period_scenario;
+                    period,
+                    reference_curve_segment,
+                    scenario,
+                )
+            end
         end
+    finally
+        finalize_outputs!(outputs)
     end
 
     return nothing

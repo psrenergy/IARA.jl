@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase07ReferenceCurveCase
+module TestCase07MinCostCase
 
 using Test
 using IARA
@@ -26,12 +26,7 @@ finally
     end
 end
 
-IARA.single_period_hydro_supply_reference_curve(
-    PATH;
-    period = 1,
-    plot_outputs = false,
-    delete_output_folder_before_execution = true,
-)
+IARA.train_min_cost(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
 
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)

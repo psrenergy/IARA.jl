@@ -1086,6 +1086,10 @@ read_inflow_from_file(inputs::AbstractInputs) =
 Return whether bids should be read from a file.
 """
 function read_bids_from_file(inputs::AbstractInputs)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs)
+        return false
+    end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
         Configurations_ConstructionType.COST_BASED,
@@ -1105,6 +1109,10 @@ end
 Return whether heuristic bids should be generated for clearing.
 """
 function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs)
+        return false
+    end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
         Configurations_ConstructionType.COST_BASED,
@@ -1119,6 +1127,10 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
 end
 
 function is_any_construction_type_cost_based(inputs::AbstractInputs)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs)
+        return true
+    end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
            construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.COST_BASED ||
            construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
@@ -1132,6 +1144,10 @@ function need_demand_price_input_data(inputs::AbstractInputs)
 end
 
 function is_any_construction_type_hybrid(inputs::AbstractInputs)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs)
+        return false
+    end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.HYBRID ||
            construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.HYBRID ||
            construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.HYBRID ||
@@ -1413,7 +1429,10 @@ virtual_reservoir_initial_energy_account_share(inputs) =
 Determine the integer variables representation.
 """
 function integer_variable_representation(inputs::AbstractInputs, run_time_options)
-    if is_mincost(inputs)
+    # Always linearize the integer variables for the reference curve run mode
+    if is_reference_curve(inputs)
+        return Configurations_IntegerVariableRepresentation.LINEARIZE
+    elseif is_mincost(inputs)
         return integer_variable_representation_mincost(inputs)
     elseif is_ex_ante_problem(run_time_options)
         if is_physical_problem(run_time_options)
@@ -1489,7 +1508,12 @@ function is_skipped(inputs::AbstractInputs, construction_type::String)
     elseif construction_type == "ex_ante_physical"
         return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
     elseif construction_type == "ex_ante_commercial"
-        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+        # Overwrite the construction type if the run mode is reference curve
+        if is_reference_curve(inputs)
+            return false
+        else
+            return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
+        end
     else
         error(
             "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",

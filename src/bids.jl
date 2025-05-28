@@ -813,9 +813,10 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     # VR
     virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
 
-    # Hydro 
+    # Hydro
     available_energy_per_hydro_unit =
-        if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+        if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
+           is_reference_curve(inputs)
             hydro_available_energy(inputs, run_time_options, period, scenario)
         end
 
@@ -882,6 +883,14 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         end
     end
 
+    serialize_virtual_reservoir_heuristic_bids(
+        inputs,
+        quantity_offers,
+        price_offers;
+        period,
+        scenario,
+    )
+
     if !isnothing(outputs)
         write_virtual_reservoir_bid_output(
             outputs,
@@ -899,14 +908,6 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             run_time_options,
             "virtual_reservoir_price_offer",
             price_offers,
-            period,
-            scenario,
-        )
-
-        serialize_virtual_reservoir_heuristic_bids(
-            inputs,
-            quantity_offers,
-            price_offers;
             period,
             scenario,
         )

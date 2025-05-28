@@ -679,9 +679,9 @@ function time_series_virtual_reservoir_quantity_offer(
     period::Int,
     scenario::Int,
 )
-    if !is_market_clearing(inputs)
+    if !(is_market_clearing(inputs) || is_reference_curve(inputs))
         error(
-            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir quantity offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs)'.",
+            "This function is only available for MARKET_CLEARING and SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE run modes. To access the virtual reservoir quantity offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs)'.",
         )
     end
 
@@ -722,9 +722,9 @@ function time_series_virtual_reservoir_price_offer(
     period::Int,
     scenario::Int,
 )
-    if !is_market_clearing(inputs)
+    if !(is_market_clearing(inputs) || is_reference_curve(inputs))
         error(
-            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir price offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_price_offer(inputs)'.",
+            "This function is only available for MARKET_CLEARING and SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE run modes. To access the virtual reservoir price offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_price_offer(inputs)'.",
         )
     end
 

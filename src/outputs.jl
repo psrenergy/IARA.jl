@@ -244,6 +244,8 @@ function get_outputs_dimension_size(
             push!(dimension_size, maximum_number_of_bidding_profiles(inputs))
         elseif dimension == "complementary_group"
             push!(dimension_size, maximum_number_of_complementary_grouping(inputs))
+        elseif dimension == "reference_curve_segment"
+            push!(dimension_size, length(reference_curve_demand_multipliers(inputs)))
         else
             error("Dimension $dimension not recognized")
         end
@@ -443,6 +445,68 @@ function write_output_without_subperiod!(
             period, scenario,
         )
     end
+    return nothing
+end
+
+function write_reference_curve_output!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    matrix_of_results::Matrix{T};
+    period::Int,
+    reference_curve_segment::Int,
+    scenario::Int,
+    multiply_by::Float64 = 1.0,
+    divide_by_subperiod_duration_in_hours::Bool = false,
+    indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
+) where {T}
+
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    # Create a vector of zeros based on the number of time series
+    num_time_series = output.writer.metadata.number_of_time_series
+    data = zeros(num_time_series)
+
+    # Validate that the indices of the outputs match the jump_conatiner
+    if indices_of_elements_in_output === nothing
+        @assert size(matrix_of_results, 1) == num_time_series
+    else
+        @assert length(indices_of_elements_in_output) == size(matrix_of_results, 1)
+    end
+
+    for subperiod in axes(matrix_of_results, 2)
+        vector_to_write = matrix_of_results[:, subperiod] * multiply_by
+        if divide_by_subperiod_duration_in_hours
+            vector_to_write ./= subperiod_duration_in_hours(inputs, subperiod)
+        end
+        if indices_of_elements_in_output === nothing
+            # Write in all indices without filtering
+            for (idx, value) in enumerate(vector_to_write)
+                data[idx] = value
+            end
+        else
+            # Write only the filtered indices that are in the output file
+            for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
+                data[idx_in_output] = vector_to_write[idx]
+            end
+        end
+        Quiver.write!(
+            output.writer,
+            round_output(data);
+            period,
+            reference_curve_segment,
+            scenario,
+            subperiod,
+        )
+    end
+    return nothing
 end
 
 function all_buses(inputs::Inputs, index1::Int)

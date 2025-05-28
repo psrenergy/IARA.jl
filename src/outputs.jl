@@ -102,7 +102,7 @@ Initialize the outputs struct.
 function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
     outputs = Outputs()
     model_action(outputs, inputs, run_time_options, InitializeOutput)
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+    if is_market_clearing(inputs) && clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         initialize_virtual_reservoir_post_processing_outputs!(outputs, inputs, run_time_options)
     end
     return outputs

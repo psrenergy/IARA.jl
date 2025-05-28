@@ -217,7 +217,7 @@ end
 
 function marginal_cost_to_opportunity_cost(
     inputs::Inputs,
-    water_marginal_cost::Matrix{Float64},
+    water_marginal_cost::AbstractArray{Float64, 2},
     hydro_unit_indexes::Vector{Int},
 )
     hydro_opportunity_cost = zeros(number_of_subperiods(inputs), length(hydro_unit_indexes))

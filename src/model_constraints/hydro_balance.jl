@@ -336,7 +336,7 @@ function hydro_balance!(
         elements_to_write = existing_hydro_units,
     )
 
-    water_marginal_cost = simulation_results.data[:water_marginal_cost].data * (-1)
+    water_marginal_cost = simulation_results.data[:water_marginal_cost] * (-1)
     hydro_opportunity_cost = marginal_cost_to_opportunity_cost(
         inputs,
         water_marginal_cost,

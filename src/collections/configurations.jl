@@ -827,7 +827,11 @@ is_market_clearing(inputs::AbstractInputs) =
 Return whether the run mode is SINGLE_PERIOD_MARKET_CLEARING or SINGLE_PERIOD_HEURISTIC_BID.
 """
 is_single_period(inputs::AbstractInputs) =
-    run_mode(inputs) in [RunMode.SINGLE_PERIOD_MARKET_CLEARING, RunMode.SINGLE_PERIOD_HEURISTIC_BID, RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE]
+    run_mode(inputs) in [
+        RunMode.SINGLE_PERIOD_MARKET_CLEARING,
+        RunMode.SINGLE_PERIOD_HEURISTIC_BID,
+        RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE,
+    ]
 
 """
     policy_graph_type(inputs::AbstractInputs)

@@ -31,7 +31,7 @@ function initialize_reference_curve_outputs(
         outputs;
         inputs,
         output_name = "hydro_reference_curve_quantity",
-        dimensions = ["period", "reference_curve_segment", "scenario", "subperiod"],
+        dimensions = ["period", "reference_curve_segment", "scenario"],
         unit = "GWh",
         labels = labels_for_output_by_pair_of_agents(
             inputs,
@@ -47,7 +47,7 @@ function initialize_reference_curve_outputs(
         outputs;
         inputs,
         output_name = "hydro_reference_curve_price",
-        dimensions = ["period", "reference_curve_segment", "scenario", "subperiod"],
+        dimensions = ["period", "reference_curve_segment", "scenario"],
         unit = "\$/MWh",
         labels = labels_for_output_by_pair_of_agents(
             inputs,
@@ -87,26 +87,34 @@ function post_process_reference_curve_outputs(
             hydro_unit_om_cost(inputs, h)
     end
 
+    # Aggregate subperiods
+    hydro_load_marginal_cost_agg = zeros(number_of_hydro_units)
+    hydro_generation_agg = zeros(number_of_hydro_units)
+    for h in existing_hydro_units
+        hydro_generation_agg[h] = sum(hydro_generation[:, h])
+        hydro_load_marginal_cost_agg[h] = mean(hydro_load_marginal_cost[:, h])
+    end
+
     # Aggregate for virtual reservoirs
-    virtual_reservoir_generation = zeros(number_of_subperiods(inputs), number_of_virtual_reservoirs)
-    virtual_reservoir_marginal_cost = zeros(number_of_subperiods(inputs), number_of_virtual_reservoirs)
-    for vr in virtual_reservoirs, subperiod in 1:number_of_subperiods(inputs)
-        virtual_reservoir_generation[subperiod, vr] =
-            sum(hydro_generation[subperiod, virtual_reservoir_hydro_unit_indices(inputs, vr)])
-        virtual_reservoir_marginal_cost[subperiod, vr] =
-            mean(hydro_load_marginal_cost[subperiod, virtual_reservoir_hydro_unit_indices(inputs, vr)])
+    virtual_reservoir_generation = zeros(number_of_virtual_reservoirs)
+    virtual_reservoir_marginal_cost = zeros(number_of_virtual_reservoirs)
+    for vr in virtual_reservoirs
+        virtual_reservoir_generation[vr] =
+            sum(hydro_generation_agg[virtual_reservoir_hydro_unit_indices(inputs, vr)])
+        virtual_reservoir_marginal_cost[vr] =
+            mean(hydro_load_marginal_cost_agg[virtual_reservoir_hydro_unit_indices(inputs, vr)])
     end
 
     # Disaggregate for asset owners
-    vr_ao_generation = zeros(number_of_virtual_reservoirs, number_of_asset_owners, number_of_subperiods(inputs))
-    vr_ao_marginal_cost = zeros(number_of_virtual_reservoirs, number_of_asset_owners, number_of_subperiods(inputs))
-    for vr in virtual_reservoirs, subperiod in 1:number_of_subperiods(inputs)
+    vr_ao_generation = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
+    vr_ao_marginal_cost = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
+    for vr in virtual_reservoirs
         vr_asset_owners = virtual_reservoir_asset_owner_indices(inputs, vr)
         for (ao_idx, ao) in enumerate(vr_asset_owners)
-            vr_ao_generation[vr, ao, subperiod] =
-                virtual_reservoir_generation[subperiod, vr] *
+            vr_ao_generation[vr, ao] =
+                virtual_reservoir_generation[vr] *
                 virtual_reservoir_asset_owners_inflow_allocation(inputs, vr)[ao_idx]
-            vr_ao_marginal_cost[vr, ao, subperiod] = virtual_reservoir_marginal_cost[subperiod, vr]
+            vr_ao_marginal_cost[vr, ao] = virtual_reservoir_marginal_cost[vr]
         end
     end
 
@@ -117,7 +125,6 @@ function post_process_reference_curve_outputs(
         inputs.collections.virtual_reservoir,
         inputs.collections.asset_owner;
         index_getter = virtual_reservoir_asset_owner_indices,
-        dimension_size = [number_of_subperiods(inputs)],
     )
     treated_vr_ao_marginal_cost = treat_output_for_writing_by_pairs_of_agents(
         inputs,
@@ -126,7 +133,6 @@ function post_process_reference_curve_outputs(
         inputs.collections.virtual_reservoir,
         inputs.collections.asset_owner;
         index_getter = virtual_reservoir_asset_owner_indices,
-        dimension_size = [number_of_subperiods(inputs)],
     )
 
     quantity = treated_vr_ao_generation

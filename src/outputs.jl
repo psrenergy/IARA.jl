@@ -102,7 +102,8 @@ Initialize the outputs struct.
 function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
     outputs = Outputs()
     model_action(outputs, inputs, run_time_options, InitializeOutput)
-    if is_market_clearing(inputs) && clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+    if is_market_clearing(inputs) &&
+       clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         initialize_virtual_reservoir_post_processing_outputs!(outputs, inputs, run_time_options)
     end
     return outputs
@@ -453,12 +454,11 @@ function write_reference_curve_output!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     output_name::String,
-    matrix_of_results::Matrix{T};
+    vector_of_results::Vector{T};
     period::Int,
     reference_curve_segment::Int,
     scenario::Int,
     multiply_by::Float64 = 1.0,
-    divide_by_subperiod_duration_in_hours::Bool = false,
     indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
 ) where {T}
 
@@ -474,38 +474,32 @@ function write_reference_curve_output!(
     num_time_series = output.writer.metadata.number_of_time_series
     data = zeros(num_time_series)
 
-    # Validate that the indices of the outputs match the jump_conatiner
+    # Validate that the indices of the outputs match the jump_container
     if indices_of_elements_in_output === nothing
-        @assert size(matrix_of_results, 1) == num_time_series
+        @assert length(vector_of_results) == num_time_series
     else
-        @assert length(indices_of_elements_in_output) == size(matrix_of_results, 1)
+        @assert length(indices_of_elements_in_output) == length(vector_of_results)
     end
 
-    for subperiod in axes(matrix_of_results, 2)
-        vector_to_write = matrix_of_results[:, subperiod] * multiply_by
-        if divide_by_subperiod_duration_in_hours
-            vector_to_write ./= subperiod_duration_in_hours(inputs, subperiod)
+    vector_to_write = vector_of_results * multiply_by
+    if indices_of_elements_in_output === nothing
+        # Write in all indices without filtering
+        for (idx, value) in enumerate(vector_to_write)
+            data[idx] = value
         end
-        if indices_of_elements_in_output === nothing
-            # Write in all indices without filtering
-            for (idx, value) in enumerate(vector_to_write)
-                data[idx] = value
-            end
-        else
-            # Write only the filtered indices that are in the output file
-            for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
-                data[idx_in_output] = vector_to_write[idx]
-            end
+    else
+        # Write only the filtered indices that are in the output file
+        for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
+            data[idx_in_output] = vector_to_write[idx]
         end
-        Quiver.write!(
-            output.writer,
-            round_output(data);
-            period,
-            reference_curve_segment,
-            scenario,
-            subperiod,
-        )
     end
+    Quiver.write!(
+        output.writer,
+        round_output(data);
+        period,
+        reference_curve_segment,
+        scenario,
+    )
     return nothing
 end
 
@@ -562,6 +556,33 @@ function treat_output_for_writing_by_pairs_of_agents(
             treated_output[number_of_pairs_fullfiled, dimension_indices...] =
                 raw_output[index1, index2, dimension_indices...]
         end
+    end
+
+    @assert number_of_pairs_fullfiled == number_of_pairs
+
+    return treated_output
+end
+
+function treat_output_for_writing_by_pairs_of_agents(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    raw_output::AbstractArray{Float64, 2},
+    first_collection::T1,
+    second_collection::T2;
+    # index_getter is a function that receives the inputs and the index of the first collection
+    # and returns the indices of the second collection that are associated with the elements 
+    # of index1 in first collection.
+    index_getter::Function,
+) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
+    # This function receives model outputs, and is compatible with SparseAxisArrays.
+
+    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
+    treated_output = zeros(number_of_pairs)
+
+    number_of_pairs_fullfiled = 0
+    for index1 in index_of_elements(inputs, T1; run_time_options), index2 in index_getter(inputs, index1)
+        number_of_pairs_fullfiled += 1
+        treated_output[number_of_pairs_fullfiled,] = raw_output[index1, index2]
     end
 
     @assert number_of_pairs_fullfiled == number_of_pairs

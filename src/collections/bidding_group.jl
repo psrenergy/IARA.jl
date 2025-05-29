@@ -235,16 +235,6 @@ function validate(bidding_group::BiddingGroup)
                 "Segment fraction vector has both null and non-null values for Bidding group $(bidding_group.label[i])."
             )
         end
-        if any(bidding_group.segment_fraction[i] .< 0)
-            @error(
-                "Segment fraction values must be non-negative. Bidding group $(bidding_group.label[i]) has segment fractions $(bidding_group.segment_fraction[i])."
-            )
-        end
-        if sum(bidding_group.segment_fraction[i]) != 1.0
-            @error(
-                "Segment fractions must sum to 1. Bidding group $(bidding_group.label[i]) has segment fractions $(bidding_group.segment_fraction[i])."
-            )
-        end
     end
     return num_errors
 end

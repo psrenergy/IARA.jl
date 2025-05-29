@@ -107,14 +107,6 @@ function zonal_bid_generation_expression(
         get_model_object(model, :hydro_generation)
     end
 
-    if has_any_simple_bids(inputs)
-        valid_segments = get_maximum_valid_segments(inputs)
-    end
-
-    if has_any_profile_bids(inputs)
-        valid_profiles = get_maximum_valid_profiles(inputs)
-    end
-
     # Market Clearing Generation
     @expression(
         model.jump_model,
@@ -123,7 +115,7 @@ function zonal_bid_generation_expression(
             # The double for loop is necessary, otherwise it breaks
             sum(
                 bidding_group_generation[blk, bg, bds, bus] for
-                bus in buses, bg in bidding_groups for bds in 1:valid_segments[bg] if
+                bus in buses, bg in bidding_groups for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg) if
                 bus_zone_index(inputs, bus) == zone;
                 init = 0.0,
             )
@@ -134,7 +126,7 @@ function zonal_bid_generation_expression(
         if has_any_profile_bids(inputs)
             sum(
                 bidding_group_generation_profile[blk, bg, prf, bus] for
-                bus in buses, bg in bidding_groups for prf in 1:valid_profiles[bg] if
+                bus in buses, bg in bidding_groups for prf in 1:number_of_valid_profiles(inputs, bg) if
                 bus_zone_index(inputs, bus) == zone;
                 init = 0.0,
             )
@@ -337,14 +329,6 @@ function nodal_bid_generation_expression(
         get_model_object(model, :hydro_generation)
     end
 
-    if has_any_simple_bids(inputs)
-        valid_segments = get_maximum_valid_segments(inputs)
-    end
-
-    if has_any_profile_bids(inputs)
-        valid_profiles = get_maximum_valid_profiles(inputs)
-    end
-
     # Market Clearing Generation
     @expression(
         model.jump_model,
@@ -353,7 +337,7 @@ function nodal_bid_generation_expression(
             # The double for loop is necessary, otherwise it breaks
             sum(
                 bidding_group_generation[blk, bg, bds, bus] for
-                bg in bidding_groups for bds in 1:valid_segments[bg];
+                bg in bidding_groups for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg);
                 init = 0.0,
             )
         else
@@ -363,7 +347,7 @@ function nodal_bid_generation_expression(
         if has_any_profile_bids(inputs)
             sum(
                 bidding_group_generation_profile[blk, bg, prf, bus] for
-                bg in bidding_groups for prf in 1:valid_profiles[bg];
+                bg in bidding_groups for prf in 1:number_of_valid_profiles(inputs, bg);
                 init = 0.0,
             )
         else

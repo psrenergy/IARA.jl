@@ -95,7 +95,7 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     dimensions = ts.reader.metadata.dimensions
     dimension_size = ts.reader.metadata.dimension_size
     vr_bidding_segments = dimension_size[3]
-    update_number_of_virtual_reservoir_bidding_segments!(inputs, vr_bidding_segments)
+    update_maximum_number_of_vr_bidding_segments!(inputs, vr_bidding_segments)
 
     # Validate if the dimensions are as expected
     if !isempty(possible_expected_dimensions)
@@ -118,7 +118,7 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
 
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
     asset_owners = index_of_elements(inputs, AssetOwner)
-    number_of_bid_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    number_of_bid_segments = maximum_number_of_vr_bidding_segments(inputs)
 
     ts.data = zeros(
         T,
@@ -146,7 +146,7 @@ function read_virtual_reservoir_bids_view_from_external_file!(
 ) where {T}
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
-    for bs in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    for bs in 1:maximum_number_of_vr_bidding_segments(inputs)
         Quiver.goto!(ts.reader; period, scenario, bid_segment = bs)
         pair_index = 0
         # vr and ao are in a bad performance order, but it is convenient for maping pairs the correct way.

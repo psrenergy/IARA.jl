@@ -588,9 +588,7 @@ function single_period_heuristic_bid(
 )
     run_time_options = RunTimeOptions()
 
-    # Update the number of offer segments for the heuristic bids
-    maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
-    update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+    update_number_of_segments_for_heuristic_bids!(inputs)
 
     # Initialize the outputs
     heuristic_bids_outputs = Outputs()

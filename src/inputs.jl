@@ -330,7 +330,8 @@ function fill_caches!(inputs::Inputs)
     end
     if run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
        run_mode(inputs) == RunMode.STRATEGIC_BID
-        update_number_of_bid_segments!(inputs, 1)
+        update_number_of_bg_valid_bidding_segments!(inputs, ones(Int, number_of_elements(inputs, BiddingGroup)))
+        update_maximum_number_of_bg_bidding_segments!(inputs, 1)
     end
     fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs)
     fill_plot_strings_dict!(inputs)

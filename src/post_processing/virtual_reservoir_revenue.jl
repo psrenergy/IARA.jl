@@ -66,7 +66,7 @@ function accepted_offer_revenue(
 
                 number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_ao_generation = zeros(number_of_pairs)
-                for bid_segment in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+                for bid_segment in 1:maximum_number_of_vr_bidding_segments(inputs)
                     if has_subscenario(vr_generation_reader)
                         Quiver.goto!(
                             vr_generation_reader;

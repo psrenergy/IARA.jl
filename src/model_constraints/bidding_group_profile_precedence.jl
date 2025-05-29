@@ -30,17 +30,14 @@ function bidding_group_profile_precedence!(
     linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)
     bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
-    maximum_bidding_profiles = maximum_number_of_bidding_profiles(inputs)
 
     parent_profile_bids = zeros(Int,
         length(bidding_groups),
-        maximum_bidding_profiles,
+        maximum_number_of_profiles(inputs),
     )
 
-    valid_profiles = get_maximum_valid_profiles(inputs)
-
     placeholder_scenario = 1
-    for (i_bg, bg) in enumerate(bidding_groups), profile in 1:valid_profiles[bg]
+    for (i_bg, bg) in enumerate(bidding_groups), profile in 1:number_of_valid_profiles(inputs, bg)
         parent_profile_bids[bg, profile] =
             time_series_parent_profile(inputs, model.node, placeholder_scenario)[i_bg, profile]
         if parent_profile_bids[bg, profile] == profile
@@ -53,7 +50,7 @@ function bidding_group_profile_precedence!(
         model.jump_model,
         bidding_group_profile_precedence[
             bg in bidding_groups,
-            profile in 1:valid_profiles[bg];
+            profile in 1:number_of_valid_profiles(inputs, bg);
             is_valid_parent(parent_profile_bids[bg, profile], profile),
         ],
         linear_combination_bid_segments_profile[bg, profile]

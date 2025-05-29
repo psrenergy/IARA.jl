@@ -93,7 +93,7 @@ function bidding_group_markup_units(inputs::Inputs)
     bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units
 end
 
-function maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::AbstractInputs)
+function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::AbstractInputs)
     # Indexes
     virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
     asset_owner_indices = index_of_elements(inputs, AssetOwner)
@@ -121,12 +121,15 @@ function maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(i
                 asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
         end
     end
-    maximum_number_of_offer_segments = maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir; init = 0)
+    number_per_virtual_reservoir = [
+        maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir[:, vr]) for
+        vr in virtual_reservoir_indices
+    ]
 
-    return maximum_number_of_offer_segments
+    return number_per_virtual_reservoir
 end
 
-function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
+function number_of_bidding_group_offer_segments_for_heuristic_bids(inputs::Inputs)
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
@@ -153,9 +156,8 @@ function maximum_number_of_offer_segments_for_heuristic_bids(inputs::Inputs)
         dropdims(maximum(number_of_units_per_bidding_group_and_bus; dims = 2, init = 0); dims = 2)
 
     number_of_offer_segments = bidding_group_number_of_risk_factors .* maximum_number_of_units_per_bidding_group
-    maximum_number_of_offer_segments = maximum(number_of_offer_segments; init = 0)
 
-    return maximum_number_of_offer_segments
+    return number_of_offer_segments
 end
 
 """
@@ -193,7 +195,7 @@ function markup_offers_for_period_scenario(
     bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units =
         bidding_group_markup_units(inputs)
 
-    maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
+    maximum_number_of_offer_segments = maximum_number_of_bg_bidding_segments(inputs)
 
     quantity_offers = zeros(
         number_of_bidding_groups,
@@ -797,7 +799,7 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         end
     end
 
-    maximum_number_of_offer_segments = maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    maximum_number_of_offer_segments = maximum_number_of_vr_bidding_segments(inputs)
 
     # Offers
     quantity_offers = zeros(
@@ -916,7 +918,7 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
     if is_virtual_reservoir
         for vr in 1:number_elements
             for segment in reverse(segments)
-                if any(bids_view.data[vr, :, segment] != 0.0) # VR can bid negative values
+                if any(.!isapprox.(bids_view.data[vr, :, segment], 0.0; atol = tol))
                     valid_segments_per_timeseries[vr] = segment
                     break
                 end
@@ -1018,7 +1020,7 @@ function write_individual_bids_files(
 
     df_length =
         length(bidding_group_indexes_to_read) * length(buses) * number_of_subperiods(inputs) *
-        number_of_scenarios(inputs) * maximum_number_of_bidding_segments(inputs)
+        number_of_scenarios(inputs) * maximum_number_of_bg_bidding_segments(inputs)
 
     period_column = ones(Int, df_length) * inputs.args.period
     scenario_column = zeros(Int, df_length)
@@ -1047,7 +1049,7 @@ function write_individual_bids_files(
             has_profile_bids = false,
         )
 
-        for subperiod in 1:number_of_subperiods(inputs), segment in 1:maximum_number_of_bidding_segments(inputs)
+        for subperiod in 1:number_of_subperiods(inputs), segment in 1:maximum_number_of_bg_bidding_segments(inputs)
             for bg in bidding_groups, bus in buses
                 if bg in bidding_group_indexes_to_read
                     line_index += 1
@@ -1127,9 +1129,7 @@ function write_individual_virtual_reservoir_bids_files(
 
     filename = "$(asset_owner_label(inputs, asset_owner_index))_virtual_reservoir_bids_period_$(inputs.args.period).csv"
 
-    df_length =
-        length(virtual_reservoirs) * number_of_scenarios(inputs) *
-        maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+    df_length = length(virtual_reservoirs) * number_of_scenarios(inputs) * maximum_number_of_vr_bidding_segments(inputs)
 
     period_column = ones(Int, df_length) * inputs.args.period
     scenario_column = zeros(Int, df_length)
@@ -1154,7 +1154,7 @@ function write_individual_virtual_reservoir_bids_files(
             scenario,
         )
 
-        for segment in 1:maximum_number_of_virtual_reservoir_bidding_segments(inputs)
+        for segment in 1:maximum_number_of_vr_bidding_segments(inputs)
             for vr in virtual_reservoirs
                 line_index += 1
                 scenario_column[line_index] = scenario
@@ -1188,69 +1188,67 @@ function adjust_quantity_offer_for_ex_post!(
     quantity_offer_series::IARA.BidsView{Float64},
     subscenario::Int,
 )
-    if !is_market_clearing(inputs) || is_ex_ante_problem(run_time_options) || !read_ex_post_renewable_file(inputs)
+    if !is_market_clearing(inputs) || is_ex_ante_problem(run_time_options) || !read_ex_post_renewable_file(inputs) ||
+       maximum_number_of_bg_bidding_segments(inputs) == 0
         return nothing
     end
 
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
 
-    if maximum_number_of_bidding_segments(inputs) > 0
-        valid_segments = get_maximum_valid_segments(inputs)
-        for bg in bidding_group_indexes
-            for bus in 1:number_of_elements(inputs, Bus)
-                for bds in 1:valid_segments[bg]
-                    for blk in subperiods(inputs)
-                        # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
-                        run_time_options =
-                            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-                        total_energy_ex_ante = sum_units_energy_ub_per_bg(
-                            inputs,
-                            run_time_options,
-                            bg,
-                            bus,
-                            blk,
-                            subscenario,
-                        )
-                        total_demand_ex_ante = sum_demand_per_bg(
-                            inputs,
-                            run_time_options,
-                            bg,
-                            bus,
-                            blk,
-                            subscenario,
-                        )
-                        run_time_options =
-                            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
-                        total_energy_ex_post = sum_units_energy_ub_per_bg(
-                            inputs,
-                            run_time_options,
-                            bg,
-                            bus,
-                            blk,
-                            subscenario,
-                        )
-                        total_demand_ex_post = sum_demand_per_bg(
-                            inputs,
-                            run_time_options,
-                            bg,
-                            bus,
-                            blk,
-                            subscenario,
-                        )
-                        if quantity_offer_series.data[bg, bus, bds, blk] > 0.0
-                            if total_energy_ex_ante == 0.0
-                                quantity_offer_series.data[bg, bus, bds, blk] = 0.0
-                            else
-                                quantity_offer_series.data[bg, bus, bds, blk] *=
-                                    total_energy_ex_post / total_energy_ex_ante
-                            end
-                        elseif quantity_offer_series.data[bg, bus, bds, blk] < 0.0
-                            if total_demand_ex_ante == 0.0
-                                quantity_offer_series.data[bg, bus, bds, blk] = 0.0
-                            else
-                                quantity_offer_series.data[bg, bus, bds, blk] *=
-                                    total_demand_ex_post / total_demand_ex_ante
-                            end
+    for bg in bidding_group_indexes
+        for bus in 1:number_of_elements(inputs, Bus)
+            for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
+                for blk in subperiods(inputs)
+                    # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
+                    run_time_options =
+                        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+                    total_energy_ex_ante = sum_units_energy_ub_per_bg(
+                        inputs,
+                        run_time_options,
+                        bg,
+                        bus,
+                        blk,
+                        subscenario,
+                    )
+                    total_demand_ex_ante = sum_demand_per_bg(
+                        inputs,
+                        run_time_options,
+                        bg,
+                        bus,
+                        blk,
+                        subscenario,
+                    )
+                    run_time_options =
+                        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+                    total_energy_ex_post = sum_units_energy_ub_per_bg(
+                        inputs,
+                        run_time_options,
+                        bg,
+                        bus,
+                        blk,
+                        subscenario,
+                    )
+                    total_demand_ex_post = sum_demand_per_bg(
+                        inputs,
+                        run_time_options,
+                        bg,
+                        bus,
+                        blk,
+                        subscenario,
+                    )
+                    if quantity_offer_series.data[bg, bus, bds, blk] > 0.0
+                        if total_energy_ex_ante == 0.0
+                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                        else
+                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                                total_energy_ex_post / total_energy_ex_ante
+                        end
+                    elseif quantity_offer_series.data[bg, bus, bds, blk] < 0.0
+                        if total_demand_ex_ante == 0.0
+                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                        else
+                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                                total_demand_ex_post / total_demand_ex_ante
                         end
                     end
                 end
@@ -1330,16 +1328,19 @@ end
 
 function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
     if generate_heuristic_bids_for_clearing(inputs)
-        maximum_number_of_offer_segments = maximum_number_of_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_bid_segments!(inputs, maximum_number_of_offer_segments)
+        number_of_bg_offer_segments = number_of_bidding_group_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_bg_valid_bidding_segments!(inputs, number_of_bg_offer_segments)
+        maximum_number_of_bg_offer_segments = maximum(number_of_bg_offer_segments; init = 0)
+        update_maximum_number_of_bg_bidding_segments!(inputs, maximum_number_of_bg_offer_segments)
 
-        maximum_number_of_virtual_reservoir_offer_segments =
-            maximum_number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_virtual_reservoir_bidding_segments!(inputs, maximum_number_of_virtual_reservoir_offer_segments)
+        number_of_vr_offer_segments = number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
+        update_number_of_vr_valid_bidding_segments!(inputs, number_of_vr_offer_segments)
+        maximum_number_of_vr_offer_segments = maximum(number_of_vr_offer_segments; init = 0)
+        update_maximum_number_of_vr_bidding_segments!(inputs, maximum_number_of_vr_offer_segments)
 
         @info("Heuristic bids")
-        @info("   Number of bidding group segments: $maximum_number_of_offer_segments")
-        @info("   Number of virtual reservoir segments: $maximum_number_of_virtual_reservoir_offer_segments")
+        @info("   Number of bidding group segments: $maximum_number_of_bg_offer_segments")
+        @info("   Number of virtual reservoir segments: $maximum_number_of_vr_offer_segments")
         @info("")
     end
     return nothing

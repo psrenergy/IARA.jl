@@ -130,23 +130,6 @@ function fill_initial_energy_account!(inputs::AbstractInputs, vr::Int)
     return nothing
 end
 
-function update_number_of_virtual_reservoir_bidding_segments!(inputs::AbstractInputs, value::Int)
-    values_array = fill(value, length(index_of_elements(inputs, VirtualReservoir)))
-    update_number_of_virtual_reservoir_bidding_segments!(inputs, values_array)
-    return nothing
-end
-
-function update_number_of_virtual_reservoir_bidding_segments!(inputs::AbstractInputs, values::Array{Int})
-    if length(inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments) == 0
-        inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments = zeros(
-            Int,
-            length(index_of_elements(inputs, VirtualReservoir)),
-        )
-    end
-    inputs.collections.virtual_reservoir._maximum_number_of_virtual_reservoir_bidding_segments .= values
-    return nothing
-end
-
 function post_process_virtual_reservoirs!(
     inputs::AbstractInputs,
     run_time_options::RunTimeOptions,
@@ -188,13 +171,10 @@ function post_process_virtual_reservoirs!(
         subscenario = subscenario,
     )
 
-    treated_energy_account = treat_output_for_writing_by_pairs_of_agents(
+    treated_energy_account = treat_energy_account_for_writing_by_pairs_of_agents(
         inputs,
         run_time_options,
         energy_account,
-        inputs.collections.virtual_reservoir,
-        inputs.collections.asset_owner;
-        index_getter = virtual_reservoir_asset_owner_indices,
     )
 
     write_output_without_subperiod!(

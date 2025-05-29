@@ -236,14 +236,12 @@ function get_outputs_dimension_size(
             end
         elseif dimension == "bid_segment"
             if occursin("virtual_reservoir", output_name)
-                push!(dimension_size, maximum_number_of_virtual_reservoir_bidding_segments(inputs))
+                push!(dimension_size, maximum_number_of_vr_bidding_segments(inputs))
             else
-                push!(dimension_size, maximum_number_of_bidding_segments(inputs))
+                push!(dimension_size, maximum_number_of_bg_bidding_segments(inputs))
             end
         elseif dimension == "profile"
-            push!(dimension_size, maximum_number_of_bidding_profiles(inputs))
-        elseif dimension == "complementary_group"
-            push!(dimension_size, maximum_number_of_complementary_grouping(inputs))
+            push!(dimension_size, maximum_number_of_profiles(inputs))
         else
             error("Dimension $dimension not recognized")
         end
@@ -258,6 +256,7 @@ function initialize!(
     run_time_options::RunTimeOptions,
     output_name::String,
     dir_path::String = output_path(inputs),
+    consider_one_segment = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -278,6 +277,10 @@ function initialize!(
 
     file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
+    if "bid_segment" in dimensions && consider_one_segment
+        idx = findfirst(isequal("bid_segment"), dimensions)
+        dimension_size[idx] = 1
+    end
 
     writer = Quiver.Writer{output_type}(
         file;
@@ -473,7 +476,7 @@ function labels_for_output_by_pair_of_agents(
     return labels
 end
 
-function treat_output_for_writing_by_pairs_of_agents(
+function treat_virtual_reservoir_sparse_output(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     raw_output::AbstractArray{Float64, 3},
@@ -483,20 +486,23 @@ function treat_output_for_writing_by_pairs_of_agents(
     # and returns the indices of the second collection that are associated with the elements 
     # of index1 in first collection.
     index_getter::Function,
-    dimension_size::Vector{Int},
+    # dimension_size_getter is a function that receives the inputs and the index of the first collection
+    # and returns the size of the dimension of the second collection that is associated with the elements
+    # of index1 in first collection.
+    dimension_size_getter::Function,
+    # maximum_dimension_size is the dimension size at the final output.
+    maximum_dimension_size::Int,
 ) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
     # This function receives model outputs, and is compatible with SparseAxisArrays.
 
     number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
-    treated_output = zeros(number_of_pairs, dimension_size...)
-    ranges = (1:n for n in dimension_size)
+    treated_output = zeros(number_of_pairs, maximum_dimension_size)
 
     number_of_pairs_fullfiled = 0
     for index1 in index_of_elements(inputs, T1; run_time_options), index2 in index_getter(inputs, index1)
         number_of_pairs_fullfiled += 1
-        for dimension_indices in Iterators.product(ranges...)
-            treated_output[number_of_pairs_fullfiled, dimension_indices...] =
-                raw_output[index1, index2, dimension_indices...]
+        for t in 1:dimension_size_getter(inputs, index1)
+            treated_output[number_of_pairs_fullfiled, t] = raw_output[index1, index2, t]
         end
     end
 
@@ -505,26 +511,20 @@ function treat_output_for_writing_by_pairs_of_agents(
     return treated_output
 end
 
-function treat_output_for_writing_by_pairs_of_agents(
+function treat_energy_account_for_writing_by_pairs_of_agents(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     raw_output::Vector{Vector{Float64}},
-    first_collection::T1,
-    second_collection::T2;
-    # index_getter is a function that receives the inputs and the index of the first collection
-    # and returns the indices of the second collection that are associated with the elements 
-    # of index1 in first collection.
-    index_getter::Function,
-) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
-    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
+)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options)
+    number_of_pairs = sum(length(virtual_reservoir_asset_owner_indices(inputs, vr)) for vr in virtual_reservoirs)
     treated_output = zeros(number_of_pairs)
 
     number_of_pairs_fullfiled = 0
-    for index1 in index_of_elements(inputs, T1; run_time_options)
-        @assert length(index_getter(inputs, index1)) == length(raw_output[index1])
-        for index2 in eachindex(raw_output[index1])
+    for vr in virtual_reservoirs
+        for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
             number_of_pairs_fullfiled += 1
-            treated_output[number_of_pairs_fullfiled] = raw_output[index1][index2]
+            treated_output[number_of_pairs_fullfiled] = raw_output[vr][i]
         end
     end
 
@@ -560,17 +560,11 @@ function write_bid_output(
         run_time_options,
         filters = filters,
     )
-    if has_profile_bids
-        bid_profiles = bidding_profiles(inputs)
-        valid_profiles = get_maximum_valid_profiles(inputs)
-    else
-        bid_segments = bidding_segments(inputs)
-        valid_segments = get_maximum_valid_segments(inputs)
-    end
     blks = subperiods(inputs)
     buses = index_of_elements(inputs, Bus)
     num_buses = length(buses)
-    size_segments = has_profile_bids ? length(bid_profiles) : length(bid_segments)
+    size_segments =
+        has_profile_bids ? maximum_number_of_profiles(inputs) : maximum_number_of_bg_bidding_segments(inputs)
     # 4D array with dimensions: subperiod, bidding_group, bid_segment, bus
     # We use the function write_bid_output for both writing the output of the
     # optimization problem and the heuristic bids.
@@ -590,9 +584,9 @@ function write_bid_output(
 
     for blk in blks
         if has_profile_bids
-            for prf in bid_profiles
+            for prf in 1:maximum_number_of_profiles(inputs)
                 for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    if prf > valid_profiles[bg]
+                    if prf > number_of_valid_profiles(inputs, bg)
                         continue
                     end
                     # If the data is a OrderedDict (value of a JuMP.Variable) we can acess
@@ -626,9 +620,9 @@ function write_bid_output(
                 end
             end
         else
-            for bds in bid_segments
+            for bds in 1:maximum_number_of_bg_bidding_segments(inputs)
                 for (i_bg, bg) in enumerate(bidding_groups_filtered), bus in buses
-                    if bds > valid_segments[bg]
+                    if bds > number_of_bg_valid_bidding_segments(inputs, bg)
                         continue
                     end
                     # If the data is a OrderedDict (value of a JuMP.Variable) we can acess

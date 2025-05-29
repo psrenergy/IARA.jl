@@ -73,7 +73,7 @@ function markup_offers_for_period_scenario(
     outputs::Union{Outputs, Nothing} = nothing,
 )
     if isnothing(outputs)
-        @assert is_reference_curve(inputs)
+        @assert is_reference_curve(inputs; run_time_options)
     end
     if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
         bidding_group_markup_offers_for_period_scenario(
@@ -816,7 +816,7 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     # Hydro
     available_energy_per_hydro_unit =
         if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
-           is_reference_curve(inputs)
+           is_reference_curve(inputs; run_time_options)
             hydro_available_energy(inputs, run_time_options, period, scenario)
         end
 

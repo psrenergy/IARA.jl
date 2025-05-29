@@ -13,6 +13,7 @@
     clearing_model_subproblem::Union{RunTime_ClearingSubproblem.T, Nothing} = nothing
     clearing_integer_variables_in_model::Vector{Symbol} = Symbol[]
     is_post_processing::Bool = false
+    is_reference_curve::Bool = false
     demand_multiplier::Float64 = 1.0
 end
 

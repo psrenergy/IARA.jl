@@ -599,13 +599,6 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
         end
     end
 
-    if is_reference_curve(inputs)
-        if isempty(configurations.reference_curve_demand_multipliers)
-            @error("Reference curve demand multipliers must be defined when calculating the hydro reference curve.")
-            num_errors += 1
-        end
-    end
-
     return num_errors
 end
 
@@ -1130,9 +1123,9 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
     return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.PRICETAKER_HEURISTICS
 end
 
-function is_any_construction_type_cost_based(inputs::AbstractInputs)
+function is_any_construction_type_cost_based(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs)
+    if is_reference_curve(inputs; run_time_options)
         return true
     end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
@@ -1147,9 +1140,9 @@ function need_demand_price_input_data(inputs::AbstractInputs)
            (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs))
 end
 
-function is_any_construction_type_hybrid(inputs::AbstractInputs)
+function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs)
+    if is_reference_curve(inputs; run_time_options)
         return false
     end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.HYBRID ||
@@ -1432,9 +1425,9 @@ virtual_reservoir_initial_energy_account_share(inputs) =
 
 Determine the integer variables representation.
 """
-function integer_variable_representation(inputs::AbstractInputs, run_time_options)
+function integer_variable_representation(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     # Always linearize the integer variables for the reference curve run mode
-    if is_reference_curve(inputs)
+    if is_reference_curve(inputs; run_time_options)
         return Configurations_IntegerVariableRepresentation.LINEARIZE
     elseif is_mincost(inputs)
         return integer_variable_representation_mincost(inputs)
@@ -1512,12 +1505,7 @@ function is_skipped(inputs::AbstractInputs, construction_type::String)
     elseif construction_type == "ex_ante_physical"
         return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.SKIP
     elseif construction_type == "ex_ante_commercial"
-        # Overwrite the construction type if the run mode is reference curve
-        if is_reference_curve(inputs)
-            return false
-        else
-            return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
-        end
+        return construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.SKIP
     else
         error(
             "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",

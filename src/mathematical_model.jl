@@ -106,6 +106,7 @@ Dispatch the model action based on the run mode and the action type.
 """
 function model_action(args...)
     inputs = locate_inputs_in_args(args...)
+    run_time_options = locate_run_time_options_in_args(args...)
 
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
        run_mode(inputs) == RunMode.MIN_COST
@@ -116,7 +117,7 @@ function model_action(args...)
         strategic_bid_model_action(args...)
     elseif is_market_clearing(inputs)
         market_clearing_model_action(args...)
-    elseif is_reference_curve(inputs)
+    elseif is_reference_curve(inputs; run_time_options)
         market_clearing_model_action(args...)
     else
         error("Run mode $(run_mode(inputs)) not implemented")

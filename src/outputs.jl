@@ -278,8 +278,6 @@ function initialize!(
     file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
     if "bid_segment" in dimensions && consider_one_segment
-        # This is a temporary solution. In the next PR, the outputs with the number of segments artificially set to 1
-        # will lose the "bid_segment" dimension.
         idx = findfirst(isequal("bid_segment"), dimensions)
         dimension_size[idx] = 1
     end
@@ -488,7 +486,11 @@ function treat_virtual_reservoir_sparse_output(
     # and returns the indices of the second collection that are associated with the elements 
     # of index1 in first collection.
     index_getter::Function,
+    # dimension_size_getter is a function that receives the inputs and the index of the first collection
+    # and returns the size of the dimension of the second collection that is associated with the elements
+    # of index1 in first collection.
     dimension_size_getter::Function,
+    # maximum_dimension_size is the dimension size at the final output.
     maximum_dimension_size::Int,
 ) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
     # This function receives model outputs, and is compatible with SparseAxisArrays.

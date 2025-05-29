@@ -142,16 +142,6 @@ function validate(asset_owner::AssetOwner)
         if any(is_null.(asset_owner.segment_fraction[i]))
             @error("Segment fraction vector has both null and non-null values for Asset owner $(asset_owner.label[i]).")
         end
-        if any(asset_owner.segment_fraction[i] .< 0)
-            @error(
-                "Segment fraction values must be non-negative. Asset owner $(asset_owner.label[i]) has segment fractions $(asset_owner.segment_fraction[i])."
-            )
-        end
-        if sum(asset_owner.segment_fraction[i]) != 1.0
-            @error(
-                "Segment fractions must sum to 1. Asset owner $(asset_owner.label[i]) has segment fractions $(asset_owner.segment_fraction[i])."
-            )
-        end
     end
     return num_errors
 end

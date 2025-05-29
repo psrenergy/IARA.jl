@@ -33,13 +33,7 @@ function initialize_reference_curve_outputs(
         output_name = "hydro_reference_curve_quantity",
         dimensions = ["period", "reference_curve_segment", "scenario"],
         unit = "GWh",
-        labels = labels_for_output_by_pair_of_agents(
-            inputs,
-            run_time_options,
-            inputs.collections.virtual_reservoir,
-            inputs.collections.asset_owner;
-            index_getter = virtual_reservoir_asset_owner_indices,
-        ),
+        labels = virtual_reservoir_label(inputs),
         run_time_options,
     )
     initialize!(
@@ -49,13 +43,7 @@ function initialize_reference_curve_outputs(
         output_name = "hydro_reference_curve_price",
         dimensions = ["period", "reference_curve_segment", "scenario"],
         unit = "\$/MWh",
-        labels = labels_for_output_by_pair_of_agents(
-            inputs,
-            run_time_options,
-            inputs.collections.virtual_reservoir,
-            inputs.collections.asset_owner;
-            index_getter = virtual_reservoir_asset_owner_indices,
-        ),
+        labels = virtual_reservoir_label(inputs),
         run_time_options,
     )
 
@@ -105,38 +93,8 @@ function post_process_reference_curve_outputs(
             mean(hydro_load_marginal_cost_agg[virtual_reservoir_hydro_unit_indices(inputs, vr)])
     end
 
-    # Disaggregate for asset owners
-    vr_ao_generation = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
-    vr_ao_marginal_cost = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
-    for vr in virtual_reservoirs
-        vr_asset_owners = virtual_reservoir_asset_owner_indices(inputs, vr)
-        for (ao_idx, ao) in enumerate(vr_asset_owners)
-            vr_ao_generation[vr, ao] =
-                virtual_reservoir_generation[vr] *
-                virtual_reservoir_asset_owners_inflow_allocation(inputs, vr)[ao_idx]
-            vr_ao_marginal_cost[vr, ao] = virtual_reservoir_marginal_cost[vr]
-        end
-    end
-
-    treated_vr_ao_generation = treat_output_for_writing_by_pairs_of_agents(
-        inputs,
-        run_time_options,
-        vr_ao_generation,
-        inputs.collections.virtual_reservoir,
-        inputs.collections.asset_owner;
-        index_getter = virtual_reservoir_asset_owner_indices,
-    )
-    treated_vr_ao_marginal_cost = treat_output_for_writing_by_pairs_of_agents(
-        inputs,
-        run_time_options,
-        vr_ao_marginal_cost,
-        inputs.collections.virtual_reservoir,
-        inputs.collections.asset_owner;
-        index_getter = virtual_reservoir_asset_owner_indices,
-    )
-
-    quantity = treated_vr_ao_generation
-    price = treated_vr_ao_marginal_cost
+    quantity = virtual_reservoir_generation
+    price = virtual_reservoir_marginal_cost
     return quantity, price
 end
 

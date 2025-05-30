@@ -23,9 +23,9 @@ function build_model(
         lower_bound = get_lower_bound(inputs, run_time_options),
         optimizer = optimizer,
     ) do subproblem, node
+        update_segments_profile_dimensions!(inputs, node)
         update_time_series_views_from_external_files!(inputs; period = node, scenario = 1)
         update_time_series_from_db!(inputs, node)
-        update_segments_profile_dimensions!(inputs, node)
 
         sp_model = build_subproblem_model(
             inputs,
@@ -43,6 +43,7 @@ function build_model(
             sp_model.jump_model,
             scenario_combinations,
         ) do (scenario, subscenario, simulation_period, simulation_trajectory)
+            update_segments_profile_dimensions!(inputs, node)
             update_time_series_views_from_external_files!(inputs; period = node, scenario)
             update_time_series_from_db!(inputs, node)
             model_action(

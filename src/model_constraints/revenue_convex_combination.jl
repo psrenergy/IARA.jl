@@ -23,7 +23,6 @@ function revenue_convex_combination!(
 )
     bidding_groups = index_of_elements(inputs, BiddingGroup; run_time_options)
     blks = subperiods(inputs)
-    bid_segments = bidding_segments(inputs)
     buses = index_of_elements(inputs, Bus)
 
     # Number of points in the convex hull for each bus and subperiod
@@ -66,7 +65,7 @@ function revenue_convex_combination!(
                 bidding_group_energy_offer[blk, bg, bds, bus] for
                 bus in buses,
                 bg in bidding_groups,
-                bds in bid_segments
+                bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
             ),
         )
     else
@@ -85,7 +84,7 @@ function revenue_convex_combination!(
             sum(
                 bidding_group_energy_offer[blk, bg, bds, bus] for
                 bg in bidding_groups,
-                bds in bid_segments
+                bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
             ),
         )
     end

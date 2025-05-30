@@ -28,7 +28,6 @@ function bidding_group_balance!(
     existing_renewable_units = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
     existing_battery_units = index_of_elements(inputs, BatteryUnit; run_time_options, filters = [is_existing])
     blks = subperiods(inputs)
-    bid_segments = bidding_segments(inputs)
 
     # Model variables
     bidding_group_energy_offer = get_model_object(model, :bidding_group_energy_offer)
@@ -51,7 +50,7 @@ function bidding_group_balance!(
         bidding_group_balance[
             blk in blks,
             bg in bidding_groups,
-            bds in bid_segments,
+            bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ],
         bidding_group_energy_offer[blk, bg, bds, bus] ==

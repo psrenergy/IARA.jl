@@ -38,15 +38,13 @@ function bidding_group_profile_generation_bound_by_offer!(
     # Model parameters
     bidding_group_quantity_offer_profile = get_model_object(model, :bidding_group_quantity_offer_profile)
 
-    valid_profiles = get_maximum_valid_profiles(inputs)
-
     # Model constraints
     @constraint(
         model.jump_model,
         bidding_group_profile_generation_bound_by_offer_profile[
             blk in blks,
             bg in bidding_groups,
-            prf in 1:valid_profiles[bg],
+            prf in 1:number_of_valid_profiles(inputs, bg),
             bus in buses,
         ],
         bidding_group_generation_profile[blk, bg, prf, bus] ==

@@ -17,7 +17,6 @@ function virtual_reservoir_generation_bounds_values!(
     ::Type{SubproblemBuild},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
     placeholder_upper_bound = 0.0
     placeholder_lower_bound = 0.0
@@ -27,7 +26,7 @@ function virtual_reservoir_generation_bounds_values!(
         virtual_reservoir_generation_upper_bound_value[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:valid_segments[vr],
+            seg in 1:number_of_vr_valid_bidding_segments(inputs, vr),
         ]
         in
         MOI.Parameter(placeholder_upper_bound)
@@ -38,7 +37,7 @@ function virtual_reservoir_generation_bounds_values!(
         virtual_reservoir_generation_lower_bound_value[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
-            seg in 1:valid_segments[vr],
+            seg in 1:number_of_vr_valid_bidding_segments(inputs, vr),
         ]
         in
         MOI.Parameter(placeholder_lower_bound)
@@ -58,7 +57,6 @@ function virtual_reservoir_generation_bounds_values!(
     ::Type{SubproblemUpdate},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    valid_segments = get_maximum_valid_virtual_reservoir_segments(inputs)
 
     # Time series
     virtual_reservoir_quantity_offer_series =
@@ -70,7 +68,9 @@ function virtual_reservoir_generation_bounds_values!(
     virtual_reservoir_generation_lower_bound_value =
         get_model_object(model, :virtual_reservoir_generation_lower_bound_value)
 
-    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr), seg in 1:valid_segments[vr]
+    for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr),
+        seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
+
         if virtual_reservoir_quantity_offer_series[vr, ao, seg] >= 0.0
             MOI.set(
                 model.jump_model,

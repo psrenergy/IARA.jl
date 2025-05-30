@@ -76,10 +76,6 @@ function _write_generation_bg_file(
     initial_date_time = nothing
     unit = nothing
 
-    number_of_bid_segments = maximum_number_of_bidding_segments(inputs)
-    # Set number of bidding segments to 1 to add the cost based generation only in the first segment
-    update_number_of_bid_segments!(inputs, 1)
-
     if is_ex_post
         dimensions = ["period", "scenario", "subscenario", "subperiod", "bid_segment"]
     else
@@ -105,6 +101,7 @@ function _write_generation_bg_file(
         labels = bidding_group_bus_labels,
         run_time_options,
         dir_path = post_processing_dir,
+        consider_one_segment = true,
     )
     bidding_group_generation_writer =
         get_writer(
@@ -113,8 +110,6 @@ function _write_generation_bg_file(
             run_time_options,
             "bidding_group_generation_$(clearing_procedure)",
         )
-
-    update_number_of_bid_segments!(inputs, number_of_bid_segments)
 
     generation_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
     for generation_technology in generation_technologies

@@ -25,14 +25,12 @@ function profile_min_activation_level!(
     bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
 
-    valid_profiles = get_maximum_valid_profiles(inputs)
-
     # Model variables
     @variable(
         model.jump_model,
         minimum_activation_level_profile_indicator[
             bg in bidding_groups,
-            profile in 1:valid_profiles[bg],
+            profile in 1:number_of_valid_profiles(inputs, bg),
         ], Bin
     )
 
@@ -48,7 +46,7 @@ function profile_min_activation_level!(
         model.jump_model,
         profile_min_activation_level[
             bg in bidding_groups,
-            profile in 1:valid_profiles[bg],
+            profile in 1:number_of_valid_profiles(inputs, bg),
         ]
         in
         MOI.Parameter(minimum_activation_level_profile_series[bg, profile])
@@ -80,9 +78,7 @@ function profile_min_activation_level!(
         time_series_minimum_activation_level_profile(inputs, model.node)
     profile_min_activation_level = get_model_object(model, :profile_min_activation_level)
 
-    valid_profiles = get_maximum_valid_profiles(inputs)
-
-    for bg in bidding_groups, profile in 1:valid_profiles[bg]
+    for bg in bidding_groups, profile in 1:number_of_valid_profiles(inputs, bg)
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),

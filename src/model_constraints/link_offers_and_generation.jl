@@ -57,21 +57,13 @@ function link_offers_and_generation!(
         bidding_group_generation = get_model_object(model, :bidding_group_generation)
     end
 
-    if has_any_simple_bids(inputs)
-        valid_segments = get_maximum_valid_segments(inputs)
-    end
-
-    if has_any_profile_bids(inputs)
-        valid_profiles = get_maximum_valid_profiles(inputs)
-    end
-
     @constraint(
         model.jump_model,
         link_offers_and_generation[blk in blks, bg in bidding_groups, bus in buses],
         if has_any_simple_bids(inputs)
             sum(
                 bidding_group_generation[blk, bg, bds, bus] for
-                bds in 1:valid_segments[bg]
+                bds in 1:1:number_of_bg_valid_bidding_segments(inputs, bg)
                 if bg in bidding_groups;
                 init = 0.0,
             )
@@ -82,7 +74,7 @@ function link_offers_and_generation!(
         if has_any_profile_bids(inputs)
             sum(
                 bidding_group_generation_profile[blk, bg, prf, bus] for
-                prf in 1:valid_profiles[bg]
+                prf in 1:number_of_valid_profiles(inputs, bg)
                 if bg in bidding_groups;
                 init = 0.0,
             )

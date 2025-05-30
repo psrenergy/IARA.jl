@@ -113,6 +113,14 @@ function write_reference_curve_outputs(
         simulation_results,
     )
 
+    serialize_reference_curve(
+        inputs,
+        quantity,
+        price;
+        period,
+        scenario,
+    )
+
     write_reference_curve_output!(
         outputs,
         inputs,
@@ -136,5 +144,33 @@ function write_reference_curve_outputs(
         scenario,
     )
 
+    return nothing
+end
+
+function serialize_reference_curve(
+    inputs::Inputs,
+    quantity::Vector{Float64},
+    price::Vector{Float64};
+    period::Int,
+    scenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+    serialized_file_name =
+        joinpath(temp_path, "reference_curve_period_$(period)_scenario_$(scenario).json")
+
+    if isfile(serialized_file_name)
+        data_to_serialize = Serialization.deserialize(serialized_file_name)
+    else
+        data_to_serialize = Dict{Symbol, Any}()
+        data_to_serialize[:quantity] = Vector{Float64}[]
+        data_to_serialize[:price] = Vector{Float64}[]
+    end
+    push!(data_to_serialize[:quantity], quantity)
+    push!(data_to_serialize[:price], price)
+
+    Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing
 end

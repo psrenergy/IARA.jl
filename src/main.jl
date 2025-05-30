@@ -717,7 +717,7 @@ function single_period_hydro_supply_reference_curve(
         scaled_cuts_file = "scaled_$(cuts_file)"
         cuts_path = joinpath(path_case(inputs), cuts_file)
         scaled_cuts_path = joinpath(path_case(inputs), scaled_cuts_file)
-        scale_cuts(cuts_path, scaled_cuts_path, market_clearing_tiebreaker_weight(inputs))
+        scale_cuts(cuts_path, scaled_cuts_path, 1.0) # create the "scaled_cuts" file, but with no scaling
     end
 
     try

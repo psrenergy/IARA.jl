@@ -572,33 +572,6 @@ end
 function treat_energy_account_for_writing_by_pairs_of_agents(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    raw_output::AbstractArray{Float64, 2},
-    first_collection::T1,
-    second_collection::T2;
-    # index_getter is a function that receives the inputs and the index of the first collection
-    # and returns the indices of the second collection that are associated with the elements 
-    # of index1 in first collection.
-    index_getter::Function,
-) where {T1 <: AbstractCollection, T2 <: AbstractCollection}
-    # This function receives model outputs, and is compatible with SparseAxisArrays.
-
-    number_of_pairs = sum(length(index_getter(inputs, idx)) for idx in 1:length(first_collection))
-    treated_output = zeros(number_of_pairs)
-
-    number_of_pairs_fullfiled = 0
-    for index1 in index_of_elements(inputs, T1; run_time_options), index2 in index_getter(inputs, index1)
-        number_of_pairs_fullfiled += 1
-        treated_output[number_of_pairs_fullfiled,] = raw_output[index1, index2]
-    end
-
-    @assert number_of_pairs_fullfiled == number_of_pairs
-
-    return treated_output
-end
-
-function treat_output_for_writing_by_pairs_of_agents(
-    inputs::Inputs,
-    run_time_options::RunTimeOptions,
     raw_output::Vector{Vector{Float64}},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options)

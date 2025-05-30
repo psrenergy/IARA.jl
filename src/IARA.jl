@@ -122,6 +122,7 @@ include("sddp.jl")
 include("bids.jl")
 include("debugging_utils.jl")
 include("clearing_utils.jl")
+include("hydro_supply_reference_curve_utils.jl")
 include("virtual_reservoir.jl")
 include("main.jl")
 

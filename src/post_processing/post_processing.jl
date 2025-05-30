@@ -48,7 +48,7 @@ function post_process_outputs(
 )
     gather_outputs_separated_by_asset_owners(inputs)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
-       (is_market_clearing(inputs) && clearing_has_physical_variables(inputs))
+       (is_market_clearing(inputs) && clearing_has_physical_variables(inputs, run_time_options))
         post_processing_generation(inputs, run_time_options)
     end
     if is_market_clearing(inputs)

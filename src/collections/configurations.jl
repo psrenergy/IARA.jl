@@ -31,6 +31,7 @@ Configurations for the problem.
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Float64} = []
+    reference_curve_demand_multipliers::Vector{Float64} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
@@ -319,6 +320,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
         PSRI.get_vectors(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
+    configurations.reference_curve_demand_multipliers =
+        PSRI.get_vectors(inputs.db, "Configuration", "reference_curve_demand_multipliers")[1]
 
     # Load time series files
     configurations.hour_subperiod_map_file =
@@ -817,7 +820,11 @@ is_market_clearing(inputs::AbstractInputs) =
 Return whether the run mode is SINGLE_PERIOD_MARKET_CLEARING or SINGLE_PERIOD_HEURISTIC_BID.
 """
 is_single_period(inputs::AbstractInputs) =
-    run_mode(inputs) in [RunMode.SINGLE_PERIOD_MARKET_CLEARING, RunMode.SINGLE_PERIOD_HEURISTIC_BID]
+    run_mode(inputs) in [
+        RunMode.SINGLE_PERIOD_MARKET_CLEARING,
+        RunMode.SINGLE_PERIOD_HEURISTIC_BID,
+        RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE,
+    ]
 
 """
     policy_graph_type(inputs::AbstractInputs)
@@ -875,6 +882,14 @@ function expected_number_of_repeats_per_node(inputs::AbstractInputs, node::Int)
         return inputs.collections.configurations.expected_number_of_repeats_per_node[node]
     end
 end
+
+"""
+    reference_curve_demand_multipliers(inputs::AbstractInputs)
+
+Return the reference curve demand multipliers.
+"""
+reference_curve_demand_multipliers(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_demand_multipliers
 
 """
     use_binary_variables(inputs::AbstractInputs, run_time_options)
@@ -1068,6 +1083,10 @@ read_inflow_from_file(inputs::AbstractInputs) =
 Return whether bids should be read from a file.
 """
 function read_bids_from_file(inputs::AbstractInputs)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs)
+        return false
+    end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
         Configurations_ConstructionType.COST_BASED,
@@ -1087,6 +1106,10 @@ end
 Return whether heuristic bids should be generated for clearing.
 """
 function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs)
+        return false
+    end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
         Configurations_ConstructionType.COST_BASED,
@@ -1100,7 +1123,14 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
     return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.PRICETAKER_HEURISTICS
 end
 
-function is_any_construction_type_cost_based(inputs::AbstractInputs)
+function is_any_construction_type_cost_based(
+    inputs::AbstractInputs;
+    run_time_options::RunTimeOptions = RunTimeOptions(),
+)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs; run_time_options)
+        return true
+    end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
            construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.COST_BASED ||
            construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
@@ -1113,7 +1143,11 @@ function need_demand_price_input_data(inputs::AbstractInputs)
            (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs))
 end
 
-function is_any_construction_type_hybrid(inputs::AbstractInputs)
+function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_options::RunTimeOptions)
+    # Overwrite the construction type if the run mode is reference curve
+    if is_reference_curve(inputs; run_time_options)
+        return false
+    end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.HYBRID ||
            construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.HYBRID ||
            construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.HYBRID ||
@@ -1394,8 +1428,11 @@ virtual_reservoir_initial_energy_account_share(inputs) =
 
 Determine the integer variables representation.
 """
-function integer_variable_representation(inputs::AbstractInputs, run_time_options)
-    if is_mincost(inputs)
+function integer_variable_representation(inputs::AbstractInputs, run_time_options::RunTimeOptions)
+    # Always linearize the integer variables for the reference curve run mode
+    if is_reference_curve(inputs; run_time_options)
+        return Configurations_IntegerVariableRepresentation.LINEARIZE
+    elseif is_mincost(inputs)
         return integer_variable_representation_mincost(inputs)
     elseif is_ex_ante_problem(run_time_options)
         if is_physical_problem(run_time_options)

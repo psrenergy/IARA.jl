@@ -660,6 +660,9 @@ function build_plots(
 
     if is_market_clearing(inputs)
         for file in readdir(output_path(inputs))
+            if occursin("reference_curve", file)
+                continue
+            end
             if occursin(".csv", file)
                 final_file_name = _snake_to_regular(String(split(file, ".")[1]))
                 if occursin("Post", final_file_name)

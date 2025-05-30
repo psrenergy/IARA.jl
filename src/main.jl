@@ -354,7 +354,17 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             # Reference curve
             if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
                generate_heuristic_bids_for_clearing(inputs)
-                single_period_hydro_supply_reference_curve(inputs; period, outputs = reference_curve_outputs)
+                # TODO: this inner if should be removed once the new VR heuristic bids are implemented
+                # It is only here because many test cases use the old VR heuristic bid, that does not use the reference curve
+                # and thus they do not have an fcf file linked.
+                if clearing_representation_must_read_cuts(inputs, run_time_options) || use_fcf_in_clearing(inputs)
+                    single_period_hydro_supply_reference_curve(inputs; period, outputs = reference_curve_outputs)
+                else
+                    @warn(
+                        "Skipping reference curve generation for period $period. " *
+                        "This is likely because the fcf file is not linked to the case.",
+                    )
+                end
             end
 
             # Heuristic bids

@@ -1123,7 +1123,7 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
     return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.PRICETAKER_HEURISTICS
 end
 
-function is_any_construction_type_cost_based(inputs::AbstractInputs, run_time_options::RunTimeOptions)
+function is_any_construction_type_cost_based(inputs::AbstractInputs; run_time_options::RunTimeOptions)
     # Overwrite the construction type if the run mode is reference curve
     if is_reference_curve(inputs; run_time_options)
         return true

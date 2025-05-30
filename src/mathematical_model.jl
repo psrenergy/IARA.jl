@@ -66,8 +66,17 @@ end
 
 Return a function that retrieves the dual value of a constraint with the provided name.
 """
-function constraint_dual_recorder(constraint_name::Symbol)
-    return (sp_model -> JuMP.dual.(sp_model[constraint_name]))
+function constraint_dual_recorder(inputs::Inputs, constraint_name::Symbol)
+    return (sp_model -> JuMP.dual.(sp_model[constraint_name]) * discount_rate_correction(inputs, SDDP.get_node(sp_model).index))
+end
+
+function discount_rate_correction(inputs::Inputs, node::Int)
+    if linear_policy_graph(inputs)
+        return 1/(1.0 - period_discount_rate(inputs))^(node - 1)
+    else
+        # TODO: Implement a more general discount rate correction for non-linear policy graphs
+        return 1.0
+    end
 end
 
 """
@@ -434,7 +443,6 @@ function hybrid_market_clearing_model_action(args...)
             virtual_reservoir_generation!(args...)
             virtual_reservoir_volume_distance_to_waveguide!(args...)
             virtual_reservoir_energy_account!(args...)
-            virtual_reservoir_generation_bounds_values!(args...)
         end
     end
 

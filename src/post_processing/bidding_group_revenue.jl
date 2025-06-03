@@ -539,7 +539,7 @@ function _join_independent_and_profile_bid(
             post_processing_dir,
             "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
         )
-        if !(has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs))
+        if !(has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs, run_time_options))
             filepath_independent = joinpath(
                 temp_dir,
                 "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
@@ -594,7 +594,7 @@ function _join_independent_and_profile_bid(
             post_processing_dir,
             "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
         )
-        if !(has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs))
+        if !(has_any_simple_bids(inputs) || clearing_has_physical_variables(inputs, run_time_options))
             filepath_independent = joinpath(
                 temp_dir,
                 "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),

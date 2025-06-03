@@ -123,6 +123,8 @@ end
     single_period_market_clearing(path::String; kwargs...)
 
 Run the model with the single period market clearing strategy.
+
+$ARGS_KEYWORDS
 """
 function single_period_market_clearing(path::String; kwargs...)
     args = Args(path, RunMode.SINGLE_PERIOD_MARKET_CLEARING; kwargs...)
@@ -133,9 +135,23 @@ end
     single_period_heuristic_bid(path::String; kwargs...)
 
 Generate heuristic bids for a single period.
+    
+$ARGS_KEYWORDS
 """
 function single_period_heuristic_bid(path::String; kwargs...)
     args = Args(path, RunMode.SINGLE_PERIOD_HEURISTIC_BID; kwargs...)
+    return main(args)
+end
+
+"""
+    single_period_hydro_supply_reference_curve(path::String; kwargs...)
+
+Generate heuristic bids for a single period.
+    
+$ARGS_KEYWORDS
+"""
+function single_period_hydro_supply_reference_curve(path::String; kwargs...)
+    args = Args(path, RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE; kwargs...)
     return main(args)
 end
 
@@ -170,6 +186,8 @@ function run_algorithms(inputs)
         simulate_all_scenarios_of_single_period_market_clearing(inputs)
     elseif run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
         single_period_heuristic_bid(inputs)
+    elseif run_mode(inputs) == RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE
+        single_period_hydro_supply_reference_curve(inputs)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
     end
@@ -289,6 +307,18 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     ex_post_commercial_outputs =
         build_clearing_outputs(inputs)
 
+    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        run_time_options =
+            RunTimeOptions(;
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+                is_reference_curve = true,
+            )
+        reference_curve_outputs = initialize_reference_curve_outputs(
+            inputs,
+            run_time_options,
+        )
+    end
+
     # Build models
     run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
     ex_ante_physical_model = build_model(inputs, run_time_options)
@@ -306,7 +336,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
     end
 
-    if is_any_construction_type_hybrid(inputs) && market_clearing_tiebreaker_weight(inputs) > 0 &&
+    if is_any_construction_type_hybrid(inputs, run_time_options) && market_clearing_tiebreaker_weight(inputs) > 0 &&
        use_fcf_in_clearing(inputs)
         cuts_file = fcf_cuts_file(inputs)
         scaled_cuts_file = "scaled_$(cuts_file)"
@@ -321,39 +351,47 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             # Update the time series in the database to the current period
             update_time_series_from_db!(inputs, period)
 
+            # Reference curve
+            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+               generate_heuristic_bids_for_clearing(inputs)
+                # TODO: this inner if should be removed once the new VR heuristic bids are implemented
+                # It is only here because many test cases use the old VR heuristic bid, that does not use the reference curve
+                # and thus they do not have an fcf file linked.
+                if clearing_representation_must_read_cuts(inputs, run_time_options) || use_fcf_in_clearing(inputs)
+                    single_period_hydro_supply_reference_curve(inputs; period, outputs = reference_curve_outputs)
+                else
+                    @warn(
+                        "Skipping reference curve generation for period $period. " *
+                        "This is likely because the fcf file is not linked to the case.",
+                    )
+                end
+            end
+
             # Heuristic bids
             if generate_heuristic_bids_for_clearing(inputs)
                 run_time_options = RunTimeOptions()
                 for scenario in 1:number_of_scenarios(inputs)
                     # Update the time series in the external files to the current period and scenario
                     update_time_series_views_from_external_files!(inputs; period, scenario)
-                    if any_elements(inputs, BiddingGroup)
-                        if has_any_simple_bids(inputs)
-                            markup_offers_for_period_scenario(
-                                inputs,
-                                heuristic_bids_outputs,
-                                run_time_options,
-                                period,
-                                scenario,
-                            )
-                        end
-                    end
-                    if clearing_hydro_representation(inputs) ==
-                       Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-                        virtual_reservoir_markup_offers_for_period_scenario(
-                            inputs,
-                            heuristic_bids_outputs,
-                            run_time_options,
-                            period,
-                            scenario,
-                        )
-                    end
+                    markup_offers_for_period_scenario(
+                        inputs,
+                        run_time_options,
+                        period,
+                        scenario;
+                        outputs = heuristic_bids_outputs,
+                    )
                 end
             end
 
             # Clearing problems
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-            run_clearing_simulation(ex_ante_physical_model, inputs, ex_ante_physical_outputs, run_time_options, period)
+            run_clearing_simulation(
+                ex_ante_physical_model,
+                inputs,
+                run_time_options,
+                period;
+                outputs = ex_ante_physical_outputs,
+            )
 
             run_time_options = RunTimeOptions(;
                 clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
@@ -361,13 +399,19 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             run_clearing_simulation(
                 ex_ante_commercial_model,
                 inputs,
-                ex_ante_commercial_outputs,
                 run_time_options,
-                period,
+                period;
+                outputs = ex_ante_commercial_outputs,
             )
 
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
-            run_clearing_simulation(ex_post_physical_model, inputs, ex_post_physical_outputs, run_time_options, period)
+            run_clearing_simulation(
+                ex_post_physical_model,
+                inputs,
+                run_time_options,
+                period;
+                outputs = ex_post_physical_outputs,
+            )
 
             run_time_options = RunTimeOptions(;
                 clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
@@ -375,9 +419,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             run_clearing_simulation(
                 ex_post_commercial_model,
                 inputs,
-                ex_post_commercial_outputs,
                 run_time_options,
-                period,
+                period;
+                outputs = ex_post_commercial_outputs,
             )
         end
     finally
@@ -388,6 +432,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             ex_post_physical_outputs,
             ex_post_commercial_outputs,
         )
+        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+            finalize_outputs!(reference_curve_outputs)
+        end
     end
 
     return nothing
@@ -440,42 +487,54 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             for scenario in 1:number_of_scenarios(inputs)
                 # Update the time series in the external files to the current period and scenario
                 update_time_series_views_from_external_files!(inputs; period, scenario)
-                if any_elements(inputs, BiddingGroup)
-                    markup_offers_for_period_scenario(
-                        inputs,
-                        heuristic_bids_outputs,
-                        run_time_options,
-                        period,
-                        scenario,
-                    )
-                end
-                if clearing_hydro_representation(inputs) ==
-                   Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-                    virtual_reservoir_markup_offers_for_period_scenario(
-                        inputs,
-                        heuristic_bids_outputs,
-                        run_time_options,
-                        period,
-                        scenario,
-                    )
-                end
+                markup_offers_for_period_scenario(
+                    inputs,
+                    run_time_options,
+                    period,
+                    scenario;
+                    outputs = heuristic_bids_outputs,
+                )
             end
         end
 
         # Clearing problems
         run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-        run_clearing_simulation(ex_ante_physical_model, inputs, ex_ante_physical_outputs, run_time_options, period)
+        run_clearing_simulation(
+            ex_ante_physical_model,
+            inputs,
+            run_time_options,
+            period;
+            outputs = ex_ante_physical_outputs,
+        )
 
         run_time_options =
             RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
-        run_clearing_simulation(ex_ante_commercial_model, inputs, ex_ante_commercial_outputs, run_time_options, period)
+        run_clearing_simulation(
+            ex_ante_commercial_model,
+            inputs,
+            run_time_options,
+            period;
+            outputs = ex_ante_commercial_outputs,
+        )
 
         run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
-        run_clearing_simulation(ex_post_physical_model, inputs, ex_post_physical_outputs, run_time_options, period)
+        run_clearing_simulation(
+            ex_post_physical_model,
+            inputs,
+            run_time_options,
+            period;
+            outputs = ex_post_physical_outputs,
+        )
 
         run_time_options =
             RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
-        run_clearing_simulation(ex_post_commercial_model, inputs, ex_post_commercial_outputs, run_time_options, period)
+        run_clearing_simulation(
+            ex_post_commercial_model,
+            inputs,
+            run_time_options,
+            period;
+            outputs = ex_post_commercial_outputs,
+        )
     finally
         finalize_clearing_outputs!(
             heuristic_bids_outputs,
@@ -503,9 +562,9 @@ Run the clearing simulation.
 function run_clearing_simulation(
     model::ProblemModel,
     inputs::Inputs,
-    outputs::Outputs,
     run_time_options::RunTimeOptions,
-    period::Int,
+    period::Int;
+    outputs::Union{Outputs, Nothing} = nothing,
 )
     if skip_clearing_subproblem(inputs, run_time_options)
         return nothing
@@ -521,6 +580,10 @@ function run_clearing_simulation(
     )
 
     simulation_results = simulate(model, inputs, outputs, run_time_options; current_period = period)
+
+    if is_reference_curve(inputs; run_time_options)
+        return simulation_results
+    end
 
     for scenario in 1:number_of_scenarios(inputs)
         # Update the time series in the external files to the current period and scenario
@@ -609,25 +672,13 @@ function single_period_heuristic_bid(
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
             update_time_series_views_from_external_files!(inputs; period, scenario)
-            if any_elements(inputs, BiddingGroup)
-                markup_offers_for_period_scenario(
-                    inputs,
-                    heuristic_bids_outputs,
-                    run_time_options,
-                    period,
-                    scenario,
-                )
-            end
-            if clearing_hydro_representation(inputs) ==
-               Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-                virtual_reservoir_markup_offers_for_period_scenario(
-                    inputs,
-                    heuristic_bids_outputs,
-                    run_time_options,
-                    period,
-                    scenario,
-                )
-            end
+            markup_offers_for_period_scenario(
+                inputs,
+                run_time_options,
+                period,
+                scenario;
+                outputs = heuristic_bids_outputs,
+            )
         end
     finally
         finalize_outputs!(heuristic_bids_outputs)
@@ -638,6 +689,89 @@ function single_period_heuristic_bid(
     end
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         generate_individual_virtual_reservoir_bids_files(inputs)
+    end
+
+    return nothing
+end
+
+function single_period_hydro_supply_reference_curve(
+    inputs::Inputs;
+    period::Int = inputs.args.period,
+    outputs::Union{Outputs, Nothing} = nothing,
+)
+    # Build model
+    run_time_options =
+        RunTimeOptions(;
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+            is_reference_curve = true,
+        )
+    model = build_model(inputs, run_time_options)
+
+    # Build outputs
+    if isnothing(outputs)
+        @assert run_mode(inputs) == RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE
+        outputs = initialize_reference_curve_outputs(
+            inputs,
+            run_time_options,
+        )
+    end
+
+    # Build period-season map
+    if cyclic_policy_graph(inputs) && !has_period_season_map_file(inputs)
+        create_period_season_map!(inputs, run_time_options, model)
+    end
+
+    # Scale cuts if necessary
+    if (market_clearing_tiebreaker_weight(inputs) > 0) && clearing_has_state_variables(inputs, run_time_options)
+        cuts_file = fcf_cuts_file(inputs)
+        scaled_cuts_file = "scaled_$(cuts_file)"
+        cuts_path = joinpath(path_case(inputs), cuts_file)
+        scaled_cuts_path = joinpath(path_case(inputs), scaled_cuts_file)
+        scale_cuts(cuts_path, scaled_cuts_path, 1.0) # create the "scaled_cuts" file, but with no scaling
+    end
+
+    try
+        # Update the time series in the database to the current period
+        update_time_series_from_db!(inputs, period)
+
+        @info("Calculating the reference hydro supply curve for period: $period")
+        for (reference_curve_segment, demand_multiplier) in enumerate(reference_curve_demand_multipliers(inputs))
+            # Update the demand multiplier
+            run_time_options =
+                RunTimeOptions(;
+                    clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+                    demand_multiplier,
+                    is_reference_curve = true,
+                )
+            # Rebuild the model with the new demand multiplier
+            model = build_model(inputs, run_time_options)
+            # Run simulation
+            simulation_results = run_clearing_simulation(model, inputs, run_time_options, period; outputs)
+            # Get results
+            for scenario in 1:number_of_scenarios(inputs)
+                # Update the time series in the external files to the current period and scenario
+                update_time_series_views_from_external_files!(inputs; period, scenario)
+                simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
+                    simulation_results,
+                    1, # since we simulate one period at a time, the simulation_results period dimension is always 1
+                    scenario,
+                )
+
+                write_reference_curve_outputs(
+                    inputs,
+                    outputs,
+                    run_time_options,
+                    simulation_results_from_period_scenario;
+                    period,
+                    reference_curve_segment,
+                    scenario,
+                )
+            end
+        end
+    finally
+        if run_mode(inputs) == RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE
+            finalize_outputs!(outputs)
+        end
     end
 
     return nothing

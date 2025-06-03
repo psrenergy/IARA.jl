@@ -38,8 +38,12 @@ IARA.train_min_cost(
     delete_output_folder_before_execution = true,
 )
 
-# After that, we have to move the hydro generation and hydro opportunity cost time series files to the `case_5_execution` folder.
+# After that, we have to move the cost-to-go function cuts file and the hydro generation and hydro opportunity cost time series files to the `case_5_execution` folder.
 
+fcf_cuts_file = joinpath(
+    PATH_EXECUTION,
+    "outputs", "cuts.json",
+)
 hydro_generation_file = joinpath(
     PATH_EXECUTION,
     "outputs", "hydro_generation.csv",
@@ -49,11 +53,13 @@ hydro_opportunity_cost_file = joinpath(
     "outputs", "hydro_opportunity_cost.csv",
 )
 
+fcf_cuts_destination = joinpath(PATH_EXECUTION, "cuts.json")
 hydro_generation_destination =
     joinpath(PATH_EXECUTION, "hydro_generation.csv")
 hydro_opportunity_cost_destination =
     joinpath(PATH_EXECUTION, "hydro_opportunity_cost.csv")
 
+mv(fcf_cuts_file, fcf_cuts_destination; force = true)
 mv(hydro_generation_file, hydro_generation_destination; force = true)
 mv(
     hydro_opportunity_cost_file,
@@ -76,6 +82,12 @@ IARA.update_configuration!(
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
+)
+
+IARA.link_time_series_to_file(
+    db,
+    "Configuration";
+    fcf_cuts = "cuts.json",
 )
 
 IARA.close_study!(db)

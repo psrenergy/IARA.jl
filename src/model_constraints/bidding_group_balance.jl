@@ -119,7 +119,7 @@ function bidding_group_balance!(
     add_custom_recorder_to_query_from_subproblem_result!(
         outputs,
         :bidding_group_price_offer,
-        constraint_dual_recorder(:bidding_group_balance),
+        constraint_dual_recorder(inputs, :bidding_group_balance),
     )
 
     labels = labels_for_output_by_pair_of_agents(

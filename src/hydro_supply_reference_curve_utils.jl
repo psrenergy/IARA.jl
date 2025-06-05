@@ -17,7 +17,7 @@ function initialize_reference_curve_outputs(
     add_custom_recorder_to_query_from_subproblem_result!(
         outputs,
         :load_marginal_cost,
-        constraint_dual_recorder(:load_balance),
+        constraint_dual_recorder(inputs, :load_balance),
     )
 
     add_symbol_to_query_from_subproblem_result!(

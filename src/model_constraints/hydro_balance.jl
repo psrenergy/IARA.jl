@@ -287,7 +287,7 @@ function hydro_balance!(
     add_custom_recorder_to_query_from_subproblem_result!(
         outputs,
         :water_marginal_cost,
-        constraint_dual_recorder(:hydro_balance),
+        constraint_dual_recorder(inputs, :hydro_balance),
     )
 
     initialize!(

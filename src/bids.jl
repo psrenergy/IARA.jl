@@ -1234,6 +1234,15 @@ function adjust_quantity_offer_for_ex_post!(
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
 
     for bg in bidding_group_indexes
+        # Check if the bidding group has ex post auto adjustment enabled
+        if bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.NONE
+            continue
+        end
+        # Check if the bidding group has hydro units
+        # If the bidding group has hydro units, we skip the adjustment
+        if bidding_group_has_hydro_units(inputs, bg)
+            continue
+        end
         for bus in 1:number_of_elements(inputs, Bus)
             for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
                 for blk in subperiods(inputs)

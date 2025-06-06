@@ -22,6 +22,7 @@ Collection representing the bidding groups in the system.
     bid_type::Vector{BiddingGroup_BidType.T} = []
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
+    ex_post_adjust_mode::Vector{BiddingGroup_ExPostAdjustMode.T} = []
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
     quantity_offer_file::String = ""
@@ -74,6 +75,12 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
             bidding_group.risk_factor[i] = [0.0]
         end
     end
+
+    bidding_group.ex_post_adjust_mode =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "BiddingGroup", "ex_post_adjust_mode"),
+            BiddingGroup_ExPostAdjustMode.T,
+        )
 
     # Load time series files
     bidding_group.quantity_offer_file =
@@ -401,6 +408,14 @@ end
 # ---------------------------------------------------------------------
 
 """
+    bidding_group_has_hydro_units(inputs::Inputs, bg::Int)
+Check if the bidding group at index 'bg' has hydro units.
+"""
+function bidding_group_has_hydro_units(inputs::Inputs, bg::Int)
+    return bg in hydro_unit_bidding_group_index(inputs)
+end
+
+"""
     markup_heuristic_bids(bg::BiddingGroup, i::Int)
 
 Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.MARKUP_HEURISTIC` bids.
@@ -415,6 +430,12 @@ has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg._has_ge
 Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.OPTIMIZE` bids.
 """
 optimize_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.OPTIMIZE
+
+"""
+    ex_post_adjust(bg::BiddingGroup, i::Int)
+Check if the bidding group at index 'i' has `IARA.BiddingGroup_ExPostAdjustMode.EX_POST_ADJUST` mode.
+"""
+bidding_group_ex_post_adjust(inputs::AbstractInputs, i::Int) = inputs.collections.bidding_group.ex_post_adjust_mode[i]
 
 function has_any_simple_bids(inputs::AbstractInputs)
     return maximum_number_of_bg_bidding_segments(inputs) > 0

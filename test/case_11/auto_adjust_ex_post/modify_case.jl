@@ -66,7 +66,8 @@ IARA.write_timeseries_file(
 
 # Ex post generation for 2 renewables:
 # Create an array with an extra subscenario dimension, e.g., two subscenarios per scenario.
-renewable_generation_ex_post = zeros(2, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
+renewable_generation_ex_post =
+    zeros(2, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
 for r in 1:2
     for scen in 1:number_of_scenarios
         # For subscenario 1, subtract 0.25 from the ex ante values:

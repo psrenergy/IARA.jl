@@ -408,10 +408,10 @@ end
 # ---------------------------------------------------------------------
 
 """
-    bidding_group_has_hydro_units(inputs::Inputs, bg::Int)
+    bidding_group_has_hydro_units(inputs::AbstractInputs, bg::Int)
 Check if the bidding group at index 'bg' has hydro units.
 """
-function bidding_group_has_hydro_units(inputs::Inputs, bg::Int)
+function bidding_group_has_hydro_units(inputs::AbstractInputs, bg::Int)
     return bg in hydro_unit_bidding_group_index(inputs)
 end
 

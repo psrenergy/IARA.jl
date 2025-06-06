@@ -40,7 +40,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
     virtual_reservoir_correspondence_type = IARA.Configurations_VirtualReservoirCorrespondenceType.DELTA_CORRESPONDENCE_CONSTRAINT,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
@@ -131,23 +131,6 @@ IARA.write_timeseries_file(
 )
 IARA.link_time_series_to_file(db, "HydroUnit"; inflow_ex_ante = "inflow")
 
-# Write hydro timeseries that usually come from a TRAIN_MIN_COST run.
-# values were chosen to match an execution of this case with the run_mode changed to TRAIN_MIN_COST
-
-hydro_generation = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
-hydro_generation[:, :, :, 1:2] .= 2.5 * MW_to_GWh
-hydro_generation[:, :, 1, 3] .= 1.4 * MW_to_GWh
-IARA.write_timeseries_file(
-    joinpath(PATH, "hydro_generation"),
-    hydro_generation;
-    dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hydro_1", "hydro_2"],
-    time_dimension = "period",
-    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
-    initial_date = "2024-01-01",
-    unit = "GWh",
-)
-
 IARA.add_bidding_group!(db;
     label = "bidding_group_2",
     assetowner_id = "asset_owner_2",
@@ -169,20 +152,110 @@ IARA.update_hydro_unit_relation!(db,
     related_label = "bidding_group_2",
 )
 
-IARA.close_study!(db)
+# Bids equivalent to the old heuristic bid
 
-hydro_opportunity_cost = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
-hydro_opportunity_cost[:, :, 1, :] .= 491.198338
-hydro_opportunity_cost[:, :, 2, 1] .= 368.398753
-hydro_opportunity_cost[:, :, 2, 2] .= 245.599169
-hydro_opportunity_cost[:, :, 2, 3] .= 0.0
-IARA.write_timeseries_file(
-    joinpath(PATH, "hydro_opportunity_cost"),
-    hydro_opportunity_cost;
-    dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hydro_1", "hydro_2"],
+number_of_vr_segments = 2
+vr_quantity_offer = zeros(
+    1,
+    2,
+    number_of_vr_segments,
+    number_of_scenarios,
+    number_of_periods,
+)
+
+vr_price_offer = zeros(
+    1,
+    2,
+    number_of_vr_segments,
+    number_of_scenarios,
+    number_of_periods,
+)
+
+quantity_data = [
+    (1,1,1,1.5,6.0),
+    (1,1,2,1.5,6.0),
+    (1,2,1,1.5,6.0),
+    (1,2,2,1.5,6.0),
+    (2,1,1,1.5,6.0),
+    (2,1,2,1.5,6.0),
+    (2,2,1,1.5,6.0),
+    (2,2,2,1.5,6.0),
+    (3,1,1,0.84,3.36),
+    (3,1,2,0.84,3.36),
+    (3,2,1,0.0,0.0),
+    (3,2,2,0.0,0.0)
+]
+
+price_data = [
+    (1,1,1,491.198334,491.198334),
+    (1,1,2,491.198334,491.198334),
+    (1,2,1,368.398743,368.398743),
+    (1,2,2,368.398743,368.398743),
+    (2,1,1,491.198334,491.198334),
+    (2,1,2,491.198334,491.198334),
+    (2,2,1,245.599167,245.599167),
+    (2,2,2,245.599167,245.599167),
+    (3,1,1,491.198334,491.198334),
+    (3,1,2,491.198334,491.198334),
+    (3,2,1,0.0,0.0),
+    (3,2,2,0.0,0.0)
+]
+
+for entry in quantity_data
+    period, scenario, bid_segment, virtual_reservoir_1, virtual_reservoir_2 = entry
+    vr_quantity_offer[1, 1, bid_segment, scenario, period] = virtual_reservoir_1
+    vr_quantity_offer[1, 2, bid_segment, scenario, period] = virtual_reservoir_2
+end
+
+for entry in price_data
+    period, scenario, bid_segment, virtual_reservoir_1, virtual_reservoir_2 = entry
+    vr_price_offer[1, 1, bid_segment, scenario, period] = virtual_reservoir_1
+    vr_price_offer[1, 2, bid_segment, scenario, period] = virtual_reservoir_2
+end
+
+map = Dict(
+    "virtual_reservoir_1" => ["asset_owner_1", "asset_owner_2"],
+)
+
+IARA.write_virtual_reservoir_bids_time_series_file(
+    joinpath(PATH, "vr_quantity_offer"),
+    vr_quantity_offer;
+    dimensions = ["period", "scenario", "bid_segment"],
+    labels_virtual_reservoirs = ["virtual_reservoir_1"],
+    labels_asset_owners = ["asset_owner_1", "asset_owner_2"],
+    virtual_reservoirs_to_asset_owners_map = map,
     time_dimension = "period",
-    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_vr_segments,
+    ],
+    initial_date = "2024-01-01",
+    unit = "MWh",
+)
+
+IARA.write_virtual_reservoir_bids_time_series_file(
+    joinpath(PATH, "vr_price_offer"),
+    vr_price_offer;
+    dimensions = ["period", "scenario", "bid_segment"],
+    labels_virtual_reservoirs = ["virtual_reservoir_1"],
+    labels_asset_owners = ["asset_owner_1", "asset_owner_2"],
+    virtual_reservoirs_to_asset_owners_map = map,
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_vr_segments,
+    ],
     initial_date = "2024-01-01",
     unit = "\$/MWh",
 )
+
+IARA.link_time_series_to_file(
+    db,
+    "VirtualReservoir";
+    quantity_offer = "vr_quantity_offer",
+    price_offer = "vr_price_offer",
+)
+
+IARA.close_study!(db)

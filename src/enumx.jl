@@ -364,6 +364,16 @@ end
 end
 
 """
+    BiddingGroup_ExPostAdjustMode
+
+    - `NONE`: Do not adjust (0)
+    - `AUTO`: Automatically adjust (1)
+"""
+@enumx BiddingGroup_ExPostAdjustMode begin
+    NONE = 0
+    AUTO = 1
+end
+"""
     RunTime_ClearingSubproblem
 
   - `EX_ANTE_PHYSICAL`: Ex-Ante physical (0)

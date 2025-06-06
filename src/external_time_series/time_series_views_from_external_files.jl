@@ -497,23 +497,25 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
     total_valid_vr_segments_per_period = zeros(Int, number_of_virtual_reservoirs)
 
     for scenario in 1:number_of_scenarios(inputs)
-        read_bids_view_from_external_file!(
-            inputs,
-            ts_quantity_offer;
-            period = period,
-            scenario = scenario,
-        )
-
-        valid_segments_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
-            inputs,
-            ts_quantity_offer;
-        )
-
-        total_valid_segments_per_period =
-            max.(
-                valid_segments_per_timeseries,
-                total_valid_segments_per_period,
+        if has_any_simple_bids(inputs)
+            read_bids_view_from_external_file!(
+                inputs,
+                ts_quantity_offer;
+                period = period,
+                scenario = scenario,
             )
+
+            valid_segments_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
+                inputs,
+                ts_quantity_offer;
+            )
+
+            total_valid_segments_per_period =
+                max.(
+                    valid_segments_per_timeseries,
+                    total_valid_segments_per_period,
+                )
+        end
 
         if has_any_profile_bids(inputs)
             read_bids_view_from_external_file!(

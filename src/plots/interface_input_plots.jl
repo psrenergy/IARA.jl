@@ -16,7 +16,6 @@ function build_ui_initial_plots(
             plot_renewable_generation(inputs, plots_path; asset_owner_index)
         end
     end
-        
 
     return nothing
 end
@@ -210,8 +209,6 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; a
     else
         _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "renewable_generation_$(ao_label).html"))
     end
-        
-
 
     return nothing
 end

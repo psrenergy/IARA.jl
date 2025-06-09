@@ -14,6 +14,8 @@ finally
     end
 end
 
+IARA.InterfaceCalls.interface_call(PATH; delete_output_folder_before_execution = true)
+
 IARA.single_period_market_clearing(
     PATH;
     plot_outputs = false,

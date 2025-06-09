@@ -73,7 +73,7 @@ function virtual_reservoir_correspondence_by_volume!(
     add_custom_recorder_to_query_from_subproblem_result!(
         outputs,
         :virtual_reservoir_marginal_cost,
-        constraint_dual_recorder(:virtual_reservoir_volume_balance),
+        constraint_dual_recorder(inputs, :virtual_reservoir_volume_balance),
     )
 
     initialize!(

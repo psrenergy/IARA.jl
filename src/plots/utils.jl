@@ -229,9 +229,16 @@ function get_demands_to_plot(
 end
 
 function get_renewable_generation_to_plot(
-    inputs::AbstractInputs,
+    inputs::AbstractInputs;
+    asset_owner_index::Int = null_value(Int),
 )
-    renewable_units = index_of_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+
+    if is_null(asset_owner_index)
+        renewable_units = index_of_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+    else
+        bidding_groups = filter(bg -> bidding_group_asset_owner_index(inputs, bg) == asset_owner_index, index_of_elements(inputs, BiddingGroup))
+        renewable_units = filter(r -> any(renewable_unit_bidding_group_index(inputs, r) .== bidding_groups), index_of_elements(inputs, RenewableUnit))
+    end
 
     ex_ante_generation = ones(number_of_periods(inputs) * number_of_subperiods(inputs))
     if read_ex_ante_renewable_file(inputs)

@@ -467,6 +467,12 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 title = title,
                 xaxis = Dict("title" => "$(get_name(inputs, "quantity")) [MW]"),
                 yaxis = Dict("title" => "$(get_name(inputs, "price")) [\$/MWh]"),
+                legend = Dict(
+                    "yanchor" => "bottom",
+                    "xanchor" => "left",
+                    "yref" => "container",
+                    "orientation" => "h",
+                ),
             )
 
             _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "offer_curve_subperiod_$subperiod.html"))
@@ -564,6 +570,12 @@ function plot_agent_output(
                 "ticktext" => string.(1:num_subperiods),
             ),
             yaxis = Dict("title" => "$(metadata.unit)"),
+            legend = Dict(
+                "yanchor" => "bottom",
+                "xanchor" => "left",
+                "yref" => "container",
+                "orientation" => "h",
+            ),
         )
     else
         for subperiod in 1:num_subperiods
@@ -598,6 +610,12 @@ function plot_agent_output(
                 "ticktext" => x_axis_ticktext,
             ),
             yaxis = Dict("title" => "$(metadata.unit)"),
+            legend = Dict(
+                "yanchor" => "bottom",
+                "xanchor" => "left",
+                "yref" => "container",
+                "orientation" => "h",
+            ),
         )
     end
 
@@ -695,6 +713,12 @@ function plot_operator_output(
                     "ticktext" => string.(1:num_subperiods),
                 ),
                 yaxis = Dict("title" => metadata.unit),
+                legend = Dict(
+                    "yanchor" => "bottom",
+                    "xanchor" => "left",
+                    "yref" => "container",
+                    "orientation" => "h",
+                ),
             )
 
             _save_plot(Plot(configs, main_configuration), plot_path * "_subscenario_$subscenario.html")
@@ -739,6 +763,12 @@ function plot_operator_output(
                     "ticktext" => x_axis_ticktext,
                 ),
                 yaxis = Dict("title" => "$(metadata.unit)"),
+                legend = Dict(
+                    "yanchor" => "bottom",
+                    "xanchor" => "left",
+                    "yref" => "container",
+                    "orientation" => "h",
+                ),
             )
 
             _save_plot(Plot(configs, main_configuration), plot_path * "_subperiod_$subperiod.html")
@@ -833,6 +863,12 @@ function plot_general_output(
                 "ticktext" => string(1:num_subperiods),
             ),
             yaxis = Dict("title" => metadata.unit),
+            legend = Dict(
+                "yanchor" => "bottom",
+                "xanchor" => "left",
+                "yref" => "container",
+                "orientation" => "h",
+            ),
         )
     else
         for agent in 1:number_of_agents, subperiod in 1:num_subperiods
@@ -873,6 +909,12 @@ function plot_general_output(
                 "ticktext" => x_axis_ticktext,
             ),
             yaxis = Dict("title" => "$(metadata.unit)"),
+            legend = Dict(
+                "yanchor" => "bottom",
+                "xanchor" => "left",
+                "yref" => "container",
+                "orientation" => "h",
+            ),
         )
     end
 

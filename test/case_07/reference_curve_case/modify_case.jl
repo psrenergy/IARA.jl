@@ -15,6 +15,9 @@ IARA.update_configuration!(db;
 )
 
 output_path_min_cost = joinpath(PATH, "..", "min_cost_case", "outputs")
+if !isdir(output_path_min_cost)
+    IARA.train_min_cost(joinpath(PATH, "..", "min_cost_case"); plot_outputs = false)
+end
 
 # Define files to copy (base_name, extension)
 files_to_copy = [

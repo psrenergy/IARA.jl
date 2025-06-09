@@ -10,28 +10,17 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_configuration!(db;
-    reference_curve_demand_multipliers = [0.5, 1.0, 1.5],
-)
-
-output_path_min_cost = joinpath(PATH, "..", "min_cost_case", "outputs")
-if !isdir(output_path_min_cost)
-    IARA.train_min_cost(joinpath(PATH, "..", "min_cost_case"); plot_outputs = false)
-end
-
-# Define files to copy (base_name, extension)
-files_to_copy = [
-    "cuts",
-]
-
-# Copy all files from base_case/outputs to current directory
-files_filter = x -> any(occursin.(files_to_copy, x))
-Main.copy_files(output_path_min_cost, PATH, files_filter)
+IARA.train_min_cost(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
+mv(joinpath(PATH, "outputs", "cuts.json"), joinpath(PATH, "cuts.json"), force = true)
 
 IARA.link_time_series_to_file(
     db,
     "Configuration";
     fcf_cuts = "cuts.json",
+)
+
+IARA.update_configuration!(db;
+    reference_curve_demand_multipliers = [0.5, 1.0, 1.5],
 )
 
 IARA.close_study!(db)

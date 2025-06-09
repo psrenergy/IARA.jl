@@ -714,11 +714,7 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     end
     # Hydro representation
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        if generate_heuristic_bids_for_clearing(inputs)
-            return true
-        else
-            return false
-        end
+        return false
     elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
         bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
         if isempty(bidding_group_indexes)

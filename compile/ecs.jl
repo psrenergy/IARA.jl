@@ -48,7 +48,7 @@ function main(args::Vector{String})
     memory_in_gb = if os == "linux"
         32
     else
-        16
+        32
     end
 
     return start_ecs_task_and_watch(;

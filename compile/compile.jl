@@ -31,7 +31,9 @@ function main(args::Vector{String})
         version_suffix = parsed_args["version_suffix"],
     )
 
-    build_docs(configuration)
+    if Sys.iswindows()
+        build_docs(configuration)
+    end
 
     PSRContinuousDeployment.compile(
         configuration;

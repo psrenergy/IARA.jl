@@ -33,7 +33,6 @@ IARA.update_configuration!(db;
 IARA.update_bidding_group!(
     db,
     "bg_1";
-    bid_type = IARA.BiddingGroup_BidType.MARKUP_HEURISTIC,
 )
 
 IARA.update_bidding_group_vectors!(
@@ -46,7 +45,6 @@ IARA.update_bidding_group_vectors!(
 IARA.update_bidding_group!(
     db,
     "bg_2";
-    bid_type = IARA.BiddingGroup_BidType.MARKUP_HEURISTIC,
 )
 
 IARA.update_bidding_group_vectors!(

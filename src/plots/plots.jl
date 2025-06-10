@@ -663,6 +663,9 @@ function build_plots(
             if occursin("reference_curve", file)
                 continue
             end
+            if occursin("bid_price_limit", file)
+                continue
+            end
             if occursin(".csv", file)
                 final_file_name = _snake_to_regular(String(split(file, ".")[1]))
                 if occursin("Post", final_file_name)

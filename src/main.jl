@@ -367,6 +367,17 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 end
             end
 
+            # Bid price limits
+            if validate_bidding_group_bids(inputs)
+                run_time_options = RunTimeOptions()
+                bidding_group_bid_price_limits_for_period(
+                    inputs,
+                    run_time_options,
+                    period;
+                    outputs = heuristic_bids_outputs,
+                )
+            end
+
             # Heuristic bids
             if generate_heuristic_bids_for_clearing(inputs)
                 run_time_options = RunTimeOptions()
@@ -480,6 +491,17 @@ function simulate_all_scenarios_of_single_period_market_clearing(
         @info("Running clearing for period: $period")
         # Update the time series in the database to the current period
         update_time_series_from_db!(inputs, period)
+
+        # Bid price limits
+        if validate_bidding_group_bids(inputs)
+            run_time_options = RunTimeOptions()
+            bidding_group_bid_price_limits_for_period(
+                inputs,
+                run_time_options,
+                period;
+                outputs = heuristic_bids_outputs,
+            )
+        end
 
         # Heuristic bids
         if generate_heuristic_bids_for_clearing(inputs)
@@ -654,12 +676,19 @@ function single_period_heuristic_bid(
     update_number_of_segments_for_heuristic_bids!(inputs)
 
     # Initialize the outputs
-    heuristic_bids_outputs = Outputs()
+    outputs = Outputs()
     if any_elements(inputs, BiddingGroup)
-        initialize_heuristic_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
+        initialize_heuristic_bids_outputs(inputs, outputs, run_time_options)
     end
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        initialize_virtual_reservoir_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
+        initialize_virtual_reservoir_bids_outputs(inputs, outputs, run_time_options)
+    end
+    if validate_bidding_group_bids(inputs)
+        initialize_bid_price_limit_outputs(
+            inputs,
+            outputs,
+            run_time_options,
+        )
     end
 
     try
@@ -667,6 +696,17 @@ function single_period_heuristic_bid(
         @info("Building heuristic bids for period: $period")
         # Update the time series in the database to the current period
         update_time_series_from_db!(inputs, period)
+
+        # Bid price limits
+        if validate_bidding_group_bids(inputs)
+            run_time_options = RunTimeOptions()
+            bidding_group_bid_price_limits_for_period(
+                inputs,
+                run_time_options,
+                period;
+                outputs,
+            )
+        end
 
         # Heuristic bids
         for scenario in 1:number_of_scenarios(inputs)
@@ -677,11 +717,11 @@ function single_period_heuristic_bid(
                 run_time_options,
                 period,
                 scenario;
-                outputs = heuristic_bids_outputs,
+                outputs,
             )
         end
     finally
-        finalize_outputs!(heuristic_bids_outputs)
+        finalize_outputs!(outputs)
     end
 
     if any_elements(inputs, BiddingGroup)

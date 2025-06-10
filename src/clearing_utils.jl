@@ -25,6 +25,13 @@ function build_clearing_outputs(inputs::Inputs)
             initialize_virtual_reservoir_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
         end
     end
+    if validate_bidding_group_bids(inputs)
+        initialize_bid_price_limit_outputs(
+            inputs,
+            heuristic_bids_outputs,
+            run_time_options,
+        )
+    end
 
     run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
     ex_ante_physical_outputs = initialize_outputs(inputs, run_time_options)

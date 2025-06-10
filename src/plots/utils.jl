@@ -243,6 +243,9 @@ function get_renewable_generation_to_plot(
             r -> any(renewable_unit_bidding_group_index(inputs, r) .== bidding_groups),
             index_of_elements(inputs, RenewableUnit),
         )
+        if isempty(renewable_units)
+            return [], []
+        end
     end
 
     ex_ante_generation = ones(number_of_periods(inputs) * number_of_subperiods(inputs))

@@ -353,17 +353,6 @@ end
 end
 
 """
-    BiddingGroup_BidType
-
-  - `MARKUP_HEURISTIC`: Markup heuristic (0)
-  - `OPTIMIZE`: Optimize (1)
-"""
-@enumx BiddingGroup_BidType begin
-    MARKUP_HEURISTIC = 0
-    OPTIMIZE = 1
-end
-
-"""
     RunTime_ClearingSubproblem
 
   - `EX_ANTE_PHYSICAL`: Ex-Ante physical (0)
@@ -531,4 +520,9 @@ end
 @enumx Configurations_VirtualReservoirInitialEnergyAccount begin
     CALCULATED_USING_INFLOW_SHARES = 0
     CALCULATED_USING_ENERGY_ACCOUNT_SHARES = 1
+end
+
+@enumx Configurations_BiddingGroupBidValidation begin
+    DO_NOT_VALIDATE = 0
+    VALIDATE = 1
 end

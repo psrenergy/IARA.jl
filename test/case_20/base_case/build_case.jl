@@ -48,6 +48,8 @@ db = IARA.create_study!(PATH;
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     language = "pt",
     market_clearing_tiebreaker_weight = 0.0,
+    bidding_group_bid_validation = IARA.Configurations_BiddingGroupBidValidation.VALIDATE,
+    bid_price_limit_low_reference = 9.0,
 )
 
 # Add collection elements

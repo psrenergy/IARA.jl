@@ -60,6 +60,28 @@ function initialize_heuristic_bids_outputs(
             unit = "\$/MWh",
             labels,
         )
+
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            run_time_options,
+            output_name = "bidding_group_soft_price_limit",
+            dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+            unit = "\$/MWh",
+            labels,
+        )
+
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            run_time_options,
+            output_name = "bidding_group_hard_price_limit",
+            dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+            unit = "\$/MWh",
+            labels,
+        )
     end
 
     return nothing
@@ -72,9 +94,6 @@ function markup_offers_for_period_scenario(
     scenario::Int;
     outputs::Union{Outputs, Nothing} = nothing,
 )
-    if isnothing(outputs)
-        @assert is_reference_curve(inputs; run_time_options)
-    end
     if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
         bidding_group_markup_offers_for_period_scenario(
             inputs,
@@ -248,6 +267,18 @@ function bidding_group_markup_offers_for_period_scenario(
         maximum_number_of_offer_segments,
         number_of_subperiods(inputs),
     )
+    soft_price_limits = zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        maximum_number_of_offer_segments,
+        number_of_subperiods(inputs),
+    )
+    hard_price_limits = zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        maximum_number_of_offer_segments,
+        number_of_subperiods(inputs),
+    )
 
     number_of_segments_validation_flag = false
 
@@ -287,6 +318,8 @@ function bidding_group_markup_offers_for_period_scenario(
             bg,
             quantity_offers,
             price_offers,
+            soft_price_limits,
+            hard_price_limits,
             no_markup_price_offers,
             thermal_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
@@ -298,6 +331,8 @@ function bidding_group_markup_offers_for_period_scenario(
             bg,
             quantity_offers,
             price_offers,
+            soft_price_limits,
+            hard_price_limits,
             no_markup_price_offers,
             renewable_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
@@ -310,6 +345,8 @@ function bidding_group_markup_offers_for_period_scenario(
             bg,
             quantity_offers,
             price_offers,
+            soft_price_limits,
+            hard_price_limits,
             no_markup_price_offers,
             hydro_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
@@ -322,6 +359,8 @@ function bidding_group_markup_offers_for_period_scenario(
             bg,
             quantity_offers,
             price_offers,
+            soft_price_limits,
+            hard_price_limits,
             no_markup_price_offers,
             demand_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
@@ -339,47 +378,75 @@ function bidding_group_markup_offers_for_period_scenario(
 
     @assert number_of_segments_validation_flag
 
-    if !isnothing(outputs)
-        write_bid_output(
-            outputs,
-            inputs,
-            run_time_options,
-            "bidding_group_energy_offer",
-            # We have to permutate the dimensions because the function expects the dimensions in the order
-            # subperiod, bidding_group, bid_segments, bus
-            permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-            period,
-            scenario,
-            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-            filters = [has_generation_besides_virtual_reservoirs],
-        )
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_energy_offer",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
 
-        write_bid_output(
-            outputs,
-            inputs,
-            run_time_options,
-            "bidding_group_price_offer",
-            # We have to permutate the dimensions because the function expects the dimensions in the order
-            # subperiod, bidding_group, bid_segments, bus
-            permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-            period,
-            scenario,
-            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-            filters = [has_generation_besides_virtual_reservoirs])
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_price_offer",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
 
-        write_bid_output(
-            outputs,
-            inputs,
-            run_time_options,
-            "bidding_group_no_markup_price_offer",
-            # We have to permutate the dimensions because the function expects the dimensions in the order
-            # subperiod, bidding_group, bid_segments, bus
-            permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-            period,
-            scenario,
-            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-            filters = [has_generation_besides_virtual_reservoirs])
-    end
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_no_markup_price_offer",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
+
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_soft_price_limit",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(soft_price_limits[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
+
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_hard_price_limit",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(hard_price_limits[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
 
     if is_market_clearing(inputs)
         serialize_heuristic_bids(
@@ -450,6 +517,8 @@ function build_thermal_offers!(
     quantity_offers::Array{Float64, 4},
     price_offers::Array{Float64, 4},
     no_markup_price_offers::Array{Float64, 4},
+    soft_price_limits::Array{Float64, 4},
+    hard_price_limits::Array{Float64, 4},
     thermal_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -472,6 +541,11 @@ function build_thermal_offers!(
                         thermal_unit_om_cost(inputs, thermal_unit) * (1 + risk_factor)
                     no_markup_price_offers[bg_index, bus, segment, subperiod] =
                         thermal_unit_om_cost(inputs, thermal_unit)
+                    # TODO: change hardcoded limits
+                    soft_price_limits[bg_index, bus, segment, subperiod] =
+                        thermal_unit_om_cost(inputs, thermal_unit) * 1.1
+                    hard_price_limits[bg_index, bus, segment, subperiod] =
+                        thermal_unit_om_cost(inputs, thermal_unit) * 1.5
                 end
             end
         end
@@ -502,6 +576,8 @@ function build_demand_offers!(
     quantity_offers::Array{Float64, 4},
     price_offers::Array{Float64, 4},
     no_markup_price_offers::Array{Float64, 4},
+    soft_price_limits::Array{Float64, 4},
+    hard_price_limits::Array{Float64, 4},
     demand_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -530,6 +606,11 @@ function build_demand_offers!(
                         time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod] * (1 + risk_factor)
                     no_markup_price_offers[bg_index, bus, segment, subperiod] =
                         time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod]
+                    # TODO: change hardcoded limits
+                    soft_price_limits[bg_index, bus, segment, subperiod] =
+                        time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod] * 1.1
+                    hard_price_limits[bg_index, bus, segment, subperiod] =
+                        time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod] * 1.5
                 end
             end
         end
@@ -556,6 +637,8 @@ function build_renewable_offers!(
     quantity_offers::Array{Float64, 4},
     price_offers::Array{Float64, 4},
     no_markup_price_offers::Array{Float64, 4},
+    soft_price_limits::Array{Float64, 4},
+    hard_price_limits::Array{Float64, 4},
     renewable_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -579,6 +662,11 @@ function build_renewable_offers!(
                         renewable_unit_om_cost(inputs, renewable_unit) * (1 + risk_factor)
                     no_markup_price_offers[bg_index, bus, segment, subperiod] =
                         renewable_unit_om_cost(inputs, renewable_unit)
+                    # TODO: change hardcoded limits
+                    soft_price_limits[bg_index, bus, segment, subperiod] =
+                        renewable_unit_om_cost(inputs, renewable_unit) * 1.1
+                    hard_price_limits[bg_index, bus, segment, subperiod] =
+                        renewable_unit_om_cost(inputs, renewable_unit) * 1.5
                 end
             end
         end
@@ -606,6 +694,8 @@ function build_hydro_offers!(
     quantity_offers::Array{Float64, 4},
     price_offers::Array{Float64, 4},
     no_markup_price_offers::Array{Float64, 4},
+    soft_price_limits::Array{Float64, 4},
+    hard_price_limits::Array{Float64, 4},
     hydro_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -627,7 +717,13 @@ function build_hydro_offers!(
                         time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] * (1 + risk_factor)
                     no_markup_price_offers[bg_index, bus, segment, subperiod] =
                         time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod]
+                    # TODO: change hardcoded limits
+                    soft_price_limits[bg_index, bus, segment, subperiod] =
+                        time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] * 1.1
+                    hard_price_limits[bg_index, bus, segment, subperiod] =
+                        time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] * 1.5
                 end
+                # Adjust quantity offers based on available energy
                 if isnothing(available_energy)
                     continue
                 end

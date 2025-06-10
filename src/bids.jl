@@ -996,7 +996,11 @@ function bidding_group_bid_price_limits_for_period(
         )
     end
 
-    bidding_group_number_of_risk_factors, bidding_group_hydro_units, bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units = bidding_group_markup_units(inputs)
+    bidding_group_number_of_risk_factors,
+    bidding_group_hydro_units,
+    bidding_group_thermal_units,
+    bidding_group_renewable_units,
+    bidding_group_demand_units = bidding_group_markup_units(inputs)
 
     for (idx, bg) in enumerate(bidding_groups)
         if !isempty(bidding_group_thermal_units[bg])
@@ -1009,15 +1013,19 @@ function bidding_group_bid_price_limits_for_period(
         else
             reference_price = bid_price_limit_high_reference(inputs)
         end
-        
+
         if has_any_simple_bids(inputs)
-            bidding_group_bid_price_limit_not_justified_independent[idx] = reference_price * (1.0 + bid_price_limit_markup_non_justified_independent(inputs))
-            bidding_group_bid_price_limit_justified_independent[idx] = reference_price * (1.0 + bid_price_limit_markup_justified_independent(inputs))
+            bidding_group_bid_price_limit_not_justified_independent[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_non_justified_independent(inputs))
+            bidding_group_bid_price_limit_justified_independent[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_justified_independent(inputs))
         end
 
         if has_any_profile_bids(inputs)
-            bidding_group_bid_price_limit_not_justified_profile[idx] = reference_price * (1.0 + bid_price_limit_markup_non_justified_profile(inputs))
-            bidding_group_bid_price_limit_justified_profile[idx] = reference_price * (1.0 + bid_price_limit_markup_justified_profile(inputs))
+            bidding_group_bid_price_limit_not_justified_profile[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_non_justified_profile(inputs))
+            bidding_group_bid_price_limit_justified_profile[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_justified_profile(inputs))
         end
     end
 

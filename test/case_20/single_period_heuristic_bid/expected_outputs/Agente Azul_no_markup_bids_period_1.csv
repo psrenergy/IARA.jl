@@ -1,1 +1,3 @@
 period,scenario,subperiod,bid_segment,bus,bidding_group,price,quantity
+1,1,1,1,Sistema,Azul,10.0,60.0
+1,1,1,2,Sistema,Azul,20.0,60.0

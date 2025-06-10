@@ -1142,6 +1142,9 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
     if is_reference_curve(inputs)
         return false
     end
+    if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+        return true
+    end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
         Configurations_ConstructionType.COST_BASED,

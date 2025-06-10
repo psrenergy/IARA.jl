@@ -37,7 +37,6 @@ db = IARA.create_study!(PATH;
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     demand_deficit_cost = 200.0,
     cycle_discount_rate = 0.0,
-    clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.PURE_BIDS,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,

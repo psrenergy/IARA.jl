@@ -9,7 +9,7 @@ using IARA
 
 # ## Case recap
 
-# In the [previous section](case_05_build_reservoir_case.md), we have built a case containing a virtual reservoir with two hydro units and two asset owners. Now, we will run this case in the `MARKET_CLEARING` mode.
+# In the [previous section](case_05_build_reservoir_case.md), we have built a case containing a virtual reservoir with two hydro units and two asset owners.
 # Now we will run this case using the `MARKET_CLEARING` mode.
 
 # As we have Hydro Units in this case, we need the hydro generation and hydro opportunity cost time series files. We can automatically generate them by running the case with the `TRAIN_MIN_COST` mode.
@@ -38,37 +38,18 @@ IARA.train_min_cost(
     delete_output_folder_before_execution = true,
 )
 
-# After that, we have to move the cost-to-go function cuts file and the hydro generation and hydro opportunity cost time series files to the `case_5_execution` folder.
+# After that, we have to move the cost-to-go function cuts file to the `case_5_execution` folder.
 
 fcf_cuts_file = joinpath(
     PATH_EXECUTION,
     "outputs", "cuts.json",
 )
-hydro_generation_file = joinpath(
-    PATH_EXECUTION,
-    "outputs", "hydro_generation.csv",
-)
-hydro_opportunity_cost_file = joinpath(
-    PATH_EXECUTION,
-    "outputs", "hydro_opportunity_cost.csv",
-)
 
 fcf_cuts_destination = joinpath(PATH_EXECUTION, "cuts.json")
-hydro_generation_destination =
-    joinpath(PATH_EXECUTION, "hydro_generation.csv")
-hydro_opportunity_cost_destination =
-    joinpath(PATH_EXECUTION, "hydro_opportunity_cost.csv")
 
 mv(fcf_cuts_file, fcf_cuts_destination; force = true)
-mv(hydro_generation_file, hydro_generation_destination; force = true)
-mv(
-    hydro_opportunity_cost_file,
-    hydro_opportunity_cost_destination;
-    force = true,
-);
 #hide
 
-# After that, the hydro generation and hydro opportunity cost time series files will be automatically linked to our case.
 # Now we are ready to run the case in the `MARKET_CLEARING` mode.
 
 # As we need to set the run mode to `MARKET_CLEARING`, we need to open the study again.
@@ -77,7 +58,7 @@ db = IARA.load_study(PATH_EXECUTION; read_only = false);
 
 IARA.update_configuration!(
     db;
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,

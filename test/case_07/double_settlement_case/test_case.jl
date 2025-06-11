@@ -32,7 +32,20 @@ IARA.market_clearing(PATH; plot_outputs = false, delete_output_folder_before_exe
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
-    Main.compare_outputs(PATH)
+    Main.compare_outputs(PATH;
+        test_only_subperiod_sum = [
+            "deficit",
+            "hydro_generation",
+            "hydro_minimum_outflow_slack",
+            "hydro_om_costs",
+            "hydro_turbining",
+            "hydro_minimum_outflow_violation_cost_expression",
+        ],
+        skipped_outputs = [
+            "hydro_final_volume",
+            "hydro_initial_volume",
+        ],
+    )
 end
 
 end

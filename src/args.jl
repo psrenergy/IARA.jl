@@ -53,9 +53,8 @@ function Args(
     period::Int = -1,
     optimizer::Any = HiGHS.Optimizer,
 )
-    if (run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
+    if (run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID || run_mode == RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE) &&
        period <= 0
-        # faltou single_period_hydro_supply_reference_curve ?
         error(
             "When running in single period modes, " *
             "the period must be greater than 0. Got period = $period.",

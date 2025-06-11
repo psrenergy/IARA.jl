@@ -341,7 +341,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             # Reference curve
             if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
                generate_heuristic_bids_for_clearing(inputs)
-                build_reference_curve(inputs, reference_curve_outputs; period)
+                build_reference_curve(inputs, reference_curve_outputs, period)
             end
 
             # Bid price limits
@@ -486,7 +486,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
         # Reference curve
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
            generate_heuristic_bids_for_clearing(inputs)
-            build_reference_curve(inputs, reference_curve_outputs; period)
+            build_reference_curve(inputs, reference_curve_outputs, period)
         end
 
         # Bid price limits
@@ -711,7 +711,7 @@ function single_period_heuristic_bid(
 
         # Reference curve
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            build_reference_curve(inputs, reference_curve_outputs; period)
+            build_reference_curve(inputs, reference_curve_outputs, period)
         end
 
         # Bid price limits
@@ -756,49 +756,45 @@ end
 
 function build_reference_curve(
     inputs::Inputs,
-    outputs::Outputs;
-    period::Int = inputs.args.period,
+    outputs::Outputs,
+    period::Int,
 )
-    try
-        # Update the time series in the database to the current period
-        update_time_series_from_db!(inputs, period)
+    # Update the time series in the database to the current period
+    update_time_series_from_db!(inputs, period)
 
-        @info("Calculating the reference hydro supply curve for period: $period")
-        for (reference_curve_segment, demand_multiplier) in enumerate(reference_curve_demand_multipliers(inputs))
-            # Update the demand multiplier
-            run_time_options =
-                RunTimeOptions(;
-                    clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
-                    demand_multiplier,
-                    is_reference_curve = true,
-                )
-            # Rebuild the model with the new demand multiplier
-            model = build_model(inputs, run_time_options)
-            # Run simulation
-            simulation_results = run_clearing_simulation(model, inputs, run_time_options, period; outputs)
-            # Get results
-            for scenario in 1:number_of_scenarios(inputs)
-                # Update the time series in the external files to the current period and scenario
-                update_time_series_views_from_external_files!(inputs; period, scenario)
-                simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
-                    simulation_results,
-                    1, # since we simulate one period at a time, the simulation_results period dimension is always 1
-                    scenario,
-                )
+    @info("Calculating the reference hydro supply curve for period: $period")
+    for (reference_curve_segment, demand_multiplier) in enumerate(reference_curve_demand_multipliers(inputs))
+        # Update the demand multiplier
+        run_time_options =
+            RunTimeOptions(;
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+                demand_multiplier,
+                is_reference_curve = true,
+            )
+        # Rebuild the model with the new demand multiplier
+        model = build_model(inputs, run_time_options)
+        # Run simulation
+        simulation_results = run_clearing_simulation(model, inputs, run_time_options, period; outputs)
+        # Get results
+        for scenario in 1:number_of_scenarios(inputs)
+            # Update the time series in the external files to the current period and scenario
+            update_time_series_views_from_external_files!(inputs; period, scenario)
+            simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
+                simulation_results,
+                1, # since we simulate one period at a time, the simulation_results period dimension is always 1
+                scenario,
+            )
 
-                write_reference_curve_outputs(
-                    inputs,
-                    outputs,
-                    run_time_options,
-                    simulation_results_from_period_scenario;
-                    period,
-                    reference_curve_segment,
-                    scenario,
-                )
-            end
+            write_reference_curve_outputs(
+                inputs,
+                outputs,
+                run_time_options,
+                simulation_results_from_period_scenario;
+                period,
+                reference_curve_segment,
+                scenario,
+            )
         end
-    finally
-        finalize_outputs!(outputs)
     end
 
     return nothing

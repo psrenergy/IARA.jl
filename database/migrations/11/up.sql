@@ -1,12 +1,15 @@
 PRAGMA user_version = 11;
 PRAGMA foreign_keys = ON;
 
-ALTER TABLE Configuration ADD COLUMN bid_price_limit_markup_non_justified_profile REAL NOT NULL DEFAULT 0.1;
-ALTER TABLE Configuration ADD COLUMN bid_price_limit_markup_justified_profile REAL NOT NULL DEFAULT 0.2;
-ALTER TABLE Configuration ADD COLUMN bid_price_limit_markup_non_justified_independent REAL NOT NULL DEFAULT 0.5;
-ALTER TABLE Configuration ADD COLUMN bid_price_limit_markup_justified_independent REAL NOT NULL DEFAULT 1.0;
-ALTER TABLE Configuration ADD COLUMN bid_price_limit_low_reference REAL;
-ALTER TABLE Configuration ADD COLUMN bid_price_limit_high_reference REAL NOT NULL DEFAULT 1000000.0;
-ALTER TABLE Configuration ADD COLUMN bidding_group_bid_validation INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE AssetOwner_vector_account_markup (
+    id INTEGER, 
+    vector_index INTEGER NOT NULL,
+    virtual_reservoir_energy_account_upper_bound REAL NOT NULL,
+    risk_factor_for_virtual_reservoir_bids REAL NOT NULL,
+    FOREIGN KEY(id) REFERENCES AssetOwner(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    PRIMARY KEY (id, vector_index)
+) STRICT;
 
-ALTER TABLE BiddingGroup DROP COLUMN bid_type;
+ALTER TABLE AssetOwner ADD COLUMN purchase_discount_rate REAL;
+
+DROP TABLE IF EXISTS AssetOwner_vector_markup;

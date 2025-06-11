@@ -181,16 +181,13 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
     # Sizes
     number_of_virtual_reservoirs = length(virtual_reservoir_indices)
     number_of_asset_owners = length(asset_owner_indices)
+    number_of_reference_curve_segments = length(reference_curve_demand_multipliers(inputs))
 
     # AO
     asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
     for ao in asset_owner_indices
-        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor(inputs, ao))
+        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao))
     end
-
-    # VR
-    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
-    number_of_hydro_units_per_virtual_reservoir = length.(virtual_reservoir_hydro_units)
 
     # Offer segments
     number_of_offer_segments_per_asset_owner_and_virtual_reservoir =
@@ -198,7 +195,7 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
     for vr in virtual_reservoir_indices
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_offer_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
-                asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
+                asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments
         end
     end
     number_per_virtual_reservoir = [
@@ -765,7 +762,7 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     # Hydro representation
     if generate_heuristic_bids_for_clearing(inputs)
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-            return true
+            return false
         elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
             bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
             if isempty(bidding_group_indexes)
@@ -845,89 +842,113 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     scenario::Int;
     outputs::Union{Outputs, Nothing} = nothing,
 )
-    # Indexes
-    virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
-    asset_owner_indices = index_of_elements(inputs, AssetOwner)
+    accounts = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    quantity_offer_reference_curve, price_offer_reference_curve =
+        read_serialized_reference_curve(inputs, period, scenario)
 
-    # Sizes
-    number_of_virtual_reservoirs = length(virtual_reservoir_indices)
-    number_of_asset_owners = length(asset_owner_indices)
-
-    # AO
-    asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
-    for ao in asset_owner_indices
-        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor(inputs, ao))
-    end
-
-    # VR
-    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
-
-    # Hydro
-    available_energy_per_hydro_unit =
-        if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
-           is_reference_curve(inputs; run_time_options)
-            hydro_available_energy(inputs, run_time_options, period, scenario)
-        end
-
-    # AO in VR
-    energy_share_of_asset_owner_in_virtual_reservoir = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
-
-    energy_account_at_beginning_of_period =
-        virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
-    for vr in virtual_reservoir_indices
-        total_virtual_reservoir_energy_account = sum(energy_account_at_beginning_of_period[vr])
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            energy_share_of_asset_owner_in_virtual_reservoir[vr, ao] =
-                energy_account_at_beginning_of_period[vr][ao] / total_virtual_reservoir_energy_account
-        end
-    end
-
-    maximum_number_of_offer_segments = maximum_number_of_vr_bidding_segments(inputs)
-
-    # Offers
     quantity_offers = zeros(
-        number_of_virtual_reservoirs,
-        number_of_asset_owners,
-        maximum_number_of_offer_segments,
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
     )
 
     price_offers = zeros(
-        number_of_virtual_reservoirs,
-        number_of_asset_owners,
-        maximum_number_of_offer_segments,
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
     )
 
-    period_duration =
-        sum(subperiod_duration_in_hours(inputs, subperiod) for subperiod in 1:number_of_subperiods(inputs))
-    for vr in virtual_reservoir_indices
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            # vr parameters
-            energy_share = energy_share_of_asset_owner_in_virtual_reservoir[vr, ao]
+    for vr in index_of_elements(inputs, VirtualReservoir)
+        vr_total_account = sum(accounts[vr])
+        vr_quantity_offer =
+            [quantity_offer_reference_curve[seg][vr] for seg in eachindex(quantity_offer_reference_curve)]
+        vr_price_offer = [price_offer_reference_curve[seg][vr] for seg in eachindex(price_offer_reference_curve)]
+        @assert issorted(vr_price_offer)
+        for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
+            seg = 0
+            ao_quantity_offer = Float64[]
+            ao_price_offer = Float64[]
 
-            for (unit_idx, hydro_unit) in enumerate(virtual_reservoir_hydro_units[vr])
-                # hydro unit parameters
-                total_generation = sum(time_series_hydro_generation(inputs)[hydro_unit, :] / MW_to_GW())
-                if total_generation > available_energy_per_hydro_unit[hydro_unit]
-                    total_generation = available_energy_per_hydro_unit[hydro_unit]
+            account_upper_bounds = asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
+            markups = asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
+
+            #---------------
+            # Energy to sell
+            #---------------
+            current_account = accounts[vr][ao]
+            # There will be defined selling bids for the current asset owner until the resulting account is zero.
+            current_reference_segment = 1
+            sum_of_ao_selling_offers = 0.0
+            # Assuming that this asset owner is the only one selling, the segment of the reference curve only changes when
+            # the sum of offers for the current asset owner is greater than the sum of quantity offers until this segment.
+            while current_account > 0
+                # In this iteration we define the quantity offer for the current markup, which is based on the account share of the
+                # asset owner in the total account of the virtual reservoir. The calculation assumes that the total account of the
+                # virtual reservoir is static, does not change according to the asset owner bids
+                current_account_share = current_account / vr_total_account
+                markup_index =
+                    findfirst(i -> account_upper_bounds[i] >= current_account_share, 1:length(account_upper_bounds))
+                account_share_lower_bound_for_markup = markup_index == 1 ? 0.0 : account_upper_bounds[markup_index-1]
+
+                maximum_offer_considering_markup =
+                    current_account - account_share_lower_bound_for_markup * vr_total_account
+
+                # We have defined the quantity offer for the current markup. Now we split it considering the prices of the reference curve.
+                sum_of_offers_for_current_markup = 0.0
+                while sum_of_offers_for_current_markup < maximum_offer_considering_markup
+                    maximum_offer_considering_reference =
+                        sum(vr_quantity_offer[1:current_reference_segment]) - sum_of_ao_selling_offers
+                    if maximum_offer_considering_reference == 0
+                        current_reference_segment += 1
+                        continue
+                    end
+
+                    seg += 1
+                    offer = min(
+                        maximum_offer_considering_markup - sum_of_offers_for_current_markup,
+                        maximum_offer_considering_reference,
+                    )
+                    quantity_offers[vr, ao, seg] = offer
+                    price_offers[vr, ao, seg] = vr_price_offer[current_reference_segment] * (1 + markups[markup_index])
+
+                    sum_of_offers_for_current_markup += offer
+                    sum_of_ao_selling_offers += offer
+                    current_account -= offer
+
+                    if sum_of_ao_selling_offers >= sum(vr_quantity_offer[1:current_reference_segment])
+                        current_reference_segment += 1
+                        if current_reference_segment > length(vr_quantity_offer)
+                            # We have reached the end of the reference curve, so we stop defining offers for this asset owner
+                            if current_account > 0
+                                @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
+                                current_account = 0 # break the external while loop
+                            end
+                            break
+                        end
+                    end
                 end
+            end
 
-                # Get weighted average opportunity cost
-                average_cost =
-                    1 / period_duration * sum(
-                        time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] *
-                        subperiod_duration_in_hours(inputs, subperiod) for
-                        subperiod in 1:number_of_subperiods(inputs))
+            #--------------
+            # Energy to buy
+            #--------------
+            current_account = accounts[vr][ao]
+            # There will be defined buying bids for the current asset owner until the resulting account share is 1.
+            while current_account < vr_total_account
+                current_account_share = current_account / vr_total_account
+                markup_index =
+                    findfirst(i -> account_upper_bounds[i] > current_account_share, 1:length(account_upper_bounds))
+                account_share_upper_bound_for_markup = account_upper_bounds[markup_index]
 
-                for risk_idx in 1:asset_owner_number_of_risk_factors[ao]
-                    segment = (unit_idx - 1) * asset_owner_number_of_risk_factors[ao] + risk_idx
-                    # ao parameters
-                    segment_fraction = asset_owner_segment_fraction(inputs, ao)[risk_idx]
-                    risk_factor = asset_owner_risk_factor(inputs, ao)[risk_idx]
+                seg += 1
+                offer = current_account - account_share_upper_bound_for_markup * vr_total_account
+                # Note that the offer is negative, because it is a bid to buy energy.
+                quantity_offers[vr, ao, seg] = offer
+                # The purchase price is based on the price of the first segment of the reference curve.
+                price_offers[vr, ao, seg] =
+                    vr_price_offer[1] * (1 + markups[markup_index] - asset_owner_purchase_discount_rate(inputs, ao))
 
-                    # offers
-                    quantity_offers[vr, ao, segment] = (total_generation * energy_share) * segment_fraction
-                    price_offers[vr, ao, segment] = average_cost * (1 + risk_factor)
-                end
+                current_account -= offer
             end
         end
     end

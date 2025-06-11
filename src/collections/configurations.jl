@@ -521,6 +521,10 @@ function validate(configurations::Configurations)
             num_errors += 1
         end
     end
+    if any(configurations.reference_curve_demand_multipliers .< 0)
+        @error("Reference curve demand multipliers must be non-negative.")
+        num_errors += 1
+    end
     return num_errors
 end
 
@@ -610,10 +614,27 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             num_errors += 1
         end
     end
-    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       !any_elements(inputs, VirtualReservoir)
-        @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
-        num_errors += 1
+    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if !any_elements(inputs, VirtualReservoir)
+            @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
+            num_errors += 1
+        end
+        if is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)
+            if isempty(configurations.reference_curve_demand_multipliers)
+                @error(
+                    "Reference curve demand multipliers vector is empty. Generating heuristic bids for virtual reservoirs "
+                    *
+                    "requires reference curve to be calculated, which uses the reference curve demand multipliers."
+                )
+                num_errors += 1
+            end
+            if !has_fcf_cuts_to_read(inputs)
+                @error(
+                    "FCF cuts file is not defined. Generating heuristic bids for virtual reservoirs requires FCF cuts to be read."
+                )
+                num_errors += 1
+            end
+        end
     end
 
     # Validate if the cycle_duration_in_years matches other time parameters

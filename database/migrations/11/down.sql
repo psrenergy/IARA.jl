@@ -1,12 +1,14 @@
 PRAGMA user_version = 10;
 PRAGMA foreign_keys = ON;
 
-ALTER TABLE Configuration DROP COLUMN bid_price_limit_markup_non_justified_profile;
-ALTER TABLE Configuration DROP COLUMN bid_price_limit_markup_justified_profile;
-ALTER TABLE Configuration DROP COLUMN bid_price_limit_markup_non_justified_independent;
-ALTER TABLE Configuration DROP COLUMN bid_price_limit_markup_justified_independent;
-ALTER TABLE Configuration DROP COLUMN bid_price_limit_low_reference;
-ALTER TABLE Configuration DROP COLUMN bid_price_limit_high_reference;
-ALTER TABLE Configuration DROP COLUMN bidding_group_bid_validation;
+DROP TABLE AssetOwner_vector_account_markup;
+ALTER TABLE AssetOwner DROP COLUMN purchase_discount_rate;
 
-ALTER TABLE BiddingGroup ADD COLUMN bid_type INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE AssetOwner_vector_markup (
+    id INTEGER, 
+    vector_index INTEGER NOT NULL,
+    risk_factor REAL,
+    segment_fraction REAL,
+    FOREIGN KEY(id) REFERENCES AssetOwner(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    PRIMARY KEY (id, vector_index)
+) STRICT;

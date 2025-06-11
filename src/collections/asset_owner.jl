@@ -20,8 +20,9 @@ Collection representing the asset owners in the problem.
 @collection @kwdef mutable struct AssetOwner <: AbstractCollection
     label::Vector{String} = []
     price_type::Vector{AssetOwner_PriceType.T} = []
-    risk_factor::Vector{Vector{Float64}} = []
-    segment_fraction::Vector{Vector{Float64}} = []
+    purchase_discount_rate::Vector{Float64} = []
+    virtual_reservoir_energy_account_upper_bound::Vector{Vector{Float64}} = []
+    risk_factor_for_virtual_reservoir_bids::Vector{Vector{Float64}} = []
     # The convex revenue cache has information for a single asset owner at a time
     # Array dimensions are [bus, subperiod]
     # Vector dimension is the number of points in the convex hull
@@ -50,21 +51,14 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "AssetOwner", "price_type"),
             AssetOwner_PriceType.T,
         )
+    asset_owner.purchase_discount_rate = PSRI.get_parms(inputs.db, "AssetOwner", "purchase_discount_rate")
 
     # Load vectors
-    asset_owner.risk_factor = PSRI.get_vectors(inputs.db, "AssetOwner", "risk_factor")
-    asset_owner.segment_fraction = PSRI.get_vectors(inputs.db, "AssetOwner", "segment_fraction")
+    asset_owner.virtual_reservoir_energy_account_upper_bound =
+        PSRI.get_vectors(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
+    asset_owner.risk_factor_for_virtual_reservoir_bids =
+        PSRI.get_vectors(inputs.db, "AssetOwner", "risk_factor_for_virtual_reservoir_bids")
 
-    # TODO: pass this to a post process, maybe fill_caches!
-    # The reason is that it being empty is useful for advanced_validations 
-    for i in 1:num_asset_owners
-        if isempty(asset_owner.segment_fraction[i])
-            asset_owner.segment_fraction[i] = [1.0]
-        end
-        if isempty(asset_owner.risk_factor[i])
-            asset_owner.risk_factor[i] = [0.0]
-        end
-    end
     return nothing
 end
 
@@ -131,16 +125,26 @@ Validate the asset owner collection.
 function validate(asset_owner::AssetOwner)
     num_errors = 0
     for i in 1:length(asset_owner)
-        if any(asset_owner.risk_factor[i] .< 0)
-            @warn(
-                "Asset owner $(asset_owner.label[i]) has negative risk factors $(asset_owner.risk_factor[i]). If this is intentional, ignore this warning."
+        vector = asset_owner.virtual_reservoir_energy_account_upper_bound[i]
+        if !isempty(vector)
+            if !issorted(vector) || vector[end] != 1.0 || any(vector .< 0)
+                num_errors += 1
+                @error(
+                    "Virtual reservoir energy account upper bound for asset owner $(asset_owner.label[i]) is not valid. " *
+                    "It must be a sequence of increasing values ending with 1.0 and not containing negative values."
+                )
+            end
+            if vector[1] == 0.0
+                @warn(
+                    "Virtual reservoir energy account upper bound for asset owner $(asset_owner.label[i]) starts with 0.0, which may not be intended for an upper bound."
+                )
+            end
+        end
+        if !is_null(asset_owner.purchase_discount_rate[i]) && asset_owner.purchase_discount_rate[i] <= 0.0
+            num_errors += 1
+            @error(
+                "Purchase discount rate for asset owner $(asset_owner.label[i]) must be greater than zero, but it is $(asset_owner.purchase_discount_rate[i])."
             )
-        end
-        if all(is_null.(asset_owner.segment_fraction[i]))
-            continue
-        end
-        if any(is_null.(asset_owner.segment_fraction[i]))
-            @error("Segment fraction vector has both null and non-null values for Asset owner $(asset_owner.label[i]).")
         end
     end
     return num_errors
@@ -153,20 +157,26 @@ Validate the AssetOwner within the inputs context. Return the number of errors f
 """
 function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
     num_errors = 0
-    # TODO: Are these checks necessary for every run mode?
-    all_virtual_reservoir_asset_owner_indices = hcat(
-        [virtual_reservoir_asset_owner_indices(inputs, vr) for vr in index_of_elements(inputs, VirtualReservoir)]...,
-    )
-    for i in 1:length(asset_owner)
-        # TODO: enable this after fixing the TODO in initialize!
-        # if !(i in all_virtual_reservoir_asset_owner_indices) && !isempty(asset_owner.segment_fraction[i])
-        #     @warn "Asset owner $(asset_owner.label[i]) is not associated to a virtual reservoir, but has segment fractions. The markup will be ignored."
-        # end
-        if i in all_virtual_reservoir_asset_owner_indices && isempty(asset_owner.segment_fraction[i])
-            num_errors += 1
-            @error(
-                "Asset owner $(asset_owner.label[i]) is associated to a virtual reservoir, but has no segment fractions defined."
-            )
+    if generate_heuristic_bids_for_clearing(inputs) &&
+       clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        all_virtual_reservoir_asset_owner_indices = union(virtual_reservoir_asset_owner_indices(inputs)...)
+        for i in 1:length(asset_owner)
+            if i in all_virtual_reservoir_asset_owner_indices
+                if isempty(asset_owner.risk_factor_for_virtual_reservoir_bids[i])
+                    @warn(
+                        "Asset owner $(asset_owner.label[i]) has no risk factor and energy account upper bound for virtual reservoir bids. " *
+                        "They will be set to zero and one, respectively, which may not be intended."
+                    )
+                    asset_owner.risk_factor_for_virtual_reservoir_bids[i] = [0.0]
+                    asset_owner.virtual_reservoir_energy_account_upper_bound[i] = [1.0]
+                end
+                if is_null(asset_owner.purchase_discount_rate[i])
+                    @error(
+                        "Asset owner $(asset_owner.label[i]) has no purchase discount rate. This is required for virtual reservoir heuristic bids."
+                    )
+                    num_errors += 1
+                end
+            end
         end
     end
     return num_errors

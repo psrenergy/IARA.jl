@@ -19,7 +19,6 @@ const PATH = @__DIR__
 db = nothing
 try
     include("build_case.jl")
-    include("../reference_curve_case/modify_case.jl")
 finally
     if db !== nothing
         IARA.close_study!(db)

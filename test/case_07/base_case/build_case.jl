@@ -46,6 +46,7 @@ db = IARA.create_study!(PATH;
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    reference_curve_demand_multipliers = [0.5, 1.0, 1.5],
 )
 
 # Add collection elements
@@ -186,4 +187,13 @@ IARA.link_time_series_to_file(
     inflow_ex_ante = "inflow",
 )
 
+IARA.link_time_series_to_file(
+    db,
+    "Configuration";
+    fcf_cuts = "cuts.json",
+)
+
 IARA.close_study!(db)
+
+IARA.train_min_cost(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
+mv(joinpath(PATH, "outputs", "cuts.json"), joinpath(PATH, "cuts.json"); force = true)

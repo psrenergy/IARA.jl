@@ -10,7 +10,6 @@ IARA.DemandUnit_DemandType
 IARA.Branch_LineModel  
 IARA.AssetOwner_PriceType  
 IARA.HydroUnit_OperationType  
-IARA.BiddingGroup_BidType  
 IARA.Configurations_ClearingHydroRepresentation  
 IARA.Configurations_IntegerVariableRepresentation  
 IARA.Configurations_BidDataSource  

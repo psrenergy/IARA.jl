@@ -174,3 +174,20 @@ function serialize_reference_curve(
     Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing
 end
+
+function read_serialized_reference_curve(
+    inputs::Inputs,
+    period::Int,
+    scenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    serialized_file_name =
+        joinpath(temp_path, "reference_curve_period_$(period)_scenario_$(scenario).json")
+
+    if !isfile(serialized_file_name)
+        error("Serialized reference curve file not found: $serialized_file_name")
+    end
+
+    data = Serialization.deserialize(serialized_file_name)
+    return data[:quantity], data[:price]
+end

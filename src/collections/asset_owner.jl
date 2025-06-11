@@ -140,6 +140,12 @@ function validate(asset_owner::AssetOwner)
                 )
             end
         end
+        if !is_null(asset_owner.purchase_discount_rate[i]) && asset_owner.purchase_discount_rate[i] <= 0.0
+            num_errors += 1
+            @error(
+                "Purchase discount rate for asset owner $(asset_owner.label[i]) must be greater than zero, but it is $(asset_owner.purchase_discount_rate[i])."
+            )
+        end
     end
     return num_errors
 end

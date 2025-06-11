@@ -194,6 +194,3 @@ IARA.link_time_series_to_file(
 )
 
 IARA.close_study!(db)
-
-IARA.train_min_cost(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
-mv(joinpath(PATH, "outputs", "cuts.json"), joinpath(PATH, "cuts.json"); force = true)

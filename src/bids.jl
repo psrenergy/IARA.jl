@@ -848,9 +848,6 @@ function virtual_reservoir_markup_offers_for_period_scenario(
                     maximum_offer_considering_reference =
                         sum(vr_quantity_offer[1:current_reference_segment]) - sum_of_ao_selling_offers
                     if maximum_offer_considering_reference == 0
-                        # current_account = 0
-                        # break
-                        # this would happen if and only if the current reference segment has 0 quantity offer
                         current_reference_segment += 1
                         continue
                     end

@@ -54,9 +54,7 @@ function Args(
     optimizer::Any = HiGHS.Optimizer,
 )
     if (
-        run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
-        run_mode == RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE
-    ) &&
+        run_mode == RunMode.SINGLE_PERIOD_MARKET_CLEARING || run_mode == RunMode.SINGLE_PERIOD_HEURISTIC_BID) &&
        period <= 0
         error(
             "When running in single period modes, " *

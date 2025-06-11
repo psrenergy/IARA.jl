@@ -876,7 +876,6 @@ is_single_period(inputs::AbstractInputs) =
     run_mode(inputs) in [
         RunMode.SINGLE_PERIOD_MARKET_CLEARING,
         RunMode.SINGLE_PERIOD_HEURISTIC_BID,
-        RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE,
     ]
 
 """

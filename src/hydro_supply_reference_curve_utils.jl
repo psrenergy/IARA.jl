@@ -8,6 +8,10 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+function is_reference_curve(inputs::Inputs; run_time_options::RunTimeOptions = RunTimeOptions())
+    return run_time_options.is_reference_curve
+end
+
 function initialize_reference_curve_outputs(
     inputs::Inputs,
     run_time_options::RunTimeOptions,

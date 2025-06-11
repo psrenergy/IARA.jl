@@ -99,7 +99,7 @@ function build_subproblem_model(
     jump_model = JuMP.Model(),
 )
     sp_model = SubproblemModel(; jump_model, node)
-    model_action(sp_model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, SubproblemBuild)
+    model_action(sp_model, inputs, run_time_options, SubproblemBuild)
 
     obj_weight = if linear_policy_graph(inputs)
         (1.0 - period_discount_rate(inputs))^(node - 1)
@@ -120,16 +120,15 @@ function model_action(args...)
     inputs = locate_inputs_in_args(args...)
     run_time_options = locate_run_time_options_in_args(args...)
 
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
-       run_mode(inputs) == RunMode.MIN_COST
+    if is_reference_curve(inputs; run_time_options)
+        market_clearing_model_action(args...)
+    elseif is_mincost(inputs)
         train_min_cost_model_action(args...)
     elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID
         price_taker_bid_model_action(args...)
     elseif run_mode(inputs) == RunMode.STRATEGIC_BID
         strategic_bid_model_action(args...)
     elseif is_market_clearing(inputs)
-        market_clearing_model_action(args...)
-    elseif is_reference_curve(inputs; run_time_options)
         market_clearing_model_action(args...)
     else
         error("Run mode $(run_mode(inputs)) not implemented")

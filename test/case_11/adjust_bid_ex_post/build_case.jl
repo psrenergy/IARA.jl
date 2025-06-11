@@ -178,12 +178,10 @@ IARA.add_asset_owner!(db;
 IARA.add_bidding_group!(db;
     label = "bg_1",
     assetowner_id = "asset_owner_1",
-    bid_type = IARA.BiddingGroup_BidType.OPTIMIZE,
 )
 IARA.add_bidding_group!(db;
     label = "bg_2",
     assetowner_id = "asset_owner_2",
-    bid_type = IARA.BiddingGroup_BidType.OPTIMIZE,
 )
 
 IARA.update_hydro_unit_relation!(db, "hyd_1";

@@ -126,6 +126,10 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; a
     num_subperiods = number_of_subperiods(inputs)
     ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs; asset_owner_index)
 
+    if isempty(ex_ante_generation) || isempty(ex_post_generation)
+        return nothing
+    end
+
     ex_post_min_generation = dropdims(minimum(ex_post_generation; dims = 1); dims = 1)
     ex_post_max_generation = dropdims(maximum(ex_post_generation; dims = 1); dims = 1)
 

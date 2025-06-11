@@ -96,6 +96,14 @@ Configurations for the problem.
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
     virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
         Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
+    bid_price_limit_markup_non_justified_profile::Float64 = 0.0
+    bid_price_limit_markup_justified_profile::Float64 = 0.0
+    bid_price_limit_markup_non_justified_independent::Float64 = 0.0
+    bid_price_limit_markup_justified_independent::Float64 = 0.0
+    bid_price_limit_low_reference::Float64 = 0.0
+    bid_price_limit_high_reference::Float64 = 0.0
+    bidding_group_bid_validation::Configurations_BiddingGroupBidValidation.T =
+        Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -315,6 +323,24 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_initial_energy_account_share")[1],
             Configurations_VirtualReservoirInitialEnergyAccount.T,
         )
+    configurations.bid_price_limit_markup_non_justified_profile =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_profile")[1]
+    configurations.bid_price_limit_markup_justified_profile =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_justified_profile")[1]
+    configurations.bid_price_limit_markup_non_justified_independent =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_independent")[1]
+    configurations.bid_price_limit_markup_justified_independent =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_justified_independent")[1]
+    configurations.bid_price_limit_low_reference =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_low_reference")[1]
+    configurations.bid_price_limit_high_reference =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_high_reference")[1]
+    configurations.bidding_group_bid_validation =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "bidding_group_bid_validation")[1],
+            Configurations_BiddingGroupBidValidation.T,
+        )
+
     # Load vectors
     configurations.subperiod_duration_in_hours =
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
@@ -488,6 +514,12 @@ function validate(configurations::Configurations)
             "Mincost model cannot have FROM_EX_ANTE_PHYSICAL integer variables, because it is not a clearing problem."
         )
         num_errors += 1
+    end
+    if configurations.bidding_group_bid_validation == Configurations_BiddingGroupBidValidation.VALIDATE
+        if is_null(configurations.bid_price_limit_low_reference)
+            @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
+            num_errors += 1
+        end
     end
     if any(configurations.reference_curve_demand_multipliers .< 0)
         @error("Reference curve demand multipliers must be non-negative.")
@@ -1448,6 +1480,52 @@ virtual_reservoir_initial_energy_account_share(inputs) =
     inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
 
 """
+    bid_price_limit_markup_non_justified_profile(inputs)
+
+Return the bid price limit markup for non-justified profile bids.
+"""
+bid_price_limit_markup_non_justified_profile(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_non_justified_profile
+
+"""
+    bid_price_limit_markup_justified_profile(inputs)
+
+Return the bid price limit markup for justified profile bids.
+"""
+bid_price_limit_markup_justified_profile(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_justified_profile
+
+"""
+    bid_price_limit_markup_non_justified_independent(inputs)
+
+Return the bid price limit markup for non-justified independent bids.
+"""
+bid_price_limit_markup_non_justified_independent(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_non_justified_independent
+
+"""
+    bid_price_limit_markup_justified_independent(inputs)
+
+Return the bid price limit markup for justified independent bids.
+"""
+bid_price_limit_markup_justified_independent(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_justified_independent
+
+"""
+    bid_price_limit_low_reference(inputs)
+
+Return the low reference price for bid price limits.
+"""
+bid_price_limit_low_reference(inputs) = inputs.collections.configurations.bid_price_limit_low_reference
+
+"""
+    bid_price_limit_high_reference(inputs)
+
+Return the high reference price for bid price limits.
+"""
+bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_price_limit_high_reference
+
+"""
     integer_variable_representation(inputs::Inputs, run_time_options)
 
 Determine the integer variables representation.
@@ -1538,4 +1616,9 @@ function is_skipped(inputs::AbstractInputs, construction_type::String)
             "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",
         )
     end
+end
+
+function validate_bidding_group_bids(inputs::AbstractInputs)
+    return inputs.collections.configurations.bidding_group_bid_validation ==
+           Configurations_BiddingGroupBidValidation.VALIDATE
 end

@@ -104,6 +104,8 @@ Configurations for the problem.
     bid_price_limit_high_reference::Float64 = 0.0
     bidding_group_bid_validation::Configurations_BiddingGroupBidValidation.T =
         Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE
+    purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
+        Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -339,6 +341,11 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "bidding_group_bid_validation")[1],
             Configurations_BiddingGroupBidValidation.T,
+        )
+    configurations.purchase_bids_for_virtual_reservoir_heuristic_bid =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "purchase_bids_for_virtual_reservoir_heuristic_bid")[1],
+            Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T,
         )
 
     # Load vectors
@@ -1524,6 +1531,10 @@ bid_price_limit_low_reference(inputs) = inputs.collections.configurations.bid_pr
 Return the high reference price for bid price limits.
 """
 bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_price_limit_high_reference
+
+consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs::AbstractInputs) =
+    inputs.collections.configurations.purchase_bids_for_virtual_reservoir_heuristic_bid ==
+    Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

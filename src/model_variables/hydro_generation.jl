@@ -64,6 +64,11 @@ function hydro_generation!(
         hydro_unit_production_factor(inputs, h) * hydro_turbining[b, h] / m3_per_second_to_hm3_per_hour()
     )
 
+    # No costs are added to the objective function in the reference curve model
+    if is_reference_curve(inputs, run_time_options)
+        return nothing
+    end
+
     # Objective
     @expression(
         model.jump_model,

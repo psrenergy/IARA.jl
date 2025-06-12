@@ -46,7 +46,7 @@ db = IARA.create_study!(PATH;
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    reference_curve_demand_multipliers = [0.5, 1.0, 1.5],
+    reference_curve_number_of_segments = 10,
 )
 
 # Add collection elements

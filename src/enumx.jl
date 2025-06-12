@@ -62,7 +62,6 @@ end
   - `SINGLE_PERIOD_MARKET_CLEARING`: Single period market clearing (5)
   - `SINGLE_PERIOD_HEURISTIC_BID`: Single period heuristic bid (6)
   - `INTERFACE_CALL`: Interface call (7)
-  - `SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE`: Single period hydro supply reference curve (8)
 """
 @enumx RunMode begin
     TRAIN_MIN_COST = 0
@@ -73,7 +72,6 @@ end
     SINGLE_PERIOD_MARKET_CLEARING = 5
     SINGLE_PERIOD_HEURISTIC_BID = 6
     INTERFACE_CALL = 7
-    SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE = 8
 end
 
 const AVAILABLE_RUN_MODES_MESSAGE = """
@@ -106,8 +104,6 @@ function parse_run_mode(run_mode::Union{String, Nothing})
         return RunMode.SINGLE_PERIOD_HEURISTIC_BID
     elseif run_mode == "interface-call"
         return RunMode.INTERFACE_CALL
-    elseif run_mode == "single-period-hydro-supply-reference-curve"
-        return RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE
     else
         error(
             """

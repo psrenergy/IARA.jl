@@ -45,7 +45,7 @@ function demand!(
                 demand_ts[d, blk],
                 d,
                 blk,
-            ) * run_time_options.demand_multiplier,
+            ),
         )
     ) # GWh
 
@@ -94,7 +94,7 @@ function demand!(
                 demand_ts[d, blk],
                 d,
                 blk,
-            ) * run_time_options.demand_multiplier,
+            ),
         )
     end
 

@@ -62,6 +62,16 @@ function get_model_object(sp_model::SubproblemModel, object_name::Symbol)
 end
 
 """
+    get_model_object(jump_model::Model, object_name::Symbol)    
+
+Retrieve an object (variable, constraint or expression) from the `jump_model` 
+using the provided `object_name`. This allows flexible access to model components by name.
+"""
+function get_model_object(jump_model::Model, object_name::Symbol)
+    return jump_model[object_name]
+end
+
+"""
     constraint_dual_recorder(constraint_name::Symbol)
 
 Return a function that retrieves the dual value of a constraint with the provided name.
@@ -99,7 +109,7 @@ function build_subproblem_model(
     jump_model = JuMP.Model(),
 )
     sp_model = SubproblemModel(; jump_model, node)
-    model_action(sp_model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, SubproblemBuild)
+    model_action(sp_model, inputs, run_time_options, SubproblemBuild)
 
     obj_weight = if linear_policy_graph(inputs)
         (1.0 - period_discount_rate(inputs))^(node - 1)
@@ -120,16 +130,15 @@ function model_action(args...)
     inputs = locate_inputs_in_args(args...)
     run_time_options = locate_run_time_options_in_args(args...)
 
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
-       run_mode(inputs) == RunMode.MIN_COST
+    if is_reference_curve(inputs, run_time_options)
+        reference_curve_model_action(args...)
+    elseif is_mincost(inputs)
         train_min_cost_model_action(args...)
     elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID
         price_taker_bid_model_action(args...)
     elseif run_mode(inputs) == RunMode.STRATEGIC_BID
         strategic_bid_model_action(args...)
     elseif is_market_clearing(inputs)
-        market_clearing_model_action(args...)
-    elseif is_reference_curve(inputs; run_time_options)
         market_clearing_model_action(args...)
     else
         error("Run mode $(run_mode(inputs)) not implemented")
@@ -781,6 +790,32 @@ function bid_based_market_clearing_model_action(args...)
             bidding_group_profile_minimum_activation!(args...)
             bidding_group_profile_precedence!(args...)
         end
+    end
+
+    return nothing
+end
+
+function reference_curve_model_action(args...)
+    inputs = locate_inputs_in_args(args...)
+    action = locate_action_in_args(args...)
+    run_time_options = locate_run_time_options_in_args(args...)
+
+    # Variables
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
+        hydro_generation!(args...)
+        hydro_volume!(args...)
+        hydro_inflow!(args...)
+        virtual_reservoir_total_generation!(args...)
+        virtual_reservoir_energy_account!(args...)
+        virtual_reservoir_previous_reference_quantity!(args...)
+    end
+
+    # Constraints
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
+        hydro_balance!(args...)
+        virtual_reservoir_total_generation_correspondence!(args...)
+        virtual_reservoir_generation_reference!(args...)
+        virtual_reservoir_non_decreasing_reference_quantity!(args...)
     end
 
     return nothing

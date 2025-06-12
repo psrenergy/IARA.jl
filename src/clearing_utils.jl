@@ -269,7 +269,7 @@ Determine the clearing model type.
 """
 function construction_type(inputs::Inputs, run_time_options::RunTimeOptions)
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return Configurations_ConstructionType.COST_BASED
     end
 
@@ -427,7 +427,7 @@ Check if the market clearing has physical variables in at least one of its probl
 """
 function clearing_has_physical_variables(inputs::Inputs, run_time_options::RunTimeOptions)
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return true
     end
     physical_variable_model_types = [

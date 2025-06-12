@@ -8,8 +8,35 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function is_reference_curve(inputs::Inputs; run_time_options::RunTimeOptions = RunTimeOptions())
+function is_reference_curve(inputs::Inputs, run_time_options::RunTimeOptions)
     return run_time_options.is_reference_curve
+end
+
+function reference_curve_multipliers(inputs::Inputs)
+    all_multipliers = range(0.0, 1.0; length = reference_curve_number_of_segments(inputs) + 1)
+    # Remove the first multiplier, which is always 0.0
+    return all_multipliers[2:end]
+end
+
+function update_virtual_reservoir_reference_multiplier!(
+    model::ProblemModel,
+    inputs::Inputs,
+    reference_multiplier::Float64,
+    period::Int,
+)
+    subproblem_model = model.policy_graph[period].subproblem
+
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+
+    # Model parameters
+    virtual_reservoir_reference_multiplier = get_model_object(subproblem_model, :virtual_reservoir_reference_multiplier)
+
+    return MOI.set(
+        subproblem_model,
+        POI.ParameterValue(),
+        virtual_reservoir_reference_multiplier,
+        reference_multiplier,
+    )
 end
 
 function initialize_reference_curve_outputs(
@@ -20,13 +47,23 @@ function initialize_reference_curve_outputs(
 
     add_custom_recorder_to_query_from_subproblem_result!(
         outputs,
-        :load_marginal_cost,
-        constraint_dual_recorder(inputs, :load_balance),
+        :virtual_reservoir_reference_price,
+        constraint_dual_recorder(inputs, :virtual_reservoir_generation_reference),
     )
 
     add_symbol_to_query_from_subproblem_result!(
         outputs,
-        :hydro_generation,
+        :virtual_reservoir_total_generation,
+    )
+
+    add_symbol_to_query_from_subproblem_result!(
+        outputs,
+        :virtual_reservoir_available_energy,
+    )
+
+    add_symbol_to_query_from_subproblem_result!(
+        outputs,
+        :inflow_slack,
     )
 
     # Outputs
@@ -58,47 +95,43 @@ function post_process_reference_curve_outputs(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     simulation_results::IARA.SimulationResultsFromPeriodScenario,
+    period::Int,
+    scenario::Int,
 )
-    # Sizes and indexes
-    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options)
-    asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
-    number_of_hydro_units = length(existing_hydro_units)
-    number_of_virtual_reservoirs = length(virtual_reservoirs)
-    number_of_asset_owners = length(asset_owners)
+    number_of_virtual_reservoirs = number_of_elements(inputs, VirtualReservoir)
 
     # Simulation results
-    load_marginal_cost = simulation_results.data[:load_marginal_cost].data
-    hydro_generation = simulation_results.data[:hydro_generation].data
+    quantity = simulation_results.data[:virtual_reservoir_total_generation].data
+    price = simulation_results.data[:virtual_reservoir_reference_price]
+    inflow_slack = simulation_results.data[:inflow_slack].data
 
-    # Map load marginal cost to hydro units
-    hydro_load_marginal_cost = zeros(number_of_subperiods(inputs), number_of_hydro_units)
-    for h in existing_hydro_units, subperiod in 1:number_of_subperiods(inputs)
-        hydro_load_marginal_cost[subperiod, h] =
-            (load_marginal_cost[subperiod, hydro_unit_bus_index(inputs, h)] / money_to_thousand_money()) -
-            hydro_unit_om_cost(inputs, h)
+    # Read serialized reference curve
+    reference_quantity, reference_price = read_serialized_reference_curve(inputs, period, scenario)
+
+    # Convert price in k$/MWh to $/MWh
+    price /= money_to_thousand_money()
+    price = zeros(number_of_virtual_reservoirs) .+ price
+
+    if !isapprox(sum(inflow_slack), 0.0; atol = 1e-4) || any(price .> demand_deficit_cost(inputs))
+        subscenario = 1 # The reference curve model has no subscenario dimension
+        # If the problem is infeasible, use the total virtual reservoir energy
+        quantity = virtual_reservoir_stored_energy(
+            inputs,
+            run_time_options,
+            period,
+            scenario,
+            subscenario,
+        )
+        # If the problem is infeasible, use the last price and add a markup
+        price = reference_price[end] * (1.0 + reference_curve_final_segment_price_markup(inputs))
     end
 
-    # Aggregate subperiods
-    hydro_load_marginal_cost_agg = zeros(number_of_hydro_units)
-    hydro_generation_agg = zeros(number_of_hydro_units)
-    for h in existing_hydro_units
-        hydro_generation_agg[h] = sum(hydro_generation[:, h])
-        hydro_load_marginal_cost_agg[h] = mean(hydro_load_marginal_cost[:, h])
-    end
+    # Get segment size from absolute quantity
+    quantity .-= sum_previous_reference_curve_quantities(
+        inputs,
+        reference_quantity,
+    )
 
-    # Aggregate for virtual reservoirs
-    virtual_reservoir_generation = zeros(number_of_virtual_reservoirs)
-    virtual_reservoir_marginal_cost = zeros(number_of_virtual_reservoirs)
-    for vr in virtual_reservoirs
-        virtual_reservoir_generation[vr] =
-            sum(hydro_generation_agg[virtual_reservoir_hydro_unit_indices(inputs, vr)])
-        virtual_reservoir_marginal_cost[vr] =
-            mean(hydro_load_marginal_cost_agg[virtual_reservoir_hydro_unit_indices(inputs, vr)])
-    end
-
-    quantity = virtual_reservoir_generation
-    price = virtual_reservoir_marginal_cost
     return quantity, price
 end
 
@@ -115,6 +148,8 @@ function write_reference_curve_outputs(
         inputs,
         run_time_options,
         simulation_results,
+        period,
+        scenario,
     )
 
     serialize_reference_curve(
@@ -172,8 +207,8 @@ function serialize_reference_curve(
         data_to_serialize[:quantity] = Vector{Float64}[]
         data_to_serialize[:price] = Vector{Float64}[]
     end
-    push!(data_to_serialize[:quantity], quantity)
-    push!(data_to_serialize[:price], price)
+    push!(data_to_serialize[:quantity], round_output(quantity))
+    push!(data_to_serialize[:price], round_output(price))
 
     Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing
@@ -189,9 +224,21 @@ function read_serialized_reference_curve(
         joinpath(temp_path, "reference_curve_period_$(period)_scenario_$(scenario).json")
 
     if !isfile(serialized_file_name)
-        error("Serialized reference curve file not found: $serialized_file_name")
+        return Vector{Float64}[], Vector{Float64}[]
     end
 
     data = Serialization.deserialize(serialized_file_name)
     return data[:quantity], data[:price]
+end
+
+function sum_previous_reference_curve_quantities(
+    inputs::Inputs,
+    reference_quantity::Vector{Vector{Float64}},
+)
+    number_of_virtual_reservoirs = number_of_elements(inputs, VirtualReservoir)
+    reference_quantity_sum = zeros(number_of_virtual_reservoirs)
+    for i in eachindex(reference_quantity)
+        reference_quantity_sum .+= reference_quantity[i]
+    end
+    return reference_quantity_sum
 end

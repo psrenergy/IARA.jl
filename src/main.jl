@@ -297,7 +297,6 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
        generate_heuristic_bids_for_clearing(inputs)
         run_time_options =
             RunTimeOptions(;
-                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
                 is_reference_curve = true,
             )
         reference_curve_outputs = initialize_reference_curve_outputs(
@@ -451,7 +450,6 @@ function simulate_all_scenarios_of_single_period_market_clearing(
        generate_heuristic_bids_for_clearing(inputs)
         run_time_options =
             RunTimeOptions(;
-                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
                 is_reference_curve = true,
             )
         reference_curve_outputs = initialize_reference_curve_outputs(
@@ -604,10 +602,6 @@ function run_clearing_simulation(
 
     simulation_results = simulate(model, inputs, outputs, run_time_options; current_period = period)
 
-    if is_reference_curve(inputs; run_time_options)
-        return simulation_results
-    end
-
     for scenario in 1:number_of_scenarios(inputs)
         # Update the time series in the external files to the current period and scenario
         update_time_series_views_from_external_files!(inputs; period, scenario)
@@ -694,7 +688,6 @@ function single_period_heuristic_bid(
     if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         run_time_options =
             RunTimeOptions(;
-                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
                 is_reference_curve = true,
             )
         reference_curve_outputs = initialize_reference_curve_outputs(
@@ -762,19 +755,27 @@ function build_reference_curve(
     # Update the time series in the database to the current period
     update_time_series_from_db!(inputs, period)
 
+    # Build the model
+    run_time_options = RunTimeOptions(; is_reference_curve = true)
+    model = build_model(inputs, run_time_options)
+    read_cuts_into_clearing_model!(
+        model,
+        inputs,
+        run_time_options,
+        period,
+    )
+
     @info("Calculating the reference hydro supply curve for period: $period")
-    for (reference_curve_segment, demand_multiplier) in enumerate(reference_curve_demand_multipliers(inputs))
-        # Update the demand multiplier
-        run_time_options =
-            RunTimeOptions(;
-                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
-                demand_multiplier,
-                is_reference_curve = true,
-            )
-        # Rebuild the model with the new demand multiplier
-        model = build_model(inputs, run_time_options)
+    for (reference_curve_segment, reference_multiplier) in enumerate(reference_curve_multipliers(inputs))
+        # Update the reference generation multiplier for the current segment
+        update_virtual_reservoir_reference_multiplier!(
+            model,
+            inputs,
+            reference_multiplier,
+            period,
+        )
         # Run simulation
-        simulation_results = run_clearing_simulation(model, inputs, run_time_options, period; outputs)
+        simulation_results = simulate(model, inputs, outputs, run_time_options; current_period = period)
         # Get results
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario

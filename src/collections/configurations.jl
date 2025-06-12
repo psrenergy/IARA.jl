@@ -31,7 +31,6 @@ Configurations for the problem.
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Float64} = []
-    reference_curve_demand_multipliers::Vector{Float64} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
@@ -104,6 +103,8 @@ Configurations for the problem.
     bid_price_limit_high_reference::Float64 = 0.0
     bidding_group_bid_validation::Configurations_BiddingGroupBidValidation.T =
         Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE
+    reference_curve_number_of_segments::Int = 0
+    reference_curve_final_segment_price_markup::Float64 = 0.0
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -340,14 +341,16 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "bidding_group_bid_validation")[1],
             Configurations_BiddingGroupBidValidation.T,
         )
+    configurations.reference_curve_number_of_segments =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
+    configurations.reference_curve_final_segment_price_markup =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
         PSRI.get_vectors(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
-    configurations.reference_curve_demand_multipliers =
-        PSRI.get_vectors(inputs.db, "Configuration", "reference_curve_demand_multipliers")[1]
 
     # Load time series files
     configurations.hour_subperiod_map_file =
@@ -521,10 +524,6 @@ function validate(configurations::Configurations)
             num_errors += 1
         end
     end
-    if any(configurations.reference_curve_demand_multipliers .< 0)
-        @error("Reference curve demand multipliers must be non-negative.")
-        num_errors += 1
-    end
     return num_errors
 end
 
@@ -620,14 +619,6 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             num_errors += 1
         end
         if is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)
-            if isempty(configurations.reference_curve_demand_multipliers)
-                @error(
-                    "Reference curve demand multipliers vector is empty. Generating heuristic bids for virtual reservoirs "
-                    *
-                    "requires reference curve to be calculated, which uses the reference curve demand multipliers."
-                )
-                num_errors += 1
-            end
             if !has_fcf_cuts_to_read(inputs)
                 @error(
                     "FCF cuts file is not defined. Generating heuristic bids for virtual reservoirs requires FCF cuts to be read."
@@ -936,14 +927,6 @@ function expected_number_of_repeats_per_node(inputs::AbstractInputs, node::Int)
 end
 
 """
-    reference_curve_demand_multipliers(inputs::AbstractInputs)
-
-Return the reference curve demand multipliers.
-"""
-reference_curve_demand_multipliers(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_demand_multipliers
-
-"""
     use_binary_variables(inputs::AbstractInputs, run_time_options)
 
 Return whether binary variables should be used.
@@ -1135,10 +1118,6 @@ read_inflow_from_file(inputs::AbstractInputs) =
 Return whether bids should be read from a file.
 """
 function read_bids_from_file(inputs::AbstractInputs)
-    # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs)
-        return false
-    end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
         Configurations_ConstructionType.COST_BASED,
@@ -1158,10 +1137,6 @@ end
 Return whether heuristic bids should be generated for clearing.
 """
 function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
-    # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs)
-        return false
-    end
     if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
         return true
     end
@@ -1183,7 +1158,7 @@ function is_any_construction_type_cost_based(
     run_time_options::RunTimeOptions = RunTimeOptions(),
 )
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return true
     end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
@@ -1200,7 +1175,7 @@ end
 
 function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return false
     end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.HYBRID ||
@@ -1525,13 +1500,29 @@ Return the high reference price for bid price limits.
 bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_price_limit_high_reference
 
 """
+    reference_curve_number_of_segments(inputs::AbstractInputs)
+
+Return the number of segments in the reference curve.
+"""
+reference_curve_number_of_segments(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_number_of_segments
+
+"""
+    reference_curve_final_segment_price_markup(inputs::AbstractInputs)
+
+Return the final segment price markup for the reference curve.
+"""
+reference_curve_final_segment_price_markup(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_final_segment_price_markup
+
+"""
     integer_variable_representation(inputs::Inputs, run_time_options)
 
 Determine the integer variables representation.
 """
 function integer_variable_representation(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     # Always linearize the integer variables for the reference curve run mode
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return Configurations_IntegerVariableRepresentation.LINEARIZE
     elseif is_mincost(inputs)
         return integer_variable_representation_mincost(inputs)

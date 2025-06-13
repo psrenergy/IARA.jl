@@ -133,6 +133,18 @@ function validate(virtual_reservoir::VirtualReservoir)
             )
             num_errors += 1
         end
+        if !allunique(virtual_reservoir.hydro_unit_indices[i])
+            @error(
+                "Virtual reservoir $(virtual_reservoir_label) has duplicate hydro unit indices: $(virtual_reservoir.hydro_unit_indices[i]). Each hydro unit must be associated with a virtual reservoir only once."
+            )
+            num_errors += 1
+        end
+        if !allunique(virtual_reservoir.asset_owner_indices[i])
+            @error(
+                "Virtual reservoir $(virtual_reservoir_label) has duplicate asset owner indices: $(virtual_reservoir.asset_owner_indices[i]). Each asset owner must be associated with a virtual reservoir only once."
+            )
+            num_errors += 1
+        end
     end
     return num_errors
 end
@@ -172,6 +184,26 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
                     "Initial energy account share for virtual reservoir $(virtual_reservoir_label) must be defined for all asset owners."
                 )
                 num_errors += 1
+            end
+        end
+    end
+    counteroffer_agent =
+        findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT)
+    if !isnothing(counteroffer_agent)
+        for vr in 1:length(virtual_reservoir)
+            if !(counteroffer_agent in virtual_reservoir.asset_owner_indices[vr])
+                @error(
+                    "Counteroffer agent $(inputs.collections.asset_owner.label[counteroffer_agent]) must be associated with virtual reservoir $(virtual_reservoir.label[vr])."
+                )
+                num_errors += 1
+            else
+                index_among_vr = findfirst(virtual_reservoir.asset_owner_indices[vr] .== counteroffer_agent)
+                if virtual_reservoir.asset_owners_inflow_allocation[vr][index_among_vr] > 0.0
+                    @error(
+                        "Counteroffer agent $(inputs.collections.asset_owner.label[counteroffer_agent]) in virtual reservoir $(virtual_reservoir.label[vr]) must have an inflow allocation of zero."
+                    )
+                    num_errors += 1
+                end
             end
         end
     end

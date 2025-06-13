@@ -124,6 +124,12 @@ Validate the asset owner collection.
 """
 function validate(asset_owner::AssetOwner)
     num_errors = 0
+    if count(asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT) > 1
+        num_errors += 1
+        @error(
+            "The number of counteroffer agents must be at most one, but found $(count(asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT))."
+        )
+    end
     for i in 1:length(asset_owner)
         vector = asset_owner.virtual_reservoir_energy_account_upper_bound[i]
         if !isempty(vector)
@@ -188,6 +194,7 @@ end
 
 is_price_taker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER
 is_price_maker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
+is_counteroffer_agent(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.COUNTEROFFER_AGENT
 
 """
     asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, subperiod::Int, point_idx::Int)

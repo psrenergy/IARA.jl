@@ -324,6 +324,17 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             num_errors += 1
         end
     end
+    counteroffer_agent =
+        findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT)
+    if !isnothing(counteroffer_agent)
+        if counteroffer_agent in bidding_group.asset_owner_index
+            bg_indices = findall(bidding_group.asset_owner_index .== counteroffer_agent)
+            @error(
+                "The counteroffer agent cannot be assigned to a bidding group. It is assigned to $(bidding_group.label[bg_indices])."
+            )
+            num_errors += 1
+        end
+    end
     return num_errors
 end
 

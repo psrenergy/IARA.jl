@@ -944,23 +944,25 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             #--------------
             # Energy to buy
             #--------------
-            current_account = accounts[vr][i]
-            # There will be defined buying bids for the current asset owner until the resulting account share is 1.
-            while current_account < vr_total_account
-                current_account_share = current_account / vr_total_account
-                markup_index =
-                    findfirst(i -> account_upper_bounds[i] > current_account_share, 1:length(account_upper_bounds))
-                account_share_upper_bound_for_markup = account_upper_bounds[markup_index]
+            if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs)
+                current_account = accounts[vr][i]
+                # There will be defined buying bids for the current asset owner until the resulting account share is 1.
+                while current_account < vr_total_account
+                    current_account_share = current_account / vr_total_account
+                    markup_index =
+                        findfirst(i -> account_upper_bounds[i] > current_account_share, 1:length(account_upper_bounds))
+                    account_share_upper_bound_for_markup = account_upper_bounds[markup_index]
 
-                seg += 1
-                offer = current_account - account_share_upper_bound_for_markup * vr_total_account
-                # Note that the offer is negative, because it is a bid to buy energy.
-                quantity_offers[vr, ao, seg] = offer
-                # The purchase price is based on the price of the first segment of the reference curve.
-                price_offers[vr, ao, seg] =
-                    vr_price_offer[1] * (1 + markups[markup_index] - asset_owner_purchase_discount_rate(inputs, ao))
+                    seg += 1
+                    offer = current_account - account_share_upper_bound_for_markup * vr_total_account
+                    # Note that the offer is negative, because it is a bid to buy energy.
+                    quantity_offers[vr, ao, seg] = offer
+                    # The purchase price is based on the price of the first segment of the reference curve.
+                    price_offers[vr, ao, seg] =
+                        vr_price_offer[1] * (1 + markups[markup_index] - asset_owner_purchase_discount_rate(inputs, ao))
 
-                current_account -= offer
+                    current_account -= offer
+                end
             end
         end
     end

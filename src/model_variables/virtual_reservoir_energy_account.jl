@@ -22,6 +22,7 @@ function virtual_reservoir_energy_account!(
     ::Type{SubproblemBuild},
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    placeholder_energy_account = 0.0
 
     @variable(
         model.jump_model,
@@ -31,7 +32,7 @@ function virtual_reservoir_energy_account!(
         ]
         in
         MOI.Parameter(
-            virtual_reservoir_energy_account_from_previous_period(inputs, 1, 1)[vr][ao],
+            placeholder_energy_account,
         ),
     )
     return nothing
@@ -65,12 +66,12 @@ function virtual_reservoir_energy_account!(
 
     virtual_reservoir_energy_account = get_model_object(model, :virtual_reservoir_energy_account)
     for vr in virtual_reservoirs
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+        for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
             MOI.set(
                 model.jump_model,
                 POI.ParameterValue(),
                 virtual_reservoir_energy_account[vr, ao],
-                virtual_reservoir_energy_account_at_beginning_of_period[vr][ao] +
+                virtual_reservoir_energy_account_at_beginning_of_period[vr][i] +
                 vr_energy_arrival[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao),
             )
         end

@@ -862,9 +862,18 @@ function virtual_reservoir_markup_offers_for_period_scenario(
         vr_total_account = sum(accounts[vr])
         vr_quantity_offer =
             [quantity_offer_reference_curve[seg][vr] for seg in eachindex(quantity_offer_reference_curve)]
+        first_warning = false
+        if vr_total_account - sum(vr_quantity_offer) > 1e-6
+            @warn "Virtual reservoir $(vr) has a total account of $(vr_total_account) MWh, but the sum of the reference curve offers is $(sum(vr_quantity_offer)) MWh."
+            first_warning = true
+        end
         vr_price_offer = [price_offer_reference_curve[seg][vr] for seg in eachindex(price_offer_reference_curve)]
         @assert issorted(vr_price_offer)
         for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
+            # The reference curve for the asset owner is proportional to the original reference curve, but scaled by the
+            # share of the asset owner's account in the total account of the virtual reservoir.
+            ao_reference_quantity_offer = vr_quantity_offer * accounts[vr][i] / vr_total_account
+
             seg = 0
             ao_quantity_offer = Float64[]
             ao_price_offer = Float64[]
@@ -875,13 +884,13 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             #---------------
             # Energy to sell
             #---------------
-            current_account = accounts[vr][ao]
+            current_account = accounts[vr][i]
             # There will be defined selling bids for the current asset owner until the resulting account is zero.
             current_reference_segment = 1
             sum_of_ao_selling_offers = 0.0
             # Assuming that this asset owner is the only one selling, the segment of the reference curve only changes when
             # the sum of offers for the current asset owner is greater than the sum of quantity offers until this segment.
-            while current_account > 0
+            while current_account > 1e-6
                 # In this iteration we define the quantity offer for the current markup, which is based on the account share of the
                 # asset owner in the total account of the virtual reservoir. The calculation assumes that the total account of the
                 # virtual reservoir is static, does not change according to the asset owner bids
@@ -897,8 +906,9 @@ function virtual_reservoir_markup_offers_for_period_scenario(
                 sum_of_offers_for_current_markup = 0.0
                 while sum_of_offers_for_current_markup < maximum_offer_considering_markup
                     maximum_offer_considering_reference =
-                        sum(vr_quantity_offer[1:current_reference_segment]) - sum_of_ao_selling_offers
+                        sum(ao_reference_quantity_offer[1:current_reference_segment]) - sum_of_ao_selling_offers
                     if maximum_offer_considering_reference == 0
+                        # This is possibly redundant with the end of this while loop
                         current_reference_segment += 1
                         continue
                     end
@@ -915,12 +925,14 @@ function virtual_reservoir_markup_offers_for_period_scenario(
                     sum_of_ao_selling_offers += offer
                     current_account -= offer
 
-                    if sum_of_ao_selling_offers >= sum(vr_quantity_offer[1:current_reference_segment])
+                    if sum_of_ao_selling_offers >= sum(ao_reference_quantity_offer[1:current_reference_segment])
                         current_reference_segment += 1
-                        if current_reference_segment > length(vr_quantity_offer)
+                        if current_reference_segment > length(ao_reference_quantity_offer)
                             # We have reached the end of the reference curve, so we stop defining offers for this asset owner
-                            if current_account > 0
-                                @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
+                            if current_account > 1e-6
+                                if !first_warning
+                                    @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
+                                end
                                 current_account = 0 # break the external while loop
                             end
                             break
@@ -933,7 +945,7 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             # Energy to buy
             #--------------
             if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs)
-                current_account = accounts[vr][ao]
+                current_account = accounts[vr][i]
                 # There will be defined buying bids for the current asset owner until the resulting account share is 1.
                 while current_account < vr_total_account
                     current_account_share = current_account / vr_total_account

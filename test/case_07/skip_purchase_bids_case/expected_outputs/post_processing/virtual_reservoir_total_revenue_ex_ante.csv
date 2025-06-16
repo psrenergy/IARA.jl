@@ -1,0 +1,7 @@
+period,scenario,subscenario,reservoir_1 - asset_owner_1,reservoir_1 - asset_owner_2
+1,1,1,6.0637502e7,1.81912498e8
+1,2,1,9.8e7,2.94e8
+2,1,1,7.0743752e7,9.0956248e7
+2,2,1,1.37197e8,1.47003e8
+3,1,1,0.0,0.0
+3,2,1,1.9606e8,-60000.0

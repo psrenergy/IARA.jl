@@ -1235,36 +1235,42 @@ function adjust_quantity_offer_for_ex_post!(
 
     for bg in bidding_group_indexes
         # Check if the bidding group has ex post auto adjustment enabled
-        if bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.NONE
+        if bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT
             continue
         end
         # Check if the bidding group has hydro units
         # If the bidding group has hydro units, we skip the adjustment
-        if bidding_group_has_hydro_units(inputs, bg)
+        if bidding_group_has_hydro_units(inputs, bg) &&
+            clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
             continue
         end
         for bus in 1:number_of_elements(inputs, Bus)
             for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
                 for blk in subperiods(inputs)
-                    # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
-                    run_time_options =
-                        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-                    total_energy_ex_ante = sum_units_energy_ub_per_bg(
-                        inputs,
-                        run_time_options,
-                        bg,
-                        bus,
-                        blk,
-                        subscenario,
-                    )
-                    total_demand_ex_ante = sum_demand_per_bg(
-                        inputs,
-                        run_time_options,
-                        bg,
-                        bus,
-                        blk,
-                        subscenario,
-                    )
+                    if bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.ADJUST_TO_EXPOST_AVAILABILITY
+                        # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
+                        run_time_options =
+                            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+                        total_energy_ex_ante = sum_units_energy_ub_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
+                        total_demand_ex_ante = sum_demand_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
+                    elseif bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.ADJUST_TO_EXANTE_BID
+                        total_energy_ex_ante = max(quantity_offer_series.data[bg, bus, bds, blk], 0.0)
+                        total_demand_ex_ante = min(quantity_offer_series.data[bg, bus, bds, blk], 0.0)
+                    end
                     run_time_options =
                         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
                     total_energy_ex_post = sum_units_energy_ub_per_bg(

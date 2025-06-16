@@ -16,7 +16,7 @@ IARA.add_bidding_group!(db;
     label = "bg_3",
     assetowner_id = "asset_owner_1",  # or re-use an existing asset owner if preferred
     bid_type = IARA.BiddingGroup_BidType.OPTIMIZE,
-    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NONE,
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
 )
 
 # Add an extra renewable unit "gnd_2"

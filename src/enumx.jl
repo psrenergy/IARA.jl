@@ -366,12 +366,14 @@ end
 """
     BiddingGroup_ExPostAdjustMode
 
-    - `NONE`: Do not adjust (0)
-    - `AUTO`: Automatically adjust (1)
+    - `NO_ADJUSTMENT`: No adjustment (0)
+    - `ADJUST_TO_EXPOST_AVAILABILITY`: Adjust to ex-post availability (1)
+    - `ADJUST_TO_EXANTE_BID`: Adjust to ex-ante bid (2)
 """
 @enumx BiddingGroup_ExPostAdjustMode begin
-    NONE = 0
-    AUTO = 1
+    NO_ADJUSTMENT = 0
+    ADJUST_TO_EXPOST_AVAILABILITY  = 1
+    ADJUST_TO_EXANTE_BID = 2
 end
 """
     RunTime_ClearingSubproblem

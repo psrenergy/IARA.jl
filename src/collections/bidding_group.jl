@@ -412,6 +412,8 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
+bidding_group_has_hydro_units(inputs::AbstractInputs, bg::Int) = bg in hydro_unit_bidding_group_index(inputs)
+
 has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg._has_generation_besides_virtual_reservoirs[i]
 
 bidding_group_ex_post_adjust(inputs::AbstractInputs, i::Int) = inputs.collections.bidding_group.ex_post_adjust_mode[i]

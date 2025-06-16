@@ -351,6 +351,18 @@ end
 end
 
 """
+    BiddingGroup_ExPostAdjustMode
+
+    - `NO_ADJUSTMENT`: No adjustment (0)
+    - `ADJUST_TO_EXPOST_AVAILABILITY`: Adjust to ex-post availability (1)
+    - `ADJUST_TO_EXANTE_BID`: Adjust to ex-ante bid (2)
+"""
+@enumx BiddingGroup_ExPostAdjustMode begin
+    NO_ADJUSTMENT = 0
+    ADJUST_TO_EXPOST_AVAILABILITY = 1
+    ADJUST_TO_EXANTE_BID = 2
+end
+"""
     RunTime_ClearingSubproblem
 
   - `EX_ANTE_PHYSICAL`: Ex-Ante physical (0)

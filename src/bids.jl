@@ -181,7 +181,7 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
     # Sizes
     number_of_virtual_reservoirs = length(virtual_reservoir_indices)
     number_of_asset_owners = length(asset_owner_indices)
-    number_of_reference_curve_segments = length(reference_curve_demand_multipliers(inputs))
+    number_of_reference_curve_segments = reference_curve_number_of_segments(inputs)
 
     # AO
     asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)

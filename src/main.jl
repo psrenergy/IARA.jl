@@ -343,17 +343,6 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 build_reference_curve(inputs, reference_curve_outputs, period)
             end
 
-            # Bid price limits
-            if validate_bidding_group_bids(inputs)
-                run_time_options = RunTimeOptions()
-                bidding_group_bid_price_limits_for_period(
-                    inputs,
-                    run_time_options,
-                    period;
-                    outputs = heuristic_bids_outputs,
-                )
-            end
-
             # Heuristic bids
             if generate_heuristic_bids_for_clearing(inputs)
                 run_time_options = RunTimeOptions()
@@ -366,6 +355,28 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                         period,
                         scenario;
                         outputs = heuristic_bids_outputs,
+                    )
+                end
+            end
+
+            # Bid validation
+            if validate_bidding_group_bids(inputs)
+                run_time_options = RunTimeOptions()
+                bidding_group_bid_price_limits_for_period(
+                    inputs,
+                    run_time_options,
+                    period;
+                    outputs = heuristic_bids_outputs,
+                )
+                for scenario in 1:number_of_scenarios(inputs)
+                    # Update the time series in the external files to the current period and scenario
+                    update_time_series_views_from_external_files!(inputs; period, scenario)
+                    validate_bids_for_period_scenario(
+                        inputs,
+                        heuristic_bids_outputs,
+                        run_time_options;
+                        period,
+                        scenario,
                     )
                 end
             end
@@ -487,17 +498,6 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             build_reference_curve(inputs, reference_curve_outputs, period)
         end
 
-        # Bid price limits
-        if validate_bidding_group_bids(inputs)
-            run_time_options = RunTimeOptions()
-            bidding_group_bid_price_limits_for_period(
-                inputs,
-                run_time_options,
-                period;
-                outputs = heuristic_bids_outputs,
-            )
-        end
-
         # Heuristic bids
         if generate_heuristic_bids_for_clearing(inputs)
             run_time_options = RunTimeOptions()
@@ -510,6 +510,28 @@ function simulate_all_scenarios_of_single_period_market_clearing(
                     period,
                     scenario;
                     outputs = heuristic_bids_outputs,
+                )
+            end
+        end
+
+        # Bid validation
+        if validate_bidding_group_bids(inputs)
+            run_time_options = RunTimeOptions()
+            bidding_group_bid_price_limits_for_period(
+                inputs,
+                run_time_options,
+                period;
+                outputs = heuristic_bids_outputs,
+            )
+            for scenario in 1:number_of_scenarios(inputs)
+                # Update the time series in the external files to the current period and scenario
+                update_time_series_views_from_external_files!(inputs; period, scenario)
+                validate_bids_for_period_scenario(
+                    inputs,
+                    heuristic_bids_outputs,
+                    run_time_options;
+                    period,
+                    scenario,
                 )
             end
         end

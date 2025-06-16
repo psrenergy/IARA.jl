@@ -70,6 +70,16 @@ in chunks.
     minimum_activation_level_profile::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
 
+    # BiddingGroups
+    bid_price_limit_justified_independent::TimeSeriesView{Float64, 1} =
+        TimeSeriesView{Float64, 1}()
+    bid_price_limit_non_justified_independent::TimeSeriesView{Float64, 1} =
+        TimeSeriesView{Float64, 1}()
+    bid_price_limit_justified_profile::TimeSeriesView{Float64, 1} =
+        TimeSeriesView{Float64, 1}()
+    bid_price_limit_non_justified_profile::TimeSeriesView{Float64, 1} =
+        TimeSeriesView{Float64, 1}()
+
     # VirtualReservoirs x AssetOwners x segments
     virtual_reservoir_quantity_offer::VirtualReservoirBidsView{Float64} = VirtualReservoirBidsView{Float64}()
     virtual_reservoir_price_offer::VirtualReservoirBidsView{Float64} = VirtualReservoirBidsView{Float64}()
@@ -280,6 +290,60 @@ function initialize_time_series_from_external_files(inputs)
             bidding_groups_to_read = bidding_group_label(inputs)[bidding_groups],
             buses_to_read = bus_label(inputs),
         )
+    end
+
+    # Bid price limit
+    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) && must_read_bid_price_limit_file(inputs)
+        if has_any_simple_bids(inputs)
+            file = joinpath(path_case(inputs), bidding_group_bid_price_limit_justified_independent_file(inputs))
+            num_errors += initialize_time_series_view_from_external_file(
+                inputs.time_series.bid_price_limit_justified_independent,
+                inputs,
+                file;
+                expected_unit = raw"$/MWh",
+                possible_expected_dimensions = [
+                    [:period, :scenario],
+                ],
+                labels_to_read = bidding_group_label(inputs),
+            )
+
+            file = joinpath(path_case(inputs), bidding_group_bid_price_limit_non_justified_independent_file(inputs))
+            num_errors += initialize_time_series_view_from_external_file(
+                inputs.time_series.bid_price_limit_non_justified_independent,
+                inputs,
+                file;
+                expected_unit = raw"$/MWh",
+                possible_expected_dimensions = [
+                    [:period, :scenario],
+                ],
+                labels_to_read = bidding_group_label(inputs),
+            )
+        end
+        if has_any_profile_bids(inputs)
+            file = joinpath(path_case(inputs), bidding_group_bid_price_limit_justified_profile_file(inputs))
+            num_errors += initialize_time_series_view_from_external_file(
+                inputs.time_series.bid_price_limit_justified_profile,
+                inputs,
+                file;
+                expected_unit = raw"$/MWh",
+                possible_expected_dimensions = [
+                    [:period, :scenario, :subperiod],
+                ],
+                labels_to_read = bidding_group_label(inputs),
+            )
+
+            file = joinpath(path_case(inputs), bidding_group_bid_price_limit_non_justified_profile_file(inputs))
+            num_errors += initialize_time_series_view_from_external_file(
+                inputs.time_series.bid_price_limit_non_justified_profile,
+                inputs,
+                file;
+                expected_unit = raw"$/MWh",
+                possible_expected_dimensions = [
+                    [:period, :scenario, :subperiod],
+                ],
+                labels_to_read = bidding_group_label(inputs),
+            )
+        end
     end
 
     # profile offers

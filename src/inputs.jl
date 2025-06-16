@@ -816,3 +816,32 @@ subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod
 Return a 3-element vector with the current season, sample and next_subscenario given the current period and scenario.
 """
 period_season_map_from_file(inputs) = inputs.time_series.period_season_map
+
+"""
+    time_series_bid_price_limit_justified_independent(inputs)
+
+Return the time series of price limits for justified independent bids.
+"""
+time_series_bid_price_limit_justified_independent(inputs) = inputs.time_series.bid_price_limit_justified_independent
+
+"""
+    time_series_bid_price_limit_non_justified_independent(inputs)
+
+Return the time series of price limits for non justified independent bids.
+"""
+time_series_bid_price_limit_non_justified_independent(inputs) =
+    inputs.time_series.bid_price_limit_non_justified_independent
+
+"""
+    time_series_bid_price_limit_justified_profile(inputs)
+
+Return the time series of price limits for justified profile bids.
+"""
+time_series_bid_price_limit_justified_profile(inputs) = inputs.time_series.bid_price_limit_justified_profile
+
+"""
+    time_series_bid_price_limit_non_justified_profile(inputs)
+
+Return the time series of price limits for non justified profile bids.
+"""
+time_series_bid_price_limit_non_justified_profile(inputs) = inputs.time_series.bid_price_limit_non_justified_profile

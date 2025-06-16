@@ -31,6 +31,11 @@ function build_clearing_outputs(inputs::Inputs)
             heuristic_bids_outputs,
             run_time_options,
         )
+        initialize_bid_validation_outputs(
+            inputs,
+            heuristic_bids_outputs,
+            run_time_options,
+        )
     end
 
     run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
@@ -187,6 +192,40 @@ function serialize_virtual_reservoir_heuristic_bids(
     data_to_serialize = Dict{Symbol, Any}()
     data_to_serialize[:quantity_offer] = quantity_offer
     data_to_serialize[:price_offer] = price_offer
+
+    Serialization.serialize(serialized_file_name, data_to_serialize)
+    return nothing
+end
+
+"""
+    serialize_bid_price_limits(inputs::Inputs, bidding_group_bid_price_limit_not_justified_independent::Array{Float64, 1}, bidding_group_bid_price_limit_justified_independent::Array{Float64, 1}, bidding_group_bid_price_limit_not_justified_profile::Array{Float64, 1}, bidding_group_bid_price_limit_justified_profile::Array{Float64, 1}; period::Int, scenario::Int)
+
+Serialize bid price limits.
+"""
+function serialize_bid_price_limits(
+    inputs::Inputs,
+    bidding_group_bid_price_limit_not_justified_independent::Array{Float64, 1},
+    bidding_group_bid_price_limit_justified_independent::Array{Float64, 1},
+    bidding_group_bid_price_limit_not_justified_profile::Array{Float64, 1},
+    bidding_group_bid_price_limit_justified_profile::Array{Float64, 1};
+    period::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+    serialized_file_name =
+        joinpath(temp_path, "bid_price_limits_period_$(period).json")
+
+    data_to_serialize = Dict{Symbol, Any}()
+    data_to_serialize[:bidding_group_bid_price_limit_not_justified_independent] =
+        bidding_group_bid_price_limit_not_justified_independent
+    data_to_serialize[:bidding_group_bid_price_limit_justified_independent] =
+        bidding_group_bid_price_limit_justified_independent
+    data_to_serialize[:bidding_group_bid_price_limit_not_justified_profile] =
+        bidding_group_bid_price_limit_not_justified_profile
+    data_to_serialize[:bidding_group_bid_price_limit_justified_profile] =
+        bidding_group_bid_price_limit_justified_profile
 
     Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing

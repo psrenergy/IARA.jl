@@ -244,7 +244,7 @@ function get_outputs_dimension_size(
         elseif dimension == "profile"
             push!(dimension_size, maximum_number_of_profiles(inputs))
         elseif dimension == "reference_curve_segment"
-            push!(dimension_size, length(reference_curve_demand_multipliers(inputs)))
+            push!(dimension_size, reference_curve_number_of_segments(inputs))
         else
             error("Dimension $dimension not recognized")
         end
@@ -387,6 +387,56 @@ function write_output_per_subperiod!(
             )
         end
     end
+    return nothing
+end
+
+function write_output_without_scenario!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    vector_of_results::Vector{T};
+    period::Int,
+    multiply_by::Float64 = 1.0,
+    indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
+) where {T}
+
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    # Create a vector of zeros based on the number of time series
+    num_time_series = output.writer.metadata.number_of_time_series
+    data = zeros(num_time_series)
+
+    # Validate that the indices of the outputs match the jump_container
+    if indices_of_elements_in_output === nothing
+        @assert length(vector_of_results) == num_time_series
+    else
+        @assert length(indices_of_elements_in_output) == length(vector_of_results)
+    end
+
+    vector_to_write = vector_of_results * multiply_by
+    if indices_of_elements_in_output === nothing
+        # Write in all indices without filtering
+        for (idx, value) in enumerate(vector_to_write)
+            data[idx] = value
+        end
+    else
+        # Write only the filtered indices that are in the output file
+        for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
+            data[idx_in_output] = vector_to_write[idx]
+        end
+    end
+    Quiver.write!(
+        output.writer,
+        round_output(data);
+        period,
+    )
     return nothing
 end
 

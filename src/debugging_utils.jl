@@ -13,7 +13,9 @@
 Return the filename to write the lp file.
 """
 function lp_filename(inputs::Inputs, run_time_options::RunTimeOptions, t::Integer, scen::Integer, subscenario::Integer)
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST
+    if is_reference_curve(inputs, run_time_options)
+        return joinpath(path_case(inputs), "t$(t)_s$(scen)_reference_curve.lp")
+    elseif run_mode(inputs) == RunMode.TRAIN_MIN_COST
         return joinpath(path_case(inputs), "t$(t)_s$(scen)_train_min_cost.lp")
     elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
            run_mode(inputs) == RunMode.STRATEGIC_BID

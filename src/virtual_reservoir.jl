@@ -277,3 +277,27 @@ virtual_reservoir_waveguide_filename(inputs::AbstractInputs, vr::Int) =
     "$(path_case(inputs))/waveguide_points_$(virtual_reservoir_label(inputs, vr)).csv"
 
 virtual_reservoir_waveguide_filename(path_case::String, vr::String) = "$(path_case)/waveguide_points_$vr.csv"
+
+function virtual_reservoir_stored_energy(
+    inputs::AbstractInputs,
+    run_time_options::RunTimeOptions,
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+
+    # Calculate total stored energy
+    inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
+    virtual_reservoir_energy_account_at_beginning_of_period =
+        virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, period, scenario)
+
+    vr_energy_arrival, _ = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+    energy_accounts = [
+        sum(virtual_reservoir_energy_account_at_beginning_of_period[vr]) + vr_energy_arrival[vr]
+        for vr in virtual_reservoirs
+    ]
+
+    return energy_accounts
+end

@@ -31,7 +31,6 @@ Configurations for the problem.
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Float64} = []
-    reference_curve_demand_multipliers::Vector{Float64} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
@@ -96,6 +95,18 @@ Configurations for the problem.
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
     virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
         Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
+    bid_price_limit_markup_non_justified_profile::Float64 = 0.0
+    bid_price_limit_markup_justified_profile::Float64 = 0.0
+    bid_price_limit_markup_non_justified_independent::Float64 = 0.0
+    bid_price_limit_markup_justified_independent::Float64 = 0.0
+    bid_price_limit_low_reference::Float64 = 0.0
+    bid_price_limit_high_reference::Float64 = 0.0
+    bidding_group_bid_validation::Configurations_BiddingGroupBidValidation.T =
+        Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE
+    reference_curve_number_of_segments::Int = 0
+    reference_curve_final_segment_price_markup::Float64 = 0.0
+    purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
+        Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -315,13 +326,38 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_initial_energy_account_share")[1],
             Configurations_VirtualReservoirInitialEnergyAccount.T,
         )
+    configurations.bid_price_limit_markup_non_justified_profile =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_profile")[1]
+    configurations.bid_price_limit_markup_justified_profile =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_justified_profile")[1]
+    configurations.bid_price_limit_markup_non_justified_independent =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_independent")[1]
+    configurations.bid_price_limit_markup_justified_independent =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_justified_independent")[1]
+    configurations.bid_price_limit_low_reference =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_low_reference")[1]
+    configurations.bid_price_limit_high_reference =
+        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_high_reference")[1]
+    configurations.bidding_group_bid_validation =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "bidding_group_bid_validation")[1],
+            Configurations_BiddingGroupBidValidation.T,
+        )
+    configurations.reference_curve_number_of_segments =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
+    configurations.reference_curve_final_segment_price_markup =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
+    configurations.purchase_bids_for_virtual_reservoir_heuristic_bid =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "purchase_bids_for_virtual_reservoir_heuristic_bid")[1],
+            Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T,
+        )
+
     # Load vectors
     configurations.subperiod_duration_in_hours =
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
         PSRI.get_vectors(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
-    configurations.reference_curve_demand_multipliers =
-        PSRI.get_vectors(inputs.db, "Configuration", "reference_curve_demand_multipliers")[1]
 
     # Load time series files
     configurations.hour_subperiod_map_file =
@@ -489,6 +525,12 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
+    if configurations.bidding_group_bid_validation == Configurations_BiddingGroupBidValidation.VALIDATE
+        if is_null(configurations.bid_price_limit_low_reference)
+            @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
+            num_errors += 1
+        end
+    end
     return num_errors
 end
 
@@ -578,10 +620,19 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             num_errors += 1
         end
     end
-    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
-       !any_elements(inputs, VirtualReservoir)
-        @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
-        num_errors += 1
+    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if !any_elements(inputs, VirtualReservoir)
+            @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
+            num_errors += 1
+        end
+        if is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)
+            if !has_fcf_cuts_to_read(inputs)
+                @error(
+                    "FCF cuts file is not defined. Generating heuristic bids for virtual reservoirs requires FCF cuts to be read."
+                )
+                num_errors += 1
+            end
+        end
     end
 
     # Validate if the cycle_duration_in_years matches other time parameters
@@ -823,7 +874,6 @@ is_single_period(inputs::AbstractInputs) =
     run_mode(inputs) in [
         RunMode.SINGLE_PERIOD_MARKET_CLEARING,
         RunMode.SINGLE_PERIOD_HEURISTIC_BID,
-        RunMode.SINGLE_PERIOD_HYDRO_SUPPLY_REFERENCE_CURVE,
     ]
 
 """
@@ -882,14 +932,6 @@ function expected_number_of_repeats_per_node(inputs::AbstractInputs, node::Int)
         return inputs.collections.configurations.expected_number_of_repeats_per_node[node]
     end
 end
-
-"""
-    reference_curve_demand_multipliers(inputs::AbstractInputs)
-
-Return the reference curve demand multipliers.
-"""
-reference_curve_demand_multipliers(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_demand_multipliers
 
 """
     use_binary_variables(inputs::AbstractInputs, run_time_options)
@@ -1083,10 +1125,6 @@ read_inflow_from_file(inputs::AbstractInputs) =
 Return whether bids should be read from a file.
 """
 function read_bids_from_file(inputs::AbstractInputs)
-    # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs)
-        return false
-    end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
         Configurations_ConstructionType.COST_BASED,
@@ -1106,9 +1144,8 @@ end
 Return whether heuristic bids should be generated for clearing.
 """
 function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
-    # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs)
-        return false
+    if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+        return true
     end
     no_file_model_types = [
         Configurations_ConstructionType.SKIP,
@@ -1128,7 +1165,7 @@ function is_any_construction_type_cost_based(
     run_time_options::RunTimeOptions = RunTimeOptions(),
 )
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return true
     end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
@@ -1145,7 +1182,7 @@ end
 
 function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     # Overwrite the construction type if the run mode is reference curve
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return false
     end
     return construction_type_ex_ante_physical(inputs) == Configurations_ConstructionType.HYBRID ||
@@ -1424,13 +1461,79 @@ virtual_reservoir_initial_energy_account_share(inputs) =
     inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
 
 """
+    bid_price_limit_markup_non_justified_profile(inputs)
+
+Return the bid price limit markup for non-justified profile bids.
+"""
+bid_price_limit_markup_non_justified_profile(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_non_justified_profile
+
+"""
+    bid_price_limit_markup_justified_profile(inputs)
+
+Return the bid price limit markup for justified profile bids.
+"""
+bid_price_limit_markup_justified_profile(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_justified_profile
+
+"""
+    bid_price_limit_markup_non_justified_independent(inputs)
+
+Return the bid price limit markup for non-justified independent bids.
+"""
+bid_price_limit_markup_non_justified_independent(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_non_justified_independent
+
+"""
+    bid_price_limit_markup_justified_independent(inputs)
+
+Return the bid price limit markup for justified independent bids.
+"""
+bid_price_limit_markup_justified_independent(inputs) =
+    inputs.collections.configurations.bid_price_limit_markup_justified_independent
+
+"""
+    bid_price_limit_low_reference(inputs)
+
+Return the low reference price for bid price limits.
+"""
+bid_price_limit_low_reference(inputs) = inputs.collections.configurations.bid_price_limit_low_reference
+
+"""
+    bid_price_limit_high_reference(inputs)
+
+Return the high reference price for bid price limits.
+"""
+bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_price_limit_high_reference
+
+consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs::AbstractInputs) =
+    inputs.collections.configurations.purchase_bids_for_virtual_reservoir_heuristic_bid ==
+    Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
+
+"""
+    reference_curve_number_of_segments(inputs::AbstractInputs)
+
+Return the number of segments in the reference curve.
+"""
+reference_curve_number_of_segments(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_number_of_segments
+
+"""
+    reference_curve_final_segment_price_markup(inputs::AbstractInputs)
+
+Return the final segment price markup for the reference curve.
+"""
+reference_curve_final_segment_price_markup(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_final_segment_price_markup
+
+"""
     integer_variable_representation(inputs::Inputs, run_time_options)
 
 Determine the integer variables representation.
 """
 function integer_variable_representation(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     # Always linearize the integer variables for the reference curve run mode
-    if is_reference_curve(inputs; run_time_options)
+    if is_reference_curve(inputs, run_time_options)
         return Configurations_IntegerVariableRepresentation.LINEARIZE
     elseif is_mincost(inputs)
         return integer_variable_representation_mincost(inputs)
@@ -1514,4 +1617,9 @@ function is_skipped(inputs::AbstractInputs, construction_type::String)
             "Unknown construction type: $construction_type. Valid options are: \"ex_post_physical\", \"ex_post_commercial\", \"ex_ante_physical\", \"ex_ante_commercial\".",
         )
     end
+end
+
+function validate_bidding_group_bids(inputs::AbstractInputs)
+    return inputs.collections.configurations.bidding_group_bid_validation ==
+           Configurations_BiddingGroupBidValidation.VALIDATE
 end

@@ -19,7 +19,6 @@ Collection representing the bidding groups in the system.
 """
 @collection @kwdef mutable struct BiddingGroup <: AbstractCollection
     label::Vector{String} = []
-    bid_type::Vector{BiddingGroup_BidType.T} = []
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
     ex_post_adjust_mode::Vector{BiddingGroup_ExPostAdjustMode.T} = []
@@ -56,11 +55,6 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
     end
 
     bidding_group.label = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
-    bidding_group.bid_type =
-        convert_to_enum.(
-            PSRI.get_parms(inputs.db, "BiddingGroup", "bid_type"),
-            BiddingGroup_BidType.T,
-        )
     bidding_group.asset_owner_index = PSRI.get_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
 
     # Load vectors
@@ -337,6 +331,17 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             num_errors += 1
         end
     end
+    counteroffer_agent =
+        findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT)
+    if !isnothing(counteroffer_agent)
+        if counteroffer_agent in bidding_group.asset_owner_index
+            bg_indices = findall(bidding_group.asset_owner_index .== counteroffer_agent)
+            @error(
+                "The counteroffer agent cannot be assigned to a bidding group. It is assigned to $(bidding_group.label[bg_indices])."
+            )
+            num_errors += 1
+        end
+    end
     return num_errors
 end
 
@@ -407,34 +412,8 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
-"""
-    bidding_group_has_hydro_units(inputs::AbstractInputs, bg::Int)
-Check if the bidding group at index 'bg' has hydro units.
-"""
-function bidding_group_has_hydro_units(inputs::AbstractInputs, bg::Int)
-    return bg in hydro_unit_bidding_group_index(inputs)
-end
-
-"""
-    markup_heuristic_bids(bg::BiddingGroup, i::Int)
-
-Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.MARKUP_HEURISTIC` bids.
-"""
-markup_heuristic_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.MARKUP_HEURISTIC
-
 has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg._has_generation_besides_virtual_reservoirs[i]
 
-"""
-    optimize_bids(bg::BiddingGroup, i::Int)
-
-Check if the bidding group at index 'i' has `IARA.BiddingGroup_BidType.OPTIMIZE` bids.
-"""
-optimize_bids(bg::BiddingGroup, i::Int) = bg.bid_type[i] == BiddingGroup_BidType.OPTIMIZE
-
-"""
-    ex_post_adjust(bg::BiddingGroup, i::Int)
-Check if the bidding group at index 'i' has `IARA.BiddingGroup_ExPostAdjustMode.EX_POST_ADJUST` mode.
-"""
 bidding_group_ex_post_adjust(inputs::AbstractInputs, i::Int) = inputs.collections.bidding_group.ex_post_adjust_mode[i]
 
 function has_any_simple_bids(inputs::AbstractInputs)

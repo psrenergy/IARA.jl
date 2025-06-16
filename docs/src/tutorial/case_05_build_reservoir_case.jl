@@ -65,7 +65,7 @@ db = IARA.create_study!(PATH_CASE;
     demand_deficit_cost = 500.0,
     hydro_minimum_outflow_violation_cost = 600.0,
     clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
@@ -126,17 +126,9 @@ IARA.set_hydro_spill_to!(db, "hydro_1", "hydro_2")
 
 # Let's add two asset owners to our case. Both of them will be price makers.
 
-IARA.add_asset_owner!(db;
-    label = "asset_owner_1",
-    segment_fraction = [1.0],
-    risk_factor = [0.1],
-)
+IARA.add_asset_owner!(db; label = "asset_owner_1")
 
-IARA.add_asset_owner!(db;
-    label = "asset_owner_2",
-    segment_fraction = [1.0],
-    risk_factor = [0.9],
-)
+IARA.add_asset_owner!(db; label = "asset_owner_2")
 
 # ## Virtual Reservoir
 
@@ -193,6 +185,8 @@ IARA.add_demand_unit!(db;
 # For this case, we have added time series files for the 
 # - Demand
 # - Inflow 
+# - Virtual Reservoir Energy Offer
+# - Virtual Reservoir Price Offer
 # They are available in the folder [`data/case_5`](https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_5)
 
 # Let's take a look into each of these files before linking them.
@@ -221,6 +215,25 @@ IARA.link_time_series_to_file(
     db,
     "HydroUnit";
     inflow_ex_ante = "inflow",
+)
+
+#
+
+IARA.time_series_dataframe(
+    joinpath(PATH_CASE, "virtual_reservoir_energy_offer.csv"),
+)
+
+IARA.time_series_dataframe(
+    joinpath(PATH_CASE, "virtual_reservoir_price_offer.csv"),
+)
+
+#
+
+IARA.link_time_series_to_file(
+    db,
+    "VirtualReservoir";
+    quantity_offer = "virtual_reservoir_energy_offer",
+    price_offer = "virtual_reservoir_price_offer",
 )
 
 # ## Closing the study

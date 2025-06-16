@@ -65,6 +65,56 @@ function initialize_heuristic_bids_outputs(
     return nothing
 end
 
+function initialize_bid_price_limit_outputs(
+    inputs::Inputs,
+    outputs::Outputs,
+    run_time_options::RunTimeOptions,
+)
+    profile_bids_price_limit_outputs = [
+        "bid_price_limit_justified_profile",
+        "bid_price_limit_not_justified_profile",
+    ]
+    independent_bids_price_limit_outputs = [
+        "bid_price_limit_justified_independent",
+        "bid_price_limit_not_justified_independent",
+    ]
+
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    labels = bidding_group_label(inputs)[bidding_groups]
+
+    if has_any_simple_bids(inputs)
+        for output_name in independent_bids_price_limit_outputs
+            initialize!(
+                QuiverOutput,
+                outputs;
+                inputs,
+                run_time_options,
+                output_name = output_name,
+                dimensions = ["period"],
+                unit = "\$/MWh",
+                labels = labels,
+            )
+        end
+    end
+
+    if has_any_profile_bids(inputs)
+        for output_name in profile_bids_price_limit_outputs
+            initialize!(
+                QuiverOutput,
+                outputs;
+                inputs,
+                run_time_options,
+                output_name = output_name,
+                dimensions = ["period"],
+                unit = "\$/MWh",
+                labels = labels,
+            )
+        end
+    end
+
+    return nothing
+end
+
 function markup_offers_for_period_scenario(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -72,9 +122,6 @@ function markup_offers_for_period_scenario(
     scenario::Int;
     outputs::Union{Outputs, Nothing} = nothing,
 )
-    if isnothing(outputs)
-        @assert is_reference_curve(inputs; run_time_options)
-    end
     if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
         bidding_group_markup_offers_for_period_scenario(
             inputs,
@@ -99,7 +146,7 @@ function markup_offers_for_period_scenario(
 end
 
 function bidding_group_markup_units(inputs::Inputs)
-    bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
+    bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
 
@@ -134,16 +181,13 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
     # Sizes
     number_of_virtual_reservoirs = length(virtual_reservoir_indices)
     number_of_asset_owners = length(asset_owner_indices)
+    number_of_reference_curve_segments = reference_curve_number_of_segments(inputs)
 
     # AO
     asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
     for ao in asset_owner_indices
-        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor(inputs, ao))
+        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao))
     end
-
-    # VR
-    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
-    number_of_hydro_units_per_virtual_reservoir = length.(virtual_reservoir_hydro_units)
 
     # Offer segments
     number_of_offer_segments_per_asset_owner_and_virtual_reservoir =
@@ -151,7 +195,7 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
     for vr in virtual_reservoir_indices
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_offer_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
-                asset_owner_number_of_risk_factors[ao] * number_of_hydro_units_per_virtual_reservoir[vr]
+                asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments
         end
     end
     number_per_virtual_reservoir = [
@@ -163,7 +207,7 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
 end
 
 function number_of_bidding_group_offer_segments_for_heuristic_bids(inputs::Inputs)
-    bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
+    bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
     bidding_group_number_of_risk_factors, bidding_group_hydro_units,
@@ -213,7 +257,7 @@ function bidding_group_markup_offers_for_period_scenario(
     bidding_group_indexes = index_of_elements(
         inputs,
         BiddingGroup;
-        filters = [markup_heuristic_bids, has_generation_besides_virtual_reservoirs],
+        filters = [has_generation_besides_virtual_reservoirs],
     )
     number_of_bidding_groups = number_of_elements(inputs, BiddingGroup)
     number_of_buses = number_of_elements(inputs, Bus)
@@ -339,47 +383,47 @@ function bidding_group_markup_offers_for_period_scenario(
 
     @assert number_of_segments_validation_flag
 
-    if !isnothing(outputs)
-        write_bid_output(
-            outputs,
-            inputs,
-            run_time_options,
-            "bidding_group_energy_offer",
-            # We have to permutate the dimensions because the function expects the dimensions in the order
-            # subperiod, bidding_group, bid_segments, bus
-            permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-            period,
-            scenario,
-            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-            filters = [has_generation_besides_virtual_reservoirs],
-        )
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_energy_offer",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
 
-        write_bid_output(
-            outputs,
-            inputs,
-            run_time_options,
-            "bidding_group_price_offer",
-            # We have to permutate the dimensions because the function expects the dimensions in the order
-            # subperiod, bidding_group, bid_segments, bus
-            permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-            period,
-            scenario,
-            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-            filters = [has_generation_besides_virtual_reservoirs])
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_price_offer",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
 
-        write_bid_output(
-            outputs,
-            inputs,
-            run_time_options,
-            "bidding_group_no_markup_price_offer",
-            # We have to permutate the dimensions because the function expects the dimensions in the order
-            # subperiod, bidding_group, bid_segments, bus
-            permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
-            period,
-            scenario,
-            subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
-            filters = [has_generation_besides_virtual_reservoirs])
-    end
+    write_bid_output(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_no_markup_price_offer",
+        # We have to permutate the dimensions because the function expects the dimensions in the order
+        # subperiod, bidding_group, bid_segments, bus
+        permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        period,
+        scenario,
+        subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
 
     if is_market_clearing(inputs)
         serialize_heuristic_bids(
@@ -628,6 +672,7 @@ function build_hydro_offers!(
                     no_markup_price_offers[bg_index, bus, segment, subperiod] =
                         time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod]
                 end
+                # Adjust quantity offers based on available energy
                 if isnothing(available_energy)
                     continue
                 end
@@ -694,8 +739,7 @@ end
 
 This function returns true when the following conditions are met:
 1. The run mode is not TRAIN_MIN_COST
-2. There is at least one bidding group with markup_heuristic_bids = true
-3. There is at least one hydro unit that is associated with a bidding group with markup_heuristic_bids = true
+2. There is at least one hydro unit that is associated with a bidding group
 """
 function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     # Run mode
@@ -716,22 +760,22 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
         end
     end
     # Hydro representation
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        if generate_heuristic_bids_for_clearing(inputs)
-            return true
-        else
+    if generate_heuristic_bids_for_clearing(inputs)
+        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             return false
-        end
-    elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
-        bidding_group_indexes = index_of_elements(inputs, BiddingGroup; filters = [markup_heuristic_bids])
-        if isempty(bidding_group_indexes)
-            return false
-        end
-        for hydro_unit in index_of_elements(inputs, HydroUnit)
-            if hydro_unit_bidding_group_index(inputs, hydro_unit) in bidding_group_indexes
-                return true
+        elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
+            bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
+            if isempty(bidding_group_indexes)
+                return false
+            end
+            for hydro_unit in index_of_elements(inputs, HydroUnit)
+                if hydro_unit_bidding_group_index(inputs, hydro_unit) in bidding_group_indexes
+                    return true
+                end
             end
         end
+    else
+        return false
     end
 
     return false
@@ -798,88 +842,126 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     scenario::Int;
     outputs::Union{Outputs, Nothing} = nothing,
 )
-    # Indexes
-    virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
-    asset_owner_indices = index_of_elements(inputs, AssetOwner)
+    accounts = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    quantity_offer_reference_curve, price_offer_reference_curve =
+        read_serialized_reference_curve(inputs, period, scenario)
 
-    # Sizes
-    number_of_virtual_reservoirs = length(virtual_reservoir_indices)
-    number_of_asset_owners = length(asset_owner_indices)
-
-    # AO
-    asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
-    for ao in asset_owner_indices
-        asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor(inputs, ao))
-    end
-
-    # VR
-    virtual_reservoir_hydro_units = virtual_reservoir_hydro_unit_indices(inputs)
-
-    # Hydro
-    available_energy_per_hydro_unit =
-        if is_market_clearing(inputs) || run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID ||
-           is_reference_curve(inputs; run_time_options)
-            hydro_available_energy(inputs, run_time_options, period, scenario)
-        end
-
-    # AO in VR
-    energy_share_of_asset_owner_in_virtual_reservoir = zeros(number_of_virtual_reservoirs, number_of_asset_owners)
-
-    energy_account_at_beginning_of_period =
-        virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
-    for vr in virtual_reservoir_indices
-        total_virtual_reservoir_energy_account = sum(energy_account_at_beginning_of_period[vr])
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            energy_share_of_asset_owner_in_virtual_reservoir[vr, ao] =
-                energy_account_at_beginning_of_period[vr][ao] / total_virtual_reservoir_energy_account
-        end
-    end
-
-    maximum_number_of_offer_segments = maximum_number_of_vr_bidding_segments(inputs)
-
-    # Offers
     quantity_offers = zeros(
-        number_of_virtual_reservoirs,
-        number_of_asset_owners,
-        maximum_number_of_offer_segments,
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
     )
 
     price_offers = zeros(
-        number_of_virtual_reservoirs,
-        number_of_asset_owners,
-        maximum_number_of_offer_segments,
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
     )
 
-    period_duration =
-        sum(subperiod_duration_in_hours(inputs, subperiod) for subperiod in 1:number_of_subperiods(inputs))
-    for vr in virtual_reservoir_indices
-        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            # vr parameters
-            energy_share = energy_share_of_asset_owner_in_virtual_reservoir[vr, ao]
+    for vr in index_of_elements(inputs, VirtualReservoir)
+        vr_total_account = sum(accounts[vr])
+        vr_quantity_offer =
+            [quantity_offer_reference_curve[seg][vr] for seg in eachindex(quantity_offer_reference_curve)]
+        first_warning = false
+        if vr_total_account - sum(vr_quantity_offer) > 1e-6
+            @warn "Virtual reservoir $(vr) has a total account of $(vr_total_account) MWh, but the sum of the reference curve offers is $(sum(vr_quantity_offer)) MWh."
+            first_warning = true
+        end
+        vr_price_offer = [price_offer_reference_curve[seg][vr] for seg in eachindex(price_offer_reference_curve)]
+        @assert issorted(vr_price_offer)
+        for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
+            # The reference curve for the asset owner is proportional to the original reference curve, but scaled by the
+            # share of the asset owner's account in the total account of the virtual reservoir.
+            ao_reference_quantity_offer = vr_quantity_offer * accounts[vr][i] / vr_total_account
 
-            for (unit_idx, hydro_unit) in enumerate(virtual_reservoir_hydro_units[vr])
-                # hydro unit parameters
-                total_generation = sum(time_series_hydro_generation(inputs)[hydro_unit, :] / MW_to_GW())
-                if total_generation > available_energy_per_hydro_unit[hydro_unit]
-                    total_generation = available_energy_per_hydro_unit[hydro_unit]
+            seg = 0
+            ao_quantity_offer = Float64[]
+            ao_price_offer = Float64[]
+
+            account_upper_bounds = asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
+            markups = asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
+
+            #---------------
+            # Energy to sell
+            #---------------
+            current_account = accounts[vr][i]
+            # There will be defined selling bids for the current asset owner until the resulting account is zero.
+            current_reference_segment = 1
+            sum_of_ao_selling_offers = 0.0
+            # Assuming that this asset owner is the only one selling, the segment of the reference curve only changes when
+            # the sum of offers for the current asset owner is greater than the sum of quantity offers until this segment.
+            while current_account > 1e-6
+                # In this iteration we define the quantity offer for the current markup, which is based on the account share of the
+                # asset owner in the total account of the virtual reservoir. The calculation assumes that the total account of the
+                # virtual reservoir is static, does not change according to the asset owner bids
+                current_account_share = current_account / vr_total_account
+                markup_index =
+                    findfirst(i -> account_upper_bounds[i] >= current_account_share, 1:length(account_upper_bounds))
+                account_share_lower_bound_for_markup = markup_index == 1 ? 0.0 : account_upper_bounds[markup_index-1]
+
+                maximum_offer_considering_markup =
+                    current_account - account_share_lower_bound_for_markup * vr_total_account
+
+                # We have defined the quantity offer for the current markup. Now we split it considering the prices of the reference curve.
+                sum_of_offers_for_current_markup = 0.0
+                while sum_of_offers_for_current_markup < maximum_offer_considering_markup
+                    maximum_offer_considering_reference =
+                        sum(ao_reference_quantity_offer[1:current_reference_segment]) - sum_of_ao_selling_offers
+                    if maximum_offer_considering_reference == 0
+                        # This is possibly redundant with the end of this while loop
+                        current_reference_segment += 1
+                        continue
+                    end
+
+                    seg += 1
+                    offer = min(
+                        maximum_offer_considering_markup - sum_of_offers_for_current_markup,
+                        maximum_offer_considering_reference,
+                    )
+                    quantity_offers[vr, ao, seg] = offer
+                    price_offers[vr, ao, seg] = vr_price_offer[current_reference_segment] * (1 + markups[markup_index])
+
+                    sum_of_offers_for_current_markup += offer
+                    sum_of_ao_selling_offers += offer
+                    current_account -= offer
+
+                    if sum_of_ao_selling_offers >= sum(ao_reference_quantity_offer[1:current_reference_segment])
+                        current_reference_segment += 1
+                        if current_reference_segment > length(ao_reference_quantity_offer)
+                            # We have reached the end of the reference curve, so we stop defining offers for this asset owner
+                            if current_account > 1e-6
+                                if !first_warning
+                                    @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
+                                end
+                                current_account = 0 # break the external while loop
+                            end
+                            break
+                        end
+                    end
                 end
+            end
 
-                # Get weighted average opportunity cost
-                average_cost =
-                    1 / period_duration * sum(
-                        time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] *
-                        subperiod_duration_in_hours(inputs, subperiod) for
-                        subperiod in 1:number_of_subperiods(inputs))
+            #--------------
+            # Energy to buy
+            #--------------
+            if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs)
+                current_account = accounts[vr][i]
+                # There will be defined buying bids for the current asset owner until the resulting account share is 1.
+                while current_account < vr_total_account
+                    current_account_share = current_account / vr_total_account
+                    markup_index =
+                        findfirst(i -> account_upper_bounds[i] > current_account_share, 1:length(account_upper_bounds))
+                    account_share_upper_bound_for_markup = account_upper_bounds[markup_index]
 
-                for risk_idx in 1:asset_owner_number_of_risk_factors[ao]
-                    segment = (unit_idx - 1) * asset_owner_number_of_risk_factors[ao] + risk_idx
-                    # ao parameters
-                    segment_fraction = asset_owner_segment_fraction(inputs, ao)[risk_idx]
-                    risk_factor = asset_owner_risk_factor(inputs, ao)[risk_idx]
+                    seg += 1
+                    offer = current_account - account_share_upper_bound_for_markup * vr_total_account
+                    # Note that the offer is negative, because it is a bid to buy energy.
+                    quantity_offers[vr, ao, seg] = offer
+                    # The purchase price is based on the price of the first segment of the reference curve.
+                    price_offers[vr, ao, seg] =
+                        vr_price_offer[1] * (1 + markups[markup_index] - asset_owner_purchase_discount_rate(inputs, ao))
 
-                    # offers
-                    quantity_offers[vr, ao, segment] = (total_generation * energy_share) * segment_fraction
-                    price_offers[vr, ao, segment] = average_cost * (1 + risk_factor)
+                    current_account -= offer
                 end
             end
         end
@@ -912,6 +994,111 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             price_offers,
             period,
             scenario,
+        )
+    end
+
+    return nothing
+end
+
+function bidding_group_bid_price_limits_for_period(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    period::Int;
+    outputs::Union{Outputs, Nothing} = nothing,
+)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    number_of_bidding_groups = length(bidding_groups)
+
+    if !has_any_simple_bids(inputs) && !has_any_profile_bids(inputs)
+        return nothing
+    end
+
+    if has_any_simple_bids(inputs)
+        bidding_group_bid_price_limit_not_justified_independent = zeros(
+            number_of_bidding_groups,
+        )
+        bidding_group_bid_price_limit_justified_independent = zeros(
+            number_of_bidding_groups,
+        )
+    end
+
+    if has_any_profile_bids(inputs)
+        bidding_group_bid_price_limit_not_justified_profile = zeros(
+            number_of_bidding_groups,
+        )
+        bidding_group_bid_price_limit_justified_profile = zeros(
+            number_of_bidding_groups,
+        )
+    end
+
+    bidding_group_number_of_risk_factors,
+    bidding_group_hydro_units,
+    bidding_group_thermal_units,
+    bidding_group_renewable_units,
+    bidding_group_demand_units = bidding_group_markup_units(inputs)
+
+    for (idx, bg) in enumerate(bidding_groups)
+        if !isempty(bidding_group_thermal_units[bg])
+            max_thermal_cost = maximum(
+                [thermal_unit_om_cost(inputs, t) for t in bidding_group_thermal_units[bg]],
+            )
+            reference_price = max(max_thermal_cost, bid_price_limit_low_reference(inputs))
+        elseif !isempty(bidding_group_renewable_units[bg])
+            reference_price = bid_price_limit_low_reference(inputs)
+        else
+            reference_price = bid_price_limit_high_reference(inputs)
+        end
+
+        if has_any_simple_bids(inputs)
+            bidding_group_bid_price_limit_not_justified_independent[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_non_justified_independent(inputs))
+            bidding_group_bid_price_limit_justified_independent[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_justified_independent(inputs))
+        end
+
+        if has_any_profile_bids(inputs)
+            bidding_group_bid_price_limit_not_justified_profile[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_non_justified_profile(inputs))
+            bidding_group_bid_price_limit_justified_profile[idx] =
+                reference_price * (1.0 + bid_price_limit_markup_justified_profile(inputs))
+        end
+    end
+
+    if has_any_simple_bids(inputs)
+        write_output_without_scenario!(
+            outputs,
+            inputs,
+            run_time_options,
+            "bid_price_limit_not_justified_independent",
+            bidding_group_bid_price_limit_not_justified_independent;
+            period,
+        )
+        write_output_without_scenario!(
+            outputs,
+            inputs,
+            run_time_options,
+            "bid_price_limit_justified_independent",
+            bidding_group_bid_price_limit_justified_independent;
+            period,
+        )
+    end
+
+    if has_any_profile_bids(inputs)
+        write_output_without_scenario!(
+            outputs,
+            inputs,
+            run_time_options,
+            "bid_price_limit_not_justified_profile",
+            bidding_group_bid_price_limit_not_justified_profile;
+            period,
+        )
+        write_output_without_scenario!(
+            outputs,
+            inputs,
+            run_time_options,
+            "bid_price_limit_justified_profile",
+            bidding_group_bid_price_limit_justified_profile;
+            period,
         )
     end
 

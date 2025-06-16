@@ -100,7 +100,7 @@ reduced_test_list = Dict(
 #     "case_07/ex_post_settlement_case/test_case.jl",
 #     "case_07/double_settlement_case/test_case.jl",
 #     "case_07/min_cost_case/test_case.jl",
-#     "case_07/reference_curve_case/test_case.jl",
+#     "case_07/skip_purchase_bids_case/test_case.jl",
 # ],
 # "case_08" => [
 #     "case_08/base_case/test_case.jl",
@@ -160,6 +160,11 @@ reduced_test_list = Dict(
 # "case_19" => [
 #     "case_19/base_case/test_case.jl",
 #     "case_19/negative_bids_case/test_case.jl",
+# ],
+# "case_20" => [
+#     "case_20/base_case/test_case.jl",
+#     "case_20/market_clearing/test_case.jl",
+#     "case_20/single_period_heuristic_bid/test_case.jl",
 # ],
 )
 

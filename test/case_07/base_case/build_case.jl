@@ -46,6 +46,7 @@ db = IARA.create_study!(PATH;
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    reference_curve_number_of_segments = 10,
 )
 
 # Add collection elements
@@ -95,13 +96,15 @@ IARA.set_hydro_spill_to!(db, "hydro_1", "hydro_2")
 IARA.add_asset_owner!(db;
     label = "asset_owner_1",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
-    segment_fraction = [0.2, 0.8],
-    risk_factor = [0.1, 0.2],
+    virtual_reservoir_energy_account_upper_bound = [0.5, 1.0],
+    risk_factor_for_virtual_reservoir_bids = [0.1, -0.1],
+    purchase_discount_rate = 0.1,
 )
 
 IARA.add_asset_owner!(db;
     label = "asset_owner_2",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    purchase_discount_rate = 0.1,
 )
 
 IARA.add_virtual_reservoir!(db;
@@ -184,38 +187,10 @@ IARA.link_time_series_to_file(
     inflow_ex_ante = "inflow",
 )
 
-# Write hydro timeseries that usually come from a TRAIN_MIN_COST run.
-# values were chosen to match an execution of this case with the run_mode changed to TRAIN_MIN_COST
-hydro_generation = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
-hydro_generation .= 75.0
-hydro_generation[1, 4, 1, 1:2] .= 25.0
-hydro_generation[2, 1:3, 1, 1:2] .= 25.0
-hydro_generation[2, :, 1, 3] .= 25.0
-
-hydro_opportunity_cost = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
-hydro_opportunity_cost[1, :, :, :] .= 0.3
-hydro_opportunity_cost[2, :, :, :] .= 0.6
-
-IARA.write_timeseries_file(
-    joinpath(PATH, "hydro_generation"),
-    hydro_generation;
-    dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hydro_1", "hydro_2"],
-    time_dimension = "period",
-    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
-    initial_date = "2020-01-01T00:00:00",
-    unit = "GWh",
-)
-
-IARA.write_timeseries_file(
-    joinpath(PATH, "hydro_opportunity_cost"),
-    hydro_opportunity_cost;
-    dimensions = ["period", "scenario", "subperiod"],
-    labels = ["hydro_1", "hydro_2"],
-    time_dimension = "period",
-    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
-    initial_date = "2020-01-01T00:00:00",
-    unit = "\$/MWh",
+IARA.link_time_series_to_file(
+    db,
+    "Configuration";
+    fcf_cuts = "cuts.json",
 )
 
 IARA.close_study!(db)

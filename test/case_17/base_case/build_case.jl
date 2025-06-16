@@ -215,14 +215,12 @@ IARA.add_asset_owner!(db;
 IARA.add_bidding_group!(db;
     label = "bg_1",
     assetowner_id = "asset_owner_1",
-    bid_type = IARA.BiddingGroup_BidType.MARKUP_HEURISTIC,
     risk_factor = [0.1],
     segment_fraction = [1.0],
 )
 IARA.add_bidding_group!(db;
     label = "bg_2",
     assetowner_id = "asset_owner_2",
-    bid_type = IARA.BiddingGroup_BidType.MARKUP_HEURISTIC,
     risk_factor = [0.2, 0.3],
     segment_fraction = [0.4, 0.6],
 )

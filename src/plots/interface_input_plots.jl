@@ -10,6 +10,12 @@ function build_ui_initial_plots(
         plot_renewable_generation(inputs, plots_path)
         plot_demand(inputs, plots_path; net_demand = true)
     end
+    if any_elements(inputs, RenewableUnit; filters = [!has_no_bidding_group])
+        plots_path = mkdir(joinpath(plots_path, "agents"))
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            plot_renewable_generation(inputs, plots_path; asset_owner_index)
+        end
+    end
 
     return nothing
 end
@@ -102,6 +108,12 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
             "ticktext" => plot_ticks,
         ),
         yaxis = Dict("title" => "$(get_name(inputs, demand_name)) [$unit]"),
+        legend = Dict(
+            "yanchor" => "bottom",
+            "xanchor" => "left",
+            "yref" => "container",
+            "orientation" => "h",
+        ),
     )
 
     _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "$(demand_name).html"))
@@ -109,10 +121,14 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
     return nothing
 end
 
-function plot_renewable_generation(inputs::AbstractInputs, plots_path::String)
+function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; asset_owner_index::Int = null_value(Int))
     num_periods = number_of_periods(inputs)
     num_subperiods = number_of_subperiods(inputs)
-    ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs)
+    ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs; asset_owner_index)
+
+    if isempty(ex_ante_generation) || isempty(ex_post_generation)
+        return nothing
+    end
 
     ex_post_min_generation = dropdims(minimum(ex_post_generation; dims = 1); dims = 1)
     ex_post_max_generation = dropdims(maximum(ex_post_generation; dims = 1); dims = 1)
@@ -126,6 +142,11 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String)
     title = get_name(inputs, "renewable_generation")
     unit = "MW"
     color_idx = 0
+
+    if !is_null(asset_owner_index)
+        ao_label = asset_owner_label(inputs, asset_owner_index)
+        title = "$ao_label - $title"
+    end
 
     # Ex-post max generation
     color_idx += 1
@@ -179,9 +200,19 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String)
             "ticktext" => plot_ticks,
         ),
         yaxis = Dict("title" => "$(get_name(inputs, "renewable_generation")) [$unit]"),
+        legend = Dict(
+            "yanchor" => "bottom",
+            "xanchor" => "left",
+            "yref" => "container",
+            "orientation" => "h",
+        ),
     )
 
-    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "renewable_generation.html"))
+    if is_null(asset_owner_index)
+        _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "renewable_generation.html"))
+    else
+        _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "renewable_generation_$(ao_label).html"))
+    end
 
     return nothing
 end

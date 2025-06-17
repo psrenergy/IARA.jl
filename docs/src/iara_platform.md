@@ -1,7 +1,7 @@
 # IARA Platform
 
 As discussed in this documentation, IARA.jl uses several concepts from electricity markets, which can be complex to understand.
-That said, along with IARA.jl, we have developed a web platform called [IARA Platform](https://iara-staging.psr-inc.com/) that allows users to participante on an energy market simulation, where they can play the role of an Asset Owner or Operator.
+That said, along with IARA.jl, we have developed a web platform called [IARA Platform](https://iara.psr-inc.com/) that allows users to participante on an energy market simulation, where they can play the role of an Asset Owner or Operator.
 For now, the IARA Platform is only available in Portuguese.
 
 ![IARA Platform Screenshot](assets/iara_platform.gif)

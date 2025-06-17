@@ -51,12 +51,19 @@ function validate_bids_for_period_scenario(
     period::Int,
     scenario::Int,
 )
+    # Read bid justifications
     if bids_justifications_exist(inputs)
         all_bid_justifications = open(bidding_group_bid_justifications_file(inputs), "r") do file
             return JSON.parse(file)
         end
         bid_justifications = findfirst(x -> x["period"] == period, all_bid_justifications)["justifications"]
     end
+    # Read bid price limits
+    bid_price_limit_not_justified_independent,
+    bid_price_limit_justified_independent,
+    bid_price_limit_not_justified_profile,
+    bid_price_limit_justified_profile = read_serialized_bid_price_limits(inputs; period)
+    # Read bids and initialize outputs
     bid_justification_status = zeros(Int, length(inputs.collections.bidding_group))
     if has_any_simple_bids(inputs)
         independent_bid_limit_violation_status = zeros(Int, length(inputs.collections.bidding_group))
@@ -69,6 +76,7 @@ function validate_bids_for_period_scenario(
 
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
 
+    # Validate bids
     for (idx, bg) in enumerate(bidding_groups)
         bg_label = bidding_group_label(inputs, bg)
         if bids_justifications_exist(inputs) && !isnothing(bid_justifications)
@@ -76,9 +84,9 @@ function validate_bids_for_period_scenario(
         end
         if has_any_simple_bids(inputs)
             highest_bid = maximum(independent_bids_price[bg, :, :, :])
-            if highest_bid > time_series_bid_price_limit_justified_independent(inputs)[bg]
+            if highest_bid > bid_price_limit_justified_independent[bg]
                 independent_bid_limit_violation_status[idx] = 2
-            elseif highest_bid > time_series_bid_price_limit_not_justified_independent(inputs)[bg] &&
+            elseif highest_bid > bid_price_limit_not_justified_independent[bg] &&
                    bid_justification_status[idx] == 0
                 independent_bid_limit_violation_status[idx] = 1
             end
@@ -86,15 +94,16 @@ function validate_bids_for_period_scenario(
 
         if has_any_profile_bids(inputs)
             highest_bid = maximum(profile_bids_price[bg, :, :, :])
-            if highest_bid > time_series_bid_price_limit_justified_profile(inputs)[bg]
+            if highest_bid > bid_price_limit_justified_profile[bg]
                 profile_bid_limit_violation_status[idx] = 2
-            elseif highest_bid > time_series_bid_price_limit_not_justified_profile(inputs)[bg] &&
+            elseif highest_bid > bid_price_limit_not_justified_profile[bg] &&
                    bid_justification_status[idx] == 0
                 profile_bid_limit_violation_status[idx] = 1
             end
         end
     end
 
+    # Write outputs
     placeholder_subscenario = 1
     write_output_without_subperiod!(
         outputs,
@@ -309,4 +318,59 @@ function bidding_group_bid_price_limits_for_period(
     end
 
     return nothing
+end
+
+"""
+    serialize_bid_price_limits(inputs::Inputs, bidding_group_bid_price_limit_not_justified_independent::Array{Float64, 1}, bidding_group_bid_price_limit_justified_independent::Array{Float64, 1}, bidding_group_bid_price_limit_not_justified_profile::Array{Float64, 1}, bidding_group_bid_price_limit_justified_profile::Array{Float64, 1}; period::Int, scenario::Int)
+
+Serialize bid price limits.
+"""
+function serialize_bid_price_limits(
+    inputs::Inputs,
+    bid_price_limit_not_justified_independent::Array{Float64, 1},
+    bid_price_limit_justified_independent::Array{Float64, 1},
+    bid_price_limit_not_justified_profile::Array{Float64, 1},
+    bid_price_limit_justified_profile::Array{Float64, 1};
+    period::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+    serialized_file_name =
+        joinpath(temp_path, "bid_price_limits_period_$(period).json")
+
+    data_to_serialize = Dict{Symbol, Any}()
+    data_to_serialize[:bid_price_limit_not_justified_independent] =
+        bid_price_limit_not_justified_independent
+    data_to_serialize[:bid_price_limit_justified_independent] =
+        bid_price_limit_justified_independent
+    data_to_serialize[:bid_price_limit_not_justified_profile] =
+        bid_price_limit_not_justified_profile
+    data_to_serialize[:bid_price_limit_justified_profile] =
+        bid_price_limit_justified_profile
+
+    Serialization.serialize(serialized_file_name, data_to_serialize)
+    return nothing
+end
+
+"""
+    read_serialized_bid_price_limits(inputs::Inputs; period::Int, scenario::Int)
+
+Read serialized bid price limits.
+"""
+function read_serialized_bid_price_limits(
+    inputs::Inputs;
+    period::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    serialized_file_name =
+        joinpath(temp_path, "bid_price_limits_period_$(period).json")
+
+    data = Serialization.deserialize(serialized_file_name)
+
+    return data[:bid_price_limit_not_justified_independent],
+    data[:bid_price_limit_justified_independent],
+    data[:bid_price_limit_not_justified_profile],
+    data[:bid_price_limit_justified_profile]
 end

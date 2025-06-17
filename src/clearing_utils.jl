@@ -198,40 +198,6 @@ function serialize_virtual_reservoir_heuristic_bids(
 end
 
 """
-    serialize_bid_price_limits(inputs::Inputs, bidding_group_bid_price_limit_not_justified_independent::Array{Float64, 1}, bidding_group_bid_price_limit_justified_independent::Array{Float64, 1}, bidding_group_bid_price_limit_not_justified_profile::Array{Float64, 1}, bidding_group_bid_price_limit_justified_profile::Array{Float64, 1}; period::Int, scenario::Int)
-
-Serialize bid price limits.
-"""
-function serialize_bid_price_limits(
-    inputs::Inputs,
-    bidding_group_bid_price_limit_not_justified_independent::Array{Float64, 1},
-    bidding_group_bid_price_limit_justified_independent::Array{Float64, 1},
-    bidding_group_bid_price_limit_not_justified_profile::Array{Float64, 1},
-    bidding_group_bid_price_limit_justified_profile::Array{Float64, 1};
-    period::Int,
-)
-    temp_path = joinpath(path_case(inputs), "temp")
-    if !isdir(temp_path)
-        mkdir(temp_path)
-    end
-    serialized_file_name =
-        joinpath(temp_path, "bid_price_limits_period_$(period).json")
-
-    data_to_serialize = Dict{Symbol, Any}()
-    data_to_serialize[:bidding_group_bid_price_limit_not_justified_independent] =
-        bidding_group_bid_price_limit_not_justified_independent
-    data_to_serialize[:bidding_group_bid_price_limit_justified_independent] =
-        bidding_group_bid_price_limit_justified_independent
-    data_to_serialize[:bidding_group_bid_price_limit_not_justified_profile] =
-        bidding_group_bid_price_limit_not_justified_profile
-    data_to_serialize[:bidding_group_bid_price_limit_justified_profile] =
-        bidding_group_bid_price_limit_justified_profile
-
-    Serialization.serialize(serialized_file_name, data_to_serialize)
-    return nothing
-end
-
-"""
     read_serialized_clearing_variable(inputs::Inputs, clearing_model_subproblem::RunTime_ClearingSubproblem.T, symbol_to_read::Symbol; period::Int, scenario::Int)
 
 Read serialized clearing variable.

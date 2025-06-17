@@ -165,6 +165,8 @@ reduced_test_list = Dict(
 #     "case_20/base_case/test_case.jl",
 #     "case_20/market_clearing/test_case.jl",
 #     "case_20/single_period_heuristic_bid/test_case.jl",
+#     "case_20/bid_justification/test_case.jl",
+#     "case_20/profile_bid_justification/test_case.jl",
 # ],
 )
 

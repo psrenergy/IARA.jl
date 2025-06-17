@@ -29,6 +29,7 @@ using Serialization
 using SDDP
 using StatsBase
 using MemoizedSerialization
+using JSON
 
 # Julia std packages
 using Dates

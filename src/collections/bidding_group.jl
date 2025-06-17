@@ -595,5 +595,5 @@ end
 
 function bids_justifications_exist(inputs::AbstractInputs)
     return bidding_group_bid_justifications_file(inputs) != "" &&
-           isfile(bidding_group_bid_justifications_file(inputs))
+           isfile(joinpath(path_case(inputs), bidding_group_bid_justifications_file(inputs)))
 end

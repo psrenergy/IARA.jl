@@ -98,29 +98,29 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
     bidding_group.bid_price_limit_justified_independent_file =
         PSRDatabaseSQLite.read_time_series_file(
             inputs.db,
-            "BiddingGroup_time_series_files",
+            "BiddingGroup",
             "bid_price_limit_justified_independent",
         )
     bidding_group.bid_price_limit_non_justified_independent_file =
         PSRDatabaseSQLite.read_time_series_file(
             inputs.db,
-            "BiddingGroup_time_series_files",
+            "BiddingGroup",
             "bid_price_limit_non_justified_independent",
         )
     bidding_group.bid_price_limit_justified_profile_file =
         PSRDatabaseSQLite.read_time_series_file(
             inputs.db,
-            "BiddingGroup_time_series_files",
+            "BiddingGroup",
             "bid_price_limit_justified_profile",
         )
     bidding_group.bid_price_limit_non_justified_profile_file =
         PSRDatabaseSQLite.read_time_series_file(
             inputs.db,
-            "BiddingGroup_time_series_files",
+            "BiddingGroup",
             "bid_price_limit_non_justified_profile",
         )
     bidding_group.bid_justifications_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup_time_series_files", "bid_justifications")
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "bid_justifications")
 
     # Caches
     bidding_group._has_generation_besides_virtual_reservoirs = zeros(Bool, num_bidding_groups)

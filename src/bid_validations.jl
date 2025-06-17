@@ -199,23 +199,18 @@ function bidding_group_bid_price_limits_for_period(
         return nothing
     end
 
-    if has_any_simple_bids(inputs)
-        bidding_group_bid_price_limit_not_justified_independent = zeros(
-            number_of_bidding_groups,
-        )
-        bidding_group_bid_price_limit_justified_independent = zeros(
-            number_of_bidding_groups,
-        )
-    end
-
-    if has_any_profile_bids(inputs)
-        bidding_group_bid_price_limit_not_justified_profile = zeros(
-            number_of_bidding_groups,
-        )
-        bidding_group_bid_price_limit_justified_profile = zeros(
-            number_of_bidding_groups,
-        )
-    end
+    bidding_group_bid_price_limit_not_justified_independent = zeros(
+        number_of_bidding_groups,
+    )
+    bidding_group_bid_price_limit_justified_independent = zeros(
+        number_of_bidding_groups,
+    )
+    bidding_group_bid_price_limit_not_justified_profile = zeros(
+        number_of_bidding_groups,
+    )
+    bidding_group_bid_price_limit_justified_profile = zeros(
+        number_of_bidding_groups,
+    )
 
     bidding_group_number_of_risk_factors,
     bidding_group_hydro_units,

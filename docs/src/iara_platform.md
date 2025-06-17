@@ -19,7 +19,6 @@ Additionally, the `subperiod` duration can vary and is defined by the `subperiod
 
 In the web platform, however, in order to simplify the user experience, we consider the notion of a game being comprised of rounds, where each round is treated a a single period.
 This single period is then divided into subperiods, each representing one hour of the day.
-As our goal is to introduce users to the concepts of electricity markets, a round (period) can have only one subperiod.
 
 When executing a round, IARA.jl performs the single period market clearing process by calling the [`IARA.single_period_market_clearing`](@ref) function, which considers the bids submitted by the users for the current round and outputs specialized plots for the web platform.
 The results of the market clearing process are then displayed to the users, allowing them to visualize the dispatch of assets and the prices determined by the market.

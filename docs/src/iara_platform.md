@@ -17,6 +17,7 @@ In the [Key Features](key_features.md#the-market-clearing-process) section, we e
 In this case, the problem's time horizon can vary and have multiple time steps, which are depicted by the `period` and `subperiod` dimensions.
 Additionally, the `subperiod` duration can vary and is defined by the `subperiod_duration` parameter during the formulation of the problem.
 
+In the web platform, however, in order to simplify the user experience, we consider the notion of a game being comprised of rounds, where each round is treated a a single period.
 This single period is then divided into subperiods, each representing one hour of the day.
 As our goal is to introduce users to the concepts of electricity markets, a round (period) can have only one subperiod.
 

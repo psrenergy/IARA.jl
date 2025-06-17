@@ -114,6 +114,7 @@ pages = [
         "Style guide" => "style_guide.md",
         "Development guides" => "development_guides.md",
     ],
+    "IARA Platform" => "iara_platform.md",
     "API Reference" => "api_reference.md",
 ]
 

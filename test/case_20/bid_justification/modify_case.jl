@@ -49,14 +49,14 @@ for period in 1:number_of_periods
     period_justification = Dict(
         "period" => period,
         "justifications" => Dict(
-            "Azul" => "foo bar baz"
-        )
+            "Azul" => "foo bar baz",
+        ),
     )
     push!(justifications, period_justification)
 end
 
 open(joinpath(PATH, "bid_justifications.json"), "w") do file
-    write(file, IARA.JSON.json(justifications))
+    return write(file, IARA.JSON.json(justifications))
 end
 
 # Build bid price limit files

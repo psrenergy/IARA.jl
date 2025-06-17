@@ -53,9 +53,10 @@ function validate_bids_for_period_scenario(
 )
     # Read bid justifications
     if bids_justifications_exist(inputs)
-        all_bid_justifications = open(joinpath(path_case(inputs), bidding_group_bid_justifications_file(inputs)), "r") do file
-            return JSON.parse(file)
-        end
+        all_bid_justifications =
+            open(joinpath(path_case(inputs), bidding_group_bid_justifications_file(inputs)), "r") do file
+                return JSON.parse(file)
+            end
         period_idx = findfirst(x -> x["period"] == period, all_bid_justifications)
         bid_justifications = all_bid_justifications[period_idx]["justifications"]
     end

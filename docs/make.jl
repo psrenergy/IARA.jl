@@ -50,7 +50,8 @@ if !PDF
     if isempty(tutorial_files)
         tutorial_paths = readdir(tutorial_dir)
     else
-        tutorial_paths = [joinpath(tutorial_dir, file) for file in tutorial_files]
+        tutorial_paths =
+            [joinpath(tutorial_dir, file) for file in tutorial_files]
     end
     for file in tutorial_paths
         if occursin(".jl", file)
@@ -124,7 +125,8 @@ if !PDF
     push!(PAGES, "API Reference" => "api_reference.md")
 end
 
-const FORMAT = PDF ?
+const FORMAT =
+    PDF ?
     Documenter.LaTeX(; platform = "docker") :
     Documenter.HTML(;
         assets = ["assets/favicon.ico"],

@@ -152,7 +152,7 @@ makedocs(;
     format = FORMAT,
     sitename = "IARA.jl",
     authors = "PSR Energy",
-    warnonly = true,
+    warnonly = false,
     pages = PAGES,
     remotes = nothing,
 )

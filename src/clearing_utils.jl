@@ -31,6 +31,11 @@ function build_clearing_outputs(inputs::Inputs)
             heuristic_bids_outputs,
             run_time_options,
         )
+        initialize_bid_validation_outputs(
+            inputs,
+            heuristic_bids_outputs,
+            run_time_options,
+        )
     end
 
     run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)

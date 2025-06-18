@@ -237,6 +237,12 @@ function read_time_series_view_from_external_file!(
             season = period,
             sample = scenario,
         )
+    elseif ts.dimensions == [:period]
+        read_period!(
+            inputs,
+            ts,
+            period,
+        )
     else
         error("Time series with dimensions $(ts.dimensions) not supported.")
     end
@@ -469,6 +475,23 @@ function read_season_sample_subperiod!(
         Quiver.goto!(ts.reader; season, sample, subperiod)
         ts.exact_dimensions_data[:, subperiod] = ts.reader.data
     end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    Quiver.goto!(ts.reader; period = file_period)
+    ts.exact_dimensions_data = ts.reader.data
     ts.data = ts.exact_dimensions_data
     return nothing
 end

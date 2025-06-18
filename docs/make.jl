@@ -119,6 +119,7 @@ const PAGES = [
         "Style guide" => "style_guide.md",
         "Development guides" => "development_guides.md",
     ],
+    "IARA Platform" => "iara_platform.md",
 ]
 
 if !PDF

@@ -295,3 +295,5 @@ IARA.link_time_series_to_file(
     "RenewableUnit";
     generation_ex_post = "renewable_generation_ex_post",
 )
+
+IARA.close_study!(db)

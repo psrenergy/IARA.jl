@@ -118,8 +118,11 @@ const PAGES = [
         "Style guide" => "style_guide.md",
         "Development guides" => "development_guides.md",
     ],
-    "API Reference" => "api_reference.md",
 ]
+
+if !PDF
+    push!(PAGES, "API Reference" => "api_reference.md")
+end
 
 const FORMAT = PDF ?
     Documenter.LaTeX(; platform = "docker") :

@@ -9,6 +9,7 @@ IARA.HydroUnit_InitialVolumeType
 IARA.DemandUnit_DemandType  
 IARA.Branch_LineModel  
 IARA.AssetOwner_PriceType  
+IARA.BiddingGroup_ExPostAdjustMode
 IARA.HydroUnit_OperationType  
 IARA.Configurations_ClearingHydroRepresentation  
 IARA.Configurations_IntegerVariableRepresentation  

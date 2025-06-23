@@ -169,9 +169,9 @@ price_offer =
 quantity_offer[1, :, :, :, :, :] = hydro_production
 quantity_offer[2, :, :, :, :, :] = gnd_production
 for scen in 1:number_of_scenarios
-    quantity_offer[3, :, :, :, scen, :] = 1/number_of_scenarios * sum(gnd_production, dims = 3) # assignment for bg_3
-    quantity_offer[4, :, :, :, scen, :] = 1/number_of_scenarios * sum(gnd_production, dims = 3) # assignment for bg_4
-    quantity_offer[5, :, :, :, scen, :] = 1/number_of_scenarios * sum(gnd_production, dims = 3) # assignment for bg_4
+    quantity_offer[3, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_3
+    quantity_offer[4, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_4
+    quantity_offer[5, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_4
 end
 
 price_offer[1, :, :, :, :, :] .= 10.0

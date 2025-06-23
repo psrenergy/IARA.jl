@@ -542,3 +542,8 @@ end
     DO_NOT_CONSIDER = 0
     CONSIDER = 1
 end
+
+@enumx BiddingGroup_BidPriceLimitSource begin
+    DEFAULT_LIMIT = 0
+    READ_FROM_FILE = 1
+end

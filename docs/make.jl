@@ -22,39 +22,44 @@ using Dates
 using DataFrames
 using IARA
 
+const PDF = findfirst(isequal("--pdf"), ARGS) !== nothing
+
 tutorial_dir = joinpath(@__DIR__, "src", "tutorial")
 
 # List of each tutorial file
-tutorial_files = [
-    "first_execution.jl",
-    "case_building.jl",
-    "clearing_executions.jl",
-    "case_01_build_base_case.jl",
-    "case_01_run_base_case.jl",
-    "case_02_build_hydrounit_base_case.jl",
-    "case_02_run_hydrounit_base_case.jl",
-    "case_03_build_profile_base_case.jl",
-    "case_03_run_profile_base_case.jl",
-    "case_04_build_multi_min_activation.jl",
-    "case_04_run_multi_min_activation.jl",
-    "case_05_build_reservoir_case.jl",
-    "case_05_run_reservoir_case.jl",
-    "case_06_build_policy_graph.jl",
-    "case_06_run_policy_graph.jl",
-    "case_07_modifications_case.jl",
-    "plots_tutorial.jl",
-]
-if isempty(tutorial_files)
-    tutorial_paths = readdir(tutorial_dir)
-else
-    tutorial_paths = [joinpath(tutorial_dir, file) for file in tutorial_files]
-end
-for file in tutorial_paths
-    if occursin(".jl", file)
-        Literate.markdown(
-            joinpath(tutorial_dir, "$file"),
-            tutorial_dir;
-            documenter = true)
+if !PDF
+    tutorial_files = [
+        "first_execution.jl",
+        "case_building.jl",
+        "clearing_executions.jl",
+        "case_01_build_base_case.jl",
+        "case_01_run_base_case.jl",
+        "case_02_build_hydrounit_base_case.jl",
+        "case_02_run_hydrounit_base_case.jl",
+        "case_03_build_profile_base_case.jl",
+        "case_03_run_profile_base_case.jl",
+        "case_04_build_multi_min_activation.jl",
+        "case_04_run_multi_min_activation.jl",
+        "case_05_build_reservoir_case.jl",
+        "case_05_run_reservoir_case.jl",
+        "case_06_build_policy_graph.jl",
+        "case_06_run_policy_graph.jl",
+        "case_07_modifications_case.jl",
+        "plots_tutorial.jl",
+    ]
+    if isempty(tutorial_files)
+        tutorial_paths = readdir(tutorial_dir)
+    else
+        tutorial_paths =
+            [joinpath(tutorial_dir, file) for file in tutorial_files]
+    end
+    for file in tutorial_paths
+        if occursin(".jl", file)
+            Literate.markdown(
+                joinpath(tutorial_dir, "$file"),
+                tutorial_dir;
+                documenter = true)
+        end
     end
 end
 
@@ -65,7 +70,7 @@ DocMeta.setdocmeta!(
     recursive = true,
 )
 
-pages = [
+const PAGES = [
     "About IARA" => "index.md",
     "Getting started" => [
         "My first execution" => "tutorial/first_execution.md",
@@ -114,14 +119,17 @@ pages = [
         "Style guide" => "style_guide.md",
         "Development guides" => "development_guides.md",
     ],
-    "API Reference" => "api_reference.md",
+    "IARA Platform" => "iara_platform.md",
 ]
 
-makedocs(;
-    modules = [IARA],
-    doctest = false,
-    clean = true,
-    format = Documenter.HTML(;
+if !PDF
+    push!(PAGES, "API Reference" => "api_reference.md")
+end
+
+const FORMAT =
+    PDF ?
+    Documenter.LaTeX(; platform = "docker") :
+    Documenter.HTML(;
         assets = ["assets/favicon.ico"],
         mathengine = Documenter.MathJax2(),
         prettyurls = false,
@@ -135,22 +143,30 @@ makedocs(;
         example_size_threshold = nothing,
         # Setting it to nothing will ignore the size threshold
         size_threshold = nothing,
-    ),
+    )
+
+makedocs(;
+    modules = [IARA],
+    doctest = false,
+    clean = false,
+    format = FORMAT,
     sitename = "IARA.jl",
-    authors = "psrenergy",
+    authors = "PSR Energy",
     warnonly = false,
-    pages = pages,
+    pages = PAGES,
     remotes = nothing,
 )
 
 # Remove the tutorial files from the docs
-for file in readdir(tutorial_dir)
-    if occursin(".md", file)
-        rm(joinpath(tutorial_dir, file))
+if !PDF
+    for file in readdir(tutorial_dir)
+        if occursin(".md", file)
+            rm(joinpath(tutorial_dir, file))
+        end
     end
-end
 
-deploydocs(;
-    repo = "github.com/psrenergy/IARA.jl.git",
-    push_preview = true,
-)
+    deploydocs(;
+        repo = "github.com/psrenergy/IARA.jl.git",
+        push_preview = true,
+    )
+end

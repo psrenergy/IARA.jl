@@ -1,0 +1,9 @@
+PRAGMA user_version = 14;
+PRAGMA foreign_keys = ON;
+
+ALTER TABLE BiddingGroup DROP COLUMN bid_price_limit_source;
+ALTER TABLE BiddingGroup_time_series_files DROP COLUMN bid_price_limit_justified_independent;
+ALTER TABLE BiddingGroup_time_series_files DROP COLUMN bid_price_limit_non_justified_independent;
+ALTER TABLE BiddingGroup_time_series_files DROP COLUMN bid_price_limit_justified_profile;
+ALTER TABLE BiddingGroup_time_series_files DROP COLUMN bid_price_limit_non_justified_profile;
+ALTER TABLE BiddingGroup_time_series_files DROP COLUMN bid_justifications;

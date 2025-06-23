@@ -24,6 +24,7 @@ Collection representing the bidding groups in the system.
     ex_post_adjust_mode::Vector{BiddingGroup_ExPostAdjustMode.T} = []
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
+    bid_price_limit_source::Vector{BiddingGroup_BidPriceLimitSource.T} = []
     quantity_offer_file::String = ""
     price_offer_file::String = ""
     quantity_offer_profile_file::String = ""
@@ -31,6 +32,11 @@ Collection representing the bidding groups in the system.
     parent_profile_file::String = ""
     complementary_grouping_profile_file::String = ""
     minimum_activation_level_profile_file::String = ""
+    bid_price_limit_justified_independent_file::String = ""
+    bid_price_limit_non_justified_independent_file::String = ""
+    bid_price_limit_justified_profile_file::String = ""
+    bid_price_limit_non_justified_profile_file::String = ""
+    bid_justifications_file::String = ""
     # caches
     _has_generation_besides_virtual_reservoirs::Vector{Bool} = []
     _number_of_valid_bidding_segments::Vector{Int} = Int[]
@@ -56,6 +62,11 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 
     bidding_group.label = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
     bidding_group.asset_owner_index = PSRI.get_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
+    bidding_group.bid_price_limit_source =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "BiddingGroup", "bid_price_limit_source"),
+            BiddingGroup_BidPriceLimitSource.T,
+        )
 
     # Load vectors
     bidding_group.risk_factor = PSRI.get_vectors(inputs.db, "BiddingGroup", "risk_factor")
@@ -91,6 +102,34 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
     bidding_group.minimum_activation_level_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
+    bidding_group.bid_price_limit_justified_independent_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_justified_independent",
+        )
+    bidding_group.bid_price_limit_non_justified_independent_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_non_justified_independent",
+        )
+    bidding_group.bid_price_limit_justified_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_justified_profile",
+        )
+    bidding_group.bid_price_limit_non_justified_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_non_justified_profile",
+        )
+    bidding_group.bid_justifications_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "bid_justifications")
+
+    # Caches
     bidding_group._has_generation_besides_virtual_reservoirs = zeros(Bool, num_bidding_groups)
 
     update_time_series_from_db!(bidding_group, inputs.db, initial_date_time(inputs))
@@ -257,6 +296,38 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
                 "BiddingGroup $(bidding_group.label[i]) AssetOwner ID $(bidding_group.asset_owner_index[i]) not found."
             )
             num_errors += 1
+        end
+    end
+
+    # Check if the bid price limit files are necessary, and if so, if they are provided
+    if must_read_bid_price_limit_file(inputs)
+        if has_any_simple_bids(inputs)
+            if bidding_group.bid_price_limit_justified_independent_file == ""
+                @error(
+                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit justified independent file is missing."
+                )
+                num_errors += 1
+            end
+            if bidding_group.bid_price_limit_non_justified_independent_file == ""
+                @error(
+                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit non-justified independent file is missing."
+                )
+                num_errors += 1
+            end
+        end
+        if has_any_profile_bids(inputs)
+            if bidding_group.bid_price_limit_justified_profile_file == ""
+                @error(
+                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit justified profile file is missing."
+                )
+                num_errors += 1
+            end
+            if bidding_group.bid_price_limit_non_justified_profile_file == ""
+                @error(
+                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit non-justified profile file is missing."
+                )
+                num_errors += 1
+            end
         end
     end
 
@@ -519,4 +590,21 @@ function update_number_of_valid_profiles!(inputs::AbstractInputs, values::Vector
     end
     inputs.collections.bidding_group._number_of_valid_profiles .= values
     return nothing
+end
+
+function use_bid_price_limits_from_file(inputs::AbstractInputs, bidding_group_index::Int)
+    return bidding_group_bid_price_limit_source(inputs)[bidding_group_index] ==
+           BiddingGroup_BidPriceLimitSource.READ_FROM_FILE
+end
+
+function must_read_bid_price_limit_file(inputs::AbstractInputs)
+    return any(
+        bidding_group_bid_price_limit_source(inputs) .==
+        BiddingGroup_BidPriceLimitSource.READ_FROM_FILE,
+    ) && validate_bidding_group_bids(inputs)
+end
+
+function bids_justifications_exist(inputs::AbstractInputs)
+    return bidding_group_bid_justifications_file(inputs) != "" &&
+           isfile(joinpath(path_case(inputs), bidding_group_bid_justifications_file(inputs)))
 end

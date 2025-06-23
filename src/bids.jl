@@ -1302,8 +1302,8 @@ function adjust_quantity_offer_for_ex_post!(
                         )
                     elseif bidding_group_ex_post_adjust(inputs, bg) ==
                            BiddingGroup_ExPostAdjustMode.ADJUST_TO_EXANTE_BID
-                        total_energy_ex_ante = max(quantity_offer_series.data[bg, bus, bds, blk], 0.0)
-                        total_demand_ex_ante = min(quantity_offer_series.data[bg, bus, bds, blk], 0.0)
+                        total_energy_ex_ante = max(sum(quantity_offer_series.data[bg, bus, :, blk]), 0.0)
+                        total_demand_ex_ante = min(sum(quantity_offer_series.data[bg, bus, :, blk]), 0.0)
                     end
                     run_time_options =
                         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)

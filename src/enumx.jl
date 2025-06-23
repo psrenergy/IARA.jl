@@ -362,6 +362,7 @@ end
     ADJUST_TO_EXPOST_AVAILABILITY = 1
     ADJUST_TO_EXANTE_BID = 2
 end
+
 """
     RunTime_ClearingSubproblem
 

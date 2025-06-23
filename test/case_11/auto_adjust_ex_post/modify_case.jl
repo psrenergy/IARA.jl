@@ -21,13 +21,13 @@ IARA.add_bidding_group!(db;
 IARA.add_bidding_group!(db;
     label = "bg_4",
     assetowner_id = "asset_owner_1",
-    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.ADJUST_TO_EXPOST_AVAILABILITY,
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION,
 )
 
 IARA.add_bidding_group!(db;
     label = "bg_5",
     assetowner_id = "asset_owner_1",
-    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.ADJUST_TO_EXANTE_BID,
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
 )
 
 # Add an extra renewable unit "gnd_2"

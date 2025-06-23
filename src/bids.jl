@@ -1280,7 +1280,7 @@ function adjust_quantity_offer_for_ex_post!(
             for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
                 for blk in subperiods(inputs)
                     if bidding_group_ex_post_adjust(inputs, bg) ==
-                       BiddingGroup_ExPostAdjustMode.ADJUST_TO_EXPOST_AVAILABILITY
+                       BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION
                         # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
                         run_time_options =
                             RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
@@ -1301,7 +1301,7 @@ function adjust_quantity_offer_for_ex_post!(
                             subscenario,
                         )
                     elseif bidding_group_ex_post_adjust(inputs, bg) ==
-                           BiddingGroup_ExPostAdjustMode.ADJUST_TO_EXANTE_BID
+                           BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
                         total_energy_ex_ante = max(sum(quantity_offer_series.data[bg, bus, :, blk]), 0.0)
                         total_demand_ex_ante = min(sum(quantity_offer_series.data[bg, bus, :, blk]), 0.0)
                     end

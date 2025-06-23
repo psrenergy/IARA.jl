@@ -354,13 +354,13 @@ end
     BiddingGroup_ExPostAdjustMode
 
     - `NO_ADJUSTMENT`: No adjustment (0)
-    - `ADJUST_TO_EXPOST_AVAILABILITY`: Adjust to ex-post availability (1)
-    - `ADJUST_TO_EXANTE_BID`: Adjust to ex-ante bid (2)
+    - `PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION`: Adjust to ex-post availability (1)
+    - `PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID`: Adjust to ex-ante bid (2)
 """
 @enumx BiddingGroup_ExPostAdjustMode begin
     NO_ADJUSTMENT = 0
-    ADJUST_TO_EXPOST_AVAILABILITY = 1
-    ADJUST_TO_EXANTE_BID = 2
+    PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION = 1
+    PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID = 2
 end
 
 """

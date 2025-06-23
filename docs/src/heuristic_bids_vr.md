@@ -70,49 +70,51 @@ The variables, constraints, objective function, and parameters of the $P(\theta)
 
 # Heuristic bid for virtual reservoir
 
-For each asset owner $i$ in the virtual reservoir $r$, the heuristic bid is constructed based on the hydro reference curve $[Q_{r, p} \; \Mu_{r,p}]_{p \in P}$, the pairs of reference and markup $(s_{i,f}, p_{i,f})_{f \in F^{AO}(i)}$, the purchase discount rate $o_i$ and the energy accounts $E^{in}_r$.
+For each asset owner $i$ in the virtual reservoir $r$, the heuristic bid is constructed based on the hydro reference curve $[Q_{r, p}, \Mu_{r,p}]_{p \in P}$, the pairs of reference and markup $(s_{i,f}, p_{i,f})_{f \in F^{AO}(i)}$, the purchase discount rate $o_i$, and the energy accounts $E^{in}_r$.
 
-The available parameters for the heuristic bid are input data or results from the market clearing problem, and they are defined as follows:
+The available parameters for the heuristic bid are either input data or results from the market clearing problem. They are defined as follows:
 
-- $F^{AO}(i)$: Set of risk factors for asset owner $i$. 
-- $G$: Set of points at the hydro reference curve.
-- $s_{i,f}$: Maximum account share at which the risk factor $p_{i,f}$ is applied, for asset owner $i$. $s_{i,f} > s_{i, f+1}$, $s_{i,1} > 0$, $s_{i, |F^{AO}(i)|} = 1$.
-- $m_{i,f}$: Risk factor for asset owner $i$ at level $f$.
-- $o_i$: purchase discount rate for asset owner $i$.
-- $E^{in}_{r,i}$: Energy account of asset owner $i$ on virtual reservoir $r$.
-- $\Mu_{r, g}$: Price of the point $g$ at the hydro reference curve for virtual reservoir $r$.
-- $Q_{r, g}$: Quantity of the point $g$ at the hydro reference curve for virtual reservoir $r$.
+- $F^{AO}(i)$: Set of risk factors for asset owner $i$.
+- $G$: Set of points on the hydro reference curve.
+- $s_{i,f}$: Maximum account share at which the risk factor $p_{i,f}$ is applied for asset owner $i$, with $s_{i,f} > s_{i,f+1}$, $s_{i,1} > 0$, and $s_{i, |F^{AO}(i)|} = 1$.
+- $p_{i,f}$: Risk factor for asset owner $i$ at level $f$.
+- $o_i$: Purchase discount rate for asset owner $i$.
+- $E^{in}_{r,i}$: Energy account of asset owner $i$ in virtual reservoir $r$.
+- $\Mu_{r, g}$: Price at point $g$ of the hydro reference curve for virtual reservoir $r$.
+- $Q_{r, g}$: Quantity at point $g$ of the hydro reference curve for virtual reservoir $r$.
 
-The calculation of the heuristic bid for virtual reservoir $r$ can be splited into three steps: 
-1. Adjusting the the pairs of reference and markup $(s_{i,f}, m_{i,f})_{f \in F^{AO}(i)}$ into pairs of energy quantity and markup $(s'_{i,f},m_{i,f})_{f \in F^{AO}(i)}$
-2. Adjusting the hydro reference curve for each asset owner $i$, based on the energy accounts
+The calculation of the heuristic bid for virtual reservoir $r$ can be split into three steps:
+
+1. Adjusting the pairs of reference and markup $(s_{i,f}, p_{i,f})_{f \in F^{AO}(i)}$ into pairs of energy quantity and markup $(s'_{i,f}, p_{i,f})_{f \in F^{AO}(i)}$.
+2. Adjusting the hydro reference curve for each asset owner $i$, based on the energy accounts.
 3. Applying the adjusted markup vectors to the adjusted hydro reference curve to obtain the heuristic bid for asset owner $i$.
 
 
 ## Adjust markup vectors for asset owner $i$
 
-The markup vectors for asset owner $i$ form a set of pairs $(s_{i,f}, m_{i,f})_{f \in F^{AO}(i)}$, where $s_{i,f}$ is the maximum share of the energy account at which the risk factor $m_{i,f}$ is applied. The image below illustrates the markup vectors for an asset owner, where $(s_{i,f}, m_{i,f})_{f \in F^{AO}(i)} = \{(0.1, 0.3), (0.6, 0.05), (1.0, -0.2)\}.$ 
+The markup vectors for asset owner $i$ form a set of pairs $(s_{i,f}, m_{i,f})_{f \in F^{AO}(i)}$, where $s_{i,f}$ is the maximum share of the energy account at which the risk factor $m_{i,f}$ is applied. The image below illustrates the markup vectors for an asset owner, where $(s_{i,f}, m_{i,f})_{f \in F^{AO}(i)} = \{(0.1, 0.3), (0.6, 0.05), (1.0, -0.2)\}$.
 
 ![alt text](image.png)
 
-We want to find the relation between the energy offer and risk factor. For that, we look for the relation between the energy offer and the share of the energy account. The following calculated parameters are used:
+We want to find the relation between the energy offer and the risk factor. For that, we look for the relation between the energy offer and the share of the energy account. The following calculated parameters are used:
 
 - $E_{r,i}$: Energy account of asset owner $i$ in virtual reservoir $r$, considering the initial energy account and the inflow, $E_{r,i} = E^{in}_{r,i} + e^{inflow}_r \cdot \gamma^{VR}_{r,i}$, where $e^{inflow}_r$ is the inflow energy of virtual reservoir $r$ and $\gamma^{VR}_{r,i}$ is the inflow share of asset owner $i$ in virtual reservoir $r$.
 - $T$: Sum of the energy accounts of all asset owners in the virtual reservoir $r$, $T = \sum_{i \in I^{VR}(r)} E_{r,i}$.
 - $S_i$: Share of the energy account of asset owner $i$ in the virtual reservoir $r$, calculated as $S_i = \frac{E_{r,i}}{T}$.
-- $j_{S_i}$: Index of the first risk factor above the share $S_i$ of asset owner $i$. $j_{s_i} = \min\{f \mid s_{i,f} \ge s_i\}$ 
+- $j_{S_i}$: Index of the first risk factor above the share $S_i$ of asset owner $i$. $j_{S_i} = \min\{f \mid s_{i,f} \ge S_i\}$.
 - $n_i$: Number of risk factors for asset owner $i$, $n_i = |F^{AO}(i)|$.
 
-The energy account share in function of the energy offer is $s(q) = \frac{E_{r,i} - q}{T} = S_i - \frac{q}{T}$.
-For our example, considering $S_i = 10$, $T=12.5$, the image bellow shows the graph of the function.
+The energy account share as a function of the energy offer is $s(q) = \frac{E_{r,i} - q}{T} = S_i - \frac{q}{T}$.
+
+For our example, considering $S_i = 10$, $T=12.5$, the image below shows the graph of the function.
 
 ![alt text](image-1.png)
 
-If $f(s)$ is the risk factor in function of the share $s$, then $f(s(q)) will give us the risk factor in function of the energy offer $q$. Intuitively, we take the graph of the function $f(s)$, mirror in a vertical axis so the domain keeps the same, stretch it to the right by a factor of $T$, and then shift it to the left by $T - E_{r,i}$. The image bellow shows the graph of the function $f(s(q))$ for our example.
+If $f(s)$ is the risk factor as a function of the share $s$, then $f(s(q))$ will give us the risk factor as a function of the energy offer $q$. Intuitively, we take the graph of the function $f(s)$, mirror it on a vertical axis so the domain remains the same, stretch it to the right by a factor of $T$, and then shift it to the left by $T - E_{r,i}$. The image below shows the graph of the function $f(s(q))$ for our example.
 
 ![alt text](image-2.png)
 
-Also, to the negative side of the energy offer, we apply the purchase discount rate $o_i$ to the risk factor, which is $o_i = 0.1$ in our example. The image bellow shows the final graph of the risk factor in function of the energy offer for our example.
+Additionally, for the negative side of the energy offer, we apply the purchase discount rate $o_i$ to the risk factor, which is $o_i = 0.1$ in our example. The image below shows the final graph of the risk factor as a function of the energy offer for our example.
 
 ![alt text](image-3.png)
 
@@ -130,7 +132,7 @@ $$
     \vdots & & \vdots \\
     (s_{i, 2} -  s_{i, 1}) \cdot T & & m_{i, 2} \\
     (s_{i, 1} -  0) \cdot T & & m_{i, 1} \\
-\end{bmatrix} 
+\end{bmatrix}
 $$
 
 Note that the energy offer segment $(s'_{i,f})$ represents the length of the corresponding segment in the graph. This way, for our example, where $j_{S_i} = 3$, the pair of vectors for asset owner $i$ is $s'_{i,f} = \{-2.5, 2.5, 6.25, 1.25\}$ and $m'_{i,f} = \{-0.3, -0.2, 0.05, 0.3\}$.
@@ -141,12 +143,24 @@ The hydro reference curve for virtual reservoir $r$ is defined as a set of point
 
 ![alt text](image-4.png)
 
+We want to adjust the hydro reference curve for asset owner $i$ to let it be proportional to the energy account of asset owner $i$: 
 
-We want to adjust the hydro reference curve for asset owner $i$ to let it proportional to the energy account of asset owner $i$: $q'_{r,i,g} = Q_{r,g} \cdot \frac{E_{r,i}}{\sum_{i' \in I^{VR}(r)} E^{in}_{r,i'}} = Q_{r,g} \cdot S_i$. Also, we want to have a price for buying energy, so we extend the hydro reference curve to the negative side of the energy offer, which is done by adding a segment with the same price as the first point of the hydro reference curve, but with a quantity equal to the negative difference between the energy account of asset owner $i$ and the sum of energy accounts: $q'_{r,i,0} = E_{r,i} - T$ and $\Mu'_{r,i,0} = \Mu_{r,1}$. The image below shows the adjusted hydro reference curve for asset owner $i$.
+$$
+q'_{r,i,g} = Q_{r,g} \cdot S_i
+$$
+
+Also, we want to have a price for buying energy, so we extend the hydro reference curve to the negative side of the energy offer. This is done by adding a segment with the same price as the first point of the hydro reference curve, but with a quantity equal to the negative difference between the energy account of asset owner $i$ and the sum of energy accounts:
+
+$$
+q'_{r,i,0} = E_{r,i} - T \quad \text{and} \quad \Mu'_{r,i,0} = \Mu_{r,1}
+$$
+
+The image below shows the adjusted hydro reference curve for asset owner $i$.
 
 ![alt text](adjusted_reference_curve2.png)
 
 The vectors that represent the adjusted hydro reference curve for asset owner $i$ are defined as follows:
+
 $$
 \{(q'_{r,i,g}, \Mu'_{r,i,g})\}_{g \in G'} =  \begin{bmatrix}
     E_{r,i} - T & & \Mu_{r,1} \\
@@ -158,17 +172,17 @@ $$
 \end{bmatrix}
 $$
 
-where $G' = G \cup \{0\}$. 
+where $G' = G \cup \{0\}$.
 
 ## Apply adjusted markup vectors to adjusted hydro reference curve
+
 Once we have the reference price and the markup for each quantity segment, we can construct the heuristic bid for asset owner $i$. The image below shows the adjusted hydro reference curve $h'(q)$, the adjusted markup curve, shifted 1 unit up, $1 + f'(q)$, and the heuristic bid $p(q) = h'(q)\cdot(1+f'(q))$. 
 
 ![alt text](final_curve4.png)
 
+To calculate the vectors that represent the quantity bidding segments for asset owner $i$, we get the vectors of the adjusted hydro reference curve $q'_{r,i,g}$ and the adjusted markup energy offer segments $s'_{i,f}$.
 
-To calculate the vectors that represent the quantity bidding segments for asset owner $i$, we get the vectors of the adjusted hydro reference curve $q'_{r,i,g}$ and the adjusted markup energy offer segments $s'_{i,f}$. 
-
-Based on the quantity segments $q'_{r,i,g}$, we define the ticks $Q'_{r,i,g}$, where the price $\Mu'_{r,i,g}$ is applied in the interval $[Q'_{r,i,g}, Q'_{r,i,g+1})$. The ticks are defined as follows:
+Based on the quantity segments $q'_{r,i,g}$, we define the segment boundaries $Q'_{r,i,g}$, where the price $\Mu'_{r,i,g}$ is applied in the interval $[Q'_{r,i,g}, Q'_{r,i,g+1})$. The boundaries are defined as follows:
 
 $$
 Q'^+ = \left[\sum_{g \in G', g \le h} q'_{r,i,g}\right]_{h \in G', q'_{r,i,h} > 0} \\
@@ -176,7 +190,7 @@ Q'^- = \left[\sum_{g \in G', g \ge h} q'_{r,i,g}\right]_{h \in G', q'_{r,i,h} < 
 Q' = \left[ Q'^-; 0; Q'^+ \right]
 $$
 
-We do the same for the adjusted markup segments $s'_{i,f}$, defining the ticks $S'_{i,f}$ as follows:
+We do the same for the adjusted markup segments $s'_{i,f}$, defining the boundaries $S'_{i,f}$ as follows:
 
 $$
 S'^+ = \left[\sum_{f \in F^{AO}(i), f \le h} s'_{i,f}\right]_{h \in F^{AO}(i), s'_{i,h} > 0} \\
@@ -184,14 +198,34 @@ S'^- = \left[\sum_{f \in F^{AO}(i), f \ge h} s'_{i,f}\right]_{h \in F^{AO}(i), s
 S' = \left[ S'^-; 0; S'^+ \right]
 $$
 
-This way, the ticks that represent the quantity offer at the heuristic bid are defined by $\{Q_{r,i,k}^{VR}\}_{k \in K(r, i)} =  Q' \cup S'$.
+This way, the boundaries that represent the quantity offer at the heuristic bid are defined by $\{Q_{r,i,k}^{VR}\}_{k \in K(r, i)} =  Q' \cup S'$.
 
-To find the quantity offer of each segment $k$, we calculate $q^{VR}_{r,i,k} = Q^{VR}_{r,i,k+1} - Q^{VR}_{r,i,k}$.
+To find the quantity offer of each segment $k$, we calculate:
+
+$$
+q^{VR}_{r,i,k} = Q^{VR}_{r,i,k+1} - Q^{VR}_{r,i,k}
+$$
 
 And for the price at the segment $k$, we calculate as follows:
+
 $$
 P^{VR}_{r,i,k} =
 \max_g\{\Mu'_{r,i,g} \mid Q'_g \le Q^{VR}_{r,i,k}\} \;\cdot \; \left(1+\max_{f}\{m'_{i,f} \mid S'_f \le Q^{VR}_{r,i,k} \}\right)
 $$
 
-# Counteroffer agent
+
+# Supply Safety Agent
+
+The **Supply Safety Agent** is a special type of asset owner that acts as a safeguard for the system. If present, the following conditions must be met:
+
+- It must be associated with every virtual reservoir $r$ in the system.
+- It cannot be associated with any bidding group, meaning it does not own any units.
+- For each virtual reservoir $r$, the inflow share of the supply safety agent must be zero, i.e., $\gamma^{VR}_{r, i} = 0$.
+
+The role of the supply safety agent is to mitigate risks arising from the actions of other asset owners in the virtual reservoir. If the other asset owners in the virtual reservoir $r$ are selling too much energy at a low price, this could deplete the reservoir too quickly, creating a risk of failing to meet future demand. In such cases, the supply safety agent will place **buying offers** at a price higher than or equal to the prices of the other asset owners, effectively increasing its own energy account and reducing the rate at which water is withdrawn from the reservoir.
+
+Conversely, if the other asset owners are selling energy at excessively high prices, the supply safety agent will place **selling offers** at lower prices, ensuring fairer prices for consumers.
+
+The determination of "too cheap" and "too expensive" is based on the future cost of water, ensuring the agent's actions are aligned with the long-term sustainability of the system.
+
+The markup vectors for the supply safety agent must be defined to generate this desired behavior.

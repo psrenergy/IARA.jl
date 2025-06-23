@@ -16,7 +16,7 @@ Bid offers are calculated using predefined formulas that incorporate operational
 - ``J^H_{VR}(r)``: Set of hydro units associated with virtual reservoir $r$.
 - ``I_{VR}(r)``: Set of asset owners associated with virtual reservoir $r$.
 - ``K^{VR}(r, i)``: Set of segment offers at virtual reservoir $r$ for the asset owner $i$.
-- ``E^{VR}_{r,i}(\omega)``: Energy account of asset owner $i$ on virtual reservoir $r$ at scenario $\omega$.
+- ``E^{in}_{r,i}(\omega)``: Energy account of asset owner $i$ on virtual reservoir $r$ at scenario $\omega$.
 - ``F(b)`` Set of risk factors for bidding group $b$.
 - ``F^{AO}(i)`` Set of risk factors for asset owner $i$.
 - ``p_f``: Risk factor.
@@ -96,7 +96,7 @@ For hydro units in a virtual reservoir, the conversion is performed using the fo
 
 ```math
 \begin{align}
-e_{r,i} &= \frac{E^{VR}_{r,i}(\omega)}{\sum_{l \in I_{VR}(r)} E^{VR}_{r,l}(\omega)} &\quad \forall i \in I_{VR}(r), r \in J^{VR}\\
+e_{r,i} &= \frac{E^{in}_{r,i}(\omega)}{\sum_{l \in I_{VR}(r)} E^{in}_{r,l}(\omega)} &\quad \forall i \in I_{VR}(r), r \in J^{VR}\\
 Q^{VR}_{r, i, k}(\omega) &= e_{r,i} \cdot s_f \cdot \sum_{\tau \in B(t)} g^H_{j, \tau}(\omega) &\quad \forall k = (j - 1) \cdot |F^{AO}(i)| + f, f \in F^{AO}(a), j \in J^H_{VR}(r), i \in I_{VR}(r), r \in J^{VR}  \\
 P^{VR}_{r, i, k}(\omega) &= (1 + p_f) \cdot  \frac{1}{\sum_{\tau \in B(t)} d(\tau)} \sum_{\tau \in B(t)} \pi^H_{j, \tau} d(\tau) &\quad \forall k = (j - 1) \cdot |F^{AO}(i)| + f, f \in F^{AO}(a), j \in J^H_{VR}(r), i \in I_{VR}(r), r \in J^{VR}  \\
 \end{align}

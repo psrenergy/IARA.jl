@@ -31,12 +31,13 @@ function update_virtual_reservoir_reference_multiplier!(
     # Model parameters
     virtual_reservoir_reference_multiplier = get_model_object(subproblem_model, :virtual_reservoir_reference_multiplier)
 
-    return MOI.set(
+    MOI.set(
         subproblem_model,
         POI.ParameterValue(),
         virtual_reservoir_reference_multiplier,
         reference_multiplier,
     )
+    return nothing
 end
 
 function initialize_reference_curve_outputs(

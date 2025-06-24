@@ -20,7 +20,6 @@ function water_to_energy_factors(inputs::AbstractInputs, hydro_units_indices::Ve
         h_downstream = hydro_unit_turbine_to(inputs, h)
         water_to_energy_factors[h] = if is_null(h_downstream) || !(h_downstream in hydro_units_indices)
             hydro_unit_production_factor(inputs, h) / m3_per_second_to_hm3_per_hour()
-            # Should I multiply by the subperiod duration?
         else
             hydro_unit_production_factor(inputs, h) / m3_per_second_to_hm3_per_hour() +
             water_to_energy_factors[h_downstream]

@@ -10,7 +10,7 @@ Based on these results, the price and quantity segments corresponding to the mul
 
 - $q_r(\theta) = q_r^* - \sum_{\vartheta \in \Theta, \vartheta < \theta}{q_r(\vartheta)}$, which defines the quantity for the multiplier $\theta$.
 
-For each virtual reservoir $r$, this process generates two vectors: one for the price levels $\Mu_r$ and one for the quantities $Q_r$. The vectors are ordered in ascending order of price, which is important for constructing the heuristic bid later. The last segment of quantities is extended to reach the total stored energy, as it can be greater than the maximum turbinable energy.
+For each virtual reservoir $r$, this process generates two vectors: one for the price levels $M_r$ and one for the quantities $Q_r$. The vectors are ordered in ascending order of price, which is important for constructing the heuristic bid later. The last segment of quantities is extended to reach the total stored energy, as it can be greater than the maximum turbinable energy.
 
 The variables, constraints, objective function, and parameters of the $P(\theta)$ problem are presented below. Additional symbols are defined in the [Market Clearing Problem](#market-clearing-problem) and [Centralized Operation Problem](#centralized-operation-problem) sections.
 
@@ -68,7 +68,7 @@ The variables, constraints, objective function, and parameters of the $P(\theta)
 
 # Heuristic bid for virtual reservoir
 
-For each asset owner $i$ in the virtual reservoir $r$, the heuristic bid is constructed based on the hydro reference curve $[Q_{r, p}, \Mu_{r,p}]_{p \in P}$, the pairs of reference and markup $(s_{i,f}, p_{i,f})_{f \in F^{AO}(i)}$, the purchase discount rate $o_i$, and the energy accounts $E^{in}_r$.
+For each asset owner $i$ in the virtual reservoir $r$, the heuristic bid is constructed based on the hydro reference curve $[Q_{r, p}, M_{r,p}]_{p \in P}$, the pairs of reference and markup $(s_{i,f}, p_{i,f})_{f \in F^{AO}(i)}$, the purchase discount rate $o_i$, and the energy accounts $E^{in}_r$.
 
 The available parameters for the heuristic bid are either input data or results from the market clearing problem. They are defined as follows:
 
@@ -78,7 +78,7 @@ The available parameters for the heuristic bid are either input data or results 
 - $p_{i,f}$: Risk factor for asset owner $i$ at level $f$.
 - $o_i$: Purchase discount rate for asset owner $i$.
 - $E^{in}_{r,i}$: Energy account of asset owner $i$ in virtual reservoir $r$.
-- $\Mu_{r, g}$: Price at point $g$ of the hydro reference curve for virtual reservoir $r$.
+- $M_{r, g}$: Price at point $g$ of the hydro reference curve for virtual reservoir $r$.
 - $Q_{r, g}$: Quantity at point $g$ of the hydro reference curve for virtual reservoir $r$.
 
 The calculation of the heuristic bid for virtual reservoir $r$ can be split into three steps:
@@ -137,7 +137,7 @@ Note that the energy offer segment $(s'_{i,f})$ represents the length of the cor
 
 ## Adjust hydro reference curve for asset owner $i$
 
-The hydro reference curve for virtual reservoir $r$ is defined as a set of points $G_r = \{(Q_{r,g}, \Mu_{r,g})\}_{g \in G}$, where $Q_{r,g}$ is the quantity and $\Mu_{r,g}$ is the price at point $g$. The image below illustrates the hydro reference curve for virtual reservoir $r$.
+The hydro reference curve for virtual reservoir $r$ is defined as a set of points $G_r = \{(Q_{r,g}, M_{r,g})\}_{g \in G}$, where $Q_{r,g}$ is the quantity and $M_{r,g}$ is the price at point $g$. The image below illustrates the hydro reference curve for virtual reservoir $r$.
 
 ![Reference curve](./assets/reference_curve.png)
 
@@ -150,7 +150,7 @@ $$
 Also, we want to have a price for buying energy, so we extend the hydro reference curve to the negative side of the energy offer. This is done by adding a segment with the same price as the first point of the hydro reference curve, but with a quantity equal to the negative difference between the energy account of asset owner $i$ and the sum of energy accounts:
 
 $$
-q'_{r,i,0} = E_{r,i} - T \quad \text{and} \quad \Mu'_{r,i,0} = \Mu_{r,1}
+q'_{r,i,0} = E_{r,i} - T \quad \text{and} \quad M'_{r,i,0} = M_{r,1}
 $$
 
 The image below shows the adjusted hydro reference curve for asset owner $i$.
@@ -160,13 +160,13 @@ The image below shows the adjusted hydro reference curve for asset owner $i$.
 The vectors that represent the adjusted hydro reference curve for asset owner $i$ are defined as follows:
 
 $$
-\{(q'_{r,i,g}, \Mu'_{r,i,g})\}_{g \in G'} =  \begin{bmatrix}
-    E_{r,i} - T & & \Mu_{r,1} \\
-    Q_{r,1} \cdot S_i & & \Mu_{r,1} \\
-    Q_{r,2} \cdot S_i & & \Mu_{r,2} \\
+\{(q'_{r,i,g}, M'_{r,i,g})\}_{g \in G'} =  \begin{bmatrix}
+    E_{r,i} - T & & M_{r,1} \\
+    Q_{r,1} \cdot S_i & & M_{r,1} \\
+    Q_{r,2} \cdot S_i & & M_{r,2} \\
     \vdots & & \vdots \\
-    Q_{r,|G|-1} \cdot S_i & & \Mu_{r,|G|-1} \\
-    Q_{r,|G|} \cdot S_i & & \Mu_{r,|G|} \\
+    Q_{r,|G|-1} \cdot S_i & & M_{r,|G|-1} \\
+    Q_{r,|G|} \cdot S_i & & M_{r,|G|} \\
 \end{bmatrix}
 $$
 
@@ -180,7 +180,7 @@ Once we have the reference price and the markup for each quantity segment, we ca
 
 To calculate the vectors that represent the quantity bidding segments for asset owner $i$, we get the vectors of the adjusted hydro reference curve $q'_{r,i,g}$ and the adjusted markup energy offer segments $s'_{i,f}$.
 
-Based on the quantity segments $q'_{r,i,g}$, we define the segment boundaries $Q'_{r,i,g}$, where the price $\Mu'_{r,i,g}$ is applied in the interval $[Q'_{r,i,g}, Q'_{r,i,g+1})$. The boundaries are defined as follows:
+Based on the quantity segments $q'_{r,i,g}$, we define the segment boundaries $Q'_{r,i,g}$, where the price $M'_{r,i,g}$ is applied in the interval $[Q'_{r,i,g}, Q'_{r,i,g+1})$. The boundaries are defined as follows:
 
 $$
 Q'^+ = \left[\sum_{g \in G', g \le h} q'_{r,i,g}\right]_{h \in G', q'_{r,i,h} > 0} \\
@@ -208,7 +208,7 @@ And for the price at the segment $k$, we calculate as follows:
 
 $$
 P^{VR}_{r,i,k} =
-\max_g\{\Mu'_{r,i,g} \mid Q'_g \le Q^{VR}_{r,i,k}\} \;\cdot \; \left(1+\max_{f}\{m'_{i,f} \mid S'_f \le Q^{VR}_{r,i,k} \}\right)
+\max_g\{M'_{r,i,g} \mid Q'_g \le Q^{VR}_{r,i,k}\} \;\cdot \; \left(1+\max_{f}\{m'_{i,f} \mid S'_f \le Q^{VR}_{r,i,k} \}\right)
 $$
 
 

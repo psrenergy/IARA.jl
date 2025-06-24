@@ -2,7 +2,7 @@
 
 The hydro reference curve seeks to draw the aggregate offer curve for each virtual reservoir for a given period and scenario, defining price and quantity levels. These results are later used for the heuristic bidding of virtual reservoirs
 
-The maximum energy generation in the period and scenario is determined by the amount of stored energy and the turbine limits of the reservoirs. The set of multipliers $\Theta$, in the interval $0 < \theta \le 1$, is applied to the maximum amount of stored energy. For each value of the multiplier $\theta$, a single optimization model $P(\theta)$ is run, which returns the price levels $\mu_r^*$ and quantity $q_r^*$ for each virtual reservoir in the scenario considered.
+The maximum energy generation in the period and scenario is determined by the amount of stored energy and the turbine limits of the reservoirs. The set of multipliers $\Theta$, in the interval $0 < \theta \le 1$, is applied to the maximum amount of available energy. For each value of the multiplier $\theta$, a single optimization model $P(\theta)$ is run, which returns the price levels $\mu_r^*$ and quantity $q_r^*$ for each virtual reservoir in the scenario considered.
 
 Based on these results, the price and quantity segments corresponding to the multiplier $\theta$ are defined for each reservoir $r$:
 
@@ -10,11 +10,10 @@ Based on these results, the price and quantity segments corresponding to the mul
 
 - $q_r(\theta) = q_r^* - \sum_{\vartheta \in \Theta, \vartheta < \theta}{q_r(\vartheta)}$, which defines the quantity for the multiplier $\theta$.
 
-For each virtual reservoir $r$, this process generates two vectors: one for the price levels $\Mu_r$ and one for the quantities $Q_r$. The vectors are ordered in ascending order of price, which is important for constructing the heuristic bid later.
+For each virtual reservoir $r$, this process generates two vectors: one for the price levels $\Mu_r$ and one for the quantities $Q_r$. The vectors are ordered in ascending order of price, which is important for constructing the heuristic bid later. The last segment of quantities is extended to reach the total stored energy, as it can be greater than the maximum turbinable energy.
 
 The variables, constraints, objective function, and parameters of the $P(\theta)$ problem are presented below. Additional symbols are defined in the [Market Clearing Problem](#market-clearing-problem) and [Centralized Operation Problem](#centralized-operation-problem) sections.
 
-<!-- Faltou comentar que no final estica a curva -->
 ## Sets
 - ``\Theta``: Set of reference curve multipliers.
 - ``C``: Set of future cost cutting planes coefficients.
@@ -32,7 +31,6 @@ The variables, constraints, objective function, and parameters of the $P(\theta)
 ```math
     \min \; \alpha\\
 ```
-
 
 ## Constraints
 
@@ -94,7 +92,7 @@ The calculation of the heuristic bid for virtual reservoir $r$ can be split into
 
 The markup vectors for asset owner $i$ form a set of pairs $(s_{i,f}, m_{i,f})_{f \in F^{AO}(i)}$, where $s_{i,f}$ is the maximum share of the energy account at which the risk factor $m_{i,f}$ is applied. The image below illustrates the markup vectors for an asset owner, where $(s_{i,f}, m_{i,f})_{f \in F^{AO}(i)} = \{(0.1, 0.3), (0.6, 0.05), (1.0, -0.2)\}$.
 
-![alt text](image.png)
+![Risk factor over account share](./assets/risk_factor_account_share.png)
 
 We want to find the relation between the energy offer and the risk factor. For that, we look for the relation between the energy offer and the share of the energy account. The following calculated parameters are used:
 
@@ -108,15 +106,15 @@ The energy account share as a function of the energy offer is $s(q) = \frac{E_{r
 
 For our example, considering $S_i = 10$, $T=12.5$, the image below shows the graph of the function.
 
-![alt text](image-1.png)
+![Account share over energy offer](./assets/account_share_energy_offer.png)
 
 If $f(s)$ is the risk factor as a function of the share $s$, then $f(s(q))$ will give us the risk factor as a function of the energy offer $q$. Intuitively, we take the graph of the function $f(s)$, mirror it on a vertical axis so the domain remains the same, stretch it to the right by a factor of $T$, and then shift it to the left by $T - E_{r,i}$. The image below shows the graph of the function $f(s(q))$ for our example.
 
-![alt text](image-2.png)
+![Risk factor over energy offer](./assets/risk_factor_energy_offer.png)
 
 Additionally, for the negative side of the energy offer, we apply the purchase discount rate $o_i$ to the risk factor, which is $o_i = 0.1$ in our example. The image below shows the final graph of the risk factor as a function of the energy offer for our example.
 
-![alt text](image-3.png)
+![Risk factor over energy offer discounted](./assets/risk_factor_energy_offer_discounted.png)
 
 The pair of vectors $m', s'$ representing the risk factors and the energy offer segments for asset owner $i$ are defined as follows:
 
@@ -141,7 +139,7 @@ Note that the energy offer segment $(s'_{i,f})$ represents the length of the cor
 
 The hydro reference curve for virtual reservoir $r$ is defined as a set of points $G_r = \{(Q_{r,g}, \Mu_{r,g})\}_{g \in G}$, where $Q_{r,g}$ is the quantity and $\Mu_{r,g}$ is the price at point $g$. The image below illustrates the hydro reference curve for virtual reservoir $r$.
 
-![alt text](image-4.png)
+![Reference curve](./assets/reference_curve.png)
 
 We want to adjust the hydro reference curve for asset owner $i$ to let it be proportional to the energy account of asset owner $i$: 
 
@@ -157,7 +155,7 @@ $$
 
 The image below shows the adjusted hydro reference curve for asset owner $i$.
 
-![alt text](adjusted_reference_curve2.png)
+![Adjusted reference curve](./assets/adjusted_reference_curve.png)
 
 The vectors that represent the adjusted hydro reference curve for asset owner $i$ are defined as follows:
 
@@ -178,7 +176,7 @@ where $G' = G \cup \{0\}$.
 
 Once we have the reference price and the markup for each quantity segment, we can construct the heuristic bid for asset owner $i$. The image below shows the adjusted hydro reference curve $h'(q)$, the adjusted markup curve, shifted 1 unit up, $1 + f'(q)$, and the heuristic bid $p(q) = h'(q)\cdot(1+f'(q))$. 
 
-![alt text](final_curve4.png)
+![Final curve](./assets/final_curve.png)
 
 To calculate the vectors that represent the quantity bidding segments for asset owner $i$, we get the vectors of the adjusted hydro reference curve $q'_{r,i,g}$ and the adjusted markup energy offer segments $s'_{i,f}$.
 

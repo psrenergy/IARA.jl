@@ -216,7 +216,7 @@ As mentioned above, during the market clearing process, IARA can automatically g
 
 The heuristic bid generation differs based on the type of assets that an agent's bidding group contains.
 In this documentation we provide [examples](heuristic_bid_examples.md) of how the heuristic bid is generated.
-For the mathematical formulation of the heuristic bid, please refer to the [Heuristic Bid](heuristic_bids.md) chapter.
+For the mathematical formulation of the heuristic bid, please refer to the [Heuristic Bid](heuristic_bids.md) chapter. The heuristic bid for virtual reservoirs is described in the [Virtual Reservoir Bids](heuristic_bids_vr.md) chapter.
 
 ## Practical examples
 

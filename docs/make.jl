@@ -86,6 +86,7 @@ const PAGES = [
             "Centralized operation problem" => "centralized_operation_problem.md",
             "Market clearing problem" => "market_clearing_problem.md",
             "Heuristic bids" => "heuristic_bids.md",
+            "Bid price limits" => "bid_limits.md",
         ],
     ],
     "Use guides and tutorials" => [

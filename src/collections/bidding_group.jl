@@ -25,6 +25,7 @@ Collection representing the bidding groups in the system.
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
     bid_price_limit_source::Vector{BiddingGroup_BidPriceLimitSource.T} = []
+    fixed_cost::Vector{Float64} = []
     quantity_offer_file::String = ""
     price_offer_file::String = ""
     quantity_offer_profile_file::String = ""
@@ -67,6 +68,7 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "BiddingGroup", "bid_price_limit_source"),
             BiddingGroup_BidPriceLimitSource.T,
         )
+    bidding_group.fixed_cost = PSRI.get_parms(inputs.db, "BiddingGroup", "fixed_cost")
 
     # Load vectors
     bidding_group.risk_factor = PSRI.get_vectors(inputs.db, "BiddingGroup", "risk_factor")

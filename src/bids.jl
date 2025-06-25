@@ -1265,7 +1265,7 @@ function adjust_quantity_offer_for_ex_post!(
 
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
 
-    adjustment_factors = zeros(size(quantity_offer_series))
+    adjustment_factors = ones(size(quantity_offer_series))
 
     for bg in bidding_group_indexes
         # Check if the bidding group has ex post auto adjustment enabled

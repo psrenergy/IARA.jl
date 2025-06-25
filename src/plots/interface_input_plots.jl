@@ -100,19 +100,33 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
     )
 
     main_configuration = Config(;
-        title = title,
+        title = Dict(
+            "text"=> title,
+            "font" => Dict("size" => title_font_size()),
+        ),
         xaxis = Dict(
-            "title" => get_name(inputs, "period"),
+            "title" => Dict(
+                "text"=> get_name(inputs, "period"),
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
             "tickmode" => "array",
             "tickvals" => [i for i in eachindex(plot_ticks)],
             "ticktext" => plot_ticks,
+            "tickfont" => Dict("size" => axis_tick_font_size()),
         ),
-        yaxis = Dict("title" => "$(get_name(inputs, demand_name)) [$unit]"),
+        yaxis = Dict(
+            "title" => Dict(
+                "text"=> "$(get_name(inputs, demand_name)) [$unit]",
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
+            "tickfont" => Dict("size" => axis_tick_font_size()),
+        ),
         legend = Dict(
             "yanchor" => "bottom",
             "xanchor" => "left",
             "yref" => "container",
             "orientation" => "h",
+            "font" => Dict("size" => legend_font_size()),
         ),
     )
 
@@ -192,19 +206,33 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; a
     )
 
     main_configuration = Config(;
-        title = title,
+        title = Dict(
+            "text"=> title,
+            "font" => Dict("size" => title_font_size()),
+        ),
         xaxis = Dict(
-            "title" => get_name(inputs, "period"),
+            "title" => Dict(
+                "text"=> get_name(inputs, "period"),
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
             "tickmode" => "array",
             "tickvals" => [i for i in eachindex(plot_ticks)],
             "ticktext" => plot_ticks,
+            "tickfont" => Dict("size" => axis_tick_font_size()),
         ),
-        yaxis = Dict("title" => "$(get_name(inputs, "renewable_generation")) [$unit]"),
+        yaxis = Dict(
+            "title" => Dict(
+                "text"=> "$(get_name(inputs, "renewable_generation")) [$unit]",
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
+            "tickfont" => Dict("size" => axis_tick_font_size()),
+        ),
         legend = Dict(
             "yanchor" => "bottom",
             "xanchor" => "left",
             "yref" => "container",
             "orientation" => "h",
+            "font" => Dict("size" => legend_font_size()),
         ),
     )
 

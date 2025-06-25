@@ -348,3 +348,23 @@ function convert_generation_data_from_GWh_to_MW!(
 
     return data
 end
+
+function title_font_size()
+    # Plotly default is 17
+    return 17
+end
+
+function legend_font_size()
+    # Plotly default is 12
+    return 14
+end
+
+function axis_title_font_size()
+    # Plotly default is 14
+    return 14
+end
+
+function axis_tick_font_size()
+    # Plotly default is 12
+    return 12
+end

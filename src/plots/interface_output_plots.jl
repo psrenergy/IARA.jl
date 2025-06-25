@@ -488,14 +488,30 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             )
 
             main_configuration = Config(;
-                title = title,
-                xaxis = Dict("title" => "$(get_name(inputs, "quantity")) [MW]"),
-                yaxis = Dict("title" => "$(get_name(inputs, "price")) [\$/MWh]"),
+                title = Dict(
+                    "text"=> title,
+                    "font" => Dict("size" => title_font_size()),
+                ),
+                xaxis = Dict(
+                    "title" => Dict(
+                        "text"=> "$(get_name(inputs, "quantity")) [MW]",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
+                yaxis = Dict(
+                    "title" => Dict(
+                        "text"=> "$(get_name(inputs, "price")) [\$/MWh]",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
                 legend = Dict(
                     "yanchor" => "bottom",
                     "xanchor" => "left",
                     "yref" => "container",
                     "orientation" => "h",
+                    "font" => Dict("size" => legend_font_size()),
                 ),
             )
 
@@ -591,19 +607,33 @@ function plot_agent_output(
         end
 
         main_configuration = Config(;
-            title = title,
+            title = Dict(
+                "text"=> title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => get_name(inputs, "subperiod"),
+                "title" => Dict(
+                    "text"=> get_name(inputs, "subperiod"),
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => "$(metadata.unit)"),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text"=> "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     else
@@ -653,19 +683,33 @@ function plot_agent_output(
         end
         main_configuration = Config(;
             barmode = "stack",
-            title = title,
+            title = Dict(
+                "text"=> title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => x_axis_title,
+                "title" => Dict(
+                    "text"=> x_axis_title,
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => x_axis_tickvals,
                 "ticktext" => x_axis_ticktext,
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => "$(metadata.unit)"),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text"=> "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     end
@@ -756,19 +800,33 @@ function plot_operator_output(
             end
 
             main_configuration = Config(;
-                title = title * " - $(get_name(inputs, "subscenario")) $subscenario",
+                title = Dict(
+                    "text"=> title * " - $(get_name(inputs, "subscenario")) $subscenario",
+                    "font" => Dict("size" => title_font_size()),
+                ),
                 xaxis = Dict(
-                    "title" => get_name(inputs, "subperiod"),
+                    "title" => Dict(
+                        "text"=> get_name(inputs, "subperiod"),
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
                     "tickmode" => "array",
                     "tickvals" => 1:num_subperiods,
                     "ticktext" => string.(1:num_subperiods),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
                 ),
-                yaxis = Dict("title" => metadata.unit),
+                yaxis = Dict(
+                    "title" => Dict(
+                        "text"=> "$(metadata.unit)",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
                 legend = Dict(
                     "yanchor" => "bottom",
                     "xanchor" => "left",
                     "yref" => "container",
                     "orientation" => "h",
+                    "font" => Dict("size" => legend_font_size()),
                 ),
             )
 
@@ -806,19 +864,33 @@ function plot_operator_output(
                 plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
             main_configuration = Config(;
-                title = plot_title,
+                title = Dict(
+                    "text"=> plot_title,
+                    "font" => Dict("size" => title_font_size()),
+                ),
                 xaxis = Dict(
-                    "title" => x_axis_title,
+                    "title" => Dict(
+                        "text"=> x_axis_title,
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
                     "tickmode" => "array",
                     "tickvals" => x_axis_tickvals,
                     "ticktext" => x_axis_ticktext,
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
                 ),
-                yaxis = Dict("title" => "$(metadata.unit)"),
+                yaxis = Dict(
+                    "title" => Dict(
+                        "text"=> "$(metadata.unit)",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
                 legend = Dict(
                     "yanchor" => "bottom",
                     "xanchor" => "left",
                     "yref" => "container",
                     "orientation" => "h",
+                    "font" => Dict("size" => legend_font_size()),
                 ),
             )
 
@@ -906,19 +978,33 @@ function plot_general_output(
             )
         end
         main_configuration = Config(;
-            title = title,
+            title = Dict(
+                "text"=> title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => get_name(inputs, "subperiod"),
+                "title" => Dict(
+                    "text"=> get_name(inputs, "subperiod"),
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string(1:num_subperiods),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => metadata.unit),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text"=> "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     else
@@ -952,19 +1038,33 @@ function plot_general_output(
             x_axis_ticktext = string.(1:num_subscenarios)
         end
         main_configuration = Config(;
-            title = title,
+            title = Dict(
+                "text"=> title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => x_axis_title,
+                "title" => Dict(
+                    "text"=> x_axis_title,
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => x_axis_tickvals,
                 "ticktext" => x_axis_ticktext,
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => "$(metadata.unit)"),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text"=> "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     end

@@ -77,6 +77,29 @@ function get_profit_file(inputs::AbstractInputs)
     return joinpath(post_processing_path(inputs), filename)
 end
 
+function get_variable_cost_file(inputs::AbstractInputs)
+    base_name = "bidding_group_variable_costs"
+    period_suffix = "_period_$(inputs.args.period)"
+    extension = ".csv"
+
+    subproblem_suffixes = ["_ex_post_physical", "_ex_post_commercial", "_ex_ante_physical", "_ex_ante_commercial"]
+    filename = ""
+
+    for subproblem_suffix in subproblem_suffixes
+        filename = base_name * subproblem_suffix * period_suffix * extension
+        if isfile(joinpath(output_path(inputs), filename))
+            break
+        elseif isfile(joinpath(post_processing_path(inputs), filename))
+            break
+        end
+        if subproblem_suffix == last(subproblem_suffixes)
+            error("Cost file not found")
+        end
+    end
+
+    return joinpath(post_processing_path(inputs), filename)
+end
+
 function get_load_marginal_cost_files(inputs::AbstractInputs)
     base_name = "load_marginal_cost"
     period_suffix = "_period_$(inputs.args.period)"
@@ -231,9 +254,10 @@ end
 function get_renewable_generation_to_plot(
     inputs::AbstractInputs;
     asset_owner_index::Int = null_value(Int),
+    @nospecialize(filters::Vector{<:Function} = Function[])
 )
     if is_null(asset_owner_index)
-        renewable_units = index_of_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+        renewable_units = index_of_elements(inputs, RenewableUnit; filters)
     else
         bidding_groups = filter(
             bg -> bidding_group_asset_owner_index(inputs, bg) == asset_owner_index,

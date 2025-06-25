@@ -42,7 +42,7 @@ function _write_costs_bg_file(
         QuiverOutput,
         outputs_post_processing;
         inputs,
-        output_name = "bidding_group_costs_$(clearing_procedure)",
+        output_name = "bidding_group_variable_costs_$(clearing_procedure)",
         dimensions = dimensions,
         unit = "\$",
         labels = labels_by_pairs,
@@ -50,8 +50,13 @@ function _write_costs_bg_file(
         dir_path = post_processing_dir,
     )
 
-    bidding_group_costs_writer =
-        get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_costs_$(clearing_procedure)")
+    bidding_group_variable_costs_writer =
+        get_writer(
+            outputs_post_processing,
+            inputs,
+            run_time_options,
+            "bidding_group_variable_costs_$(clearing_procedure)",
+        )
 
     total_costs_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
     for generation_technology in generation_technologies
@@ -111,7 +116,7 @@ function _write_costs_bg_file(
                             end
                         end
                         Quiver.write!(
-                            bidding_group_costs_writer,
+                            bidding_group_variable_costs_writer,
                             bidding_group_costs;
                             period,
                             scenario,
@@ -149,7 +154,7 @@ function _write_costs_bg_file(
                         end
                     end
                     Quiver.write!(
-                        bidding_group_costs_writer,
+                        bidding_group_variable_costs_writer,
                         bidding_group_costs;
                         period,
                         scenario,
@@ -160,17 +165,17 @@ function _write_costs_bg_file(
         end
     end
 
-    Quiver.close!(bidding_group_costs_writer)
+    Quiver.close!(bidding_group_variable_costs_writer)
 
     return
 end
 
-function get_costs_files(path::String; from_ex_post::Bool)
+function get_fixed_costs_files(path::String; from_ex_post::Bool)
     from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
 
     commercial_costs_files = filter(
         x ->
-            occursin("bidding_group_costs", x) &&
+            occursin("bidding_group_fixed_costs", x) &&
                 occursin(from_ex_post_string * "_commercial", x) &&
                 get_file_ext(x) == ".csv",
         readdir(path),
@@ -178,7 +183,33 @@ function get_costs_files(path::String; from_ex_post::Bool)
 
     physical_costs_files = filter(
         x ->
-            occursin("bidding_group_costs", x) &&
+            occursin("bidding_group_fixed_costs", x) &&
+                occursin(from_ex_post_string * "_physical", x) &&
+                get_file_ext(x) == ".csv",
+        readdir(path),
+    )
+
+    if isempty(physical_costs_files)
+        return joinpath.(path, commercial_costs_files)
+    else
+        return joinpath.(path, physical_costs_files)
+    end
+end
+
+function get_variable_costs_files(path::String; from_ex_post::Bool)
+    from_ex_post_string = from_ex_post ? "ex_post" : "ex_ante"
+
+    commercial_costs_files = filter(
+        x ->
+            occursin("bidding_group_variable_costs", x) &&
+                occursin(from_ex_post_string * "_commercial", x) &&
+                get_file_ext(x) == ".csv",
+        readdir(path),
+    )
+
+    physical_costs_files = filter(
+        x ->
+            occursin("bidding_group_variable_costs", x) &&
                 occursin(from_ex_post_string * "_physical", x) &&
                 get_file_ext(x) == ".csv",
         readdir(path),
@@ -246,6 +277,99 @@ function _merge_costs_files(
     return nothing
 end
 
+function _write_fixed_costs_bg_file(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    run_time_options::RunTimeOptions,
+    clearing_procedure::String;
+    is_ex_post::Bool = false,
+)
+    post_processing_dir = post_processing_path(inputs)
+
+    num_bidding_groups = number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    num_buses = length(inputs.collections.bus)
+
+    suffix = "$(clearing_procedure)"
+    suffix *= run_time_file_suffixes(inputs, run_time_options)
+
+    if is_ex_post
+        dimensions = ["period", "scenario", "subscenario", "subperiod"]
+    else
+        dimensions = ["period", "scenario", "subperiod"]
+    end
+
+    labels_by_pairs = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.bidding_group,
+        inputs.collections.bus;
+        index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "bidding_group_fixed_costs_$(clearing_procedure)",
+        dimensions = dimensions,
+        unit = "\$",
+        labels = labels_by_pairs,
+        run_time_options,
+        dir_path = post_processing_dir,
+    )
+
+    bidding_group_fixed_costs_writer =
+        get_writer(outputs_post_processing, inputs, run_time_options, "bidding_group_fixed_costs_$(clearing_procedure)")
+
+    num_periods = if is_single_period(inputs)
+        1
+    else
+        number_of_periods(inputs)
+    end
+
+    fixed_cost_by_pairs = repeat(bidding_group_fixed_cost(inputs) ./ num_buses; inner = num_buses)
+
+    for period in 1:num_periods
+        for scenario in scenarios(inputs)
+            if is_ex_post
+                for subscenario in subscenarios(inputs, run_time_options)
+                    for subperiod in subperiods(inputs)
+                        fixed_cost_by_pairs_at_subperiod =
+                            fixed_cost_by_pairs .*
+                            (subperiod_duration_in_hours(inputs, subperiod) / sum(subperiod_duration_in_hours(inputs)))
+                        Quiver.write!(
+                            bidding_group_fixed_costs_writer,
+                            fixed_cost_by_pairs_at_subperiod;
+                            period,
+                            scenario,
+                            subscenario,
+                            subperiod = subperiod,
+                        )
+                    end
+                end
+            else
+                for subperiod in subperiods(inputs)
+                    fixed_cost_by_pairs_at_subperiod =
+                        fixed_cost_by_pairs .*
+                        (subperiod_duration_in_hours(inputs, subperiod) / sum(subperiod_duration_in_hours(inputs)))
+                    Quiver.write!(
+                        bidding_group_fixed_costs_writer,
+                        fixed_cost_by_pairs_at_subperiod;
+                        period,
+                        scenario,
+                        subperiod = subperiod,
+                    )
+                end
+            end
+        end
+    end
+
+    Quiver.close!(bidding_group_fixed_costs_writer)
+
+    return nothing
+end
+
 """
     create_bidding_group_cost_files(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::OutputReaders, run_time_options::RunTimeOptions)
 
@@ -281,6 +405,13 @@ function create_bidding_group_cost_files(
         _merge_costs_files(
             inputs,
             clearing_procedure,
+        )
+        _write_fixed_costs_bg_file(
+            inputs,
+            outputs_post_processing,
+            run_time_options,
+            clearing_procedure;
+            is_ex_post = is_ex_post[i],
         )
         _write_costs_bg_file(
             inputs,

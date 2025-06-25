@@ -20,8 +20,6 @@ end
 
 cp(PATH_ORIGINAL, PATH_CENTRALIZED; force = true);
 cp(PATH_ORIGINAL, PATH_MARKET_CLEARING; force = true);</code></pre><h2 id="Centralized-Operation"><a class="docs-heading-anchor" href="#Centralized-Operation">Centralized Operation</a><a id="Centralized-Operation-1"></a><a class="docs-heading-anchor-permalink" href="#Centralized-Operation" title="Permalink"></a></h2><p>Now we are able to run the case with <a href="../api_reference.html#IARA.train_min_cost-Tuple{String}"><code>IARA.train_min_cost</code></a>.</p><pre><code class="language-julia hljs">IARA.train_min_cost(PATH_CENTRALIZED)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: IARA - version: x.x.x
-┌ Warning: Bidding group Price Taker has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you&#39;re not offering all the energy available in the ex post problem.
-└ @ IARA ~/work/IARA.jl/IARA.jl/src/collections/bidding_group.jl:424
 [ Info:
 [ Info: Execution options
 [ Info:    Path: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized
@@ -78,14 +76,14 @@ numerical stability report
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
-         1   8.353781e+01  8.172276e+01  1.273729e+01        10   1
-        20   5.953474e+01  8.172276e+01  1.382289e+01       232   1
+         1   8.332342e+01  8.172276e+01  1.170507e+01        10   1
+        20   8.447496e+01  8.172276e+01  1.273056e+01       232   1
 -------------------------------------------------------------------
 status         : simulation_stopping
-total time (s) : 1.382289e+01
+total time (s) : 1.273056e+01
 total solves   : 232
 best bound     :  8.172276e+01
-simulation ci  :  8.310442e+01 ± 7.163978e+00
+simulation ci  :  8.107186e+01 ± 5.881869e+00
 numeric issues : 0
 -------------------------------------------------------------------
 
@@ -107,8 +105,8 @@ IARA.close_study!(db)</code></pre><p>Now we are able to run the case with <a hre
     PATH_MARKET_CLEARING;
     delete_output_folder_before_execution = true,
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: IARA - version: x.x.x
-┌ Warning: Bidding group Price Taker has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you&#39;re not offering all the energy available in the ex post problem.
-└ @ IARA ~/work/IARA.jl/IARA.jl/src/collections/bidding_group.jl:424
+┌ Warning: Bidding group Price Taker has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you&#39;re not offering all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups.
+└ @ IARA ~/work/IARA.jl/IARA.jl/src/collections/bidding_group.jl:426
 [ Info:
 [ Info: Execution options
 [ Info:    Path: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing
@@ -164,4 +162,4 @@ IARA.close_study!(db)</code></pre><p>Now we are able to run the case with <a hre
 └ @ Quiver ~/.julia/packages/Quiver/QQM2F/src/operations.jl:109
 ┌ Warning: Dimension subscenario is not the last dimension. This not the most efficient way to operate over dimensions.
 └ @ Quiver ~/.julia/packages/Quiver/QQM2F/src/operations.jl:109
-[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 24 June 2025 13:32">Tuesday 24 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Wednesday 25 June 2025 14:16">Wednesday 25 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

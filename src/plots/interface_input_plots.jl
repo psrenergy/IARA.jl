@@ -101,12 +101,12 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
 
     main_configuration = Config(;
         title = Dict(
-            "text"=> title,
+            "text" => title,
             "font" => Dict("size" => title_font_size()),
         ),
         xaxis = Dict(
             "title" => Dict(
-                "text"=> get_name(inputs, "period"),
+                "text" => get_name(inputs, "period"),
                 "font" => Dict("size" => axis_title_font_size()),
             ),
             "tickmode" => "array",
@@ -116,7 +116,7 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
         ),
         yaxis = Dict(
             "title" => Dict(
-                "text"=> "$(get_name(inputs, demand_name)) [$unit]",
+                "text" => "$(get_name(inputs, demand_name)) [$unit]",
                 "font" => Dict("size" => axis_title_font_size()),
             ),
             "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -207,12 +207,12 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; a
 
     main_configuration = Config(;
         title = Dict(
-            "text"=> title,
+            "text" => title,
             "font" => Dict("size" => title_font_size()),
         ),
         xaxis = Dict(
             "title" => Dict(
-                "text"=> get_name(inputs, "period"),
+                "text" => get_name(inputs, "period"),
                 "font" => Dict("size" => axis_title_font_size()),
             ),
             "tickmode" => "array",
@@ -222,7 +222,7 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; a
         ),
         yaxis = Dict(
             "title" => Dict(
-                "text"=> "$(get_name(inputs, "renewable_generation")) [$unit]",
+                "text" => "$(get_name(inputs, "renewable_generation")) [$unit]",
                 "font" => Dict("size" => axis_title_font_size()),
             ),
             "tickfont" => Dict("size" => axis_tick_font_size()),

@@ -489,19 +489,19 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 
             main_configuration = Config(;
                 title = Dict(
-                    "text"=> title,
+                    "text" => title,
                     "font" => Dict("size" => title_font_size()),
                 ),
                 xaxis = Dict(
                     "title" => Dict(
-                        "text"=> "$(get_name(inputs, "quantity")) [MW]",
+                        "text" => "$(get_name(inputs, "quantity")) [MW]",
                         "font" => Dict("size" => axis_title_font_size()),
                     ),
                     "tickfont" => Dict("size" => axis_tick_font_size()),
                 ),
                 yaxis = Dict(
                     "title" => Dict(
-                        "text"=> "$(get_name(inputs, "price")) [\$/MWh]",
+                        "text" => "$(get_name(inputs, "price")) [\$/MWh]",
                         "font" => Dict("size" => axis_title_font_size()),
                     ),
                     "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -608,12 +608,12 @@ function plot_agent_output(
 
         main_configuration = Config(;
             title = Dict(
-                "text"=> title,
+                "text" => title,
                 "font" => Dict("size" => title_font_size()),
             ),
             xaxis = Dict(
                 "title" => Dict(
-                    "text"=> get_name(inputs, "subperiod"),
+                    "text" => get_name(inputs, "subperiod"),
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickmode" => "array",
@@ -623,7 +623,7 @@ function plot_agent_output(
             ),
             yaxis = Dict(
                 "title" => Dict(
-                    "text"=> "$(metadata.unit)",
+                    "text" => "$(metadata.unit)",
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -684,12 +684,12 @@ function plot_agent_output(
         main_configuration = Config(;
             barmode = "stack",
             title = Dict(
-                "text"=> title,
+                "text" => title,
                 "font" => Dict("size" => title_font_size()),
             ),
             xaxis = Dict(
                 "title" => Dict(
-                    "text"=> x_axis_title,
+                    "text" => x_axis_title,
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickmode" => "array",
@@ -699,7 +699,7 @@ function plot_agent_output(
             ),
             yaxis = Dict(
                 "title" => Dict(
-                    "text"=> "$(metadata.unit)",
+                    "text" => "$(metadata.unit)",
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -801,12 +801,12 @@ function plot_operator_output(
 
             main_configuration = Config(;
                 title = Dict(
-                    "text"=> title * " - $(get_name(inputs, "subscenario")) $subscenario",
+                    "text" => title * " - $(get_name(inputs, "subscenario")) $subscenario",
                     "font" => Dict("size" => title_font_size()),
                 ),
                 xaxis = Dict(
                     "title" => Dict(
-                        "text"=> get_name(inputs, "subperiod"),
+                        "text" => get_name(inputs, "subperiod"),
                         "font" => Dict("size" => axis_title_font_size()),
                     ),
                     "tickmode" => "array",
@@ -816,7 +816,7 @@ function plot_operator_output(
                 ),
                 yaxis = Dict(
                     "title" => Dict(
-                        "text"=> "$(metadata.unit)",
+                        "text" => "$(metadata.unit)",
                         "font" => Dict("size" => axis_title_font_size()),
                     ),
                     "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -865,12 +865,12 @@ function plot_operator_output(
             end
             main_configuration = Config(;
                 title = Dict(
-                    "text"=> plot_title,
+                    "text" => plot_title,
                     "font" => Dict("size" => title_font_size()),
                 ),
                 xaxis = Dict(
                     "title" => Dict(
-                        "text"=> x_axis_title,
+                        "text" => x_axis_title,
                         "font" => Dict("size" => axis_title_font_size()),
                     ),
                     "tickmode" => "array",
@@ -880,7 +880,7 @@ function plot_operator_output(
                 ),
                 yaxis = Dict(
                     "title" => Dict(
-                        "text"=> "$(metadata.unit)",
+                        "text" => "$(metadata.unit)",
                         "font" => Dict("size" => axis_title_font_size()),
                     ),
                     "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -979,12 +979,12 @@ function plot_general_output(
         end
         main_configuration = Config(;
             title = Dict(
-                "text"=> title,
+                "text" => title,
                 "font" => Dict("size" => title_font_size()),
             ),
             xaxis = Dict(
                 "title" => Dict(
-                    "text"=> get_name(inputs, "subperiod"),
+                    "text" => get_name(inputs, "subperiod"),
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickmode" => "array",
@@ -994,7 +994,7 @@ function plot_general_output(
             ),
             yaxis = Dict(
                 "title" => Dict(
-                    "text"=> "$(metadata.unit)",
+                    "text" => "$(metadata.unit)",
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -1039,12 +1039,12 @@ function plot_general_output(
         end
         main_configuration = Config(;
             title = Dict(
-                "text"=> title,
+                "text" => title,
                 "font" => Dict("size" => title_font_size()),
             ),
             xaxis = Dict(
                 "title" => Dict(
-                    "text"=> x_axis_title,
+                    "text" => x_axis_title,
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickmode" => "array",
@@ -1054,7 +1054,7 @@ function plot_general_output(
             ),
             yaxis = Dict(
                 "title" => Dict(
-                    "text"=> "$(metadata.unit)",
+                    "text" => "$(metadata.unit)",
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickfont" => Dict("size" => axis_tick_font_size()),

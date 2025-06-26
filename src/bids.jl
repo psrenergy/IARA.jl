@@ -1265,6 +1265,8 @@ function adjust_quantity_offer_for_ex_post!(
 
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
 
+    adjustment_factors = ones(size(quantity_offer_series))
+
     for bg in bidding_group_indexes
         # Check if the bidding group has ex post auto adjustment enabled
         if bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT
@@ -1325,16 +1327,16 @@ function adjust_quantity_offer_for_ex_post!(
                     )
                     if quantity_offer_series.data[bg, bus, bds, blk] > 0.0
                         if total_energy_ex_ante == 0.0
-                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            adjustment_factors[bg, bus, bds, blk] = 0.0
                         else
-                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                            adjustment_factors[bg, bus, bds, blk] =
                                 total_energy_ex_post / total_energy_ex_ante
                         end
                     elseif quantity_offer_series.data[bg, bus, bds, blk] < 0.0
                         if total_demand_ex_ante == 0.0
-                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            adjustment_factors[bg, bus, bds, blk] = 0.0
                         else
-                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                            adjustment_factors[bg, bus, bds, blk] =
                                 total_demand_ex_post / total_demand_ex_ante
                         end
                     end
@@ -1342,6 +1344,8 @@ function adjust_quantity_offer_for_ex_post!(
             end
         end
     end
+
+    quantity_offer_series.data .*= adjustment_factors
 
     return nothing
 end

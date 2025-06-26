@@ -36,9 +36,9 @@ We add the following parameters to the list of parameters of the strategic subpr
 - ``P^{VR}_{r, i, k}(\omega)``: Price offer of asset owner $i$ on virtual reservoir $r$ for segment $k$ at scenario $\omega$.
 - ``Q^{VR}_{r, i, k}(\omega)``: Quantity offer of asset owner $i$ on virtual reservoir $r$ for segment $k$ at scenario $\omega$.
 - ``v^{WG}_{r, h, p}``: Hydro $h$ volume at waveguide point $p$ of virtual reservoir $r$.
-- ``E^{in}_{r,i}``: Energy account of asset owner $i$ on virtual reservoir $r$ at beggining of period.
+- ``E^{in}_{r,i}``: Energy account of asset owner $i$ on virtual reservoir $r$ at beginning of period.
 - ``\zeta_{r,h}``: Factor that converts the water volume at hydro unit $h$, where $h \in J^H_{VR}(r)$, into energy. 
-- ``e^{inflow}_r``: Aditional energy from inflow water, at virtual reservoir $r$.
+- ``e^{inflow}_r``: Additional energy from inflow water, at virtual reservoir $r$.
 - ``\gamma^{VR}_{r,i}``: Inflow shares of asset owner $i$ at virtual reservoir $r$. $\sum_{i \in I^{VR}(r)} \gamma^{VR}_{r,i} = 1 \; \forall r \in J^{VR}$.
 
 

@@ -148,6 +148,18 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Price",
             "pt" => "Preço",
         ),
+        "variable_cost" => Dict(
+            "en" => "Variable Cost",
+            "pt" => "Custo Variável",
+        ),
+        "fixed_cost" => Dict(
+            "en" => "Fixed Cost",
+            "pt" => "Custo Fixo",
+        ),
+        "total_cost" => Dict(
+            "en" => "Total Cost",
+            "pt" => "Custo Total",
+        ),
     )
 
     for (key, value) in complete_dict

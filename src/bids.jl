@@ -1265,29 +1265,48 @@ function adjust_quantity_offer_for_ex_post!(
 
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
 
+    adjustment_factors = ones(size(quantity_offer_series))
+
     for bg in bidding_group_indexes
+        # Check if the bidding group has ex post auto adjustment enabled
+        if bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT
+            continue
+        end
+        # Check if the bidding group has hydro units
+        # If the bidding group has hydro units, we skip the adjustment
+        if bidding_group_has_hydro_units(inputs, bg) &&
+           clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
+            continue
+        end
         for bus in 1:number_of_elements(inputs, Bus)
             for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
                 for blk in subperiods(inputs)
-                    # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
-                    run_time_options =
-                        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-                    total_energy_ex_ante = sum_units_energy_ub_per_bg(
-                        inputs,
-                        run_time_options,
-                        bg,
-                        bus,
-                        blk,
-                        subscenario,
-                    )
-                    total_demand_ex_ante = sum_demand_per_bg(
-                        inputs,
-                        run_time_options,
-                        bg,
-                        bus,
-                        blk,
-                        subscenario,
-                    )
+                    if bidding_group_ex_post_adjust(inputs, bg) ==
+                       BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION
+                        # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
+                        run_time_options =
+                            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+                        total_energy_ex_ante = sum_units_energy_ub_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
+                        total_demand_ex_ante = sum_demand_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
+                    elseif bidding_group_ex_post_adjust(inputs, bg) ==
+                           BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+                        total_energy_ex_ante = max(sum(quantity_offer_series.data[bg, bus, :, blk]), 0.0)
+                        total_demand_ex_ante = min(sum(quantity_offer_series.data[bg, bus, :, blk]), 0.0)
+                    end
                     run_time_options =
                         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
                     total_energy_ex_post = sum_units_energy_ub_per_bg(
@@ -1308,16 +1327,16 @@ function adjust_quantity_offer_for_ex_post!(
                     )
                     if quantity_offer_series.data[bg, bus, bds, blk] > 0.0
                         if total_energy_ex_ante == 0.0
-                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            adjustment_factors[bg, bus, bds, blk] = 0.0
                         else
-                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                            adjustment_factors[bg, bus, bds, blk] =
                                 total_energy_ex_post / total_energy_ex_ante
                         end
                     elseif quantity_offer_series.data[bg, bus, bds, blk] < 0.0
                         if total_demand_ex_ante == 0.0
-                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            adjustment_factors[bg, bus, bds, blk] = 0.0
                         else
-                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                            adjustment_factors[bg, bus, bds, blk] =
                                 total_demand_ex_post / total_demand_ex_ante
                         end
                     end
@@ -1325,6 +1344,8 @@ function adjust_quantity_offer_for_ex_post!(
             end
         end
     end
+
+    quantity_offer_series.data .*= adjustment_factors
 
     return nothing
 end

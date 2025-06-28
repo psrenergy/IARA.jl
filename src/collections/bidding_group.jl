@@ -21,9 +21,11 @@ Collection representing the bidding groups in the system.
     label::Vector{String} = []
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
+    ex_post_adjust_mode::Vector{BiddingGroup_ExPostAdjustMode.T} = []
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
     bid_price_limit_source::Vector{BiddingGroup_BidPriceLimitSource.T} = []
+    fixed_cost::Vector{Float64} = []
     quantity_offer_file::String = ""
     price_offer_file::String = ""
     quantity_offer_profile_file::String = ""
@@ -66,6 +68,7 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "BiddingGroup", "bid_price_limit_source"),
             BiddingGroup_BidPriceLimitSource.T,
         )
+    bidding_group.fixed_cost = PSRI.get_parms(inputs.db, "BiddingGroup", "fixed_cost")
 
     # Load vectors
     bidding_group.risk_factor = PSRI.get_vectors(inputs.db, "BiddingGroup", "risk_factor")
@@ -79,6 +82,12 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
             bidding_group.risk_factor[i] = [0.0]
         end
     end
+
+    bidding_group.ex_post_adjust_mode =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "BiddingGroup", "ex_post_adjust_mode"),
+            BiddingGroup_ExPostAdjustMode.T,
+        )
 
     # Load time series files
     bidding_group.quantity_offer_file =
@@ -406,6 +415,28 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             num_errors += 1
         end
     end
+
+    if construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.SKIP ||
+       construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.SKIP
+        bg_indices = index_of_elements(inputs, BiddingGroup)
+        for bg in bg_indices
+            if bidding_group_has_renewable_units(inputs, bg) &&
+               bidding_group_ex_post_adjust(inputs, bg) ==
+               BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION
+                # If the bidding group has renewable units and the ex post adjustment mode is proportional to ex post generation
+                # over ex ante generation, you're not offering all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you're not offering all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+            end
+
+            if bidding_group_has_thermal_units(inputs, bg) &&
+               bidding_group_ex_post_adjust(inputs, bg) ==
+               BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+                # If the bidding group has thermal units and the ex post adjustment mode is proportional to ex post generation
+                # over ex ante bid, you're not offering all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has thermal units and the ex post adjustment mode is proportional to ex post generation over ex ante bid. This means that you're offering all the thermal energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+            end
+        end
+    end
     return num_errors
 end
 
@@ -476,7 +507,15 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
+bidding_group_has_hydro_units(inputs::AbstractInputs, bg::Int) = bg in hydro_unit_bidding_group_index(inputs)
+
+bidding_group_has_thermal_units(inputs::AbstractInputs, bg::Int) = bg in thermal_unit_bidding_group_index(inputs)
+
+bidding_group_has_renewable_units(inputs::AbstractInputs, bg::Int) = bg in renewable_unit_bidding_group_index(inputs)
+
 has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg._has_generation_besides_virtual_reservoirs[i]
+
+bidding_group_ex_post_adjust(inputs::AbstractInputs, i::Int) = inputs.collections.bidding_group.ex_post_adjust_mode[i]
 
 function has_any_simple_bids(inputs::AbstractInputs)
     return maximum_number_of_bg_bidding_segments(inputs) > 0

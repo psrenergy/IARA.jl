@@ -806,7 +806,6 @@ function reference_curve_model_action(args...)
         hydro_volume!(args...)
         hydro_inflow!(args...)
         virtual_reservoir_total_generation!(args...)
-        virtual_reservoir_energy_account!(args...)
         virtual_reservoir_previous_reference_quantity!(args...)
     end
 

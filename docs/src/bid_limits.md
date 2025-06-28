@@ -54,9 +54,10 @@ M^j = M^{j}_p
 
 ## Bid Price Limits
 
-
 Given the reference price, the maximum markup without justification, and the maximum markup with justification, the price offers are validated as follows:
 
-1. If the bid price is not greater than maximum the markup without justification applied to the reference price ($P \le P^{ref} \cdot (1 + M^n)$) , the bid is considered valid.
-2. If the bid price is greater than the maximum markup without justification applied to the reference price, but not greater than the maximum markup with justification applied to the reference price ($ P^{ref} \cdot (1+M^n) \le P \le P^{ref} \cdot (1 + M^j)$), the bid is considered valid if it has a justification.
-3. If the bid price is greater than the maximum markup with justification applied to the reference price ($P > P^{ref} \cdot (1 + M^j)$), the bid is automatically considered invalid.
+1. If the bid price is below the non justified limit ($P \le P^{ref} \cdot (1 + M^n)$), the bid is considered valid.
+2. If the bid price is above the non justified limit, but below the justified limit ($ P^{ref} \cdot (1+M^n) \le P \le P^{ref} \cdot (1 + M^j)$), the bid is considered valid if a justification is provided.
+3. If the bid price is above the justified limit ($P > P^{ref} \cdot (1 + M^j)$), the bid is automatically considered invalid.
+
+The bid justifications are plain text explanations provided via JSON file. The configuration parameter ``bid\_justifications\_file`` specifies the path to this file. When using IARA in the Market Game platform, a prompt will ask the user to provide a justification for the bids that exceed the non justified limit.

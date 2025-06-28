@@ -30,7 +30,7 @@ The results of the market clearing process are then displayed to the users, allo
 ### Price Violation
 
 The IARA Platform includes a validation routine that checks if the price offers submitted by the users are within the allowed range for their assets.
-In this documentation you can find more information about how the price limits are calculated by IARA.jl.
+At [Bid Price Limit](bid_limits.md#bid-price-limit), you can find more information about how the price limits are calculated by IARA.jl.
 
 There are two main price thresholds that are considered in the validation routine:
 1. **Non justified offer**: If the price offer is below this limit, the user is not required to justify their offer. 

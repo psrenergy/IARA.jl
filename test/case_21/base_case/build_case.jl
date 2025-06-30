@@ -76,6 +76,7 @@ IARA.add_bidding_group!(
     risk_factor = [0.1],
     segment_fraction = [1.0],
     fixed_cost = 300.0,
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
 )
 IARA.add_bidding_group!(
     db;
@@ -92,6 +93,7 @@ IARA.add_bidding_group!(
     risk_factor = [0.1],
     segment_fraction = [1.0],
     fixed_cost = 1000.0,
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
 )
 
 # Thermal units
@@ -114,7 +116,7 @@ IARA.add_thermal_unit!(
         date_time = [DateTime(0)],
         existing = [1],
         max_generation = [40.0],
-        om_cost = [150.0],
+        om_cost = [130.0],
     ),
     biddinggroup_id = "Portfólio",
     bus_id = "Sistema",
@@ -134,7 +136,7 @@ IARA.add_thermal_unit!(
 
 # Renewable units
 IARA.add_renewable_unit!(db;
-    label = "Solar",
+    label = "Solar 1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1],
@@ -146,7 +148,7 @@ IARA.add_renewable_unit!(db;
     bus_id = "Sistema",
 )
 IARA.add_renewable_unit!(db;
-    label = "Eólica",
+    label = "Solar 2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1],
@@ -158,12 +160,12 @@ IARA.add_renewable_unit!(db;
     bus_id = "Sistema",
 )
 IARA.add_renewable_unit!(db;
-    label = "Biomassa",
+    label = "Eólica 1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1],
         max_generation = [50.0],
-        om_cost = [15.0],
+        om_cost = [10.0],
         curtailment_cost = [0.0],
     ),
     biddinggroup_id = "Renovável",
@@ -186,10 +188,10 @@ IARA.add_demand_unit!(
 # Time series data
 # ----------------
 # Demand
-high_demand = 160.0
-low_demand = 120.0
-low_demand_scenarios = [1, 3]
-high_demand_scenarios = [2, 4]
+low_demand = 100.0
+high_demand = 150.0
+low_demand_scenarios = [1, 2]
+high_demand_scenarios = [3, 4]
 demand_ex_post =
     zeros(number_of_buses, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
 demand_ex_post[:, :, low_demand_scenarios, :, :] .= low_demand / max_demand
@@ -212,36 +214,22 @@ IARA.link_time_series_to_file(
 )
 
 # Renewable generation
-solar_low_value = 0.25
-solar_high_value = 0.95
-wind_low_value = 0.4
-wind_high_value = 0.8
-biomass_low_value = 0.5
-biomass_high_value = 0.7
-high_generation_scenarios = [1, 2]
-low_generation_scenarios = [3, 4]
-high_generation_values = [
-    solar_high_value,
-    wind_high_value,
-    biomass_high_value,
-]
-low_generation_values = [
-    solar_low_value,
-    wind_low_value,
-    biomass_low_value,
-]
+solar_1_generation_scenarios = [0.8, 0.5, 0.5, 0.2]
+solar_2_generation_scenarios = [0.9, 0.8, 0.2, 0.1]
+eolica_1_generation_scenarios = [0.2, 0.4, 0.6, 0.8]
 renewable_generation_ex_post =
     zeros(3, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
-for i in 1:number_of_renewable_units
-    renewable_generation_ex_post[i, :, high_generation_scenarios, :, :] .= high_generation_values[i]
-    renewable_generation_ex_post[i, :, low_generation_scenarios, :, :] .= low_generation_values[i]
+for subscenario in 1:number_of_subscenarios
+    renewable_generation_ex_post[1, :, subscenario, :, :] .= solar_1_generation_scenarios[subscenario]
+    renewable_generation_ex_post[2, :, subscenario, :, :] .= solar_2_generation_scenarios[subscenario]
+    renewable_generation_ex_post[3, :, subscenario, :, :] .= eolica_1_generation_scenarios[subscenario]
 end
 
 IARA.write_timeseries_file(
     joinpath(PATH, "renewable_generation_ex_post"),
     renewable_generation_ex_post;
     dimensions = ["period", "scenario", "subscenario", "subperiod"],
-    labels = ["Solar", "Eólica", "Biomassa"],
+    labels = ["Solar 1", "Solar 2", "Eólica 1"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subscenarios, number_of_subperiods],
     initial_date = "2025-01-01T00:00:00",
@@ -277,27 +265,27 @@ price_offer =
 # Agente Portfólio
 # ----------------
 # Termica 2
-quantity_offer[1, :, 1, :, :, :] .= 40
-price_offer[1, :, 1, :, :, :] .= 150.0
-# Solar
-quantity_offer[1, :, 2, :, :, :] .= 60
+quantity_offer[1, :, 1, :, :, :] .= 40.0
+price_offer[1, :, 1, :, :, :] .= 130.0
+# Solar 1
+quantity_offer[1, :, 2, :, :, :] .= 50.0
 price_offer[1, :, 2, :, :, :] .= 3.0
 # Agente Termico
 # ----------------
 # Termica 1
-quantity_offer[2, :, 1, :, :, :] .= 70
+quantity_offer[2, :, 1, :, :, :] .= 70.0
 price_offer[2, :, 1, :, :, :] .= 80.0
 # Termica 3
-quantity_offer[2, :, 2, :, :, :] .= 30
+quantity_offer[2, :, 2, :, :, :] .= 30.0
 price_offer[2, :, 2, :, :, :] .= 200.0
 # Agente Renovável
 # ----------------
-# Eólica
-quantity_offer[3, :, 1, :, :, :] .= 36
+# Solar 2
+quantity_offer[3, :, 1, :, :, :] .= 30.0
 price_offer[3, :, 1, :, :, :] .= 5.0
-# Biomassa
-quantity_offer[3, :, 2, :, :, :] .= 30
-price_offer[3, :, 2, :, :, :] .= 15.0
+# Eólica 1
+quantity_offer[3, :, 2, :, :, :] .= 25.0
+price_offer[3, :, 2, :, :, :] .= 10.0
 
 IARA.write_bids_time_series_file(
     joinpath(PATH, "quantity_offer"),

@@ -342,12 +342,12 @@ end
 
   - `PRICE_MAKER`: Price maker (1)
   - `PRICE_TAKER`: Price taker (0)
-  - `COUNTEROFFER_AGENT`: Counteroffer agent (2)
+  - `SUPPLY_SECURITY_AGENT`: Supply security agent (2)
 """
 @enumx AssetOwner_PriceType begin
     PRICE_MAKER = 1
     PRICE_TAKER = 0
-    COUNTEROFFER_AGENT = 2
+    SUPPLY_SECURITY_AGENT = 2
 end
 
 """

@@ -380,7 +380,6 @@ IARA.link_time_series_to_file(
     price_offer = "price_offer",
 )
 
-
 # No-markup bids
 # --------------
 no_markup_price_offer = zeros(

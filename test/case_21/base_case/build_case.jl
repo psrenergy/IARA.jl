@@ -75,7 +75,7 @@ IARA.add_bidding_group!(
     assetowner_id = "Agente Portfólio",
     risk_factor = [0.1],
     segment_fraction = [1.0],
-    fixed_cost = 300.0,
+    fixed_cost = 600.0,
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
 )
 IARA.add_bidding_group!(
@@ -84,7 +84,7 @@ IARA.add_bidding_group!(
     assetowner_id = "Agente Térmico",
     risk_factor = [0.1],
     segment_fraction = [1.0],
-    fixed_cost = 100.0,
+    fixed_cost = 200.0,
 )
 IARA.add_bidding_group!(
     db;

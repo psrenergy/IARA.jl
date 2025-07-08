@@ -64,15 +64,15 @@ IARA.add_zone!(db; label = "Zona")
 IARA.add_bus!(db; label = "Sistema", zone_id = "Zona")
 
 # AO
-IARA.add_asset_owner!(db; label = "Agente Portfólio")
-IARA.add_asset_owner!(db; label = "Agente Térmico")
-IARA.add_asset_owner!(db; label = "Agente Renovável")
+IARA.add_asset_owner!(db; label = "Agente Portfolio")
+IARA.add_asset_owner!(db; label = "Agente Termico")
+IARA.add_asset_owner!(db; label = "Agente Renovavel")
 
 # BG
 IARA.add_bidding_group!(
     db;
-    label = "Portfólio",
-    assetowner_id = "Agente Portfólio",
+    label = "Portfolio",
+    assetowner_id = "Agente Portfolio",
     risk_factor = [0.1],
     segment_fraction = [1.0],
     fixed_cost = 600.0,
@@ -80,16 +80,16 @@ IARA.add_bidding_group!(
 )
 IARA.add_bidding_group!(
     db;
-    label = "Térmico",
-    assetowner_id = "Agente Térmico",
+    label = "Termico",
+    assetowner_id = "Agente Termico",
     risk_factor = [0.1],
     segment_fraction = [1.0],
     fixed_cost = 200.0,
 )
 IARA.add_bidding_group!(
     db;
-    label = "Renovável",
-    assetowner_id = "Agente Renovável",
+    label = "Renovavel",
+    assetowner_id = "Agente Renovavel",
     risk_factor = [0.1],
     segment_fraction = [1.0],
     fixed_cost = 1000.0,
@@ -99,38 +99,38 @@ IARA.add_bidding_group!(
 # Thermal units
 IARA.add_thermal_unit!(
     db;
-    label = "Térmica 1",
+    label = "Termica 1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1],
         max_generation = [70.0],
         om_cost = [80.0],
     ),
-    biddinggroup_id = "Térmico",
+    biddinggroup_id = "Termico",
     bus_id = "Sistema",
 )
 IARA.add_thermal_unit!(
     db;
-    label = "Térmica 2",
+    label = "Termica 2",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1],
         max_generation = [40.0],
         om_cost = [130.0],
     ),
-    biddinggroup_id = "Portfólio",
+    biddinggroup_id = "Portfolio",
     bus_id = "Sistema",
 )
 IARA.add_thermal_unit!(
     db;
-    label = "Térmica 3",
+    label = "Termica 3",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1],
         max_generation = [30.0],
         om_cost = [200.0],
     ),
-    biddinggroup_id = "Térmico",
+    biddinggroup_id = "Termico",
     bus_id = "Sistema",
 )
 
@@ -144,7 +144,7 @@ IARA.add_renewable_unit!(db;
         om_cost = [3.0],
         curtailment_cost = [0.0],
     ),
-    biddinggroup_id = "Portfólio",
+    biddinggroup_id = "Portfolio",
     bus_id = "Sistema",
 )
 IARA.add_renewable_unit!(db;
@@ -156,11 +156,11 @@ IARA.add_renewable_unit!(db;
         om_cost = [5.0],
         curtailment_cost = [0.0],
     ),
-    biddinggroup_id = "Renovável",
+    biddinggroup_id = "Renovavel",
     bus_id = "Sistema",
 )
 IARA.add_renewable_unit!(db;
-    label = "Eólica 1",
+    label = "Eolica 1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1],
@@ -168,7 +168,7 @@ IARA.add_renewable_unit!(db;
         om_cost = [10.0],
         curtailment_cost = [0.0],
     ),
-    biddinggroup_id = "Renovável",
+    biddinggroup_id = "Renovavel",
     bus_id = "Sistema",
 )
 
@@ -227,7 +227,7 @@ IARA.write_timeseries_file(
     joinpath(PATH, "renewable_generation_ex_post"),
     renewable_generation_ex_post;
     dimensions = ["period", "scenario", "subscenario", "subperiod"],
-    labels = ["Solar 1", "Solar 2", "Eólica 1"],
+    labels = ["Solar 1", "Solar 2", "Eolica 1"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subscenarios, number_of_subperiods],
     initial_date = "2025-01-01T00:00:00",
@@ -261,7 +261,7 @@ price_offer =
     )
 
 # --------------------------------------------------------------------------------
-# Agente Portfólio
+# Agente Portfolio
 # --------------------------------------------------------------------------------
 bidding_group_index = 1
 # Solar 1
@@ -316,7 +316,7 @@ quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 30.0
 price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 200.0
 
 # --------------------------------------------------------------------------------
-# Agente Renovável
+# Agente Renovavel
 # --------------------------------------------------------------------------------
 bidding_group_index = 3
 # Solar 2
@@ -329,7 +329,7 @@ price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 5.0
 bid_segment = 2
 quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 9.0
 price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 60.0
-# Eólica 1
+# Eolica 1
 # ----------------
 # Bid 70% of expected generation at O&M cost
 bid_segment = 3
@@ -344,7 +344,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "quantity_offer"),
     quantity_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Portfólio", "Térmico", "Renovável"],
+    labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [
@@ -361,7 +361,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "price_offer"),
     price_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Portfólio", "Térmico", "Renovável"],
+    labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [
@@ -399,7 +399,7 @@ no_markup_energy_offer = zeros(
     1, # number of periods for reference price is always 1
 )
 
-# Agente Portfólio
+# Agente Portfolio
 # ----------------
 bidding_group_index = 1
 # Solar 1
@@ -408,7 +408,7 @@ no_markup_price_offer[bidding_group_index, :, 1, :, :, :] .= 3.0
 # Termica 2
 no_markup_energy_offer[bidding_group_index, :, 2, :, :, :] .= 40.0
 no_markup_price_offer[bidding_group_index, :, 2, :, :, :] .= 130.0
-# Agente Térmico
+# Agente Termico
 # ----------------
 bidding_group_index = 2
 # Termica 1
@@ -417,13 +417,13 @@ no_markup_price_offer[bidding_group_index, :, 1, :, :, :] .= 80.0
 # Termica 3
 no_markup_energy_offer[bidding_group_index, :, 2, :, :, :] .= 30.0
 no_markup_price_offer[bidding_group_index, :, 2, :, :, :] .= 200.0
-# Agente Renovável
+# Agente Renovavel
 # ----------------
 bidding_group_index = 3
 # Solar 2
 no_markup_energy_offer[bidding_group_index, :, 1, :, :, :] .= 30.0
 no_markup_price_offer[bidding_group_index, :, 1, :, :, :] .= 5.0
-# Eólica 1
+# Eolica 1
 no_markup_energy_offer[bidding_group_index, :, 2, :, :, :] .= 25.0
 no_markup_price_offer[bidding_group_index, :, 2, :, :, :] .= 10.0
 
@@ -431,7 +431,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "bidding_group_no_markup_energy_offer_period_1"),
     no_markup_energy_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Portfólio", "Térmico", "Renovável"],
+    labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [
@@ -448,7 +448,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "bidding_group_no_markup_price_offer_period_1"),
     no_markup_price_offer;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Portfólio", "Térmico", "Renovável"],
+    labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [

@@ -5,4 +5,4 @@ initial_date = "2025-01-01 00:00:00"
 time_dimension = "period"
 frequency = "monthly"
 unit = "GWh"
-labels = ["Térmica 1", "Térmica 2", "Térmica 3"]
+labels = ["Termica 1", "Termica 2", "Termica 3"]

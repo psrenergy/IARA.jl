@@ -5,4 +5,4 @@ initial_date = "2025-01-01 00:00:00"
 time_dimension = "period"
 frequency = "monthly"
 unit = "$"
-labels = ["Solar", "Eólica", "Biomassa"]
+labels = ["Solar 1", "Solar 2", "Eolica 1"]

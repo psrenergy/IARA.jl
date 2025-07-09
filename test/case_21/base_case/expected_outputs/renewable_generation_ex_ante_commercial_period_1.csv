@@ -1,2 +1,2 @@
-period,scenario,subperiod,Solar,Eólica,Biomassa
-1,1,1,0.06,0.036,0.03
+period,scenario,subperiod,Solar 1,Solar 2,Eolica 1
+1,1,1,0.05,0.03,0.025

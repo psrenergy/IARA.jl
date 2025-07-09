@@ -1,2 +1,2 @@
-period,scenario,subperiod,Solar,Eólica,Biomassa
-1,1,1,179.999998,180.000001,449.999996
+period,scenario,subperiod,Solar 1,Solar 2,Eolica 1
+1,1,1,150.0,149.999999,250.000001

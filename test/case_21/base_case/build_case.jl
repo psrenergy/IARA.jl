@@ -75,7 +75,7 @@ IARA.add_bidding_group!(
     assetowner_id = "Agente Portfolio",
     risk_factor = [0.1],
     segment_fraction = [1.0],
-    fixed_cost = 600.0,
+    fixed_cost = 1500.0,
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
 )
 IARA.add_bidding_group!(
@@ -92,7 +92,7 @@ IARA.add_bidding_group!(
     assetowner_id = "Agente Renovavel",
     risk_factor = [0.1],
     segment_fraction = [1.0],
-    fixed_cost = 1000.0,
+    fixed_cost = 2000.0,
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
 )
 

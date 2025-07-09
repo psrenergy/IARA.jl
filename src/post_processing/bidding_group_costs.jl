@@ -328,7 +328,12 @@ function _write_fixed_costs_bg_file(
         number_of_periods(inputs)
     end
 
-    fixed_cost_by_pairs = repeat(bidding_group_fixed_cost(inputs) ./ num_buses; inner = num_buses)
+    bidding_group_indexes = index_of_elements(
+        inputs,
+        BiddingGroup;
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
+    fixed_cost_by_pairs = repeat(bidding_group_fixed_cost(inputs)[bidding_group_indexes] ./ num_buses; inner = num_buses)
 
     for period in 1:num_periods
         for scenario in scenarios(inputs)

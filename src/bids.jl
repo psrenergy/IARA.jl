@@ -44,6 +44,17 @@ function initialize_heuristic_bids_outputs(
             outputs;
             inputs,
             run_time_options,
+            output_name = "bidding_group_energy_offer_ex_post",
+            dimensions = ["period", "scenario", "subscenario", "subperiod", "bid_segment"],
+            unit = "MWh",
+            labels,
+        )
+
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            run_time_options,
             output_name = "bidding_group_price_offer",
             dimensions = ["period", "scenario", "subperiod", "bid_segment"],
             unit = "\$/MWh",
@@ -383,6 +394,47 @@ function bidding_group_markup_offers_for_period_scenario(
             period,
             scenario,
         )
+    end
+
+    return nothing
+end
+
+function print_bidding_group_ex_post_bids(
+    inputs::Inputs,
+    outputs::Outputs,
+    run_time_options::RunTimeOptions,
+    period::Int,
+)
+    if !has_any_simple_bids(inputs)
+        return nothing
+    end
+
+    for scenario in 1:number_of_scenarios(inputs)
+        for subscenario in 1:number_of_subscenarios(inputs, run_time_options)
+            quantity_offer_series = time_series_quantity_offer(inputs, period, scenario)
+
+            adjust_quantity_offer_for_ex_post!(
+                inputs,
+                run_time_options,
+                quantity_offer_series,
+                subscenario,
+            )
+
+            write_bid_output(
+                outputs,
+                inputs,
+                run_time_options,
+                "bidding_group_energy_offer_ex_post",
+                # We have to permutate the dimensions because the function expects the dimensions in the order
+                # subperiod, bidding_group, bid_segments, bus
+                permutedims(quantity_offer_series.data, (4, 1, 3, 2));
+                period,
+                scenario,
+                subscenario,
+                filters = [has_generation_besides_virtual_reservoirs],
+                add_suffix_to_output_name = false,
+            )
+        end
     end
 
     return nothing

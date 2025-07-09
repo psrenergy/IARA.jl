@@ -652,6 +652,7 @@ function write_bid_output(
     subscenario::Int,
     multiply_by::Float64 = 1.0,
     has_profile_bids::Bool = false,
+    add_suffix_to_output_name::Bool = true,
     @nospecialize(filters::Vector{<:Function} = Function[])
 )
     # Quiver file dimensions are always 1:N, so we need to set the period to 1
@@ -686,7 +687,10 @@ function write_bid_output(
     end
 
     # Pick the correct output based on the run time options
-    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+    if add_suffix_to_output_name
+        output_name *= run_time_file_suffixes(inputs, run_time_options)
+    end
+    output = outputs.outputs[output_name]
 
     treated_output = zeros(length(blks), size_segments, length(bidding_groups_filtered) * length(buses))
 

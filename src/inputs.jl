@@ -123,8 +123,6 @@ function load_inputs(args::Args)
     # Initialize or allocate all fields from collections
     initialize!(inputs)
 
-    fill_caches!(inputs)
-
     return inputs
 end
 
@@ -175,6 +173,9 @@ function initialize!(inputs::Inputs)
         clean_up(inputs)
         rethrow(e)
     end
+
+    # Fill caches with collection data
+    fill_caches!(inputs)
 
     # Fit PAR(p) and generate scenarios
     if !read_inflow_from_file(inputs)

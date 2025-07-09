@@ -257,7 +257,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Offers
-    bidding_groups = index_of_elements(inputs, BiddingGroup)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     if run_mode(inputs) == RunMode.STRATEGIC_BID ||
        (
         is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&

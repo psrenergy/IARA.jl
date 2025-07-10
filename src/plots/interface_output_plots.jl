@@ -544,10 +544,6 @@ function plot_agent_output(
         metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
     end
 
-    if occursin("generation", file_path)
-        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
-    end
-
     has_subscenarios = :subscenario in metadata.dimensions
 
     if has_subscenarios
@@ -739,10 +735,6 @@ function plot_operator_output(
         metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
     end
 
-    if occursin("generation", file_path)
-        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
-    end
-
     has_subscenarios = :subscenario in metadata.dimensions
 
     if has_subscenarios
@@ -921,10 +913,6 @@ function plot_general_output(
     else
         number_of_agents = length(agent_labels)
         agent_indexes = [findfirst(isequal(agent), metadata.labels) for agent in agent_labels]
-    end
-
-    if occursin("generation", file_path)
-        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
     end
 
     has_subscenarios = :subscenario in metadata.dimensions

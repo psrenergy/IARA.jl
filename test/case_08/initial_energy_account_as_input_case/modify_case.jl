@@ -184,7 +184,7 @@ IARA.write_bids_time_series_file(
         1,
     ],
     initial_date = "2024-01-01",
-    unit = "MWh",
+    unit = "MW",
 )
 
 IARA.write_bids_time_series_file(

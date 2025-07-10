@@ -318,37 +318,6 @@ function get_renewable_generation_to_plot(
     return ex_ante_generation, ex_post_generation
 end
 
-function convert_generation_data_from_GWh_to_MW!(
-    data::Array{T, N},
-    metadata::Quiver.Metadata,
-    inputs::AbstractInputs,
-) where {T, N}
-    if metadata.unit == "MW"
-        @error("Data is already in MW")
-    end
-    @assert metadata.unit == "GWh" "Unit conversion only implemented for GWh"
-
-    if N == 5
-        @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod]
-        num_subperiods = metadata.dimension_size[4]
-        for subperiod in 1:num_subperiods
-            data[:, subperiod, :, :, :] .*= 1000 / subperiod_duration_in_hours(inputs, subperiod)
-        end
-    elseif N == 4
-        @assert metadata.dimensions == [:period, :scenario, :subperiod]
-        num_subperiods = metadata.dimension_size[3]
-        for subperiod in 1:num_subperiods
-            data[:, subperiod, :, :] .*= 1000 / subperiod_duration_in_hours(inputs, subperiod)
-        end
-    else
-        @error("Unit conversion not implemented for data with $(N) dimensions")
-    end
-
-    metadata.unit = "MW"
-
-    return data
-end
-
 function title_font_size()
     # Plotly default is 17
     return 17

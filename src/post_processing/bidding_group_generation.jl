@@ -97,7 +97,7 @@ function _write_generation_bg_file(
         inputs,
         output_name = "bidding_group_generation_$(clearing_procedure)",
         dimensions = dimensions,
-        unit = "GWh",
+        unit = "MW",
         labels = bidding_group_bus_labels,
         run_time_options,
         dir_path = post_processing_dir,

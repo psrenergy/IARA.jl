@@ -92,7 +92,7 @@ function flexible_demand!(
         inputs,
         output_name = "attended_flexible_demand",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = demand_unit_label(inputs)[flexible_demands],
         run_time_options,
     )
@@ -103,7 +103,7 @@ function flexible_demand!(
         inputs,
         output_name = "demand_curtailment",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = demand_unit_label(inputs)[flexible_demands],
         run_time_options,
     )
@@ -146,8 +146,8 @@ function flexible_demand!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     write_output_per_subperiod!(
@@ -159,8 +159,8 @@ function flexible_demand!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     return nothing

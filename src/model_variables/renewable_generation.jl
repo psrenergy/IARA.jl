@@ -137,7 +137,7 @@ function renewable_generation!(
         inputs,
         output_name = "renewable_generation",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = renewable_unit_label(inputs),
         run_time_options,
     )
@@ -148,7 +148,7 @@ function renewable_generation!(
         inputs,
         output_name = "renewable_curtailment",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = renewable_unit_label(inputs),
         run_time_options,
     )
@@ -212,8 +212,8 @@ function renewable_generation!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     write_output_per_subperiod!(
@@ -225,8 +225,8 @@ function renewable_generation!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     write_output_per_subperiod!(

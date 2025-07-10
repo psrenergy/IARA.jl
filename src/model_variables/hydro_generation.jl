@@ -194,7 +194,7 @@ function hydro_generation!(
         inputs,
         output_name = "hydro_generation",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = hydro_unit_label(inputs)[hydros],
         run_time_options,
     )
@@ -333,8 +333,8 @@ function hydro_generation!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     write_output_per_subperiod!(

@@ -124,7 +124,7 @@ function _write_revenue_without_subscenarios(
                         subperiod = subperiod,
                         Symbol(dim_name) => bid_segment,
                     )
-                    sum_generation .+= generation_ex_ante_reader.data
+                    sum_generation .+= generation_ex_ante_reader.data * subperiod_duration_in_hours(inputs, subperiod)
                 end
 
                 # Position the reader for the current period/scenario/subperiod
@@ -143,7 +143,7 @@ function _write_revenue_without_subscenarios(
 
                 Quiver.write!(
                     writer_without_subscenarios,
-                    sum_generation .* apply_lmc_bounds(spot_price_data, inputs) / MW_to_GW(); # GWh to MWh
+                    sum_generation .* apply_lmc_bounds(spot_price_data, inputs);
                     period,
                     scenario,
                     subperiod = subperiod,
@@ -207,6 +207,7 @@ function _write_revenue_with_subscenarios(
                             sum_generation .+= generation_ex_post_reader.data
                         end
                     end
+                    sum_generation .= sum_generation * subperiod_duration_in_hours(inputs, subperiod)
 
                     # Select the appropriate reader based on settlement type
                     if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
@@ -235,11 +236,11 @@ function _write_revenue_with_subscenarios(
 
                     Quiver.write!(
                         writer_with_subscenarios,
-                        sum_generation .* apply_lmc_bounds(spot_price_data, inputs) / MW_to_GW(); # GWh to MWh
+                        sum_generation .* apply_lmc_bounds(spot_price_data, inputs),
                         period,
                         scenario,
                         subscenario,
-                        subperiod = subperiod,
+                        subperiod,
                     )
                 end
             end

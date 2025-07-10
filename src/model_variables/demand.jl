@@ -122,7 +122,7 @@ function demand!(
         inputs,
         output_name = "deficit",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = demand_unit_label(inputs)[demands],
         run_time_options,
     )
@@ -133,7 +133,7 @@ function demand!(
         inputs,
         output_name = "demand",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = demand_unit_label(inputs)[demands],
         run_time_options,
     )
@@ -176,8 +176,8 @@ function demand!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     write_output_per_subperiod!(
@@ -189,7 +189,9 @@ function demand!(
         period,
         scenario,
         subscenario,
+        multiply_by = 1 / MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     return nothing

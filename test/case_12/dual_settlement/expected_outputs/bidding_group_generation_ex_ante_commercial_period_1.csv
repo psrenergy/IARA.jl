@@ -1,2 +1,2 @@
 period,scenario,subperiod,bid_segment,Bidding Group 1 - Bus 1,Bidding Group 2 - Bus 1,Bidding Group 3 - Bus 1
-1,1,1,1,0.1,0.05,-0.0
+1,1,1,1,100.0,50.000002,-0.0

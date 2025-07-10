@@ -123,7 +123,7 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
             # The maximum number of segments is hard-coded to 1
             quantity_offers =
                 [
-                    quantity_offers_ts[bg, bus, 1, blk]
+                    quantity_offers_ts[bg, bus, 1, blk] * subperiod_duration_in_hours(inputs, blk)
                     for bus in buses, bg in bidding_groups if
                     bidding_group_asset_owner_index(inputs, bg) != run_time_options.asset_owner_index
                 ]
@@ -162,7 +162,7 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
             # Get data for current bus and subperiod
             # The maximum number of segments is hard-coded to 1
             quantity_offers = [
-                quantity_offers_ts[bg, bus, 1, blk]
+                quantity_offers_ts[bg, bus, 1, blk] * subperiod_duration_in_hours(inputs, blk)
                 for
                 bg in bidding_groups if
                 bidding_group_asset_owner_index(inputs, bg) != run_time_options.asset_owner_index

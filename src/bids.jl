@@ -345,6 +345,7 @@ function bidding_group_markup_offers_for_period_scenario(
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
         filters = [has_generation_besides_virtual_reservoirs],
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     write_bid_output(
@@ -1020,7 +1021,7 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         inputs.time_series.quantity_offer,
         inputs,
         quantity_file;
-        expected_unit = "MWh",
+        expected_unit = "MW",
         possible_expected_dimensions = [
             [:period, :scenario, :subperiod, :bid_segment],
         ],

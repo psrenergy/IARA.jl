@@ -4,5 +4,5 @@ dimension_size = [3, 4, 2]
 initial_date = "2020-01-01 00:00:00"
 time_dimension = "period"
 frequency = "month"
-unit = "GWh"
+unit = "MW"
 labels = ["ter_sb_1", "ter_sb_2", "ter_sb_3", "ter_sb_4"]

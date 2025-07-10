@@ -44,17 +44,6 @@ function initialize_heuristic_bids_outputs(
             outputs;
             inputs,
             run_time_options,
-            output_name = "bidding_group_energy_offer_ex_post",
-            dimensions = ["period", "scenario", "subscenario", "subperiod", "bid_segment"],
-            unit = "MWh",
-            labels,
-        )
-
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
             output_name = "bidding_group_price_offer",
             dimensions = ["period", "scenario", "subperiod", "bid_segment"],
             unit = "\$/MWh",
@@ -72,6 +61,35 @@ function initialize_heuristic_bids_outputs(
             labels,
         )
     end
+
+    return nothing
+end
+
+function initialiaze_bids_ex_post_outputs(
+    inputs::Inputs,
+    outputs::Outputs,
+    run_time_options::RunTimeOptions,
+)
+    labels = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.bidding_group,
+        inputs.collections.bus;
+        index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        run_time_options,
+        output_name = "bidding_group_energy_offer_ex_post",
+        dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+        unit = "MWh",
+        labels,
+        add_runtime_file_suffix = false,
+    )
 
     return nothing
 end

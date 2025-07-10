@@ -406,7 +406,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
             print_bidding_group_ex_post_bids(
                 inputs,
-                heuristic_bids_outputs,
+                ex_post_physical_outputs,
                 run_time_options,
                 period,
             )

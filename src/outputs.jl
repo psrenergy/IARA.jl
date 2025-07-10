@@ -106,6 +106,9 @@ function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
        clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         initialize_virtual_reservoir_post_processing_outputs!(outputs, inputs, run_time_options)
     end
+    if is_ex_post_problem(run_time_options) && is_physical_problem(run_time_options)
+        initialiaze_bids_ex_post_outputs(inputs, outputs, run_time_options)
+    end
     return outputs
 end
 
@@ -260,6 +263,7 @@ function initialize!(
     output_name::String,
     dir_path::String = output_path(inputs),
     consider_one_segment = false,
+    add_runtime_file_suffix = true,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -276,7 +280,9 @@ function initialize!(
     unit = kwargs[:unit]
     labels = kwargs[:labels]
 
-    output_name *= run_time_file_suffixes(inputs, run_time_options)
+    if add_runtime_file_suffix
+        output_name *= run_time_file_suffixes(inputs, run_time_options)
+    end
 
     file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)

@@ -40,7 +40,7 @@ function bidding_group_profile_energy_offer!(
             bus in buses,
         ]
         in
-        MOI.Parameter(quantity_offer_profile_series[bg, bus, prf, blk])
+        MOI.Parameter(quantity_offer_profile_series[bg, bus, prf, blk] * subperiod_duration_in_hours(inputs, blk))
     ) # MWh
     @variable(
         model.jump_model,
@@ -129,7 +129,7 @@ function bidding_group_profile_energy_offer!(
             model.jump_model,
             POI.ParameterValue(),
             bidding_group_quantity_offer_profile[blk, bg, prf, bus],
-            quantity_offer_profile_series[bg, bus, prf, blk],
+            quantity_offer_profile_series[bg, bus, prf, blk] * subperiod_duration_in_hours(inputs, blk),
         )
     end
     return nothing
@@ -167,7 +167,7 @@ function bidding_group_profile_energy_offer!(
         run_time_options,
         output_name = "bidding_group_generation_profile",
         dimensions = ["period", "scenario", "subperiod", "profile"],
-        unit = "GWh",
+        unit = "MW",
         labels,
     )
 
@@ -198,8 +198,8 @@ function bidding_group_profile_energy_offer!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         has_profile_bids = true,
+        divide_by_subperiod_duration_in_hours = true,
     )
     return nothing
 end

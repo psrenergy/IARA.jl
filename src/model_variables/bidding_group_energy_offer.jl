@@ -136,7 +136,7 @@ function bidding_group_energy_offer!(
         inputs,
         output_name = "bidding_group_energy_offer",
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-        unit = "GWh",
+        unit = "MW",
         labels,
         run_time_options,
     )
@@ -167,7 +167,7 @@ function bidding_group_energy_offer!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
+        divide_by_subperiod_duration_in_hours = true,
     )
     return nothing
 end

@@ -126,7 +126,7 @@ function bidding_group_generation!(
             model.jump_model,
             POI.ParameterValue(),
             bidding_group_quantity_offer[blk, bg, bds, bus],
-            quantity_offer_series[bg, bus, bds, blk],
+            quantity_offer_series[bg, bus, bds, blk] * subperiod_duration_in_hours(inputs, blk),
         )
         MOI.set(
             model.jump_model,
@@ -169,7 +169,7 @@ function bidding_group_generation!(
         inputs,
         output_name = "bidding_group_generation",
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-        unit = "GWh",
+        unit = "MW",
         labels,
         run_time_options,
     )
@@ -203,9 +203,9 @@ function bidding_group_generation!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         has_profile_bids = false,
         filters = [has_generation_besides_virtual_reservoirs],
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     return nothing

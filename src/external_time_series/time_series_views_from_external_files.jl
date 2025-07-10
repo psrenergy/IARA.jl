@@ -268,7 +268,7 @@ function initialize_time_series_from_external_files(inputs)
             inputs.time_series.quantity_offer,
             inputs,
             file;
-            expected_unit = "MWh",
+            expected_unit = "MW",
             possible_expected_dimensions = [
                 [:period, :scenario, :subperiod, :profile],
                 [:period, :scenario, :subperiod, :bid_segment],
@@ -300,7 +300,7 @@ function initialize_time_series_from_external_files(inputs)
             inputs.time_series.quantity_offer_profile,
             inputs,
             file;
-            expected_unit = "MWh",
+            expected_unit = "MW",
             possible_expected_dimensions = [
                 [:period, :scenario, :subperiod, :profile],
                 [:period, :scenario, :subperiod, :bid_segment],

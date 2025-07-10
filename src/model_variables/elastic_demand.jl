@@ -132,7 +132,7 @@ function elastic_demand!(
         inputs,
         output_name = "attended_elastic_demand",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = demand_unit_label(inputs)[elastic_demands],
         run_time_options,
     )
@@ -174,8 +174,8 @@ function elastic_demand!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
     return nothing
 end

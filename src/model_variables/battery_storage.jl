@@ -87,7 +87,7 @@ function battery_unit_storage!(
         inputs,
         output_name = "battery_storage",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = battery_unit_label(inputs)[battery_units],
         run_time_options,
     )
@@ -139,8 +139,8 @@ function battery_unit_storage!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
         indices_of_elements_in_output,
+        divide_by_subperiod_duration_in_hours = true,
     )
 
     write_output_per_subperiod!(

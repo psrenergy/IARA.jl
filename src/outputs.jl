@@ -124,7 +124,7 @@ function initialize_virtual_reservoir_post_processing_outputs!(
         inputs,
         output_name = "virtual_reservoir_final_energy_account",
         dimensions = ["period", "scenario"],
-        unit = "GWh",
+        unit = "MW",
         labels = labels_for_output_by_pair_of_agents(
             inputs,
             run_time_options,
@@ -141,7 +141,7 @@ function initialize_virtual_reservoir_post_processing_outputs!(
         inputs,
         output_name = "hydro_turbinable_spilled_energy",
         dimensions = ["period", "scenario", "subperiod"],
-        unit = "GWh",
+        unit = "MW",
         labels = hydro_unit_label(inputs),
         run_time_options,
     )
@@ -450,6 +450,7 @@ function write_output_without_subperiod!(
     scenario::Int,
     subscenario::Int,
     multiply_by::Float64 = 1.0,
+    divide_by_subperiod_duration_in_hours::Bool = false,
     indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
 ) where {T}
 
@@ -483,6 +484,9 @@ function write_output_without_subperiod!(
         for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
             data[idx_in_output] = vector_to_write[idx]
         end
+    end
+    if divide_by_subperiod_duration_in_hours
+        data ./= subperiod_duration_in_hours(inputs)
     end
     if is_ex_post_problem(run_time_options)
         Quiver.write!(
@@ -512,6 +516,7 @@ function write_reference_curve_output!(
     reference_curve_segment::Int,
     scenario::Int,
     multiply_by::Float64 = 1.0,
+    divide_by_subperiod_duration_in_hours = true,
     indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
 ) where {T}
 
@@ -545,6 +550,9 @@ function write_reference_curve_output!(
         for (idx, idx_in_output) in enumerate(indices_of_elements_in_output)
             data[idx_in_output] = vector_to_write[idx]
         end
+    end
+    if divide_by_subperiod_duration_in_hours
+        data ./= subperiod_duration_in_hours(inputs)
     end
     Quiver.write!(
         output.writer,
@@ -651,6 +659,7 @@ function write_bid_output(
     scenario::Int,
     subscenario::Int,
     multiply_by::Float64 = 1.0,
+    divide_by_subperiod_duration_in_hours::Bool = false,
     has_profile_bids::Bool = false,
     @nospecialize(filters::Vector{<:Function} = Function[])
 )
@@ -706,6 +715,9 @@ function write_bid_output(
                     end
                     treated_output[blk, prf, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
+                if divide_by_subperiod_duration_in_hours
+                    treated_output ./= subperiod_duration_in_hours(inputs, blk)
+                end
                 if is_ex_post_problem(run_time_options)
                     Quiver.write!(
                         output.writer,
@@ -741,6 +753,9 @@ function write_bid_output(
                         data[blk, bg, bds, bus]
                     end
                     treated_output[blk, bds, (i_bg-1)*(num_buses)+bus] = data_bg
+                end
+                if divide_by_subperiod_duration_in_hours
+                    treated_output ./= subperiod_duration_in_hours(inputs, blk)
                 end
                 if is_ex_post_problem(run_time_options)
                     Quiver.write!(

@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subperiod"]
+dimension_size = [1, 1, 1]
+initial_date = "2025-01-01 00:00:00"
+time_dimension = "period"
+frequency = "monthly"
+unit = "GWh"
+labels = ["Solar 1", "Solar 2", "Eolica 1", "Solar 3", "Solar 4", "Eolica 2"]

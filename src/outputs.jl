@@ -516,7 +516,6 @@ function write_reference_curve_output!(
     reference_curve_segment::Int,
     scenario::Int,
     multiply_by::Float64 = 1.0,
-    divide_by_subperiod_duration_in_hours = true,
     indices_of_elements_in_output::Union{Vector{Int}, Nothing} = nothing,
 ) where {T}
 
@@ -551,9 +550,7 @@ function write_reference_curve_output!(
             data[idx_in_output] = vector_to_write[idx]
         end
     end
-    if divide_by_subperiod_duration_in_hours
-        data ./= subperiod_duration_in_hours(inputs)
-    end
+
     Quiver.write!(
         output.writer,
         round_output(data);

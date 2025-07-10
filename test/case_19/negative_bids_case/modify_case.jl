@@ -80,7 +80,7 @@ IARA.write_virtual_reservoir_bids_time_series_file(
         number_of_vr_segments,
     ],
     initial_date = "2024-01-01",
-    unit = "MW",
+    unit = "MWh",
 )
 
 IARA.write_virtual_reservoir_bids_time_series_file(

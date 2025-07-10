@@ -1178,14 +1178,13 @@ function any_ex_post_type_has_bids(
     inputs::AbstractInputs;
     run_time_options::RunTimeOptions = RunTimeOptions(),
 )
-   bid_model_types = [
+    bid_model_types = [
         Configurations_ConstructionType.BID_BASED,
         Configurations_ConstructionType.HYBRID,
     ]
     return construction_type_ex_post_physical(inputs) in bid_model_types ||
-        construction_type_ex_post_commercial(inputs) in bid_model_types
+           construction_type_ex_post_commercial(inputs) in bid_model_types
 end
-
 
 function need_demand_price_input_data(inputs::AbstractInputs)
     return is_mincost(inputs) ||

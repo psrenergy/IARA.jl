@@ -50,7 +50,8 @@ function build_clearing_outputs(inputs::Inputs)
     run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
     ex_post_commercial_outputs = initialize_outputs(inputs, run_time_options)
 
-    if any_ex_post_type_has_bids(inputs) && any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    if any_ex_post_type_has_bids(inputs) &&
+       any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
         initialiaze_bids_ex_post_outputs(inputs, ex_post_commercial_outputs, run_time_options)
     end
 

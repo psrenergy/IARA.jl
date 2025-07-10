@@ -106,9 +106,6 @@ function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
        clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
         initialize_virtual_reservoir_post_processing_outputs!(outputs, inputs, run_time_options)
     end
-    if is_ex_post_problem(run_time_options) && is_physical_problem(run_time_options)
-        initialiaze_bids_ex_post_outputs(inputs, outputs, run_time_options)
-    end
     return outputs
 end
 

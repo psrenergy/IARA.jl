@@ -1,0 +1,2 @@
+period,scenario,subperiod,hydro,thermal,renewable,battery_unit,deficit
+1,1,1,0.0,0.087,0.188,0.0,0.0

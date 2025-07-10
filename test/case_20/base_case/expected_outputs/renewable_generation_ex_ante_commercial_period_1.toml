@@ -4,5 +4,5 @@ dimension_size = [1, 1, 1]
 initial_date = "2025-01-01 00:00:00"
 time_dimension = "period"
 frequency = "monthly"
-unit = "GWh"
+unit = "MW"
 labels = ["Renovavel 1", "Renovavel 2", "Renovavel 3"]

@@ -124,7 +124,7 @@ function initialize_virtual_reservoir_post_processing_outputs!(
         inputs,
         output_name = "virtual_reservoir_final_energy_account",
         dimensions = ["period", "scenario"],
-        unit = "MW",
+        unit = "GWh",
         labels = labels_for_output_by_pair_of_agents(
             inputs,
             run_time_options,

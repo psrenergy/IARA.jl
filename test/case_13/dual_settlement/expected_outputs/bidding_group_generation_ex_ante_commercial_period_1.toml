@@ -4,5 +4,5 @@ dimension_size = [1, 1, 2, 1]
 initial_date = "2024-01-01 00:00:00"
 time_dimension = "period"
 frequency = "monthly"
-unit = "GWh"
+unit = "MW"
 labels = ["Bidding Group 1 - Bus 1", "Bidding Group 2 - Bus 1", "Bidding Group 3 - Bus 1"]

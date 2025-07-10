@@ -218,7 +218,7 @@ IARA.write_bids_time_series_file(
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods, maximum_number_of_bidding_segments],
     initial_date = "2020-01-01",
-    unit = "MWh",
+    unit = "MW",
 )
 
 price_offer = zeros(

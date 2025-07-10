@@ -168,7 +168,7 @@ IARA.write_bids_time_series_file(
         maximum_number_of_bidding_segments,
     ],
     initial_date = "2020-01-01T00:00:00",
-    unit = "MWh",
+    unit = "MW",
 )
 
 price_offer = zeros(

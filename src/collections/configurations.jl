@@ -1174,6 +1174,19 @@ function is_any_construction_type_cost_based(
            construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.COST_BASED
 end
 
+function any_ex_post_type_has_bids(
+    inputs::AbstractInputs;
+    run_time_options::RunTimeOptions = RunTimeOptions(),
+)
+   bid_model_types = [
+        Configurations_ConstructionType.BID_BASED,
+        Configurations_ConstructionType.HYBRID,
+    ]
+    return construction_type_ex_post_physical(inputs) in bid_model_types ||
+        construction_type_ex_post_commercial(inputs) in bid_model_types
+end
+
+
 function need_demand_price_input_data(inputs::AbstractInputs)
     return is_mincost(inputs) ||
            (is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)) ||

@@ -1,6 +1,6 @@
-# How to Input an FCF File
+# How to Input a FCF File
 
-Follow these steps to integrate an FCF (Future Cost Function) file into your study:
+Follow these steps to integrate a FCF (Future Cost Function) file into your study:
 
 1. **Prepare the FCF File**  
    Ensure that the FCF file (`cuts.json`) is available in your study’s input directory.

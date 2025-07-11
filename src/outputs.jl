@@ -260,6 +260,7 @@ function initialize!(
     output_name::String,
     dir_path::String = output_path(inputs),
     consider_one_segment = false,
+    force_all_subscenarios::Bool = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -268,7 +269,7 @@ function initialize!(
     output_type = Quiver.csv
 
     dimensions = kwargs[:dimensions]
-    if is_ex_post_problem(run_time_options)
+    if is_ex_post_problem(run_time_options) || force_all_subscenarios
         @assert dimensions[1] == "period"
         @assert dimensions[2] == "scenario"
         dimensions = cat(dimensions[1:2], "subscenario", dimensions[3:end]; dims = 1)
@@ -707,7 +708,7 @@ function write_bid_output(
                     end
                     treated_output[blk, prf, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
-                if is_ex_post_problem(run_time_options)
+                if is_ex_post_problem(run_time_options) || run_time_options.force_all_subscenarios
                     Quiver.write!(
                         output.writer,
                         round_output(treated_output[blk, prf, :] * multiply_by);
@@ -743,7 +744,7 @@ function write_bid_output(
                     end
                     treated_output[blk, bds, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
-                if is_ex_post_problem(run_time_options)
+                if is_ex_post_problem(run_time_options) || run_time_options.force_all_subscenarios
                     Quiver.write!(
                         output.writer,
                         round_output(treated_output[blk, bds, :] * multiply_by);

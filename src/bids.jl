@@ -88,6 +88,7 @@ function initialiaze_bids_ex_post_outputs(
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
         unit = "MWh",
         labels,
+        force_all_subscenarios = true,
     )
 
     return nothing
@@ -433,7 +434,7 @@ function print_bidding_group_ex_post_bids(
     )
 
     for scenario in 1:number_of_scenarios(inputs)
-        for subscenario in 1:inputs.collections.configurations.number_of_subscenarios
+        for subscenario in 1:number_of_subscenarios(inputs, run_time_options)
             quantity_offer_series = time_series_quantity_offer(inputs, period, scenario)
 
             adjust_quantity_offer_for_ex_post!(

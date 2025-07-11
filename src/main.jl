@@ -423,7 +423,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 outputs = ex_post_commercial_outputs,
             )
 
-            run_time_options = RunTimeOptions()
+            run_time_options = RunTimeOptions(; force_all_subscenarios = true)
 
             print_bidding_group_ex_post_bids(
                 inputs,
@@ -585,7 +585,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             outputs = ex_post_commercial_outputs,
         )
 
-        run_time_options = RunTimeOptions()
+        run_time_options = RunTimeOptions(; force_all_subscenarios = true)
 
         print_bidding_group_ex_post_bids(
             inputs,

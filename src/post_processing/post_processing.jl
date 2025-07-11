@@ -22,7 +22,7 @@ function post_processing(inputs::Inputs)
 
     outputs_post_processing = Outputs()
     model_outputs_time_series = OutputReaders()
-    run_time_options = RunTimeOptions(; is_post_processing = true)
+    run_time_options = RunTimeOptions(; force_all_subscenarios = true)
 
     try
         post_process_outputs(inputs, outputs_post_processing, model_outputs_time_series, run_time_options)

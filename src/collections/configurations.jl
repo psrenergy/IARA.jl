@@ -781,7 +781,7 @@ nodes(inputs::AbstractInputs) = collect(1:number_of_nodes(inputs))
 Return the number of subscenarios to simulate.
 """
 function number_of_subscenarios(inputs::AbstractInputs, run_time_options)
-    if is_ex_post_problem(run_time_options) || run_time_options.is_post_processing
+    if is_ex_post_problem(run_time_options) || run_time_options.force_all_subscenarios
         return inputs.collections.configurations.number_of_subscenarios
     else
         return 1
@@ -1172,6 +1172,18 @@ function is_any_construction_type_cost_based(
            construction_type_ex_ante_commercial(inputs) == Configurations_ConstructionType.COST_BASED ||
            construction_type_ex_post_physical(inputs) == Configurations_ConstructionType.COST_BASED ||
            construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.COST_BASED
+end
+
+function any_ex_post_type_has_bids(
+    inputs::AbstractInputs;
+    run_time_options::RunTimeOptions = RunTimeOptions(),
+)
+    bid_model_types = [
+        Configurations_ConstructionType.BID_BASED,
+        Configurations_ConstructionType.HYBRID,
+    ]
+    return construction_type_ex_post_physical(inputs) in bid_model_types ||
+           construction_type_ex_post_commercial(inputs) in bid_model_types
 end
 
 function need_demand_price_input_data(inputs::AbstractInputs)

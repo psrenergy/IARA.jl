@@ -403,6 +403,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             )
 
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+
             run_clearing_simulation(
                 ex_post_physical_model,
                 inputs,
@@ -420,6 +421,15 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 run_time_options,
                 period;
                 outputs = ex_post_commercial_outputs,
+            )
+
+            run_time_options = RunTimeOptions(; force_all_subscenarios = true)
+
+            print_bidding_group_ex_post_bids(
+                inputs,
+                ex_post_commercial_outputs,
+                run_time_options,
+                period,
             )
         end
     finally
@@ -573,6 +583,15 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             run_time_options,
             period;
             outputs = ex_post_commercial_outputs,
+        )
+
+        run_time_options = RunTimeOptions(; force_all_subscenarios = true)
+
+        print_bidding_group_ex_post_bids(
+            inputs,
+            ex_post_commercial_outputs,
+            run_time_options,
+            period,
         )
     finally
         finalize_clearing_outputs!(

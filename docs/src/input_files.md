@@ -1,4 +1,4 @@
-# **Input files**
+# **Input files table**
 
 Here is a table of the model attributes that need a external file:
 

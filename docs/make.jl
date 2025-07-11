@@ -113,7 +113,7 @@ const PAGES = [
     ],
     "Input and Outputs" => [
         "Quiver" => "quiver_format.md",
-        "Input files" => "input_files.md",
+        "Input files" => ["input_files.md", "how_to_input_fcf.md"],
         "Output files" => "output_files.md",
     ],
     "Developer Docs" => [

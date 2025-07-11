@@ -88,7 +88,6 @@ function initialiaze_bids_ex_post_outputs(
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
         unit = "MWh",
         labels,
-        add_runtime_file_suffix = false,
     )
 
     return nothing
@@ -427,8 +426,14 @@ function print_bidding_group_ex_post_bids(
         return nothing
     end
 
+    all_bidding_groups = index_of_elements(
+        inputs,
+        BiddingGroup;
+        filters = [has_generation_besides_virtual_reservoirs],
+    )
+
     for scenario in 1:number_of_scenarios(inputs)
-        for subscenario in 1:number_of_subscenarios(inputs, run_time_options)
+        for subscenario in 1:inputs.collections.configurations.number_of_subscenarios
             quantity_offer_series = time_series_quantity_offer(inputs, period, scenario)
 
             adjust_quantity_offer_for_ex_post!(
@@ -445,12 +450,11 @@ function print_bidding_group_ex_post_bids(
                 "bidding_group_energy_offer_ex_post",
                 # We have to permutate the dimensions because the function expects the dimensions in the order
                 # subperiod, bidding_group, bid_segments, bus
-                permutedims(quantity_offer_series.data, (4, 1, 3, 2));
+                permutedims(quantity_offer_series.data[all_bidding_groups, :, :, :], (4, 1, 3, 2));
                 period,
                 scenario,
                 subscenario,
                 filters = [has_generation_besides_virtual_reservoirs],
-                add_suffix_to_output_name = false,
             )
         end
     end

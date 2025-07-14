@@ -166,6 +166,9 @@ function initialize!(inputs::Inputs)
         initialize!(getfield(inputs.collections, fieldname), inputs)
     end
 
+    # Fill caches with collection data
+    fill_caches!(inputs)
+
     # Validate all collections
     try
         validate(inputs)
@@ -173,9 +176,6 @@ function initialize!(inputs::Inputs)
         clean_up(inputs)
         rethrow(e)
     end
-
-    # Fill caches with collection data
-    fill_caches!(inputs)
 
     # Fit PAR(p) and generate scenarios
     if !read_inflow_from_file(inputs)

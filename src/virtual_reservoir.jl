@@ -122,9 +122,9 @@ function fill_initial_energy_account!(inputs::AbstractInputs, vr::Int)
         h in hydro_units
     )
     inputs.collections.virtual_reservoir.initial_energy_account[vr] =
-        [NaN for ao in 1:length(index_of_elements(inputs, AssetOwner))]
-    for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-        inputs.collections.virtual_reservoir.initial_energy_account[vr][ao] =
+        [NaN for ao in 1:length(virtual_reservoir_asset_owner_indices(inputs, vr))]
+    for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
+        inputs.collections.virtual_reservoir.initial_energy_account[vr][i] =
             total_energy_account * virtual_reservoir_asset_owners_initial_energy_account_share(inputs, vr, ao)
     end
     return nothing
@@ -247,15 +247,7 @@ end
 
 function virtual_reservoir_energy_account_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
     if period == 1
-        energy_accounts = Vector{Float64}[]
-        for vr in index_of_elements(inputs, VirtualReservoir)
-            vr_energy_account = zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr)))
-            for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
-                vr_energy_account[i] = inputs.collections.virtual_reservoir.initial_energy_account[vr][ao]
-            end
-            push!(energy_accounts, vr_energy_account)
-        end
-        return energy_accounts
+        return inputs.collections.virtual_reservoir.initial_energy_account
     else
         return read_serialized_virtual_reservoir_energy_account(inputs, period - 1, scenario)
     end

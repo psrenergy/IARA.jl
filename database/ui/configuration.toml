@@ -131,12 +131,6 @@ tooltip.en = "Make whole payments of the configuration"
 hide = true
 
 [[attribute]]
-id = "price_limits"
-label.en = "Price Limits"
-tooltip.en = "Price limits of the configuration"
-hide = true
-
-[[attribute]]
 id = "construction_type_ex_ante_physical"
 label.en = "Construction Type Ex Ante Physical"
 tooltip.en = "Construction type ex ante physical of the configuration"

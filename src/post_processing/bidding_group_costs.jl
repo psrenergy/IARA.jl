@@ -99,7 +99,7 @@ function _write_costs_bg_file(
                             for unit in 1:num_units
                                 if collection == "HydroUnit" &&
                                    clearing_hydro_representation(inputs) ==
-                                   Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                                   Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
                                     if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, unit)
                                         # The cost of this unit is written within the virtual reservoir scope
                                         continue
@@ -138,7 +138,7 @@ function _write_costs_bg_file(
                         for unit in 1:num_units
                             if collection == "HydroUnit" &&
                                clearing_hydro_representation(inputs) ==
-                               Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+                               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
                                 if is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, unit)
                                     continue
                                 end

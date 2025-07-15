@@ -23,7 +23,7 @@ function build_ui_operator_plots(
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(revenue_files) == 2
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
         plot_operator_output(
@@ -50,7 +50,7 @@ function build_ui_operator_plots(
 
     # Generation
     generation_files = get_generation_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(generation_files) == 2
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
         plot_operator_output(
@@ -90,7 +90,7 @@ function build_ui_agents_plots(
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(revenue_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
@@ -124,7 +124,7 @@ function build_ui_agents_plots(
 
     # Generation
     generation_files = get_generation_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(generation_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
@@ -178,7 +178,7 @@ function build_ui_general_plots(
 
     # Spot price
     files = get_load_marginal_cost_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(files) == 2
         plot_general_output(
             inputs;

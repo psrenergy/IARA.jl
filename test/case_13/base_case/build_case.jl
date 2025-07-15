@@ -37,13 +37,13 @@ db = IARA.create_study!(PATH;
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     demand_deficit_cost = 100.0,
     cycle_discount_rate = 0.0,
-    clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.PURE_BIDS,
+    clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    settlement_type = IARA.Configurations_SettlementType.EX_POST,
-    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
+    settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
+    bid_data_source = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
 )
 

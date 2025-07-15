@@ -14,7 +14,7 @@ IARA.update_configuration!(db;
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
-    settlement_type = IARA.Configurations_SettlementType.EX_POST,
+    settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
 )
 
 IARA.close_study!(db)

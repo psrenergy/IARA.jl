@@ -603,7 +603,8 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
                 )
         end
 
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             read_virtual_reservoir_bids_view_from_external_file!(
                 inputs,
                 ts_virtual_reservoir_quantity_offer;

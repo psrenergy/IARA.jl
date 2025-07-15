@@ -82,7 +82,7 @@ function markup_offers_for_period_scenario(
         )
     end
     if clearing_hydro_representation(inputs) ==
-       Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
         virtual_reservoir_markup_offers_for_period_scenario(
             inputs,
             run_time_options,
@@ -109,7 +109,8 @@ function bidding_group_markup_units(inputs::Inputs)
     for bg in bidding_group_indexes
         bidding_group_number_of_risk_factors[bg] = length(bidding_group_risk_factor(inputs, bg))
         bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             filter!(
                 x -> !is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, x),
                 bidding_group_hydro_units[bg],
@@ -711,9 +712,11 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     end
     # Hydro representation
     if generate_heuristic_bids_for_clearing(inputs)
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             return false
-        elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
+        elseif clearing_hydro_representation(inputs) ==
+               Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
             bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
             if isempty(bidding_group_indexes)
                 return false
@@ -1015,7 +1018,8 @@ function generate_individual_bids_files(inputs::AbstractInputs)
         output_path(inputs),
         "bidding_group_energy_offer" * period_suffix,
     )
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     initialize_bids_view_from_external_file!(
         inputs.time_series.quantity_offer,
         inputs,
@@ -1199,7 +1203,9 @@ function write_individual_virtual_reservoir_bids_files(
 
     filename = "$(asset_owner_label(inputs, asset_owner_index))_virtual_reservoir_bids_period_$(inputs.args.period).csv"
 
-    df_length = length(virtual_reservoirs) * number_of_scenarios(inputs) * maximum_number_of_vr_bidding_segments(inputs)
+    df_length =
+        length(virtual_reservoirs) * number_of_scenarios(inputs) *
+        maximum_number_of_vr_bidding_segments(inputs)
 
     period_column = ones(Int, df_length) * inputs.args.period
     scenario_column = zeros(Int, df_length)
@@ -1275,7 +1281,8 @@ function adjust_quantity_offer_for_ex_post!(
         # Check if the bidding group has hydro units
         # If the bidding group has hydro units, we skip the adjustment
         if bidding_group_has_hydro_units(inputs, bg) &&
-           clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
+           clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
             continue
         end
         for bus in 1:number_of_elements(inputs, Bus)

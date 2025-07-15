@@ -223,7 +223,7 @@ function marginal_cost_to_opportunity_cost(
     hydro_opportunity_cost = zeros(number_of_subperiods(inputs), length(hydro_unit_indexes))
 
     @assert hydro_balance_subperiod_resolution(inputs) ==
-            Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
+            Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
 
     for (idx, h) in enumerate(hydro_unit_indexes)
         if hydro_unit_production_factor(inputs, h) == 0
@@ -253,7 +253,7 @@ function marginal_cost_to_opportunity_cost(
     hydro_opportunity_cost = zeros(number_of_subperiods(inputs), length(hydro_unit_indexes))
 
     @assert hydro_balance_subperiod_resolution(inputs) ==
-            Configurations_HydroBalanceSubperiodResolution.AGGREGATED_SUBPERIODS
+            Configurations_HydroBalanceSubperiodRepresentation.AGGREGATED_SUBPERIODS
 
     for (idx, h) in enumerate(hydro_unit_indexes)
         if hydro_unit_production_factor(inputs, h) == 0

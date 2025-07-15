@@ -27,10 +27,10 @@ function hydro_balance!(
     ::Type{SubproblemBuild},
 )
     if hydro_balance_subperiod_resolution(inputs) ==
-       Configurations_HydroBalanceSubperiodResolution.AGGREGATED_SUBPERIODS
+       Configurations_HydroBalanceSubperiodRepresentation.AGGREGATED_SUBPERIODS
         hydro_balance_aggregated_subperiods(model, inputs, run_time_options)
     elseif hydro_balance_subperiod_resolution(inputs) ==
-           Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
+           Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
         hydro_balance_chronological_subperiods(model, inputs, run_time_options)
     else
         error("Hydro balance subperiod resolution $(hydro_balance_subperiod_resolution(inputs)) not implemented.")

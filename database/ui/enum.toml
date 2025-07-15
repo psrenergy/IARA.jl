@@ -150,14 +150,6 @@ label.en = "Constrained on Period Aggregate"
 id = 3
 label.en = "Ignore"
 
-[[price_limits]]
-id = 0
-label.en = "Represent"
-
-[[price_limits]]
-id = 1
-label.en = "Ignore"
-
 [[consider_subperiods_loop_for_thermal_constraints]]
 id = 0
 label.en = "Consider"

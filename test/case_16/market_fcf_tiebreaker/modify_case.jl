@@ -77,7 +77,7 @@ IARA.update_configuration!(
     db;
     market_clearing_tiebreaker_weight = 1e-4,
     use_fcf_in_clearing = 1,
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_source = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,

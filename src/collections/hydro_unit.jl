@@ -25,11 +25,11 @@ Hydro units are high-level data structures that represent hydro electricity gene
     min_volume::Vector{Float64} = []
     max_volume::Vector{Float64} = []
     initial_volume::Vector{Float64} = []
-    initial_volume_type::Vector{HydroUnit_InitialVolumeType.T} = []
+    initial_volume_type::Vector{HydroUnit_InitialVolumeDataType.T} = []
     min_outflow::Vector{Float64} = []
     om_cost::Vector{Float64} = []
     has_commitment::Vector{HydroUnit_HasCommitment.T} = []
-    operation_type::Vector{HydroUnit_OperationType.T} = []
+    operation_type::Vector{HydroUnit_OperationTypeBetweenPeriods.T} = []
     min_generation::Vector{Float64} = []
     # index of the bus to which the hydro unit belongs in the collection Bus
     bus_index::Vector{Int} = []
@@ -70,12 +70,12 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
     hydro_unit.initial_volume_type =
         convert_to_enum.(
             PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_type"),
-            HydroUnit_InitialVolumeType.T,
+            HydroUnit_InitialVolumeDataType.T,
         )
     hydro_unit.operation_type =
         convert_to_enum.(
             PSRI.get_parms(inputs.db, "HydroUnit", "operation_type"),
-            HydroUnit_OperationType.T,
+            HydroUnit_OperationTypeBetweenPeriods.T,
         )
     hydro_unit.has_commitment =
         convert_to_enum.(
@@ -205,7 +205,7 @@ Example:
 ```julia
 IARA.add_hydro_unit!(db;
     label = "Hydro1",
-    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+    operation_type = IARA.HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [IARA.HydroUnit_Existence.EXISTS], # 1 = true
@@ -492,13 +492,13 @@ function validate(hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeType.PER_UNIT &&
+        if hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME &&
            !(0.0 <= hydro_unit.initial_volume[i] <= 1.0)
             @error(
                 "Hydro Unit $(hydro_unit.label[i]) Initial volume type is `PerUnit` must be between 0 and 1. Current value is $(hydro_unit.initial_volume[i])."
             )
             num_errors += 1
-        elseif hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeType.VOLUME &&
+        elseif hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.ABSOLUTE_VOLUME_IN_HM3 &&
                !(hydro_unit.min_volume[i] <= hydro_unit.initial_volume[i] <= hydro_unit.max_volume[i])
             # TODO: Could min volume be null?
             @error(
@@ -683,11 +683,13 @@ end
 Get the initial volume for the Hydro Unit at index 'idx'.
 """
 function hydro_unit_initial_volume(inputs::AbstractInputs, idx::Int)
-    if inputs.collections.hydro_unit.initial_volume_type[idx] == HydroUnit_InitialVolumeType.PER_UNIT
+    if inputs.collections.hydro_unit.initial_volume_type[idx] ==
+       HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME
         return hydro_unit_min_volume(inputs, idx) +
                inputs.collections.hydro_unit.initial_volume[idx] *
                (hydro_unit_max_volume(inputs, idx) - hydro_unit_min_volume(inputs, idx))
-    elseif inputs.collections.hydro_unit.initial_volume_type[idx] == HydroUnit_InitialVolumeType.VOLUME
+    elseif inputs.collections.hydro_unit.initial_volume_type[idx] ==
+           HydroUnit_InitialVolumeDataType.ABSOLUTE_VOLUME_IN_HM3
         return inputs.collections.hydro_unit.initial_volume[idx]
     else
         error("Initial volume type not recognized.")
@@ -696,13 +698,13 @@ end
 
 function hydro_subperiods(inputs::AbstractInputs)
     if hydro_balance_subperiod_resolution(inputs) ==
-       Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
+       Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
         # There is one more subperiod because this is the volume at the start of each subperiod.
         # In this case the last subperiod is actually the final volume of a certain period and
         # the first subperiod of the next period
         return collect(1:number_of_subperiods(inputs)+1)
     elseif hydro_balance_subperiod_resolution(inputs) ==
-           Configurations_HydroBalanceSubperiodResolution.AGGREGATED_SUBPERIODS
+           Configurations_HydroBalanceSubperiodRepresentation.AGGREGATED_SUBPERIODS
         # In this case the first subperiod is the only one in the period and the second subperiod is only used to represent
         # the final volume of the period.
         return [1, 2]
@@ -755,7 +757,7 @@ has_commitment(hydro_unit::HydroUnit, idx::Int) =
 Check if the Hydro Unit at index 'idx' operates with reservoir.
 """
 operates_with_reservoir(hydro_unit::HydroUnit, idx::Int) =
-    hydro_unit.operation_type[idx] == HydroUnit_OperationType.RESERVOIR
+    hydro_unit.operation_type[idx] == HydroUnit_OperationTypeBetweenPeriods.RESERVOIR
 
 """
     operates_as_run_of_river(hydro_unit::HydroUnit, idx::Int)
@@ -763,7 +765,7 @@ operates_with_reservoir(hydro_unit::HydroUnit, idx::Int) =
 Check if the Hydro Unit at index 'idx' operates as run of river.
 """
 operates_as_run_of_river(hydro_unit::HydroUnit, idx::Int) =
-    hydro_unit.operation_type[idx] == HydroUnit_OperationType.RUN_OF_RIVER
+    hydro_unit.operation_type[idx] == HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER
 
 """
     is_associated_with_some_virtual_reservoir(hydro_unit::HydroUnit, idx::Int)

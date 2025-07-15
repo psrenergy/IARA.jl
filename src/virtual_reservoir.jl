@@ -254,7 +254,7 @@ function virtual_reservoir_energy_account_from_previous_period(inputs::AbstractI
 end
 
 function fill_waveguide_points!(inputs::AbstractInputs, vr::Int)
-    if vr_curveguide_data_source(inputs) == Configurations_VRCurveguideDataSource.READ_FROM_FILE
+    if vr_curveguide_data_source(inputs) == Configurations_VRCurveguideDataSource.EXTERNAL_UNVALIDATED_BID
         fill_waveguide_points_provided_by_user!(inputs, vr)
     elseif vr_curveguide_data_source(inputs) ==
            Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS

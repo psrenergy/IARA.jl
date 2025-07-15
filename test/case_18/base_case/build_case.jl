@@ -41,7 +41,7 @@ db = IARA.create_study!(PATH;
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
-    settlement_type = IARA.Configurations_SettlementType.EX_ANTE,
+    settlement_type = IARA.Configurations_FinancialSettlementType.EX_ANTE,
 )
 
 # Add collection elements

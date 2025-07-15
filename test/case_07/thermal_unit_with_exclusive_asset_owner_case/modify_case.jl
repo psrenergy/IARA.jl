@@ -6,6 +6,12 @@ IARA.add_asset_owner!(
     price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 
-IARA.update_bidding_group_relation!(db, "bg_1"; collection = "AssetOwner", relation_type = "id",  related_label = "exclusive_for_thermal_unit")
+IARA.update_bidding_group_relation!(
+    db,
+    "bg_1";
+    collection = "AssetOwner",
+    relation_type = "id",
+    related_label = "exclusive_for_thermal_unit",
+)
 
 IARA.close_study!(db)

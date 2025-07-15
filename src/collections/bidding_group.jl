@@ -290,6 +290,17 @@ Validate the BiddingGroup's context within the inputs. Return the number of erro
 function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGroup)
     num_errors = 0
 
+    # Check if bid files are necessary, and if so, if they are provided
+    if read_bids_from_file(inputs) && any(bidding_group._has_generation_besides_virtual_reservoirs)
+        if (bidding_group.quantity_offer_file == "" || bidding_group.price_offer_file == "") &&
+           (bidding_group.quantity_offer_profile_file == "" || bidding_group.price_offer_profile_file == "")
+            @error(
+                "Bid files are required for some bidding groups, but the quantity or price offer files are missing."
+            )
+            num_errors += 1
+        end
+    end
+
     # Check if the assigned AssetOwner exists in the database
     asset_owners = index_of_elements(inputs, AssetOwner)
     for i in 1:length(bidding_group)

@@ -38,7 +38,7 @@ function elastic_demand!(
     if is_mincost(inputs) ||
        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
         # This is only used in pure physical problems, when in bid-based problems
-        # the price offer is set by the bidding group
+        # the price bid is set by the bidding group
 
         @variable(
             model.jump_model,

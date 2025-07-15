@@ -57,15 +57,15 @@ IARA.update_thermal_unit_relation!(
     related_label = "Vermelho",
 )
 
-price_offer[1, :, :, :, :, :] .= 80.0
-price_offer[2, :, :, :, :, :] .= 60.0
-price_offer[3, :, :, :, :, :] .= 75.0
-price_offer[4, :, :, :, :, :] .= 40.0
-price_offer[5, :, :, :, :, :] .= 45.0
+price_bid[1, :, :, :, :, :] .= 80.0
+price_bid[2, :, :, :, :, :] .= 60.0
+price_bid[3, :, :, :, :, :] .= 75.0
+price_bid[4, :, :, :, :, :] .= 40.0
+price_bid[5, :, :, :, :, :] .= 45.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Vermelho", "Verde", "Amarelo", "Azul", "Roxo"],
     labels_buses = ["Sistema"],

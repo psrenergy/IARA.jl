@@ -241,7 +241,7 @@ IARA.link_time_series_to_file(
 
 # Bids
 maximum_number_of_bidding_segments = 5
-quantity_offer =
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -250,7 +250,7 @@ quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-price_offer =
+price_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -268,27 +268,27 @@ bidding_group_index = 1
 # ----------------
 # Bid lowest scenario at O&M cost
 bid_segment = 1
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 20.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 3.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 20.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 3.0
 # Bid expected generation at an intermediate price
 bid_segment = 2
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 30.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 50.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 30.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 50.0
 # Bid highest scenario at a higher price
 bid_segment = 3
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 30.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 100.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 30.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 100.0
 # Termica 2
 # ----------------
 # Bid 30% of capacity at O&M cost
 bid_segment = 4
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 15.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 130.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 15.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 130.0
 # Bid 30% of capacity at a markup
 bid_segment = 5
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 15.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 150.0
-# The remaining capacity is not offered to hedge for lower solar generation scenarios
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 15.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 150.0
+# The remaining capacity is not bided to hedge for lower solar generation scenarios
 
 # --------------------------------------------------------------------------------
 # Agente Termico
@@ -298,22 +298,22 @@ bidding_group_index = 2
 # ----------------
 # Bid 30% of capacity at O&M cost
 bid_segment = 1
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 21.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 80.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 21.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 80.0
 # Bid 30% of capacity at a 10% markup
 bid_segment = 2
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 21.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 88.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 21.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 88.0
 # Bid 40% of capacity at a higher markup
 bid_segment = 3
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 28.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 125.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 28.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 125.0
 # Termica 3
 # ----------------
 # Bid capacity at O&M cost
 bid_segment = 4
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 30.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 200.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 30.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 200.0
 
 # --------------------------------------------------------------------------------
 # Agente Renovavel
@@ -323,26 +323,26 @@ bidding_group_index = 3
 # ----------------
 # Bid 70% of expected generation at O&M cost
 bid_segment = 1
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 21.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 5.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 21.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 5.0
 # Bid 30% of expected generation at a markup
 bid_segment = 2
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 9.0
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 60.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 9.0
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 60.0
 # Eolica 1
 # ----------------
 # Bid 70% of expected generation at O&M cost
 bid_segment = 3
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 17.5
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 10.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 17.5
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 10.0
 # Bid 30% of expected generation at a markup
 bid_segment = 4
-quantity_offer[bidding_group_index, :, bid_segment, :, :, :] .= 7.5
-price_offer[bidding_group_index, :, bid_segment, :, :, :] .= 70.0
+quantity_bid[bidding_group_index, :, bid_segment, :, :, :] .= 7.5
+price_bid[bidding_group_index, :, bid_segment, :, :, :] .= 70.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],
@@ -358,8 +358,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],
@@ -376,13 +376,13 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )
 
 # No-markup bids
 # --------------
-no_markup_price_offer = zeros(
+no_markup_price_bid = zeros(
     number_of_bidding_groups,
     number_of_buses,
     maximum_number_of_bidding_segments,
@@ -390,7 +390,7 @@ no_markup_price_offer = zeros(
     number_of_scenarios,
     1, # number of periods for reference price is always 1
 )
-no_markup_energy_offer = zeros(
+no_markup_energy_bid = zeros(
     number_of_bidding_groups,
     number_of_buses,
     maximum_number_of_bidding_segments,
@@ -403,33 +403,33 @@ no_markup_energy_offer = zeros(
 # ----------------
 bidding_group_index = 1
 # Solar 1
-no_markup_energy_offer[bidding_group_index, :, 1, :, :, :] .= 50.0
-no_markup_price_offer[bidding_group_index, :, 1, :, :, :] .= 3.0
+no_markup_energy_bid[bidding_group_index, :, 1, :, :, :] .= 50.0
+no_markup_price_bid[bidding_group_index, :, 1, :, :, :] .= 3.0
 # Termica 2
-no_markup_energy_offer[bidding_group_index, :, 2, :, :, :] .= 40.0
-no_markup_price_offer[bidding_group_index, :, 2, :, :, :] .= 130.0
+no_markup_energy_bid[bidding_group_index, :, 2, :, :, :] .= 40.0
+no_markup_price_bid[bidding_group_index, :, 2, :, :, :] .= 130.0
 # Agente Termico
 # ----------------
 bidding_group_index = 2
 # Termica 1
-no_markup_energy_offer[bidding_group_index, :, 1, :, :, :] .= 70.0
-no_markup_price_offer[bidding_group_index, :, 1, :, :, :] .= 80.0
+no_markup_energy_bid[bidding_group_index, :, 1, :, :, :] .= 70.0
+no_markup_price_bid[bidding_group_index, :, 1, :, :, :] .= 80.0
 # Termica 3
-no_markup_energy_offer[bidding_group_index, :, 2, :, :, :] .= 30.0
-no_markup_price_offer[bidding_group_index, :, 2, :, :, :] .= 200.0
+no_markup_energy_bid[bidding_group_index, :, 2, :, :, :] .= 30.0
+no_markup_price_bid[bidding_group_index, :, 2, :, :, :] .= 200.0
 # Agente Renovavel
 # ----------------
 bidding_group_index = 3
 # Solar 2
-no_markup_energy_offer[bidding_group_index, :, 1, :, :, :] .= 30.0
-no_markup_price_offer[bidding_group_index, :, 1, :, :, :] .= 5.0
+no_markup_energy_bid[bidding_group_index, :, 1, :, :, :] .= 30.0
+no_markup_price_bid[bidding_group_index, :, 1, :, :, :] .= 5.0
 # Eolica 1
-no_markup_energy_offer[bidding_group_index, :, 2, :, :, :] .= 25.0
-no_markup_price_offer[bidding_group_index, :, 2, :, :, :] .= 10.0
+no_markup_energy_bid[bidding_group_index, :, 2, :, :, :] .= 25.0
+no_markup_price_bid[bidding_group_index, :, 2, :, :, :] .= 10.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "bidding_group_no_markup_energy_offer_period_1"),
-    no_markup_energy_offer;
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_1"),
+    no_markup_energy_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],
@@ -445,8 +445,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "bidding_group_no_markup_price_offer_period_1"),
-    no_markup_price_offer;
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_1"),
+    no_markup_price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel"],
     labels_buses = ["Sistema"],

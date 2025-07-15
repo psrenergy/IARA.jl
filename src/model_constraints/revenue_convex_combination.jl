@@ -30,7 +30,7 @@ function revenue_convex_combination!(
 
     # Model variables
     convex_revenue_coefficients = get_model_object(model, :convex_revenue_coefficients)
-    bidding_group_energy_offer = get_model_object(model, :bidding_group_energy_offer)
+    bidding_group_energy_bid = get_model_object(model, :bidding_group_energy_bid)
 
     # Model parameters
     convex_hull_point_quantity = get_model_object(model, :convex_hull_point_quantity)
@@ -62,7 +62,7 @@ function revenue_convex_combination!(
                 for v in 1:convex_hull_length[agg_bus, blk]
             ) ==
             sum(
-                bidding_group_energy_offer[blk, bg, bds, bus] for
+                bidding_group_energy_bid[blk, bg, bds, bus] for
                 bus in buses,
                 bg in bidding_groups,
                 bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
@@ -82,7 +82,7 @@ function revenue_convex_combination!(
                 for v in 1:convex_hull_length[bus, blk]
             ) ==
             sum(
-                bidding_group_energy_offer[blk, bg, bds, bus] for
+                bidding_group_energy_bid[blk, bg, bds, bus] for
                 bg in bidding_groups,
                 bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
             ),

@@ -11,11 +11,11 @@
 db = IARA.load_study(PATH; read_only = false)
 
 # Remove BG "Verde" from independent bids
-quantity_offer_new = copy(quantity_offer)
-quantity_offer_new[3, :, :, :, :, :] .= 0
+quantity_bid_new = copy(quantity_bid)
+quantity_bid_new[3, :, :, :, :, :] .= 0
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer_new;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid_new;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Azul", "Vermelho", "Verde"],
     labels_buses = ["Sistema"],
@@ -30,11 +30,11 @@ IARA.write_bids_time_series_file(
     unit = "MWh",
 )
 
-price_offer_new = copy(price_offer)
-price_offer_new[3, :, :, :, :, :] .= 0.0
+price_bid_new = copy(price_bid)
+price_bid_new[3, :, :, :, :, :] .= 0.0
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer_new;
+    joinpath(PATH, "price_bid"),
+    price_bid_new;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Azul", "Vermelho", "Verde"],
     labels_buses = ["Sistema"],
@@ -52,7 +52,7 @@ IARA.write_bids_time_series_file(
 # Build profile bids
 maximum_number_of_bidding_profiles = 2
 
-quantity_offer_profile = zeros(
+quantity_bid_profile = zeros(
     number_of_bidding_groups,
     number_of_buses,
     maximum_number_of_bidding_profiles,
@@ -60,10 +60,10 @@ quantity_offer_profile = zeros(
     number_of_scenarios,
     number_of_periods,
 )
-quantity_offer_profile[3, :, :, :, :, :] .= 60
+quantity_bid_profile[3, :, :, :, :, :] .= 60
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer_profile"),
-    quantity_offer_profile;
+    joinpath(PATH, "quantity_bid_profile"),
+    quantity_bid_profile;
     dimensions = ["period", "scenario", "subperiod", "profile"],
     labels_bidding_groups = ["Azul", "Vermelho", "Verde"],
     labels_buses = ["Sistema"],
@@ -78,18 +78,18 @@ IARA.write_bids_time_series_file(
     unit = "MWh",
 )
 
-price_offer_profile = zeros(
+price_bid_profile = zeros(
     number_of_bidding_groups,
     maximum_number_of_bidding_profiles,
     number_of_scenarios,
     number_of_periods,
 )
-price_offer_profile[3, :, :, 1:3] .= 8.0
-price_offer_profile[3, :, :, 4:6] .= 10.0
-price_offer_profile[3, :, :, 7:10] .= 12.0
+price_bid_profile[3, :, :, 1:3] .= 8.0
+price_bid_profile[3, :, :, 4:6] .= 10.0
+price_bid_profile[3, :, :, 7:10] .= 12.0
 IARA.write_timeseries_file(
-    joinpath(PATH, "price_offer_profile"),
-    price_offer_profile;
+    joinpath(PATH, "price_bid_profile"),
+    price_bid_profile;
     dimensions = ["period", "scenario", "profile"],
     labels = ["Azul", "Vermelho", "Verde"],
     time_dimension = "period",
@@ -133,8 +133,8 @@ IARA.write_timeseries_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer_profile = "quantity_offer_profile",
-    price_offer_profile = "price_offer_profile",
+    quantity_bid_profile = "quantity_bid_profile",
+    price_bid_profile = "price_bid_profile",
     bid_price_limit_justified_profile = "bid_price_limit_justified_profile",
     bid_price_limit_non_justified_profile = "bid_price_limit_non_justified_profile",
 )

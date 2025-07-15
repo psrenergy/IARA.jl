@@ -142,7 +142,7 @@ IARA.write_timeseries_file(
 )
 
 # Update bids time series arrays dimensions:
-quantity_offer =
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -151,7 +151,7 @@ quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-price_offer =
+price_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -166,23 +166,23 @@ price_offer =
 # and for demonstration, let group 3 use the same renewable production as group 2 
 # (adjust as needed).
 
-quantity_offer[1, :, :, :, :, :] = hydro_production
-quantity_offer[2, :, :, :, :, :] = gnd_production
+quantity_bid[1, :, :, :, :, :] = hydro_production
+quantity_bid[2, :, :, :, :, :] = gnd_production
 for scen in 1:number_of_scenarios
-    quantity_offer[3, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_3
-    quantity_offer[4, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_4
-    quantity_offer[5, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_4
+    quantity_bid[3, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_3
+    quantity_bid[4, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_4
+    quantity_bid[5, :, :, :, scen, :] = 1 / number_of_scenarios * sum(gnd_production; dims = 3) # assignment for bg_4
 end
 
-price_offer[1, :, :, :, :, :] .= 10.0
-price_offer[2, :, :, :, :, :] .= 20.0
-price_offer[3, :, :, :, :, :] .= 25.0  # pricing for bg_3
-price_offer[4, :, :, :, :, :] .= 30.0  # pricing for bg_4
-price_offer[5, :, :, :, :, :] .= 35.0  # pricing for bg_5
+price_bid[1, :, :, :, :, :] .= 10.0
+price_bid[2, :, :, :, :, :] .= 20.0
+price_bid[3, :, :, :, :, :] .= 25.0  # pricing for bg_3
+price_bid[4, :, :, :, :, :] .= 30.0  # pricing for bg_4
+price_bid[5, :, :, :, :, :] .= 35.0  # pricing for bg_5
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2", "bg_3", "bg_4", "bg_5"],
     labels_buses = ["bus_1"],
@@ -198,8 +198,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2", "bg_3", "bg_4", "bg_5"],
     labels_buses = ["bus_1"],
@@ -217,8 +217,8 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )
 
 # Finally, update the renewable unit link to the new files:

@@ -639,19 +639,19 @@ function build_plots(
     end
 
     if is_market_clearing(inputs)
-        # Energy offer
+        # Energy bid
         plot_config_energy = PlotConfig(
             "Energy Offer per Bidding Group",
-            "bidding_group_energy_offer",
+            "bidding_group_energy_bid",
             [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_energy)
 
-        # Price offer
+        # Price bid
         plot_config_price = PlotConfig(
             "Price Offer per Bidding Group",
-            "bidding_group_price_offer",
+            "bidding_group_price_bid",
             [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )

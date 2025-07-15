@@ -49,7 +49,7 @@ IARA.add_thermal_unit!(db;
 
 number_of_bidding_groups = 2
 
-quantity_offer_new = zeros(
+quantity_bid_new = zeros(
     number_of_bidding_groups,
     maximum_number_of_bidding_profiles,
     number_of_buses,
@@ -57,11 +57,11 @@ quantity_offer_new = zeros(
     number_of_scenarios,
     number_of_periods,
 )
-quantity_offer_new[1, :, :, :, :, :] .= quantity_offer[1, :, :, :, :, :]
+quantity_bid_new[1, :, :, :, :, :] .= quantity_bid[1, :, :, :, :, :]
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer_new;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid_new;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2"],
     labels_buses = ["bus_1", "bus_2"],
@@ -76,7 +76,7 @@ IARA.write_bids_time_series_file(
     unit = "MWh",
 )
 
-price_offer_new = zeros(
+price_bid_new = zeros(
     number_of_bidding_groups,
     number_of_buses,
     maximum_number_of_bidding_segments,
@@ -85,12 +85,12 @@ price_offer_new = zeros(
     number_of_periods,
 )
 
-# Choose the first subperiod of price offers for the new bidding group
-price_offer_new[1, :, :, :, :, :] .= price_offer[1, :, :, :, :, :]
+# Choose the first subperiod of price bids for the new bidding group
+price_bid_new[1, :, :, :, :, :] .= price_bid[1, :, :, :, :, :]
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer_new;
+    joinpath(PATH, "price_bid"),
+    price_bid_new;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2"],
     labels_buses = ["bus_1", "bus_2"],
@@ -105,8 +105,8 @@ IARA.write_bids_time_series_file(
     unit = "\$/MWh",
 )
 
-# Quantity and price offers for profile bids
-quantity_offer_profile =
+# Quantity and price bids for profile bids
+quantity_bid_profile =
     zeros(
         number_of_bidding_groups,
         maximum_number_of_bidding_profiles,
@@ -115,10 +115,10 @@ quantity_offer_profile =
         number_of_scenarios,
         number_of_periods,
     )
-quantity_offer_profile[2, :, :, :, :, :] .= 4
+quantity_bid_profile[2, :, :, :, :, :] .= 4
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer_profile"),
-    quantity_offer_profile;
+    joinpath(PATH, "quantity_bid_profile"),
+    quantity_bid_profile;
     dimensions = ["period", "scenario", "subperiod", "profile"],
     labels_bidding_groups = ["bg_1", "bg_2"],
     labels_buses = ["bus_1", "bus_2"],
@@ -133,14 +133,14 @@ IARA.write_bids_time_series_file(
     unit = "MWh",
 )
 
-price_offer_profile = zeros(
+price_bid_profile = zeros(
     number_of_bidding_groups,
     maximum_number_of_bidding_profiles,
     number_of_scenarios,
     number_of_periods,
 )
-price_offer_profile[2, 1, :, :] .= 90 / 2
-price_offer_profile[2, 2, :, :] .= 70 / 2
+price_bid_profile[2, 1, :, :] .= 90 / 2
+price_bid_profile[2, 2, :, :] .= 70 / 2
 
 IARA.add_demand_unit!(db;
     label = "dem_2",
@@ -165,8 +165,8 @@ IARA.write_timeseries_file(
 )
 
 IARA.write_timeseries_file(
-    joinpath(PATH, "price_offer_profile"),
-    price_offer_profile;
+    joinpath(PATH, "price_bid_profile"),
+    price_bid_profile;
     dimensions = ["period", "scenario", "profile"],
     labels = ["bg_1", "bg_2"],
     time_dimension = "period",
@@ -182,8 +182,8 @@ IARA.write_timeseries_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer_profile = "quantity_offer_profile",
-    price_offer_profile = "price_offer_profile",
+    quantity_bid_profile = "quantity_bid_profile",
+    price_bid_profile = "price_bid_profile",
 )
 
 minimum_activation_level_profile =

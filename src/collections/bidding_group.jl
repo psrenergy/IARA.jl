@@ -26,10 +26,10 @@ Collection representing the bidding groups in the system.
     asset_owner_index::Vector{Int} = []
     bid_price_limit_source::Vector{BiddingGroup_BidPriceLimitSource.T} = []
     fixed_cost::Vector{Float64} = []
-    quantity_offer_file::String = ""
-    price_offer_file::String = ""
-    quantity_offer_profile_file::String = ""
-    price_offer_profile_file::String = ""
+    quantity_bid_file::String = ""
+    price_bid_file::String = ""
+    quantity_bid_profile_file::String = ""
+    price_bid_profile_file::String = ""
     parent_profile_file::String = ""
     complementary_grouping_profile_file::String = ""
     minimum_activation_level_profile_file::String = ""
@@ -90,14 +90,14 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         )
 
     # Load time series files
-    bidding_group.quantity_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_offer")
-    bidding_group.price_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_offer")
-    bidding_group.quantity_offer_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_offer_profile")
-    bidding_group.price_offer_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_offer_profile")
+    bidding_group.quantity_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_bid")
+    bidding_group.price_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_bid")
+    bidding_group.quantity_bid_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_bid_profile")
+    bidding_group.price_bid_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_bid_profile")
     bidding_group.parent_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "parent_profile")
     bidding_group.complementary_grouping_profile_file =
@@ -292,10 +292,10 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
 
     # Check if bid files are necessary, and if so, if they are provided
     if read_bids_from_file(inputs) && any(bidding_group._has_generation_besides_virtual_reservoirs)
-        if (bidding_group.quantity_offer_file == "" || bidding_group.price_offer_file == "") &&
-           (bidding_group.quantity_offer_profile_file == "" || bidding_group.price_offer_profile_file == "")
+        if (bidding_group.quantity_bid_file == "" || bidding_group.price_bid_file == "") &&
+           (bidding_group.quantity_bid_profile_file == "" || bidding_group.price_bid_profile_file == "")
             @error(
-                "Bid files are required for some bidding groups, but the quantity or price offer files are missing."
+                "Bid files are required for some bidding groups, but the quantity or price bid files are missing."
             )
             num_errors += 1
         end
@@ -435,16 +435,16 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
                bidding_group_ex_post_adjust(inputs, bg) ==
                BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION
                 # If the bidding group has renewable units and the ex post adjustment mode is proportional to ex post generation
-                # over ex ante generation, you're not offering all the energy available in the ex post problem
-                @warn "Bidding group $(bidding_group_label(inputs, bg)) has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you're not offering all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+                # over ex ante generation, you're not biding all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you're not biding all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
             end
 
             if bidding_group_has_thermal_units(inputs, bg) &&
                bidding_group_ex_post_adjust(inputs, bg) ==
                BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
                 # If the bidding group has thermal units and the ex post adjustment mode is proportional to ex post generation
-                # over ex ante bid, you're not offering all the energy available in the ex post problem
-                @warn "Bidding group $(bidding_group_label(inputs, bg)) has thermal units and the ex post adjustment mode is proportional to ex post generation over ex ante bid. This means that you're offering all the thermal energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+                # over ex ante bid, you're not biding all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has thermal units and the ex post adjustment mode is proportional to ex post generation over ex ante bid. This means that you're biding all the thermal energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
             end
         end
     end
@@ -550,12 +550,12 @@ function has_any_profile_complex_bids(inputs::AbstractInputs)
 end
 
 function has_any_bid_simple_input_files(inputs::AbstractInputs)
-    return bidding_group_quantity_offer_file(inputs) != "" && bidding_group_price_offer_file(inputs) != ""
+    return bidding_group_quantity_bid_file(inputs) != "" && bidding_group_price_bid_file(inputs) != ""
 end
 
 function has_any_profile_input_files(inputs::AbstractInputs)
-    return bidding_group_quantity_offer_profile_file(inputs) != "" &&
-           bidding_group_price_offer_profile_file(inputs) != ""
+    return bidding_group_quantity_bid_profile_file(inputs) != "" &&
+           bidding_group_price_bid_profile_file(inputs) != ""
 end
 
 """

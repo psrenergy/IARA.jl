@@ -100,7 +100,7 @@ IARA.link_time_series_to_file(
 
 # ## Asset Owners and Bidding Groups
 
-# For this case, we will be demonstrating the differences of a profile bid bid and an independent bid bid.
+# For this case, we will be demonstrating the differences of a profile bid offer and an independent bid offer.
 # Thus, we will create two Bidding Groups, one for each type of bid, and link them to the same Asset Owner.
 
 # We can add an Asset Owner with the function [`IARA.add_asset_owner!`](@ref).
@@ -141,7 +141,7 @@ IARA.link_time_series_to_file(
     price_bid = "price_bid",
 )
 
-# We have just added the time series for the independent bidding bids. Now let's check the profile bidding bids and link them to our case.
+# We have just added the time series for the independent bids. Now let's check the profile bids and link them to our case.
 
 # ### Quantity Offer
 

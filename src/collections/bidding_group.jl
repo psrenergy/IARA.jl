@@ -435,16 +435,16 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
                bidding_group_ex_post_adjust(inputs, bg) ==
                BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION
                 # If the bidding group has renewable units and the ex post adjustment mode is proportional to ex post generation
-                # over ex ante generation, you're not biding all the energy available in the ex post problem
-                @warn "Bidding group $(bidding_group_label(inputs, bg)) has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you're not biding all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+                # over ex ante generation, you're not bidding all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you're not bidding all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
             end
 
             if bidding_group_has_thermal_units(inputs, bg) &&
                bidding_group_ex_post_adjust(inputs, bg) ==
                BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
                 # If the bidding group has thermal units and the ex post adjustment mode is proportional to ex post generation
-                # over ex ante bid, you're not biding all the energy available in the ex post problem
-                @warn "Bidding group $(bidding_group_label(inputs, bg)) has thermal units and the ex post adjustment mode is proportional to ex post generation over ex ante bid. This means that you're biding all the thermal energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+                # over ex ante bid, you're not bidding all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has thermal units and the ex post adjustment mode is proportional to ex post generation over ex ante bid. This means that you're bidding all the thermal energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
             end
         end
     end

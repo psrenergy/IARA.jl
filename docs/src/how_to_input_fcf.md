@@ -28,3 +28,17 @@ Follow these steps to integrate a FCF (Future Cost Function) file into your stud
    ```
 
 For a complete working example, refer to the [modify_case.jl](https://github.com/psrenergy/IARA.jl/tree/main/test/case_01/base_case_simulation/modify_case.jl) file in the `test/case_01/base_case_simulation` directory.
+
+# Use cases for FCF Input
+
+1. Minimum Cost Run:
+   If you have already trained a policy and wish to run a decoupled simulation using that trained policy, you can input an FCF file to ensure that the simulation utilizes the expected cost function.
+2. Clearing Simulations:
+   - `HYBRID`: If you are running a clearing simulation with the `HYBRID` construction type, you may to input a FCF file to define the water values for the simulation. This option is enabled through the configuration setting `use_fcf_in_clearing`.
+   - `COST_BASED`: If you are running a clearing simulation with the `COST_BASED` construction type, inputting an FCF file is **mandatory** to define the water values for the simulation.
+
+!!! tip "Tip"
+    If you are using the HYBRID construction type, providing an FCF file is optional, but strongly recommended. This will help ensure more accurate water values during the simulation.
+
+!!! danger "Warning"
+    When using the COST_BASED construction type, it is mandatory to input an FCF file. Failure to do so will result in an error during the simulation.

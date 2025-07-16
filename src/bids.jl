@@ -83,7 +83,7 @@ function markup_bids_for_period_scenario(
     end
     if clearing_hydro_representation(inputs) ==
        Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
-        virtual_reservoir_markup_offers_for_period_scenario(
+        virtual_reservoir_markup_bids_for_period_scenario(
             inputs,
             run_time_options,
             period,

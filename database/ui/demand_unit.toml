@@ -43,26 +43,26 @@ label.en = "Demand Type"
 tooltip.en = "Demand type of the demand unit"
 
 [[attribute]]
-id = "max_shift_up"
+id = "max_shift_up_flexible_demand"
 label.en = "Max Shift Up"
 tooltip.en = "Max shift up of the demand unit"
 hide = true
 
 [[attribute]]
-id = "max_shift_down"
+id = "max_shift_down_flexible_demand"
 label.en = "Max Shift Down"
 tooltip.en = "Max shift down of the demand unit"
 hide = true
 
 [[attribute]]
-id = "curtailment_cost"
+id = "curtailment_cost_flexible_demand"
 label.en = "Curtailment Cost"
 tooltip.en = "Curtailment cost of the demand unit (if flexible demand)"
 unit = "$/MWh"
 hide = true
 
 [[attribute]]
-id = "max_curtailment"
+id = "max_curtailment_flexible_demand"
 label.en = "Max Curtailment"
 tooltip.en = "Max curtailment of the demand unit (if flexible demand)"
 hide = true

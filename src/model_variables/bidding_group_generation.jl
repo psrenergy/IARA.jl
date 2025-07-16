@@ -152,7 +152,7 @@ function bidding_group_generation!(
     add_symbol_to_query_from_subproblem_result!(
         outputs,
         [:bidding_group_generation,
-            :bidding_group_quantity_offer],
+            :bidding_group_quantity_bid],
     )
 
     labels = labels_for_output_by_pair_of_agents(
@@ -218,7 +218,7 @@ function bidding_group_generation!(
             inputs,
             run_time_options,
             "bidding_group_energy_bid_ex_post",
-            simulation_results.data[:bidding_group_quantity_offer].data;
+            simulation_results.data[:bidding_group_quantity_bid].data;
             period,
             scenario,
             subscenario,

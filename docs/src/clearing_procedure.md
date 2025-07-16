@@ -40,7 +40,7 @@ In ex-post problems, a set of sub-scenarios can be provided for each scenario ve
 
 The first sub-scenario calculated in the ex-post is used to transmit the state variable information and the virtual reservoir balance to the next period.
 
-At a given period, the Virtual Reservoir balance is added to the ex-post inflow allocation for this agent in its balance, and the offers accepted by the Operator are debited. After this operation, an adjustment can be made so that the Virtual Reservoir balance equals the Available Energy of the hydros that make up this reservoir.
+At a given period, the Virtual Reservoir balance is added to the ex-post inflow allocation for this agent in its balance, and the bids accepted by the Operator are debited. After this operation, an adjustment can be made so that the Virtual Reservoir balance equals the Available Energy of the hydros that make up this reservoir.
 
 ### Ex-Post Physical
 

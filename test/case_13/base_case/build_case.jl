@@ -155,7 +155,7 @@ IARA.link_time_series_to_file(
 number_of_buses = 1
 number_of_bidding_groups = 3
 maximum_number_of_bidding_segments = 1
-quantity_offer =
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -164,7 +164,7 @@ quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-price_offer =
+price_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -174,16 +174,16 @@ price_offer =
         number_of_periods,
     )
 
-quantity_offer[1, :, :, :, :, :] .= 100
-quantity_offer[2, :, :, :, :, :] .= 100
-quantity_offer[3, :, :, :, :, :] .= 100
-price_offer[1, :, :, :, :, :] .= 41.0
-price_offer[2, :, :, :, :, :] .= 51.0
-price_offer[3, :, :, :, :, :] .= 65.0
+quantity_bid[1, :, :, :, :, :] .= 100
+quantity_bid[2, :, :, :, :, :] .= 100
+quantity_bid[3, :, :, :, :, :] .= 100
+price_bid[1, :, :, :, :, :] .= 41.0
+price_bid[2, :, :, :, :, :] .= 51.0
+price_bid[3, :, :, :, :, :] .= 65.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],
     labels_buses = ["Bus 1"],
@@ -199,8 +199,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Bidding Group 1", "Bidding Group 2", "Bidding Group 3"],
     labels_buses = ["Bus 1"],
@@ -217,6 +217,6 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )

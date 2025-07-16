@@ -21,7 +21,7 @@ For instance, consider that we have two thermal units witht the following charac
 
 The heuristic bid will have the following structure:
 
-#### Price offer
+#### Price bid
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|
@@ -29,7 +29,7 @@ The heuristic bid will have the following structure:
 |   1    |    1     |     1     |      2      |    40.0     |
 
 
-#### Quantity offer
+#### Quantity bid
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|
@@ -39,10 +39,10 @@ The heuristic bid will have the following structure:
 
 ## Using markup factors
 
-When using markup factors, the price offer is calculated by increasing the operational cost of the thermal unit by the markup factor (_cost * (1 + markup factor)_). 
+When using markup factors, the price bid is calculated by increasing the operational cost of the thermal unit by the markup factor (_cost * (1 + markup factor)_). 
 The markup factor is a global parameter for all assets in a bidding group.
-It can be used to make more complex bidding strategies, by dividing the offers originated from a single asset into multiple segments, each with a different markup factor.
-Also, each segment is assigned a different portion of the generation, which is used to calculate the quantity offer.
+It can be used to make more complex bidding strategies, by dividing the bids originated from a single asset into multiple segments, each with a different markup factor.
+Also, each segment is assigned a different portion of the generation, which is used to calculate the quantity bid.
 
 Using the same example as before, consider that we have the following markup factors:
 
@@ -52,13 +52,13 @@ Using the same example as before, consider that we have the following markup fac
 |      2      |        60.0       |   30.0          |
 
 
-Then, for example, T1 will be offering 40% of its generation in the first segment for a price of 36.0 \$/MWh and 60%  of its generation in the second segment for a price of 39.0 \$/MWh.
+Then, for example, T1 will be bidding 40% of its generation in the first segment for a price of 36.0 \$/MWh and 60%  of its generation in the second segment for a price of 39.0 \$/MWh.
 
 
 The heuristic bid will have the following structure:
 
 
-#### Price offer
+#### Price bid
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|
@@ -68,7 +68,7 @@ The heuristic bid will have the following structure:
 |   1    |    1     |     1     |      4      |    52.0 (T2) |
 
 
-#### Quantity offer
+#### Quantity bid
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|
@@ -118,7 +118,7 @@ Also, consider the following characteristics of the renewable units:
 As seen in the previous example for thermal units, the heuristic bid for this case will also be divided into segments, where the price for each segment corresponds to the operational cost of a renewable unit in the bidding group and the quantity for each segment corresponds to the expected generation of the renewable unit (in p.u.) multiplied by the maximum generation of the renewable unit.
 
 
-#### Price offer
+#### Price bid
 
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
@@ -133,7 +133,7 @@ As seen in the previous example for thermal units, the heuristic bid for this ca
 |   1    |    2     |     2     |      2      |     40      |
 
 
-#### Quantity offer
+#### Quantity bid
 
 | period | scenario | subperiod | bid_segment | bg_1 - bus_1 |
 |:------:|:--------:|:---------:|:-----------:|:------------:|

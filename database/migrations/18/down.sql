@@ -1,7 +1,9 @@
 PRAGMA user_version = 17;
 PRAGMA foreign_keys = ON;
 
-ALTER TABLE DemandUnit RENAME COLUMN curtailment_cost_flexible_demand TO curtailment_cost;
-ALTER TABLE DemandUnit RENAME COLUMN max_shift_up_flexible_demand TO max_shift_up;
-ALTER TABLE DemandUnit RENAME COLUMN max_shift_down_flexible_demand TO max_shift_down;
-ALTER TABLE DemandUnit RENAME COLUMN max_curtailment_flexible_demand TO max_curtailment;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN quantity_bid TO quantity_offer;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN price_bid TO price_offer;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN quantity_bid_profile TO quantity_offer_profile;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN price_bid_profile TO price_offer_profile;
+ALTER TABLE VirtualReservoir_time_series_files RENAME COLUMN quantity_bid TO quantity_offer;
+ALTER TABLE VirtualReservoir_time_series_files RENAME COLUMN price_bid TO price_offer;

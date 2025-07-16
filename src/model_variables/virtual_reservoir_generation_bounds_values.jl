@@ -59,8 +59,8 @@ function virtual_reservoir_generation_bounds_values!(
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
     # Time series
-    virtual_reservoir_quantity_offer_series =
-        time_series_virtual_reservoir_quantity_offer(inputs, model.node, scenario)
+    virtual_reservoir_quantity_bid_series =
+        time_series_virtual_reservoir_quantity_bid(inputs, model.node, scenario)
 
     # Variables
     virtual_reservoir_generation_upper_bound_value =
@@ -71,12 +71,12 @@ function virtual_reservoir_generation_bounds_values!(
     for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr),
         seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
 
-        if virtual_reservoir_quantity_offer_series[vr, ao, seg] >= 0.0
+        if virtual_reservoir_quantity_bid_series[vr, ao, seg] >= 0.0
             MOI.set(
                 model.jump_model,
                 POI.ParameterValue(),
                 virtual_reservoir_generation_upper_bound_value[vr, ao, seg],
-                virtual_reservoir_quantity_offer_series[vr, ao, seg],
+                virtual_reservoir_quantity_bid_series[vr, ao, seg],
             )
             MOI.set(
                 model.jump_model,
@@ -95,7 +95,7 @@ function virtual_reservoir_generation_bounds_values!(
                 model.jump_model,
                 POI.ParameterValue(),
                 virtual_reservoir_generation_lower_bound_value[vr, ao, seg],
-                virtual_reservoir_quantity_offer_series[vr, ao, seg],
+                virtual_reservoir_quantity_bid_series[vr, ao, seg],
             )
         end
     end

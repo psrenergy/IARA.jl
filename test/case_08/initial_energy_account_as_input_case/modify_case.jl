@@ -12,7 +12,7 @@ IARA.PSRDatabaseSQLite.update_vector_parameters!(
     [0.3, 0.7],
 )
 
-virtual_reservoir_quantity_offer = zeros(
+virtual_reservoir_quantity_bid = zeros(
     1, # number of virtual reservoirs
     2, # number of asset owners
     2, # number of segments
@@ -20,7 +20,7 @@ virtual_reservoir_quantity_offer = zeros(
     number_of_periods,
 )
 
-virtual_reservoir_price_offer = zeros(
+virtual_reservoir_price_bid = zeros(
     1, # number of virtual reservoirs
     2, # number of asset owners
     2, # number of segments
@@ -45,8 +45,8 @@ quantity_data = [
 
 for entry in quantity_data
     period, scenario, bid_segment, quantity_asset_owner_1, quantity_asset_owner_2 = entry
-    virtual_reservoir_quantity_offer[1, 1, bid_segment, scenario, period] = quantity_asset_owner_1
-    virtual_reservoir_quantity_offer[1, 2, bid_segment, scenario, period] = quantity_asset_owner_2
+    virtual_reservoir_quantity_bid[1, 1, bid_segment, scenario, period] = quantity_asset_owner_1
+    virtual_reservoir_quantity_bid[1, 2, bid_segment, scenario, period] = quantity_asset_owner_2
 end
 
 price_data = [
@@ -66,8 +66,8 @@ price_data = [
 
 for entry in price_data
     period, scenario, bid_segment, price_asset_owner_1, price_asset_owner_2 = entry
-    virtual_reservoir_price_offer[1, 1, bid_segment, scenario, period] = price_asset_owner_1
-    virtual_reservoir_price_offer[1, 2, bid_segment, scenario, period] = price_asset_owner_2
+    virtual_reservoir_price_bid[1, 1, bid_segment, scenario, period] = price_asset_owner_1
+    virtual_reservoir_price_bid[1, 2, bid_segment, scenario, period] = price_asset_owner_2
 end
 
 map = Dict(
@@ -75,8 +75,8 @@ map = Dict(
 )
 
 IARA.write_virtual_reservoir_bids_time_series_file(
-    joinpath(PATH, "vr_quantity_offer"),
-    virtual_reservoir_quantity_offer;
+    joinpath(PATH, "vr_quantity_bid"),
+    virtual_reservoir_quantity_bid;
     dimensions = ["period", "scenario", "bid_segment"],
     labels_virtual_reservoirs = ["virtual_reservoir_1"],
     labels_asset_owners = ["asset_owner_1", "asset_owner_2"],
@@ -92,8 +92,8 @@ IARA.write_virtual_reservoir_bids_time_series_file(
 )
 
 IARA.write_virtual_reservoir_bids_time_series_file(
-    joinpath(PATH, "vr_price_offer"),
-    virtual_reservoir_price_offer;
+    joinpath(PATH, "vr_price_bid"),
+    virtual_reservoir_price_bid;
     dimensions = ["period", "scenario", "bid_segment"],
     labels_virtual_reservoirs = ["virtual_reservoir_1"],
     labels_asset_owners = ["asset_owner_1", "asset_owner_2"],
@@ -111,11 +111,11 @@ IARA.write_virtual_reservoir_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "VirtualReservoir";
-    quantity_offer = "vr_quantity_offer",
-    price_offer = "vr_price_offer",
+    quantity_bid = "vr_quantity_bid",
+    price_bid = "vr_price_bid",
 )
 
-bidding_group_quantity_offer = zeros(
+bidding_group_quantity_bid = zeros(
     1, # number of bidding groups
     1, # number of buses
     1, # number of segments
@@ -124,7 +124,7 @@ bidding_group_quantity_offer = zeros(
     number_of_periods,
 )
 
-bidding_group_price_offer = zeros(
+bidding_group_price_bid = zeros(
     1, # number of bidding groups
     1, # number of buses
     1, # number of segments
@@ -156,7 +156,7 @@ quantity_data = [
 
 for entry in quantity_data
     period, scenario, subperiod, bid_segment, quantity = entry
-    bidding_group_quantity_offer[1, 1, bid_segment, subperiod, scenario, period] = quantity
+    bidding_group_quantity_bid[1, 1, bid_segment, subperiod, scenario, period] = quantity
 end
 
 price_data = [
@@ -167,12 +167,12 @@ price_data = [
 
 for entry in price_data
     period, scenario, subperiod, bid_segment, price = entry
-    bidding_group_price_offer[1, 1, bid_segment, subperiod, scenario, period] = price
+    bidding_group_price_bid[1, 1, bid_segment, subperiod, scenario, period] = price
 end
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bidding_group_1"],
     labels_buses = ["bus_1"],
@@ -188,8 +188,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bidding_group_1"],
     labels_buses = ["bus_1"],
@@ -206,8 +206,8 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )
 
 IARA.close_study!(db)

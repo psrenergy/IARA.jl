@@ -8,54 +8,54 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function bidding_group_generation_bound_by_offer! end
+function bidding_group_profile_generation_bound_by_bid! end
 
 """
-    bidding_group_generation_bound_by_offer!(
+    bidding_group_profile_generation_bound_by_bid!(
         model,
         inputs,
         run_time_options,
         ::Type{SubproblemBuild},
     )
 
-Add the bidding group generation bound by offer constraints to the model.
+Add the bidding group profile generation bound by bid constraints to the model.
 """
-function bidding_group_generation_bound_by_offer!(
+function bidding_group_profile_generation_bound_by_bid!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
     buses = index_of_elements(inputs, Bus)
-    bidding_groups =
-        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    # Define the bidding groups
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
     # Model variables
-    bidding_group_generation = get_model_object(model, :bidding_group_generation)
-    linear_combination_bid_segments = get_model_object(model, :linear_combination_bid_segments)
+    bidding_group_generation_profile = get_model_object(model, :bidding_group_generation_profile)
+    linear_combination_bid_segments_profile = get_model_object(model, :linear_combination_bid_segments_profile)
 
     # Model parameters
-    bidding_group_quantity_offer = get_model_object(model, :bidding_group_quantity_offer)
+    bidding_group_quantity_bid_profile = get_model_object(model, :bidding_group_quantity_bid_profile)
 
     # Model constraints
     @constraint(
         model.jump_model,
-        bidding_group_generation_bound_by_offer[
+        bidding_group_profile_generation_bound_by_bid_profile[
             blk in blks,
             bg in bidding_groups,
-            bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
+            prf in 1:number_of_valid_profiles(inputs, bg),
             bus in buses,
         ],
-        bidding_group_generation[blk, bg, bds, bus] ==
-        linear_combination_bid_segments[blk, bg, bds, bus] *
-        bidding_group_quantity_offer[blk, bg, bds, bus],
+        bidding_group_generation_profile[blk, bg, prf, bus] ==
+        linear_combination_bid_segments_profile[bg, prf] *
+        bidding_group_quantity_bid_profile[blk, bg, prf, bus],
     )
 
     return nothing
 end
 
-function bidding_group_generation_bound_by_offer!(
+function bidding_group_profile_generation_bound_by_bid!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -68,7 +68,7 @@ function bidding_group_generation_bound_by_offer!(
     return nothing
 end
 
-function bidding_group_generation_bound_by_offer!(
+function bidding_group_profile_generation_bound_by_bid!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -77,7 +77,7 @@ function bidding_group_generation_bound_by_offer!(
     return nothing
 end
 
-function bidding_group_generation_bound_by_offer!(
+function bidding_group_profile_generation_bound_by_bid!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,

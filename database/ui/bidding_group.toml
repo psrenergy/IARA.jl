@@ -41,36 +41,36 @@ label.en = "Segment Fraction"
 tooltip.en = "Segment fraction of the bidding group"
 
 [[attribute]]
-id = "quantity_offer"
+id = "quantity_bid"
 label.en = "Quantity Offer"
-tooltip.en = "Quantity of offers for independent segement bids"
+tooltip.en = "Quantity of bids for independent segement bids"
 unit.en = "GWh"
 hide = true
 
 [[attribute]]
-id = "price_offer"
+id = "price_bid"
 label.en = "Price Offer"
-tooltip.en = "Price of offers for independent segement bids"
+tooltip.en = "Price of bids for independent segement bids"
 unit.en = "$/MWh"
 
 [[attribute]]
-id = "quantity_offer_profile"
+id = "quantity_bid_profile"
 label.en = "Quantity Offer Profile"
-tooltip.en = "Quantity of offers for profile bids"
+tooltip.en = "Quantity of bids for profile bids"
 unit.en = "GWh"
 hide = true
 
 [[attribute]]
-id = "price_offer_profile"
+id = "price_bid_profile"
 label.en = "Price Offer Profile"
-tooltip.en = "Price of offers for profile bids"
+tooltip.en = "Price of bids for profile bids"
 unit.en = "$/MWh"
 hide = true
 
 [[attribute]]
 id = "parent_profile"
 label.en = "Parent Profile"
-tooltip.en = "Parent profile of this offer profile"
+tooltip.en = "Parent profile of this bid profile"
 hide = true
 
 [[attribute]]

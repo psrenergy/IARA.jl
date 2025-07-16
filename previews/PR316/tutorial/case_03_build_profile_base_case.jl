@@ -7,7 +7,7 @@
 # In the last two tutorials we have built cases with different components, including a hydro unit, and executed them in different run modes.
 # In this tutorial, we will focus on one of the three run modes that we have seen earlier: `MARKET_CLEARING`.
 
-# During `MARKET_CLEARING`, we have Asset Owners placing energy offers from their Bidding Groups.
+# During `MARKET_CLEARING`, we have Asset Owners placing energy bids from their Bidding Groups.
 # These bids are selected by the system to meet the demand at the lowest cost possible, considering the possible constraints that the problem might have.
 
 # A possible configuration that a bid can have is to have a profile bid, where the price for the energy is the same for all subperiods in the study.
@@ -121,38 +121,38 @@ IARA.add_bidding_group!(db;
     assetowner_id = "asset_owner_1",
 )
 
-# After adding the Bidding Groups, we can link the time series files for the price and quantity offers.
+# After adding the Bidding Groups, we can link the time series files for the price and quantity bids.
 # Let's take a look at each of these files before linking them.
 
 # ### Quantity Offer
 
-IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "quantity_offer.csv"))
+IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "quantity_bid.csv"))
 
 # ### Price Offer
 
-IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "price_offer.csv"))
+IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, "price_bid.csv"))
 
 #
 
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )
 
-# We have just added the time series for the independent bidding offers. Now let's check the profile bidding offers and link them to our case.
+# We have just added the time series for the independent bids. Now let's check the profile bids and link them to our case.
 
 # ### Quantity Offer
 
 IARA.time_series_dataframe(
-    joinpath(PATH_BASE_CASE, "quantity_offer_profile.csv"),
+    joinpath(PATH_BASE_CASE, "quantity_bid_profile.csv"),
 )
 
 # ### Price Offer
 
 IARA.time_series_dataframe(
-    joinpath(PATH_BASE_CASE, "price_offer_profile.csv"),
+    joinpath(PATH_BASE_CASE, "price_bid_profile.csv"),
 )
 
 #
@@ -160,8 +160,8 @@ IARA.time_series_dataframe(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer_profile = "quantity_offer_profile",
-    price_offer_profile = "price_offer_profile",
+    quantity_bid_profile = "quantity_bid_profile",
+    price_bid_profile = "price_bid_profile",
 )
 
 # ## Generation Units

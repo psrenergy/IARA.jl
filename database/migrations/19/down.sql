@@ -10,7 +10,7 @@ UPDATE Configuration SET bid_data_source = CASE
     WHEN bid_data_source = 3 THEN 1
     ELSE 0
 END;
-ALTER TABLE Configuration ADD COLUMN bidding_group_bid_validation;
+ALTER TABLE Configuration ADD COLUMN bidding_group_bid_validation INTEGER;
 UPDATE Configuration SET bidding_group_bid_validation = CASE
     WHEN bid_data_source = 0 THEN 0
     WHEN bid_data_source = 1 THEN 1

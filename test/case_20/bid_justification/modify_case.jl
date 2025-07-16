@@ -14,7 +14,7 @@ db = IARA.load_study(PATH; read_only = false)
 IARA.update_bidding_group!(
     db,
     "Azul";
-    bid_price_limit_source = IARA.BiddingGroup_BidPriceLimitSource.EXTERNAL_UNVALIDATED_BID,
+    bid_price_limit_source = IARA.BiddingGroup_BidPriceLimitSource.READ_FROM_FILE,
 )
 
 # Modify timeseries

@@ -634,13 +634,13 @@ end
 
 function use_bid_price_limits_from_file(inputs::AbstractInputs, bidding_group_index::Int)
     return bidding_group_bid_price_limit_source(inputs)[bidding_group_index] ==
-           BiddingGroup_BidPriceLimitSource.EXTERNAL_UNVALIDATED_BID
+           BiddingGroup_BidPriceLimitSource.READ_FROM_FILE
 end
 
 function must_read_bid_price_limit_file(inputs::AbstractInputs)
     return any(
         bidding_group_bid_price_limit_source(inputs) .==
-        BiddingGroup_BidPriceLimitSource.EXTERNAL_UNVALIDATED_BID,
+        BiddingGroup_BidPriceLimitSource.READ_FROM_FILE,
     ) && validate_bidding_group_bids(inputs)
 end
 

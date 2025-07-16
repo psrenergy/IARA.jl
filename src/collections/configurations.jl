@@ -46,7 +46,7 @@ Configurations for the problem.
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
     demand_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
-    bid_data_source::Configurations_BiddingGroupBidProcessing.T =
+    bid_data_processing::Configurations_BiddingGroupBidProcessing.T =
         Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID
     clearing_hydro_representation::Configurations_VirtualReservoirBidProcessing.T =
         Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
@@ -101,8 +101,6 @@ Configurations for the problem.
     bid_price_limit_markup_justified_independent::Float64 = 0.0
     bid_price_limit_low_reference::Float64 = 0.0
     bid_price_limit_high_reference::Float64 = 0.0
-    bidding_group_bid_validation::Configurations_BiddingGroupBidValidation.T =
-        Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
     purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
@@ -198,9 +196,9 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "demand_scenarios_files")[1],
             Configurations_UncertaintyScenariosFiles.T,
         )
-    configurations.bid_data_source =
+    configurations.bid_data_processing =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "bid_data_source")[1],
+            PSRI.get_parms(inputs.db, "Configuration", "bid_data_processing")[1],
             Configurations_BiddingGroupBidProcessing.T,
         )
     configurations.clearing_hydro_representation =
@@ -333,11 +331,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_low_reference")[1]
     configurations.bid_price_limit_high_reference =
         PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_high_reference")[1]
-    configurations.bidding_group_bid_validation =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "bidding_group_bid_validation")[1],
-            Configurations_BiddingGroupBidValidation.T,
-        )
     configurations.reference_curve_number_of_segments =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
@@ -520,7 +513,8 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
-    if configurations.bidding_group_bid_validation == Configurations_BiddingGroupBidValidation.VALIDATE
+    if configurations.bid_data_processing in [Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
+                                          Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID]
         if is_null(configurations.bid_price_limit_low_reference)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
@@ -1133,8 +1127,10 @@ function read_bids_from_file(inputs::AbstractInputs)
        construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
-    return inputs.collections.configurations.bid_data_source ==
-           Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID
+    return inputs.collections.configurations.bid_data_processing in
+           [Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
+            Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID
+           ]
 end
 
 """
@@ -1156,8 +1152,11 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
        construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
-    return inputs.collections.configurations.bid_data_source ==
-           Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID
+    return inputs.collections.configurations.bid_data_processing in
+        [
+           Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
+           Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
+        ]
 end
 
 function is_any_construction_type_cost_based(
@@ -1192,11 +1191,11 @@ function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_option
 end
 
 """
-    bid_data_source(inputs::AbstractInputs)
+    bid_data_processing(inputs::AbstractInputs)
 
 Return the clearing bid source.
 """
-bid_data_source(inputs::AbstractInputs) = inputs.collections.configurations.bid_data_source
+bid_data_processing(inputs::AbstractInputs) = inputs.collections.configurations.bid_data_processing
 
 """
     clearing_hydro_representation(inputs::AbstractInputs)
@@ -1613,6 +1612,9 @@ function is_skipped(inputs::AbstractInputs, construction_type::String)
 end
 
 function validate_bidding_group_bids(inputs::AbstractInputs)
-    return inputs.collections.configurations.bidding_group_bid_validation ==
-           Configurations_BiddingGroupBidValidation.VALIDATE
+    return inputs.collections.configurations.bid_data_processing in
+           [
+               Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
+               Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
+           ]
 end

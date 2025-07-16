@@ -499,7 +499,7 @@ function time_series_quantity_offer(
         quantity_view.data = quantity_offer
         return quantity_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -545,7 +545,7 @@ function time_series_price_offer(
         price_view.data = price_offer
         return price_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -567,7 +567,7 @@ function time_series_quantity_offer_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Quantity offer profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -589,7 +589,7 @@ function time_series_price_offer_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Price offer profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -611,7 +611,7 @@ function time_series_parent_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Parent profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -633,7 +633,7 @@ function time_series_complementary_grouping_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Complementary grouping profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -655,7 +655,7 @@ function time_series_minimum_activation_level_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Minimum activation level profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 """
@@ -697,7 +697,7 @@ function time_series_virtual_reservoir_quantity_offer(
         quantity_view.data = quantity_offer
         return quantity_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -740,7 +740,7 @@ function time_series_virtual_reservoir_price_offer(
         price_view.data = price_offer
         return price_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 

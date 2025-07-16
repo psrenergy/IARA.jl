@@ -506,7 +506,7 @@ end
   - `UNIFORM_ACROSS_RESERVOIRS`: Uniform volume percentage (1)
 """
 @enumx Configurations_VRCurveguideDataSource begin
-    EXTERNAL_UNVALIDATED_BID = 0
+    READ_FROM_FILE = 0
     UNIFORM_ACROSS_RESERVOIRS = 1
 end
 
@@ -532,11 +532,6 @@ end
     CALCULATED_USING_ENERGY_ACCOUNT_SHARES = 1
 end
 
-@enumx Configurations_BiddingGroupBidValidation begin
-    DO_NOT_VALIDATE = 0
-    VALIDATE = 1
-end
-
 @enumx Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid begin
     DO_NOT_CONSIDER = 0
     CONSIDER = 1
@@ -544,5 +539,5 @@ end
 
 @enumx BiddingGroup_BidPriceLimitSource begin
     DEFAULT_LIMIT = 0
-    EXTERNAL_UNVALIDATED_BID = 1
+    READ_FROM_FILE = 1
 end

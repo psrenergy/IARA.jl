@@ -58,11 +58,11 @@ label.en = "Average"
 id = 2
 label.en = "Last Value"
 
-[[bid_data_source]]
+[[bid_data_processing]]
 id = 0
 label.en = "Read From File"
 
-[[bid_data_source]]
+[[bid_data_processing]]
 id = 1
 label.en = "Price Taker Heuristics"
 

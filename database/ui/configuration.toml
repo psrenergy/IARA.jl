@@ -93,9 +93,9 @@ tooltip.en = "PARP max lags of the configuration"
 hide = true
 
 [[attribute]]
-id = "bid_data_source"
+id = "bid_data_processing"
 type = "enum"
-enum = "bid_data_source"
+enum = "bid_data_processing"
 label.en = "Bid Data Source"
 tooltip.en = "Bid data source of the configuration"
 hide = true

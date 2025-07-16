@@ -44,7 +44,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
     settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
-    bid_data_source = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     market_clearing_tiebreaker_weight = 0.0,
 )

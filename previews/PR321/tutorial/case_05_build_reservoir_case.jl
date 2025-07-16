@@ -220,11 +220,11 @@ IARA.link_time_series_to_file(
 #
 
 IARA.time_series_dataframe(
-    joinpath(PATH_CASE, "virtual_reservoir_energy_offer.csv"),
+    joinpath(PATH_CASE, "virtual_reservoir_energy_bid.csv"),
 )
 
 IARA.time_series_dataframe(
-    joinpath(PATH_CASE, "virtual_reservoir_price_offer.csv"),
+    joinpath(PATH_CASE, "virtual_reservoir_price_bid.csv"),
 )
 
 #
@@ -232,8 +232,8 @@ IARA.time_series_dataframe(
 IARA.link_time_series_to_file(
     db,
     "VirtualReservoir";
-    quantity_offer = "virtual_reservoir_energy_offer",
-    price_offer = "virtual_reservoir_price_offer",
+    quantity_bid = "virtual_reservoir_energy_bid",
+    price_bid = "virtual_reservoir_price_bid",
 )
 
 # ## Closing the study

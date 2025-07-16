@@ -1,6 +1,6 @@
 # Hydro reference curve 
 
-The hydro reference curve seeks to draw the aggregate offer curve for each virtual reservoir for a given period and scenario, defining price and quantity levels. These results are later used for the heuristic bidding of virtual reservoirs.
+The hydro reference curve seeks to draw the aggregate bid curve for each virtual reservoir for a given period and scenario, defining price and quantity levels. These results are later used for the heuristic bidding of virtual reservoirs.
 
 The maximum energy generation in the period and scenario is determined by the amount of stored energy and the turbine limits of the reservoirs. A set of multipliers $\Theta$ is defined, ranging uniformly from 0 to 1, and the amount of elements is defined by the user. Each multiplier $\theta \in \Theta$ is applied to the maximum amount of available energy. For each value of the multiplier $\theta$, a single optimization model $Z(\theta)$ is run, which returns the quantity $q_r^*$ for each virtual reservoir and the price $\mu$ in the scenario considered.
 
@@ -109,7 +109,7 @@ The markup vectors for asset owner $i$ form a set of pairs $(s_{i,f}, m_{i,f})_{
 
 ![Risk factor over account share](./assets/risk_factor_account_share.png)
 
-We aim to understand the relationship between energy offer and the risk factor by examining how the energy offer influences the share of the energy account. As the energy offer increases, the share of the energy account may decrease. In this context, the risk factor is dynamic and varies depending on the energy offer and the consequential share of the energy account. The following calculated parameters are used:
+We aim to understand the relationship between energy bid and the risk factor by examining how the energy bid influences the share of the energy account. As the energy bid increases, the share of the energy account may decrease. In this context, the risk factor is dynamic and varies depending on the energy bid and the consequential share of the energy account. The following calculated parameters are used:
 
 - ``E_{r,i}``: Energy account of asset owner $i$ in virtual reservoir $r$, considering the initial energy account and the inflow, $E_{r,i} = E^{in}_{r,i} + e^{inflow}_r \cdot \gamma^{VR}_{r,i}$, where $e^{inflow}_r$ is the inflow energy of virtual reservoir $r$ and $\gamma^{VR}_{r,i}$ is the inflow share of asset owner $i$ in virtual reservoir $r$.
 - ``T``: Sum of the energy accounts of all asset owners in the virtual reservoir $r$, $T = \sum_{i \in I^{VR}(r)} E_{r,i}$.
@@ -117,21 +117,21 @@ We aim to understand the relationship between energy offer and the risk factor b
 - ``j_{S_i}``: Index of the first risk factor above the share $S_i$ of asset owner $i$. $j_{S_i} = \min\{f \mid s_{i,f} \ge S_i\}$.
 - ``n_i``: Number of risk factors for asset owner $i$, $n_i = |F^{AO}(i)|$.
 
-The energy account share as a function of the energy offer is $s(q) = \frac{E_{r,i} - q}{T} = S_i - \frac{q}{T}$.
+The energy account share as a function of the energy bid is $s(q) = \frac{E_{r,i} - q}{T} = S_i - \frac{q}{T}$.
 
 For our example, considering $S_i = 10$, $T=12.5$, the image below shows the graph of the function.
 
-![Account share over energy offer](./assets/account_share_energy_offer.png)
+![Account share over energy bid](./assets/account_share_energy_bid.png)
 
-If $f(s)$ is the risk factor as a function of the share $s$, then $f(s(q))$ will give us the risk factor as a function of the energy offer $q$. Intuitively, we take the graph of the function $f(s)$, mirror it on a vertical axis so the domain remains the same, stretch it to the right by a factor of $T$, and then shift it to the left by $T - E_{r,i}$. The image below shows the graph of the function $f(s(q))$ for our example.
+If $f(s)$ is the risk factor as a function of the share $s$, then $f(s(q))$ will give us the risk factor as a function of the energy bid $q$. Intuitively, we take the graph of the function $f(s)$, mirror it on a vertical axis so the domain remains the same, stretch it to the right by a factor of $T$, and then shift it to the left by $T - E_{r,i}$. The image below shows the graph of the function $f(s(q))$ for our example.
 
-![Risk factor over energy offer](./assets/risk_factor_energy_offer.png)
+![Risk factor over energy bid](./assets/risk_factor_energy_bid.png)
 
-Additionally, for the negative side of the energy offer, we apply the purchase discount rate $o_i$ to the risk factor, which is $o_i = 0.1$ in our example. The image below shows the final graph of the risk factor as a function of the energy offer for our example.
+Additionally, for the negative side of the energy bid, we apply the purchase discount rate $o_i$ to the risk factor, which is $o_i = 0.1$ in our example. The image below shows the final graph of the risk factor as a function of the energy bid for our example.
 
-![Risk factor over energy offer discounted](./assets/risk_factor_energy_offer_discounted.png)
+![Risk factor over energy bid discounted](./assets/risk_factor_energy_bid_discounted.png)
 
-The pair of vectors $m', s'$ representing the risk factors and the energy offer segments for asset owner $i$ are defined as follows:
+The pair of vectors $m', s'$ representing the risk factors and the energy bid segments for asset owner $i$ are defined as follows:
 
 ```math
 \{(s'_{i,f}, m'_{i,f})\}_{f \in F^{AO}(i)} = \begin{bmatrix}
@@ -148,7 +148,7 @@ The pair of vectors $m', s'$ representing the risk factors and the energy offer 
 \end{bmatrix}
 ```
 
-Note that the energy offer segment $(s'_{i,f})$ represents the length of the corresponding segment in the graph. This way, for our example, where $j_{S_i} = 3$, the pair of vectors for asset owner $i$ is $s'_{i,f} = \{-2.5, 2.5, 6.25, 1.25\}$ and $m'_{i,f} = \{-0.3, -0.2, 0.05, 0.3\}$.
+Note that the energy bid segment $(s'_{i,f})$ represents the length of the corresponding segment in the graph. This way, for our example, where $j_{S_i} = 3$, the pair of vectors for asset owner $i$ is $s'_{i,f} = \{-2.5, 2.5, 6.25, 1.25\}$ and $m'_{i,f} = \{-0.3, -0.2, 0.05, 0.3\}$.
 
 ## Adjust hydro reference curve for asset owner $i$
 
@@ -162,7 +162,7 @@ We want to adjust the hydro reference curve for asset owner $i$ to let it be pro
 q'_{r,i,g} = Q_{r,g} \cdot S_i
 ```
 
-Also, we want to have a price for buying energy, so we extend the hydro reference curve to the negative side of the energy offer. This is done by adding a segment with the same price as the first point of the hydro reference curve, but with a quantity equal to the negative difference between the energy account of asset owner $i$ and the sum of energy accounts. This negative segment represents all the available energy that asset owner $i$ can buy from the virtual reservoir $r$.
+Also, we want to have a price for buying energy, so we extend the hydro reference curve to the negative side of the energy bid. This is done by adding a segment with the same price as the first point of the hydro reference curve, but with a quantity equal to the negative difference between the energy account of asset owner $i$ and the sum of energy accounts. This negative segment represents all the available energy that asset owner $i$ can buy from the virtual reservoir $r$.
 
 ```math
 q'_{r,i,0} = E_{r,i} - T \quad \text{and} \quad P'_{r,i,0} = P_{r,1}
@@ -193,7 +193,7 @@ Once we have the reference price and the markup for each quantity segment, we ca
 
 ![Final curve](./assets/final_curve.png)
 
-To calculate the vectors that represent the quantity bidding segments for asset owner $i$, we get the vectors of the adjusted hydro reference curve $q'_{r,i,g}$ and the adjusted markup energy offer segments $s'_{i,f}$.
+To calculate the vectors that represent the quantity bidding segments for asset owner $i$, we get the vectors of the adjusted hydro reference curve $q'_{r,i,g}$ and the adjusted markup energy bid segments $s'_{i,f}$.
 
 Based on the quantity segments $q'_{r,i,g}$, we define the segment boundaries $Q'_{r,i,g}$, where the price $P'_{r,i,g}$ is applied in the interval $[Q'_{r,i,g}, Q'_{r,i,g+1})$. The boundaries are defined as follows:
 
@@ -211,9 +211,9 @@ S'^- = \left[\sum_{f \in F^{AO}(i), f \ge h} s'_{i,f}\right]_{h \in F^{AO}(i), s
 S' = \left[ S'^-; 0; S'^+ \right]
 ```
 
-This way, the boundaries that represent the quantity offer at the heuristic bid are defined by $\{Q_{r,i,k}^{VR}\}_{k \in K(r, i)} =  Q' \cup S'$.
+This way, the boundaries that represent the quantity bid at the heuristic bid are defined by $\{Q_{r,i,k}^{VR}\}_{k \in K(r, i)} =  Q' \cup S'$.
 
-To find the quantity offer of each segment $k$, we calculate:
+To find the quantity bid of each segment $k$, we calculate:
 
 ```math
 q^{VR}_{r,i,k} = Q^{VR}_{r,i,k+1} - Q^{VR}_{r,i,k}
@@ -235,10 +235,10 @@ The **Supply Security Agent** is a special type of asset owner that acts as a sa
 - It cannot be associated with any bidding group, meaning it does not own any units.
 - For each virtual reservoir $r$, the inflow share of the supply security agent must be zero, i.e., $\gamma^{VR}_{r, i} = 0$.
 
-The role of the supply security agent is to mitigate risks arising from the actions of other asset owners in the virtual reservoir. If the other asset owners in the virtual reservoir $r$ are selling too much energy at a low price, this could deplete the reservoir too quickly, creating a risk of failing to meet future demand. In such cases, the supply security agent will place **buying offers** at a price higher than or equal to the prices of the other asset owners, effectively increasing its own energy account and reducing the rate at which water is withdrawn from the reservoir.
+The role of the supply security agent is to mitigate risks arising from the actions of other asset owners in the virtual reservoir. If the other asset owners in the virtual reservoir $r$ are selling too much energy at a low price, this could deplete the reservoir too quickly, creating a risk of failing to meet future demand. In such cases, the supply security agent will place **buying bids** at a price higher than or equal to the prices of the other asset owners, effectively increasing its own energy account and reducing the rate at which water is withdrawn from the reservoir.
 
-Conversely, if the other asset owners are selling energy at excessively high prices, the supply security agent will place **selling offers** at lower prices, ensuring fairer prices for consumers.
+Conversely, if the other asset owners are selling energy at excessively high prices, the supply security agent will place **selling bids** at lower prices, ensuring fairer prices for consumers.
 
 The determination of "too cheap" and "too expensive" is based on the future cost of water, ensuring the agent's actions are aligned with the long-term sustainability of the system, as presented in the hydro reference curve. 
 
-To ensure the supply security agent behaves as expected, the user can either define the markup vectors for the agent’s heuristic bid, as described above, or specify the offers in an external file.
+To ensure the supply security agent behaves as expected, the user can either define the markup vectors for the agent’s heuristic bid, as described above, or specify the bids in an external file.

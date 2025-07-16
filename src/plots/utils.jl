@@ -1,40 +1,40 @@
-function get_offer_file_paths(inputs::AbstractInputs)
-    offer_files = String[]
+function get_bid_file_paths(inputs::AbstractInputs)
+    bid_files = String[]
     if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup)
         if read_bids_from_file(inputs)
-            push!(offer_files, joinpath(path_case(inputs), bidding_group_quantity_offer_file(inputs) * ".csv"))
-            push!(offer_files, joinpath(path_case(inputs), bidding_group_price_offer_file(inputs) * ".csv"))
+            push!(bid_files, joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs) * ".csv"))
+            push!(bid_files, joinpath(path_case(inputs), bidding_group_price_bid_file(inputs) * ".csv"))
         elseif generate_heuristic_bids_for_clearing(inputs)
             push!(
-                offer_files,
-                joinpath(output_path(inputs), "bidding_group_energy_offer_period_$(inputs.args.period).csv"),
+                bid_files,
+                joinpath(output_path(inputs), "bidding_group_energy_bid_period_$(inputs.args.period).csv"),
             )
             push!(
-                offer_files,
-                joinpath(output_path(inputs), "bidding_group_price_offer_period_$(inputs.args.period).csv"),
+                bid_files,
+                joinpath(output_path(inputs), "bidding_group_price_bid_period_$(inputs.args.period).csv"),
             )
         end
-        @assert all(isfile.(offer_files)) "Offer files not found: $(offer_files)"
+        @assert all(isfile.(bid_files)) "Offer files not found: $(bid_files)"
         no_markup_price_folder = if read_bids_from_file(inputs)
             path_case(inputs)
         else
             output_path(inputs)
         end
         no_markup_price_path =
-            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_offer_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_bid_period_$(inputs.args.period).csv")
         no_markup_quantity_path =
-            joinpath(no_markup_price_folder, "bidding_group_no_markup_energy_offer_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_energy_bid_period_$(inputs.args.period).csv")
         if isfile(no_markup_price_path) && isfile(no_markup_quantity_path)
-            push!(offer_files, no_markup_price_path)
-            push!(offer_files, no_markup_quantity_path)
+            push!(bid_files, no_markup_price_path)
+            push!(bid_files, no_markup_quantity_path)
         else
             @warn(
-                "Reference price and quantity offer files not found: $(no_markup_price_path), $(no_markup_quantity_path)"
+                "Reference price and quantity bid files not found: $(no_markup_price_path), $(no_markup_quantity_path)"
             )
         end
     end
 
-    return offer_files
+    return bid_files
 end
 
 function plot_title_from_filename(inputs::AbstractInputs, filename::String)

@@ -229,44 +229,44 @@ function build_ui_general_plots(
     end
 
     # Offer curve
-    plot_offer_curve(inputs, plots_path)
+    plot_bid_curve(inputs, plots_path)
 
     return nothing
 end
 
-function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
-    offer_files = get_offer_file_paths(inputs)
-    if !isempty(offer_files)
+function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
+    bid_files = get_bid_file_paths(inputs)
+    if !isempty(bid_files)
         plot_no_markup_price = false
-        quantity_offer_file = offer_files[1]
-        price_offer_file = offer_files[2]
-        if length(offer_files) == 4
-            no_markup_price_offer_file = offer_files[3]
-            no_markup_quantity_offer_file = offer_files[4]
+        quantity_bid_file = bid_files[1]
+        price_bid_file = bid_files[2]
+        if length(bid_files) == 4
+            no_markup_price_bid_file = bid_files[3]
+            no_markup_quantity_bid_file = bid_files[4]
             plot_no_markup_price = true
         end
 
-        quantity_data, quantity_metadata = read_timeseries_file(quantity_offer_file)
-        price_data, price_metadata = read_timeseries_file(price_offer_file)
+        quantity_data, quantity_metadata = read_timeseries_file(quantity_bid_file)
+        price_data, price_metadata = read_timeseries_file(price_bid_file)
         if plot_no_markup_price
-            no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_offer_file)
-            no_markup_quantity_data, no_markup_quantity_metadata = read_timeseries_file(no_markup_quantity_offer_file)
+            no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_bid_file)
+            no_markup_quantity_data, no_markup_quantity_metadata = read_timeseries_file(no_markup_quantity_bid_file)
         end
 
-        @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price offer file columns"
-        @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price offer file dimensions"
-        @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
+        @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price bid file columns"
+        @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price bid file dimensions"
+        @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price bid file labels"
         if plot_no_markup_price
             # Compare the price files
-            @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
+            @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price bid file columns"
             # The number of periods in the reference price file is always 1
             # The number of bid segments does not need to match
-            @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price offer file dimensions"
-            @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price offer file labels"
+            @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price bid file dimensions"
+            @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price bid file labels"
             # Compare both "no_markup" files
-            @assert no_markup_price_metadata.number_of_time_series == no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity offer file columns"
-            @assert no_markup_price_metadata.dimension_size == no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity offer file dimensions"
-            @assert no_markup_price_metadata.labels == no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity offer file labels"
+            @assert no_markup_price_metadata.number_of_time_series == no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity bid file columns"
+            @assert no_markup_price_metadata.dimension_size == no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity bid file dimensions"
+            @assert no_markup_price_metadata.labels == no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity bid file labels"
         end
 
         num_labels = quantity_metadata.number_of_time_series
@@ -372,14 +372,14 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 
             configs = Vector{Config}()
 
-            title = get_name(inputs, "available_offers")
+            title = get_name(inputs, "available_bids")
             if num_subperiods > 1
                 title *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
             color_idx = 0
             for bus in 1:num_buses
                 color_idx += 1
-                name = get_name(inputs, "offers")
+                name = get_name(inputs, "bids")
                 if num_buses > 1
                     name *= " - $(bus_label(inputs, bus))"
                 end
@@ -515,7 +515,7 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
                 ),
             )
 
-            _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "offer_curve_subperiod_$subperiod.html"))
+            _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "bid_curve_subperiod_$subperiod.html"))
         end
     end
 

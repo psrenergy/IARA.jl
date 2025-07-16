@@ -351,7 +351,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 for scenario in 1:number_of_scenarios(inputs)
                     # Update the time series in the external files to the current period and scenario
                     update_time_series_views_from_external_files!(inputs; period, scenario)
-                    markup_offers_for_period_scenario(
+                    markup_bids_for_period_scenario(
                         inputs,
                         run_time_options,
                         period,
@@ -509,7 +509,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             for scenario in 1:number_of_scenarios(inputs)
                 # Update the time series in the external files to the current period and scenario
                 update_time_series_views_from_external_files!(inputs; period, scenario)
-                markup_offers_for_period_scenario(
+                markup_bids_for_period_scenario(
                     inputs,
                     run_time_options,
                     period,
@@ -754,7 +754,7 @@ function single_period_heuristic_bid(
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
             update_time_series_views_from_external_files!(inputs; period, scenario)
-            markup_offers_for_period_scenario(
+            markup_bids_for_period_scenario(
                 inputs,
                 run_time_options,
                 period,

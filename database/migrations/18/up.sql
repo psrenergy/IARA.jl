@@ -1,7 +1,9 @@
 PRAGMA user_version = 18;
 PRAGMA foreign_keys = ON;
 
-ALTER TABLE Configuration DROP COLUMN price_limits;
-ALTER TABLE Configuration RENAME COLUMN bid_data_source TO bid_data_processing;
-UPDATE Configuration SET bid_data_processing = 2 WHERE bid_data_processing = 1;
-UPDATE Configuration SET make_whole_payments = 0;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN quantity_offer TO quantity_bid;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN price_offer TO price_bid;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN quantity_offer_profile TO quantity_bid_profile;
+ALTER TABLE BiddingGroup_time_series_files RENAME COLUMN price_offer_profile TO price_bid_profile;
+ALTER TABLE VirtualReservoir_time_series_files RENAME COLUMN quantity_offer TO quantity_bid;
+ALTER TABLE VirtualReservoir_time_series_files RENAME COLUMN price_offer TO price_bid;

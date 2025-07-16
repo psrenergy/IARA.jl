@@ -69,11 +69,11 @@ function validate_bids_for_period_scenario(
     bid_justification_status = zeros(Int, length(inputs.collections.bidding_group))
     if has_any_simple_bids(inputs)
         independent_bid_limit_violation_status = zeros(Int, length(inputs.collections.bidding_group))
-        independent_bids_price = time_series_price_offer(inputs, period, scenario)
+        independent_bids_price = time_series_price_bid(inputs, period, scenario)
     end
     if has_any_profile_bids(inputs)
         profile_bid_limit_violation_status = zeros(Int, length(inputs.collections.bidding_group))
-        profile_bids_price = time_series_price_offer_profile(inputs, period, scenario)
+        profile_bids_price = time_series_price_bid_profile(inputs, period, scenario)
     end
 
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])

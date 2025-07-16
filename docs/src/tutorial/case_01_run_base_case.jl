@@ -114,11 +114,11 @@ IARA.market_clearing(
 # Let's take a look into some of the plots generated automatically.
 
 # ```@raw html
-# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe>
+# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_bid_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
 # ```@raw html
-# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe>
+# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_bid_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
 # ```@raw html

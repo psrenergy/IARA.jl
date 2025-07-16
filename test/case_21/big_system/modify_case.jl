@@ -139,11 +139,11 @@ IARA.write_timeseries_file(
 )
 
 # Bids
-new_quantity_offer = cat(quantity_offer, quantity_offer; dims = 1)
-new_price_offer = cat(price_offer, price_offer; dims = 1)
+new_quantity_bid = cat(quantity_bid, quantity_bid; dims = 1)
+new_price_bid = cat(price_bid, price_bid; dims = 1)
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    new_quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    new_quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel", "Portfolio 2", "Termico 2", "Renovavel 2"],
     labels_buses = ["Sistema"],
@@ -159,8 +159,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    new_price_offer;
+    joinpath(PATH, "price_bid"),
+    new_price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel", "Portfolio 2", "Termico 2", "Renovavel 2"],
     labels_buses = ["Sistema"],
@@ -177,11 +177,11 @@ IARA.write_bids_time_series_file(
 
 # No-markup bids
 # --------------
-new_no_markup_price_offer = cat(no_markup_price_offer, no_markup_price_offer; dims = 1)
-new_no_markup_energy_offer = cat(no_markup_energy_offer, no_markup_energy_offer; dims = 1)
+new_no_markup_price_bid = cat(no_markup_price_bid, no_markup_price_bid; dims = 1)
+new_no_markup_energy_bid = cat(no_markup_energy_bid, no_markup_energy_bid; dims = 1)
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "bidding_group_no_markup_energy_offer_period_1"),
-    new_no_markup_energy_offer;
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_1"),
+    new_no_markup_energy_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel", "Portfolio 2", "Termico 2", "Renovavel 2"],
     labels_buses = ["Sistema"],
@@ -197,8 +197,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "bidding_group_no_markup_price_offer_period_1"),
-    new_no_markup_price_offer;
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_1"),
+    new_no_markup_price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Portfolio", "Termico", "Renovavel", "Portfolio 2", "Termico 2", "Renovavel 2"],
     labels_buses = ["Sistema"],

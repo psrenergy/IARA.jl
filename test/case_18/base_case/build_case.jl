@@ -196,7 +196,7 @@ nominal_demand = demand * max_demand
 max_thermal_generation = 6.0
 max_renewable_generation = 4.0
 
-quantity_offer =
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -205,13 +205,13 @@ quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-quantity_offer[1, 1, 1, :, :, :] .= max_thermal_generation
-quantity_offer[1, 1, 2, :, :, :] .= max_renewable_generation .* renewable_generation[1, :, :, :]
-quantity_offer[2, 1, 1, :, :, :] = -new_demand[2, :, :, :]
+quantity_bid[1, 1, 1, :, :, :] .= max_thermal_generation
+quantity_bid[1, 1, 2, :, :, :] .= max_renewable_generation .* renewable_generation[1, :, :, :]
+quantity_bid[2, 1, 1, :, :, :] = -new_demand[2, :, :, :]
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2"],
     labels_buses = ["bus_1"],
@@ -221,7 +221,7 @@ IARA.write_bids_time_series_file(
     unit = "MWh",
 )
 
-price_offer = zeros(
+price_bid = zeros(
     number_of_bidding_groups,
     number_of_buses,
     maximum_number_of_bidding_segments,
@@ -229,14 +229,14 @@ price_offer = zeros(
     number_of_scenarios,
     number_of_periods,
 )
-price_offer[1, 1, 1, :, :, :] .= 100
-price_offer[1, 1, 2, :, :, :] .= 10
-price_offer[2, 1, 1, :, 1, :] .= 90
-price_offer[2, 1, 1, :, 2, :] .= 110
+price_bid[1, 1, 1, :, :, :] .= 100
+price_bid[1, 1, 2, :, :, :] .= 10
+price_bid[2, 1, 1, :, 1, :] .= 90
+price_bid[2, 1, 1, :, 2, :] .= 110
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2"],
     labels_buses = ["bus_1"],
@@ -249,6 +249,6 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )

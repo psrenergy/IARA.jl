@@ -51,8 +51,8 @@ function list_case_configurations(inputs::IARA.AbstractInputs)
         "number_of_subperiods" => IARA.number_of_subperiods(inputs),
         "initial_date_time" => replace(string(IARA.initial_date_time(inputs)), "T" => " "),
         "period_type" => IARA.period_type_string(IARA.time_series_step(inputs)),
-        "price_offer_file" => IARA.bidding_group_price_offer_file(inputs),
-        "quantity_offer_file" => IARA.bidding_group_quantity_offer_file(inputs),
+        "price_bid_file" => IARA.bidding_group_price_bid_file(inputs),
+        "quantity_bid_file" => IARA.bidding_group_quantity_bid_file(inputs),
         "demand_deficit_cost" => IARA.demand_deficit_cost(inputs),
     )
 end

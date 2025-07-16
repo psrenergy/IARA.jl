@@ -138,8 +138,8 @@ IARA.link_time_series_to_file(
     demand_ex_ante = "demand",
 )
 
-# Quantity and price offers
-quantity_offer =
+# Quantity and price bids
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         maximum_number_of_bidding_segments,
@@ -149,14 +149,14 @@ quantity_offer =
         number_of_periods,
     )
 for scenario in 1:number_of_scenarios
-    quantity_offer[:, 1, 1, :, scenario, :] .= 6 - scenario
+    quantity_bid[:, 1, 1, :, scenario, :] .= 6 - scenario
     for seg in 1:maximum_number_of_bidding_segments
-        quantity_offer[1, seg, 2, :, scenario, :] .= (seg / 2) * (scenario + 1)
+        quantity_bid[1, seg, 2, :, scenario, :] .= (seg / 2) * (scenario + 1)
     end
 end
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1"],
     labels_buses = ["bus_1", "bus_2"],
@@ -171,7 +171,7 @@ IARA.write_bids_time_series_file(
     unit = "MWh",
 )
 
-price_offer = zeros(
+price_bid = zeros(
     number_of_bidding_groups,
     number_of_buses,
     maximum_number_of_bidding_segments,
@@ -179,14 +179,14 @@ price_offer = zeros(
     number_of_scenarios,
     number_of_periods,
 )
-price_offer[1, 1, 1, :, :, :] .= 100
-price_offer[1, 2, 1, :, :, :] .= 90
-price_offer[1, 1, 2, :, :, :] .= 80
-price_offer[1, 2, 2, :, :, :] .= 70
+price_bid[1, 1, 1, :, :, :] .= 100
+price_bid[1, 2, 1, :, :, :] .= 90
+price_bid[1, 1, 2, :, :, :] .= 80
+price_bid[1, 2, 2, :, :, :] .= 70
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1"],
     labels_buses = ["bus_1", "bus_2"],
@@ -203,8 +203,8 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )
 
 IARA.close_study!(db)

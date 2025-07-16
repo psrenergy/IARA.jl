@@ -54,7 +54,7 @@ M^j = M^{j}_p
 
 ## Bid Price Limits
 
-Given the reference price, the maximum markup without justification, and the maximum markup with justification, the price offers are validated as follows:
+Given the reference price, the maximum markup without justification, and the maximum markup with justification, the price bids are validated as follows:
 
 1. If the bid price is below the non justified limit ($P \le P^{ref} \cdot (1 + M^n)$), the bid is considered valid.
 2. If the bid price is above the non justified limit, but below the justified limit ($ P^{ref} \cdot (1+M^n) \le P \le P^{ref} \cdot (1 + M^j)$), the bid is considered valid if a justification is provided.

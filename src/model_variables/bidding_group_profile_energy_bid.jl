@@ -8,14 +8,14 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function bidding_group_profile_energy_offer! end
+function bidding_group_profile_energy_bid! end
 
 """
-    bidding_group_profile_energy_offer!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+    bidding_group_profile_energy_bid!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
 
-Add the bidding group profile energy offer variables to the model.
+Add the bidding group profile energy bid variables to the model.
 """
-function bidding_group_profile_energy_offer!(
+function bidding_group_profile_energy_bid!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -27,29 +27,29 @@ function bidding_group_profile_energy_offer!(
     blks = subperiods(inputs)
 
     placeholder_scenario = 1
-    quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.node, placeholder_scenario)
-    price_offer_profile_series = time_series_price_offer_profile(inputs, model.node, placeholder_scenario)
+    quantity_bid_profile_series = time_series_quantity_bid_profile(inputs, model.node, placeholder_scenario)
+    price_bid_profile_series = time_series_price_bid_profile(inputs, model.node, placeholder_scenario)
 
     # Variables
     @variable(
         model.jump_model,
-        bidding_group_quantity_offer_profile[
+        bidding_group_quantity_bid_profile[
             blk in blks,
             bg in bidding_groups,
             prf in 1:number_of_valid_profiles(inputs, bg),
             bus in buses,
         ]
         in
-        MOI.Parameter(quantity_offer_profile_series[bg, bus, prf, blk])
+        MOI.Parameter(quantity_bid_profile_series[bg, bus, prf, blk])
     ) # MWh
     @variable(
         model.jump_model,
-        bidding_group_price_offer_profile[
+        bidding_group_price_bid_profile[
             bg in bidding_groups,
             prf in 1:number_of_valid_profiles(inputs, bg),
         ]
         in
-        MOI.Parameter(price_offer_profile_series[bg, prf])
+        MOI.Parameter(price_bid_profile_series[bg, prf])
     ) # $/MWh
 
     # Variables
@@ -75,27 +75,27 @@ function bidding_group_profile_energy_offer!(
     # Objective function
     @expression(
         model.jump_model,
-        accepted_offers_profile_cost[
+        accepted_bids_profile_cost[
             blk in blks,
             bg in bidding_groups,
             prf in 1:number_of_valid_profiles(inputs, bg),
             bus in buses,
         ],
         bidding_group_generation_profile[blk, bg, prf, bus] *
-        bidding_group_price_offer_profile[bg, prf],
+        bidding_group_price_bid_profile[bg, prf],
     )
 
-    model.obj_exp += sum(accepted_offers_profile_cost) * money_to_thousand_money()
+    model.obj_exp += sum(accepted_bids_profile_cost) * money_to_thousand_money()
 
     return nothing
 end
 
 """
-    bidding_group_profile_energy_offer!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemUpdate})
+    bidding_group_profile_energy_bid!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemUpdate})
 
-Updates the objective function coefficients for the bidding group profile energy offer variables.
+Updates the objective function coefficients for the bidding group profile energy bid variables.
 """
-function bidding_group_profile_energy_offer!(
+function bidding_group_profile_energy_bid!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -110,37 +110,37 @@ function bidding_group_profile_energy_offer!(
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
-    quantity_offer_profile_series = time_series_quantity_offer_profile(inputs, model.node, scenario)
-    price_offer_profile_series = time_series_price_offer_profile(inputs, model.node, scenario)
+    quantity_bid_profile_series = time_series_quantity_bid_profile(inputs, model.node, scenario)
+    price_bid_profile_series = time_series_price_bid_profile(inputs, model.node, scenario)
 
-    bidding_group_price_offer_profile = get_model_object(model, :bidding_group_price_offer_profile)
-    bidding_group_quantity_offer_profile = get_model_object(model, :bidding_group_quantity_offer_profile)
+    bidding_group_price_bid_profile = get_model_object(model, :bidding_group_price_bid_profile)
+    bidding_group_quantity_bid_profile = get_model_object(model, :bidding_group_quantity_bid_profile)
 
     for bg in bidding_groups, prf in 1:number_of_valid_profiles(inputs, bg)
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            bidding_group_price_offer_profile[bg, prf],
-            price_offer_profile_series[bg, prf],
+            bidding_group_price_bid_profile[bg, prf],
+            price_bid_profile_series[bg, prf],
         )
     end
     for blk in blks, bg in bidding_groups, prf in 1:number_of_valid_profiles(inputs, bg), bus in buses
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            bidding_group_quantity_offer_profile[blk, bg, prf, bus],
-            quantity_offer_profile_series[bg, bus, prf, blk],
+            bidding_group_quantity_bid_profile[blk, bg, prf, bus],
+            quantity_bid_profile_series[bg, bus, prf, blk],
         )
     end
     return nothing
 end
 
 """
-    bidding_group_profile_energy_offer!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+    bidding_group_profile_energy_bid!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
 
-Initialize the output file to store the bidding group profile energy offer variable values.
+Initialize the output file to store the bidding group profile energy bid variable values.
 """
-function bidding_group_profile_energy_offer!(
+function bidding_group_profile_energy_bid!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -175,11 +175,11 @@ function bidding_group_profile_energy_offer!(
 end
 
 """
-    bidding_group_profile_energy_offer!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+    bidding_group_profile_energy_bid!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
 
-Write the bidding group profile energy offer variables' values to the output.
+Write the bidding group profile energy bid variables' values to the output.
 """
-function bidding_group_profile_energy_offer!(
+function bidding_group_profile_energy_bid!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,

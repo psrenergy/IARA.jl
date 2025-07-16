@@ -23,7 +23,7 @@
 
 #### IARA: Interaction Assessment between Regulators and Agents
 
-IARA is a computational model that provides the capability to simulate mechanism designs for economic dispatch and price formation in electricity markets. Through hourly simulations of large-scale systems, incorporating uncertainties, and with detailed representation of the physical components of generation, transmission, storage, and consumption, it is possible to assess the impacts on agents and the system of price formation mechanisms based on "cost," "offer," or any hybrid model between the two.
+IARA is a computational model that provides the capability to simulate mechanism designs for economic dispatch and price formation in electricity markets. Through hourly simulations of large-scale systems, incorporating uncertainties, and with detailed representation of the physical components of generation, transmission, storage, and consumption, it is possible to assess the impacts on agents and the system of price formation mechanisms based on "cost," "bid," or any hybrid model between the two.
 
 ## Funding 
 

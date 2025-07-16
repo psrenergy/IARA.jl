@@ -26,31 +26,31 @@ function bidding_group_generation!(
     blks = subperiods(inputs)
 
     # Time series
-    placeholder_quantity_offer_series = 0.0
-    placeholder_price_offer_series = 0.0
+    placeholder_quantity_bid_series = 0.0
+    placeholder_price_bid_series = 0.0
 
     # Parameters
     @variable(
         model.jump_model,
-        bidding_group_quantity_offer[
+        bidding_group_quantity_bid[
             blk in blks,
             bg in bidding_groups,
             bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ]
         in
-        MOI.Parameter(placeholder_quantity_offer_series)
+        MOI.Parameter(placeholder_quantity_bid_series)
     ) # MWh
     @variable(
         model.jump_model,
-        bidding_group_price_offer[
+        bidding_group_price_bid[
             blk in blks,
             bg in bidding_groups,
             bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ]
         in
-        MOI.Parameter(placeholder_price_offer_series)
+        MOI.Parameter(placeholder_price_bid_series)
     ) # $/MWh
 
     # Variables
@@ -78,16 +78,16 @@ function bidding_group_generation!(
     # Objective function
     @expression(
         model.jump_model,
-        accepted_offers_cost[
+        accepted_bids_cost[
             blk in blks,
             bg in bidding_groups,
             bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ],
-        bidding_group_generation[blk, bg, bds, bus] * bidding_group_price_offer[blk, bg, bds, bus],
+        bidding_group_generation[blk, bg, bds, bus] * bidding_group_price_bid[blk, bg, bds, bus],
     )
 
-    model.obj_exp += sum(accepted_offers_cost) * money_to_thousand_money()
+    model.obj_exp += sum(accepted_bids_cost) * money_to_thousand_money()
 
     return nothing
 end
@@ -112,27 +112,27 @@ function bidding_group_generation!(
     blks = subperiods(inputs)
 
     # Model parameters
-    bidding_group_quantity_offer = get_model_object(model, :bidding_group_quantity_offer)
-    bidding_group_price_offer = get_model_object(model, :bidding_group_price_offer)
+    bidding_group_quantity_bid = get_model_object(model, :bidding_group_quantity_bid)
+    bidding_group_price_bid = get_model_object(model, :bidding_group_price_bid)
 
     # Time series
-    quantity_offer_series = time_series_quantity_offer(inputs, model.node, scenario)
-    price_offer_series = time_series_price_offer(inputs, model.node, scenario)
+    quantity_bid_series = time_series_quantity_bid(inputs, model.node, scenario)
+    price_bid_series = time_series_price_bid(inputs, model.node, scenario)
 
-    adjust_quantity_offer_for_ex_post!(inputs, run_time_options, quantity_offer_series, subscenario)
+    adjust_quantity_bid_for_ex_post!(inputs, run_time_options, quantity_bid_series, subscenario)
 
     for blk in blks, bg in bidding_groups, bds in 1:number_of_bg_valid_bidding_segments(inputs, bg), bus in buses
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            bidding_group_quantity_offer[blk, bg, bds, bus],
-            quantity_offer_series[bg, bus, bds, blk],
+            bidding_group_quantity_bid[blk, bg, bds, bus],
+            quantity_bid_series[bg, bus, bds, blk],
         )
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            bidding_group_price_offer[blk, bg, bds, bus],
-            price_offer_series[bg, bus, bds, blk],
+            bidding_group_price_bid[blk, bg, bds, bus],
+            price_bid_series[bg, bus, bds, blk],
         )
     end
     return nothing

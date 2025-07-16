@@ -200,7 +200,7 @@ IARA.link_time_series_to_file(
 number_of_buses = 1
 number_of_bidding_groups = 3
 maximum_number_of_bidding_segments = 2
-quantity_offer =
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -209,7 +209,7 @@ quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-price_offer =
+price_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -219,22 +219,22 @@ price_offer =
         number_of_periods,
     )
 
-quantity_offer[1, :, 1, :, :, :] .= 60
-quantity_offer[2, :, 1, :, :, :] .= 60
-quantity_offer[3, :, 1, :, :, :] .= 60
-quantity_offer[1, :, 2, :, :, :] .= 60
-quantity_offer[2, :, 2, :, :, :] .= 60
-quantity_offer[3, :, 2, :, :, :] .= 60
-price_offer[1, :, 1, :, :, :] .= 10.0
-price_offer[2, :, 1, :, :, :] .= 30.0
-price_offer[3, :, 1, :, :, :] .= 2.0
-price_offer[1, :, 2, :, :, :] .= 20.0
-price_offer[2, :, 2, :, :, :] .= 1.0
-price_offer[3, :, 2, :, :, :] .= 3.0
+quantity_bid[1, :, 1, :, :, :] .= 60
+quantity_bid[2, :, 1, :, :, :] .= 60
+quantity_bid[3, :, 1, :, :, :] .= 60
+quantity_bid[1, :, 2, :, :, :] .= 60
+quantity_bid[2, :, 2, :, :, :] .= 60
+quantity_bid[3, :, 2, :, :, :] .= 60
+price_bid[1, :, 1, :, :, :] .= 10.0
+price_bid[2, :, 1, :, :, :] .= 30.0
+price_bid[3, :, 1, :, :, :] .= 2.0
+price_bid[1, :, 2, :, :, :] .= 20.0
+price_bid[2, :, 2, :, :, :] .= 1.0
+price_bid[3, :, 2, :, :, :] .= 3.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Azul", "Vermelho", "Verde"],
     labels_buses = ["Sistema"],
@@ -250,8 +250,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Azul", "Vermelho", "Verde"],
     labels_buses = ["Sistema"],
@@ -268,8 +268,8 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )
 
 renewable_generation_ex_post =

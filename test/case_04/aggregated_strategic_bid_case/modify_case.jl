@@ -105,7 +105,7 @@ IARA.write_timeseries_file(
 )
 
 # Offers
-new_quantity_offer =
+new_quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -114,11 +114,11 @@ new_quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-new_quantity_offer[1:(number_of_bidding_groups-1), :, :, :, :, :] .= quantity_offer
-new_quantity_offer[number_of_bidding_groups, :, :, :, :, :] .= quantity_offer[1, :, :, :, :, :]
+new_quantity_bid[1:(number_of_bidding_groups-1), :, :, :, :, :] .= quantity_bid
+new_quantity_bid[number_of_bidding_groups, :, :, :, :, :] .= quantity_bid[1, :, :, :, :, :]
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    new_quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    new_quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2", "bg_3"],
     labels_buses = ["bus_1", "bus_2"],
@@ -133,7 +133,7 @@ IARA.write_bids_time_series_file(
     unit = "MWh",
 )
 
-new_price_offer =
+new_price_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -142,11 +142,11 @@ new_price_offer =
         number_of_scenarios,
         number_of_periods,
     )
-new_price_offer[1:(number_of_bidding_groups-1), :, :, :, :, :] .= price_offer
-new_price_offer[number_of_bidding_groups, :, :, :, :, :] .= price_offer[1, :, :, :, :, :]
+new_price_bid[1:(number_of_bidding_groups-1), :, :, :, :, :] .= price_bid
+new_price_bid[number_of_bidding_groups, :, :, :, :, :] .= price_bid[1, :, :, :, :, :]
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    new_price_offer;
+    joinpath(PATH, "price_bid"),
+    new_price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2", "bg_3"],
     labels_buses = ["bus_1", "bus_2"],

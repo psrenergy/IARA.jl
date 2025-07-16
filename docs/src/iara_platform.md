@@ -7,7 +7,7 @@ For now, the IARA Platform is only available in Portuguese.
 ![IARA Platform Screenshot](assets/iara_platform.gif)
 
 In a game, each user is assigned to an Asset Owner by the System Operator, who is responsible for executing the optimization problem after all users have submitted their bids.
-A user's bid, which consists of a quantity and price offer, should be chosen by the user based on their knowledge of the market and their assets.
+A user's bid, which consists of a quantity and price bid, should be chosen by the user based on their knowledge of the market and their assets.
 
 ![IARA Platform Bidding](assets/bidding.gif)
 
@@ -29,17 +29,17 @@ The results of the market clearing process are then displayed to the users, allo
 
 ### Price Violation
 
-The IARA Platform includes a validation routine that checks if the price offers submitted by the users are within the allowed range for their assets.
+The IARA Platform includes a validation routine that checks if the price bids submitted by the users are within the allowed range for their assets.
 At [Bid Price Limit](bid_limits.md#bid-price-limit), you can find more information about how the price limits are calculated by IARA.jl.
 
 There are two main price thresholds that are considered in the validation routine:
-1. **Non justified offer**: If the price offer is below this limit, the user is not required to justify their offer. 
-However, if the price offer is above this limit, the user must provide a justification for their offer in a text box.
+1. **Non justified bid**: If the price bid is below this limit, the user is not required to justify their bid. 
+However, if the price bid is above this limit, the user must provide a justification for their bid in a text box.
 
 ![IARA Platform Bidding](assets/justification.gif)
 
 
-2. **Justified offer**: If the price offer is above this limit, the user cannot submit their offer, even if they provide a justification.
+2. **Justified bid**: If the price bid is above this limit, the user cannot submit their bid, even if they provide a justification.
 
 ![IARA Platform Bidding](assets/no_justification.gif)
 

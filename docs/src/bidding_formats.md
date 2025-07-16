@@ -192,7 +192,7 @@ The same applies for profiles that are the only ones in a complementary group.
 
 ### Minimum activation constraints
 
-Minimum activation constraints establish that, for a profile bid to be accepted, the bided quantity must be at least a certain threshold, expressed as a percentage of the total bid volume.
+Minimum activation constraints establish that, for a profile bid to be accepted, the bid quantity must be at least a certain threshold, expressed as a percentage of the total bid volume.
 This is represented in the database by the `minimum_activation_level_profile` time series file, which can be attached to the case using the [`IARA.link_time_series_to_file`](@ref) function.
 
 In the following example of a `minimum_activation_level_profile.csv` file, we have two bidding groups, `bg_1` and `bg_2`, with two profiles each.

@@ -20,8 +20,8 @@ Collection representing the virtual reservoir.
     asset_owners_inflow_allocation::Vector{Vector{Float64}} = []
     asset_owners_initial_energy_account_share::Vector{Vector{Float64}} = []
     number_of_waveguide_points_for_file_template::Vector{Int} = []
-    quantity_offer_file::String = ""
-    price_offer_file::String = ""
+    quantity_bid_file::String = ""
+    price_bid_file::String = ""
     # caches
     initial_energy_account::Vector{Vector{Float64}} = []
     waveguide_points::Vector{Matrix{Float64}} = []
@@ -51,10 +51,10 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     virtual_reservoir.asset_owners_initial_energy_account_share =
         PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "initial_energy_account_share")
     # Load time series files
-    virtual_reservoir.quantity_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "quantity_offer")
-    virtual_reservoir.price_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "price_offer")
+    virtual_reservoir.quantity_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "quantity_bid")
+    virtual_reservoir.price_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "price_bid")
     # Initialize caches
     virtual_reservoir.initial_energy_account =
         [zeros(Float64, length(index_of_elements(inputs, AssetOwner))) for vr in 1:num_virtual_reservoirs]

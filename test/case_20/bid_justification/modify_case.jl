@@ -19,16 +19,16 @@ IARA.update_bidding_group!(
 
 # Modify timeseries
 # Azul
-price_offer[1, :, 2, :, :, 1:3] .= 15.0
-price_offer[1, :, 2, :, :, 4:6] .= 25.0
-price_offer[1, :, 2, :, :, 7:10] .= 35.0
+price_bid[1, :, 2, :, :, 1:3] .= 15.0
+price_bid[1, :, 2, :, :, 4:6] .= 25.0
+price_bid[1, :, 2, :, :, 7:10] .= 35.0
 # Verde
-price_offer[3, :, 2, :, :, 1:5] .= 10.0
-price_offer[3, :, 2, :, :, 6:10] .= 15.0
+price_bid[3, :, 2, :, :, 1:5] .= 10.0
+price_bid[3, :, 2, :, :, 6:10] .= 15.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Azul", "Vermelho", "Verde"],
     labels_buses = ["Sistema"],

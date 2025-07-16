@@ -8,14 +8,14 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function link_offers_and_generation! end
+function link_bids_and_generation! end
 
 """
-    link_offers_and_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
+    link_bids_and_generation!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild})
 
-Add the link between offers and generation constraints to the model.
+Add the link between bids and generation constraints to the model.
 """
-function link_offers_and_generation!(
+function link_bids_and_generation!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -59,7 +59,7 @@ function link_offers_and_generation!(
 
     @constraint(
         model.jump_model,
-        link_offers_and_generation[blk in blks, bg in bidding_groups, bus in buses],
+        link_bids_and_generation[blk in blks, bg in bidding_groups, bus in buses],
         if has_any_simple_bids(inputs)
             sum(
                 bidding_group_generation[blk, bg, bds, bus] for
@@ -115,11 +115,11 @@ function link_offers_and_generation!(
         #
         # In a bid group that consists only of flexible demand:
         #   Total Bid Quantity = Σ(Elastic Demand Bids)
-        #                       = Σ(- MW offers)
+        #                       = Σ(- MW bids)
         #
         # Example:
-        #   - Factory A offers a elastic demand of 20 MW
-        #   - Factory B offers a elastic demand of 30 MW
+        #   - Factory A bids a elastic demand of 20 MW
+        #   - Factory B bids a elastic demand of 30 MW
         #   → The total bid quantity for the group = -50 MW (representing the total load reduction)
         -
         if any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
@@ -136,7 +136,7 @@ function link_offers_and_generation!(
     )
     return nothing
 end
-function link_offers_and_generation!(
+function link_bids_and_generation!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -148,7 +148,7 @@ function link_offers_and_generation!(
 )
     return nothing
 end
-function link_offers_and_generation!(
+function link_bids_and_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -156,7 +156,7 @@ function link_offers_and_generation!(
 )
     return nothing
 end
-function link_offers_and_generation!(
+function link_bids_and_generation!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,

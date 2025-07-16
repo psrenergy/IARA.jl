@@ -90,7 +90,7 @@ IARA.train_min_cost(PATH_CENTRALIZED)
 db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false);
 #hide
 
-# In order to run the case in `Market Clearing`, we need to set the run mode and the clearing bid source (where the bid quantity and price offers will come from).
+# In order to run the case in `Market Clearing`, we need to set the run mode and the clearing bid source (where the bid quantity and price bids will come from).
 # For this example we will be using the `PRICETAKER_HEURISTICS` as the clearing bid source. This setting will automatically generate bids for each Bidding Group.
 # We can set these two parameters in the configurations, with [`IARA.update_configuration!`](@ref).
 
@@ -114,11 +114,11 @@ IARA.market_clearing(
 # Let's take a look into some of the plots generated automatically.
 
 # ```@raw html
-# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe>
+# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_bid_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
 # ```@raw html
-# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe>
+# <iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_bid_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
 # ```@raw html

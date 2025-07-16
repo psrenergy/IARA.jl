@@ -24,29 +24,29 @@ function virtual_reservoir_generation!(
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
     # Time series
-    placeholder_virtual_reservoir_quantity_offer_series = 0.0
-    placeholder_virtual_reservoir_price_offer_series = 0.0
+    placeholder_virtual_reservoir_quantity_bid_series = 0.0
+    placeholder_virtual_reservoir_price_bid_series = 0.0
 
     # Parameters
     @variable(
         model.jump_model,
-        virtual_reservoir_quantity_offer[
+        virtual_reservoir_quantity_bid[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
             seg in 1:number_of_vr_valid_bidding_segments(inputs, vr),
         ]
         in
-        MOI.Parameter(placeholder_virtual_reservoir_quantity_offer_series)
+        MOI.Parameter(placeholder_virtual_reservoir_quantity_bid_series)
     ) # MWh
     @variable(
         model.jump_model,
-        virtual_reservoir_price_offer[
+        virtual_reservoir_price_bid[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
             seg in 1:number_of_vr_valid_bidding_segments(inputs, vr),
         ]
         in
-        MOI.Parameter(placeholder_virtual_reservoir_price_offer_series)
+        MOI.Parameter(placeholder_virtual_reservoir_price_bid_series)
     ) # $/MWh
 
     # Variables
@@ -62,15 +62,15 @@ function virtual_reservoir_generation!(
     # Objective function
     @expression(
         model.jump_model,
-        accepted_virtual_reservoir_offers_cost[
+        accepted_virtual_reservoir_bids_cost[
             vr in virtual_reservoirs,
             ao in virtual_reservoir_asset_owner_indices(inputs, vr),
             seg in 1:number_of_vr_valid_bidding_segments(inputs, vr),
         ],
-        virtual_reservoir_generation[vr, ao, seg] * virtual_reservoir_price_offer[vr, ao, seg],
+        virtual_reservoir_generation[vr, ao, seg] * virtual_reservoir_price_bid[vr, ao, seg],
     )
 
-    model.obj_exp += sum(accepted_virtual_reservoir_offers_cost) * money_to_thousand_money()
+    model.obj_exp += sum(accepted_virtual_reservoir_bids_cost) * money_to_thousand_money()
 
     return nothing
 end
@@ -93,13 +93,13 @@ function virtual_reservoir_generation!(
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
     # Model parameters
-    virtual_reservoir_quantity_offer = get_model_object(model, :virtual_reservoir_quantity_offer)
-    virtual_reservoir_price_offer = get_model_object(model, :virtual_reservoir_price_offer)
+    virtual_reservoir_quantity_bid = get_model_object(model, :virtual_reservoir_quantity_bid)
+    virtual_reservoir_price_bid = get_model_object(model, :virtual_reservoir_price_bid)
 
     # Time series
-    virtual_reservoir_quantity_offer_series =
-        time_series_virtual_reservoir_quantity_offer(inputs, model.node, scenario)
-    virtual_reservoir_price_offer_series = time_series_virtual_reservoir_price_offer(inputs, model.node, scenario)
+    virtual_reservoir_quantity_bid_series =
+        time_series_virtual_reservoir_quantity_bid(inputs, model.node, scenario)
+    virtual_reservoir_price_bid_series = time_series_virtual_reservoir_price_bid(inputs, model.node, scenario)
 
     for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr),
         seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
@@ -107,14 +107,14 @@ function virtual_reservoir_generation!(
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            virtual_reservoir_quantity_offer[vr, ao, seg],
-            virtual_reservoir_quantity_offer_series[vr, ao, seg],
+            virtual_reservoir_quantity_bid[vr, ao, seg],
+            virtual_reservoir_quantity_bid_series[vr, ao, seg],
         )
         MOI.set(
             model.jump_model,
             POI.ParameterValue(),
-            virtual_reservoir_price_offer[vr, ao, seg],
-            virtual_reservoir_price_offer_series[vr, ao, seg],
+            virtual_reservoir_price_bid[vr, ao, seg],
+            virtual_reservoir_price_bid_series[vr, ao, seg],
         )
     end
     return nothing

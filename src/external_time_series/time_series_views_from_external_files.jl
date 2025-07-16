@@ -49,16 +49,16 @@ in chunks.
         TimeSeriesView{Float64, 2}()
 
     # BiddingGroups x buses x segments x subperiods
-    quantity_offer::BidsView{Float64} = BidsView{Float64}()
-    price_offer::BidsView{Float64} = BidsView{Float64}()
-    no_markup_price_offer::BidsView{Float64} = BidsView{Float64}()
+    quantity_bid::BidsView{Float64} = BidsView{Float64}()
+    price_bid::BidsView{Float64} = BidsView{Float64}()
+    no_markup_price_bid::BidsView{Float64} = BidsView{Float64}()
 
     # BiddingGroups x buses x segments x subperiods
-    quantity_offer_profile = BidsView{Float64}()
+    quantity_bid_profile = BidsView{Float64}()
 
     # BiddingGroups x profile
-    # On profile bids, the price offer is the same for all subperiods and all buses
-    price_offer_profile::TimeSeriesView{Float64, 2} =
+    # On profile bids, the price bid is the same for all subperiods and all buses
+    price_bid_profile::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
     # BiddingGroups x profile
     parent_profile::TimeSeriesView{Float64, 2} =
@@ -81,8 +81,8 @@ in chunks.
         TimeSeriesView{Float64, 1}()
 
     # VirtualReservoirs x AssetOwners x segments
-    virtual_reservoir_quantity_offer::VirtualReservoirBidsView{Float64} = VirtualReservoirBidsView{Float64}()
-    virtual_reservoir_price_offer::VirtualReservoirBidsView{Float64} = VirtualReservoirBidsView{Float64}()
+    virtual_reservoir_quantity_bid::VirtualReservoirBidsView{Float64} = VirtualReservoirBidsView{Float64}()
+    virtual_reservoir_price_bid::VirtualReservoirBidsView{Float64} = VirtualReservoirBidsView{Float64}()
 end
 
 """
@@ -263,9 +263,9 @@ function initialize_time_series_from_external_files(inputs)
         is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&
         read_bids_from_file(inputs) && has_any_bid_simple_input_files(inputs)
     )
-        file = joinpath(path_case(inputs), bidding_group_quantity_offer_file(inputs))
+        file = joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(
-            inputs.time_series.quantity_offer,
+            inputs.time_series.quantity_bid,
             inputs,
             file;
             expected_unit = "MWh",
@@ -277,9 +277,9 @@ function initialize_time_series_from_external_files(inputs)
             buses_to_read = bus_label(inputs),
         )
 
-        file = joinpath(path_case(inputs), bidding_group_price_offer_file(inputs))
+        file = joinpath(path_case(inputs), bidding_group_price_bid_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(
-            inputs.time_series.price_offer,
+            inputs.time_series.price_bid,
             inputs,
             file;
             expected_unit = raw"$/MWh",
@@ -292,12 +292,12 @@ function initialize_time_series_from_external_files(inputs)
         )
     end
 
-    # profile offers
+    # profile bids
     if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&
        read_bids_from_file(inputs) && has_any_profile_input_files(inputs)
-        file = joinpath(path_case(inputs), bidding_group_quantity_offer_profile_file(inputs))
+        file = joinpath(path_case(inputs), bidding_group_quantity_bid_profile_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(
-            inputs.time_series.quantity_offer_profile,
+            inputs.time_series.quantity_bid_profile,
             inputs,
             file;
             expected_unit = "MWh",
@@ -310,9 +310,9 @@ function initialize_time_series_from_external_files(inputs)
             has_profile_bids = true,
         )
 
-        file = joinpath(path_case(inputs), bidding_group_price_offer_profile_file(inputs))
+        file = joinpath(path_case(inputs), bidding_group_price_bid_profile_file(inputs))
         num_errors += initialize_time_series_view_from_external_file(
-            inputs.time_series.price_offer_profile,
+            inputs.time_series.price_bid_profile,
             inputs,
             file;
             expected_unit = raw"$/MWh",
@@ -348,14 +348,14 @@ function initialize_time_series_from_external_files(inputs)
             )
         end
     end
-    # Virtual reservoir offers
+    # Virtual reservoir bids
     if (
            run_mode(inputs) == RunMode.STRATEGIC_BID ||
            is_market_clearing(inputs)
        ) && any_elements(inputs, VirtualReservoir) && read_bids_from_file(inputs)
-        file = joinpath(path_case(inputs), virtual_reservoir_quantity_offer_file(inputs))
+        file = joinpath(path_case(inputs), virtual_reservoir_quantity_bid_file(inputs))
         num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
-            inputs.time_series.virtual_reservoir_quantity_offer,
+            inputs.time_series.virtual_reservoir_quantity_bid,
             inputs,
             file;
             expected_unit = "MWh",
@@ -366,9 +366,9 @@ function initialize_time_series_from_external_files(inputs)
             asset_owners_to_read = asset_owner_label(inputs),
         )
 
-        file = joinpath(path_case(inputs), virtual_reservoir_price_offer_file(inputs))
+        file = joinpath(path_case(inputs), virtual_reservoir_price_bid_file(inputs))
         num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
-            inputs.time_series.virtual_reservoir_price_offer,
+            inputs.time_series.virtual_reservoir_price_bid,
             inputs,
             file;
             expected_unit = raw"$/MWh",
@@ -478,7 +478,7 @@ function update_time_series_views_from_external_files!(
             update_hour_subperiod_mapping!(inputs; period = period_index_in_year(inputs, period))
         end
         if isa(ts, BidsView) && ts.reader !== nothing
-            has_profile_bids = field == :quantity_offer_profile
+            has_profile_bids = field == :quantity_bid_profile
             read_bids_view_from_external_file!(
                 inputs,
                 ts;
@@ -547,9 +547,9 @@ end
 
 function update_segments_profile_dimensions_by_timeseries!(inputs, period)
     time_series = inputs.time_series
-    ts_quantity_offer = time_series.quantity_offer
-    ts_quantity_offer_profile = time_series.quantity_offer_profile
-    ts_virtual_reservoir_quantity_offer = time_series.virtual_reservoir_quantity_offer
+    ts_quantity_bid = time_series.quantity_bid
+    ts_quantity_bid_profile = time_series.quantity_bid_profile
+    ts_virtual_reservoir_quantity_bid = time_series.virtual_reservoir_quantity_bid
 
     # Start with 0 segments and profiles to update it later
 
@@ -564,14 +564,14 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
         if has_any_simple_bids(inputs)
             read_bids_view_from_external_file!(
                 inputs,
-                ts_quantity_offer;
+                ts_quantity_bid;
                 period = period,
                 scenario = scenario,
             )
 
             valid_segments_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
                 inputs,
-                ts_quantity_offer;
+                ts_quantity_bid;
             )
 
             total_valid_segments_per_period =
@@ -584,7 +584,7 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
         if has_any_profile_bids(inputs)
             read_bids_view_from_external_file!(
                 inputs,
-                ts_quantity_offer_profile;
+                ts_quantity_bid_profile;
                 period = period,
                 scenario = scenario,
                 has_profile_bids = true,
@@ -592,7 +592,7 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
 
             valid_profiles_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
                 inputs,
-                ts_quantity_offer_profile;
+                ts_quantity_bid_profile;
                 has_profile_bids = true,
             )
 
@@ -606,13 +606,13 @@ function update_segments_profile_dimensions_by_timeseries!(inputs, period)
         if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
             read_virtual_reservoir_bids_view_from_external_file!(
                 inputs,
-                ts_virtual_reservoir_quantity_offer;
+                ts_virtual_reservoir_quantity_bid;
                 period = period,
                 scenario = scenario,
             )
             valid_segments_per_timeseries = calculate_maximum_valid_segments_or_profiles_per_timeseries(
                 inputs,
-                ts_virtual_reservoir_quantity_offer;
+                ts_virtual_reservoir_quantity_bid;
                 is_virtual_reservoir = true,
             )
 

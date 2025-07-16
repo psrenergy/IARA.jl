@@ -8,14 +8,14 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-function bidding_group_energy_offer! end
+function bidding_group_energy_bid! end
 
 """
-    bidding_group_energy_offer!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild}) 
+    bidding_group_energy_bid!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemBuild}) 
 
-Add the bidding group energy offer variables to the model.
+Add the bidding group energy bid variables to the model.
 """
-function bidding_group_energy_offer!(
+function bidding_group_energy_bid!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -28,7 +28,7 @@ function bidding_group_energy_offer!(
     # Variables
     @variable(
         model.jump_model,
-        bidding_group_energy_offer[
+        bidding_group_energy_bid[
             blk in blks,
             bg in bidding_groups,
             bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
@@ -52,7 +52,7 @@ function bidding_group_energy_offer!(
             bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ],
-        -bidding_group_energy_offer[blk, bg, bds, bus] * spot_price_series[bus, blk],
+        -bidding_group_energy_bid[blk, bg, bds, bus] * spot_price_series[bus, blk],
     )
 
     for bg in bidding_groups
@@ -67,11 +67,11 @@ function bidding_group_energy_offer!(
 end
 
 """
-    bidding_group_energy_offer!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemUpdate})
+    bidding_group_energy_bid!(model::SubproblemModel, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{SubproblemUpdate})
 
-Updates the objective function coefficients for the bidding group energy offer variables.
+Updates the objective function coefficients for the bidding group energy bid variables.
 """
-function bidding_group_energy_offer!(
+function bidding_group_energy_bid!(
     model::SubproblemModel,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -90,7 +90,7 @@ function bidding_group_energy_offer!(
     end
 
     # Variables
-    bidding_group_energy_offer = get_model_object(model, :bidding_group_energy_offer)
+    bidding_group_energy_bid = get_model_object(model, :bidding_group_energy_bid)
 
     # Time series
     spot_price_series = time_series_spot_price(inputs)
@@ -98,7 +98,7 @@ function bidding_group_energy_offer!(
     for blk in blks, bg in bidding_groups, bds in 1:number_of_bg_valid_bidding_segments(inputs, bg), bus in buses
         set_objective_coefficient(
             model.jump_model,
-            bidding_group_energy_offer[blk, bg, bds, bus],
+            bidding_group_energy_bid[blk, bg, bds, bus],
             -spot_price_series[bus, blk] * money_to_thousand_money(),
         )
     end
@@ -106,11 +106,11 @@ function bidding_group_energy_offer!(
 end
 
 """
-    bidding_group_energy_offer!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
+    bidding_group_energy_bid!(outputs::Outputs, inputs::Inputs, run_time_options::RunTimeOptions, ::Type{InitializeOutput})
 
-Initialize the output file to store the bidding group energy offer variable values.
+Initialize the output file to store the bidding group energy bid variable values.
 """
-function bidding_group_energy_offer!(
+function bidding_group_energy_bid!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -118,7 +118,7 @@ function bidding_group_energy_offer!(
 )
     add_symbol_to_query_from_subproblem_result!(
         outputs,
-        :bidding_group_energy_offer,
+        :bidding_group_energy_bid,
     )
 
     labels = labels_for_output_by_pair_of_agents(
@@ -134,7 +134,7 @@ function bidding_group_energy_offer!(
         QuiverOutput,
         outputs;
         inputs,
-        output_name = "bidding_group_energy_offer",
+        output_name = "bidding_group_energy_bid",
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
         unit = "GWh",
         labels,
@@ -144,11 +144,11 @@ function bidding_group_energy_offer!(
 end
 
 """
-    bidding_group_energy_offer!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
+    bidding_group_energy_bid!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
 
-Write the bidding group energy offer variable values to the output.
+Write the bidding group energy bid variable values to the output.
 """
-function bidding_group_energy_offer!(
+function bidding_group_energy_bid!(
     outputs::Outputs,
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -162,8 +162,8 @@ function bidding_group_energy_offer!(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_energy_offer",
-        simulation_results.data[:bidding_group_energy_offer].data;
+        "bidding_group_energy_bid",
+        simulation_results.data[:bidding_group_energy_bid].data;
         period,
         scenario,
         subscenario,

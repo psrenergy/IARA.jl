@@ -152,7 +152,7 @@ function bidding_group_generation!(
     add_symbol_to_query_from_subproblem_result!(
         outputs,
         [:bidding_group_generation,
-        :bidding_group_quantity_offer]
+            :bidding_group_quantity_offer],
     )
 
     labels = labels_for_output_by_pair_of_agents(

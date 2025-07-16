@@ -831,7 +831,11 @@ function write_virtual_reservoir_bid_output(
     end
 end
 
-function run_time_file_suffixes(inputs::Inputs, run_time_options::RunTimeOptions; suppress_construction_type_suffix::Bool = false)
+function run_time_file_suffixes(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions;
+    suppress_construction_type_suffix::Bool = false,
+)
     suffix = ""
     if !is_null(run_time_options.asset_owner_index)
         suffix *= "_asset_owner_$(run_time_options.asset_owner_index)"

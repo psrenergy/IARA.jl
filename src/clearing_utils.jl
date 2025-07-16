@@ -563,7 +563,7 @@ function should_write_ex_post_quantity_bid_output_file(
 )
     # Write the ex-post quantity bid output file only if the procedure is ex-post commercial, if it is
     # skipped, write in the ex-post physical procedure.
-    return (is_ex_post_problem(run_time_options) && is_physical_problem(run_time_options)) && 
-            construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP ||
+    return (is_ex_post_problem(run_time_options) && is_physical_problem(run_time_options)) &&
+           construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP ||
            (is_ex_post_problem(run_time_options) && is_commercial_problem(run_time_options))
 end

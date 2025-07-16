@@ -514,7 +514,7 @@ function validate(configurations::Configurations)
         num_errors += 1
     end
     if configurations.bid_data_processing in [Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
-                                          Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID]
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID]
         if is_null(configurations.bid_price_limit_low_reference)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
@@ -1129,8 +1129,8 @@ function read_bids_from_file(inputs::AbstractInputs)
     end
     return inputs.collections.configurations.bid_data_processing in
            [Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
-            Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID
-           ]
+        Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
+    ]
 end
 
 """
@@ -1153,10 +1153,10 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
         return false
     end
     return inputs.collections.configurations.bid_data_processing in
-        [
-           Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
-           Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
-        ]
+           [
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
+    ]
 end
 
 function is_any_construction_type_cost_based(
@@ -1614,7 +1614,7 @@ end
 function validate_bidding_group_bids(inputs::AbstractInputs)
     return inputs.collections.configurations.bid_data_processing in
            [
-               Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
-               Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
-           ]
+        Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
+    ]
 end

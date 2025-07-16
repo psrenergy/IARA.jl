@@ -54,11 +54,11 @@ function build_clearing_outputs(inputs::Inputs)
 
     if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
         if construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.SKIP &&
-            construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.COST_BASED
+           construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.COST_BASED
             # Initialize the outputs for the ex-post bids in COMMERICIAL problem.
             initialiaze_bids_ex_post_outputs(inputs, ex_post_commercial_outputs, run_time_options)
         elseif construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.SKIP &&
-            construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.COST_BASED
+               construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.COST_BASED
             # Initialize the outputs for the ex-post bids in PHYSICAL problem.
             initialiaze_bids_ex_post_outputs(inputs, ex_post_physical_outputs, run_time_options)
         end

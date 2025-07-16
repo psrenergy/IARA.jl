@@ -151,7 +151,8 @@ function bidding_group_generation!(
 )
     add_symbol_to_query_from_subproblem_result!(
         outputs,
-        :bidding_group_generation,
+        [:bidding_group_generation,
+        :bidding_group_quantity_offer]
     )
 
     labels = labels_for_output_by_pair_of_agents(
@@ -207,6 +208,26 @@ function bidding_group_generation!(
         has_profile_bids = false,
         filters = [has_generation_besides_virtual_reservoirs],
     )
+
+    if should_write_ex_post_quantity_bid_output_file(
+        inputs,
+        run_time_options,
+    )
+        write_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "bidding_group_energy_bid_ex_post",
+            simulation_results.data[:bidding_group_quantity_offer].data;
+            period,
+            scenario,
+            subscenario,
+            multiply_by = MW_to_GW(),
+            has_profile_bids = false,
+            filters = [has_generation_besides_virtual_reservoirs],
+            suppress_construction_type_suffix = true,
+        )
+    end
 
     return nothing
 end

@@ -31,8 +31,8 @@ Configurations for the problem.
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Float64} = []
-    hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
-        Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
+    hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodRepresentation.T =
+        Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
     loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
         Configurations_ConsiderSubperiodsLoopForThermalConstraints.DO_NOT_CONSIDER
     cycle_discount_rate::Float64 = 0.0
@@ -46,9 +46,10 @@ Configurations for the problem.
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
     demand_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
-    bid_data_source::Configurations_BidDataSource.T = Configurations_BidDataSource.READ_FROM_FILE
-    clearing_hydro_representation::Configurations_ClearingHydroRepresentation.T =
-        Configurations_ClearingHydroRepresentation.PURE_BIDS
+    bid_data_processing::Configurations_BiddingGroupBidProcessing.T =
+        Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID
+    clearing_hydro_representation::Configurations_VirtualReservoirBidProcessing.T =
+        Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
     construction_type_ex_ante_physical::Configurations_ConstructionType.T =
         Configurations_ConstructionType.SKIP
     construction_type_ex_ante_commercial::Configurations_ConstructionType.T =
@@ -78,10 +79,9 @@ Configurations for the problem.
         Configurations_NetworkRepresentation.NODAL
     network_representation_ex_post_commercial::Configurations_NetworkRepresentation.T =
         Configurations_NetworkRepresentation.NODAL
-    settlement_type::Configurations_SettlementType.T = Configurations_SettlementType.EX_ANTE
+    settlement_type::Configurations_FinancialSettlementType.T = Configurations_FinancialSettlementType.EX_ANTE
     make_whole_payments::Configurations_MakeWholePayments.T =
-        Configurations_MakeWholePayments.CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD
-    price_limits::Configurations_PriceLimits.T = Configurations_PriceLimits.REPRESENT
+        Configurations_MakeWholePayments.IGNORE
     vr_curveguide_data_source::Configurations_VRCurveguideDataSource.T =
         Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
     vr_curveguide_data_format::Configurations_VRCurveguideDataFormat.T =
@@ -101,8 +101,6 @@ Configurations for the problem.
     bid_price_limit_markup_justified_independent::Float64 = 0.0
     bid_price_limit_low_reference::Float64 = 0.0
     bid_price_limit_high_reference::Float64 = 0.0
-    bidding_group_bid_validation::Configurations_BiddingGroupBidValidation.T =
-        Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
     purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
@@ -162,7 +160,7 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.hydro_balance_subperiod_resolution =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_subperiod_resolution")[1],
-            Configurations_HydroBalanceSubperiodResolution.T,
+            Configurations_HydroBalanceSubperiodRepresentation.T,
         )
     loop_subperiods_for_thermal_constraints =
         PSRI.get_parms(inputs.db, "Configuration", "loop_subperiods_for_thermal_constraints")[1]
@@ -198,30 +196,25 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "demand_scenarios_files")[1],
             Configurations_UncertaintyScenariosFiles.T,
         )
-    configurations.bid_data_source =
+    configurations.bid_data_processing =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "bid_data_source")[1],
-            Configurations_BidDataSource.T,
+            PSRI.get_parms(inputs.db, "Configuration", "bid_data_processing")[1],
+            Configurations_BiddingGroupBidProcessing.T,
         )
     configurations.clearing_hydro_representation =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "clearing_hydro_representation")[1],
-            Configurations_ClearingHydroRepresentation.T,
+            Configurations_VirtualReservoirBidProcessing.T,
         )
     configurations.settlement_type =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "settlement_type")[1],
-            Configurations_SettlementType.T,
+            Configurations_FinancialSettlementType.T,
         )
     configurations.make_whole_payments =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "make_whole_payments")[1],
             Configurations_MakeWholePayments.T,
-        )
-    configurations.price_limits =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "price_limits")[1],
-            Configurations_PriceLimits.T,
         )
     configurations.cycle_discount_rate =
         PSRI.get_parms(inputs.db, "Configuration", "cycle_discount_rate")[1]
@@ -338,11 +331,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_low_reference")[1]
     configurations.bid_price_limit_high_reference =
         PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_high_reference")[1]
-    configurations.bidding_group_bid_validation =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "bidding_group_bid_validation")[1],
-            Configurations_BiddingGroupBidValidation.T,
-        )
     configurations.reference_curve_number_of_segments =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
@@ -525,7 +513,8 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
-    if configurations.bidding_group_bid_validation == Configurations_BiddingGroupBidValidation.VALIDATE
+    if configurations.bid_data_processing in [Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID]
         if is_null(configurations.bid_price_limit_low_reference)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
@@ -544,7 +533,8 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
 
     if is_market_clearing(inputs)
         model_type_warning = false
-        if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if configurations.clearing_hydro_representation ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             if (
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.HYBRID &&
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
@@ -577,7 +567,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 @warn("All clearing models must be hybrid when using virtual reservoirs.")
             end
         end
-        if settlement_type(inputs) == Configurations_SettlementType.NONE
+        if settlement_type(inputs) == Configurations_FinancialSettlementType.NONE
             @warn("Settlement type is NONE. No revenue will be calculated.")
         else
             if configurations.construction_type_ex_post_physical == Configurations_ConstructionType.SKIP &&
@@ -587,7 +577,8 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 )
                 num_errors += 1
             end
-            if settlement_type(inputs) in [Configurations_SettlementType.DOUBLE, Configurations_SettlementType.EX_ANTE]
+            if settlement_type(inputs) in
+               [Configurations_FinancialSettlementType.TWO_SETTLEMENT, Configurations_FinancialSettlementType.EX_ANTE]
                 if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
                    configurations.construction_type_ex_ante_commercial == Configurations_ConstructionType.SKIP
                     @error(
@@ -597,7 +588,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
                 end
             end
             if configurations.construction_type_ex_ante_physical == Configurations_ConstructionType.SKIP &&
-               settlement_type(inputs) == Configurations_SettlementType.DOUBLE
+               settlement_type(inputs) == Configurations_FinancialSettlementType.TWO_SETTLEMENT
                 @warn(
                     "The ex-ante physical clearing model is skipped. " *
                     "Instead, generation data for revenue calculation will be sourced from the ex-ante commercial clearing model. " *
@@ -620,7 +611,8 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             num_errors += 1
         end
     end
-    if configurations.clearing_hydro_representation == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+    if configurations.clearing_hydro_representation ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
         if !any_elements(inputs, VirtualReservoir)
             @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
             num_errors += 1
@@ -1135,7 +1127,10 @@ function read_bids_from_file(inputs::AbstractInputs)
        construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
-    return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.READ_FROM_FILE
+    return inputs.collections.configurations.bid_data_processing in
+           [Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
+        Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
+    ]
 end
 
 """
@@ -1157,7 +1152,11 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
        construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
-    return inputs.collections.configurations.bid_data_source == Configurations_BidDataSource.PRICETAKER_HEURISTICS
+    return inputs.collections.configurations.bid_data_processing in
+           [
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
+    ]
 end
 
 function is_any_construction_type_cost_based(
@@ -1192,11 +1191,11 @@ function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_option
 end
 
 """
-    bid_data_source(inputs::AbstractInputs)
+    bid_data_processing(inputs::AbstractInputs)
 
 Return the clearing bid source.
 """
-bid_data_source(inputs::AbstractInputs) = inputs.collections.configurations.bid_data_source
+bid_data_processing(inputs::AbstractInputs) = inputs.collections.configurations.bid_data_processing
 
 """
     clearing_hydro_representation(inputs::AbstractInputs)
@@ -1338,13 +1337,6 @@ settlement_type(inputs::AbstractInputs) = inputs.collections.configurations.sett
 Return the make whole payments type.
 """
 make_whole_payments(inputs::AbstractInputs) = inputs.collections.configurations.make_whole_payments
-
-"""
-    price_limits(inputs::AbstractInputs)
-
-Return the price cap type.
-"""
-price_limits(inputs::AbstractInputs) = inputs.collections.configurations.price_limits
 
 """
     demand_deficit_cost(inputs::AbstractInputs)
@@ -1620,6 +1612,9 @@ function is_skipped(inputs::AbstractInputs, construction_type::String)
 end
 
 function validate_bidding_group_bids(inputs::AbstractInputs)
-    return inputs.collections.configurations.bidding_group_bid_validation ==
-           Configurations_BiddingGroupBidValidation.VALIDATE
+    return inputs.collections.configurations.bid_data_processing in
+           [
+        Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
+        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
+    ]
 end

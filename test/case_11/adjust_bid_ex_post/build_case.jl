@@ -39,12 +39,12 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
     hydro_spillage_cost = 1.0,
-    settlement_type = IARA.Configurations_SettlementType.DOUBLE,
+    settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
@@ -206,7 +206,7 @@ hydro_production = zeros(1, number_of_subperiods, number_of_scenarios, number_of
 for scen in 1:number_of_scenarios
     hydro_production[:, :, scen, :] .= inflow[:, :, scen, :] * 1.0 * subperiod_duration_in_hours
 end
-quantity_offer =
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -215,8 +215,8 @@ quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-# quantity_offer = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
-price_offer =
+# quantity_bid = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
+price_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -225,14 +225,14 @@ price_offer =
         number_of_scenarios,
         number_of_periods,
     )
-quantity_offer[2, :, :, :, :, :] = gnd_production
-quantity_offer[1, :, :, :, :, :] = hydro_production
-price_offer[1, :, :, :, :, :] .= 10.0
-price_offer[2, :, :, :, :, :] .= 20.0
+quantity_bid[2, :, :, :, :, :] = gnd_production
+quantity_bid[1, :, :, :, :, :] = hydro_production
+price_bid[1, :, :, :, :, :] .= 10.0
+price_bid[2, :, :, :, :, :] .= 20.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2"],
     labels_buses = ["bus_1"],
@@ -248,8 +248,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["bg_1", "bg_2"],
     labels_buses = ["bus_1"],
@@ -266,8 +266,8 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )
 
 number_of_subscenarios = 2

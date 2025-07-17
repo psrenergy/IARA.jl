@@ -21,15 +21,23 @@ Collection representing the bidding groups in the system.
     label::Vector{String} = []
     risk_factor::Vector{Vector{Float64}} = []
     segment_fraction::Vector{Vector{Float64}} = []
+    ex_post_adjust_mode::Vector{BiddingGroup_ExPostAdjustMode.T} = []
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
-    quantity_offer_file::String = ""
-    price_offer_file::String = ""
-    quantity_offer_profile_file::String = ""
-    price_offer_profile_file::String = ""
+    bid_price_limit_source::Vector{BiddingGroup_BidPriceLimitSource.T} = []
+    fixed_cost::Vector{Float64} = []
+    quantity_bid_file::String = ""
+    price_bid_file::String = ""
+    quantity_bid_profile_file::String = ""
+    price_bid_profile_file::String = ""
     parent_profile_file::String = ""
     complementary_grouping_profile_file::String = ""
     minimum_activation_level_profile_file::String = ""
+    bid_price_limit_justified_independent_file::String = ""
+    bid_price_limit_non_justified_independent_file::String = ""
+    bid_price_limit_justified_profile_file::String = ""
+    bid_price_limit_non_justified_profile_file::String = ""
+    bid_justifications_file::String = ""
     # caches
     _has_generation_besides_virtual_reservoirs::Vector{Bool} = []
     _number_of_valid_bidding_segments::Vector{Int} = Int[]
@@ -55,6 +63,12 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 
     bidding_group.label = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
     bidding_group.asset_owner_index = PSRI.get_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
+    bidding_group.bid_price_limit_source =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "BiddingGroup", "bid_price_limit_source"),
+            BiddingGroup_BidPriceLimitSource.T,
+        )
+    bidding_group.fixed_cost = PSRI.get_parms(inputs.db, "BiddingGroup", "fixed_cost")
 
     # Load vectors
     bidding_group.risk_factor = PSRI.get_vectors(inputs.db, "BiddingGroup", "risk_factor")
@@ -69,21 +83,55 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         end
     end
 
+    bidding_group.ex_post_adjust_mode =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "BiddingGroup", "ex_post_adjust_mode"),
+            BiddingGroup_ExPostAdjustMode.T,
+        )
+
     # Load time series files
-    bidding_group.quantity_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_offer")
-    bidding_group.price_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_offer")
-    bidding_group.quantity_offer_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_offer_profile")
-    bidding_group.price_offer_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_offer_profile")
+    bidding_group.quantity_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_bid")
+    bidding_group.price_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_bid")
+    bidding_group.quantity_bid_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_bid_profile")
+    bidding_group.price_bid_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_bid_profile")
     bidding_group.parent_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "parent_profile")
     bidding_group.complementary_grouping_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
     bidding_group.minimum_activation_level_profile_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
+    bidding_group.bid_price_limit_justified_independent_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_justified_independent",
+        )
+    bidding_group.bid_price_limit_non_justified_independent_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_non_justified_independent",
+        )
+    bidding_group.bid_price_limit_justified_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_justified_profile",
+        )
+    bidding_group.bid_price_limit_non_justified_profile_file =
+        PSRDatabaseSQLite.read_time_series_file(
+            inputs.db,
+            "BiddingGroup",
+            "bid_price_limit_non_justified_profile",
+        )
+    bidding_group.bid_justifications_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "bid_justifications")
+
+    # Caches
     bidding_group._has_generation_besides_virtual_reservoirs = zeros(Bool, num_bidding_groups)
 
     update_time_series_from_db!(bidding_group, inputs.db, initial_date_time(inputs))
@@ -242,6 +290,17 @@ Validate the BiddingGroup's context within the inputs. Return the number of erro
 function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGroup)
     num_errors = 0
 
+    # Check if bid files are necessary, and if so, if they are provided
+    if read_bids_from_file(inputs) && any(bidding_group._has_generation_besides_virtual_reservoirs)
+        if (bidding_group.quantity_bid_file == "" || bidding_group.price_bid_file == "") &&
+           (bidding_group.quantity_bid_profile_file == "" || bidding_group.price_bid_profile_file == "")
+            @error(
+                "Bid files are required for some bidding groups, but the quantity or price bid files are missing."
+            )
+            num_errors += 1
+        end
+    end
+
     # Check if the assigned AssetOwner exists in the database
     asset_owners = index_of_elements(inputs, AssetOwner)
     for i in 1:length(bidding_group)
@@ -250,6 +309,38 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
                 "BiddingGroup $(bidding_group.label[i]) AssetOwner ID $(bidding_group.asset_owner_index[i]) not found."
             )
             num_errors += 1
+        end
+    end
+
+    # Check if the bid price limit files are necessary, and if so, if they are provided
+    if must_read_bid_price_limit_file(inputs)
+        if has_any_simple_bids(inputs)
+            if bidding_group.bid_price_limit_justified_independent_file == ""
+                @error(
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit justified independent file is missing."
+                )
+                num_errors += 1
+            end
+            if bidding_group.bid_price_limit_non_justified_independent_file == ""
+                @error(
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit non-justified independent file is missing."
+                )
+                num_errors += 1
+            end
+        end
+        if has_any_profile_bids(inputs)
+            if bidding_group.bid_price_limit_justified_profile_file == ""
+                @error(
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit justified profile file is missing."
+                )
+                num_errors += 1
+            end
+            if bidding_group.bid_price_limit_non_justified_profile_file == ""
+                @error(
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit non-justified profile file is missing."
+                )
+                num_errors += 1
+            end
         end
     end
 
@@ -324,15 +415,37 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             num_errors += 1
         end
     end
-    counteroffer_agent =
-        findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT)
-    if !isnothing(counteroffer_agent)
-        if counteroffer_agent in bidding_group.asset_owner_index
-            bg_indices = findall(bidding_group.asset_owner_index .== counteroffer_agent)
+    supply_security_agent =
+        findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.SUPPLY_SECURITY_AGENT)
+    if !isnothing(supply_security_agent)
+        if supply_security_agent in bidding_group.asset_owner_index
+            bg_indices = findall(bidding_group.asset_owner_index .== supply_security_agent)
             @error(
-                "The counteroffer agent cannot be assigned to a bidding group. It is assigned to $(bidding_group.label[bg_indices])."
+                "The supply security agent cannot be assigned to a bidding group. It is assigned to $(bidding_group.label[bg_indices])."
             )
             num_errors += 1
+        end
+    end
+
+    if construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.SKIP ||
+       construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.SKIP
+        bg_indices = index_of_elements(inputs, BiddingGroup)
+        for bg in bg_indices
+            if bidding_group_has_renewable_units(inputs, bg) &&
+               bidding_group_ex_post_adjust(inputs, bg) ==
+               BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION
+                # If the bidding group has renewable units and the ex post adjustment mode is proportional to ex post generation
+                # over ex ante generation, you're not bidding all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you're not bidding all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+            end
+
+            if bidding_group_has_thermal_units(inputs, bg) &&
+               bidding_group_ex_post_adjust(inputs, bg) ==
+               BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+                # If the bidding group has thermal units and the ex post adjustment mode is proportional to ex post generation
+                # over ex ante bid, you're not bidding all the energy available in the ex post problem
+                @warn "Bidding group $(bidding_group_label(inputs, bg)) has thermal units and the ex post adjustment mode is proportional to ex post generation over ex ante bid. This means that you're bidding all the thermal energy available in the ex post problem. To avoid this distortion, consider splitting thermal and reewable units into different bidding groups."
+            end
         end
     end
     return num_errors
@@ -354,7 +467,8 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
         bg_index = hydro_unit_bidding_group_index(inputs, h)
         if !is_null(bg_index)
             number_of_units[bg_index] += 1
-            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+            if clearing_hydro_representation(inputs) ==
+               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
                is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
                 number_of_hydro_units_in_virtual_reservoirs[bg_index] += 1
             end
@@ -405,7 +519,15 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
+bidding_group_has_hydro_units(inputs::AbstractInputs, bg::Int) = bg in hydro_unit_bidding_group_index(inputs)
+
+bidding_group_has_thermal_units(inputs::AbstractInputs, bg::Int) = bg in thermal_unit_bidding_group_index(inputs)
+
+bidding_group_has_renewable_units(inputs::AbstractInputs, bg::Int) = bg in renewable_unit_bidding_group_index(inputs)
+
 has_generation_besides_virtual_reservoirs(bg::BiddingGroup, i::Int) = bg._has_generation_besides_virtual_reservoirs[i]
+
+bidding_group_ex_post_adjust(inputs::AbstractInputs, i::Int) = inputs.collections.bidding_group.ex_post_adjust_mode[i]
 
 function has_any_simple_bids(inputs::AbstractInputs)
     return maximum_number_of_bg_bidding_segments(inputs) > 0
@@ -429,12 +551,12 @@ function has_any_profile_complex_bids(inputs::AbstractInputs)
 end
 
 function has_any_bid_simple_input_files(inputs::AbstractInputs)
-    return bidding_group_quantity_offer_file(inputs) != "" && bidding_group_price_offer_file(inputs) != ""
+    return bidding_group_quantity_bid_file(inputs) != "" && bidding_group_price_bid_file(inputs) != ""
 end
 
 function has_any_profile_input_files(inputs::AbstractInputs)
-    return bidding_group_quantity_offer_profile_file(inputs) != "" &&
-           bidding_group_price_offer_profile_file(inputs) != ""
+    return bidding_group_quantity_bid_profile_file(inputs) != "" &&
+           bidding_group_price_bid_profile_file(inputs) != ""
 end
 
 """
@@ -508,4 +630,21 @@ function update_number_of_valid_profiles!(inputs::AbstractInputs, values::Vector
     end
     inputs.collections.bidding_group._number_of_valid_profiles .= values
     return nothing
+end
+
+function use_bid_price_limits_from_file(inputs::AbstractInputs, bidding_group_index::Int)
+    return bidding_group_bid_price_limit_source(inputs)[bidding_group_index] ==
+           BiddingGroup_BidPriceLimitSource.READ_FROM_FILE
+end
+
+function must_read_bid_price_limit_file(inputs::AbstractInputs)
+    return any(
+        bidding_group_bid_price_limit_source(inputs) .==
+        BiddingGroup_BidPriceLimitSource.READ_FROM_FILE,
+    ) && validate_bidding_group_bids(inputs)
+end
+
+function bids_justifications_exist(inputs::AbstractInputs)
+    return bidding_group_bid_justifications_file(inputs) != "" &&
+           isfile(joinpath(path_case(inputs), bidding_group_bid_justifications_file(inputs)))
 end

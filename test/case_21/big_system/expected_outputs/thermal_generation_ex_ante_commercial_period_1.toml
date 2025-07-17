@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subperiod"]
+dimension_size = [1, 1, 1]
+initial_date = "2025-01-01 00:00:00"
+time_dimension = "period"
+frequency = "monthly"
+unit = "GWh"
+labels = ["Termica 1", "Termica 2", "Termica 3", "Termica 4", "Termica 5", "Termica 6"]

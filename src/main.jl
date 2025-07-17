@@ -293,7 +293,8 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     ex_post_commercial_outputs =
         build_clearing_outputs(inputs)
 
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+    if clearing_hydro_representation(inputs) ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
        generate_heuristic_bids_for_clearing(inputs)
         run_time_options =
             RunTimeOptions(;
@@ -338,20 +339,10 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             update_time_series_from_db!(inputs, period)
 
             # Reference curve
-            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+            if clearing_hydro_representation(inputs) ==
+               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
                generate_heuristic_bids_for_clearing(inputs)
                 build_reference_curve(inputs, reference_curve_outputs, period)
-            end
-
-            # Bid price limits
-            if validate_bidding_group_bids(inputs)
-                run_time_options = RunTimeOptions()
-                bidding_group_bid_price_limits_for_period(
-                    inputs,
-                    run_time_options,
-                    period;
-                    outputs = heuristic_bids_outputs,
-                )
             end
 
             # Heuristic bids
@@ -360,12 +351,34 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 for scenario in 1:number_of_scenarios(inputs)
                     # Update the time series in the external files to the current period and scenario
                     update_time_series_views_from_external_files!(inputs; period, scenario)
-                    markup_offers_for_period_scenario(
+                    markup_bids_for_period_scenario(
                         inputs,
                         run_time_options,
                         period,
                         scenario;
                         outputs = heuristic_bids_outputs,
+                    )
+                end
+            end
+
+            # Bid validation
+            if validate_bidding_group_bids(inputs)
+                run_time_options = RunTimeOptions()
+                bidding_group_bid_price_limits_for_period(
+                    inputs,
+                    run_time_options,
+                    period;
+                    outputs = heuristic_bids_outputs,
+                )
+                for scenario in 1:number_of_scenarios(inputs)
+                    # Update the time series in the external files to the current period and scenario
+                    update_time_series_views_from_external_files!(inputs; period, scenario)
+                    validate_bids_for_period_scenario(
+                        inputs,
+                        heuristic_bids_outputs,
+                        run_time_options;
+                        period,
+                        scenario,
                     )
                 end
             end
@@ -419,7 +432,8 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             ex_post_physical_outputs,
             ex_post_commercial_outputs,
         )
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
            generate_heuristic_bids_for_clearing(inputs)
             finalize_outputs!(reference_curve_outputs)
         end
@@ -446,7 +460,8 @@ function simulate_all_scenarios_of_single_period_market_clearing(
     ex_post_commercial_outputs =
         build_clearing_outputs(inputs)
 
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+    if clearing_hydro_representation(inputs) ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
        generate_heuristic_bids_for_clearing(inputs)
         run_time_options =
             RunTimeOptions(;
@@ -482,20 +497,10 @@ function simulate_all_scenarios_of_single_period_market_clearing(
         update_time_series_from_db!(inputs, period)
 
         # Reference curve
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
            generate_heuristic_bids_for_clearing(inputs)
             build_reference_curve(inputs, reference_curve_outputs, period)
-        end
-
-        # Bid price limits
-        if validate_bidding_group_bids(inputs)
-            run_time_options = RunTimeOptions()
-            bidding_group_bid_price_limits_for_period(
-                inputs,
-                run_time_options,
-                period;
-                outputs = heuristic_bids_outputs,
-            )
         end
 
         # Heuristic bids
@@ -504,12 +509,34 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             for scenario in 1:number_of_scenarios(inputs)
                 # Update the time series in the external files to the current period and scenario
                 update_time_series_views_from_external_files!(inputs; period, scenario)
-                markup_offers_for_period_scenario(
+                markup_bids_for_period_scenario(
                     inputs,
                     run_time_options,
                     period,
                     scenario;
                     outputs = heuristic_bids_outputs,
+                )
+            end
+        end
+
+        # Bid validation
+        if validate_bidding_group_bids(inputs)
+            run_time_options = RunTimeOptions()
+            bidding_group_bid_price_limits_for_period(
+                inputs,
+                run_time_options,
+                period;
+                outputs = heuristic_bids_outputs,
+            )
+            for scenario in 1:number_of_scenarios(inputs)
+                # Update the time series in the external files to the current period and scenario
+                update_time_series_views_from_external_files!(inputs; period, scenario)
+                validate_bids_for_period_scenario(
+                    inputs,
+                    heuristic_bids_outputs,
+                    run_time_options;
+                    period,
+                    scenario,
                 )
             end
         end
@@ -560,7 +587,8 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             ex_post_physical_outputs,
             ex_post_commercial_outputs,
         )
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
            generate_heuristic_bids_for_clearing(inputs)
             finalize_outputs!(reference_curve_outputs)
         end
@@ -617,7 +645,8 @@ function run_clearing_simulation(
                     subscenario,
                 )
 
-            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+            if clearing_hydro_representation(inputs) ==
+               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
                 post_process_virtual_reservoirs!(
                     inputs,
                     run_time_options,
@@ -675,7 +704,8 @@ function single_period_heuristic_bid(
     if any_elements(inputs, BiddingGroup)
         initialize_heuristic_bids_outputs(inputs, outputs, run_time_options)
     end
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+    if clearing_hydro_representation(inputs) ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
         initialize_virtual_reservoir_bids_outputs(inputs, outputs, run_time_options)
     end
     if validate_bidding_group_bids(inputs)
@@ -685,7 +715,8 @@ function single_period_heuristic_bid(
             run_time_options,
         )
     end
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+    if clearing_hydro_representation(inputs) ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
         run_time_options =
             RunTimeOptions(;
                 is_reference_curve = true,
@@ -703,7 +734,8 @@ function single_period_heuristic_bid(
         update_time_series_from_db!(inputs, period)
 
         # Reference curve
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             build_reference_curve(inputs, reference_curve_outputs, period)
         end
 
@@ -722,7 +754,7 @@ function single_period_heuristic_bid(
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
             update_time_series_views_from_external_files!(inputs; period, scenario)
-            markup_offers_for_period_scenario(
+            markup_bids_for_period_scenario(
                 inputs,
                 run_time_options,
                 period,
@@ -732,7 +764,8 @@ function single_period_heuristic_bid(
         end
     finally
         finalize_outputs!(outputs)
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             finalize_outputs!(reference_curve_outputs)
         end
     end
@@ -740,7 +773,8 @@ function single_period_heuristic_bid(
     if any_elements(inputs, BiddingGroup)
         generate_individual_bids_files(inputs)
     end
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+    if clearing_hydro_representation(inputs) ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
         generate_individual_virtual_reservoir_bids_files(inputs)
     end
 

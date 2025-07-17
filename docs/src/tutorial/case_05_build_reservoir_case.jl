@@ -64,8 +64,8 @@ db = IARA.create_study!(PATH_CASE;
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 500.0,
     hydro_minimum_outflow_violation_cost = 600.0,
-    clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
-    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
+    clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
@@ -220,11 +220,11 @@ IARA.link_time_series_to_file(
 #
 
 IARA.time_series_dataframe(
-    joinpath(PATH_CASE, "virtual_reservoir_energy_offer.csv"),
+    joinpath(PATH_CASE, "virtual_reservoir_energy_bid.csv"),
 )
 
 IARA.time_series_dataframe(
-    joinpath(PATH_CASE, "virtual_reservoir_price_offer.csv"),
+    joinpath(PATH_CASE, "virtual_reservoir_price_bid.csv"),
 )
 
 #
@@ -232,8 +232,8 @@ IARA.time_series_dataframe(
 IARA.link_time_series_to_file(
     db,
     "VirtualReservoir";
-    quantity_offer = "virtual_reservoir_energy_offer",
-    price_offer = "virtual_reservoir_price_offer",
+    quantity_bid = "virtual_reservoir_energy_bid",
+    price_bid = "virtual_reservoir_price_bid",
 )
 
 # ## Closing the study

@@ -21,14 +21,9 @@ function build_ui_operator_plots(
     plots_path = joinpath(output_path(inputs), "plots", "operator")
     mkdir(plots_path)
 
-    # Profit
-    profit_file_path = get_profit_file(inputs)
-    plot_path = joinpath(plots_path, "total_profit")
-    plot_operator_output(inputs, profit_file_path, plot_path, get_name(inputs, "total_profit"); round_data = true)
-
     # Revenue
     revenue_files = get_revenue_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(revenue_files) == 2
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
         plot_operator_output(
@@ -55,7 +50,7 @@ function build_ui_operator_plots(
 
     # Generation
     generation_files = get_generation_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(generation_files) == 2
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
         plot_operator_output(
@@ -95,7 +90,7 @@ function build_ui_agents_plots(
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(revenue_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
@@ -129,7 +124,7 @@ function build_ui_agents_plots(
 
     # Generation
     generation_files = get_generation_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(generation_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
@@ -153,6 +148,25 @@ function build_ui_agents_plots(
         end
     end
 
+    # Costs
+    cost_file_path = get_variable_cost_file(inputs)
+    if isfile(cost_file_path)
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - $(get_name(inputs, "total_cost"))"
+            plot_path = joinpath(plots_path, "cost_$ao_label.html")
+            plot_agent_output(
+                inputs,
+                cost_file_path,
+                plot_path,
+                asset_owner_index,
+                title;
+                round_data = true,
+                fixed_component = bidding_group_fixed_cost(inputs),
+            )
+        end
+    end
+
     return nothing
 end
 
@@ -164,7 +178,7 @@ function build_ui_general_plots(
 
     # Spot price
     files = get_load_marginal_cost_files(inputs)
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(files) == 2
         plot_general_output(
             inputs;
@@ -215,44 +229,44 @@ function build_ui_general_plots(
     end
 
     # Offer curve
-    plot_offer_curve(inputs, plots_path)
+    plot_bid_curve(inputs, plots_path)
 
     return nothing
 end
 
-function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
-    offer_files = get_offer_file_paths(inputs)
-    if !isempty(offer_files)
+function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
+    bid_files = get_bid_file_paths(inputs)
+    if !isempty(bid_files)
         plot_no_markup_price = false
-        quantity_offer_file = offer_files[1]
-        price_offer_file = offer_files[2]
-        if length(offer_files) == 4
-            no_markup_price_offer_file = offer_files[3]
-            no_markup_quantity_offer_file = offer_files[4]
+        quantity_bid_file = bid_files[1]
+        price_bid_file = bid_files[2]
+        if length(bid_files) == 4
+            no_markup_price_bid_file = bid_files[3]
+            no_markup_quantity_bid_file = bid_files[4]
             plot_no_markup_price = true
         end
 
-        quantity_data, quantity_metadata = read_timeseries_file(quantity_offer_file)
-        price_data, price_metadata = read_timeseries_file(price_offer_file)
+        quantity_data, quantity_metadata = read_timeseries_file(quantity_bid_file)
+        price_data, price_metadata = read_timeseries_file(price_bid_file)
         if plot_no_markup_price
-            no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_offer_file)
-            no_markup_quantity_data, no_markup_quantity_metadata = read_timeseries_file(no_markup_quantity_offer_file)
+            no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_bid_file)
+            no_markup_quantity_data, no_markup_quantity_metadata = read_timeseries_file(no_markup_quantity_bid_file)
         end
 
-        @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price offer file columns"
-        @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price offer file dimensions"
-        @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price offer file labels"
+        @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price bid file columns"
+        @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price bid file dimensions"
+        @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price bid file labels"
         if plot_no_markup_price
             # Compare the price files
-            @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price offer file columns"
+            @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price bid file columns"
             # The number of periods in the reference price file is always 1
             # The number of bid segments does not need to match
-            @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price offer file dimensions"
-            @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price offer file labels"
+            @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price bid file dimensions"
+            @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price bid file labels"
             # Compare both "no_markup" files
-            @assert no_markup_price_metadata.number_of_time_series == no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity offer file columns"
-            @assert no_markup_price_metadata.dimension_size == no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity offer file dimensions"
-            @assert no_markup_price_metadata.labels == no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity offer file labels"
+            @assert no_markup_price_metadata.number_of_time_series == no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity bid file columns"
+            @assert no_markup_price_metadata.dimension_size == no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity bid file dimensions"
+            @assert no_markup_price_metadata.labels == no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity bid file labels"
         end
 
         num_labels = quantity_metadata.number_of_time_series
@@ -358,14 +372,14 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
 
             configs = Vector{Config}()
 
-            title = get_name(inputs, "available_offers")
+            title = get_name(inputs, "available_bids")
             if num_subperiods > 1
                 title *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
             color_idx = 0
             for bus in 1:num_buses
                 color_idx += 1
-                name = get_name(inputs, "offers")
+                name = get_name(inputs, "bids")
                 if num_buses > 1
                     name *= " - $(bus_label(inputs, bus))"
                 end
@@ -401,11 +415,21 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             # Add demand lines
             ex_ante_demand, ex_post_demand = get_demands_to_plot(inputs)
             demand_name = "demand"
-            if any_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+            # Remove all renewable generation from the demand
+            if any_elements(inputs, RenewableUnit)
                 ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs)
                 ex_ante_demand = ex_ante_demand .- ex_ante_generation
                 ex_post_demand = ex_post_demand .- ex_post_generation
                 demand_name = "net_demand"
+            end
+            # Add back the ex-ante value of renewable bids
+            if any_elements(inputs, RenewableUnit; filters = [!has_no_bidding_group])
+                ex_ante_generation, _ = get_renewable_generation_to_plot(inputs; filters = [!has_no_bidding_group])
+                ex_ante_demand = ex_ante_demand .+ ex_ante_generation
+                num_subscenarios = size(ex_post_demand, 1)
+                for s in 1:num_subscenarios
+                    ex_post_demand[s, :] = ex_post_demand[s, :] .+ ex_ante_generation
+                end
             end
             ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
             ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
@@ -464,18 +488,34 @@ function plot_offer_curve(inputs::AbstractInputs, plots_path::String)
             )
 
             main_configuration = Config(;
-                title = title,
-                xaxis = Dict("title" => "$(get_name(inputs, "quantity")) [MW]"),
-                yaxis = Dict("title" => "$(get_name(inputs, "price")) [\$/MWh]"),
+                title = Dict(
+                    "text" => title,
+                    "font" => Dict("size" => title_font_size()),
+                ),
+                xaxis = Dict(
+                    "title" => Dict(
+                        "text" => "$(get_name(inputs, "quantity")) [MW]",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
+                yaxis = Dict(
+                    "title" => Dict(
+                        "text" => "$(get_name(inputs, "price")) [\$/MWh]",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
                 legend = Dict(
                     "yanchor" => "bottom",
                     "xanchor" => "left",
                     "yref" => "container",
                     "orientation" => "h",
+                    "font" => Dict("size" => legend_font_size()),
                 ),
             )
 
-            _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "offer_curve_subperiod_$subperiod.html"))
+            _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "bid_curve_subperiod_$subperiod.html"))
         end
     end
 
@@ -491,6 +531,7 @@ function plot_agent_output(
     subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
+    fixed_component::Vector{Float64} = Float64[],
 )
     data, metadata = read_timeseries_file(file_path)
 
@@ -526,8 +567,9 @@ function plot_agent_output(
     end
     @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
 
+    asset_onwer_bidding_groups = bidding_group_asset_owner_index(inputs) .== asset_owner_index
     labels_to_read = String[]
-    for bg in bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
+    for bg in bidding_group_label(inputs)[asset_onwer_bidding_groups]
         for bus in bus_label(inputs)
             push!(labels_to_read, "$bg - $bus")
         end
@@ -540,6 +582,9 @@ function plot_agent_output(
 
     # Fixed scenario, fixed period, sum for all bidding groups
     reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
+    if !isempty(fixed_component)
+        fixed_component = sum(fixed_component[asset_onwer_bidding_groups]; dims = 1) / num_subperiods
+    end
 
     configs = Vector{Config}()
 
@@ -562,30 +607,65 @@ function plot_agent_output(
         end
 
         main_configuration = Config(;
-            title = title,
+            title = Dict(
+                "text" => title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => get_name(inputs, "subperiod"),
+                "title" => Dict(
+                    "text" => get_name(inputs, "subperiod"),
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string.(1:num_subperiods),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => "$(metadata.unit)"),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text" => "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     else
         for subperiod in 1:num_subperiods
+            variable_component_name = ""
+            if !isempty(fixed_component)
+                fixed_component_name = get_name(inputs, "fixed_cost")
+                variable_component_name = get_name(inputs, "variable_cost")
+                if num_subperiods > 1
+                    fixed_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+                end
+                push!(
+                    configs,
+                    Config(;
+                        x = 1:num_subscenarios,
+                        y = repeat(fixed_component, num_subscenarios),
+                        name = fixed_component_name,
+                        marker = Dict("color" => _get_plot_color(num_subperiods + subperiod)),
+                        type = "bar",
+                    ),
+                )
+            end
+            if num_subperiods > 1
+                variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
             push!(
                 configs,
                 Config(;
                     x = 1:num_subscenarios,
                     y = reshaped_data[subperiod, :],
-                    name = "$(get_name(inputs, "subperiod")) $subperiod",
-                    line = Dict("color" => _get_plot_color(subperiod)),
+                    name = variable_component_name,
+                    marker = Dict("color" => _get_plot_color(subperiod)),
                     type = "bar",
                 ),
             )
@@ -602,19 +682,34 @@ function plot_agent_output(
             x_axis_ticktext = string.(1:num_subscenarios)
         end
         main_configuration = Config(;
-            title = title,
+            barmode = "stack",
+            title = Dict(
+                "text" => title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => x_axis_title,
+                "title" => Dict(
+                    "text" => x_axis_title,
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => x_axis_tickvals,
                 "ticktext" => x_axis_ticktext,
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => "$(metadata.unit)"),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text" => "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     end
@@ -705,19 +800,33 @@ function plot_operator_output(
             end
 
             main_configuration = Config(;
-                title = title * " - $(get_name(inputs, "subscenario")) $subscenario",
+                title = Dict(
+                    "text" => title * " - $(get_name(inputs, "subscenario")) $subscenario",
+                    "font" => Dict("size" => title_font_size()),
+                ),
                 xaxis = Dict(
-                    "title" => get_name(inputs, "subperiod"),
+                    "title" => Dict(
+                        "text" => get_name(inputs, "subperiod"),
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
                     "tickmode" => "array",
                     "tickvals" => 1:num_subperiods,
                     "ticktext" => string.(1:num_subperiods),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
                 ),
-                yaxis = Dict("title" => metadata.unit),
+                yaxis = Dict(
+                    "title" => Dict(
+                        "text" => "$(metadata.unit)",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
                 legend = Dict(
                     "yanchor" => "bottom",
                     "xanchor" => "left",
                     "yref" => "container",
                     "orientation" => "h",
+                    "font" => Dict("size" => legend_font_size()),
                 ),
             )
 
@@ -734,7 +843,7 @@ function plot_operator_output(
                         x = 1:num_subscenarios,
                         y = reshaped_data[asset_owner_index, subperiod, :],
                         name = ao_label,
-                        line = Dict("color" => _get_plot_color(asset_owner_index)),
+                        marker = Dict("color" => _get_plot_color(asset_owner_index)),
                         type = "bar",
                     ),
                 )
@@ -755,19 +864,33 @@ function plot_operator_output(
                 plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
             main_configuration = Config(;
-                title = plot_title,
+                title = Dict(
+                    "text" => plot_title,
+                    "font" => Dict("size" => title_font_size()),
+                ),
                 xaxis = Dict(
-                    "title" => x_axis_title,
+                    "title" => Dict(
+                        "text" => x_axis_title,
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
                     "tickmode" => "array",
                     "tickvals" => x_axis_tickvals,
                     "ticktext" => x_axis_ticktext,
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
                 ),
-                yaxis = Dict("title" => "$(metadata.unit)"),
+                yaxis = Dict(
+                    "title" => Dict(
+                        "text" => "$(metadata.unit)",
+                        "font" => Dict("size" => axis_title_font_size()),
+                    ),
+                    "tickfont" => Dict("size" => axis_tick_font_size()),
+                ),
                 legend = Dict(
                     "yanchor" => "bottom",
                     "xanchor" => "left",
                     "yref" => "container",
                     "orientation" => "h",
+                    "font" => Dict("size" => legend_font_size()),
                 ),
             )
 
@@ -855,19 +978,33 @@ function plot_general_output(
             )
         end
         main_configuration = Config(;
-            title = title,
+            title = Dict(
+                "text" => title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => get_name(inputs, "subperiod"),
+                "title" => Dict(
+                    "text" => get_name(inputs, "subperiod"),
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => 1:num_subperiods,
                 "ticktext" => string(1:num_subperiods),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => metadata.unit),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text" => "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     else
@@ -883,7 +1020,7 @@ function plot_general_output(
                     x = 1:num_subscenarios,
                     y = reshaped_data[agent, subperiod, :],
                     name = label,
-                    line = Dict("color" => _get_plot_color(color_idx)),
+                    marker = Dict("color" => _get_plot_color(color_idx)),
                     type = "bar",
                     plot_kwargs...,
                 ),
@@ -901,19 +1038,33 @@ function plot_general_output(
             x_axis_ticktext = string.(1:num_subscenarios)
         end
         main_configuration = Config(;
-            title = title,
+            title = Dict(
+                "text" => title,
+                "font" => Dict("size" => title_font_size()),
+            ),
             xaxis = Dict(
-                "title" => x_axis_title,
+                "title" => Dict(
+                    "text" => x_axis_title,
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
                 "tickmode" => "array",
                 "tickvals" => x_axis_tickvals,
                 "ticktext" => x_axis_ticktext,
+                "tickfont" => Dict("size" => axis_tick_font_size()),
             ),
-            yaxis = Dict("title" => "$(metadata.unit)"),
+            yaxis = Dict(
+                "title" => Dict(
+                    "text" => "$(metadata.unit)",
+                    "font" => Dict("size" => axis_title_font_size()),
+                ),
+                "tickfont" => Dict("size" => axis_tick_font_size()),
+            ),
             legend = Dict(
                 "yanchor" => "bottom",
                 "xanchor" => "left",
                 "yref" => "container",
                 "orientation" => "h",
+                "font" => Dict("size" => legend_font_size()),
             ),
         )
     end

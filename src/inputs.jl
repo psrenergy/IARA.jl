@@ -123,8 +123,6 @@ function load_inputs(args::Args)
     # Initialize or allocate all fields from collections
     initialize!(inputs)
 
-    fill_caches!(inputs)
-
     return inputs
 end
 
@@ -167,6 +165,9 @@ function initialize!(inputs::Inputs)
     for fieldname in fieldnames(Collections)
         initialize!(getfield(inputs.collections, fieldname), inputs)
     end
+
+    # Fill caches with collection data
+    fill_caches!(inputs)
 
     # Validate all collections
     try
@@ -317,7 +318,8 @@ Store pre-calculated values for the collections.
 """
 
 function fill_caches!(inputs::Inputs)
-    if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+    if clearing_hydro_representation(inputs) ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
         fill_hydro_unit_virtual_reservoir_index!(inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)
             fill_waveguide_points!(inputs, vr)
@@ -455,139 +457,139 @@ function time_series_spot_price(inputs)
 end
 
 """
-    time_series_quantity_offer(inputs::Inputs)
+    time_series_quantity_bid(inputs::Inputs)
 
-Return the quantity offer time series.
+Return the quantity bid time series.
 """
-function time_series_quantity_offer(inputs)
+function time_series_quantity_bid(inputs)
     if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the quantity offer time series in MARKET_CLEARING run mode, use 'time_series_quantity_offer(inputs, period, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the quantity bid time series in MARKET_CLEARING run mode, use 'time_series_quantity_bid(inputs, period, scenario)'.",
         )
     end
 
-    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.quantity_offer)[3] > 1
-        error("Quantity offer time series is not available for StrategicBid run mode with multiple segments.")
+    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.quantity_bid)[3] > 1
+        error("Quantity bid time series is not available for StrategicBid run mode with multiple segments.")
     end
 
-    return inputs.time_series.quantity_offer
+    return inputs.time_series.quantity_bid
 end
 
 """
-    time_series_quantity_offer(inputs::Inputs, period::Int, scenario::Int)
+    time_series_quantity_bid(inputs::Inputs, period::Int, scenario::Int)
 
-Return the quantity offer time series for the given period and scenario.
+Return the quantity bid time series for the given period and scenario.
 """
-function time_series_quantity_offer(
+function time_series_quantity_bid(
     inputs,
     period::Int,
     scenario::Int,
 )
     if !is_market_clearing(inputs)
         error(
-            "This function is only available for MARKET_CLEARING run mode. To access the quantity offer time series in STRATEGIC_BID run mode, use 'time_series_quantity_offer(inputs)'.",
+            "This function is only available for MARKET_CLEARING run mode. To access the quantity bid time series in STRATEGIC_BID run mode, use 'time_series_quantity_bid(inputs)'.",
         )
     end
 
     if read_bids_from_file(inputs)
-        return inputs.time_series.quantity_offer
+        return inputs.time_series.quantity_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
+        quantity_bid, price_bid = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
         quantity_view = BidsView{Float64}()
-        quantity_view.data = quantity_offer
+        quantity_view.data = quantity_bid
         return quantity_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
 """
-    time_series_price_offer(inputs::Inputs)
+    time_series_price_bid(inputs::Inputs)
 
-Return the price offer time series.
+Return the price bid time series.
 """
-function time_series_price_offer(inputs)
+function time_series_price_bid(inputs)
     if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the price offer time series in MARKET_CLEARING run mode, use 'time_series_price_offer(inputs, period, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the price bid time series in MARKET_CLEARING run mode, use 'time_series_price_bid(inputs, period, scenario)'.",
         )
     end
 
-    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.price_offer)[3] > 1
-        error("Price offer time series is not available for StrategicBid run mode with multiple segments.")
+    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.price_bid)[3] > 1
+        error("Price bid time series is not available for StrategicBid run mode with multiple segments.")
     end
-    return inputs.time_series.price_offer
+    return inputs.time_series.price_bid
 end
 
 """
-    time_series_price_offer(inputs, period::Int, scenario::Int)
+    time_series_price_bid(inputs, period::Int, scenario::Int)
 
-Return the price offer time series for the given period and scenario.
+Return the price bid time series for the given period and scenario.
 """
-function time_series_price_offer(
+function time_series_price_bid(
     inputs,
     period::Int,
     scenario::Int,
 )
     if !is_market_clearing(inputs)
         error(
-            "This function is only available for MARKET_CLEARING run mode. To access the price offer time series in STRATEGIC_BID run mode, use 'time_series_price_offer(inputs)'.",
+            "This function is only available for MARKET_CLEARING run mode. To access the price bid time series in STRATEGIC_BID run mode, use 'time_series_price_bid(inputs)'.",
         )
     end
 
     if read_bids_from_file(inputs)
-        return inputs.time_series.price_offer
+        return inputs.time_series.price_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer, price_offer = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
+        quantity_bid, price_bid = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
         price_view = BidsView{Float64}()
-        price_view.data = price_offer
+        price_view.data = price_bid
         return price_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
 """
-    time_series_quantity_offer_profile(inputs::Inputs)
+    time_series_quantity_bid_profile(inputs::Inputs)
 
-Return the quantity offer profile time series.
+Return the quantity bid profile time series.
 """
-function time_series_quantity_offer_profile(
+function time_series_quantity_bid_profile(
     inputs,
     period::Int,
     scenario::Int,
 )
     if !is_market_clearing(inputs)
-        error("Quantity offer profile time series is only available for MarketClearing run mode.")
+        error("Quantity bid profile time series is only available for MarketClearing run mode.")
     end
     if read_bids_from_file(inputs)
-        return inputs.time_series.quantity_offer_profile
+        return inputs.time_series.quantity_bid_profile
     elseif generate_heuristic_bids_for_clearing(inputs)
-        error("Quantity offer profile time series is not available for heuristic bids.")
+        error("Quantity bid profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
 """
-    time_series_price_offer_profile(inputs::Inputs)
+    time_series_price_bid_profile(inputs::Inputs)
 
-Return the price offer profile time series.
+Return the price bid profile time series.
 """
-function time_series_price_offer_profile(
+function time_series_price_bid_profile(
     inputs,
     period::Int,
     scenario::Int,
 )
     if !is_market_clearing(inputs)
-        error("Price offer profile time series is only available for MarketClearing run mode.")
+        error("Price bid profile time series is only available for MarketClearing run mode.")
     end
     if read_bids_from_file(inputs)
-        return inputs.time_series.price_offer_profile
+        return inputs.time_series.price_bid_profile
     elseif generate_heuristic_bids_for_clearing(inputs)
-        error("Price offer profile time series is not available for heuristic bids.")
+        error("Price bid profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -609,7 +611,7 @@ function time_series_parent_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Parent profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -631,7 +633,7 @@ function time_series_complementary_grouping_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Complementary grouping profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -653,92 +655,92 @@ function time_series_minimum_activation_level_profile(
     elseif generate_heuristic_bids_for_clearing(inputs)
         error("Minimum activation level profile time series is not available for heuristic bids.")
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 """
-    time_series_virtual_reservoir_quantity_offer(inputs::Inputs)
+    time_series_virtual_reservoir_quantity_bid(inputs::Inputs)
 
-Return the virtual reservoir quantity offer time series.
+Return the virtual reservoir quantity bid time series.
 """
-function time_series_virtual_reservoir_quantity_offer(inputs)
+function time_series_virtual_reservoir_quantity_bid(inputs)
     if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir quantity offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs, period, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir quantity bid time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_quantity_bid(inputs, period, scenario)'.",
         )
     end
-    return inputs.time_series.virtual_reservoir_quantity_offer
+    return inputs.time_series.virtual_reservoir_quantity_bid
 end
 
 """
-    time_series_virtual_reservoir_quantity_offer(inputs, period::Int, scenario::Int)
+    time_series_virtual_reservoir_quantity_bid(inputs, period::Int, scenario::Int)
 
-Return the virtual reservoir quantity offer time series for the given period and scenario.
+Return the virtual reservoir quantity bid time series for the given period and scenario.
 """
-function time_series_virtual_reservoir_quantity_offer(
+function time_series_virtual_reservoir_quantity_bid(
     inputs,
     period::Int,
     scenario::Int,
 )
     if !(is_market_clearing(inputs))
         error(
-            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir quantity offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_quantity_offer(inputs)'.",
+            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir quantity bid time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_quantity_bid(inputs)'.",
         )
     end
 
     if read_bids_from_file(inputs)
-        return inputs.time_series.virtual_reservoir_quantity_offer
+        return inputs.time_series.virtual_reservoir_quantity_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer, price_offer =
+        quantity_bid, price_bid =
             read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)
         quantity_view = VirtualReservoirBidsView{Float64}()
-        quantity_view.data = quantity_offer
+        quantity_view.data = quantity_bid
         return quantity_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
 """
-    time_series_virtual_reservoir_price_offer(inputs)
+    time_series_virtual_reservoir_price_bid(inputs)
 
-Return the virtual reservoir price offer time series.
+Return the virtual reservoir price bid time series.
 """
-function time_series_virtual_reservoir_price_offer(inputs)
+function time_series_virtual_reservoir_price_bid(inputs)
     if run_mode(inputs) != RunMode.STRATEGIC_BID
         error(
-            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir price offer time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_price_offer(inputs, period, scenario)'.",
+            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir price bid time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_price_bid(inputs, period, scenario)'.",
         )
     end
-    return inputs.time_series.virtual_reservoir_price_offer
+    return inputs.time_series.virtual_reservoir_price_bid
 end
 
 """
-    time_series_virtual_reservoir_price_offer(inputs, period::Int, scenario::Int)
+    time_series_virtual_reservoir_price_bid(inputs, period::Int, scenario::Int)
 
-Return the virtual reservoir price offer time series for the given period and scenario.
+Return the virtual reservoir price bid time series for the given period and scenario.
 """
-function time_series_virtual_reservoir_price_offer(
+function time_series_virtual_reservoir_price_bid(
     inputs,
     period::Int,
     scenario::Int,
 )
     if !(is_market_clearing(inputs))
         error(
-            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir price offer time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_price_offer(inputs)'.",
+            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir price bid time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_price_bid(inputs)'.",
         )
     end
 
     if read_bids_from_file(inputs)
-        return inputs.time_series.virtual_reservoir_price_offer
+        return inputs.time_series.virtual_reservoir_price_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
-        quantity_offer, price_offer =
+        quantity_bid, price_bid =
             read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)
         price_view = VirtualReservoirBidsView{Float64}()
-        price_view.data = price_offer
+        price_view.data = price_bid
         return price_view
     else
-        error("Unrecognized bid source: $(bid_data_source(inputs))")
+        error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
 
@@ -816,3 +818,32 @@ subperiod_hour_map(inputs) = inputs.time_series.hour_subperiod_mapping.subperiod
 Return a 3-element vector with the current season, sample and next_subscenario given the current period and scenario.
 """
 period_season_map_from_file(inputs) = inputs.time_series.period_season_map
+
+"""
+    time_series_bid_price_limit_justified_independent(inputs)
+
+Return the time series of price limits for justified independent bids.
+"""
+time_series_bid_price_limit_justified_independent(inputs) = inputs.time_series.bid_price_limit_justified_independent
+
+"""
+    time_series_bid_price_limit_non_justified_independent(inputs)
+
+Return the time series of price limits for non justified independent bids.
+"""
+time_series_bid_price_limit_non_justified_independent(inputs) =
+    inputs.time_series.bid_price_limit_non_justified_independent
+
+"""
+    time_series_bid_price_limit_justified_profile(inputs)
+
+Return the time series of price limits for justified profile bids.
+"""
+time_series_bid_price_limit_justified_profile(inputs) = inputs.time_series.bid_price_limit_justified_profile
+
+"""
+    time_series_bid_price_limit_non_justified_profile(inputs)
+
+Return the time series of price limits for non justified profile bids.
+"""
+time_series_bid_price_limit_non_justified_profile(inputs) = inputs.time_series.bid_price_limit_non_justified_profile

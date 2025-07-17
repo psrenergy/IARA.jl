@@ -101,6 +101,7 @@ reduced_test_list = Dict(
 #     "case_07/double_settlement_case/test_case.jl",
 #     "case_07/min_cost_case/test_case.jl",
 #     "case_07/skip_purchase_bids_case/test_case.jl",
+#     "case_07/thermal_unit_with_exclusive_asset_owner_case/test_case.jl",
 # ],
 # "case_08" => [
 #     "case_08/base_case/test_case.jl",
@@ -128,6 +129,7 @@ reduced_test_list = Dict(
 #     "case_11/adjust_bid_ex_post/test_case.jl",
 #     "case_11/settlement_ex_ante/test_case.jl",
 #     "case_11/settlement_ex_post/test_case.jl",
+#     "case_11/auto_adjust_ex_post/test_case.jl",
 # ],
 # "case_12" => [
 #     "case_12/base_case/test_case.jl",
@@ -165,6 +167,8 @@ reduced_test_list = Dict(
 #     "case_20/base_case/test_case.jl",
 #     "case_20/market_clearing/test_case.jl",
 #     "case_20/single_period_heuristic_bid/test_case.jl",
+#     "case_20/bid_justification/test_case.jl",
+#     "case_20/profile_bid_justification/test_case.jl",
 # ],
 )
 

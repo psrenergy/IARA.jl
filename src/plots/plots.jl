@@ -105,12 +105,12 @@ function _get_plot_color(index::Int; transparent::Bool = false)
         "rgb(31, 119, 180)",
         "rgb(255, 127, 14)",
         "rgb(44, 160, 44)",
-        "rgb(214, 39, 40)",
         "rgb(148, 103, 189)",
+        "rgb(214, 39, 40)",
+        "rgb(188, 189, 34)",
         "rgb(140, 86, 75)",
         "rgb(227, 119, 194)",
         "rgb(127, 127, 127)",
-        "rgb(188, 189, 34)",
         "rgb(23, 190, 207)",
     ]
 
@@ -639,19 +639,19 @@ function build_plots(
     end
 
     if is_market_clearing(inputs)
-        # Energy offer
+        # Energy bid
         plot_config_energy = PlotConfig(
             "Energy Offer per Bidding Group",
-            "bidding_group_energy_offer",
+            "bidding_group_energy_bid",
             [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )
         push!(plot_configs, plot_config_energy)
 
-        # Price offer
+        # Price bid
         plot_config_price = PlotConfig(
             "Price Offer per Bidding Group",
-            "bidding_group_price_offer",
+            "bidding_group_price_bid",
             [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
             inputs,
         )

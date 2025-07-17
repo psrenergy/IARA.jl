@@ -40,7 +40,7 @@ In ex-post problems, a set of sub-scenarios can be provided for each scenario ve
 
 The first sub-scenario calculated in the ex-post is used to transmit the state variable information and the virtual reservoir balance to the next period.
 
-At a given period, the Virtual Reservoir balance is added to the ex-post inflow allocation for this agent in its balance, and the offers accepted by the Operator are debited. After this operation, an adjustment can be made so that the Virtual Reservoir balance equals the Available Energy of the hydros that make up this reservoir.
+At a given period, the Virtual Reservoir balance is added to the ex-post inflow allocation for this agent in its balance, and the bids accepted by the Operator are debited. After this operation, an adjustment can be made so that the Virtual Reservoir balance equals the Available Energy of the hydros that make up this reservoir.
 
 ### Ex-Post Physical
 
@@ -94,13 +94,13 @@ The revenue of the agents is calculated as follows:
 | --------------- | ---------- |
 | EX_POST | $q^{\text{ex-post}} \pi^{\text{ex-post}}$ |
 | EX_ANTE | $q^{\text{ex-post}} \pi^{\text{ex-ante}}$ |
-| DOUBLE  | $q^{\text{ex-ante}} \pi^{\text{ex-ante}}+(q^{\text{ex-post}}-q^{\text{ex-ante}} ) \pi^{\text{ex-post}}$ |
+| TWO_SETTLEMENT  | $q^{\text{ex-ante}} \pi^{\text{ex-ante}}+(q^{\text{ex-post}}-q^{\text{ex-ante}} ) \pi^{\text{ex-post}}$ |
 
 - The default file for **generation** is the *Physical* Problem. If this file is unavailable due to being skipped,
   the model will use the *Commercial* Problem instead, but a warning will be generated to indicate a non-standard execution type.
 - The default file for **marginal costs** is the *Commercial Problem*. If this file is unavailable due to being skipped,
   the model will use the *Physical Problem* instead.
-- In **EX_ANTE** or **DOUBLE** settlements, if both the *Ex Ante Physical* and *Ex Ante Commercial* Problems or
+- In **EX_ANTE** or **TWO_SETTLEMENT** settlements, if both the *Ex Ante Physical* and *Ex Ante Commercial* Problems or
   both *Ex Post Physical* and *Ex Post Commercial* Problems are skipped, an error will occur.
 - In **EX_POST** settlements, if both the *Ex Post Physical* and *Ex Post Commercial* Problems are skipped, an error will occur.
 

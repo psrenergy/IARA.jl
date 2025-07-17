@@ -21,12 +21,18 @@ function build_clearing_outputs(inputs::Inputs)
         if any_elements(inputs, BiddingGroup)
             initialize_heuristic_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
         end
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             initialize_virtual_reservoir_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
         end
     end
     if validate_bidding_group_bids(inputs)
         initialize_bid_price_limit_outputs(
+            inputs,
+            heuristic_bids_outputs,
+            run_time_options,
+        )
+        initialize_bid_validation_outputs(
             inputs,
             heuristic_bids_outputs,
             run_time_options,
@@ -139,14 +145,14 @@ function serialize_clearing_variables(
 end
 
 """
-    serialize_heuristic_bids(inputs::Inputs, quantity_offer::Array{Float64, 4}, price_offer::Array{Float64, 4}; period::Int, scenario::Int)
+    serialize_heuristic_bids(inputs::Inputs, quantity_bid::Array{Float64, 4}, price_bid::Array{Float64, 4}; period::Int, scenario::Int)
 
 Serialize heuristic bids.
 """
 function serialize_heuristic_bids(
     inputs::Inputs,
-    quantity_offer::Array{Float64, 4},
-    price_offer::Array{Float64, 4};
+    quantity_bid::Array{Float64, 4},
+    price_bid::Array{Float64, 4};
     period::Int,
     scenario::Int,
 )
@@ -158,22 +164,22 @@ function serialize_heuristic_bids(
         joinpath(temp_path, "heuristic_bids_period_$(period)_scenario_$(scenario).json")
 
     data_to_serialize = Dict{Symbol, Any}()
-    data_to_serialize[:quantity_offer] = quantity_offer
-    data_to_serialize[:price_offer] = price_offer
+    data_to_serialize[:quantity_bid] = quantity_bid
+    data_to_serialize[:price_bid] = price_bid
 
     Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing
 end
 
 """
-    serialize_virtual_reservoir_heuristic_bids(inputs::Inputs, quantity_offer::Array{Float64, 3}, price_offer::Array{Float64, 3}; period::Int, scenario::Int)   
+    serialize_virtual_reservoir_heuristic_bids(inputs::Inputs, quantity_bid::Array{Float64, 3}, price_bid::Array{Float64, 3}; period::Int, scenario::Int)   
 
 Serialize virtual reservoir heuristic bids.
 """
 function serialize_virtual_reservoir_heuristic_bids(
     inputs::Inputs,
-    quantity_offer::Array{Float64, 3},
-    price_offer::Array{Float64, 3};
+    quantity_bid::Array{Float64, 3},
+    price_bid::Array{Float64, 3};
     period::Int,
     scenario::Int,
 )
@@ -185,8 +191,8 @@ function serialize_virtual_reservoir_heuristic_bids(
         joinpath(temp_path, "virtual_reservoir_heuristic_bids_period_$(period)_scenario_$(scenario).json")
 
     data_to_serialize = Dict{Symbol, Any}()
-    data_to_serialize[:quantity_offer] = quantity_offer
-    data_to_serialize[:price_offer] = price_offer
+    data_to_serialize[:quantity_bid] = quantity_bid
+    data_to_serialize[:price_bid] = price_bid
 
     Serialization.serialize(serialized_file_name, data_to_serialize)
     return nothing
@@ -240,7 +246,7 @@ function read_serialized_heuristic_bids(
         joinpath(temp_path, "heuristic_bids_period_$(period)_scenario_$(scenario).json")
     data = Serialization.deserialize(serialized_file_name)
 
-    return data[:quantity_offer], data[:price_offer]
+    return data[:quantity_bid], data[:price_bid]
 end
 
 """
@@ -259,7 +265,7 @@ function read_serialized_virtual_reservoir_heuristic_bids(
 
     data = Serialization.deserialize(serialized_file_name)
 
-    return data[:quantity_offer], data[:price_offer]
+    return data[:quantity_bid], data[:price_bid]
 end
 
 """

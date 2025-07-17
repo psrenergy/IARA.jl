@@ -38,13 +38,13 @@ db = IARA.create_study!(PATH;
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     demand_deficit_cost = 200.0,
     cycle_discount_rate = 0.0,
-    clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.PURE_BIDS,
+    clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    settlement_type = IARA.Configurations_SettlementType.EX_POST,
-    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
+    settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     market_clearing_tiebreaker_weight = 0.0,
 )
@@ -202,7 +202,7 @@ IARA.link_time_series_to_file(
 number_of_buses = 1
 number_of_bidding_groups = 5
 maximum_number_of_bidding_segments = 1
-quantity_offer =
+quantity_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -211,7 +211,7 @@ quantity_offer =
         number_of_scenarios,
         number_of_periods,
     )
-price_offer =
+price_bid =
     zeros(
         number_of_bidding_groups,
         number_of_buses,
@@ -221,20 +221,20 @@ price_offer =
         number_of_periods,
     )
 
-quantity_offer[1, :, :, :, :, :] .= 60
-quantity_offer[2, :, :, :, :, :] .= 60
-quantity_offer[3, :, :, :, :, :] .= 60
-quantity_offer[4, :, :, :, :, :] .= 60
-quantity_offer[5, :, :, :, :, :] .= 60
-price_offer[1, :, :, :, :, :] .= 40.0
-price_offer[2, :, :, :, :, :] .= 45.0
-price_offer[3, :, :, :, :, :] .= 60.0
-price_offer[4, :, :, :, :, :] .= 75.0
-price_offer[5, :, :, :, :, :] .= 80.0
+quantity_bid[1, :, :, :, :, :] .= 60
+quantity_bid[2, :, :, :, :, :] .= 60
+quantity_bid[3, :, :, :, :, :] .= 60
+quantity_bid[4, :, :, :, :, :] .= 60
+quantity_bid[5, :, :, :, :, :] .= 60
+price_bid[1, :, :, :, :, :] .= 40.0
+price_bid[2, :, :, :, :, :] .= 45.0
+price_bid[3, :, :, :, :, :] .= 60.0
+price_bid[4, :, :, :, :, :] .= 75.0
+price_bid[5, :, :, :, :, :] .= 80.0
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "quantity_offer"),
-    quantity_offer;
+    joinpath(PATH, "quantity_bid"),
+    quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Vermelho", "Verde", "Amarelo", "Azul", "Roxo"],
     labels_buses = ["Sistema"],
@@ -250,8 +250,8 @@ IARA.write_bids_time_series_file(
 )
 
 IARA.write_bids_time_series_file(
-    joinpath(PATH, "price_offer"),
-    price_offer;
+    joinpath(PATH, "price_bid"),
+    price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
     labels_bidding_groups = ["Vermelho", "Verde", "Amarelo", "Azul", "Roxo"],
     labels_buses = ["Sistema"],
@@ -268,6 +268,6 @@ IARA.write_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "BiddingGroup";
-    quantity_offer = "quantity_offer",
-    price_offer = "price_offer",
+    quantity_bid = "quantity_bid",
+    price_bid = "price_bid",
 )

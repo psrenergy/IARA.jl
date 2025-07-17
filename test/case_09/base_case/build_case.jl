@@ -30,8 +30,8 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.COST_BASED,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
-    settlement_type = IARA.Configurations_SettlementType.EX_POST,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
+    settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
@@ -114,7 +114,7 @@ try
         initial_volume = 0.0,
         bus_id = "Eastern",
         biddinggroup_id = "UpstreamA_01",
-        operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+        operation_type = IARA.HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER,
     )
 
     IARA.add_hydro_unit!(db;
@@ -132,7 +132,7 @@ try
         initial_volume = 0.0,
         bus_id = "Eastern",
         biddinggroup_id = "DownstreamA_01",
-        operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+        operation_type = IARA.HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER,
     )
 
     IARA.set_hydro_turbine_to!(db, "Hydro Upstream", "Hydro Downstream")

@@ -20,8 +20,8 @@ Collection representing the virtual reservoir.
     asset_owners_inflow_allocation::Vector{Vector{Float64}} = []
     asset_owners_initial_energy_account_share::Vector{Vector{Float64}} = []
     number_of_waveguide_points_for_file_template::Vector{Int} = []
-    quantity_offer_file::String = ""
-    price_offer_file::String = ""
+    quantity_bid_file::String = ""
+    price_bid_file::String = ""
     # caches
     initial_energy_account::Vector{Vector{Float64}} = []
     waveguide_points::Vector{Matrix{Float64}} = []
@@ -51,10 +51,10 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     virtual_reservoir.asset_owners_initial_energy_account_share =
         PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "initial_energy_account_share")
     # Load time series files
-    virtual_reservoir.quantity_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "quantity_offer")
-    virtual_reservoir.price_offer_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "price_offer")
+    virtual_reservoir.quantity_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "quantity_bid")
+    virtual_reservoir.price_bid_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "price_bid")
     # Initialize caches
     virtual_reservoir.initial_energy_account =
         [zeros(Float64, length(index_of_elements(inputs, AssetOwner))) for vr in 1:num_virtual_reservoirs]
@@ -187,20 +187,20 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
             end
         end
     end
-    counteroffer_agent =
-        findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT)
-    if !isnothing(counteroffer_agent)
+    supply_security_agent =
+        findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.SUPPLY_SECURITY_AGENT)
+    if !isnothing(supply_security_agent)
         for vr in 1:length(virtual_reservoir)
-            if !(counteroffer_agent in virtual_reservoir.asset_owner_indices[vr])
+            if !(supply_security_agent in virtual_reservoir.asset_owner_indices[vr])
                 @error(
-                    "Counteroffer agent $(inputs.collections.asset_owner.label[counteroffer_agent]) must be associated with virtual reservoir $(virtual_reservoir.label[vr])."
+                    "Supply security agent $(inputs.collections.asset_owner.label[supply_security_agent]) must be associated with virtual reservoir $(virtual_reservoir.label[vr])."
                 )
                 num_errors += 1
             else
-                index_among_vr = findfirst(virtual_reservoir.asset_owner_indices[vr] .== counteroffer_agent)
+                index_among_vr = findfirst(virtual_reservoir.asset_owner_indices[vr] .== supply_security_agent)
                 if virtual_reservoir.asset_owners_inflow_allocation[vr][index_among_vr] > 0.0
                     @error(
-                        "Counteroffer agent $(inputs.collections.asset_owner.label[counteroffer_agent]) in virtual reservoir $(virtual_reservoir.label[vr]) must have an inflow allocation of zero."
+                        "Supply security agent $(inputs.collections.asset_owner.label[supply_security_agent]) in virtual reservoir $(virtual_reservoir.label[vr]) must have an inflow allocation of zero."
                     )
                     num_errors += 1
                 end

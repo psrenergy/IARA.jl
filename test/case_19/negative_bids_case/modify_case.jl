@@ -16,14 +16,14 @@ number_of_virtual_reservoirs = 2
 number_of_asset_owners = 2
 number_of_vr_segments = 3
 
-vr_quantity_offer = zeros(
+vr_quantity_bid = zeros(
     number_of_virtual_reservoirs,
     number_of_asset_owners,
     number_of_vr_segments,
     number_of_scenarios,
     number_of_periods,
 )
-vr_price_offer = zeros(
+vr_price_bid = zeros(
     number_of_virtual_reservoirs,
     number_of_asset_owners,
     number_of_vr_segments,
@@ -32,34 +32,34 @@ vr_price_offer = zeros(
 )
 
 # VR 1, AO 1
-vr_quantity_offer[1, 1, 1, :, :] .= 420.0
-vr_quantity_offer[1, 1, 2, :, :] .= 70.0
-vr_price_offer[1, 1, 1, :, :] .= 30.0
-vr_price_offer[1, 1, 2, :, :] .= 160.0
+vr_quantity_bid[1, 1, 1, :, :] .= 420.0
+vr_quantity_bid[1, 1, 2, :, :] .= 70.0
+vr_price_bid[1, 1, 1, :, :] .= 30.0
+vr_price_bid[1, 1, 2, :, :] .= 160.0
 
 # VR 2, AO 1
-vr_quantity_offer[2, 1, 1, :, :] .= 300.0
-vr_quantity_offer[2, 1, 2, :, :] .= 50.0
-vr_price_offer[2, 1, 1, :, :] .= 30.0
-vr_price_offer[2, 1, 2, :, :] .= 160.0
+vr_quantity_bid[2, 1, 1, :, :] .= 300.0
+vr_quantity_bid[2, 1, 2, :, :] .= 50.0
+vr_price_bid[2, 1, 1, :, :] .= 30.0
+vr_price_bid[2, 1, 2, :, :] .= 160.0
 
 # VR 1, AO 2
-vr_quantity_offer[1, 2, 1, :, :] .= 210.0
-vr_price_offer[1, 2, 1, :, :] .= 90.0
+vr_quantity_bid[1, 2, 1, :, :] .= 210.0
+vr_price_bid[1, 2, 1, :, :] .= 90.0
 
 # VR 2, AO 2 
-vr_quantity_offer[2, 2, 1, :, :] .= 100.0
-vr_quantity_offer[2, 2, 2, :, :] .= 100.0
-vr_price_offer[2, 2, 1, :, :] .= 60.0
-vr_price_offer[2, 2, 2, :, :] .= 110.0
+vr_quantity_bid[2, 2, 1, :, :] .= 100.0
+vr_quantity_bid[2, 2, 2, :, :] .= 100.0
+vr_price_bid[2, 2, 1, :, :] .= 60.0
+vr_price_bid[2, 2, 2, :, :] .= 110.0
 
 # Extra segment with negative bids
 # VR 1, AO 1, period 5
-vr_quantity_offer[1, 1, 3, :, 5] .= -10.0
-vr_price_offer[1, 1, 3, :, 5] .= 40.0
+vr_quantity_bid[1, 1, 3, :, 5] .= -10.0
+vr_price_bid[1, 1, 3, :, 5] .= 40.0
 # VR 2, AO 1, period 5
-vr_quantity_offer[2, 1, 3, :, 5] .= -5.0
-vr_price_offer[2, 1, 3, :, 5] .= 35.0
+vr_quantity_bid[2, 1, 3, :, 5] .= -5.0
+vr_price_bid[2, 1, 3, :, 5] .= 35.0
 
 map = Dict(
     "VR 1" => ["AO 1", "AO 2"],
@@ -67,8 +67,8 @@ map = Dict(
 )
 
 IARA.write_virtual_reservoir_bids_time_series_file(
-    joinpath(PATH, "vr_quantity_offer"),
-    vr_quantity_offer;
+    joinpath(PATH, "vr_quantity_bid"),
+    vr_quantity_bid;
     dimensions = ["period", "scenario", "bid_segment"],
     labels_virtual_reservoirs = ["VR 1", "VR 2"],
     labels_asset_owners = ["AO 1", "AO 2"],
@@ -84,8 +84,8 @@ IARA.write_virtual_reservoir_bids_time_series_file(
 )
 
 IARA.write_virtual_reservoir_bids_time_series_file(
-    joinpath(PATH, "vr_price_offer"),
-    vr_price_offer;
+    joinpath(PATH, "vr_price_bid"),
+    vr_price_bid;
     dimensions = ["period", "scenario", "bid_segment"],
     labels_virtual_reservoirs = ["VR 1", "VR 2"],
     labels_asset_owners = ["AO 1", "AO 2"],
@@ -103,8 +103,8 @@ IARA.write_virtual_reservoir_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "VirtualReservoir";
-    quantity_offer = "vr_quantity_offer",
-    price_offer = "vr_price_offer",
+    quantity_bid = "vr_quantity_bid",
+    price_bid = "vr_price_bid",
 )
 
 IARA.close_study!(db)

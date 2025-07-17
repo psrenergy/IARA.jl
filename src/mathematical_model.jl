@@ -284,7 +284,7 @@ function price_taker_bid_model_action(args...)
 
     # Model variables
     # ---------------
-    bidding_group_energy_offer!(args...)
+    bidding_group_energy_bid!(args...)
     if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_generation!(args...)
         hydro_volume!(args...)
@@ -354,7 +354,7 @@ function strategic_bid_model_action(args...)
 
     # Model variables
     # ---------------
-    bidding_group_energy_offer!(args...)
+    bidding_group_energy_bid!(args...)
     convex_hull_coefficients!(args...)
     if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_generation!(args...)
@@ -454,7 +454,8 @@ function hybrid_market_clearing_model_action(args...)
         if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             virtual_reservoir_generation!(args...)
             virtual_reservoir_volume_distance_to_waveguide!(args...)
             virtual_reservoir_energy_account!(args...)
@@ -503,7 +504,7 @@ function hybrid_market_clearing_model_action(args...)
     end
 
     if has_any_profile_bids(inputs)
-        bidding_group_profile_energy_offer!(args...)
+        bidding_group_profile_energy_bid!(args...)
         if has_any_profile_complex_bids(inputs)
             profile_min_activation_level!(args...)
         end
@@ -512,7 +513,7 @@ function hybrid_market_clearing_model_action(args...)
     # Model constraints
     # -----------------
     if has_any_simple_bids(inputs)
-        bidding_group_generation_bound_by_offer!(args...)
+        bidding_group_generation_bound_by_bid!(args...)
     end
 
     load_balance!(args...)
@@ -528,7 +529,7 @@ function hybrid_market_clearing_model_action(args...)
         kirchhoffs_voltage_law!(args...)
     end
     if has_any_profile_bids(inputs)
-        bidding_group_profile_generation_bound_by_offer!(args...)
+        bidding_group_profile_generation_bound_by_bid!(args...)
         if has_any_profile_complex_bids(inputs)
             bidding_group_profile_complementary_profile!(args...)
             bidding_group_profile_minimum_activation!(args...)
@@ -549,7 +550,8 @@ function hybrid_market_clearing_model_action(args...)
             hydro_minimum_outflow!(args...)
         end
 
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             if virtual_reservoir_correspondence_type(inputs) ==
                Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
                 virtual_reservoir_correspondence_by_volume!(args...)
@@ -580,7 +582,7 @@ function hybrid_market_clearing_model_action(args...)
         battery_unit_balance!(args...)
     end
 
-    link_offers_and_generation!(args...)
+    link_bids_and_generation!(args...)
 
     return nothing
 end
@@ -759,7 +761,7 @@ function bid_based_market_clearing_model_action(args...)
         end
     end
     if has_any_profile_bids(inputs)
-        bidding_group_profile_energy_offer!(args...)
+        bidding_group_profile_energy_bid!(args...)
         if has_any_profile_complex_bids(inputs)
             profile_min_activation_level!(args...)
         end
@@ -768,7 +770,7 @@ function bid_based_market_clearing_model_action(args...)
     # Model constraints
     # -----------------
     if has_any_simple_bids(inputs)
-        bidding_group_generation_bound_by_offer!(args...)
+        bidding_group_generation_bound_by_bid!(args...)
     end
 
     load_balance!(args...)
@@ -784,7 +786,7 @@ function bid_based_market_clearing_model_action(args...)
         kirchhoffs_voltage_law!(args...)
     end
     if has_any_profile_bids(inputs)
-        bidding_group_profile_generation_bound_by_offer!(args...)
+        bidding_group_profile_generation_bound_by_bid!(args...)
         if has_any_profile_complex_bids(inputs)
             bidding_group_profile_complementary_profile!(args...)
             bidding_group_profile_minimum_activation!(args...)

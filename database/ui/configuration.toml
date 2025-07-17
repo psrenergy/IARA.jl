@@ -51,7 +51,7 @@ tooltip.en = "Hydro balance subperiod resolution of the configuration"
 hide = true
 
 [[attribute]]
-id = "loop_subperiods_for_thermal_constraints"
+id = "thermal_unit_intra_period_operation"
 label.en = "Loop Subperiods for Thermal Constraints"
 tooltip.en = "Loop subperiods for thermal constraints of the configuration"
 hide = true

@@ -11,7 +11,7 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    loop_subperiods_for_thermal_constraints = IARA.Configurations_ConsiderSubperiodsLoopForThermalConstraints.CONSIDER,
+    thermal_unit_intra_period_operation = IARA.Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END,
 )
 
 IARA.close_study!(db)

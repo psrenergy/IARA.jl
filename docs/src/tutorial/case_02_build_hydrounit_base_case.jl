@@ -116,7 +116,7 @@ IARA.add_gauging_station!(db;
 
 IARA.add_hydro_unit!(db;
     label = "Hydro1",
-    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+    intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [1], # 1 = true

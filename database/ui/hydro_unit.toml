@@ -79,9 +79,9 @@ label.en = "Has Commitment"
 tooltip.en = "Has commitment of the hydro unit"
 
 [[attribute]]
-id = "operation_type"
+id = "intra_period_operation"
 type = "enum"
-enum = "operation_type"
+enum = "intra_period_operation"
 label.en = "Operation Type"
 tooltip.en = "Operation type of the hydro unit"
 hide = true

@@ -51,7 +51,7 @@ function thermal_commitment!(
         upper_bound = 1.0,
     )
 
-    if loop_subperiods_for_thermal_constraints(inputs)
+    if thermal_unit_intra_period_operation(inputs)
         # Add fictitious startup and shutdown variables to connect the last subperiod to the first subperiod
         @variable(
             model.jump_model,

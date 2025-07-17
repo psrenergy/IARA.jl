@@ -60,7 +60,7 @@ IARA.write_timeseries_file(
 IARA.update_hydro_unit!(
     db,
     "hyd_2";
-    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+    intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
 )
 
 IARA.close_study!(db)

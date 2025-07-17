@@ -74,7 +74,7 @@ IARA.add_hydro_unit!(db;
         min_outflow = [0.0, missing],
         om_cost = [0.0, missing],
     ),
-    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+    intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     initial_volume = 0.0,
     bus_id = "bus_2",
 )
@@ -198,7 +198,7 @@ IARA.add_hydro_unit!(
         max_volume = [0.0],
         om_cost = [0.0],
     ),
-    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+    intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     initial_volume = 0.0,
     bus_id = "bus_2",
 )

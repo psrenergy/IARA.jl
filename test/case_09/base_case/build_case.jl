@@ -114,7 +114,7 @@ try
         initial_volume = 0.0,
         bus_id = "Eastern",
         biddinggroup_id = "UpstreamA_01",
-        operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+        intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     )
 
     IARA.add_hydro_unit!(db;
@@ -132,7 +132,7 @@ try
         initial_volume = 0.0,
         bus_id = "Eastern",
         biddinggroup_id = "DownstreamA_01",
-        operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+        intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     )
 
     IARA.set_hydro_turbine_to!(db, "Hydro Upstream", "Hydro Downstream")

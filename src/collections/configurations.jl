@@ -493,9 +493,21 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
-    if configurations.inflow_scenarios_files == Configurations_UncertaintyScenariosFiles.NONE &&
+    if configurations.inflow_scenarios_files == Configurations_UncertaintyScenariosFiles.PARP &&
        is_null(configurations.parp_max_lags)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
+        num_errors += 1
+    end
+    if configurations.renewable_scenarios_files == Configurations_UncertaintyScenariosFiles.PARP
+        @error(
+            "Renewable scenarios files cannot be set to PAR(p) model. Use ONLY_EX_ANTE, ONLY_EX_POST or EX_ANTE_AND_EX_POST."
+        )
+        num_errors += 1
+    end
+    if configurations.demand_scenarios_files == Configurations_UncertaintyScenariosFiles.PARP
+        @error(
+            "Demand scenarios files cannot be set to PAR(p) model. Use ONLY_EX_ANTE, ONLY_EX_POST or EX_ANTE_AND_EX_POST."
+        )
         num_errors += 1
     end
     if configurations.integer_variable_representation_ex_ante_physical ==

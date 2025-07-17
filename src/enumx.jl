@@ -205,13 +205,13 @@ end
 """
     Configurations_UncertaintyScenariosFiles
 
-  - `NONE`: None (0)
+  - `PARP`: PARP (0)
   - `ONLY_EX_ANTE`: Only ex-ante (1)
   - `ONLY_EX_POST`: Only ex-post (2)
   - `EX_ANTE_AND_EX_POST`: Ex-ante and ex-post (3)
 """
 @enumx Configurations_UncertaintyScenariosFiles begin
-    NONE = 0
+    PARP = 0
     ONLY_EX_ANTE = 1
     ONLY_EX_POST = 2
     EX_ANTE_AND_EX_POST = 3

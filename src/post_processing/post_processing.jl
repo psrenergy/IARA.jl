@@ -65,7 +65,7 @@ function post_process_outputs(
                 model_outputs_time_serie,
                 run_time_options,
             )
-            if settlement_type(inputs) != IARA.Configurations_SettlementType.NONE
+            if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.NONE
                 post_processing_bidding_group_revenue(
                     inputs,
                     outputs_post_processing,
@@ -76,7 +76,7 @@ function post_process_outputs(
                     inputs,
                     run_time_options,
                 )
-                if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+                if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
                     post_processing_bidding_group_total_revenue(
                         inputs,
                         outputs_post_processing,
@@ -90,11 +90,12 @@ function post_process_outputs(
                 )
             end
         end
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             physical_variables_suffix =
                 is_skipped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
 
-            if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+            if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
                 commercial_variables_suffix =
                     is_skipped(inputs, "ex_ante_commercial") ? "_ex_ante_physical" : "_ex_ante_commercial"
 
@@ -107,7 +108,7 @@ function post_process_outputs(
                     commercial_variables_suffix = commercial_variables_suffix,
                     output_suffix = "_ex_ante",
                 )
-            elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+            elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
                 commercial_variables_suffix =
                     is_skipped(inputs, "ex_post_commercial") ? "_ex_post_physical" : "_ex_post_commercial"
 
@@ -120,7 +121,7 @@ function post_process_outputs(
                     commercial_variables_suffix = commercial_variables_suffix,
                     output_suffix = "_ex_post",
                 )
-            elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+            elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
                 ex_post_physical_suffix =
                     is_skipped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
                 ex_post_commercial_suffix =

@@ -124,7 +124,7 @@ end
     ONE_MONTH_PER_PERIOD = 0
 end
 
-@enumx Configurations_HydroBalanceSubperiodResolution begin
+@enumx Configurations_HydroBalanceSubperiodRepresentation begin
     CHRONOLOGICAL_SUBPERIODS = 0
     AGGREGATED_SUBPERIODS = 1
 end
@@ -152,26 +152,31 @@ end
 end
 
 """
-  Configurations_BidDataSource
+  Configurations_BiddingGroupBidProcessing
 
-  - `READ_FROM_FILE`: Read from file (0)
-  - `PRICETAKER_HEURISTICS`: Run the heuristic bids module concurrently with clearing, one period at a time (1)
+  - `EXTERNAL_UNVALIDATED_BID`: Read from file (0)
+  - `EXTERNAL_VALIDATED_BID`: Read from file and validated (1)
+  - `HEURISTIC_UNVALIDATED_BID`: Run the heuristic bids module concurrently with clearing, one period at a time (2)
+  - `HEURISTIC_VALIDATED_BID`: Run the heuristic bids module concurrently with clearing, one period at a time and validated (3)
 """
-@enumx Configurations_BidDataSource begin
-    READ_FROM_FILE = 0
-    PRICETAKER_HEURISTICS = 1
+@enumx Configurations_BiddingGroupBidProcessing begin
+    EXTERNAL_UNVALIDATED_BID = 0
+    EXTERNAL_VALIDATED_BID = 1
+    HEURISTIC_UNVALIDATED_BID = 2
+    HEURISTIC_VALIDATED_BID = 3
 end
 
 """
-    Configurations_ClearingHydroRepresentation
+    Configurations_VirtualReservoirBidProcessing
 
-  - `PURE_BIDS`: Pure bids (0)
-  - `VIRTUAL_RESERVOIRS`: Virtual reservoirs (1)
-  - `FUTURE_COST_FUNCTION`: Future cost function (2)
+  - `IGNORE_VIRTUAL_RESERVOIRS`: Pure bids (0)
+  - `HEURISTIC_BID_FROM_WATER_VALUES`: Virtual reservoirs (1)
+  - `HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE`: Virtual reservoirs with hydro reference curve (2)
 """
-@enumx Configurations_ClearingHydroRepresentation begin
-    PURE_BIDS = 0
-    VIRTUAL_RESERVOIRS = 1
+@enumx Configurations_VirtualReservoirBidProcessing begin
+    IGNORE_VIRTUAL_RESERVOIRS = 0
+    HEURISTIC_BID_FROM_WATER_VALUES = 1
+    HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE = 2
 end
 
 """
@@ -218,33 +223,27 @@ end
 end
 
 """
-    Configurations_SettlementType
+   Configurations_FinancialSettlementType
 
   - `NONE`: None (-1)
   - `EX_ANTE`: Ex-ante (0)
   - `EX_POST`: Ex-post (1)
-  - `DOUBLE`: Double (2)
+  - `TWO_SETTLEMENT`: Double (2)
 """
-@enumx Configurations_SettlementType begin
+@enumx Configurations_FinancialSettlementType begin
     NONE = -1
     EX_ANTE = 0
     EX_POST = 1
-    DOUBLE = 2
+    TWO_SETTLEMENT = 2
 end
 
 """
     Configurations_MakeWholePayments
 
-  - `CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD`: Constrained on and off per subperiod (0)
-  - `CONSTRAINED_ON_PER_SUBPERIOD`: Constrained on per subperiod (1)
-  - `CONSTRAINED_ON_PERIOD_AGGREGATE`: Constrained on daily aggregate (2)
-  - `IGNORE`: Ignore (3)
+  - `IGNORE`: Ignore (0)
 """
 @enumx Configurations_MakeWholePayments begin
-    CONSTRAINED_ON_AND_OFF_PER_SUBPERIOD = 0
-    CONSTRAINED_ON_PER_SUBPERIOD = 1
-    CONSTRAINED_ON_PERIOD_AGGREGATE = 2
-    IGNORE = 3
+    IGNORE = 0
 end
 
 """
@@ -292,23 +291,23 @@ end
 end
 
 """
-    HydroUnit_InitialVolumeType
+    HydroUnit_InitialVolumeDataType
 
-  - `PER_UNIT`: Initial volume in per unit (0)
-  - `VOLUME`: Initial volume in hm³ (2)
+  - `FRACTION_OF_USEFUL_VOLUME`: Initial volume in per unit (0)
+  - `ABSOLUTE_VOLUME_IN_HM3`: Initial volume in hm³ (2)
 """
-@enumx HydroUnit_InitialVolumeType begin
-    PER_UNIT = 0
-    VOLUME = 2
+@enumx HydroUnit_InitialVolumeDataType begin
+    FRACTION_OF_USEFUL_VOLUME = 0
+    ABSOLUTE_VOLUME_IN_HM3 = 2
 end
 
 """
-    HydroUnit_OperationType
+    HydroUnit_OperationTypeBetweenPeriods
 
   - `RESERVOIR`: Reservoir operation (0)
   - `RUN_OF_RIVER`: Run of river operation (1)
 """
-@enumx HydroUnit_OperationType begin
+@enumx HydroUnit_OperationTypeBetweenPeriods begin
     RESERVOIR = 0
     RUN_OF_RIVER = 1
 end
@@ -503,7 +502,7 @@ end
 """
   Configurations_VRCurveguideDataSource
 
-  - `READ_FROM_FILE`: User provided (0)
+  - `EXTERNAL_UNVALIDATED_BID`: User provided (0)
   - `UNIFORM_ACROSS_RESERVOIRS`: Uniform volume percentage (1)
 """
 @enumx Configurations_VRCurveguideDataSource begin
@@ -531,11 +530,6 @@ end
 @enumx Configurations_VirtualReservoirInitialEnergyAccount begin
     CALCULATED_USING_INFLOW_SHARES = 0
     CALCULATED_USING_ENERGY_ACCOUNT_SHARES = 1
-end
-
-@enumx Configurations_BiddingGroupBidValidation begin
-    DO_NOT_VALIDATE = 0
-    VALIDATE = 1
 end
 
 @enumx Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid begin

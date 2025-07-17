@@ -14,7 +14,7 @@ using DataFrames
 IARA.update_configuration!(
     db;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    settlement_type = IARA.Configurations_SettlementType.DOUBLE,
+    settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
 )
 
 IARA.update_thermal_unit_relation!(

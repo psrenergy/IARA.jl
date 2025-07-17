@@ -1129,7 +1129,7 @@ read_ex_post_file(files_to_read::Configurations_UncertaintyScenariosFiles.T) =
 Return whether inflow should be read from a file.
 """
 read_inflow_from_file(inputs::AbstractInputs) =
-    inputs.collections.configurations.inflow_scenarios_files != Configurations_UncertaintyScenariosFiles.NONE
+    inputs.collections.configurations.inflow_scenarios_files != Configurations_UncertaintyScenariosFiles.PARP
 
 """
     read_bids_from_file(inputs::AbstractInputs)

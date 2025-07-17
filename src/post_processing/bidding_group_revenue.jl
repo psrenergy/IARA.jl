@@ -191,7 +191,7 @@ function _write_revenue_with_subscenarios(
                             subperiod = subperiod,
                             Symbol(dim_name) => bid_segment,
                         )
-                        if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+                        if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
                             # Just read the ex-ante generation once per subscenario
                             Quiver.goto!(
                                 generation_ex_ante_reader;
@@ -209,7 +209,7 @@ function _write_revenue_with_subscenarios(
                     end
 
                     # Select the appropriate reader based on settlement type
-                    if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+                    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
                         Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
                         current_reader = spot_ex_ante_reader
                         net_rep = network_representation_ex_ante_commercial(inputs)
@@ -247,7 +247,7 @@ function _write_revenue_with_subscenarios(
     end
     Quiver.close!(writer_with_subscenarios)
     # Close readers because they reached the end of the file.
-    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+    if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
         Quiver.close!(generation_ex_ante_reader)
         Quiver.close!(spot_ex_ante_reader)
     end
@@ -270,7 +270,7 @@ function post_processing_bidding_group_revenue(
     outputs_dir = output_path(inputs)
     post_processing_dir = post_processing_path(inputs)
 
-    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+    if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
         bidding_group_generation_ex_ante_files =
             get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
         bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
@@ -285,7 +285,7 @@ function post_processing_bidding_group_revenue(
         )
     end
 
-    if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+    if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
         if length(bidding_group_load_marginal_cost_ex_ante_files) > 1
             error(
                 "Multiple load marginal cost files found: $bidding_group_load_marginal_cost_ex_ante_files",
@@ -297,7 +297,7 @@ function post_processing_bidding_group_revenue(
     outputs_dir = output_path(inputs)
 
     for i in 1:number_of_files
-        if settlement_type(inputs) != IARA.Configurations_SettlementType.EX_POST
+        if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
@@ -330,7 +330,7 @@ function post_processing_bidding_group_revenue(
         time_series_path_with_subscenarios = "bidding_group_revenue"
         time_series_path_without_subscenarios = "bidding_group_revenue"
         file_type_with_subscenarios =
-            settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE ? "_ex_ante" : "_ex_post"
+            settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE ? "_ex_ante" : "_ex_post"
         file_type_without_subscenarios = "_ex_ante"
 
         if is_profile
@@ -370,7 +370,7 @@ function post_processing_bidding_group_revenue(
             is_profile,
         )
 
-        if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+        if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
             geneneration_ex_ante_file = get_filename(bidding_group_generation_ex_ante_files[i])
             spot_price_ex_ante_file = get_filename(bidding_group_load_marginal_cost_ex_ante_files[1])
             geneneration_ex_ante_reader =
@@ -526,10 +526,10 @@ function _join_independent_and_profile_bid(
     # If there are no independent or profile bids, generate a zero file.
     # Check for the existence of ex ante files, which are present if the settlement type is ex ante or dual.
     if settlement_type(inputs) in
-       [IARA.Configurations_SettlementType.EX_ANTE, IARA.Configurations_SettlementType.DOUBLE]
+       [IARA.Configurations_FinancialSettlementType.EX_ANTE, IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT]
         # For ex ante settlement type, the final revenue is calculated as the product of ex_post generation and ex_ante spot price.
         # For double settlement type, the ex_ante revenue is the product of ex_ante generation and ex_ante spot price.
-        has_subscenarios = settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+        has_subscenarios = settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         filepath_independent = joinpath(
             post_processing_dir,
             "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
@@ -585,7 +585,7 @@ function _join_independent_and_profile_bid(
     end
     # Check for the existence of ex_post files, which are present if the settlement type is ex post or dual.
     if settlement_type(inputs) in
-       [IARA.Configurations_SettlementType.EX_POST, IARA.Configurations_SettlementType.DOUBLE]
+       [IARA.Configurations_FinancialSettlementType.EX_POST, IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT]
         filepath_independent = joinpath(
             post_processing_dir,
             "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),

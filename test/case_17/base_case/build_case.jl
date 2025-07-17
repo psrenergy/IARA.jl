@@ -36,7 +36,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
@@ -44,7 +44,7 @@ db = IARA.create_study!(PATH;
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    settlement_type = IARA.Configurations_SettlementType.DOUBLE,
+    settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
 )
 
 # Add collection elements
@@ -68,7 +68,7 @@ IARA.add_renewable_unit!(db;
 
 IARA.add_hydro_unit!(db;
     label = "hyd_1",
-    operation_type = IARA.HydroUnit_OperationType.RUN_OF_RIVER,
+    operation_type = IARA.HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [Int(IARA.HydroUnit_Existence.EXISTS)],

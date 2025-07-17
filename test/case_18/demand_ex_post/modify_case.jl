@@ -20,7 +20,7 @@ number_of_subscenarios = 4  # For ex-post scenarios
 IARA.update_configuration!(db;
     number_of_subscenarios,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
-    settlement_type = IARA.Configurations_SettlementType.EX_POST,
+    settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
 )
 
 # Move existing demand file to _ex_ante suffix

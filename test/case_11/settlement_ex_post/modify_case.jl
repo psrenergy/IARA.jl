@@ -11,7 +11,7 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    settlement_type = IARA.Configurations_SettlementType.EX_POST,
+    settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
 )
 
 IARA.close_study!(db)

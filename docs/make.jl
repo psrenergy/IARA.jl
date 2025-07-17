@@ -82,6 +82,7 @@ pages = [
             "Market clearing problem" => "market_clearing_problem.md",
             "Heuristic bids for bidding groups" => "heuristic_bids.md",
             "Heuristic bids for virtual reservoirs" => "heuristic_bids_vr.md",
+            "Virtual reservoirs pre and post processing" => "post_processing_virtual_reservoir.md",
         ],
     ],
     "Use guides and tutorials" => [

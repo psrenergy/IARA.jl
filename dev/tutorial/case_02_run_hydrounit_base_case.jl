@@ -132,13 +132,13 @@ cp(
 )
 ; #hide
 
-# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `PRICETAKER_HEURISTICS`.
+# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `HEURISTIC_UNVALIDATED_BID`.
 
 db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false)
 
 IARA.update_configuration!(
     db;
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,

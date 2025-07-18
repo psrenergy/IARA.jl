@@ -405,6 +405,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             )
 
             run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+
             run_clearing_simulation(
                 ex_post_physical_model,
                 inputs,

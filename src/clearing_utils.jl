@@ -51,6 +51,20 @@ function build_clearing_outputs(inputs::Inputs)
     run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
     ex_post_commercial_outputs = initialize_outputs(inputs, run_time_options)
 
+    run_time_options = RunTimeOptions(; force_all_subscenarios = true)
+
+    if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+        if construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.SKIP &&
+           construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.COST_BASED
+            # Initialize the outputs for the ex-post bids in COMMERICIAL problem.
+            initialiaze_bids_ex_post_outputs(inputs, ex_post_commercial_outputs, run_time_options)
+        elseif construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.SKIP &&
+               construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.COST_BASED
+            # Initialize the outputs for the ex-post bids in PHYSICAL problem.
+            initialiaze_bids_ex_post_outputs(inputs, ex_post_physical_outputs, run_time_options)
+        end
+    end
+
     return heuristic_bids_outputs,
     ex_ante_physical_outputs,
     ex_ante_commercial_outputs,
@@ -539,4 +553,20 @@ function scale_cuts(input_file::String, output_file::String, factor::Float64)
     end
 
     return scaled_data
+end
+
+"""
+    should_write_ex_post_quantity_bid_output_file(inputs::Inputs, run_time_options::RunTimeOptions)
+
+Check if the ex-post quantity bid output file should be written.
+"""
+function should_write_ex_post_quantity_bid_output_file(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+)
+    # Write the ex-post quantity bid output file only if the procedure is ex-post commercial, if it is
+    # skipped, write in the ex-post physical procedure.
+    return (is_ex_post_problem(run_time_options) && is_physical_problem(run_time_options)) &&
+           construction_type_ex_post_commercial(inputs) == Configurations_ConstructionType.SKIP ||
+           (is_ex_post_problem(run_time_options) && is_commercial_problem(run_time_options))
 end

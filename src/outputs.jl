@@ -261,6 +261,8 @@ function initialize!(
     output_name::String,
     dir_path::String = output_path(inputs),
     consider_one_segment = false,
+    force_all_subscenarios::Bool = false,
+    suppress_construction_type_suffix::Bool = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -269,7 +271,7 @@ function initialize!(
     output_type = Quiver.csv
 
     dimensions = kwargs[:dimensions]
-    if is_ex_post_problem(run_time_options)
+    if is_ex_post_problem(run_time_options) || force_all_subscenarios
         @assert dimensions[1] == "period"
         @assert dimensions[2] == "scenario"
         dimensions = cat(dimensions[1:2], "subscenario", dimensions[3:end]; dims = 1)
@@ -277,7 +279,7 @@ function initialize!(
     unit = kwargs[:unit]
     labels = kwargs[:labels]
 
-    output_name *= run_time_file_suffixes(inputs, run_time_options)
+    output_name *= run_time_file_suffixes(inputs, run_time_options; suppress_construction_type_suffix)
 
     file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
@@ -653,6 +655,7 @@ function write_bid_output(
     subscenario::Int,
     multiply_by::Float64 = 1.0,
     has_profile_bids::Bool = false,
+    suppress_construction_type_suffix::Bool = false,
     @nospecialize(filters::Vector{<:Function} = Function[])
 )
     # Quiver file dimensions are always 1:N, so we need to set the period to 1
@@ -687,7 +690,8 @@ function write_bid_output(
     end
 
     # Pick the correct output based on the run time options
-    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+    output_name *= run_time_file_suffixes(inputs, run_time_options; suppress_construction_type_suffix)
+    output = outputs.outputs[output_name]
 
     treated_output = zeros(length(blks), size_segments, length(bidding_groups_filtered) * length(buses))
 
@@ -707,7 +711,7 @@ function write_bid_output(
                     end
                     treated_output[blk, prf, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
-                if is_ex_post_problem(run_time_options)
+                if is_ex_post_problem(run_time_options) || run_time_options.force_all_subscenarios
                     Quiver.write!(
                         output.writer,
                         round_output(treated_output[blk, prf, :] * multiply_by);
@@ -743,7 +747,7 @@ function write_bid_output(
                     end
                     treated_output[blk, bds, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
-                if is_ex_post_problem(run_time_options)
+                if is_ex_post_problem(run_time_options) || run_time_options.force_all_subscenarios
                     Quiver.write!(
                         output.writer,
                         round_output(treated_output[blk, bds, :] * multiply_by);
@@ -828,13 +832,19 @@ function write_virtual_reservoir_bid_output(
     end
 end
 
-function run_time_file_suffixes(inputs::Inputs, run_time_options::RunTimeOptions)
+function run_time_file_suffixes(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions;
+    suppress_construction_type_suffix::Bool = false,
+)
     suffix = ""
     if !is_null(run_time_options.asset_owner_index)
         suffix *= "_asset_owner_$(run_time_options.asset_owner_index)"
     end
-    if run_time_options.clearing_model_subproblem !== nothing
-        suffix *= "_$(lowercase(string(run_time_options.clearing_model_subproblem)))"
+    if !suppress_construction_type_suffix
+        if run_time_options.clearing_model_subproblem !== nothing
+            suffix *= "_$(lowercase(string(run_time_options.clearing_model_subproblem)))"
+        end
     end
     if is_single_period(inputs)
         suffix *= "_period_$(inputs.args.period)"

@@ -45,7 +45,7 @@ function flexible_demand!(
         model.jump_model,
         model.obj_exp +
         money_to_thousand_money() * sum(
-            demand_curtailment[b, d] * demand_unit_curtailment_cost(inputs, d)
+            demand_curtailment[b, d] * demand_unit_curtailment_cost_flexible_demand(inputs, d)
             for b in subperiods(inputs), d in flexible_demands
         ),
     )

@@ -21,10 +21,10 @@ DemandUnit collection definition.
     label::Vector{String} = []
     demand_unit_type::Vector{DemandUnit_DemandType.T} = []
     existing::Vector{DemandUnit_Existence.T} = []
-    max_shift_up::Vector{Float64} = []
-    max_shift_down::Vector{Float64} = []
-    curtailment_cost::Vector{Float64} = []
-    max_curtailment::Vector{Float64} = []
+    max_shift_up_flexible_demand::Vector{Float64} = []
+    max_shift_down_flexible_demand::Vector{Float64} = []
+    curtailment_cost_flexible_demand::Vector{Float64} = []
+    max_curtailment_flexible_demand::Vector{Float64} = []
     max_demand::Vector{Float64} = []
     # index of the bus to which the demand unit belongs in the collection Bus
     bus_index::Vector{Int} = []
@@ -62,10 +62,13 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "DemandUnit", "demand_unit_type"),
             DemandUnit_DemandType.T,
         )
-    demand_unit.max_shift_up = PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_up")
-    demand_unit.max_shift_down = PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_down")
-    demand_unit.curtailment_cost = PSRI.get_parms(inputs.db, "DemandUnit", "curtailment_cost")
-    demand_unit.max_curtailment = PSRI.get_parms(inputs.db, "DemandUnit", "max_curtailment")
+    demand_unit.max_shift_up_flexible_demand = PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_up_flexible_demand")
+    demand_unit.max_shift_down_flexible_demand =
+        PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_down_flexible_demand")
+    demand_unit.curtailment_cost_flexible_demand =
+        PSRI.get_parms(inputs.db, "DemandUnit", "curtailment_cost_flexible_demand")
+    demand_unit.max_curtailment_flexible_demand =
+        PSRI.get_parms(inputs.db, "DemandUnit", "max_curtailment_flexible_demand")
     demand_unit.bus_index = PSRI.get_map(inputs.db, "DemandUnit", "Bus", "id")
     demand_unit.bidding_group_index = PSRI.get_map(inputs.db, "DemandUnit", "BiddingGroup", "id")
     demand_unit.max_demand = PSRI.get_parms(inputs.db, "DemandUnit", "max_demand")
@@ -186,19 +189,19 @@ function validate(demand_unit::DemandUnit)
             @error("Demand Unit Label cannot be empty.")
             num_errors += 1
         end
-        if demand_unit.max_shift_up[i] < 0
+        if demand_unit.max_shift_up_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Max Shift Up must be non-negative.")
             num_errors += 1
         end
-        if demand_unit.max_shift_down[i] < 0
+        if demand_unit.max_shift_down_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Max Shift Down must be non-negative.")
             num_errors += 1
         end
-        if demand_unit.curtailment_cost[i] < 0
+        if demand_unit.curtailment_cost_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Curtailment Cost must be non-negative.")
             num_errors += 1
         end
-        if demand_unit.max_curtailment[i] < 0
+        if demand_unit.max_curtailment_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Max Curtailment must be non-negative.")
             num_errors += 1
         end
@@ -207,45 +210,45 @@ function validate(demand_unit::DemandUnit)
             num_errors += 1
         end
         if demand_unit.demand_unit_type[i] == DemandUnit_DemandType.FLEXIBLE
-            if is_null(demand_unit.max_shift_up[i])
+            if is_null(demand_unit.max_shift_up_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Shift Up must be defined for flexible demands."
                 )
                 num_errors += 1
-            elseif demand_unit.max_shift_up[i] <= 0
+            elseif demand_unit.max_shift_up_flexible_demand[i] <= 0
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Shift Up must be positive for flexible demands."
                 )
                 num_errors += 1
             end
-            if is_null(demand_unit.max_shift_down[i])
+            if is_null(demand_unit.max_shift_down_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Shift Down must be defined for flexible demands."
                 )
                 num_errors += 1
-            elseif demand_unit.max_shift_down[i] <= 0
+            elseif demand_unit.max_shift_down_flexible_demand[i] <= 0
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Shift Down must be positive for flexible demands."
                 )
                 num_errors += 1
             end
-            if is_null(demand_unit.curtailment_cost[i])
+            if is_null(demand_unit.curtailment_cost_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Curtailment Cost must be defined for flexible demands."
                 )
                 num_errors += 1
-            elseif demand_unit.curtailment_cost[i] <= 0
+            elseif demand_unit.curtailment_cost_flexible_demand[i] <= 0
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Curtailment Cost must be positive for flexible demands."
                 )
                 num_errors += 1
             end
-            if is_null(demand_unit.max_curtailment[i])
+            if is_null(demand_unit.max_curtailment_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Curtailment must be defined for flexible demands."
                 )
                 num_errors += 1
-            elseif demand_unit.max_curtailment[i] < 0
+            elseif demand_unit.max_curtailment_flexible_demand[i] < 0
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Curtailment must be non-negative for flexible demands."
                 )

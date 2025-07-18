@@ -40,7 +40,7 @@ function flexible_demand_shift_bounds!(
         model.jump_model,
         flexible_demand_shift_up[b in subperiods(inputs), d in flexible_demands],
         attended_flexible_demand[b, d] + demand_curtailment[b, d] <=
-        (1 + demand_unit_max_shift_up(inputs, d)) * demand[b, d] / MW_to_GW()
+        (1 + demand_unit_max_shift_up_flexible_demand(inputs, d)) * demand[b, d] / MW_to_GW()
     )
 
     @constraint(
@@ -50,7 +50,7 @@ function flexible_demand_shift_bounds!(
             d in flexible_demands,
         ],
         attended_flexible_demand[b, d] + demand_curtailment[b, d] >=
-        (1 - demand_unit_max_shift_down(inputs, d)) * demand[b, d] / MW_to_GW()
+        (1 - demand_unit_max_shift_down_flexible_demand(inputs, d)) * demand[b, d] / MW_to_GW()
     )
 
     return nothing

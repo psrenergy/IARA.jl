@@ -95,10 +95,10 @@ IARA.add_thermal_unit!(db;
 IARA.add_demand_unit!(db;
     label = "dem_1",
     demand_unit_type = IARA.DemandUnit_DemandType.INELASTIC,
-    max_shift_up = 0.0,
-    max_shift_down = 0.0,
-    curtailment_cost = 0.0,
-    max_curtailment = 0.0,
+    max_shift_up_flexible_demand = 0.0,
+    max_shift_down_flexible_demand = 0.0,
+    curtailment_cost_flexible_demand = 0.0,
+    max_curtailment_flexible_demand = 0.0,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],

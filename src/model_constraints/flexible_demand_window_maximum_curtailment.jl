@@ -45,7 +45,7 @@ function flexible_demand_window_maximum_curtailment!(
             demand_curtailment[b, d] * MW_to_GW()
             for b in subperiods_in_flexible_demand_window(inputs, d, w)
         ) <=
-        demand_unit_max_curtailment(inputs, d) * sum(
+        demand_unit_max_curtailment_flexible_demand(inputs, d) * sum(
             demand[b, d]
             for b in subperiods_in_flexible_demand_window(inputs, d, w)
         )

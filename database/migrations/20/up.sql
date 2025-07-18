@@ -1,5 +1,7 @@
-PRAGMA user_version = 19;
+PRAGMA user_version = 20;
 PRAGMA foreign_keys = ON;
 
-ALTER TABLE Configuration RENAME COLUMN loop_subperiods_for_thermal_constraints TO thermal_unit_intra_period_operation;
-ALTER TABLE HydroUnit RENAME COLUMN operation_type TO intra_period_operation;
+ALTER TABLE DemandUnit RENAME COLUMN curtailment_cost TO curtailment_cost_flexible_demand;
+ALTER TABLE DemandUnit RENAME COLUMN max_shift_up TO max_shift_up_flexible_demand;
+ALTER TABLE DemandUnit RENAME COLUMN max_shift_down TO max_shift_down_flexible_demand;
+ALTER TABLE DemandUnit RENAME COLUMN max_curtailment TO max_curtailment_flexible_demand;

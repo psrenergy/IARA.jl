@@ -64,7 +64,8 @@ function build_graph(inputs::Inputs)
     end
 
     # Assert problem terminates
-    outgoing_probabilities = [sum(child[2] for child in node) for node in values(graph.nodes)]
+    @show [[child[2] for child in node] for node in values(graph.nodes)]
+    @show outgoing_probabilities = [sum(child[2] for child in node) for node in values(graph.nodes)]
     @assert !all(outgoing_probabilities .== 1.0)
 
     return graph

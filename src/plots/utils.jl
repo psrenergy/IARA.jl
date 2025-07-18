@@ -46,13 +46,13 @@ function plot_title_from_filename(inputs::AbstractInputs, filename::String)
 end
 
 function get_revenue_files(inputs::AbstractInputs)
-    filenames = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+    filenames = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         ["bidding_group_revenue_ex_ante"]
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
         ["bidding_group_revenue_ex_post"]
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         ["bidding_group_revenue_ex_ante", "bidding_group_revenue_ex_post"]
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.NONE
         [""]
     end
     filenames .*= "_period_$(inputs.args.period)"
@@ -62,13 +62,13 @@ function get_revenue_files(inputs::AbstractInputs)
 end
 
 function get_profit_file(inputs::AbstractInputs)
-    filename = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+    filename = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         "bidding_group_profit_ex_ante"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
         "bidding_group_profit_ex_post"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         "bidding_group_profit_total"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.NONE
         ""
     end
     filename *= "_period_$(inputs.args.period)"
@@ -107,7 +107,7 @@ function get_load_marginal_cost_files(inputs::AbstractInputs)
 
     filenames = String[]
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         ex_ante_suffixes = ["_ex_ante_commercial", "_ex_ante_physical"]
         ex_post_suffixes = ["_ex_post_commercial", "_ex_post_physical"]
 
@@ -152,7 +152,7 @@ function get_generation_files(inputs::AbstractInputs)
 
     filenames = String[]
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         ex_ante_suffixes = ["_ex_ante_physical", "_ex_ante_commercial"]
         ex_post_suffixes = ["_ex_post_physical", "_ex_post_commercial"]
 

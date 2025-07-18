@@ -9,19 +9,19 @@ function calculate_profits_settlement(
 )
     post_processing_dir = post_processing_path(inputs)
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         file_revenue = joinpath(
             post_processing_dir,
             "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
         )
         settlement_string = "ex_ante"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
         file_revenue = joinpath(
             post_processing_dir,
             "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options),
         )
         settlement_string = "ex_post"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         file_revenue = joinpath(
             post_processing_dir,
             "bidding_group_total_revenue" * run_time_file_suffixes(inputs, run_time_options),

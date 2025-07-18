@@ -317,13 +317,13 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
         if has_any_simple_bids(inputs)
             if bidding_group.bid_price_limit_justified_independent_file == ""
                 @error(
-                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit justified independent file is missing."
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit justified independent file is missing."
                 )
                 num_errors += 1
             end
             if bidding_group.bid_price_limit_non_justified_independent_file == ""
                 @error(
-                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit non-justified independent file is missing."
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit non-justified independent file is missing."
                 )
                 num_errors += 1
             end
@@ -331,13 +331,13 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
         if has_any_profile_bids(inputs)
             if bidding_group.bid_price_limit_justified_profile_file == ""
                 @error(
-                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit justified profile file is missing."
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit justified profile file is missing."
                 )
                 num_errors += 1
             end
             if bidding_group.bid_price_limit_non_justified_profile_file == ""
                 @error(
-                    "Bid price limit source is set to READ_FROM_FILE for some bidding group, but the bid price limit non-justified profile file is missing."
+                    "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit non-justified profile file is missing."
                 )
                 num_errors += 1
             end
@@ -467,7 +467,8 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
         bg_index = hydro_unit_bidding_group_index(inputs, h)
         if !is_null(bg_index)
             number_of_units[bg_index] += 1
-            if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS &&
+            if clearing_hydro_representation(inputs) ==
+               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES &&
                is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
                 number_of_hydro_units_in_virtual_reservoirs[bg_index] += 1
             end

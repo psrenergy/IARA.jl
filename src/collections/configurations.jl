@@ -31,8 +31,8 @@ Configurations for the problem.
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Float64} = []
-    hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
-        Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
+    hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodRepresentation.T =
+        Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
     thermal_unit_intra_period_operation::Configurations_ThermalUnitIntraPeriodOperation.T =
         Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
     cycle_discount_rate::Float64 = 0.0

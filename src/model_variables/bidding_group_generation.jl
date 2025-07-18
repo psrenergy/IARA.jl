@@ -151,9 +151,17 @@ function bidding_group_generation!(
 )
     add_symbol_to_query_from_subproblem_result!(
         outputs,
-        [:bidding_group_generation,
-            :bidding_group_quantity_bid],
+        [:bidding_group_generation],
     )
+    if should_write_ex_post_quantity_bid_output_file(
+        inputs,
+        run_time_options,
+    )
+        add_symbol_to_query_from_subproblem_result!(
+            outputs,
+            [:bidding_group_quantity_bid],
+        )
+    end
 
     labels = labels_for_output_by_pair_of_agents(
         inputs,

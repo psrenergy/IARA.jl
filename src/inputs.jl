@@ -388,7 +388,7 @@ function time_series_inflow(inputs, run_time_options; subscenario::Union{Int, No
         end
     end
     return error(
-        "The inflow time series is not available when the option inflow_scenarios_files is set to NONE. The PAR(p) model should be used instead.",
+        "The inflow time series is not available when the option inflow_scenarios_files is set to PARP. The PAR(p) model should be used instead.",
     )
 end
 

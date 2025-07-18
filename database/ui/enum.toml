@@ -104,7 +104,7 @@ label.en = "Hybrid"
 
 [[uncertainty_scenarios_files]]
 id = 0
-label.en = "None"
+label.en = "PAR(p)"
 
 [[uncertainty_scenarios_files]]
 id = 1

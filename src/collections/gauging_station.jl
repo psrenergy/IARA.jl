@@ -92,7 +92,7 @@ Add a Gauging Station to the database.
 $(PSRDatabaseSQLite.collection_docstring(model_directory(), "GaugingStation"))
 
 !!! note "Note"
-    - `historical_inflow` is required if `Configuration.inflow_scenarios_files` _is set to_ `NONE`
+    - `historical_inflow` is required if `Configuration.inflow_scenarios_files` _is set to_ `PARP`
 
 Example:
 ```julia

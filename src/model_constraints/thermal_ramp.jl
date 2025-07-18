@@ -86,7 +86,8 @@ function thermal_ramp!(
     end
 
     # Connect first subperiod to last subperiod
-    if thermal_unit_intra_period_operation(inputs) == Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
+    if thermal_unit_intra_period_operation(inputs) ==
+       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
         @constraint(
             model.jump_model,
             thermal_ramp_up_last_subperiod[

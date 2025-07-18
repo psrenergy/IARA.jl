@@ -943,7 +943,7 @@ Return whether subperiods should be looped for thermal constraints.
 """
 thermal_unit_intra_period_operation(inputs::AbstractInputs) =
     inputs.collections.configurations.thermal_unit_intra_period_operation
-    
+
 """
     cycle_discount_rate(inputs::AbstractInputs)
 

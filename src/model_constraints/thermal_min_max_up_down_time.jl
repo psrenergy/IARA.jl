@@ -197,7 +197,8 @@ function thermal_min_max_up_down_time!(
         thermal_unit_max_uptime(inputs, t)
     )
 
-    if thermal_unit_intra_period_operation(inputs) == Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
+    if thermal_unit_intra_period_operation(inputs) ==
+       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
         thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
         thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
         # The minimum uptime and downtime constraints here are similar to the ones above, 

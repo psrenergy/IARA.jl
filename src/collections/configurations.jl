@@ -34,7 +34,7 @@ Configurations for the problem.
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodResolution.T =
         Configurations_HydroBalanceSubperiodResolution.CHRONOLOGICAL_SUBPERIODS
     thermal_unit_intra_period_operation::Configurations_ThermalUnitIntraPeriodOperation.T =
-        Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
+        Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
     cycle_discount_rate::Float64 = 0.0
     cycle_duration_in_hours::Float64 = 0.0
     aggregate_buses_for_strategic_bidding::Configurations_BusesAggregationForStrategicBidding.T =
@@ -166,7 +166,7 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "thermal_unit_intra_period_operation")[1]
     configurations.thermal_unit_intra_period_operation =
         if is_null(thermal_unit_intra_period_operation)
-            Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
+            Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
         else
             convert_to_enum(
                 thermal_unit_intra_period_operation,
@@ -942,9 +942,8 @@ end
 Return whether subperiods should be looped for thermal constraints.
 """
 thermal_unit_intra_period_operation(inputs::AbstractInputs) =
-    inputs.collections.configurations.thermal_unit_intra_period_operation ==
-    Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
-
+    inputs.collections.configurations.thermal_unit_intra_period_operation
+    
 """
     cycle_discount_rate(inputs::AbstractInputs)
 

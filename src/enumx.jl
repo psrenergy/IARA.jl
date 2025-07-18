@@ -260,12 +260,12 @@ end
 """
     Configurations_ThermalUnitIntraPeriodOperation
 
-  - `FLEXIBLE_START_FLEXIBLE_END`: Consider subperiods loop for thermal constraints (1)
-  - `CYCLIC_WITH_FLEXIBLE_START`: Do not consider subperiods loop for thermal constraints (0)
+  - `CYCLIC_WITH_FLEXIBLE_START`: Consider subperiods loop for thermal constraints (1)
+  - `FLEXIBLE_START_FLEXIBLE_END`: Do not consider subperiods loop for thermal constraints (0)
 """
 @enumx Configurations_ThermalUnitIntraPeriodOperation begin
-    FLEXIBLE_START_FLEXIBLE_END = 1
-    CYCLIC_WITH_FLEXIBLE_START = 0
+    CYCLIC_WITH_FLEXIBLE_START = 1
+    FLEXIBLE_START_FLEXIBLE_END = 0
 end
 
 """

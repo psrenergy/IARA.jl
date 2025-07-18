@@ -27,7 +27,7 @@ IARA.add_hydro_unit!(
         max_volume = [0.1, missing],
         om_cost = [0.0, missing],
     ),
-    operation_type = IARA.HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER,
+    intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     initial_volume = 0.01,
     bus_id = "bus_2",
 )

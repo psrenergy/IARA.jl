@@ -95,7 +95,8 @@ function thermal_startup_and_shutdown!(
     end
 
     # Connect first subperiod to last subperiod
-    if loop_subperiods_for_thermal_constraints(inputs)
+    if thermal_unit_intra_period_operation(inputs) ==
+       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
         thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
         thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
         @constraint(

@@ -29,7 +29,7 @@ Hydro units are high-level data structures that represent hydro electricity gene
     min_outflow::Vector{Float64} = []
     om_cost::Vector{Float64} = []
     has_commitment::Vector{HydroUnit_HasCommitment.T} = []
-    operation_type::Vector{HydroUnit_OperationTypeBetweenPeriods.T} = []
+    intra_period_operation::Vector{HydroUnit_IntraPeriodOperation.T} = []
     min_generation::Vector{Float64} = []
     # index of the bus to which the hydro unit belongs in the collection Bus
     bus_index::Vector{Int} = []
@@ -72,10 +72,10 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_type"),
             HydroUnit_InitialVolumeDataType.T,
         )
-    hydro_unit.operation_type =
+    hydro_unit.intra_period_operation =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "HydroUnit", "operation_type"),
-            HydroUnit_OperationTypeBetweenPeriods.T,
+            PSRI.get_parms(inputs.db, "HydroUnit", "intra_period_operation"),
+            HydroUnit_IntraPeriodOperation.T,
         )
     hydro_unit.has_commitment =
         convert_to_enum.(
@@ -205,7 +205,7 @@ Example:
 ```julia
 IARA.add_hydro_unit!(db;
     label = "Hydro1",
-    operation_type = IARA.HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER,
+    intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [IARA.HydroUnit_Existence.EXISTS], # 1 = true
@@ -757,7 +757,7 @@ has_commitment(hydro_unit::HydroUnit, idx::Int) =
 Check if the Hydro Unit at index 'idx' operates with reservoir.
 """
 operates_with_reservoir(hydro_unit::HydroUnit, idx::Int) =
-    hydro_unit.operation_type[idx] == HydroUnit_OperationTypeBetweenPeriods.RESERVOIR
+    hydro_unit.intra_period_operation[idx] == HydroUnit_IntraPeriodOperation.STATE_VARIABLE
 
 """
     operates_as_run_of_river(hydro_unit::HydroUnit, idx::Int)
@@ -765,7 +765,7 @@ operates_with_reservoir(hydro_unit::HydroUnit, idx::Int) =
 Check if the Hydro Unit at index 'idx' operates as run of river.
 """
 operates_as_run_of_river(hydro_unit::HydroUnit, idx::Int) =
-    hydro_unit.operation_type[idx] == HydroUnit_OperationTypeBetweenPeriods.RUN_OF_RIVER
+    hydro_unit.intra_period_operation[idx] == HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
 
 """
     is_associated_with_some_virtual_reservoir(hydro_unit::HydroUnit, idx::Int)

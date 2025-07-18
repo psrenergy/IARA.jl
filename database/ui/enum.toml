@@ -182,11 +182,11 @@ label.en = "Per Unit"
 id = 2
 label.en = "Volume"
 
-[[operation_type]]
+[[intra_period_operation]]
 id = 0
 label.en = "Reservoir"
 
-[[operation_type]]
+[[intra_period_operation]]
 id = 1
 label.en = "Run of River"
 

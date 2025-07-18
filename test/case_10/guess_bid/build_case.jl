@@ -68,7 +68,7 @@ IARA.add_renewable_unit!(db;
 
 IARA.add_hydro_unit!(db;
     label = "hyd_1",
-    operation_type = IARA.HydroUnit_OperationTypeBetweenPeriods.RESERVOIR,
+    intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.STATE_VARIABLE,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [Int(IARA.HydroUnit_Existence.EXISTS)],

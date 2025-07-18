@@ -10,7 +10,7 @@ IARA.DemandUnit_DemandType
 IARA.Branch_LineModel  
 IARA.AssetOwner_PriceType  
 IARA.BiddingGroup_ExPostAdjustMode
-IARA.HydroUnit_OperationTypeBetweenPeriods  
+IARA.HydroUnit_IntraPeriodOperation  
 IARA.Configurations_VirtualReservoirBidProcessing  
 IARA.Configurations_IntegerVariableRepresentation  
 IARA.Configurations_BiddingGroupBidProcessing  
@@ -19,7 +19,7 @@ IARA.Configurations_ConstructionType
 IARA.Configurations_FinancialSettlementType  
 IARA.Configurations_MakeWholePayments  
 IARA.Configurations_PriceLimits  
-IARA.Configurations_ConsiderSubperiodsLoopForThermalConstraints  
+IARA.Configurations_ThermalUnitIntraPeriodOperation  
 IARA.Configurations_BusesAggregationForStrategicBidding  
 IARA.Configurations_NetworkRepresentation
 IARA.Configurations_UncertaintyScenariosFiles  

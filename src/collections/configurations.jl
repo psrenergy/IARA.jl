@@ -33,8 +33,8 @@ Configurations for the problem.
     expected_number_of_repeats_per_node::Vector{Float64} = []
     hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodRepresentation.T =
         Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
-    loop_subperiods_for_thermal_constraints::Configurations_ConsiderSubperiodsLoopForThermalConstraints.T =
-        Configurations_ConsiderSubperiodsLoopForThermalConstraints.DO_NOT_CONSIDER
+    thermal_unit_intra_period_operation::Configurations_ThermalUnitIntraPeriodOperation.T =
+        Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
     cycle_discount_rate::Float64 = 0.0
     cycle_duration_in_hours::Float64 = 0.0
     aggregate_buses_for_strategic_bidding::Configurations_BusesAggregationForStrategicBidding.T =
@@ -162,15 +162,15 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_subperiod_resolution")[1],
             Configurations_HydroBalanceSubperiodRepresentation.T,
         )
-    loop_subperiods_for_thermal_constraints =
-        PSRI.get_parms(inputs.db, "Configuration", "loop_subperiods_for_thermal_constraints")[1]
-    configurations.loop_subperiods_for_thermal_constraints =
-        if is_null(loop_subperiods_for_thermal_constraints)
-            Configurations_ConsiderSubperiodsLoopForThermalConstraints.DO_NOT_CONSIDER
+    thermal_unit_intra_period_operation =
+        PSRI.get_parms(inputs.db, "Configuration", "thermal_unit_intra_period_operation")[1]
+    configurations.thermal_unit_intra_period_operation =
+        if is_null(thermal_unit_intra_period_operation)
+            Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
         else
             convert_to_enum(
-                loop_subperiods_for_thermal_constraints,
-                Configurations_ConsiderSubperiodsLoopForThermalConstraints.T,
+                thermal_unit_intra_period_operation,
+                Configurations_ThermalUnitIntraPeriodOperation.T,
             )
         end
     aggregate_buses_for_strategic_bidding =
@@ -937,13 +937,12 @@ function use_binary_variables(inputs::AbstractInputs, run_time_options)
 end
 
 """
-    loop_subperiods_for_thermal_constraints(inputs::AbstractInputs)
+    thermal_unit_intra_period_operation(inputs::AbstractInputs)
 
 Return whether subperiods should be looped for thermal constraints.
 """
-loop_subperiods_for_thermal_constraints(inputs::AbstractInputs) =
-    inputs.collections.configurations.loop_subperiods_for_thermal_constraints ==
-    Configurations_ConsiderSubperiodsLoopForThermalConstraints.CONSIDER
+thermal_unit_intra_period_operation(inputs::AbstractInputs) =
+    inputs.collections.configurations.thermal_unit_intra_period_operation
 
 """
     cycle_discount_rate(inputs::AbstractInputs)

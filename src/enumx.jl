@@ -258,14 +258,14 @@ end
 end
 
 """
-    Configurations_ConsiderSubperiodsLoopForThermalConstraints
+    Configurations_ThermalUnitIntraPeriodOperation
 
-  - `CONSIDER`: Consider subperiods loop for thermal constraints (1)
-  - `DO_NOT_CONSIDER`: Do not consider subperiods loop for thermal constraints (0)
+  - `CYCLIC_WITH_FLEXIBLE_START`: Consider subperiods loop for thermal constraints (1)
+  - `FLEXIBLE_START_FLEXIBLE_END`: Do not consider subperiods loop for thermal constraints (0)
 """
-@enumx Configurations_ConsiderSubperiodsLoopForThermalConstraints begin
-    CONSIDER = 1
-    DO_NOT_CONSIDER = 0
+@enumx Configurations_ThermalUnitIntraPeriodOperation begin
+    CYCLIC_WITH_FLEXIBLE_START = 1
+    FLEXIBLE_START_FLEXIBLE_END = 0
 end
 
 """
@@ -302,14 +302,14 @@ end
 end
 
 """
-    HydroUnit_OperationTypeBetweenPeriods
+    HydroUnit_IntraPeriodOperation
 
-  - `RESERVOIR`: Reservoir operation (0)
-  - `RUN_OF_RIVER`: Run of river operation (1)
+  - `STATE_VARIABLE`: Reservoir operation (0)
+  - `CYCLIC_WITH_FLEXIBLE_START`: Run of river operation (1)
 """
-@enumx HydroUnit_OperationTypeBetweenPeriods begin
-    RESERVOIR = 0
-    RUN_OF_RIVER = 1
+@enumx HydroUnit_IntraPeriodOperation begin
+    STATE_VARIABLE = 0
+    CYCLIC_WITH_FLEXIBLE_START = 1
 end
 
 """

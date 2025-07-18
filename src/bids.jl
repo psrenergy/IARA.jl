@@ -11,7 +11,7 @@
 """
     initialize_heuristic_bids_outputs(inputs::Inputs, outputs::Outputs, run_time_options::RunTimeOptions)
 
-Initialize the output files for bidding group energy and price offers.
+Initialize the output files for bidding group energy and price bids.
 """
 function initialize_heuristic_bids_outputs(
     inputs::Inputs,
@@ -33,7 +33,7 @@ function initialize_heuristic_bids_outputs(
             outputs;
             inputs,
             run_time_options,
-            output_name = "bidding_group_energy_offer",
+            output_name = "bidding_group_energy_bid",
             dimensions = ["period", "scenario", "subperiod", "bid_segment"],
             unit = "MWh",
             labels,
@@ -44,7 +44,7 @@ function initialize_heuristic_bids_outputs(
             outputs;
             inputs,
             run_time_options,
-            output_name = "bidding_group_price_offer",
+            output_name = "bidding_group_price_bid",
             dimensions = ["period", "scenario", "subperiod", "bid_segment"],
             unit = "\$/MWh",
             labels,
@@ -55,7 +55,7 @@ function initialize_heuristic_bids_outputs(
             outputs;
             inputs,
             run_time_options,
-            output_name = "bidding_group_no_markup_price_offer",
+            output_name = "bidding_group_no_markup_price_bid",
             dimensions = ["period", "scenario", "subperiod", "bid_segment"],
             unit = "\$/MWh",
             labels,
@@ -65,57 +65,7 @@ function initialize_heuristic_bids_outputs(
     return nothing
 end
 
-function initialize_bid_price_limit_outputs(
-    inputs::Inputs,
-    outputs::Outputs,
-    run_time_options::RunTimeOptions,
-)
-    profile_bids_price_limit_outputs = [
-        "bid_price_limit_justified_profile",
-        "bid_price_limit_not_justified_profile",
-    ]
-    independent_bids_price_limit_outputs = [
-        "bid_price_limit_justified_independent",
-        "bid_price_limit_not_justified_independent",
-    ]
-
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-    labels = bidding_group_label(inputs)[bidding_groups]
-
-    if has_any_simple_bids(inputs)
-        for output_name in independent_bids_price_limit_outputs
-            initialize!(
-                QuiverOutput,
-                outputs;
-                inputs,
-                run_time_options,
-                output_name = output_name,
-                dimensions = ["period"],
-                unit = "\$/MWh",
-                labels = labels,
-            )
-        end
-    end
-
-    if has_any_profile_bids(inputs)
-        for output_name in profile_bids_price_limit_outputs
-            initialize!(
-                QuiverOutput,
-                outputs;
-                inputs,
-                run_time_options,
-                output_name = output_name,
-                dimensions = ["period"],
-                unit = "\$/MWh",
-                labels = labels,
-            )
-        end
-    end
-
-    return nothing
-end
-
-function markup_offers_for_period_scenario(
+function markup_bids_for_period_scenario(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     period::Int,
@@ -123,7 +73,7 @@ function markup_offers_for_period_scenario(
     outputs::Union{Outputs, Nothing} = nothing,
 )
     if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
-        bidding_group_markup_offers_for_period_scenario(
+        bidding_group_markup_bids_for_period_scenario(
             inputs,
             run_time_options,
             period,
@@ -132,8 +82,8 @@ function markup_offers_for_period_scenario(
         )
     end
     if clearing_hydro_representation(inputs) ==
-       Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
-        virtual_reservoir_markup_offers_for_period_scenario(
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+        virtual_reservoir_markup_bids_for_period_scenario(
             inputs,
             run_time_options,
             period,
@@ -159,7 +109,8 @@ function bidding_group_markup_units(inputs::Inputs)
     for bg in bidding_group_indexes
         bidding_group_number_of_risk_factors[bg] = length(bidding_group_risk_factor(inputs, bg))
         bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             filter!(
                 x -> !is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, x),
                 bidding_group_hydro_units[bg],
@@ -173,7 +124,7 @@ function bidding_group_markup_units(inputs::Inputs)
     bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units
 end
 
-function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::AbstractInputs)
+function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::AbstractInputs)
     # Indexes
     virtual_reservoir_indices = index_of_elements(inputs, VirtualReservoir)
     asset_owner_indices = index_of_elements(inputs, AssetOwner)
@@ -190,23 +141,23 @@ function number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs::A
     end
 
     # Offer segments
-    number_of_offer_segments_per_asset_owner_and_virtual_reservoir =
+    number_of_bid_segments_per_asset_owner_and_virtual_reservoir =
         zeros(Int, number_of_asset_owners, number_of_virtual_reservoirs)
     for vr in virtual_reservoir_indices
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-            number_of_offer_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
+            number_of_bid_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
                 asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments
         end
     end
     number_per_virtual_reservoir = [
-        maximum(number_of_offer_segments_per_asset_owner_and_virtual_reservoir[:, vr]) for
+        maximum(number_of_bid_segments_per_asset_owner_and_virtual_reservoir[:, vr]) for
         vr in virtual_reservoir_indices
     ]
 
     return number_per_virtual_reservoir
 end
 
-function number_of_bidding_group_offer_segments_for_heuristic_bids(inputs::Inputs)
+function number_of_bidding_group_bid_segments_for_heuristic_bids(inputs::Inputs)
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
@@ -232,13 +183,13 @@ function number_of_bidding_group_offer_segments_for_heuristic_bids(inputs::Input
     maximum_number_of_units_per_bidding_group =
         dropdims(maximum(number_of_units_per_bidding_group_and_bus; dims = 2, init = 0); dims = 2)
 
-    number_of_offer_segments = bidding_group_number_of_risk_factors .* maximum_number_of_units_per_bidding_group
+    number_of_bid_segments = bidding_group_number_of_risk_factors .* maximum_number_of_units_per_bidding_group
 
-    return number_of_offer_segments
+    return number_of_bid_segments
 end
 
 """
-    bidding_group_markup_offers_for_period_scenario(
+    bidding_group_markup_bids_for_period_scenario(
         inputs::Inputs, outputs::Outputs, 
         run_time_options::RunTimeOptions, 
         period::Int, 
@@ -247,7 +198,7 @@ end
 
 Generate heuristic bids for the bidding groups and write them to the output files.
 """
-function bidding_group_markup_offers_for_period_scenario(
+function bidding_group_markup_bids_for_period_scenario(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     period::Int,
@@ -272,24 +223,24 @@ function bidding_group_markup_offers_for_period_scenario(
     bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units =
         bidding_group_markup_units(inputs)
 
-    maximum_number_of_offer_segments = maximum_number_of_bg_bidding_segments(inputs)
+    maximum_number_of_bid_segments = maximum_number_of_bg_bidding_segments(inputs)
 
-    quantity_offers = zeros(
+    quantity_bids = zeros(
         number_of_bidding_groups,
         number_of_buses,
-        maximum_number_of_offer_segments,
+        maximum_number_of_bid_segments,
         number_of_subperiods(inputs),
     )
-    price_offers = zeros(
+    price_bids = zeros(
         number_of_bidding_groups,
         number_of_buses,
-        maximum_number_of_offer_segments,
+        maximum_number_of_bid_segments,
         number_of_subperiods(inputs),
     )
-    no_markup_price_offers = zeros(
+    no_markup_price_bids = zeros(
         number_of_bidding_groups,
         number_of_buses,
-        maximum_number_of_offer_segments,
+        maximum_number_of_bid_segments,
         number_of_subperiods(inputs),
     )
 
@@ -326,57 +277,57 @@ function bidding_group_markup_offers_for_period_scenario(
             demand_unit_bus_index,
         )
 
-        build_thermal_offers!(
+        build_thermal_bids!(
             inputs,
             bg,
-            quantity_offers,
-            price_offers,
-            no_markup_price_offers,
+            quantity_bids,
+            price_bids,
+            no_markup_price_bids,
             thermal_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
         )
 
-        build_renewable_offers!(
+        build_renewable_bids!(
             inputs,
             bg,
-            quantity_offers,
-            price_offers,
-            no_markup_price_offers,
+            quantity_bids,
+            price_bids,
+            no_markup_price_bids,
             renewable_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
             renewable_generation_series,
         )
 
-        build_hydro_offers!(
+        build_hydro_bids!(
             inputs,
             bg,
-            quantity_offers,
-            price_offers,
-            no_markup_price_offers,
+            quantity_bids,
+            price_bids,
+            no_markup_price_bids,
             hydro_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
             available_energy_per_hydro_unit,
         )
 
-        build_demand_offers!(
+        build_demand_bids!(
             inputs,
             bg,
-            quantity_offers,
-            price_offers,
-            no_markup_price_offers,
+            quantity_bids,
+            price_bids,
+            no_markup_price_bids,
             demand_unit_indexes_per_bus,
             bidding_group_number_of_risk_factors[bg],
             segment_offset_per_bus,
             time_series_demand(inputs, run_time_options),
         )
 
-        # Number of segments per per "bidding group - bus" pair must always be less than or equal to the maximum number of offer segments
-        @assert maximum(segment_offset_per_bus) <= maximum_number_of_offer_segments
-        # Number of segments per per "bidding group - bus" pair must be equal to the maximum number of offer segments at least once
-        if maximum(segment_offset_per_bus) == maximum_number_of_offer_segments
+        # Number of segments per per "bidding group - bus" pair must always be less than or equal to the maximum number of bid segments
+        @assert maximum(segment_offset_per_bus) <= maximum_number_of_bid_segments
+        # Number of segments per per "bidding group - bus" pair must be equal to the maximum number of bid segments at least once
+        if maximum(segment_offset_per_bus) == maximum_number_of_bid_segments
             number_of_segments_validation_flag = true
         end
     end
@@ -387,10 +338,10 @@ function bidding_group_markup_offers_for_period_scenario(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_energy_offer",
+        "bidding_group_energy_bid",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(quantity_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        permutedims(quantity_bids[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
@@ -401,10 +352,10 @@ function bidding_group_markup_offers_for_period_scenario(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_price_offer",
+        "bidding_group_price_bid",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        permutedims(price_bids[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
@@ -415,10 +366,10 @@ function bidding_group_markup_offers_for_period_scenario(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_no_markup_price_offer",
+        "bidding_group_no_markup_price_bid",
         # We have to permutate the dimensions because the function expects the dimensions in the order
         # subperiod, bidding_group, bid_segments, bus
-        permutedims(no_markup_price_offers[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+        permutedims(no_markup_price_bids[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
         period,
         scenario,
         subscenario = 1, # subscenario dimension is fixed to 1 for heuristic bids
@@ -428,8 +379,8 @@ function bidding_group_markup_offers_for_period_scenario(
     if is_market_clearing(inputs)
         serialize_heuristic_bids(
             inputs,
-            quantity_offers,
-            price_offers;
+            quantity_bids,
+            price_bids;
             period,
             scenario,
         )
@@ -479,21 +430,21 @@ function get_unit_index_by_bus(
 end
 
 """
-    build_thermal_offers(
+    build_thermal_bids(
         inputs::Inputs, 
         bg_index::Int, 
         thermal_unit_indexes::Vector{Int}, 
         number_of_risk_factors::Int
     )
 
-Build the quantity and price offers for thermal units associated with a bidding group.
+Build the quantity and price bids for thermal units associated with a bidding group.
 """
-function build_thermal_offers!(
+function build_thermal_bids!(
     inputs::Inputs,
     bg_index::Int,
-    quantity_offers::Array{Float64, 4},
-    price_offers::Array{Float64, 4},
-    no_markup_price_offers::Array{Float64, 4},
+    quantity_bids::Array{Float64, 4},
+    price_bids::Array{Float64, 4},
+    no_markup_price_bids::Array{Float64, 4},
     thermal_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -508,13 +459,13 @@ function build_thermal_offers!(
                 segment_fraction = bidding_group_segment_fraction(inputs, bg_index)[risk_idx]
                 risk_factor = bidding_group_risk_factor(inputs, bg_index)[risk_idx]
                 for subperiod in 1:number_of_subperiods(inputs)
-                    quantity_offers[bg_index, bus, segment, subperiod] =
+                    quantity_bids[bg_index, bus, segment, subperiod] =
                         thermal_unit_max_generation(inputs, thermal_unit) *
                         subperiod_duration_in_hours(inputs, subperiod) *
                         segment_fraction
-                    price_offers[bg_index, bus, segment, subperiod] =
+                    price_bids[bg_index, bus, segment, subperiod] =
                         thermal_unit_om_cost(inputs, thermal_unit) * (1 + risk_factor)
-                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                    no_markup_price_bids[bg_index, bus, segment, subperiod] =
                         thermal_unit_om_cost(inputs, thermal_unit)
                 end
             end
@@ -527,25 +478,25 @@ function build_thermal_offers!(
 end
 
 """
-    build_demand_offers!(
+    build_demand_bids!(
         inputs::Inputs, 
         bg_index::Int, 
-        quantity_offers::Array{Float64, 4},
-        price_offers::Array{Float64, 4},
-        no_markup_price_offers::Array{Float64, 4},
+        quantity_bids::Array{Float64, 4},
+        price_bids::Array{Float64, 4},
+        no_markup_price_bids::Array{Float64, 4},
         demand_unit_indexes_per_bus::Vector{Vector{Int}},
         number_of_risk_factors::Int,
         segment_offset_per_bus::Vector{Int},
     )
 
-Build the quantity and price offers for demand units associated with a bidding group.
+Build the quantity and price bids for demand units associated with a bidding group.
 """
-function build_demand_offers!(
+function build_demand_bids!(
     inputs::Inputs,
     bg_index::Int,
-    quantity_offers::Array{Float64, 4},
-    price_offers::Array{Float64, 4},
-    no_markup_price_offers::Array{Float64, 4},
+    quantity_bids::Array{Float64, 4},
+    price_bids::Array{Float64, 4},
+    no_markup_price_bids::Array{Float64, 4},
     demand_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -564,15 +515,15 @@ function build_demand_offers!(
                 risk_factor = bidding_group_risk_factor(inputs, bg_index)[risk_idx]
                 for subperiod in 1:number_of_subperiods(inputs)
                     # demand is negative because it is a consumption
-                    quantity_offers[bg_index, bus, segment, subperiod] =
+                    quantity_bids[bg_index, bus, segment, subperiod] =
                         demand_unit_max_demand(inputs, demand_unit) *
                         demand_series[demand_unit, subperiod] *
                         subperiod_duration_in_hours(inputs, subperiod) *
                         segment_fraction *
                         (-1)
-                    price_offers[bg_index, bus, segment, subperiod] =
+                    price_bids[bg_index, bus, segment, subperiod] =
                         time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod] * (1 + risk_factor)
-                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                    no_markup_price_bids[bg_index, bus, segment, subperiod] =
                         time_series_elastic_demand_price(inputs)[elastic_demand_index, subperiod]
                 end
             end
@@ -585,21 +536,21 @@ function build_demand_offers!(
 end
 
 """
-    build_renewable_offers(
+    build_renewable_bids(
         inputs::Inputs, 
         bg_index::Int, 
         renewable_unit_indexes::Vector{Int}, 
         number_of_risk_factors::Int
     )
 
-Build the quantity and price offers for renewable units associated with a bidding group.
+Build the quantity and price bids for renewable units associated with a bidding group.
 """
-function build_renewable_offers!(
+function build_renewable_bids!(
     inputs::Inputs,
     bg_index::Int,
-    quantity_offers::Array{Float64, 4},
-    price_offers::Array{Float64, 4},
-    no_markup_price_offers::Array{Float64, 4},
+    quantity_bids::Array{Float64, 4},
+    price_bids::Array{Float64, 4},
+    no_markup_price_bids::Array{Float64, 4},
     renewable_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -615,13 +566,13 @@ function build_renewable_offers!(
                 segment_fraction = bidding_group_segment_fraction(inputs, bg_index)[risk_idx]
                 risk_factor = bidding_group_risk_factor(inputs, bg_index)[risk_idx]
                 for subperiod in 1:number_of_subperiods(inputs)
-                    quantity_offers[bg_index, bus, segment, subperiod] =
+                    quantity_bids[bg_index, bus, segment, subperiod] =
                         renewable_unit_max_generation(inputs, renewable_unit) *
                         renewable_generation_series[renewable_unit, subperiod] *
                         subperiod_duration_in_hours(inputs, subperiod) * segment_fraction
-                    price_offers[bg_index, bus, segment, subperiod] =
+                    price_bids[bg_index, bus, segment, subperiod] =
                         renewable_unit_om_cost(inputs, renewable_unit) * (1 + risk_factor)
-                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                    no_markup_price_bids[bg_index, bus, segment, subperiod] =
                         renewable_unit_om_cost(inputs, renewable_unit)
                 end
             end
@@ -630,11 +581,11 @@ function build_renewable_offers!(
 
     segment_offset_per_bus .+= length.(renewable_unit_indexes_per_bus) .* number_of_risk_factors
 
-    return quantity_offers, price_offers
+    return quantity_bids, price_bids
 end
 
 """
-    build_hydro_offers!(
+    build_hydro_bids!(
         inputs::Inputs, 
         bg_index::Int, 
         hydro_unit_indexes::Vector{Int}, 
@@ -642,14 +593,14 @@ end
         available_energy::Union{Vector{Float64}, Nothing}
     )
 
-Build the quantity and price offers for hydro units associated with a bidding group.
+Build the quantity and price bids for hydro units associated with a bidding group.
 """
-function build_hydro_offers!(
+function build_hydro_bids!(
     inputs::Inputs,
     bg_index::Int,
-    quantity_offers::Array{Float64, 4},
-    price_offers::Array{Float64, 4},
-    no_markup_price_offers::Array{Float64, 4},
+    quantity_bids::Array{Float64, 4},
+    price_bids::Array{Float64, 4},
+    no_markup_price_bids::Array{Float64, 4},
     hydro_unit_indexes_per_bus::Vector{Vector{Int}},
     number_of_risk_factors::Int,
     segment_offset_per_bus::Vector{Int},
@@ -665,21 +616,21 @@ function build_hydro_offers!(
                 segment_fraction = bidding_group_segment_fraction(inputs, bg_index)[risk_idx]
                 risk_factor = bidding_group_risk_factor(inputs, bg_index)[risk_idx]
                 for subperiod in 1:number_of_subperiods(inputs)
-                    quantity_offers[bg_index, bus, segment, subperiod] =
+                    quantity_bids[bg_index, bus, segment, subperiod] =
                         time_series_hydro_generation(inputs)[hydro_unit, subperiod] / MW_to_GW() * segment_fraction
-                    price_offers[bg_index, bus, segment, subperiod] =
+                    price_bids[bg_index, bus, segment, subperiod] =
                         time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod] * (1 + risk_factor)
-                    no_markup_price_offers[bg_index, bus, segment, subperiod] =
+                    no_markup_price_bids[bg_index, bus, segment, subperiod] =
                         time_series_hydro_opportunity_cost(inputs)[hydro_unit, subperiod]
                 end
-                # Adjust quantity offers based on available energy
+                # Adjust quantity bids based on available energy
                 if isnothing(available_energy)
                     continue
                 end
                 available_energy_in_segment = available_energy[hydro_unit] * segment_fraction
-                if available_energy_in_segment < sum(quantity_offers[bg_index, bus, segment, :])
-                    adjusting_factor = available_energy_in_segment / sum(quantity_offers[bg_index, bus, segment, :])
-                    quantity_offers[bg_index, bus, segment, :] .*= adjusting_factor
+                if available_energy_in_segment < sum(quantity_bids[bg_index, bus, segment, :])
+                    adjusting_factor = available_energy_in_segment / sum(quantity_bids[bg_index, bus, segment, :])
+                    quantity_bids[bg_index, bus, segment, :] .*= adjusting_factor
                 end
             end
         end
@@ -761,9 +712,11 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     end
     # Hydro representation
     if generate_heuristic_bids_for_clearing(inputs)
-        if clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+        if clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             return false
-        elseif clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.PURE_BIDS
+        elseif clearing_hydro_representation(inputs) ==
+               Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
             bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
             if isempty(bidding_group_indexes)
                 return false
@@ -784,7 +737,7 @@ end
 """
     initialize_virtual_reservoir_bids_outputs(inputs::Inputs, outputs::Outputs, run_time_options::RunTimeOptions)
 
-Initialize the output files for virtual reservoir energy and price offers.
+Initialize the output files for virtual reservoir energy and price bids.
 """
 function initialize_virtual_reservoir_bids_outputs(
     inputs::Inputs,
@@ -804,7 +757,7 @@ function initialize_virtual_reservoir_bids_outputs(
         outputs;
         inputs,
         run_time_options,
-        output_name = "virtual_reservoir_energy_offer",
+        output_name = "virtual_reservoir_energy_bid",
         dimensions = ["period", "scenario", "bid_segment"],
         unit = "MWh",
         labels,
@@ -815,7 +768,7 @@ function initialize_virtual_reservoir_bids_outputs(
         outputs;
         inputs,
         run_time_options,
-        output_name = "virtual_reservoir_price_offer",
+        output_name = "virtual_reservoir_price_bid",
         dimensions = ["period", "scenario", "bid_segment"],
         unit = "\$/MWh",
         labels,
@@ -825,7 +778,7 @@ function initialize_virtual_reservoir_bids_outputs(
 end
 
 """
-    virtual_reservoir_markup_offers_for_period_scenario(
+    virtual_reservoir_markup_bids_for_period_scenario(
         inputs::Inputs, 
         outputs::Outputs, 
         run_time_options::RunTimeOptions, 
@@ -835,7 +788,7 @@ end
 
 Generate heuristic bids for the virtual reservoirs and write them to the output files.
 """
-function virtual_reservoir_markup_offers_for_period_scenario(
+function virtual_reservoir_markup_bids_for_period_scenario(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     period::Int,
@@ -843,16 +796,16 @@ function virtual_reservoir_markup_offers_for_period_scenario(
     outputs::Union{Outputs, Nothing} = nothing,
 )
     accounts = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
-    quantity_offer_reference_curve, price_offer_reference_curve =
+    quantity_bid_reference_curve, price_bid_reference_curve =
         read_serialized_reference_curve(inputs, period, scenario)
 
-    quantity_offers = zeros(
+    quantity_bids = zeros(
         number_of_elements(inputs, VirtualReservoir),
         number_of_elements(inputs, AssetOwner),
         maximum_number_of_vr_bidding_segments(inputs),
     )
 
-    price_offers = zeros(
+    price_bids = zeros(
         number_of_elements(inputs, VirtualReservoir),
         number_of_elements(inputs, AssetOwner),
         maximum_number_of_vr_bidding_segments(inputs),
@@ -860,23 +813,23 @@ function virtual_reservoir_markup_offers_for_period_scenario(
 
     for vr in index_of_elements(inputs, VirtualReservoir)
         vr_total_account = sum(accounts[vr])
-        vr_quantity_offer =
-            [quantity_offer_reference_curve[seg][vr] for seg in eachindex(quantity_offer_reference_curve)]
+        vr_quantity_bid =
+            [quantity_bid_reference_curve[seg][vr] for seg in eachindex(quantity_bid_reference_curve)]
         first_warning = false
-        if vr_total_account - sum(vr_quantity_offer) > 1e-6
-            @warn "Virtual reservoir $(vr) has a total account of $(vr_total_account) MWh, but the sum of the reference curve offers is $(sum(vr_quantity_offer)) MWh."
+        if vr_total_account - sum(vr_quantity_bid) > 1e-6
+            @warn "Virtual reservoir $(vr) has a total account of $(vr_total_account) MWh, but the sum of the reference curve bids is $(sum(vr_quantity_bid)) MWh."
             first_warning = true
         end
-        vr_price_offer = [price_offer_reference_curve[seg][vr] for seg in eachindex(price_offer_reference_curve)]
-        @assert issorted(vr_price_offer)
+        vr_price_bid = [price_bid_reference_curve[seg][vr] for seg in eachindex(price_bid_reference_curve)]
+        @assert issorted(vr_price_bid)
         for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
             # The reference curve for the asset owner is proportional to the original reference curve, but scaled by the
             # share of the asset owner's account in the total account of the virtual reservoir.
-            ao_reference_quantity_offer = vr_quantity_offer * accounts[vr][i] / vr_total_account
+            ao_reference_quantity_bid = vr_quantity_bid * accounts[vr][i] / vr_total_account
 
             seg = 0
-            ao_quantity_offer = Float64[]
-            ao_price_offer = Float64[]
+            ao_quantity_bid = Float64[]
+            ao_price_bid = Float64[]
 
             account_upper_bounds = asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
             markups = asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
@@ -887,11 +840,11 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             current_account = accounts[vr][i]
             # There will be defined selling bids for the current asset owner until the resulting account is zero.
             current_reference_segment = 1
-            sum_of_ao_selling_offers = 0.0
+            sum_of_ao_selling_bids = 0.0
             # Assuming that this asset owner is the only one selling, the segment of the reference curve only changes when
-            # the sum of offers for the current asset owner is greater than the sum of quantity offers until this segment.
+            # the sum of bids for the current asset owner is greater than the sum of quantity bids until this segment.
             while current_account > 1e-6
-                # In this iteration we define the quantity offer for the current markup, which is based on the account share of the
+                # In this iteration we define the quantity bid for the current markup, which is based on the account share of the
                 # asset owner in the total account of the virtual reservoir. The calculation assumes that the total account of the
                 # virtual reservoir is static, does not change according to the asset owner bids
                 current_account_share = current_account / vr_total_account
@@ -899,36 +852,36 @@ function virtual_reservoir_markup_offers_for_period_scenario(
                     findfirst(i -> account_upper_bounds[i] >= current_account_share, 1:length(account_upper_bounds))
                 account_share_lower_bound_for_markup = markup_index == 1 ? 0.0 : account_upper_bounds[markup_index-1]
 
-                maximum_offer_considering_markup =
+                maximum_bid_considering_markup =
                     current_account - account_share_lower_bound_for_markup * vr_total_account
 
-                # We have defined the quantity offer for the current markup. Now we split it considering the prices of the reference curve.
-                sum_of_offers_for_current_markup = 0.0
-                while sum_of_offers_for_current_markup < maximum_offer_considering_markup
-                    maximum_offer_considering_reference =
-                        sum(ao_reference_quantity_offer[1:current_reference_segment]) - sum_of_ao_selling_offers
-                    if maximum_offer_considering_reference == 0
+                # We have defined the quantity bid for the current markup. Now we split it considering the prices of the reference curve.
+                sum_of_bids_for_current_markup = 0.0
+                while sum_of_bids_for_current_markup < maximum_bid_considering_markup
+                    maximum_bid_considering_reference =
+                        sum(ao_reference_quantity_bid[1:current_reference_segment]) - sum_of_ao_selling_bids
+                    if maximum_bid_considering_reference == 0
                         # This is possibly redundant with the end of this while loop
                         current_reference_segment += 1
                         continue
                     end
 
                     seg += 1
-                    offer = min(
-                        maximum_offer_considering_markup - sum_of_offers_for_current_markup,
-                        maximum_offer_considering_reference,
+                    bid = min(
+                        maximum_bid_considering_markup - sum_of_bids_for_current_markup,
+                        maximum_bid_considering_reference,
                     )
-                    quantity_offers[vr, ao, seg] = offer
-                    price_offers[vr, ao, seg] = vr_price_offer[current_reference_segment] * (1 + markups[markup_index])
+                    quantity_bids[vr, ao, seg] = bid
+                    price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment] * (1 + markups[markup_index])
 
-                    sum_of_offers_for_current_markup += offer
-                    sum_of_ao_selling_offers += offer
-                    current_account -= offer
+                    sum_of_bids_for_current_markup += bid
+                    sum_of_ao_selling_bids += bid
+                    current_account -= bid
 
-                    if sum_of_ao_selling_offers >= sum(ao_reference_quantity_offer[1:current_reference_segment])
+                    if sum_of_ao_selling_bids >= sum(ao_reference_quantity_bid[1:current_reference_segment])
                         current_reference_segment += 1
-                        if current_reference_segment > length(ao_reference_quantity_offer)
-                            # We have reached the end of the reference curve, so we stop defining offers for this asset owner
+                        if current_reference_segment > length(ao_reference_quantity_bid)
+                            # We have reached the end of the reference curve, so we stop defining bids for this asset owner
                             if current_account > 1e-6
                                 if !first_warning
                                     @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
@@ -954,14 +907,14 @@ function virtual_reservoir_markup_offers_for_period_scenario(
                     account_share_upper_bound_for_markup = account_upper_bounds[markup_index]
 
                     seg += 1
-                    offer = current_account - account_share_upper_bound_for_markup * vr_total_account
-                    # Note that the offer is negative, because it is a bid to buy energy.
-                    quantity_offers[vr, ao, seg] = offer
+                    bid = current_account - account_share_upper_bound_for_markup * vr_total_account
+                    # Note that the bid is negative, because it is a bid to buy energy.
+                    quantity_bids[vr, ao, seg] = bid
                     # The purchase price is based on the price of the first segment of the reference curve.
-                    price_offers[vr, ao, seg] =
-                        vr_price_offer[1] * (1 + markups[markup_index] - asset_owner_purchase_discount_rate(inputs, ao))
+                    price_bids[vr, ao, seg] =
+                        vr_price_bid[1] * (1 + markups[markup_index] - asset_owner_purchase_discount_rate(inputs, ao))
 
-                    current_account -= offer
+                    current_account -= bid
                 end
             end
         end
@@ -969,8 +922,8 @@ function virtual_reservoir_markup_offers_for_period_scenario(
 
     serialize_virtual_reservoir_heuristic_bids(
         inputs,
-        quantity_offers,
-        price_offers;
+        quantity_bids,
+        price_bids;
         period,
         scenario,
     )
@@ -980,8 +933,8 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             outputs,
             inputs,
             run_time_options,
-            "virtual_reservoir_energy_offer",
-            quantity_offers,
+            "virtual_reservoir_energy_bid",
+            quantity_bids,
             period,
             scenario,
         )
@@ -990,115 +943,10 @@ function virtual_reservoir_markup_offers_for_period_scenario(
             outputs,
             inputs,
             run_time_options,
-            "virtual_reservoir_price_offer",
-            price_offers,
+            "virtual_reservoir_price_bid",
+            price_bids,
             period,
             scenario,
-        )
-    end
-
-    return nothing
-end
-
-function bidding_group_bid_price_limits_for_period(
-    inputs::Inputs,
-    run_time_options::RunTimeOptions,
-    period::Int;
-    outputs::Union{Outputs, Nothing} = nothing,
-)
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-    number_of_bidding_groups = length(bidding_groups)
-
-    if !has_any_simple_bids(inputs) && !has_any_profile_bids(inputs)
-        return nothing
-    end
-
-    if has_any_simple_bids(inputs)
-        bidding_group_bid_price_limit_not_justified_independent = zeros(
-            number_of_bidding_groups,
-        )
-        bidding_group_bid_price_limit_justified_independent = zeros(
-            number_of_bidding_groups,
-        )
-    end
-
-    if has_any_profile_bids(inputs)
-        bidding_group_bid_price_limit_not_justified_profile = zeros(
-            number_of_bidding_groups,
-        )
-        bidding_group_bid_price_limit_justified_profile = zeros(
-            number_of_bidding_groups,
-        )
-    end
-
-    bidding_group_number_of_risk_factors,
-    bidding_group_hydro_units,
-    bidding_group_thermal_units,
-    bidding_group_renewable_units,
-    bidding_group_demand_units = bidding_group_markup_units(inputs)
-
-    for (idx, bg) in enumerate(bidding_groups)
-        if !isempty(bidding_group_thermal_units[bg])
-            max_thermal_cost = maximum(
-                [thermal_unit_om_cost(inputs, t) for t in bidding_group_thermal_units[bg]],
-            )
-            reference_price = max(max_thermal_cost, bid_price_limit_low_reference(inputs))
-        elseif !isempty(bidding_group_renewable_units[bg])
-            reference_price = bid_price_limit_low_reference(inputs)
-        else
-            reference_price = bid_price_limit_high_reference(inputs)
-        end
-
-        if has_any_simple_bids(inputs)
-            bidding_group_bid_price_limit_not_justified_independent[idx] =
-                reference_price * (1.0 + bid_price_limit_markup_non_justified_independent(inputs))
-            bidding_group_bid_price_limit_justified_independent[idx] =
-                reference_price * (1.0 + bid_price_limit_markup_justified_independent(inputs))
-        end
-
-        if has_any_profile_bids(inputs)
-            bidding_group_bid_price_limit_not_justified_profile[idx] =
-                reference_price * (1.0 + bid_price_limit_markup_non_justified_profile(inputs))
-            bidding_group_bid_price_limit_justified_profile[idx] =
-                reference_price * (1.0 + bid_price_limit_markup_justified_profile(inputs))
-        end
-    end
-
-    if has_any_simple_bids(inputs)
-        write_output_without_scenario!(
-            outputs,
-            inputs,
-            run_time_options,
-            "bid_price_limit_not_justified_independent",
-            bidding_group_bid_price_limit_not_justified_independent;
-            period,
-        )
-        write_output_without_scenario!(
-            outputs,
-            inputs,
-            run_time_options,
-            "bid_price_limit_justified_independent",
-            bidding_group_bid_price_limit_justified_independent;
-            period,
-        )
-    end
-
-    if has_any_profile_bids(inputs)
-        write_output_without_scenario!(
-            outputs,
-            inputs,
-            run_time_options,
-            "bid_price_limit_not_justified_profile",
-            bidding_group_bid_price_limit_not_justified_profile;
-            period,
-        )
-        write_output_without_scenario!(
-            outputs,
-            inputs,
-            run_time_options,
-            "bid_price_limit_justified_profile",
-            bidding_group_bid_price_limit_justified_profile;
-            period,
         )
     end
 
@@ -1168,11 +1016,12 @@ function generate_individual_bids_files(inputs::AbstractInputs)
 
     quantity_file = joinpath(
         output_path(inputs),
-        "bidding_group_energy_offer" * period_suffix,
+        "bidding_group_energy_bid" * period_suffix,
     )
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     initialize_bids_view_from_external_file!(
-        inputs.time_series.quantity_offer,
+        inputs.time_series.quantity_bid,
         inputs,
         quantity_file;
         expected_unit = "MWh",
@@ -1185,10 +1034,10 @@ function generate_individual_bids_files(inputs::AbstractInputs)
 
     price_file = joinpath(
         output_path(inputs),
-        "bidding_group_price_offer" * period_suffix,
+        "bidding_group_price_bid" * period_suffix,
     )
     initialize_bids_view_from_external_file!(
-        inputs.time_series.price_offer,
+        inputs.time_series.price_bid,
         inputs,
         price_file;
         expected_unit = raw"$/MWh",
@@ -1201,10 +1050,10 @@ function generate_individual_bids_files(inputs::AbstractInputs)
 
     no_markup_price_file = joinpath(
         output_path(inputs),
-        "bidding_group_no_markup_price_offer" * period_suffix,
+        "bidding_group_no_markup_price_bid" * period_suffix,
     )
     initialize_bids_view_from_external_file!(
-        inputs.time_series.no_markup_price_offer,
+        inputs.time_series.no_markup_price_bid,
         inputs,
         no_markup_price_file;
         expected_unit = raw"$/MWh",
@@ -1230,9 +1079,9 @@ function write_individual_bids_files(
     buses = index_of_elements(inputs, Bus)
 
     price_data = if use_no_markup_price
-        inputs.time_series.no_markup_price_offer
+        inputs.time_series.no_markup_price_bid
     else
-        inputs.time_series.price_offer
+        inputs.time_series.price_bid
     end
 
     bidding_group_indexes_to_read = findall(isequal(asset_owner_index), bidding_group_asset_owner_index(inputs))
@@ -1261,7 +1110,7 @@ function write_individual_bids_files(
         # Update the time series in the external files to the current period and scenario
         read_bids_view_from_external_file!(
             inputs,
-            inputs.time_series.quantity_offer;
+            inputs.time_series.quantity_bid;
             period = 1,
             scenario,
             has_profile_bids = false,
@@ -1284,7 +1133,7 @@ function write_individual_bids_files(
                     bus_column[line_index] = bus_label(inputs, bus)
                     bidding_group_column[line_index] = bidding_group_label(inputs, bg)
                     price_column[line_index] = price_data[bg, bus, segment, subperiod]
-                    quantity_column[line_index] = inputs.time_series.quantity_offer[bg, bus, segment, subperiod]
+                    quantity_column[line_index] = inputs.time_series.quantity_bid[bg, bus, segment, subperiod]
                 end
             end
         end
@@ -1312,10 +1161,10 @@ function generate_individual_virtual_reservoir_bids_files(inputs::AbstractInputs
     # Virtual reservoir files
     virtual_reservoir_quantity_file = joinpath(
         output_path(inputs),
-        "virtual_reservoir_energy_offer" * period_suffix,
+        "virtual_reservoir_energy_bid" * period_suffix,
     )
     initialize_virtual_reservoir_bids_view_from_external_file!(
-        inputs.time_series.virtual_reservoir_quantity_offer,
+        inputs.time_series.virtual_reservoir_quantity_bid,
         inputs,
         virtual_reservoir_quantity_file;
         expected_unit = "MWh",
@@ -1327,10 +1176,10 @@ function generate_individual_virtual_reservoir_bids_files(inputs::AbstractInputs
     )
     virtual_reservoir_price_file = joinpath(
         output_path(inputs),
-        "virtual_reservoir_price_offer" * period_suffix,
+        "virtual_reservoir_price_bid" * period_suffix,
     )
     initialize_virtual_reservoir_bids_view_from_external_file!(
-        inputs.time_series.virtual_reservoir_price_offer,
+        inputs.time_series.virtual_reservoir_price_bid,
         inputs,
         virtual_reservoir_price_file;
         expected_unit = raw"$/MWh",
@@ -1354,7 +1203,9 @@ function write_individual_virtual_reservoir_bids_files(
 
     filename = "$(asset_owner_label(inputs, asset_owner_index))_virtual_reservoir_bids_period_$(inputs.args.period).csv"
 
-    df_length = length(virtual_reservoirs) * number_of_scenarios(inputs) * maximum_number_of_vr_bidding_segments(inputs)
+    df_length =
+        length(virtual_reservoirs) * number_of_scenarios(inputs) *
+        maximum_number_of_vr_bidding_segments(inputs)
 
     period_column = ones(Int, df_length) * inputs.args.period
     scenario_column = zeros(Int, df_length)
@@ -1368,13 +1219,13 @@ function write_individual_virtual_reservoir_bids_files(
         # Update the time series in the external files to the current period and scenario
         read_virtual_reservoir_bids_view_from_external_file!(
             inputs,
-            inputs.time_series.virtual_reservoir_quantity_offer;
+            inputs.time_series.virtual_reservoir_quantity_bid;
             period = 1,
             scenario,
         )
         read_virtual_reservoir_bids_view_from_external_file!(
             inputs,
-            inputs.time_series.virtual_reservoir_price_offer;
+            inputs.time_series.virtual_reservoir_price_bid;
             period = 1,
             scenario,
         )
@@ -1386,9 +1237,9 @@ function write_individual_virtual_reservoir_bids_files(
                 bid_segment_column[line_index] = segment
                 virtual_reservoir_column[line_index] = virtual_reservoir_label(inputs, vr)
                 price_column[line_index] =
-                    inputs.time_series.virtual_reservoir_price_offer[vr, asset_owner_index, segment]
+                    inputs.time_series.virtual_reservoir_price_bid[vr, asset_owner_index, segment]
                 quantity_column[line_index] =
-                    inputs.time_series.virtual_reservoir_quantity_offer[vr, asset_owner_index, segment]
+                    inputs.time_series.virtual_reservoir_quantity_bid[vr, asset_owner_index, segment]
             end
         end
     end
@@ -1407,10 +1258,10 @@ function write_individual_virtual_reservoir_bids_files(
     return nothing
 end
 
-function adjust_quantity_offer_for_ex_post!(
+function adjust_quantity_bid_for_ex_post!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    quantity_offer_series::IARA.BidsView{Float64},
+    quantity_bid_series::IARA.BidsView{Float64},
     subscenario::Int,
 )
     if !is_market_clearing(inputs) || is_ex_ante_problem(run_time_options) || !read_ex_post_renewable_file(inputs) ||
@@ -1420,29 +1271,49 @@ function adjust_quantity_offer_for_ex_post!(
 
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
 
+    adjustment_factors = ones(size(quantity_bid_series))
+
     for bg in bidding_group_indexes
+        # Check if the bidding group has ex post auto adjustment enabled
+        if bidding_group_ex_post_adjust(inputs, bg) == BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT
+            continue
+        end
+        # Check if the bidding group has hydro units
+        # If the bidding group has hydro units, we skip the adjustment
+        if bidding_group_has_hydro_units(inputs, bg) &&
+           clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
+            continue
+        end
         for bus in 1:number_of_elements(inputs, Bus)
             for bds in 1:number_of_bg_valid_bidding_segments(inputs, bg)
                 for blk in subperiods(inputs)
-                    # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
-                    run_time_options =
-                        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-                    total_energy_ex_ante = sum_units_energy_ub_per_bg(
-                        inputs,
-                        run_time_options,
-                        bg,
-                        bus,
-                        blk,
-                        subscenario,
-                    )
-                    total_demand_ex_ante = sum_demand_per_bg(
-                        inputs,
-                        run_time_options,
-                        bg,
-                        bus,
-                        blk,
-                        subscenario,
-                    )
+                    if bidding_group_ex_post_adjust(inputs, bg) ==
+                       BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION
+                        # Set the clearing model subproblem to ex_ante or ex_post to calculate the energy upper bound
+                        run_time_options =
+                            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+                        total_energy_ex_ante = sum_units_energy_ub_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
+                        total_demand_ex_ante = sum_demand_per_bg(
+                            inputs,
+                            run_time_options,
+                            bg,
+                            bus,
+                            blk,
+                            subscenario,
+                        )
+                    elseif bidding_group_ex_post_adjust(inputs, bg) ==
+                           BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+                        total_energy_ex_ante = max(sum(quantity_bid_series.data[bg, bus, :, blk]), 0.0)
+                        total_demand_ex_ante = min(sum(quantity_bid_series.data[bg, bus, :, blk]), 0.0)
+                    end
                     run_time_options =
                         RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
                     total_energy_ex_post = sum_units_energy_ub_per_bg(
@@ -1461,18 +1332,18 @@ function adjust_quantity_offer_for_ex_post!(
                         blk,
                         subscenario,
                     )
-                    if quantity_offer_series.data[bg, bus, bds, blk] > 0.0
+                    if quantity_bid_series.data[bg, bus, bds, blk] > 0.0
                         if total_energy_ex_ante == 0.0
-                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            adjustment_factors[bg, bus, bds, blk] = 0.0
                         else
-                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                            adjustment_factors[bg, bus, bds, blk] =
                                 total_energy_ex_post / total_energy_ex_ante
                         end
-                    elseif quantity_offer_series.data[bg, bus, bds, blk] < 0.0
+                    elseif quantity_bid_series.data[bg, bus, bds, blk] < 0.0
                         if total_demand_ex_ante == 0.0
-                            quantity_offer_series.data[bg, bus, bds, blk] = 0.0
+                            adjustment_factors[bg, bus, bds, blk] = 0.0
                         else
-                            quantity_offer_series.data[bg, bus, bds, blk] *=
+                            adjustment_factors[bg, bus, bds, blk] =
                                 total_demand_ex_post / total_demand_ex_ante
                         end
                     end
@@ -1480,6 +1351,8 @@ function adjust_quantity_offer_for_ex_post!(
             end
         end
     end
+
+    quantity_bid_series.data .*= adjustment_factors
 
     return nothing
 end
@@ -1553,19 +1426,19 @@ end
 
 function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
     if generate_heuristic_bids_for_clearing(inputs)
-        number_of_bg_offer_segments = number_of_bidding_group_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_bg_valid_bidding_segments!(inputs, number_of_bg_offer_segments)
-        maximum_number_of_bg_offer_segments = maximum(number_of_bg_offer_segments; init = 0)
-        update_maximum_number_of_bg_bidding_segments!(inputs, maximum_number_of_bg_offer_segments)
+        number_of_bg_bid_segments = number_of_bidding_group_bid_segments_for_heuristic_bids(inputs)
+        update_number_of_bg_valid_bidding_segments!(inputs, number_of_bg_bid_segments)
+        maximum_number_of_bg_bid_segments = maximum(number_of_bg_bid_segments; init = 0)
+        update_maximum_number_of_bg_bidding_segments!(inputs, maximum_number_of_bg_bid_segments)
 
-        number_of_vr_offer_segments = number_of_virtual_reservoir_offer_segments_for_heuristic_bids(inputs)
-        update_number_of_vr_valid_bidding_segments!(inputs, number_of_vr_offer_segments)
-        maximum_number_of_vr_offer_segments = maximum(number_of_vr_offer_segments; init = 0)
-        update_maximum_number_of_vr_bidding_segments!(inputs, maximum_number_of_vr_offer_segments)
+        number_of_vr_bid_segments = number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs)
+        update_number_of_vr_valid_bidding_segments!(inputs, number_of_vr_bid_segments)
+        maximum_number_of_vr_bid_segments = maximum(number_of_vr_bid_segments; init = 0)
+        update_maximum_number_of_vr_bidding_segments!(inputs, maximum_number_of_vr_bid_segments)
 
         @info("Heuristic bids")
-        @info("   Number of bidding group segments: $maximum_number_of_bg_offer_segments")
-        @info("   Number of virtual reservoir segments: $maximum_number_of_vr_offer_segments")
+        @info("   Number of bidding group segments: $maximum_number_of_bg_bid_segments")
+        @info("   Number of virtual reservoir segments: $maximum_number_of_vr_bid_segments")
         @info("")
     end
     return nothing

@@ -12,7 +12,7 @@
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    hydro_balance_subperiod_resolution = IARA.Configurations_HydroBalanceSubperiodResolution.AGGREGATED_SUBPERIODS,
+    hydro_balance_subperiod_resolution = IARA.Configurations_HydroBalanceSubperiodRepresentation.AGGREGATED_SUBPERIODS,
 )
 
 IARA.close_study!(db)

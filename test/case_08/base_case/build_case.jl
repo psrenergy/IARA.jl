@@ -35,12 +35,12 @@ db = IARA.create_study!(PATH;
     policy_graph_type = IARA.Configurations_PolicyGraphType.LINEAR,
     demand_deficit_cost = 500.0,
     cycle_discount_rate = 0.1,
-    clearing_hydro_representation = IARA.Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS,
+    clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    bid_data_source = IARA.Configurations_BidDataSource.READ_FROM_FILE,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
     virtual_reservoir_correspondence_type = IARA.Configurations_VirtualReservoirCorrespondenceType.DELTA_CORRESPONDENCE_CONSTRAINT,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
@@ -155,7 +155,7 @@ IARA.update_hydro_unit_relation!(db,
 # Bids equivalent to the old heuristic bid
 
 number_of_vr_segments = 2
-vr_quantity_offer = zeros(
+vr_quantity_bid = zeros(
     1,
     2,
     number_of_vr_segments,
@@ -163,7 +163,7 @@ vr_quantity_offer = zeros(
     number_of_periods,
 )
 
-vr_price_offer = zeros(
+vr_price_bid = zeros(
     1,
     2,
     number_of_vr_segments,
@@ -203,14 +203,14 @@ price_data = [
 
 for entry in quantity_data
     period, scenario, bid_segment, virtual_reservoir_1, virtual_reservoir_2 = entry
-    vr_quantity_offer[1, 1, bid_segment, scenario, period] = virtual_reservoir_1
-    vr_quantity_offer[1, 2, bid_segment, scenario, period] = virtual_reservoir_2
+    vr_quantity_bid[1, 1, bid_segment, scenario, period] = virtual_reservoir_1
+    vr_quantity_bid[1, 2, bid_segment, scenario, period] = virtual_reservoir_2
 end
 
 for entry in price_data
     period, scenario, bid_segment, virtual_reservoir_1, virtual_reservoir_2 = entry
-    vr_price_offer[1, 1, bid_segment, scenario, period] = virtual_reservoir_1
-    vr_price_offer[1, 2, bid_segment, scenario, period] = virtual_reservoir_2
+    vr_price_bid[1, 1, bid_segment, scenario, period] = virtual_reservoir_1
+    vr_price_bid[1, 2, bid_segment, scenario, period] = virtual_reservoir_2
 end
 
 map = Dict(
@@ -218,8 +218,8 @@ map = Dict(
 )
 
 IARA.write_virtual_reservoir_bids_time_series_file(
-    joinpath(PATH, "vr_quantity_offer"),
-    vr_quantity_offer;
+    joinpath(PATH, "vr_quantity_bid"),
+    vr_quantity_bid;
     dimensions = ["period", "scenario", "bid_segment"],
     labels_virtual_reservoirs = ["virtual_reservoir_1"],
     labels_asset_owners = ["asset_owner_1", "asset_owner_2"],
@@ -235,8 +235,8 @@ IARA.write_virtual_reservoir_bids_time_series_file(
 )
 
 IARA.write_virtual_reservoir_bids_time_series_file(
-    joinpath(PATH, "vr_price_offer"),
-    vr_price_offer;
+    joinpath(PATH, "vr_price_bid"),
+    vr_price_bid;
     dimensions = ["period", "scenario", "bid_segment"],
     labels_virtual_reservoirs = ["virtual_reservoir_1"],
     labels_asset_owners = ["asset_owner_1", "asset_owner_2"],
@@ -254,8 +254,8 @@ IARA.write_virtual_reservoir_bids_time_series_file(
 IARA.link_time_series_to_file(
     db,
     "VirtualReservoir";
-    quantity_offer = "vr_quantity_offer",
-    price_offer = "vr_price_offer",
+    quantity_bid = "vr_quantity_bid",
+    price_bid = "vr_price_bid",
 )
 
 IARA.close_study!(db)

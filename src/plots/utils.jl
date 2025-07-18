@@ -1,40 +1,40 @@
-function get_offer_file_paths(inputs::AbstractInputs)
-    offer_files = String[]
+function get_bid_file_paths(inputs::AbstractInputs)
+    bid_files = String[]
     if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup)
         if read_bids_from_file(inputs)
-            push!(offer_files, joinpath(path_case(inputs), bidding_group_quantity_offer_file(inputs) * ".csv"))
-            push!(offer_files, joinpath(path_case(inputs), bidding_group_price_offer_file(inputs) * ".csv"))
+            push!(bid_files, joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs) * ".csv"))
+            push!(bid_files, joinpath(path_case(inputs), bidding_group_price_bid_file(inputs) * ".csv"))
         elseif generate_heuristic_bids_for_clearing(inputs)
             push!(
-                offer_files,
-                joinpath(output_path(inputs), "bidding_group_energy_offer_period_$(inputs.args.period).csv"),
+                bid_files,
+                joinpath(output_path(inputs), "bidding_group_energy_bid_period_$(inputs.args.period).csv"),
             )
             push!(
-                offer_files,
-                joinpath(output_path(inputs), "bidding_group_price_offer_period_$(inputs.args.period).csv"),
+                bid_files,
+                joinpath(output_path(inputs), "bidding_group_price_bid_period_$(inputs.args.period).csv"),
             )
         end
-        @assert all(isfile.(offer_files)) "Offer files not found: $(offer_files)"
+        @assert all(isfile.(bid_files)) "Offer files not found: $(bid_files)"
         no_markup_price_folder = if read_bids_from_file(inputs)
             path_case(inputs)
         else
             output_path(inputs)
         end
         no_markup_price_path =
-            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_offer_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_bid_period_$(inputs.args.period).csv")
         no_markup_quantity_path =
-            joinpath(no_markup_price_folder, "bidding_group_no_markup_energy_offer_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_energy_bid_period_$(inputs.args.period).csv")
         if isfile(no_markup_price_path) && isfile(no_markup_quantity_path)
-            push!(offer_files, no_markup_price_path)
-            push!(offer_files, no_markup_quantity_path)
+            push!(bid_files, no_markup_price_path)
+            push!(bid_files, no_markup_quantity_path)
         else
             @warn(
-                "Reference price and quantity offer files not found: $(no_markup_price_path), $(no_markup_quantity_path)"
+                "Reference price and quantity bid files not found: $(no_markup_price_path), $(no_markup_quantity_path)"
             )
         end
     end
 
-    return offer_files
+    return bid_files
 end
 
 function plot_title_from_filename(inputs::AbstractInputs, filename::String)
@@ -46,13 +46,13 @@ function plot_title_from_filename(inputs::AbstractInputs, filename::String)
 end
 
 function get_revenue_files(inputs::AbstractInputs)
-    filenames = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+    filenames = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         ["bidding_group_revenue_ex_ante"]
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
         ["bidding_group_revenue_ex_post"]
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         ["bidding_group_revenue_ex_ante", "bidding_group_revenue_ex_post"]
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.NONE
         [""]
     end
     filenames .*= "_period_$(inputs.args.period)"
@@ -62,17 +62,40 @@ function get_revenue_files(inputs::AbstractInputs)
 end
 
 function get_profit_file(inputs::AbstractInputs)
-    filename = if settlement_type(inputs) == IARA.Configurations_SettlementType.EX_ANTE
+    filename = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         "bidding_group_profit_ex_ante"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.EX_POST
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
         "bidding_group_profit_ex_post"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         "bidding_group_profit_total"
-    elseif settlement_type(inputs) == IARA.Configurations_SettlementType.NONE
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.NONE
         ""
     end
     filename *= "_period_$(inputs.args.period)"
     filename *= ".csv"
+
+    return joinpath(post_processing_path(inputs), filename)
+end
+
+function get_variable_cost_file(inputs::AbstractInputs)
+    base_name = "bidding_group_variable_costs"
+    period_suffix = "_period_$(inputs.args.period)"
+    extension = ".csv"
+
+    subproblem_suffixes = ["_ex_post_physical", "_ex_post_commercial", "_ex_ante_physical", "_ex_ante_commercial"]
+    filename = ""
+
+    for subproblem_suffix in subproblem_suffixes
+        filename = base_name * subproblem_suffix * period_suffix * extension
+        if isfile(joinpath(output_path(inputs), filename))
+            break
+        elseif isfile(joinpath(post_processing_path(inputs), filename))
+            break
+        end
+        if subproblem_suffix == last(subproblem_suffixes)
+            error("Cost file not found")
+        end
+    end
 
     return joinpath(post_processing_path(inputs), filename)
 end
@@ -84,7 +107,7 @@ function get_load_marginal_cost_files(inputs::AbstractInputs)
 
     filenames = String[]
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         ex_ante_suffixes = ["_ex_ante_commercial", "_ex_ante_physical"]
         ex_post_suffixes = ["_ex_post_commercial", "_ex_post_physical"]
 
@@ -129,7 +152,7 @@ function get_generation_files(inputs::AbstractInputs)
 
     filenames = String[]
 
-    if settlement_type(inputs) == IARA.Configurations_SettlementType.DOUBLE
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         ex_ante_suffixes = ["_ex_ante_physical", "_ex_ante_commercial"]
         ex_post_suffixes = ["_ex_post_physical", "_ex_post_commercial"]
 
@@ -231,9 +254,10 @@ end
 function get_renewable_generation_to_plot(
     inputs::AbstractInputs;
     asset_owner_index::Int = null_value(Int),
+    @nospecialize(filters::Vector{<:Function} = Function[])
 )
     if is_null(asset_owner_index)
-        renewable_units = index_of_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
+        renewable_units = index_of_elements(inputs, RenewableUnit; filters)
     else
         bidding_groups = filter(
             bg -> bidding_group_asset_owner_index(inputs, bg) == asset_owner_index,
@@ -323,4 +347,24 @@ function convert_generation_data_from_GWh_to_MW!(
     metadata.unit = "MW"
 
     return data
+end
+
+function title_font_size()
+    # Plotly default is 17
+    return 17
+end
+
+function legend_font_size()
+    # Plotly default is 12
+    return 14
+end
+
+function axis_title_font_size()
+    # Plotly default is 14
+    return 14
+end
+
+function axis_tick_font_size()
+    # Plotly default is 12
+    return 12
 end

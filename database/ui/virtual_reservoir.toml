@@ -44,15 +44,15 @@ label.en = "Hydro Unit"
 tooltip.en = "Hydro unit of the virtual reservoir"
 
 [[attribute]]
-id = "quantity_offer"
+id = "quantity_bid"
 label.en = "Quantity Offer"
-tooltip.en = "Quantity of offers for virtual reservoirs"
+tooltip.en = "Quantity of bids for virtual reservoirs"
 unit.en = "MWh"
 hide = true
 
 [[attribute]]
-id = "price_offer"
+id = "price_bid"
 label.en = "Price Offer"
-tooltip.en = "Price of offers for virtual reservoirs"
+tooltip.en = "Price of bids for virtual reservoirs"
 unit.en = "$/MWh"
 hide = true

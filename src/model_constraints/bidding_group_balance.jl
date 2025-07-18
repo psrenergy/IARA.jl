@@ -30,7 +30,7 @@ function bidding_group_balance!(
     blks = subperiods(inputs)
 
     # Model variables
-    bidding_group_energy_offer = get_model_object(model, :bidding_group_energy_offer)
+    bidding_group_energy_bid = get_model_object(model, :bidding_group_energy_bid)
     hydro_generation = if any_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
         get_model_object(model, :hydro_generation)
     end
@@ -53,7 +53,7 @@ function bidding_group_balance!(
             bds in 1:number_of_bg_valid_bidding_segments(inputs, bg),
             bus in buses,
         ],
-        bidding_group_energy_offer[blk, bg, bds, bus] ==
+        bidding_group_energy_bid[blk, bg, bds, bus] ==
         sum(
             hydro_generation[blk, h]
             for h in existing_hydro_units
@@ -108,7 +108,7 @@ end
     bidding_group_balance!(outputs, inputs, run_time_options, ::Type{InitializeOutput})
 
 Initialize the output files for:
-- `bidding_group_price_offer`
+- `bidding_group_price_bid`
 """
 function bidding_group_balance!(
     outputs::Outputs,
@@ -118,7 +118,7 @@ function bidding_group_balance!(
 )
     add_custom_recorder_to_query_from_subproblem_result!(
         outputs,
-        :bidding_group_price_offer,
+        :bidding_group_price_bid,
         constraint_dual_recorder(inputs, :bidding_group_balance),
     )
 
@@ -135,7 +135,7 @@ function bidding_group_balance!(
         QuiverOutput,
         outputs;
         inputs,
-        output_name = "bidding_group_price_offer",
+        output_name = "bidding_group_price_bid",
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
         unit = "\$/MWh",
         labels,
@@ -149,7 +149,7 @@ end
     bidding_group_balance!(outputs, inputs::Inputs, run_time_options::RunTimeOptions, simulation_results::SimulationResultsFromPeriodScenario, period::Int, scenario::Int, subscenario::Int, ::Type{WriteOutput})
 
 Write the bidding group results for:
-- `bidding_group_price_offer`
+- `bidding_group_price_bid`
 """
 function bidding_group_balance!(
     outputs::Outputs,
@@ -165,8 +165,8 @@ function bidding_group_balance!(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_price_offer",
-        simulation_results.data[:bidding_group_price_offer].data;
+        "bidding_group_price_bid",
+        simulation_results.data[:bidding_group_price_bid].data;
         period,
         scenario,
         subscenario,

@@ -22,7 +22,7 @@ const PATH_ORIGINAL = joinpath(@__DIR__, "data", "case_2")
 ; #hide
 
 #md # !!! note "Note"
-#md #     As we have a Hydro Unit in this case, running the `TRAIN_MIN_COST` mode before the `MARKET_CLEARING` mode is necessary, as it will help us generate the hydro offers.
+#md #     As we have a Hydro Unit in this case, running the `TRAIN_MIN_COST` mode before the `MARKET_CLEARING` mode is necessary, as it will help us generate the hydro bids.
 
 # So, before running our case, let's review some information about it.
 
@@ -97,10 +97,10 @@ IARA.train_min_cost(
 
 # ## Market Clearing
 
-# Now that we have the hydro offers from the `TRAIN_MIN_COST` mode, we can run the `MARKET_CLEARING` mode.
+# Now that we have the hydro bids from the `TRAIN_MIN_COST` mode, we can run the `MARKET_CLEARING` mode.
 
 # Let's copy the data from the `TRAIN_MIN_COST` mode to a new folder. 
-# The hydro offers are in the `outputs` folder inside the `centralized` folder. For our case, we need to move this files to the root of the case folder.
+# The hydro bids are in the `outputs` folder inside the `centralized` folder. For our case, we need to move this files to the root of the case folder.
 
 const PATH_MARKET_CLEARING = joinpath(PATH_EXECUTION, "market_clearing")
 
@@ -132,13 +132,13 @@ cp(
 )
 ; #hide
 
-# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `PRICETAKER_HEURISTICS`.
+# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `HEURISTIC_UNVALIDATED_BID`.
 
 db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false)
 
 IARA.update_configuration!(
     db;
-    bid_data_source = IARA.Configurations_BidDataSource.PRICETAKER_HEURISTICS,
+    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
@@ -158,11 +158,11 @@ IARA.market_clearing(
 # Let's take a look into some of the plots generated automatically.
 
 # ```@raw html
-# <iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_offer_all.html" style="height:500px;width:100%;"></iframe>
+# <iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_bid_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
 # ```@raw html
-# <iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_offer_all.html" style="height:500px;width:100%;"></iframe>
+# <iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_bid_all.html" style="height:500px;width:100%;"></iframe>
 # ```
 
 # ```@raw html

@@ -124,10 +124,10 @@ Validate the asset owner collection.
 """
 function validate(asset_owner::AssetOwner)
     num_errors = 0
-    if count(asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT) > 1
+    if count(asset_owner.price_type .== AssetOwner_PriceType.SUPPLY_SECURITY_AGENT) > 1
         num_errors += 1
         @error(
-            "The number of counteroffer agents must be at most one, but found $(count(asset_owner.price_type .== AssetOwner_PriceType.COUNTEROFFER_AGENT))."
+            "The number of supply security agents must be at most one, but found $(count(asset_owner.price_type .== AssetOwner_PriceType.SUPPLY_SECURITY_AGENT))."
         )
     end
     for i in 1:length(asset_owner)
@@ -164,7 +164,8 @@ Validate the AssetOwner within the inputs context. Return the number of errors f
 function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
     num_errors = 0
     if generate_heuristic_bids_for_clearing(inputs) &&
-       clearing_hydro_representation(inputs) == Configurations_ClearingHydroRepresentation.VIRTUAL_RESERVOIRS
+       clearing_hydro_representation(inputs) ==
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
         all_virtual_reservoir_asset_owner_indices = union(virtual_reservoir_asset_owner_indices(inputs)...)
         for i in 1:length(asset_owner)
             if i in all_virtual_reservoir_asset_owner_indices
@@ -194,7 +195,7 @@ end
 
 is_price_taker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER
 is_price_maker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
-is_counteroffer_agent(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.COUNTEROFFER_AGENT
+is_supply_security_agent(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.SUPPLY_SECURITY_AGENT
 
 """
     asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, subperiod::Int, point_idx::Int)

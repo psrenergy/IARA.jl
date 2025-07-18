@@ -128,12 +128,12 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Deficit",
             "pt" => "Déficit",
         ),
-        "available_offers" => Dict(
-            "en" => "Available Offers",
+        "available_bids" => Dict(
+            "en" => "Available Bids",
             "pt" => "Ofertas Disponíveis",
         ),
-        "offers" => Dict(
-            "en" => "Offers",
+        "bids" => Dict(
+            "en" => "Bids",
             "pt" => "Ofertas",
         ),
         "operating_cost" => Dict(
@@ -147,6 +147,18 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
         "price" => Dict(
             "en" => "Price",
             "pt" => "Preço",
+        ),
+        "variable_cost" => Dict(
+            "en" => "Variable Cost",
+            "pt" => "Custo Variável",
+        ),
+        "fixed_cost" => Dict(
+            "en" => "Fixed Cost",
+            "pt" => "Custo Fixo",
+        ),
+        "total_cost" => Dict(
+            "en" => "Total Cost",
+            "pt" => "Custo Total",
         ),
     )
 

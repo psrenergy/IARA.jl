@@ -41,10 +41,10 @@ function download_and_unzip_complete_case () {
     # unzip heuristic bids 
     unzip -qo ./$IARA_CASE/heuristic_bids/heuristic_bids.zip -d $CASE_PATH/heuristic_bids
 
-    mv $CASE_PATH/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv $CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.csv 
-    mv $CASE_PATH/heuristic_bids/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml $CASE_PATH/bidding_group_no_markup_price_offer_period_$IARA_GAME_ROUND.toml
-    mv $CASE_PATH/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.csv $CASE_PATH/bidding_group_no_markup_energy_offer_period_$IARA_GAME_ROUND.csv
-    mv $CASE_PATH/heuristic_bids/bidding_group_energy_offer_period_$IARA_GAME_ROUND.toml $CASE_PATH/bidding_group_no_markup_energy_offer_period_$IARA_GAME_ROUND.toml
+    mv $CASE_PATH/heuristic_bids/bidding_group_no_markup_price_bid_period_$IARA_GAME_ROUND.csv $CASE_PATH/bidding_group_no_markup_price_bid_period_$IARA_GAME_ROUND.csv 
+    mv $CASE_PATH/heuristic_bids/bidding_group_no_markup_price_bid_period_$IARA_GAME_ROUND.toml $CASE_PATH/bidding_group_no_markup_price_bid_period_$IARA_GAME_ROUND.toml
+    mv $CASE_PATH/heuristic_bids/bidding_group_energy_bid_period_$IARA_GAME_ROUND.csv $CASE_PATH/bidding_group_no_markup_energy_bid_period_$IARA_GAME_ROUND.csv
+    mv $CASE_PATH/heuristic_bids/bidding_group_energy_bid_period_$IARA_GAME_ROUND.toml $CASE_PATH/bidding_group_no_markup_energy_bid_period_$IARA_GAME_ROUND.toml
 
     echo "Completed."
 }

@@ -35,14 +35,14 @@ db = IARA.create_study!(PATH;
     expected_number_of_repeats_per_node = [expected_number_of_repeats_per_node for _ in 1:number_of_nodes],
     initial_date_time = "2020-01-01T00:00:00",
     subperiod_duration_in_hours = [subperiod_duration_in_hours for _ in 1:number_of_subperiods],
-    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT,
+    policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT,
     cycle_discount_rate = 1.0,
     cycle_duration_in_hours = 8640.0, # 12 * 30 * 24
     demand_deficit_cost = 2000.0,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    train_mincost_time_limit_sec = 3600,
+    train_mincost_time_limit_sec = 600,
 )
 
 # =====================================================
@@ -441,24 +441,10 @@ for (bus_idx, bus_number_of_thermal_units) in enumerate(number_of_thermal_units)
             parameters = DataFrame(;
                 date_time = [DateTime(0)],
                 existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
-                startup_cost = [0.0],
                 min_generation = [thermal_unit_minimum_generation[bus_idx][t]],
                 max_generation = [thermal_unit_maximum_generation[bus_idx][t]],
                 om_cost = [thermal_unit_om_cost[bus_idx][t]],
             ),
-            has_commitment = 0,
-            max_ramp_up = 0.0,
-            max_ramp_down = 0.0,
-            min_uptime = 0.0,
-            max_uptime = 0.0,
-            min_downtime = 0.0,
-            max_startups = 0,
-            max_shutdowns = 0,
-            shutdown_cost = 0.0,
-            commitment_initial_condition = IARA.ThermalUnit_CommitmentInitialCondition.OFF,
-            generation_initial_condition = 0.0,
-            uptime_initial_condition = 0.0,
-            downtime_initial_condition = 0.0,
             bus_id = bus_idx,
         )
     end

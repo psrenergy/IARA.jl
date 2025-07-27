@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subperiod"]
+dimension_size = [12, 10, 24]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "period"
+frequency = "monthly"
+unit = "GWh"
+labels = ["ter_SE_1", "ter_SE_2", "ter_SE_3", "ter_SE_4", "ter_SE_5", "ter_SE_6", "ter_SE_7", "ter_SE_8", "ter_SE_9", "ter_SE_10", "ter_SE_11", "ter_SE_12", "ter_SE_13", "ter_SE_14", "ter_SE_15", "ter_SE_16", "ter_SE_17", "ter_SE_18", "ter_SE_19", "ter_SE_20", "ter_SE_21", "ter_SE_22", "ter_SE_23", "ter_SE_24", "ter_SE_25", "ter_SE_26", "ter_SE_27", "ter_SE_28", "ter_SE_29", "ter_SE_30", "ter_SE_31", "ter_SE_32", "ter_SE_33", "ter_SE_34", "ter_SE_35", "ter_SE_36", "ter_SE_37", "ter_SE_38", "ter_SE_39", "ter_SE_40", "ter_SE_41", "ter_SE_42", "ter_SE_43", "ter_S_1", "ter_S_2", "ter_S_3", "ter_S_4", "ter_S_5", "ter_S_6", "ter_S_7", "ter_S_8", "ter_S_9", "ter_S_10", "ter_S_11", "ter_S_12", "ter_S_13", "ter_S_14", "ter_S_15", "ter_S_16", "ter_S_17", "ter_NE_1", "ter_NE_2", "ter_NE_3", "ter_NE_4", "ter_NE_5", "ter_NE_6", "ter_NE_7", "ter_NE_8", "ter_NE_9", "ter_NE_10", "ter_NE_11", "ter_NE_12", "ter_NE_13", "ter_NE_14", "ter_NE_15", "ter_NE_16", "ter_NE_17", "ter_NE_18", "ter_NE_19", "ter_NE_20", "ter_NE_21", "ter_NE_22", "ter_NE_23", "ter_NE_24", "ter_NE_25", "ter_NE_26", "ter_NE_27", "ter_NE_28", "ter_NE_29", "ter_NE_30", "ter_NE_31", "ter_NE_32", "ter_NE_33", "ter_N_1", "ter_N_2"]

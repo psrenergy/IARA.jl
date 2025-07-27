@@ -67,6 +67,22 @@ function build_model(
 end
 
 function train_model!(model::ProblemModel, inputs::Inputs)
+
+    function rollout_limit(iteration::Int)
+        iteration_ref = if isnothing(train_mincost_iteration_limit(inputs))
+            100
+        else
+            train_mincost_iteration_limit(inputs)
+        end
+
+        if iteration < (iteration_ref/10)
+            return number_of_nodes(inputs)
+        elseif iteration < (iteration_ref/5)
+            return number_of_nodes(inputs) * 5
+        end
+        return number_of_nodes(inputs) * 10
+    end
+    
     SDDP.train(
         model.policy_graph;
         stopping_rules = [
@@ -75,6 +91,7 @@ function train_model!(model::ProblemModel, inputs::Inputs)
         iteration_limit = train_mincost_iteration_limit(inputs),
         time_limit = train_mincost_time_limit_sec(inputs),
         log_file = joinpath(output_path(inputs), "sddp.log"),
+        sampling_scheme = SDDP.InSampleMonteCarlo(; rollout_limit),
     )
 
     SDDP.write_cuts_to_file(model.policy_graph, joinpath(output_path(inputs), "cuts.json"))

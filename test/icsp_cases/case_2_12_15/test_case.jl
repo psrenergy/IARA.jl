@@ -27,7 +27,7 @@ if Main.RUN_BIG_TESTS
         end
     end
 
-    IARA.train_min_cost(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
+    IARA.train_min_cost(PATH; delete_output_folder_before_execution = true)
 
     if Main.UPDATE_RESULTS
         Main.update_outputs!(PATH)

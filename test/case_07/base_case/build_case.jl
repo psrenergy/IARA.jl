@@ -98,13 +98,13 @@ IARA.add_asset_owner!(db;
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     virtual_reservoir_energy_account_upper_bound = [0.5, 1.0],
     risk_factor_for_virtual_reservoir_bids = [0.1, -0.1],
-    purchase_discount_rate = 0.1,
+    purchase_discount_rate = [0.1],
 )
 
 IARA.add_asset_owner!(db;
     label = "asset_owner_2",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
-    purchase_discount_rate = 0.1,
+    purchase_discount_rate = [0.1],
 )
 
 IARA.add_virtual_reservoir!(db;

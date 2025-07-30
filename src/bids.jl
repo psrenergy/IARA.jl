@@ -178,7 +178,8 @@ function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::Abs
     for vr in virtual_reservoir_indices
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_bid_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
-                asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments + asset_owner_number_of_markdowns[ao] - 1
+                asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments +
+                asset_owner_number_of_markdowns[ao] - 1
         end
     end
     number_per_virtual_reservoir = [
@@ -935,17 +936,25 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 buy_segments = Int[]
                 for markdown_index in 1:length(asset_owner_purchase_discount_rate(inputs, ao))
                     seg += 1
-                    
-                    price_bids[vr, ao, seg] = lower_sell_price * (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
-                    reference_sell_price = lower_sell_price * (1 + asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
-                    
-                    absolute_bid = -sum(quantity_bids[vr, ao, s] for s in sell_segments if price_bids[vr, ao, s] < reference_sell_price; init = 0.0)
+
+                    price_bids[vr, ao, seg] =
+                        lower_sell_price * (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                    reference_sell_price =
+                        lower_sell_price * (1 + asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+
+                    absolute_bid =
+                        -sum(
+                            quantity_bids[vr, ao, s] for
+                            s in sell_segments if price_bids[vr, ao, s] < reference_sell_price;
+                            init = 0.0,
+                        )
                     # Note that the bid is negative, because it is a bid to buy energy.
                     incremental_bid = absolute_bid - sum(quantity_bids[vr, ao, buy_segments]; init = 0.0)
 
                     if accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]) - incremental_bid > vr_total_account
                         # The asset owner cannot own more energy than there is available in the virtual reservoir.
-                        quantity_bids[vr, ao, seg] = vr_total_account - (accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]))
+                        quantity_bids[vr, ao, seg] =
+                            vr_total_account - (accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]))
                         break
                     else
                         quantity_bids[vr, ao, seg] = incremental_bid

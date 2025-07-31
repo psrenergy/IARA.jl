@@ -49,7 +49,7 @@ function output_path(inputs::Inputs, run_time_options::RunTimeOptions)
         dir_nash = joinpath(
             output_path(inputs.args),
             "nash_equilibrium_iteration_" *
-            string(nash_equilibrium_iteration(inputs, run_time_options))
+            string(nash_equilibrium_iteration(inputs, run_time_options)),
         )
         if !isdir(dir_nash)
             mkpath(dir_nash)

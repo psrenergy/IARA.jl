@@ -65,10 +65,11 @@ function hydro_balance_aggregated_subperiods(
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
     # from the serialized results of the previous period
-    hydro_volume_state = if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options) ||
-        is_price_maker(inputs, run_time_options) || is_price_taker(inputs, run_time_options)
-        get_model_object(model, :hydro_volume_state)
-    end
+    hydro_volume_state =
+        if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options) ||
+           is_price_maker(inputs, run_time_options) || is_price_taker(inputs, run_time_options)
+            get_model_object(model, :hydro_volume_state)
+        end
     hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
         get_model_object(model, :hydro_previous_period_volume)
     end
@@ -119,9 +120,9 @@ function hydro_balance_aggregated_subperiods(
     )
 
     if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
-        if is_mincost(inputs, run_time_options) || 
-               is_price_maker(inputs, run_time_options) ||
-               is_price_taker(inputs, run_time_options)
+        if is_mincost(inputs, run_time_options) ||
+           is_price_maker(inputs, run_time_options) ||
+           is_price_taker(inputs, run_time_options)
             @constraint(
                 model.jump_model,
                 hydro_state_in[h in hydro_units_operating_with_reservoir],
@@ -173,9 +174,10 @@ function hydro_balance_chronological_subperiods(
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
     # from the serialized results of the previous period
-    hydro_volume_state = if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
-        get_model_object(model, :hydro_volume_state)
-    end
+    hydro_volume_state =
+        if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
+            get_model_object(model, :hydro_volume_state)
+        end
     hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
         get_model_object(model, :hydro_previous_period_volume)
     end

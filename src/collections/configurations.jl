@@ -478,7 +478,9 @@ function validate(configurations::Configurations)
     end
     if configurations.max_iteration_nash_equilibrium == 0 &&
        configurations.nash_equilibrium_strategy != Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
-        @error("Maximum number of iterations for Nash equilibrium must be greater than zero if Nash equilibrium is to be calculated.")
+        @error(
+            "Maximum number of iterations for Nash equilibrium must be greater than zero if Nash equilibrium is to be calculated."
+        )
         num_errors += 1
     end
     if length(configurations.subperiod_duration_in_hours) != configurations.number_of_subperiods

@@ -294,7 +294,7 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
         # Check if bid files are necessary, and if so, if they are provided
         if read_bids_from_file(inputs) && any(bidding_group._has_generation_besides_virtual_reservoirs)
             if (bidding_group.quantity_bid_file == "" || bidding_group.price_bid_file == "") &&
-            (bidding_group.quantity_bid_profile_file == "" || bidding_group.price_bid_profile_file == "")
+               (bidding_group.quantity_bid_profile_file == "" || bidding_group.price_bid_profile_file == "")
                 @error(
                     "Bid files are required for some bidding groups, but the quantity or price bid files are missing."
                 )

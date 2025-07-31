@@ -193,9 +193,24 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
-is_price_taker(a::AssetOwner, i::Int) = if is_null(i) false else a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER end
-is_price_maker(a::AssetOwner, i::Int) = if is_null(i) false else a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER end
-is_supply_security_agent(a::AssetOwner, i::Int) = if is_null(i) false else a.price_type[i] == AssetOwner_PriceType.SUPPLY_SECURITY_AGENT end
+is_price_taker(a::AssetOwner, i::Int) =
+    if is_null(i)
+        false
+    else
+        a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER
+    end
+is_price_maker(a::AssetOwner, i::Int) =
+    if is_null(i)
+        false
+    else
+        a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
+    end
+is_supply_security_agent(a::AssetOwner, i::Int) =
+    if is_null(i)
+        false
+    else
+        a.price_type[i] == AssetOwner_PriceType.SUPPLY_SECURITY_AGENT
+    end
 is_price_taker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     is_price_taker(inputs.collections.asset_owner, run_time_options.asset_owner_index)
 is_price_maker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
@@ -203,7 +218,8 @@ is_price_maker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
 is_supply_security_agent(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     is_supply_security_agent(inputs.collections.asset_owner, run_time_options.asset_owner_index)
 is_bidder(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
-    is_price_taker(inputs, run_time_options) || is_price_maker(inputs, run_time_options) || is_supply_security_agent(inputs, run_time_options)
+    is_price_taker(inputs, run_time_options) || is_price_maker(inputs, run_time_options) ||
+    is_supply_security_agent(inputs, run_time_options)
 has_price_taker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     any(is_price_taker(inputs.collections.asset_owner, i) for i in 1:length(inputs.collections.asset_owner))
 has_price_maker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =

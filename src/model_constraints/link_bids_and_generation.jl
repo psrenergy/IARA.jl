@@ -25,12 +25,22 @@ function link_bids_and_generation!(
     blks = subperiods(inputs)
     # Generation variables
     hydro_units =
-        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, !is_associated_with_some_virtual_reservoir])
+        index_of_elements(
+            inputs,
+            HydroUnit;
+            run_time_options,
+            filters = [is_existing, !is_associated_with_some_virtual_reservoir],
+        )
     thermal_units = index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing])
     renewable_units = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
     battery_units = index_of_elements(inputs, BatteryUnit; run_time_options, filters = [is_existing])
     hydro_generation =
-        if any_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, !is_associated_with_some_virtual_reservoir])
+        if any_elements(
+            inputs,
+            HydroUnit;
+            run_time_options,
+            filters = [is_existing, !is_associated_with_some_virtual_reservoir],
+        )
             get_model_object(model, :hydro_generation)
         end
     demand_units = index_of_elements(inputs, DemandUnit; filters = [is_existing])
@@ -49,7 +59,7 @@ function link_bids_and_generation!(
     # Bid variables
     bidding_groups =
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs])
-    
+
     @expression(
         model.jump_model,
         all_bidding_group_generation[
@@ -70,7 +80,7 @@ function link_bids_and_generation!(
             bidding_group_generation = get_model_object(model, :bidding_group_generation)
         end
     end
-    
+
     for blk in blks, bg in bidding_groups, bus in buses
         all_bidding_group_generation[blk, bg, bus] =
             if is_price_maker(inputs, run_time_options) || is_price_taker(inputs, run_time_options)
@@ -223,14 +233,14 @@ function link_bids_and_generation!(
         # Fill the 4 dimensional array with the same prices for all bidding segments
 
         max_bg_bidding_segments = maximum_number_of_bg_bidding_segments(inputs)
-        
+
         # Get the original 3D data
         original_data = simulation_results.data[:bidding_group_price_bid].data
-        
+
         # Create 4D array by repeating values across the bidding segments dimension
         bidding_group_price_bid = repeat(
-            original_data,
-            outer = (1, 1, 1, max_bg_bidding_segments)
+            original_data;
+            outer = (1, 1, 1, max_bg_bidding_segments),
         )
         write_bid_output(
             outputs,

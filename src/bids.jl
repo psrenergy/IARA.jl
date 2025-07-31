@@ -724,7 +724,8 @@ This function returns true when the following conditions are met:
 """
 function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     # Run mode
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST || iterate_nash_equilibrium(inputs)
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST ||
+       iterate_nash_equilibrium(inputs)
         return false
     end
     # Model type

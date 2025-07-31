@@ -584,7 +584,7 @@ function build_plots(
         push!(plot_configs, plot_config_renewable_curtailment)
     end
 
-    if number_of_elements(inputs, DCLine) > 0 
+    if number_of_elements(inputs, DCLine) > 0
         # DC Line Flow
         plot_config_dc_flow = PlotConfig(
             "DC Line Flow",

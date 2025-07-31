@@ -168,9 +168,9 @@ function train_model_and_run_simulation(
 end
 
 function train_nash_equilibrium_model(inputs::Inputs)
-
     run_time_options = RunTimeOptions(; nash_equilibrium_initialization = true)
-    if nash_equilibrium_initialization(inputs, run_time_options) == Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
+    if nash_equilibrium_initialization(inputs, run_time_options) ==
+       Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
         initialize_nash_equilibrium(
             inputs,
             run_time_options,
@@ -335,15 +335,27 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     end
 
     # Build models
-    run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+    )
     ex_ante_physical_model = build_model(inputs, run_time_options)
     run_time_options =
-        RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+        RunTimeOptions(;
+            nash_equilibrium_iteration,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+        )
     ex_ante_commercial_model = build_model(inputs, run_time_options)
-    run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+    )
     ex_post_physical_model = build_model(inputs, run_time_options)
     run_time_options =
-        RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+        RunTimeOptions(;
+            nash_equilibrium_iteration,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
+        )
     ex_post_commercial_model = build_model(inputs, run_time_options)
 
     # Build period-season map
@@ -412,7 +424,10 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             end
 
             # Clearing problems
-            run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+            run_time_options = RunTimeOptions(;
+                nash_equilibrium_iteration,
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+            )
             run_clearing_simulation(
                 ex_ante_physical_model,
                 inputs,
@@ -422,7 +437,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             )
 
             run_time_options = RunTimeOptions(;
-                nash_equilibrium_iteration, 
+                nash_equilibrium_iteration,
                 clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
             )
             run_clearing_simulation(
@@ -433,7 +448,10 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 outputs = ex_ante_commercial_outputs,
             )
 
-            run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+            run_time_options = RunTimeOptions(;
+                nash_equilibrium_iteration,
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+            )
 
             run_clearing_simulation(
                 ex_post_physical_model,
@@ -444,7 +462,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             )
 
             run_time_options = RunTimeOptions(;
-                nash_equilibrium_iteration, 
+                nash_equilibrium_iteration,
                 clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
             )
             run_clearing_simulation(

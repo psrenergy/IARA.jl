@@ -248,7 +248,8 @@ function initialize_time_series_from_external_files(inputs)
 
     # Bids
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) && read_bids_from_file(inputs) && has_any_bid_simple_input_files(inputs)
+    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) && read_bids_from_file(inputs) &&
+       has_any_bid_simple_input_files(inputs)
         file = joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(
             inputs.time_series.quantity_bid,
@@ -442,7 +443,7 @@ end
 
 function reinitialize_generation_time_series_for_nash_initialization!(
     inputs,
-    run_time_options
+    run_time_options,
 )
     # Hydro generation
     num_errors = 0
@@ -483,7 +484,7 @@ end
 
 function reinitialize_spot_time_series_for_nash_iteration!(
     inputs,
-    run_time_options
+    run_time_options,
 )
     # Spot price
     # Close the time series view to reinitialize it

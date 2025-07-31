@@ -14,7 +14,7 @@ Build the outputs for the clearing subproblem.
 """
 function build_clearing_outputs(
     inputs::Inputs;
-    nash_equilibrium_iteration::Int = 0
+    nash_equilibrium_iteration::Int = 0,
 )
     run_time_options = RunTimeOptions(; nash_equilibrium_iteration)
     # TODO: this should be handled inside initialize_outputs()
@@ -42,16 +42,28 @@ function build_clearing_outputs(
         )
     end
 
-    run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+    )
     ex_ante_physical_outputs = initialize_outputs(inputs, run_time_options)
 
-    run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+    )
     ex_ante_commercial_outputs = initialize_outputs(inputs, run_time_options)
 
-    run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+    )
     ex_post_physical_outputs = initialize_outputs(inputs, run_time_options)
 
-    run_time_options = RunTimeOptions(; nash_equilibrium_iteration, clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
+    )
     ex_post_commercial_outputs = initialize_outputs(inputs, run_time_options)
 
     run_time_options = RunTimeOptions(; nash_equilibrium_iteration, force_all_subscenarios = true)
@@ -324,8 +336,11 @@ function is_mincost(inputs::Inputs, run_time_options::RunTimeOptions)
     # Check if the run mode is TRAIN_MIN_COST or MIN_COST
     # Or if we want to initialize the Nash equilibrium with a heuristic min-cost solution
     return run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST ||
-           (nash_equilibrium_initialization(inputs, run_time_options) == Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC &&
-           run_time_options.nash_equilibrium_initialization)
+           (
+               nash_equilibrium_initialization(inputs, run_time_options) ==
+               Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC &&
+               run_time_options.nash_equilibrium_initialization
+           )
 end
 
 """

@@ -48,7 +48,7 @@ function revenue_convex_combination!(
         ) == 1.0,
     )
 
-    if aggregate_buses_for_strategic_bidding(inputs)
+    if iteration_with_aggregate_buses(inputs)
         @constraint(
             model.jump_model,
             energy_quantity_convex_combination[

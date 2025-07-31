@@ -20,7 +20,6 @@ IARA.Configurations_FinancialSettlementType
 IARA.Configurations_MakeWholePayments  
 IARA.Configurations_PriceLimits  
 IARA.Configurations_ThermalUnitIntraPeriodOperation  
-IARA.Configurations_BusesAggregationForStrategicBidding  
 IARA.Configurations_NetworkRepresentation
 IARA.Configurations_UncertaintyScenariosFiles  
 IARA.Configurations_VRCurveguideDataSource  

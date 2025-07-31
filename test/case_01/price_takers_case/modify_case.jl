@@ -11,6 +11,16 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
+IARA.update_configuration!(db;
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.STANDARD_ITERATION,
+    max_iteration_nash_equilibrium = 3,
+    nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.EXTERNAL_BID
+)
+
 IARA.add_asset_owner!(db;
     label = "asset_owner_1",
     price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,

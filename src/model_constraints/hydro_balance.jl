@@ -65,7 +65,8 @@ function hydro_balance_aggregated_subperiods(
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
     # from the serialized results of the previous period
-    hydro_volume_state = if is_mincost(inputs) || clearing_has_volume_variables(inputs, run_time_options)
+    hydro_volume_state = if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options) ||
+        is_price_maker(inputs, run_time_options) || is_price_taker(inputs, run_time_options)
         get_model_object(model, :hydro_volume_state)
     end
     hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
@@ -117,18 +118,20 @@ function hydro_balance_aggregated_subperiods(
         )
     )
 
-    if is_mincost(inputs) || clearing_has_volume_variables(inputs, run_time_options)
-        if clearing_has_volume_variables(inputs, run_time_options)
-            @constraint(
-                model.jump_model,
-                hydro_initial_state[h in hydro_units_operating_with_reservoir],
-                hydro_volume[1, h] == hydro_previous_period_volume[h]
-            )
-        elseif is_mincost(inputs)
+    if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
+        if is_mincost(inputs, run_time_options) || 
+               is_price_maker(inputs, run_time_options) ||
+               is_price_taker(inputs, run_time_options)
             @constraint(
                 model.jump_model,
                 hydro_state_in[h in hydro_units_operating_with_reservoir],
                 hydro_volume_state[h].in == hydro_volume[1, h]
+            )
+        elseif clearing_has_volume_variables(inputs, run_time_options)
+            @constraint(
+                model.jump_model,
+                hydro_initial_state[h in hydro_units_operating_with_reservoir],
+                hydro_volume[1, h] == hydro_previous_period_volume[h]
             )
         end
 
@@ -170,7 +173,7 @@ function hydro_balance_chronological_subperiods(
 
     # If we are solving a clearing problem, there is no state variable, and the previous volume is obtained
     # from the serialized results of the previous period
-    hydro_volume_state = if is_mincost(inputs) || clearing_has_volume_variables(inputs, run_time_options)
+    hydro_volume_state = if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
         get_model_object(model, :hydro_volume_state)
     end
     hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)
@@ -213,12 +216,12 @@ function hydro_balance_chronological_subperiods(
         inflow[b, h]
     )
 
-    if is_mincost(inputs) || clearing_has_volume_variables(inputs, run_time_options)
+    if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
         # If we are in the min cost case we let SDDP.jl handle the state equality 
         # by adding a constraint with the variable.in in the model. If we are in the
         # case we ignore the state variable and use the previous volume as the initial volume.
         # This is handled without the syntaxes from SDDP.jl
-        if is_mincost(inputs)
+        if is_mincost(inputs, run_time_options)
             @constraint(
                 model.jump_model,
                 hydro_state_in[h in hydro_units_operating_with_reservoir],

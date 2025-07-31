@@ -26,7 +26,7 @@ function convex_hull_coefficients!(
         zeros(Int, length(buses_represented_for_strategic_bidding(inputs)), number_of_subperiods(inputs))
     for scenario in scenarios(inputs)
         update_time_series_views_from_external_files!(inputs; period = model.node, scenario)
-        update_convex_hull_cache!(inputs, run_time_options)
+        update_convex_hull_cache!(inputs, run_time_options, period = model.node, scenario)
         updated_convex_hull = asset_owner_revenue_convex_hull(inputs)
         max_convex_hull_length = max.(max_convex_hull_length, length.(updated_convex_hull))
     end
@@ -101,7 +101,7 @@ function convex_hull_coefficients!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    update_convex_hull_cache!(inputs, run_time_options)
+    update_convex_hull_cache!(inputs, period = model.node, scenario, run_time_options)
 
     # Number of points in the convex hull for each bus and subperiod
     convex_hull_length = length.(asset_owner_revenue_convex_hull(inputs))

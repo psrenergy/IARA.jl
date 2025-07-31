@@ -12,7 +12,7 @@ db = IARA.load_study(PATH; read_only = false)
 
 # Update base case elements
 IARA.update_configuration!(db;
-    aggregate_buses_for_strategic_bidding = IARA.Configurations_BusesAggregationForStrategicBidding.AGGREGATE,
+    iterate_nash_equilibrium = IARA.Configurations_IterateNashEquilibrium.ITERATION_WITH_AGGREGATE_BUSES,
 )
 IARA.update_asset_owner!(db, "asset_owner_1";
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,

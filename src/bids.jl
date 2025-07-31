@@ -724,7 +724,7 @@ This function returns true when the following conditions are met:
 """
 function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     # Run mode
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
+    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST || iterate_nash_equilibrium(inputs)
         return false
     end
     # Model type
@@ -1000,8 +1000,7 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
 
     valid_segments_per_timeseries = zeros(Int, number_elements)
 
-    if run_mode(inputs) == RunMode.STRATEGIC_BID ||
-       run_mode(inputs) == RunMode.PRICE_TAKER_BID
+    if iterate_nash_equilibrium(inputs)
         return ones(Int, number_elements)
     end
 
@@ -1455,7 +1454,7 @@ function sum_demand_per_bg(
 end
 
 function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
-    if generate_heuristic_bids_for_clearing(inputs)
+    if generate_heuristic_bids_for_clearing(inputs) || iterate_nash_equilibrium(inputs)
         number_of_bg_bid_segments = number_of_bidding_group_bid_segments_for_heuristic_bids(inputs)
         update_number_of_bg_valid_bidding_segments!(inputs, number_of_bg_bid_segments)
         maximum_number_of_bg_bid_segments = maximum(number_of_bg_bid_segments; init = 0)

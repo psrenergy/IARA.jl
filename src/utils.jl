@@ -83,7 +83,7 @@ function period_index_in_year(inputs::Inputs, period::Int)
 end
 
 function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
-    if run_mode(inputs) == RunMode.PRICE_TAKER_BID
+    if is_price_taker(inputs, run_time_options)
         max_price = get_max_price(inputs)
         max_generation = 0.0
         for h in index_of_elements(inputs, HydroUnit; run_time_options)
@@ -98,7 +98,7 @@ function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
         lower_bound =
             -max_price * max_generation * sum(subperiod_duration_in_hours(inputs))
         return lower_bound
-    elseif run_mode(inputs) == RunMode.STRATEGIC_BID
+    elseif is_price_maker(inputs, run_time_options)
         @warn "Strategic Bid lower bound not implemented."
         return 0.0
     else

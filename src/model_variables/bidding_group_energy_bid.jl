@@ -36,7 +36,7 @@ function bidding_group_energy_bid!(
         ],
     )
 
-    if run_mode(inputs) == RunMode.STRATEGIC_BID
+    if is_price_maker(inputs, run_time_options)
         return nothing
     end
 
@@ -85,7 +85,7 @@ function bidding_group_energy_bid!(
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
 
-    if run_mode(inputs) == RunMode.STRATEGIC_BID
+    if is_price_maker(inputs, run_time_options)
         return nothing
     end
 
@@ -136,7 +136,7 @@ function bidding_group_energy_bid!(
         inputs,
         output_name = "bidding_group_energy_bid",
         dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-        unit = "GWh",
+        unit = "MWh",
         labels,
         run_time_options,
     )
@@ -167,7 +167,6 @@ function bidding_group_energy_bid!(
         period,
         scenario,
         subscenario,
-        multiply_by = MW_to_GW(),
     )
     return nothing
 end

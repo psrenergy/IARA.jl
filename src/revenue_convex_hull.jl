@@ -106,16 +106,21 @@ function upper_convex_hull(points::Vector{Point})
     return upper
 end
 
-function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
+function update_convex_hull_cache!(
+    inputs,
+    run_time_options::RunTimeOptions;
+    period::Int64,
+    scenario::Int64,
+)
     buses = index_of_elements(inputs, Bus)
     demands = index_of_elements(inputs, DemandUnit; filters = [is_existing])
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     blks = subperiods(inputs)
-    quantity_bids_ts = time_series_quantity_bid(inputs)
-    price_bids_ts = time_series_price_bid(inputs)
+    quantity_bids_ts = time_series_quantity_bid(inputs, period, scenario)
+    price_bids_ts = time_series_price_bid(inputs, period, scenario)
     demand_ts = time_series_demand(inputs, run_time_options)
 
-    if aggregate_buses_for_strategic_bidding(inputs)
+    if iteration_with_aggregate_buses(inputs)
         inputs.collections.asset_owner.revenue_convex_hull =
             Array{Vector{Point}, 2}(undef, 1, number_of_subperiods(inputs))
         for blk in blks

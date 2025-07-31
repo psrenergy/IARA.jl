@@ -10,6 +10,8 @@
 
 @kwdef struct RunTimeOptions
     asset_owner_index::Int = PSRDatabaseSQLite._psrdatabasesqlite_null_value(Int)
+    nash_equilibrium_iteration::Int = 0
+    nash_equilibrium_initialization::Bool = false
     clearing_model_subproblem::Union{RunTime_ClearingSubproblem.T, Nothing} = nothing
     clearing_integer_variables_in_model::Vector{Symbol} = Symbol[]
     force_all_subscenarios::Bool = false

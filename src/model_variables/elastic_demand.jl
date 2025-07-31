@@ -35,7 +35,7 @@ function elastic_demand!(
 
     # Parameters
 
-    if is_mincost(inputs) ||
+    if is_mincost(inputs, run_time_options) ||
        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
         # This is only used in pure physical problems, when in bid-based problems
         # the price bid is set by the bidding group
@@ -81,7 +81,7 @@ function elastic_demand!(
     ::Type{SubproblemUpdate},
 )
     if !(
-        is_mincost(inputs) ||
+        is_mincost(inputs, run_time_options) ||
         construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
     )
         return nothing

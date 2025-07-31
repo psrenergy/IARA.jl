@@ -216,7 +216,7 @@ function zonal_demand_expression(
             init = 0.0,
         ) +
         # The attended elastic demand is considered a bid offer in the market clearing case.
-        if is_mincost(inputs) ||
+        if is_mincost(inputs, run_time_options) ||
            construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
             sum(
                 attended_elastic_demand[blk, d] for
@@ -453,7 +453,7 @@ function nodal_demand_expression(
             init = 0.0,
         ) +
         # The attended elastic demand is considered a bid offer in the market clearing case.
-        if is_mincost(inputs) ||
+        if is_mincost(inputs, run_time_options) ||
            construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
             sum(
                 attended_elastic_demand[blk, d] for

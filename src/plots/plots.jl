@@ -584,9 +584,7 @@ function build_plots(
         push!(plot_configs, plot_config_renewable_curtailment)
     end
 
-    if number_of_elements(inputs, DCLine) > 0 &&
-       run_mode(inputs) != RunMode.STRATEGIC_BID &&
-       run_mode(inputs) != RunMode.PRICE_TAKER_BID
+    if number_of_elements(inputs, DCLine) > 0 
         # DC Line Flow
         plot_config_dc_flow = PlotConfig(
             "DC Line Flow",

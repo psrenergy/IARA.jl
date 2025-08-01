@@ -15,7 +15,7 @@ Run post-processing routines for generation.
 """
 function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOptions)
     file_suffix = ""
-    @show temp_path = joinpath(output_path(inputs, run_time_options), "temp")
+    temp_path = joinpath(output_path(inputs, run_time_options), "temp")
     if !isdir(temp_path)
         mkdir(temp_path)
     end

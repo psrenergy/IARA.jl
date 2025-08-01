@@ -514,8 +514,8 @@ function reinitialize_spot_time_series_for_nash_iteration!(
 end
 
 function reinitialize_bids_time_series_for_nash_iteration!(
-    inputs::Inputs,
-    run_time_options::RunTimeOptions,
+    inputs,
+    run_time_options,
 )
     # Bids
     num_errors = 0

@@ -339,6 +339,7 @@ function initialize!(
     return nothing
 end
 
+post_processing_path(inputs, run_time_options) = joinpath(output_path(inputs, run_time_options), "post_processing")
 post_processing_path(inputs) = joinpath(output_path(inputs), "post_processing")
 
 function find_indices_of_elements_to_write_in_output(;

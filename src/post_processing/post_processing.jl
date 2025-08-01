@@ -46,7 +46,7 @@ function post_process_outputs(
     model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    gather_outputs_separated_by_asset_owners(inputs)
+    gather_outputs_separated_by_asset_owners(inputs; run_time_options)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs, run_time_options))
         post_processing_generation(inputs, run_time_options)
@@ -210,7 +210,7 @@ function create_zero_file(
     else
         number_of_periods(inputs)
     end
-    temp_path = joinpath(output_path(inputs), "temp")
+    temp_path = joinpath(output_path(inputs, run_time_options), "temp")
     if has_subscenarios
         zeros_array = zeros(
             Float64,
@@ -252,7 +252,7 @@ function create_temporary_file_with_subscenario_dimension(
     model_outputs_time_serie::OutputReaders,
     filename::String;
 )
-    tempdir = joinpath(output_path(inputs), "temp")
+    tempdir = joinpath(output_path(inputs, run_time_options), "temp")
     treated_filename = joinpath(tempdir, basename(filename))
 
     reader = Quiver.Reader{Quiver.csv}(filename)

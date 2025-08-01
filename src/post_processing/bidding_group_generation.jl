@@ -53,8 +53,8 @@ function _write_generation_bg_file(
     clearing_procedure::String;
     is_ex_post = false,
 )
-    outputs_dir = output_path(inputs)
-    post_processing_dir = post_processing_path(inputs)
+    outputs_dir = output_path(inputs, run_time_options)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
 
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
     num_bidding_groups = length(inputs.collections.bidding_group)
@@ -209,7 +209,7 @@ function _write_generation_bg_file(
 end
 
 function get_generation_files(inputs::Inputs, clearing_procedure::String, technology::String)
-    outputs_dir = output_path(inputs)
+    outputs_dir = output_path(inputs, run_time_options)
     generation_file = filter(
         x -> endswith(x, clearing_procedure * ".csv") && occursin(technology, x) && occursin("generation", x),
         readdir(outputs_dir),

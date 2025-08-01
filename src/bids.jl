@@ -1455,7 +1455,11 @@ function sum_demand_per_bg(
 end
 
 function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
-    if generate_heuristic_bids_for_clearing(inputs) || iterate_nash_equilibrium(inputs)
+    if iterate_nash_equilibrium(inputs)
+        update_number_of_bg_valid_bidding_segments!(inputs, ones(Int, number_of_elements(inputs, BiddingGroup)))
+        update_maximum_number_of_bg_bidding_segments!(inputs, 1)
+    end
+    if generate_heuristic_bids_for_clearing(inputs)
         number_of_bg_bid_segments = number_of_bidding_group_bid_segments_for_heuristic_bids(inputs)
         update_number_of_bg_valid_bidding_segments!(inputs, number_of_bg_bid_segments)
         maximum_number_of_bg_bid_segments = maximum(number_of_bg_bid_segments; init = 0)

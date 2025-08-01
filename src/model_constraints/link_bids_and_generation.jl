@@ -242,6 +242,7 @@ function link_bids_and_generation!(
             original_data;
             outer = (1, 1, 1, max_bg_bidding_segments),
         )
+        bidding_group_price_bid = permutedims(bidding_group_price_bid, (1, 2, 4, 3))
         write_bid_output(
             outputs,
             inputs,

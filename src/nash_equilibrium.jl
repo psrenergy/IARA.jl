@@ -26,3 +26,23 @@ function initialize_nash_equilibrium(
 
     return nothing
 end
+
+function copy_bidding_group_bids_to_output_folder(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+)
+    # Copy the bidding group bids file to the output folder
+    exts = [".csv", ".toml"]
+    files = []
+    push!(files, "bidding_group_energy_bid")
+    push!(files, "bidding_group_price_bid")
+    for ext in exts
+        for file in files
+            cp(
+                joinpath(output_path(inputs, run_time_options), file * "$ext"),
+                joinpath(output_path(inputs), file * "$ext"),
+            )
+        end
+    end
+    return nothing
+end

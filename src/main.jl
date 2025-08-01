@@ -222,7 +222,12 @@ function train_nash_equilibrium_model(inputs::Inputs)
         # TODO: Dont run on last iteration?
         simulate_all_periods_and_scenarios_of_market_clearing(inputs; nash_equilibrium_iteration)
         reinitialize_spot_time_series_for_nash_iteration!(inputs, run_time_options)
+        # Copy bidding group bids to the output folder in the last iteration
+        if nash_equilibrium_iteration == max_iteration_nash_equilibrium(inputs)
+            copy_bidding_group_bids_to_output_folder(inputs, run_time_options)
+        end
     end
+
     return nothing
 end
 

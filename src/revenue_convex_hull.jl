@@ -82,7 +82,6 @@ function pricemaker_revenue(
             first = false
         end
         push!(points, Point(demand_unit, demand_unit * duals[i]))
-        push!(points, Point(demand_unit, 0.0))
     end
     return points
 end

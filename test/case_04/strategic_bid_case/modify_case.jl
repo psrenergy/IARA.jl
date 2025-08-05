@@ -17,7 +17,7 @@ IARA.update_configuration!(db;
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
     settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
     nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.STANDARD_ITERATION,
-    max_iteration_nash_equilibrium = 1,
+    max_iteration_nash_equilibrium = 3,
     nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.EXTERNAL_BID,
 )
 
@@ -48,7 +48,7 @@ IARA.add_demand_unit!(db;
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",
-    max_demand = max_demand,
+    max_demand = 5.0,
 )
 
 IARA.add_thermal_unit!(db;

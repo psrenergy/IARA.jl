@@ -188,8 +188,7 @@ function link_bids_and_generation!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    # TODO: Just price taker?
-    if is_price_taker(inputs, run_time_options)
+    if is_bidder(inputs, run_time_options)
         add_custom_recorder_to_query_from_subproblem_result!(
             outputs,
             :bidding_group_price_bid,
@@ -228,8 +227,7 @@ function link_bids_and_generation!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    # TODO: Just price taker?
-    if is_price_taker(inputs, run_time_options)
+    if is_bidder(inputs, run_time_options)
         # Fill the 4 dimensional array with the same prices for all bidding segments
 
         max_bg_bidding_segments = maximum_number_of_bg_bidding_segments(inputs)

@@ -32,6 +32,7 @@ function train_nash_equilibrium_model(inputs::Inputs)
         end
     end
     reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
+    reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
     reinitialize_spot_time_series_for_nash_iteration!(inputs, run_time_options)
     update_number_of_segments_for_heuristic_bids!(inputs)
 

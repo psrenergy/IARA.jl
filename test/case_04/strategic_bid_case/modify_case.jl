@@ -10,6 +10,17 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
+IARA.update_configuration!(db;
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
+    nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.STANDARD_ITERATION,
+    max_iteration_nash_equilibrium = 1,
+    nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.EXTERNAL_BID,
+)
+
 # Update base case elements
 IARA.update_asset_owner!(db, "asset_owner_1";
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
@@ -94,6 +105,34 @@ IARA.add_thermal_unit!(db;
     has_commitment = 0,
     bus_id = "bus_2",
     biddinggroup_id = "bg_2",
+)
+
+IARA.add_thermal_unit!(db;
+    label = "ter_sb_5",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
+        min_generation = 0.0,
+        max_generation = 5.0,
+        om_cost = 80.0,
+    ),
+    has_commitment = 0,
+    bus_id = "bus_1",
+    biddinggroup_id = "bg_3",
+)
+
+IARA.add_thermal_unit!(db;
+    label = "ter_sb_6",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
+        min_generation = 0.0,
+        max_generation = 2.5,
+        om_cost = 90.0,
+    ),
+    has_commitment = 0,
+    bus_id = "bus_2",
+    biddinggroup_id = "bg_3",
 )
 
 # Create and link CSV files

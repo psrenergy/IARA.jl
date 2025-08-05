@@ -526,6 +526,16 @@ function reinitialize_bids_time_series_for_nash_iteration!(
 
     # Reinitialize the time series views
     file = joinpath(output_path(inputs, run_time_options), "bidding_group_energy_bid")
+    exts = [".csv", ".toml"]
+    if !isfile(file * ".csv")
+        for ext in exts
+            # Copy the bidding group energy bid file to the output folder
+            cp(
+                joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs) * "$ext"),
+                file * "$ext",
+            )
+        end
+    end
     num_errors += initialize_bids_view_from_external_file!(
         inputs.time_series.quantity_bid,
         inputs,
@@ -540,6 +550,14 @@ function reinitialize_bids_time_series_for_nash_iteration!(
     )
 
     file = joinpath(output_path(inputs, run_time_options), "bidding_group_price_bid")
+    if !isfile(file * ".csv")
+        for ext in exts
+            cp(
+                joinpath(path_case(inputs), bidding_group_price_bid_file(inputs) * "$ext"),
+                file * "$ext",
+            )
+        end
+    end
     num_errors += initialize_bids_view_from_external_file!(
         inputs.time_series.price_bid,
         inputs,

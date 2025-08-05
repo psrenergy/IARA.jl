@@ -36,6 +36,7 @@ function revenue_convex_combination!(
     convex_hull_point_quantity = get_model_object(model, :convex_hull_point_quantity)
 
     # Model constraints
+    # TODO: Check formulation
     @constraint(
         model.jump_model,
         convex_revenue_coefficients_sum[
@@ -45,7 +46,7 @@ function revenue_convex_combination!(
         sum(
             convex_revenue_coefficients[blk, bus, v]
             for v in 1:convex_hull_length[bus, blk]
-        ) == 1.0,
+        ) <= 1.0,
     )
 
     if iteration_with_aggregate_buses(inputs)

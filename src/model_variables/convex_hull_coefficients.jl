@@ -25,6 +25,7 @@ function convex_hull_coefficients!(
     max_convex_hull_length =
         zeros(Int, length(buses_represented_for_strategic_bidding(inputs)), number_of_subperiods(inputs))
     for scenario in scenarios(inputs)
+        # TODO: This is not good, it should be done only once and not only to get the convex hull length
         update_time_series_views_from_external_files!(inputs; period = model.node, scenario)
         update_convex_hull_cache!(inputs, run_time_options; period = model.node, scenario)
         updated_convex_hull = asset_owner_revenue_convex_hull(inputs)
@@ -52,7 +53,7 @@ function convex_hull_coefficients!(
             v in 1:max_convex_hull_length[bus, subperiod],
         ]
         in
-        MOI.Parameter(asset_owner_revenue_convex_hull_point(inputs, bus, subperiod, v).x),
+        MOI.Parameter(0.0),
     )
 
     @variable(
@@ -63,7 +64,7 @@ function convex_hull_coefficients!(
             v in 1:max_convex_hull_length[bus, subperiod],
         ]
         in
-        MOI.Parameter(asset_owner_revenue_convex_hull_point(inputs, bus, subperiod, v).y),
+        MOI.Parameter(0.0),
     )
 
     # Objective function
@@ -101,7 +102,7 @@ function convex_hull_coefficients!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    update_convex_hull_cache!(inputs; period = model.node, scenario, run_time_options)
+    update_convex_hull_cache!(inputs, run_time_options; period = model.node, scenario)
 
     # Number of points in the convex hull for each bus and subperiod
     convex_hull_length = length.(asset_owner_revenue_convex_hull(inputs))

@@ -113,7 +113,9 @@ function update_convex_hull_cache!(
     scenario::Int64,
 )
     buses = index_of_elements(inputs, Bus)
+    # TODO: Think how to incorporate elastic demand
     demands = index_of_elements(inputs, DemandUnit; filters = [is_existing])
+    # Need to be all bidding groups, not only the ones of the asset owner
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     blks = subperiods(inputs)
     quantity_bids_ts = time_series_quantity_bid(inputs, period, scenario)

@@ -28,6 +28,7 @@ Collection representing the asset owners in the problem.
     # Vector dimension is the number of points in the convex hull
     # Point is a struct with (x, y) coordinates
     revenue_convex_hull::Array{Vector{Point}, 2} = Array{Vector{Point}, 2}(undef, 0, 0)
+    _max_convex_hull_length::Array{Int, 2} = Array{Int, 2}(undef, 0, 0)
 end
 
 # ---------------------------------------------------------------------
@@ -234,4 +235,13 @@ Return a point in the revenue convex hull cache at a given bus and subperiod.
 """
 function asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, subperiod::Int, point_idx::Int)
     return inputs.collections.asset_owner.revenue_convex_hull[bus, subperiod][point_idx]
+end
+
+"""
+    asset_owner_max_convex_hull_length(inputs::AbstractInputs, bus::Int, subperiod::Int)
+
+Return the maximum number of points in the revenue convex hull cache at a given bus and subperiod.
+"""
+function asset_owner_max_convex_hull_length(inputs::AbstractInputs, bus::Int, subperiod::Int)
+    return inputs.collections.asset_owner._max_convex_hull_length[bus, subperiod]
 end

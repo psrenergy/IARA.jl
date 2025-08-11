@@ -9,8 +9,6 @@ function build_iid_inflow(
     subperiod_duration_in_hours::Float64 = 30.0,
     expected_number_of_repeats::Float64 = 1.0,
 )
-    Random.seed!(1234)
-
     @assert number_of_seasons * number_of_subperiods * subperiod_duration_in_hours * expected_number_of_repeats == 8640 "Cycle duration does not match the expected value"
     
     # Dimension adjustments

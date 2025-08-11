@@ -43,6 +43,7 @@ db = IARA.create_study!(PATH;
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     train_mincost_time_limit_sec = 600,
+    # train_mincost_iteration_limit = 1,
 )
 
 # =====================================================
@@ -459,7 +460,7 @@ s_monthly_demand = [16.239, 16.574, 16.674, 15.942, 15.479, 15.481, 15.354, 15.3
 ne_monthly_demand = [15.015, 14.838, 14.899, 14.707, 14.429, 14.068, 14.107, 14.406, 14.826, 15.186, 15.283, 15.158]
 n_monthly_demand = [9.038, 9.117, 9.036, 9.106, 9.229, 9.262, 9.204, 9.406, 9.504, 9.465, 9.543, 9.307]
 im_monthly_demand = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-monthly_demands = [se_monthly_demand, s_monthly_demand, ne_monthly_demand, n_monthly_demand, im_monthly_demand]
+monthly_demands = [se_monthly_demand, s_monthly_demand, ne_monthly_demand, n_monthly_demand, im_monthly_demand] * 0.9
 max_demand = maximum(se_monthly_demand)
 # Build the demand matrix
 demand = zeros(number_of_buses, number_of_subperiods, number_of_scenarios, number_of_periods)

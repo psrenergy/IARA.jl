@@ -72,7 +72,8 @@ function train_model!(model::ProblemModel, inputs::Inputs)
         iteration_ref = if isnothing(train_mincost_iteration_limit(inputs))
             100
         else
-            train_mincost_iteration_limit(inputs)
+            # This ensures that the first "if" has a value of at least 2, so it is always true for the first iteration
+            max(train_mincost_iteration_limit(inputs), 20)
         end
 
         if iteration < (iteration_ref/10)

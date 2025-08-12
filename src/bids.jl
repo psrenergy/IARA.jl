@@ -931,16 +931,16 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             # Energy to buy
             #--------------
             if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs)
-                lower_sell_price = minimum(price_bids[vr, ao, 1:seg])
+                lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])
                 sell_segments = collect(1:seg)
                 buy_segments = Int[]
                 for markdown_index in 1:length(asset_owner_purchase_discount_rate(inputs, ao))
                     seg += 1
 
                     price_bids[vr, ao, seg] =
-                        lower_sell_price * (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                        lowest_sell_price * (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
                     reference_sell_price =
-                        lower_sell_price * (1 + asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                        lowest_sell_price * (1 + asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
 
                     absolute_bid =
                         -sum(

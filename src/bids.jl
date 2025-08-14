@@ -166,8 +166,10 @@ function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::Abs
 
     # AO
     asset_owner_number_of_risk_factors = zeros(Int, number_of_asset_owners)
+    asset_owner_number_of_markdowns = zeros(Int, number_of_asset_owners)
     for ao in asset_owner_indices
         asset_owner_number_of_risk_factors[ao] = length(asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao))
+        asset_owner_number_of_markdowns[ao] = length(asset_owner_purchase_discount_rate(inputs, ao))
     end
 
     # Offer segments
@@ -176,7 +178,8 @@ function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::Abs
     for vr in virtual_reservoir_indices
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_bid_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
-                asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments
+                asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments +
+                asset_owner_number_of_markdowns[ao] - 1
         end
     end
     number_per_virtual_reservoir = [
@@ -928,23 +931,36 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             # Energy to buy
             #--------------
             if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs)
-                current_account = accounts[vr][i]
-                # There will be defined buying bids for the current asset owner until the resulting account share is 1.
-                while current_account < vr_total_account
-                    current_account_share = current_account / vr_total_account
-                    markup_index =
-                        findfirst(i -> account_upper_bounds[i] > current_account_share, 1:length(account_upper_bounds))
-                    account_share_upper_bound_for_markup = account_upper_bounds[markup_index]
-
+                lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])
+                sell_segments = collect(1:seg)
+                buy_segments = Int[]
+                for markdown_index in 1:length(asset_owner_purchase_discount_rate(inputs, ao))
                     seg += 1
-                    bid = current_account - account_share_upper_bound_for_markup * vr_total_account
-                    # Note that the bid is negative, because it is a bid to buy energy.
-                    quantity_bids[vr, ao, seg] = bid
-                    # The purchase price is based on the price of the first segment of the reference curve.
-                    price_bids[vr, ao, seg] =
-                        vr_price_bid[1] * (1 + markups[markup_index] - asset_owner_purchase_discount_rate(inputs, ao))
 
-                    current_account -= bid
+                    price_bids[vr, ao, seg] =
+                        lowest_sell_price * (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                    reference_sell_price =
+                        lowest_sell_price * (1 + asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+
+                    absolute_bid =
+                        -sum(
+                            quantity_bids[vr, ao, s] for
+                            s in sell_segments if price_bids[vr, ao, s] < reference_sell_price;
+                            init = 0.0,
+                        )
+                    # Note that the bid is negative, because it is a bid to buy energy.
+                    incremental_bid = absolute_bid - sum(quantity_bids[vr, ao, buy_segments]; init = 0.0)
+
+                    if accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]) - incremental_bid > vr_total_account
+                        # The asset owner cannot own more energy than there is available in the virtual reservoir.
+                        quantity_bids[vr, ao, seg] =
+                            vr_total_account - (accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]))
+                        break
+                    else
+                        quantity_bids[vr, ao, seg] = incremental_bid
+                    end
+
+                    push!(buy_segments, seg)
                 end
             end
         end

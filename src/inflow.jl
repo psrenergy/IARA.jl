@@ -14,10 +14,6 @@
 Generate inflow scenarios for the optimization problem.
 """
 function generate_inflow_scenarios(inputs::Inputs)
-    if read_inflow_from_file(inputs)
-        return nothing
-    end
-
     # Fit and simulate PAR(p)
     incremental_inflow = calculate_incremental_inflow(inputs, gauging_station_historical_inflow(inputs))
     parp_models = PARp.(incremental_inflow, periods_per_year(inputs), parp_max_lags(inputs))
@@ -99,9 +95,9 @@ function write_parp_outputs(inputs::Inputs,
     write_timeseries_file(
         joinpath(path_parp(inputs), gauging_station_parp_coefficients_file(inputs)),
         parp_coefficients;
-        dimensions = ["period", "lag"],
+        dimensions = ["inflow_period", "lag"],
         labels = gauging_station_label(inputs),
-        time_dimension = "period",
+        time_dimension = "inflow_period",
         dimension_size = [periods_per_year(inputs), parp_max_lags(inputs)],
         initial_date = initial_date_time(inputs),
         unit = "-",

@@ -23,6 +23,11 @@ Collection representing the gauging stations in the system.
     downstream_index::Vector{Int} = []
     historical_inflow::Vector{Vector{Float64}} = Vector{Vector{Float64}}()
     inflow_initial_state::Matrix{Float64} = Matrix{Float64}(undef, 0, 0)
+
+    inflow_noise_file::String = ""
+    parp_coefficients_file::String = ""
+    inflow_period_average_file::String = ""
+    inflow_period_std_dev_file::String = ""
 end
 
 # ---------------------------------------------------------------------
@@ -45,6 +50,24 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
 
     if read_inflow_from_file(inputs)
         return nothing
+    end
+
+    if fit_parp_model(inputs)
+        # When fitting the PAR(p) model, these files are output files, so we use the IARA standard.
+        gauging_station.inflow_noise_file = "inflow_noise"
+        gauging_station.parp_coefficients_file = "parp_coefficients"
+        gauging_station.inflow_period_average_file = "inflow_period_average"
+        gauging_station.inflow_period_std_dev_file = "inflow_period_std_dev"
+    else
+        # When reading the coefficients, these are input files with user-defined names
+        gauging_station.inflow_noise_file =
+            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_noise")
+        gauging_station.parp_coefficients_file =
+            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "parp_coefficients")
+        gauging_station.inflow_period_average_file =
+            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_period_average")
+        gauging_station.inflow_period_std_dev_file =
+            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_period_std_dev")
     end
 
     gauging_station.historical_inflow = Vector{Vector{Float64}}(undef, num_gauging_stations)
@@ -92,7 +115,7 @@ Add a Gauging Station to the database.
 $(PSRDatabaseSQLite.collection_docstring(model_directory(), "GaugingStation"))
 
 !!! note "Note"
-    - `historical_inflow` is required if `Configuration.inflow_scenarios_files` _is set to_ `PARP`
+    - `historical_inflow` is required if `Configuration.inflow_scenarios_files` _is set to_ `FIT_PARP_MODEL_FROM_DATA`
 
 Example:
 ```julia
@@ -170,9 +193,9 @@ Validate the GaugingStation within the inputs context. Return the number of erro
 """
 function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingStation)
     num_errors = 0
-    if !read_inflow_from_file(inputs)
+    if fit_parp_model(inputs)
         if any(isempty.(gauging_station.historical_inflow))
-            @error("Inflow is set to use the PAR(p) model, but GaugingStation historical inflow data is missing.")
+            @error("Inflow is set to use fit a PAR(p) model, but GaugingStation historical inflow data is missing.")
             num_errors += 1
         end
         for i in 1:length(gauging_station.historical_inflow)
@@ -185,6 +208,26 @@ function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingSt
             end
         end
     end
+    if read_parp_coefficients(inputs)
+        if gauging_station.inflow_noise_file == ""
+            @error("Defining the inflow noise file name is required when reading PAR(p) coefficients.")
+            num_errors += 1
+        end
+        if gauging_station.parp_coefficients_file == ""
+            @error("Defining the PAR(p) coefficients file name is required when reading PAR(p) coefficients.")
+            num_errors += 1
+        end
+        if gauging_station.inflow_period_average_file == ""
+            @error("Defining the inflow period average file name is required when reading PAR(p) coefficients.")
+            num_errors += 1
+        end
+        if gauging_station.inflow_period_std_dev_file == ""
+            @error(
+                "Defining the inflow period standard deviation file name is required when reading PAR(p) coefficients."
+            )
+            num_errors += 1
+        end
+    end
     return num_errors
 end
 
@@ -193,6 +236,7 @@ end
 # ---------------------------------------------------------------------
 
 function normalized_initial_inflow(inputs, period_idx::Integer, h::Integer, tau::Integer)
+    @show period_idx, h, tau
     gauging_station_idx = hydro_unit_gauging_station_index(inputs, h)
     if time_series_inflow_period_std_dev(inputs)[gauging_station_idx, period_idx] == 0
         return 0.0
@@ -210,34 +254,3 @@ end
 Return the inflow time series file for all gauging stations.
 """
 gauging_station_inflow_file(inputs::AbstractInputs) = "inflow"
-
-"""
-    gauging_station_inflow_noise_file(inputs::AbstractInputs)
-
-Return the inflow noise time series file for all gauging stations.
-"""
-gauging_station_inflow_noise_file(inputs::AbstractInputs) = "inflow_noise"
-
-"""
-    gauging_station_parp_coefficients_file(inputs::AbstractInputs)
-
-Return the PAR(p) coefficients time series file for all gauging stations.
-"""
-gauging_station_parp_coefficients_file(inputs::AbstractInputs) = "parp_coefficients"
-gauging_station_parp_coefficients_file() = "parp_coefficients"
-
-"""
-    gauging_station_inflow_period_average_file(inputs::AbstractInputs)
-
-Return the period average inflow time series file for all gauging stations.
-"""
-gauging_station_inflow_period_average_file(inputs::AbstractInputs) = "inflow_period_average"
-gauging_station_inflow_period_average_file() = "inflow_period_average"
-
-"""
-    gauging_station_inflow_period_std_dev_file(inputs::AbstractInputs)
-
-Return the period standard deviation inflow time series file for all gauging stations.
-"""
-gauging_station_inflow_period_std_dev_file(inputs::AbstractInputs) = "inflow_period_std_dev"
-gauging_station_inflow_period_std_dev_file() = "inflow_period_std_dev"

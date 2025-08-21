@@ -62,6 +62,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
                 :subscenario,
                 impl;
                 digits = 6,
+                suppress_dimension_order_warning = true,
             )
         end
     else
@@ -94,6 +95,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
                 :subscenario,
                 impl;
                 digits = 6,
+                suppress_dimension_order_warning = true,
             )
         end
     else
@@ -126,6 +128,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
                 :subscenario,
                 impl;
                 digits = 6,
+                suppress_dimension_order_warning = true,
             )
         end
     else
@@ -165,6 +168,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
                 :subscenario,
                 impl;
                 digits = 6,
+                suppress_dimension_order_warning = true,
             )
         end
     else
@@ -203,6 +207,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
             :subscenario,
             impl;
             digits = 6,
+            suppress_dimension_order_warning = true,
         )
     end
 

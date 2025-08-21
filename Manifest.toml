@@ -617,9 +617,9 @@ version = "2.11.2"
 
 [[deps.Quiver]]
 deps = ["CSV", "DataFrames", "Dates", "OrderedCollections", "TOML", "Tables"]
-git-tree-sha1 = "372633dd0d11f36e3e5a161fbb7bab5d17a4437b"
+git-tree-sha1 = "c2719cc7b2a7e83d679ac0511a2547a34fc56a40"
 uuid = "cdbb3f72-2527-4dbd-9d0e-93533a5519ac"
-version = "0.1.13"
+version = "0.1.14"
 weakdeps = ["PSRClassesInterface"]
 
     [deps.Quiver.extensions]

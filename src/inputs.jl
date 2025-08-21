@@ -178,7 +178,7 @@ function initialize!(inputs::Inputs)
     end
 
     # Fit PAR(p) and generate scenarios
-    if !read_inflow_from_file(inputs)
+    if fit_parp_model(inputs)
         generate_inflow_scenarios(inputs)
     end
 
@@ -383,7 +383,7 @@ function time_series_inflow(inputs, run_time_options; subscenario::Union{Int, No
         end
     end
     return error(
-        "The inflow time series is not available when the option inflow_scenarios_files is set to PARP. The PAR(p) model should be used instead.",
+        "The inflow time series is not available when the option inflow_scenarios_files is set to use the PAR(p) model.",
     )
 end
 

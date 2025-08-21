@@ -1,6 +1,12 @@
 PRAGMA user_version = 21;
 PRAGMA foreign_keys = ON;
 
-ALTER TABLE Configuration REMOVE COLUMN nash_equilibrium_strategy;
-ALTER TABLE Configuration REMOVE COLUMN nash_equilibrium_initialization;
-ALTER TABLE Configuration REMOVE COLUMN max_iteration_nash_equilibrium;
+ALTER TABLE AssetOwner ADD COLUMN purchase_discount_rate REAL;
+
+UPDATE AssetOwner SET purchase_discount_rate = (
+    SELECT purchase_discount_rate 
+    FROM AssetOwner_vector_purchase_discount_rate 
+    WHERE AssetOwner.id = AssetOwner_vector_purchase_discount_rate.id AND vector_index = 1
+);
+
+DROP TABLE AssetOwner_vector_purchase_discount_rate;

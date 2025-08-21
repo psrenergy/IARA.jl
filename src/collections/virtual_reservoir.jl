@@ -246,6 +246,11 @@ function add_virtual_reservoir!(db::DatabaseSQLite; kwargs...)
     return nothing
 end
 
+function delete_virtual_reservoir!(db::DatabaseSQLite, label::String)
+    PSRI.delete_element!(db, "VirtualReservoir", label)
+    return nothing
+end
+
 """
     update_virtual_reservoir!(db::DatabaseSQLite, label::String; kwargs...)
 

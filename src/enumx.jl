@@ -226,16 +226,18 @@ end
 """
     Configurations_UncertaintyScenariosFiles
 
-  - `PARP`: PARP (0)
+  - `FIT_PARP_MODEL_FROM_DATA`: Fit PAR(p) model from data (0)
   - `ONLY_EX_ANTE`: Only ex-ante (1)
   - `ONLY_EX_POST`: Only ex-post (2)
   - `EX_ANTE_AND_EX_POST`: Ex-ante and ex-post (3)
+  - `READ_PARP_COEFFICIENTS`: Read PAR(p) coefficients (4)
 """
 @enumx Configurations_UncertaintyScenariosFiles begin
-    PARP = 0
+    FIT_PARP_MODEL_FROM_DATA = 0
     ONLY_EX_ANTE = 1
     ONLY_EX_POST = 2
     EX_ANTE_AND_EX_POST = 3
+    READ_PARP_COEFFICIENTS = 4
 end
 
 """

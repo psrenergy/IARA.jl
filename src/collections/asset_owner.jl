@@ -20,7 +20,7 @@ Collection representing the asset owners in the problem.
 @collection @kwdef mutable struct AssetOwner <: AbstractCollection
     label::Vector{String} = []
     price_type::Vector{AssetOwner_PriceType.T} = []
-    purchase_discount_rate::Vector{Float64} = []
+    purchase_discount_rate::Vector{Vector{Float64}} = []
     virtual_reservoir_energy_account_upper_bound::Vector{Vector{Float64}} = []
     risk_factor_for_virtual_reservoir_bids::Vector{Vector{Float64}} = []
     # The convex revenue cache has information for a single asset owner at a time
@@ -52,7 +52,7 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "AssetOwner", "price_type"),
             AssetOwner_PriceType.T,
         )
-    asset_owner.purchase_discount_rate = PSRI.get_parms(inputs.db, "AssetOwner", "purchase_discount_rate")
+    asset_owner.purchase_discount_rate = PSRI.get_vectors(inputs.db, "AssetOwner", "purchase_discount_rate")
 
     # Load vectors
     asset_owner.virtual_reservoir_energy_account_upper_bound =
@@ -86,6 +86,11 @@ function add_asset_owner!(db::DatabaseSQLite; kwargs...)
     return nothing
 end
 
+function delete_asset_owner!(db::DatabaseSQLite, label::String)
+    PSRI.delete_element!(db, "AssetOwner", label)
+    return nothing
+end
+
 """
     update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
 
@@ -104,6 +109,24 @@ function update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
     for (attribute, value) in sql_typed_kwargs
         PSRI.set_parm!(
+            db,
+            "AssetOwner",
+            string(attribute),
+            label,
+            value,
+        )
+    end
+    return db
+end
+
+function update_asset_owner_vectors!(
+    db::DatabaseSQLite,
+    label::String;
+    kwargs...,
+)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    for (attribute, value) in sql_typed_kwargs
+        PSRDatabaseSQLite.update_vector_parameters!(
             db,
             "AssetOwner",
             string(attribute),
@@ -147,11 +170,20 @@ function validate(asset_owner::AssetOwner)
                 )
             end
         end
-        if !is_null(asset_owner.purchase_discount_rate[i]) && asset_owner.purchase_discount_rate[i] <= 0.0
-            num_errors += 1
-            @error(
-                "Purchase discount rate for asset owner $(asset_owner.label[i]) must be greater than zero, but it is $(asset_owner.purchase_discount_rate[i])."
-            )
+        for j in 1:length(asset_owner.purchase_discount_rate[i])
+            if is_null(asset_owner.purchase_discount_rate[i][j])
+                num_errors += 1
+                @error(
+                    "Purchase discount rate for asset owner $(asset_owner.label[i]) at index $j is null. " *
+                    "This is not allowed."
+                )
+            elseif asset_owner.purchase_discount_rate[i][j] <= 0.0
+                num_errors += 1
+                @error(
+                    "Purchase discount rate for asset owner $(asset_owner.label[i]) at index $j is less than or equal to zero. " *
+                    "This is not allowed."
+                )
+            end
         end
     end
     return num_errors
@@ -178,7 +210,7 @@ function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
                     asset_owner.risk_factor_for_virtual_reservoir_bids[i] = [0.0]
                     asset_owner.virtual_reservoir_energy_account_upper_bound[i] = [1.0]
                 end
-                if is_null(asset_owner.purchase_discount_rate[i])
+                if length(asset_owner.purchase_discount_rate[i]) == 0
                     @error(
                         "Asset owner $(asset_owner.label[i]) has no purchase discount rate. This is required for virtual reservoir heuristic bids."
                     )

@@ -236,7 +236,6 @@ end
 # ---------------------------------------------------------------------
 
 function normalized_initial_inflow(inputs, period_idx::Integer, h::Integer, tau::Integer)
-    @show period_idx, h, tau
     gauging_station_idx = hydro_unit_gauging_station_index(inputs, h)
     if time_series_inflow_period_std_dev(inputs)[gauging_station_idx, period_idx] == 0
         return 0.0

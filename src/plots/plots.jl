@@ -625,16 +625,14 @@ function build_plots(
         push!(plot_configs, plot_config_generation)
     end
 
-    if run_mode(inputs) != RunMode.STRATEGIC_BID
-        # Load Marginal Cost
-        plot_config_load_marginal_cost = PlotConfig(
-            "Load Marginal Cost",
-            "load_marginal_cost",
-            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
-            inputs,
-        )
-        push!(plot_configs, plot_config_load_marginal_cost)
-    end
+    # Load Marginal Cost
+    plot_config_load_marginal_cost = PlotConfig(
+        "Load Marginal Cost",
+        "load_marginal_cost",
+        [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+        inputs,
+    )
+    push!(plot_configs, plot_config_load_marginal_cost)
 
     if is_market_clearing(inputs)
         # Energy bid

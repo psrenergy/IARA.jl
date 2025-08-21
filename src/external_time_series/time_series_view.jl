@@ -212,11 +212,10 @@ function read_time_series_view_from_external_file!(
             period,
             scenario,
         )
-    elseif ts.dimensions == [:period, :lag]
-        read_period_lag!(
+    elseif ts.dimensions == [:inflow_period, :lag]
+        read_inflow_period_lag!(
             inputs,
             ts,
-            period,
         )
     elseif ts.dimensions == [:inflow_period]
         read_inflow_period!(
@@ -416,20 +415,13 @@ function read_period_scenario!(
     return nothing
 end
 
-function read_period_lag!(
+function read_inflow_period_lag!(
     inputs,
     ts::TimeSeriesView{T, N},
-    period::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
-        inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
-    )
-    for lag in 1:ts.reader.metadata.dimension_size[2]
-        Quiver.goto!(ts.reader; period = file_period, lag)
-        ts.exact_dimensions_data[:, lag] = ts.reader.data
+    for lag in 1:ts.reader.metadata.dimension_size[2], inflow_period in 1:ts.reader.metadata.dimension_size[1]
+        Quiver.goto!(ts.reader; inflow_period, lag)
+        ts.exact_dimensions_data[:, lag, inflow_period] = ts.reader.data
     end
     ts.data = ts.exact_dimensions_data
     return nothing

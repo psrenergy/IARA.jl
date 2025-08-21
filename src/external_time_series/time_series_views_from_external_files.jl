@@ -16,8 +16,7 @@ All fields only store a reference to the data, which is read from the files
 in chunks.
 """
 @kwdef mutable struct TimeSeriesViewsFromExternalFiles
-    # TODO: change period dimension name
-    # Agents x periods
+    # Agents x inflow_period
     inflow_period_average::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
     inflow_period_std_dev::TimeSeriesView{Float64, 2} =
@@ -33,8 +32,8 @@ in chunks.
     # Agents x subperiods
     demand_window::TimeSeriesView{Int, 2} = TimeSeriesView{Int, 2}()
 
-    # Agents x lag
-    parp_coefficients::TimeSeriesView{Float64, 2} = TimeSeriesView{Float64, 2}()
+    # Agents x inflow_period x lag
+    parp_coefficients::TimeSeriesView{Float64, 3} = TimeSeriesView{Float64, 3}()
 
     # Agents x subperiods
     inflow::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} = ExAnteAndExPostTimeSeriesView{Float64, 2, 3}()
@@ -132,14 +131,17 @@ function initialize_time_series_from_external_files(inputs)
                 labels_to_read = gauging_station_label(inputs),
             )
         else
+            possible_dimensions = if cyclic_policy_graph(inputs)
+                [[:season, :sample]]
+            else
+                [[:period, :scenario]]
+            end
             num_errors += initialize_time_series_view_from_external_file(
                 inputs.time_series.inflow_noise,
                 inputs,
                 joinpath(path_parp(inputs), gauging_station_inflow_noise_file(inputs));
                 expected_unit = "m3/s",
-                possible_expected_dimensions = [
-                    [:period, :scenario],
-                ],
+                possible_expected_dimensions = possible_dimensions,
                 labels_to_read = gauging_station_label(inputs),
             )
             if parp_max_lags(inputs) > 0

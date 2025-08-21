@@ -46,6 +46,7 @@ function parp!(
             time_series_parp_coefficients(inputs)[
                 hydro_unit_gauging_station_index(inputs, h),
                 parp_max_lags(inputs)-tau+1,
+                period_index_in_year(inputs, model.node),
             ] * normalized_inflow[h, tau].in for tau in 1:parp_max_lags(inputs)
         ) + inflow_noise[h]
     )

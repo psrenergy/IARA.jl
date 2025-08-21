@@ -481,18 +481,21 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
-    if configurations.inflow_scenarios_files == Configurations_UncertaintyScenariosFiles.PARP &&
-       is_null(configurations.parp_max_lags)
+    parp_options = [
+        Configurations_UncertaintyScenariosFiles.FIT_PARP_MODEL_FROM_DATA,
+        Configurations_UncertaintyScenariosFiles.READ_PARP_COEFFICIENTS,
+    ]
+    if configurations.inflow_scenarios_files in parp_options && is_null(configurations.parp_max_lags)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
         num_errors += 1
     end
-    if configurations.renewable_scenarios_files == Configurations_UncertaintyScenariosFiles.PARP
+    if configurations.renewable_scenarios_files in parp_options
         @error(
             "Renewable scenarios files cannot be set to PAR(p) model. Use ONLY_EX_ANTE, ONLY_EX_POST or EX_ANTE_AND_EX_POST."
         )
         num_errors += 1
     end
-    if configurations.demand_scenarios_files == Configurations_UncertaintyScenariosFiles.PARP
+    if configurations.demand_scenarios_files in parp_options
         @error(
             "Demand scenarios files cannot be set to PAR(p) model. Use ONLY_EX_ANTE, ONLY_EX_POST or EX_ANTE_AND_EX_POST."
         )
@@ -1119,8 +1122,36 @@ read_ex_post_file(files_to_read::Configurations_UncertaintyScenariosFiles.T) =
 
 Return whether inflow should be read from a file.
 """
-read_inflow_from_file(inputs::AbstractInputs) =
-    inputs.collections.configurations.inflow_scenarios_files != Configurations_UncertaintyScenariosFiles.PARP
+function read_inflow_from_file(inputs::AbstractInputs)
+    parp_options = [
+        Configurations_UncertaintyScenariosFiles.FIT_PARP_MODEL_FROM_DATA,
+        Configurations_UncertaintyScenariosFiles.READ_PARP_COEFFICIENTS,
+    ]
+    if inputs.collections.configurations.inflow_scenarios_files in parp_options
+        return false
+    end
+    return true
+end
+
+"""
+    fit_parp_model(inputs::AbstractInputs)
+
+Return whether the PAR(p) model should be fitted for historical inflow data.
+"""
+function fit_parp_model(inputs::AbstractInputs)
+    return inputs.collections.configurations.inflow_scenarios_files ==
+           Configurations_UncertaintyScenariosFiles.FIT_PARP_MODEL_FROM_DATA
+end
+
+"""
+    read_parp_coefficients(inputs::AbstractInputs)
+
+Return whether the PAR(p) coefficients should be read from files.
+"""
+function read_parp_coefficients(inputs::AbstractInputs)
+    return inputs.collections.configurations.inflow_scenarios_files ==
+           Configurations_UncertaintyScenariosFiles.READ_PARP_COEFFICIENTS
+end
 
 """
     read_bids_from_file(inputs::AbstractInputs)

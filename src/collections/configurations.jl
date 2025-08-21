@@ -690,7 +690,9 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
 
     if iterate_nash_equilibrium(inputs)
         if !read_bids_from_file(inputs) && !generate_heuristic_bids_for_clearing(inputs)
-            @error("Nash equilibrium calculation requires bid data to be read from file or heuristic bids to be generated.")
+            @error(
+                "Nash equilibrium calculation requires bid data to be read from file or heuristic bids to be generated."
+            )
             num_errors += 1
         end
     end

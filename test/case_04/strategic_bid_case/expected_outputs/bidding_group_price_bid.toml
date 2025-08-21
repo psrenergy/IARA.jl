@@ -5,4 +5,4 @@ initial_date = "2020-01-01 00:00:00"
 time_dimension = "period"
 frequency = "month"
 unit = "$/MWh"
-labels = ["bg_1 - bus_1", "bg_1 - bus_2", "bg_2 - bus_1", "bg_2 - bus_2"]
+labels = ["bg_1 - bus_1", "bg_1 - bus_2", "bg_2 - bus_1", "bg_2 - bus_2", "bg_3 - bus_1", "bg_3 - bus_2"]

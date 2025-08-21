@@ -212,4 +212,19 @@ IARA.write_bids_time_series_file(
     unit = "\$/MWh",
 )
 
+spot_price = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
+for period in 1:number_of_periods, scenario in 1:number_of_scenarios
+    spot_price[:, :, scenario, period] .= (scenario + period + 0.5) / 5
+end
+IARA.write_timeseries_file(
+    joinpath(PATH, "load_marginal_cost"),
+    spot_price;
+    dimensions = ["period", "scenario", "subperiod"],
+    labels = ["bus_1", "bus_2"],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
+    initial_date = "2020-01-01T00:00:00",
+    unit = "\$/MWh",
+)
+
 IARA.close_study!(db)

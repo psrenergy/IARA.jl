@@ -219,7 +219,7 @@ function hydro_balance_chronological_subperiods(
     )
 
     if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options) ||
-        is_bidder(inputs, run_time_options) 
+       is_bidder(inputs, run_time_options)
         # If we are in the min cost case we let SDDP.jl handle the state equality 
         # by adding a constraint with the variable.in in the model. If we are in the
         # case we ignore the state variable and use the previous volume as the initial volume.

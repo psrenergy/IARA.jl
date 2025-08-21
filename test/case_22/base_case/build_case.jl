@@ -55,12 +55,12 @@ IARA.add_zone!(db; label = "zone_1")
 IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 number_of_buses = 1
 
-IARA.add_asset_owner!(db,
-    label = "asset_owner_1";
+IARA.add_asset_owner!(db;
+    label = "asset_owner_1",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
 )
-IARA.add_asset_owner!(db, 
-    label = "asset_owner_2";
+IARA.add_asset_owner!(db;
+    label = "asset_owner_2",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
 )
 
@@ -94,7 +94,7 @@ IARA.add_renewable_unit!(db;
     ),
     technology_type = 1,
     bus_id = "bus_1",
-    biddinggroup_id = "bg_1"
+    biddinggroup_id = "bg_1",
 )
 
 IARA.add_hydro_unit!(db;
@@ -113,7 +113,7 @@ IARA.add_hydro_unit!(db;
     ),
     initial_volume = 12.0 * m3_per_second_to_hm3,
     bus_id = "bus_1",
-    biddinggroup_id = "bg_2"
+    biddinggroup_id = "bg_2",
 )
 
 IARA.add_thermal_unit!(db;
@@ -127,7 +127,7 @@ IARA.add_thermal_unit!(db;
     ),
     has_commitment = 0,
     bus_id = "bus_1",
-    biddinggroup_id = "bg_3"
+    biddinggroup_id = "bg_3",
 )
 
 max_demand = 10.0

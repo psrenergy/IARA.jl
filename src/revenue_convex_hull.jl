@@ -180,7 +180,7 @@ function update_convex_hull_cache!(
                 bg in bidding_groups if
                 bidding_group_asset_owner_index(inputs, bg) != run_time_options.asset_owner_index
             ]
-                        demand =
+            demand =
                 sum(
                     demand_mw_to_gwh(
                         inputs,
@@ -215,6 +215,7 @@ function update_max_convex_hull_length!(
         update_time_series_views_from_external_files!(inputs; period = node, scenario)
         update_convex_hull_cache!(inputs, run_time_options; period = node, scenario)
         updated_convex_hull = asset_owner_revenue_convex_hull(inputs)
-        inputs.collections.asset_owner._max_convex_hull_length = max.(inputs.collections.asset_owner._max_convex_hull_length, length.(updated_convex_hull))
+        inputs.collections.asset_owner._max_convex_hull_length =
+            max.(inputs.collections.asset_owner._max_convex_hull_length, length.(updated_convex_hull))
     end
 end

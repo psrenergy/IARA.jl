@@ -323,7 +323,7 @@ function nodal_bid_generation_expression(
     end
     bidding_group_generation =
         if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs]) &&
-            !is_mincost(inputs, run_time_options)
+           !is_mincost(inputs, run_time_options)
             get_model_object(model, :bidding_group_generation)
         end
     hydro_generation = if any_elements(inputs, VirtualReservoir)

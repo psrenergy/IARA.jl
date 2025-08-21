@@ -7,13 +7,13 @@ function train_nash_equilibrium_model(inputs::Inputs)
     end
     if nash_equilibrium_initialization(inputs) ==
        Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
-       @info("Initializing Nash Equilibrium: MIN COST HEURISTIC")
+        @info("Initializing Nash Equilibrium: MIN COST HEURISTIC")
         initialize_nash_equilibrium(
             inputs,
             run_time_options,
         )
     else
-       @info("Initializing Nash Equilibrium: READ BIDS FROM FILE")
+        @info("Initializing Nash Equilibrium: READ BIDS FROM FILE")
         exts = [".csv", ".toml"]
         files = []
         if has_any_bid_simple_input_files(inputs)
@@ -55,7 +55,6 @@ function train_nash_equilibrium_model(inputs::Inputs)
         run_time_options = RunTimeOptions(; force_all_subscenarios = true, nash_equilibrium_iteration)
         gather_outputs_separated_by_asset_owners(inputs; run_time_options)
         reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
-        
 
         # TODO: Dont run on last iteration?
         simulate_all_periods_and_scenarios_of_market_clearing(inputs; nash_equilibrium_iteration)

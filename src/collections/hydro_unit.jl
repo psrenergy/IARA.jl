@@ -809,7 +809,7 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_opti
                 RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
                 :hydro_volume;
                 period = period - 1,
-            scenario = scenario,
+                scenario = scenario,
             )
             # The volume at the end of the period is the first subperiod of the next period
             for h in axes(volume, 2)

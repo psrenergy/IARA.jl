@@ -722,11 +722,14 @@ This function returns true when the following conditions are met:
 1. The run mode is not TRAIN_MIN_COST
 2. There is at least one hydro unit that is associated with a bidding group
 """
-function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs; run_time_options::RunTimeOptions = RunTimeOptions())
+function must_read_hydro_unit_data_for_markup_wizard(
+    inputs::Inputs;
+    run_time_options::RunTimeOptions = RunTimeOptions(),
+)
     # Run mode
     if !nash_equilibrium_initialization_run_time(inputs, run_time_options)
         if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST ||
-        !nash_equilibrium_initialization_run_time(inputs, run_time_options)
+           !nash_equilibrium_initialization_run_time(inputs, run_time_options)
             return false
         end
     end

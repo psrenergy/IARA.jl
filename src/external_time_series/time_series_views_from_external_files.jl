@@ -48,6 +48,8 @@ in chunks.
     hydro_generation::TimeSeriesView{Float64, 2} = TimeSeriesView{Float64, 2}()
     hydro_opportunity_cost::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
+    hydro_volume::TimeSeriesView{Float64, 2} =
+        TimeSeriesView{Float64, 2}()
 
     # BiddingGroups x buses x segments x subperiods
     quantity_bid::BidsView{Float64} = BidsView{Float64}()
@@ -447,11 +449,12 @@ function reinitialize_generation_time_series_for_nash_initialization!(
 )
     # Hydro generation
     num_errors = 0
-    if must_read_hydro_unit_data_for_markup_wizard(inputs)
-
+    if must_read_hydro_unit_data_for_markup_wizard(inputs; run_time_options) &&
+        nash_equilibrium_initialization(inputs) == Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
         # Close the time series views to reinitialize them
         close(inputs.time_series.hydro_generation)
         close(inputs.time_series.hydro_opportunity_cost)
+        close(inputs.time_series.hydro_volume)
 
         # Reinitialize the time series views
         num_errors += initialize_time_series_view_from_external_file(
@@ -469,6 +472,17 @@ function reinitialize_generation_time_series_for_nash_initialization!(
             inputs,
             joinpath(output_path(inputs, run_time_options), hydro_unit_opportunity_cost_file(inputs));
             expected_unit = "\$/MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
+            labels_to_read = hydro_unit_label(inputs),
+        )
+
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.hydro_volume,
+            inputs,
+            joinpath(output_path(inputs, run_time_options), hydro_unit_final_volume_file(inputs));
+            expected_unit = "hm3",
             possible_expected_dimensions = [
                 [:period, :scenario, :subperiod],
             ],

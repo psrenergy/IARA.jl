@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase04AggregatedStrategicBidCase
+module TestCase22BaseCase
 
 using Test
 using IARA
@@ -18,8 +18,7 @@ const PATH = @__DIR__
 
 db = nothing
 try
-    include("../base_case/build_case.jl")
-    include("modify_case.jl")
+    include("build_case.jl")
 finally
     if db !== nothing
         IARA.close_study!(db)

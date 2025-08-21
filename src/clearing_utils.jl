@@ -337,7 +337,7 @@ function is_mincost(inputs::Inputs, run_time_options::RunTimeOptions)
     # Or if we want to initialize the Nash equilibrium with a heuristic min-cost solution
     return run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST ||
            (
-               nash_equilibrium_initialization(inputs, run_time_options) ==
+               nash_equilibrium_initialization(inputs) ==
                Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC &&
                run_time_options.nash_equilibrium_initialization
            )

@@ -1,17 +1,19 @@
 
 function train_nash_equilibrium_model(inputs::Inputs)
     run_time_options = RunTimeOptions(; nash_equilibrium_initialization = true)
-    if nash_equilibrium_initialization(inputs, run_time_options) ==
+    initialization_dir = output_path(inputs, run_time_options)
+    if !isdir(initialization_dir)
+        mkdir(initialization_dir)
+    end
+    if nash_equilibrium_initialization(inputs) ==
        Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
+       @info("Initializing Nash Equilibrium: MIN COST HEURISTIC")
         initialize_nash_equilibrium(
             inputs,
             run_time_options,
         )
     else
-        initialization_dir = output_path(inputs, run_time_options)
-        if !isdir(initialization_dir)
-            mkdir(initialization_dir)
-        end
+       @info("Initializing Nash Equilibrium: READ BIDS FROM FILE")
         exts = [".csv", ".toml"]
         files = []
         if has_any_bid_simple_input_files(inputs)
@@ -32,7 +34,9 @@ function train_nash_equilibrium_model(inputs::Inputs)
         end
     end
     reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
-    reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
+    if has_any_bid_simple_input_files(inputs)
+        reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
+    end
     reinitialize_spot_time_series_for_nash_iteration!(inputs, run_time_options)
     update_number_of_segments_for_heuristic_bids!(inputs)
 
@@ -85,13 +89,13 @@ function initialize_nash_equilibrium(
     args...,
 )
     train_model_and_run_simulation(inputs, run_time_options)
+    update_number_of_segments_for_heuristic_bids!(inputs)
+    reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
     heuristic_bids_outputs = Outputs()
     initialize_heuristic_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
     for period in 1:number_of_periods(inputs)
         # Update the time series in the database to the current period
         update_time_series_from_db!(inputs, period)
-
-        run_time_options = RunTimeOptions()
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
             update_time_series_views_from_external_files!(inputs; period, scenario)
@@ -104,6 +108,7 @@ function initialize_nash_equilibrium(
             )
         end
     end
+    finalize_outputs!(heuristic_bids_outputs)
 
     return nothing
 end

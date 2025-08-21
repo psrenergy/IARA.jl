@@ -699,7 +699,7 @@ function hydro_available_energy(
             subperiod_duration_in_hours(inputs, blk)
     end
     available_water_ignoring_upstream_plants =
-        hydro_volume_from_previous_period(inputs, period, scenario) .+ total_inflow_in_period
+        hydro_volume_from_previous_period(inputs, run_time_options, period, scenario) .+ total_inflow_in_period
 
     for h in existing_hydro_units
         current_hydro = h
@@ -722,11 +722,13 @@ This function returns true when the following conditions are met:
 1. The run mode is not TRAIN_MIN_COST
 2. There is at least one hydro unit that is associated with a bidding group
 """
-function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
+function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs; run_time_options::RunTimeOptions = RunTimeOptions())
     # Run mode
-    if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST ||
-       iterate_nash_equilibrium(inputs)
-        return false
+    if !nash_equilibrium_initialization_run_time(inputs, run_time_options)
+        if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST ||
+        !nash_equilibrium_initialization_run_time(inputs, run_time_options)
+            return false
+        end
     end
     # Model type
     if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
@@ -742,7 +744,7 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
         end
     end
     # Hydro representation
-    if generate_heuristic_bids_for_clearing(inputs)
+    if generate_heuristic_bids_for_clearing(inputs) || iterate_nash_equilibrium(inputs)
         if clearing_hydro_representation(inputs) ==
            Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
             return false

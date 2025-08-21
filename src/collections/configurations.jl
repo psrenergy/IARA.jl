@@ -1048,7 +1048,7 @@ nash_equilibrium_iteration(inputs::AbstractInputs, run_time_options::RunTimeOpti
 
 Return whether the problem is a initialization for Nash Equilibrium.
 """
-nash_equilibrium_initialization(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+nash_equilibrium_initialization(inputs::AbstractInputs) =
     inputs.collections.configurations.nash_equilibrium_initialization
 
 # TODO: Better name?

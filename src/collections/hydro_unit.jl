@@ -737,6 +737,13 @@ Return the hydro opportunity cost time series file for all hydro units.
 hydro_unit_opportunity_cost_file(inputs::AbstractInputs) = "hydro_opportunity_cost"
 
 """
+    hydro_unit_final_volume_file(inputs::AbstractInputs)
+
+Return the hydro volume time series file for all hydro units.
+"""
+hydro_unit_final_volume_file(inputs::AbstractInputs) = "hydro_final_volume"
+
+"""
     has_min_outflow(hydro_unit::HydroUnit, idx::Int) 
 
 Check if the Hydro Unit at index 'idx' has a minimum outflow.
@@ -776,13 +783,13 @@ is_associated_with_some_virtual_reservoir(hydro_unit::HydroUnit, idx::Int) =
     hydro_unit.is_associated_with_some_virtual_reservoir[idx]
 
 """
-    hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
+    hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_options, period::Int, scenario::Int)
 
 Get the hydro volume from the previous period.
 
 If the period is the first one, the initial volume is returned. Otherwise, it is read from the serialized results of the previous stage.
 """
-function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, scenario::Int)
+function hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_options, period::Int, scenario::Int)
     hydro_units = index_of_elements(inputs, HydroUnit)
     existing_hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
     previous_volume = zeros(Float64, length(hydro_units))
@@ -793,16 +800,21 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, period::Int, 
 
     if period != 1
         # The volume at the end of the period is the first subperiod of the next period
-        volume = read_serialized_clearing_variable(
-            inputs,
-            RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
-            :hydro_volume;
-            period = period - 1,
+        if nash_equilibrium_initialization_run_time(inputs, run_time_options)
+            hydro_volume_reader = inputs.time_series.hydro_volume
+            previous_volume = hydro_volume_reader.data
+        else
+            volume = read_serialized_clearing_variable(
+                inputs,
+                RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+                :hydro_volume;
+                period = period - 1,
             scenario = scenario,
-        )
-        # The volume at the end of the period is the first subperiod of the next period
-        for h in axes(volume, 2)
-            previous_volume[h] = volume[end, h]
+            )
+            # The volume at the end of the period is the first subperiod of the next period
+            for h in axes(volume, 2)
+                previous_volume[h] = volume[end, h]
+            end
         end
     end
     return previous_volume

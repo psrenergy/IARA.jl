@@ -160,8 +160,13 @@ new_quantity_bid =
         number_of_scenarios,
         number_of_periods,
     )
-new_quantity_bid[1:(number_of_bidding_groups-1), :, :, :, :, :] .= quantity_bid
-new_quantity_bid[number_of_bidding_groups, :, :, :, :, :] .= quantity_bid[1, :, :, :, :, :]
+for scenario in 1:number_of_scenarios
+    new_quantity_bid[:, 1, 1, :, scenario, :] .= 10 - scenario
+    for bg in 1:number_of_bidding_groups
+        new_quantity_bid[bg, 2, 1, :, scenario, :] .= bg * (scenario + 1)
+    end
+end
+
 IARA.write_bids_time_series_file(
     joinpath(PATH, "quantity_bid"),
     new_quantity_bid;

@@ -688,6 +688,13 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
         end
     end
 
+    if iterate_nash_equilibrium(inputs)
+        if !read_bids_from_file(inputs) && !generate_heuristic_bids_for_clearing(inputs)
+            @error("Nash equilibrium calculation requires bid data to be read from file or heuristic bids to be generated.")
+            num_errors += 1
+        end
+    end
+
     return num_errors
 end
 
@@ -707,7 +714,7 @@ function iara_log_configurations(inputs::AbstractInputs)
             run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)
             iara_log(inputs, run_time_options)
         end
-    elseif is_mincost(inputs, RunTimeOptions())
+    elseif is_mincost(inputs)
         run_time_options = RunTimeOptions()
         _integer_variable_representation = integer_variable_representation(inputs, run_time_options)
         _network_representation = network_representation(inputs, run_time_options)
@@ -1288,7 +1295,7 @@ function is_any_construction_type_cost_based(
 end
 
 function need_demand_price_input_data(inputs::AbstractInputs)
-    return is_mincost(inputs, run_time_options) ||
+    return is_mincost(inputs) ||
            (is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)) ||
            (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs))
 end

@@ -332,6 +332,8 @@ function skip_clearing_subproblem(inputs::Inputs, run_time_options::RunTimeOptio
     return construction_type(inputs, run_time_options) == Configurations_ConstructionType.SKIP
 end
 
+is_mincost(inputs::Inputs) = is_mincost(inputs, RunTimeOptions())
+
 function is_mincost(inputs::Inputs, run_time_options::RunTimeOptions)
     # Check if the run mode is TRAIN_MIN_COST or MIN_COST
     # Or if we want to initialize the Nash equilibrium with a heuristic min-cost solution

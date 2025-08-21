@@ -14,3 +14,5 @@ INSERT INTO AssetOwner_vector_purchase_discount_rate (id, vector_index, purchase
     1 AS vector_index,
     purchase_discount_rate AS purchase_discount_rate
 FROM AssetOwner WHERE purchase_discount_rate IS NOT NULL;
+
+ALTER TABLE AssetOwner DROP COLUMN purchase_discount_rate;

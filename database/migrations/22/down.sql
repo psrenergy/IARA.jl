@@ -8,5 +8,3 @@ UPDATE AssetOwner SET purchase_discount_rate = (
     FROM AssetOwner_vector_purchase_discount_rate 
     WHERE AssetOwner.id = AssetOwner_vector_purchase_discount_rate.id AND vector_index = 1
 );
-
-DROP TABLE AssetOwner_vector_purchase_discount_rate;

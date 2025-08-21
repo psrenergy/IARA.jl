@@ -174,6 +174,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Hydro generation
+    @show must_read_hydro_unit_data_for_markup_wizard(inputs)
     if must_read_hydro_unit_data_for_markup_wizard(inputs)
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.hydro_generation,

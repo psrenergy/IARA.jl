@@ -34,7 +34,8 @@ function train_nash_equilibrium_model(inputs::Inputs)
         end
     end
     reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
-    if has_any_bid_simple_input_files(inputs)
+    if nash_equilibrium_initialization(inputs) ==
+       Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
         reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
     end
     reinitialize_spot_time_series_for_nash_iteration!(inputs, run_time_options)

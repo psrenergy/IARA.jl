@@ -113,7 +113,7 @@ function _write_generation_bg_file(
 
     generation_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
     for generation_technology in generation_technologies
-        generation_file = get_generation_files(inputs, clearing_procedure, generation_technology)
+        generation_file = get_generation_files(inputs, run_time_options, clearing_procedure, generation_technology)
         if isnothing(generation_file)
             continue
         end
@@ -208,7 +208,7 @@ function _write_generation_bg_file(
     return
 end
 
-function get_generation_files(inputs::Inputs, clearing_procedure::String, technology::String)
+function get_generation_files(inputs::Inputs, run_time_options::RunTimeOptions, clearing_procedure::String, technology::String)
     outputs_dir = output_path(inputs, run_time_options)
     generation_file = filter(
         x -> endswith(x, clearing_procedure * ".csv") && occursin(technology, x) && occursin("generation", x),

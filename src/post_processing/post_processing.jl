@@ -249,6 +249,7 @@ end
 
 function create_temporary_file_with_subscenario_dimension(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     model_outputs_time_serie::OutputReaders,
     filename::String;
 )

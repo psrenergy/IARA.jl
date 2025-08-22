@@ -575,7 +575,7 @@ function post_processing_virtual_reservoirs_double_settlement(
     )
 
     treated_ex_ante_revenue_file =
-        create_temporary_file_with_subscenario_dimension(inputs, model_outputs_time_serie, ex_ante_revenue_file)
+        create_temporary_file_with_subscenario_dimension(inputs, run_time_options, model_outputs_time_serie, ex_ante_revenue_file)
 
     revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoir_total_revenue")
 

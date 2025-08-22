@@ -13,8 +13,8 @@
 
 Gather outputs separated by asset owners.
 """
-function gather_outputs_separated_by_asset_owners(inputs::Inputs)
-    outputs_dir = output_path(inputs)
+function gather_outputs_separated_by_asset_owners(inputs::Inputs; run_time_options::RunTimeOptions = RunTimeOptions())
+    outputs_dir = output_path(inputs, run_time_options)
     # Query all files that end with _asset_owner_1, _asset_owner_2, etc.
     asset_owner_files = filter(x -> occursin(r"_asset_owner_\d+", x), readdir(outputs_dir))
 

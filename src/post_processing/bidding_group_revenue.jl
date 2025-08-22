@@ -267,16 +267,16 @@ function post_processing_bidding_group_revenue(
     model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    outputs_dir = output_path(inputs)
-    post_processing_dir = post_processing_path(inputs)
+    outputs_dir = output_path(inputs, run_time_options)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
 
     if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
         bidding_group_generation_ex_ante_files =
-            get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = false)
+            get_generation_files(outputs_dir, post_processing_path(inputs, run_time_options); from_ex_post = false)
         bidding_group_load_marginal_cost_ex_ante_files = get_load_marginal_files(outputs_dir; from_ex_post = false)
     end
     bidding_group_generation_ex_post_files =
-        get_generation_files(outputs_dir, post_processing_path(inputs); from_ex_post = true)
+        get_generation_files(outputs_dir, post_processing_path(inputs, run_time_options); from_ex_post = true)
     bidding_group_load_marginal_cost_ex_post_files = get_load_marginal_files(outputs_dir; from_ex_post = true)
 
     if length(bidding_group_load_marginal_cost_ex_post_files) > 1
@@ -294,7 +294,7 @@ function post_processing_bidding_group_revenue(
     end
 
     number_of_files = length(bidding_group_generation_ex_post_files)
-    outputs_dir = output_path(inputs)
+    outputs_dir = output_path(inputs, run_time_options)
 
     for i in 1:number_of_files
         if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
@@ -507,8 +507,8 @@ function _join_independent_and_profile_bid(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
-    post_processing_dir = post_processing_path(inputs)
-    temp_dir = joinpath(output_path(inputs), "temp")
+    post_processing_dir = post_processing_path(inputs, run_time_options)
+    temp_dir = joinpath(output_path(inputs, run_time_options), "temp")
     if !isdir(temp_dir)
         mkpath(temp_dir)
     end
@@ -653,8 +653,8 @@ function post_processing_bidding_group_total_revenue(
     model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    outputs_dir = output_path(inputs)
-    post_processing_dir = post_processing_path(inputs)
+    outputs_dir = output_path(inputs, run_time_options)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
     tempdir = joinpath(path_case(inputs), "temp")
 
     period_suffix = if is_single_period(inputs)

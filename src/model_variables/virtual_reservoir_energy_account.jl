@@ -60,7 +60,8 @@ function virtual_reservoir_energy_account!(
 
     virtual_reservoir_energy_account_at_beginning_of_period =
         virtual_reservoir_energy_account_from_previous_period(inputs, simulation_period, simulation_trajectory)
-    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, simulation_period, simulation_trajectory)
+    volume_at_beginning_of_period =
+        hydro_volume_from_previous_period(inputs, run_time_options, simulation_period, simulation_trajectory)
 
     vr_energy_arrival, _ = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
 

@@ -118,6 +118,7 @@ include("plots/plot_strings.jl")
 
 include("utils.jl")
 include("mathematical_model.jl")
+include("nash_equilibrium.jl")
 include("graph_utils.jl")
 include("sddp.jl")
 include("bids.jl")

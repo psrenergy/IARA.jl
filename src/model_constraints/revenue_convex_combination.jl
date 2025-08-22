@@ -25,9 +25,6 @@ function revenue_convex_combination!(
     blks = subperiods(inputs)
     buses = index_of_elements(inputs, Bus)
 
-    # Number of points in the convex hull for each bus and subperiod
-    convex_hull_length = length.(asset_owner_revenue_convex_hull(inputs))
-
     # Model variables
     convex_revenue_coefficients = get_model_object(model, :convex_revenue_coefficients)
     bidding_group_energy_bid = get_model_object(model, :bidding_group_energy_bid)
@@ -36,6 +33,7 @@ function revenue_convex_combination!(
     convex_hull_point_quantity = get_model_object(model, :convex_hull_point_quantity)
 
     # Model constraints
+    # TODO: Check formulation
     @constraint(
         model.jump_model,
         convex_revenue_coefficients_sum[
@@ -44,11 +42,11 @@ function revenue_convex_combination!(
         ],
         sum(
             convex_revenue_coefficients[blk, bus, v]
-            for v in 1:convex_hull_length[bus, blk]
+            for v in 1:asset_owner_max_convex_hull_length(inputs, bus, blk)
         ) == 1.0,
     )
 
-    if aggregate_buses_for_strategic_bidding(inputs)
+    if iteration_with_aggregate_buses(inputs)
         @constraint(
             model.jump_model,
             energy_quantity_convex_combination[
@@ -59,7 +57,7 @@ function revenue_convex_combination!(
                 convex_revenue_coefficients[blk, agg_bus, v]
                 *
                 convex_hull_point_quantity[blk, agg_bus, v]
-                for v in 1:convex_hull_length[agg_bus, blk]
+                for v in 1:asset_owner_max_convex_hull_length(inputs, agg_bus, blk)
             ) ==
             sum(
                 bidding_group_energy_bid[blk, bg, bds, bus] for
@@ -79,7 +77,7 @@ function revenue_convex_combination!(
                 convex_revenue_coefficients[blk, bus, v]
                 *
                 convex_hull_point_quantity[blk, bus, v]
-                for v in 1:convex_hull_length[bus, blk]
+                for v in 1:asset_owner_max_convex_hull_length(inputs, bus, blk)
             ) ==
             sum(
                 bidding_group_energy_bid[blk, bg, bds, bus] for

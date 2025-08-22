@@ -12,7 +12,14 @@ db = IARA.load_study(PATH; read_only = false)
 
 # Update base case elements
 IARA.update_configuration!(db;
-    aggregate_buses_for_strategic_bidding = IARA.Configurations_BusesAggregationForStrategicBidding.AGGREGATE,
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
+    nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.ITERATION_WITH_AGGREGATE_BUSES,
+    max_iteration_nash_equilibrium = 3,
+    nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.EXTERNAL_BID,
 )
 IARA.update_asset_owner!(db, "asset_owner_1";
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
@@ -157,6 +164,21 @@ IARA.write_bids_time_series_file(
         number_of_subperiods,
         maximum_number_of_bidding_segments,
     ],
+    initial_date = "2020-01-01T00:00:00",
+    unit = "\$/MWh",
+)
+
+spot_price = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
+for period in 1:number_of_periods, scenario in 1:number_of_scenarios
+    spot_price[:, :, scenario, period] .= (scenario + period + 0.5) / 5
+end
+IARA.write_timeseries_file(
+    joinpath(PATH, "load_marginal_cost"),
+    spot_price;
+    dimensions = ["period", "scenario", "subperiod"],
+    labels = ["bus_1", "bus_2"],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "\$/MWh",
 )

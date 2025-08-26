@@ -14,7 +14,9 @@ IARA.HydroUnit_IntraPeriodOperation
 IARA.Configurations_VirtualReservoirBidProcessing  
 IARA.Configurations_IntegerVariableRepresentation  
 IARA.Configurations_BiddingGroupBidProcessing  
-IARA.RunTime_ClearingSubproblem  
+IARA.RunTime_ClearingSubproblem
+IARA.Configurations_NashEquilibriumStrategy
+IARA.Configurations_NashEquilibriumInitialization
 IARA.Configurations_ConstructionType  
 IARA.Configurations_FinancialSettlementType  
 IARA.Configurations_MakeWholePayments  

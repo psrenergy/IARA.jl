@@ -15,7 +15,6 @@ Struct holding all the time series data that is read from external files.
 All fields only store a reference to the data, which is read from the files
 in chunks.
 """
-
 @kwdef mutable struct TimeSeriesViewsFromExternalFiles
     # Agents x inflow_period
     inflow_period_average::TimeSeriesView{Float64, 2} =

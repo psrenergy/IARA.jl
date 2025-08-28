@@ -28,14 +28,16 @@ in chunks.
     # Agents
     inflow_noise::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
     period_season_map::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
+    initial_volume_by_scenario::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
 
-    # Agents x subperiods
-    demand_window::TimeSeriesView{Int, 2} = TimeSeriesView{Int, 2}()
+    # Agents x lag
+    inflow_initial_state_by_scenario::TimeSeriesView{Float64, 2} = TimeSeriesView{Float64, 2}()
 
     # Agents x inflow_period x lag
     parp_coefficients::TimeSeriesView{Float64, 3} = TimeSeriesView{Float64, 3}()
 
     # Agents x subperiods
+    demand_window::TimeSeriesView{Int, 2} = TimeSeriesView{Int, 2}()
     inflow::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} = ExAnteAndExPostTimeSeriesView{Float64, 2, 3}()
     demand::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} = ExAnteAndExPostTimeSeriesView{Float64, 2, 3}()
     renewable_generation::ExAnteAndExPostTimeSeriesView{Float64, 2, 3} =
@@ -169,7 +171,27 @@ function initialize_time_series_from_external_files(inputs)
                 expected_unit = "m3/s",
                 labels_to_read = gauging_station_label(inputs),
             )
+            if some_inflow_initial_state_varies_by_scenario(inputs)
+                num_errors += initialize_time_series_view_from_external_file(
+                    inputs.time_series.inflow_initial_state_by_scenario,
+                    inputs,
+                    joinpath(path_parp(inputs), gauging_station_inflow_initial_state_by_scenario_file(inputs));
+                    expected_unit = "m3/s",
+                    labels_to_read = gauging_station_label(inputs),
+                )
+            end
         end
+    end
+
+    # Hydro initial volume
+    if some_initial_volume_varies_by_scenario(inputs)
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.initial_volume_by_scenario,
+            inputs,
+            joinpath(path_case(inputs), hydro_unit_initial_volume_by_scenario_file(inputs));
+            expected_unit = "",
+            labels_to_read = hydro_unit_label(inputs),
+        )
     end
 
     # Hydro generation

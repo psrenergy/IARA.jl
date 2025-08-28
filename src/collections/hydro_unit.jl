@@ -26,6 +26,7 @@ Hydro units are high-level data structures that represent hydro electricity gene
     max_volume::Vector{Float64} = []
     initial_volume::Vector{Float64} = []
     initial_volume_type::Vector{HydroUnit_InitialVolumeDataType.T} = []
+    initial_volume_variation_type::Vector{HydroUnit_InitialVolumeVariationType.T} = []
     min_outflow::Vector{Float64} = []
     om_cost::Vector{Float64} = []
     has_commitment::Vector{HydroUnit_HasCommitment.T} = []
@@ -44,6 +45,7 @@ Hydro units are high-level data structures that represent hydro electricity gene
     waveguide_volume::Vector{Vector{Float64}} = []
     inflow_ex_ante_file::String = ""
     inflow_ex_post_file::String = ""
+    initial_volume_by_scenario_file::String = ""
 
     # caches
     is_associated_with_some_virtual_reservoir::Vector{Bool} = []
@@ -72,6 +74,11 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_type"),
             HydroUnit_InitialVolumeDataType.T,
         )
+    hydro_unit.initial_volume_variation_type =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_variation_type"),
+            HydroUnit_InitialVolumeVariationType.T,
+        )
     hydro_unit.intra_period_operation =
         convert_to_enum.(
             PSRI.get_parms(inputs.db, "HydroUnit", "intra_period_operation"),
@@ -95,6 +102,8 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow_ex_ante")
     hydro_unit.inflow_ex_post_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow_ex_post")
+    hydro_unit.initial_volume_by_scenario_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "initial_volume_by_scenario")
 
     hydro_unit.is_associated_with_some_virtual_reservoir = zeros(Bool, num_hydro_units)
     hydro_unit.virtual_reservoir_index = fill(null_value(Int), num_hydro_units)
@@ -552,6 +561,14 @@ function validate(hydro_unit::HydroUnit)
             num_errors += 1
         end
     end
+    if any(hydro_unit.initial_volume_variation_type .== HydroUnit_InitialVolumeVariationType.BY_SCENARIO)
+        if isempty(hydro_unit.initial_volume_by_scenario_file)
+            @error(
+                "At least one Hydro Unit has initial volume variation type set to `BY_SCENARIO`, but no initial volume by scenario file was linked."
+            )
+            num_errors += 1
+        end
+    end
     return num_errors
 end
 
@@ -629,6 +646,12 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
             This file will be ignored."
         )
     end
+    if some_initial_volume_varies_by_scenario(inputs) && hydro_unit.initial_volume_by_scenario_file != ""
+        @warn(
+            "An `initial_volume_by_scenario` file was provided. Please note that its unit is not considered, " *
+            "and the initial volume unit is instead determined individually for each hydro unit by the `initial_volume_type` field."
+        )
+    end
     return num_errors
 end
 
@@ -683,14 +706,19 @@ end
 Get the initial volume for the Hydro Unit at index 'idx'.
 """
 function hydro_unit_initial_volume(inputs::AbstractInputs, idx::Int)
+    initial_volume =
+        if hydro_unit_initial_volume_variation_type(inputs, idx) == HydroUnit_InitialVolumeVariationType.BY_SCENARIO
+            inputs.time_series.initial_volume_by_scenario[idx]
+        else
+            inputs.collections.hydro_unit.initial_volume[idx]
+        end
     if inputs.collections.hydro_unit.initial_volume_type[idx] ==
        HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME
         return hydro_unit_min_volume(inputs, idx) +
-               inputs.collections.hydro_unit.initial_volume[idx] *
-               (hydro_unit_max_volume(inputs, idx) - hydro_unit_min_volume(inputs, idx))
+               initial_volume * (hydro_unit_max_volume(inputs, idx) - hydro_unit_min_volume(inputs, idx))
     elseif inputs.collections.hydro_unit.initial_volume_type[idx] ==
            HydroUnit_InitialVolumeDataType.ABSOLUTE_VOLUME_IN_HM3
-        return inputs.collections.hydro_unit.initial_volume[idx]
+        return initial_volume
     else
         error("Initial volume type not recognized.")
     end
@@ -781,6 +809,14 @@ Check if the Hydro Unit at index 'idx' is associated with some virtual reservoir
 """
 is_associated_with_some_virtual_reservoir(hydro_unit::HydroUnit, idx::Int) =
     hydro_unit.is_associated_with_some_virtual_reservoir[idx]
+
+"""
+    some_initial_volume_varies_by_scenario(inputs::AbstractInputs)
+
+Check if it is necessary to read the initial volume by scenario timeseries file.
+"""
+some_initial_volume_varies_by_scenario(inputs::AbstractInputs) =
+    any(hydro_unit_initial_volume_variation_type(inputs) .== HydroUnit_InitialVolumeVariationType.BY_SCENARIO)
 
 """
     hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_options, period::Int, scenario::Int)

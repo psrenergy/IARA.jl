@@ -43,6 +43,9 @@ IARA.write_timeseries_file(
     initial_date = "2020-01-01T00:00:00",
     unit = "hm3",
 )
+if !ispath(joinpath(PATH, "parp"))
+    mkdir(joinpath(PATH, "parp"))
+end
 IARA.write_timeseries_file(
     joinpath(PATH, "parp", "inflow_initial_state_by_scenario"),
     inflow_initial_state_by_scenario;

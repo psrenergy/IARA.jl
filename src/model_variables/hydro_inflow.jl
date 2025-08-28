@@ -140,7 +140,8 @@ function hydro_inflow!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
-    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    num_hydro_units = number_of_elements(inputs, HydroUnit; run_time_options)
 
     if read_inflow_from_file(inputs)
         # Model parameters
@@ -149,7 +150,7 @@ function hydro_inflow!(
         # Time series
         inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
 
-        for b in subperiods(inputs), h in hydro_units
+        for b in subperiods(inputs), h in existing_hydro_units
             MOI.set(
                 model.jump_model,
                 POI.ParameterValue(),
@@ -165,13 +166,29 @@ function hydro_inflow!(
         # Time series
         inflow_noise_series = time_series_inflow_noise(inputs)
 
-        for h in hydro_units
+        for h in existing_hydro_units
             MOI.set(
                 model.jump_model,
                 POI.ParameterValue(),
                 inflow_noise[h],
                 inflow_noise_series[hydro_unit_gauging_station_index(inputs, h)],
             )
+        end
+
+        if some_inflow_initial_state_varies_by_scenario(inputs) && simulation_period == 1
+            if parp_max_lags(inputs) > 0
+                # Initial state
+                normalized_initial_state = zeros(num_hydro_units, parp_max_lags(inputs))
+                for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
+                    period_idx =
+                        mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
+                    normalized_initial_state[h, tau] = normalized_initial_inflow(inputs, period_idx, h, tau)
+                end
+                normalized_inflow = get_model_object(model, :normalized_inflow)
+                for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
+                    JuMP.fix(normalized_inflow[h, tau].in, normalized_initial_state[h, tau])
+                end
+            end
         end
     end
 

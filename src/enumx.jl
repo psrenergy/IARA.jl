@@ -543,3 +543,13 @@ end
     DEFAULT_LIMIT = 0
     READ_FROM_FILE = 1
 end
+
+@enumx GaugingStation_InflowInitialStateVariationType begin
+    CONSTANT_VALUE = 0
+    BY_SCENARIO = 1
+end
+
+@enumx HydroUnit_InitialVolumeVariationType begin
+    CONSTANT_VALUE = 0
+    BY_SCENARIO = 1
+end

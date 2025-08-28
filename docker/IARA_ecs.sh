@@ -24,7 +24,9 @@
 set -e
 
 # Script variables
-export S3_BUCKET="meta-ccee-iara-artifacts"
+if [ -z "$S3_BUCKET" ]; then
+    export S3_BUCKET="meta-ccee-iara-artifacts"
+fi
 export CASE_PATH="iara-case"
 
 function download_and_unzip_complete_case () {

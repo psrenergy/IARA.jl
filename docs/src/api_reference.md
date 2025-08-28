@@ -38,6 +38,8 @@ IARA.ThermalUnit_HasCommitment
 IARA.ThermalUnit_CommitmentInitialCondition  
 IARA.ExampleCases.list_of_available_cases  
 IARA.ExampleCases.build_example_case  
+IARA.GaugingStation_InflowInitialStateVariationType  
+IARA.HydroUnit_InitialVolumeVariationType  
 ```
 
 ```@autodocs

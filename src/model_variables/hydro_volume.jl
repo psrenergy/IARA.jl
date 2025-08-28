@@ -72,6 +72,16 @@ function hydro_volume!(
     subscenario::Int,
     ::Type{SubproblemUpdate},
 )
+    hydro_units_with_reservoir =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_with_reservoir])
+
+    if some_initial_volume_varies_by_scenario(inputs) && simulation_period == 1
+        hydro_volume_state = get_model_object(model, :hydro_volume_state)
+        for h in hydro_units_with_reservoir
+            JuMP.fix(hydro_volume_state[h].in, hydro_unit_initial_volume(inputs, h))
+        end
+    end
+
     if !is_market_clearing(inputs)
         return nothing
     end
@@ -79,9 +89,6 @@ function hydro_volume!(
     if !clearing_has_volume_variables(inputs, run_time_options)
         return nothing
     end
-
-    hydro_units_with_reservoir =
-        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, operates_with_reservoir])
 
     # Model parameters
     hydro_previous_period_volume = get_model_object(model, :hydro_previous_period_volume)

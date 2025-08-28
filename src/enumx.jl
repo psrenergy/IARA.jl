@@ -543,3 +543,25 @@ end
     DEFAULT_LIMIT = 0
     READ_FROM_FILE = 1
 end
+
+"""
+  GaugingStation_InflowInitialStateVariationType
+
+  - `CONSTANT_VALUE`: Inflow initial state is given by the last stages of the inflow history (0)
+  - `BY_SCENARIO`: Inflow initial state is given by a separate file, and varies by scenario (1)
+"""
+@enumx GaugingStation_InflowInitialStateVariationType begin
+    CONSTANT_VALUE = 0
+    BY_SCENARIO = 1
+end
+
+"""
+  HydroUnit_InitialVolumeVariationType
+
+  - `CONSTANT_VALUE`: Initial volume is given by a parameter in the hydro unit (0)
+  - `BY_SCENARIO`: Initial volume is given by a separate file, and varies by scenario (1)
+"""
+@enumx HydroUnit_InitialVolumeVariationType begin
+    CONSTANT_VALUE = 0
+    BY_SCENARIO = 1
+end

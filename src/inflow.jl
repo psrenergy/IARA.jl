@@ -18,9 +18,14 @@ function generate_inflow_scenarios(inputs::Inputs)
     incremental_inflow = calculate_incremental_inflow(inputs, gauging_station_historical_inflow(inputs))
     parp_models = PARp.(incremental_inflow, periods_per_year(inputs), parp_max_lags(inputs))
     fit_par!.(parp_models)
+    simulation_periods = if cyclic_policy_graph(inputs)
+        number_of_nodes(inputs)
+    else
+        number_of_periods(inputs)
+    end
     inflow, noise = simulate_par(
         parp_models,
-        number_of_periods(inputs),
+        simulation_periods,
         number_of_scenarios(inputs);
         lognormal_noise = false,
         return_noise = true,
@@ -72,23 +77,40 @@ function write_parp_outputs(inputs::Inputs,
     if !isdir(path_parp(inputs))
         mkdir(path_parp(inputs))
     end
+
+    dimension_names = if cyclic_policy_graph(inputs)
+        ["season", "sample"]
+    else
+        ["period", "scenario"]
+    end
+    time_dimension = if cyclic_policy_graph(inputs)
+        "season"
+    else
+        "period"
+    end
+    dimension_sizes = if cyclic_policy_graph(inputs)
+        [number_of_nodes(inputs), number_of_scenarios(inputs)]
+    else
+        [number_of_periods(inputs), number_of_scenarios(inputs)]
+    end
+
     write_timeseries_file(
         joinpath(path_parp(inputs), gauging_station_inflow_file(inputs)),
         inflow;
-        dimensions = ["period", "scenario"],
+        dimensions = dimension_names,
         labels = gauging_station_label(inputs),
-        time_dimension = "period",
-        dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs)],
+        time_dimension = time_dimension,
+        dimension_size = dimension_sizes,
         initial_date = initial_date_time(inputs),
         unit = "m3/s",
     )
     write_timeseries_file(
         joinpath(path_parp(inputs), gauging_station_inflow_noise_file(inputs)),
         noise;
-        dimensions = ["period", "scenario"],
+        dimensions = dimension_names,
         labels = gauging_station_label(inputs),
-        time_dimension = "period",
-        dimension_size = [number_of_periods(inputs), number_of_scenarios(inputs)],
+        time_dimension = time_dimension,
+        dimension_size = dimension_sizes,
         initial_date = initial_date_time(inputs),
         unit = "m3/s",
     )

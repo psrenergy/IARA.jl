@@ -142,7 +142,7 @@ function create_period_season_map!(
     end
 
     write_timeseries_file(
-        joinpath(output_path(inputs), "period_season_map"),
+        joinpath(output_path(inputs, run_time_options), "period_season_map"),
         period_season_map;
         dimensions = ["period", "scenario"],
         labels = ["season", "sample", "next_subscenario"],

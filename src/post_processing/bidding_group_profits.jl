@@ -7,7 +7,7 @@ function calculate_profits_settlement(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )
-    post_processing_dir = post_processing_path(inputs)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
 
     if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         file_revenue = joinpath(
@@ -40,7 +40,7 @@ function calculate_profits_settlement(
     bidding_group_fixed_costs_file = get_filename(bidding_group_fixed_costs_files[1])
     bidding_group_variable_costs_file = get_filename(bidding_group_variable_costs_files[1])
 
-    tempdir = joinpath(output_path(inputs), "temp")
+    tempdir = joinpath(output_path(inputs, run_time_options), "temp")
     file_total_costs = joinpath(
         tempdir,
         "bidding_group_total_costs_$(settlement_string)" * run_time_file_suffixes(inputs, run_time_options),

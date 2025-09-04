@@ -216,7 +216,7 @@ function zonal_demand_expression(
             init = 0.0,
         ) +
         # The attended elastic demand is considered a bid offer in the market clearing case.
-        if is_mincost(inputs) ||
+        if is_mincost(inputs, run_time_options) ||
            construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
             sum(
                 attended_elastic_demand[blk, d] for
@@ -322,7 +322,8 @@ function nodal_bid_generation_expression(
         get_model_object(model, :bidding_group_generation_profile)
     end
     bidding_group_generation =
-        if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+        if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs]) &&
+           !is_mincost(inputs, run_time_options)
             get_model_object(model, :bidding_group_generation)
         end
     hydro_generation = if any_elements(inputs, VirtualReservoir)
@@ -453,7 +454,7 @@ function nodal_demand_expression(
             init = 0.0,
         ) +
         # The attended elastic demand is considered a bid offer in the market clearing case.
-        if is_mincost(inputs) ||
+        if is_mincost(inputs, run_time_options) ||
            construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
             sum(
                 attended_elastic_demand[blk, d] for

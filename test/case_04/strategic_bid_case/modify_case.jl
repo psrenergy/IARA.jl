@@ -10,6 +10,17 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
+IARA.update_configuration!(db;
+    construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
+    construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
+    settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
+    nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.STANDARD_ITERATION,
+    max_iteration_nash_equilibrium = 3,
+    nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.EXTERNAL_BID,
+)
+
 # Update base case elements
 IARA.update_asset_owner!(db, "asset_owner_1";
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
@@ -37,7 +48,7 @@ IARA.add_demand_unit!(db;
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",
-    max_demand = max_demand,
+    max_demand = 5.0,
 )
 
 IARA.add_thermal_unit!(db;
@@ -96,6 +107,34 @@ IARA.add_thermal_unit!(db;
     biddinggroup_id = "bg_2",
 )
 
+IARA.add_thermal_unit!(db;
+    label = "ter_sb_5",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
+        min_generation = 0.0,
+        max_generation = 5.0,
+        om_cost = 80.0,
+    ),
+    has_commitment = 0,
+    bus_id = "bus_1",
+    biddinggroup_id = "bg_3",
+)
+
+IARA.add_thermal_unit!(db;
+    label = "ter_sb_6",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = Int(IARA.ThermalUnit_Existence.EXISTS),
+        min_generation = 0.0,
+        max_generation = 2.5,
+        om_cost = 90.0,
+    ),
+    has_commitment = 0,
+    bus_id = "bus_2",
+    biddinggroup_id = "bg_3",
+)
+
 # Create and link CSV files
 # -------------------------
 # Demand
@@ -121,8 +160,13 @@ new_quantity_bid =
         number_of_scenarios,
         number_of_periods,
     )
-new_quantity_bid[1:(number_of_bidding_groups-1), :, :, :, :, :] .= quantity_bid
-new_quantity_bid[number_of_bidding_groups, :, :, :, :, :] .= quantity_bid[1, :, :, :, :, :]
+for scenario in 1:number_of_scenarios
+    new_quantity_bid[:, 1, 1, :, scenario, :] .= 10 - scenario
+    for bg in 1:number_of_bidding_groups
+        new_quantity_bid[bg, 2, 1, :, scenario, :] .= bg * (scenario + 1)
+    end
+end
+
 IARA.write_bids_time_series_file(
     joinpath(PATH, "quantity_bid"),
     new_quantity_bid;
@@ -164,6 +208,21 @@ IARA.write_bids_time_series_file(
         number_of_subperiods,
         maximum_number_of_bidding_segments,
     ],
+    initial_date = "2020-01-01T00:00:00",
+    unit = "\$/MWh",
+)
+
+spot_price = zeros(2, number_of_subperiods, number_of_scenarios, number_of_periods)
+for period in 1:number_of_periods, scenario in 1:number_of_scenarios
+    spot_price[:, :, scenario, period] .= (scenario + period + 0.5) / 5
+end
+IARA.write_timeseries_file(
+    joinpath(PATH, "load_marginal_cost"),
+    spot_price;
+    dimensions = ["period", "scenario", "subperiod"],
+    labels = ["bus_1", "bus_2"],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2020-01-01T00:00:00",
     unit = "\$/MWh",
 )

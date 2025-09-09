@@ -10,7 +10,7 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_hydro_unit!(db, "hyd_1")
+IARA.update_hydro_unit!(db, "hyd_1", minimum_outflow_violation_cost = 100.0 * 1e3)
 IARA.update_hydro_unit_time_series_parameter!(
     db,
     "hyd_1",
@@ -18,6 +18,5 @@ IARA.update_hydro_unit_time_series_parameter!(
     2.0;
     date_time = DateTime(0),
 )
-IARA.update_configuration!(db; hydro_minimum_outflow_violation_cost = 100.0 * 1e3)
 
 IARA.close_study!(db)

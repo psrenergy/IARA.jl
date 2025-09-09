@@ -108,8 +108,6 @@ Configurations for the problem.
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
-    hydro_minimum_outflow_violation_cost::Float64 = 0.0
-    hydro_spillage_cost::Float64 = 0.0
     market_clearing_tiebreaker_weight::Float64 = 0.0
 
     # Caches
@@ -224,10 +222,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "parp_max_lags")[1]
     configurations.demand_deficit_cost =
         PSRI.get_parms(inputs.db, "Configuration", "demand_deficit_cost")[1]
-    configurations.hydro_minimum_outflow_violation_cost =
-        PSRI.get_parms(inputs.db, "Configuration", "hydro_minimum_outflow_violation_cost")[1]
-    configurations.hydro_spillage_cost =
-        PSRI.get_parms(inputs.db, "Configuration", "hydro_spillage_cost")[1]
     configurations.market_clearing_tiebreaker_weight =
         PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight")[1]
     configurations.vr_curveguide_data_source =
@@ -458,14 +452,6 @@ function validate(configurations::Configurations)
     end
     if configurations.demand_deficit_cost < 0
         @error("Demand Unit deficit cost must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.hydro_minimum_outflow_violation_cost < 0
-        @error("Hydro minimum outflow violation cost must be non-negative.")
-        num_errors += 1
-    end
-    if configurations.hydro_spillage_cost < 0
-        @error("Hydro spillage cost must be non-negative.")
         num_errors += 1
     end
     if configurations.market_clearing_tiebreaker_weight < 0
@@ -1386,21 +1372,6 @@ make_whole_payments(inputs::AbstractInputs) = inputs.collections.configurations.
 Return the deficit cost of demands.
 """
 demand_deficit_cost(inputs::AbstractInputs) = inputs.collections.configurations.demand_deficit_cost
-
-"""
-    hydro_minimum_outflow_violation_cost(inputs::AbstractInputs)
-
-Return the cost of violating the minimum outflow in hydro units.
-"""
-hydro_minimum_outflow_violation_cost(inputs::AbstractInputs) =
-    inputs.collections.configurations.hydro_minimum_outflow_violation_cost
-
-"""
-    hydro_spillage_cost(inputs::AbstractInputs)
-
-Return the cost of spilling water in hydro units.
-"""
-hydro_spillage_cost(inputs::AbstractInputs) = inputs.collections.configurations.hydro_spillage_cost
 
 """
     market_clearing_tiebreaker_weight(inputs::AbstractInputs)

@@ -63,7 +63,6 @@ db = IARA.create_study!(PATH_CASE;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 500.0,
-    hydro_minimum_outflow_violation_cost = 600.0,
     clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE,
     bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
@@ -87,6 +86,7 @@ IARA.add_hydro_unit!(db;
     label = "hydro_1",
     initial_volume = 100.0,
     bus_id = "bus_1",
+    minimum_outflow_violation_cost = 600.0,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = 1,
@@ -104,6 +104,7 @@ IARA.add_hydro_unit!(db;
     label = "hydro_2",
     initial_volume = 0.0,
     bus_id = "bus_1",
+    minimum_outflow_violation_cost = 600.0,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = 1,

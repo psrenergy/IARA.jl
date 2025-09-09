@@ -35,7 +35,6 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
-    hydro_spillage_cost = 1e-3,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
@@ -77,6 +76,7 @@ IARA.add_hydro_unit!(db;
     intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     initial_volume = 0.0,
     bus_id = "bus_2",
+    spillage_cost = 1e-3,
 )
 
 IARA.add_thermal_unit!(db;
@@ -183,6 +183,7 @@ IARA.add_hydro_unit!(db;
     ),
     initial_volume = 12.0 * m3_per_second_to_hm3,
     bus_id = "bus_2",
+    spillage_cost = 1e-3,
 )
 
 IARA.add_hydro_unit!(
@@ -201,6 +202,7 @@ IARA.add_hydro_unit!(
     intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     initial_volume = 0.0,
     bus_id = "bus_2",
+    spillage_cost = 1e-3,
 )
 
 IARA.set_hydro_turbine_to!(

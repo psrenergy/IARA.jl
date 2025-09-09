@@ -72,7 +72,7 @@ reduced_test_list = Dict(
 #     "case_02/variable_subperiod_duration_case/test_case.jl",
 # ],
 # "case_03" => [
-#     "case_03/base_case/test_case.jl",,
+#     "case_03/base_case/test_case.jl",
 # ],
 # "case_04" => [
 #     "case_04/aggregated_strategic_bid_case/test_case.jl",

@@ -10,9 +10,7 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_configuration!(db;
-    hydro_spillage_cost = 1e-3,
-)
+IARA.update_hydro_unit!(db, "hyd_1"; spillage_cost = 1e-3)
 
 IARA.add_hydro_unit!(
     db;
@@ -29,6 +27,7 @@ IARA.add_hydro_unit!(
     ),
     initial_volume = 0.0,
     bus_id = "bus_2",
+    spillage_cost = 1e-3,
 )
 
 IARA.set_hydro_turbine_to!(

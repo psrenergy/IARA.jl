@@ -76,12 +76,12 @@ function hydro_generation!(
             b in subperiods(inputs),
             h in existing_hydro_units_with_min_outflow,
         ],
-        hydro_minimum_outflow_slack[b, h] * hydro_minimum_outflow_violation_cost(inputs)
+        hydro_minimum_outflow_slack[b, h] * hydro_unit_minimum_outflow_violation_cost(inputs, h)
     )
     @expression(
         model.jump_model,
         hydro_spillage_penalty[b in subperiods(inputs), h in existing_hydro_units],
-        hydro_spillage[b, h] * hydro_spillage_cost(inputs)
+        hydro_spillage[b, h] * hydro_unit_spillage_cost(inputs, h)
     )
 
     model.obj_exp +=

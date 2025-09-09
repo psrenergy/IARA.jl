@@ -32,6 +32,8 @@ Hydro units are high-level data structures that represent hydro electricity gene
     has_commitment::Vector{HydroUnit_HasCommitment.T} = []
     intra_period_operation::Vector{HydroUnit_IntraPeriodOperation.T} = []
     min_generation::Vector{Float64} = []
+    minimum_outflow_violation_cost::Vector{Float64} = []
+    spillage_cost::Vector{Float64} = []
     # index of the bus to which the hydro unit belongs in the collection Bus
     bus_index::Vector{Int} = []
     # index of the bidding group to which the hydro unit belongs in the collection BiddingGroup
@@ -89,6 +91,8 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "HydroUnit", "has_commitment"),
             HydroUnit_HasCommitment.T,
         )
+    hydro_unit.minimum_outflow_violation_cost = PSRI.get_parms(inputs.db, "HydroUnit", "minimum_outflow_violation_cost")
+    hydro_unit.spillage_cost = PSRI.get_parms(inputs.db, "HydroUnit", "spillage_cost")
     hydro_unit.bus_index = PSRI.get_map(inputs.db, "HydroUnit", "Bus", "id")
     hydro_unit.bidding_group_index = PSRI.get_map(inputs.db, "HydroUnit", "BiddingGroup", "id")
     hydro_unit.gauging_station_index = PSRI.get_map(inputs.db, "HydroUnit", "GaugingStation", "id")
@@ -560,6 +564,24 @@ function validate(hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
+        if hydro_unit.minimum_outflow_violation_cost[i] < 0
+            @error(
+                "Hydro Unit $(hydro_unit.label[i]) Minimum outflow violation cost must be non-negative. Current value is $(hydro_unit.minimum_outflow_violation_cost[i])."
+            )
+            num_errors += 1
+        end
+        if hydro_unit.min_outflow[i] > 0.0 && hydro_unit.minimum_outflow_violation_cost[i] == 0.0
+            @warn(
+                "Hydro Unit $(hydro_unit.label[i]) has minimum outflow defined, but its minimum outflow violation cost is set to zero. The minimum outflow won't be considered."
+            )
+            hydro_unit.min_outflow[i] = 0.0
+        end
+        if hydro_unit.spillage_cost[i] < 0
+            @error(
+                "Hydro Unit $(hydro_unit.label[i]) Spillage cost must be non-negative. Current value is $(hydro_unit.spillage_cost[i])."
+            )
+            num_errors += 1
+        end
     end
     if any(hydro_unit.initial_volume_variation_type .== HydroUnit_InitialVolumeVariationType.BY_SCENARIO)
         if isempty(hydro_unit.initial_volume_by_scenario_file)
@@ -582,7 +604,6 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     gauging_stations = index_of_elements(inputs, GaugingStation)
-    any_hydro_has_min_outflow = any_elements(inputs, HydroUnit; filters = [has_min_outflow])
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
     num_errors = 0
@@ -616,11 +637,6 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-    end
-    if any_hydro_has_min_outflow &&
-       isnan(hydro_minimum_outflow_violation_cost(inputs))
-        @error("Hydro Unit minimum outflow violation cost is not defined.")
-        num_errors += 1
     end
     if read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file == "" && length(hydro_unit) > 0
         @error(

@@ -37,7 +37,7 @@ IARA.add_hydro_unit!(db;
     initial_volume = 0.0,
     bus_id = "bus_2",
     gaugingstation_id = "gs_2",
-    spillage_cost = 1e-3
+    spillage_cost = 1e-3,
 )
 
 # Set hydro relations

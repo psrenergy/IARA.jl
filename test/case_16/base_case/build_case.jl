@@ -77,7 +77,7 @@ IARA.add_hydro_unit!(db;
     ),
     initial_volume = 12.0 * m3_per_second_to_hm3,
     bus_id = "bus_2",
-    spillage_cost = 1.0
+    spillage_cost = 1.0,
 )
 
 IARA.add_thermal_unit!(db;

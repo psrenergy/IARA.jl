@@ -112,7 +112,7 @@ function markup_bids_for_period_scenario(
         )
     end
     if clearing_hydro_representation(inputs) ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
         virtual_reservoir_markup_bids_for_period_scenario(
             inputs,
             run_time_options,
@@ -140,7 +140,7 @@ function bidding_group_markup_units(inputs::Inputs)
         bidding_group_number_of_risk_factors[bg] = length(bidding_group_risk_factor(inputs, bg))
         bidding_group_hydro_units[bg] = findall(isequal(bg), hydro_unit_bidding_group_index(inputs))
         if clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
             filter!(
                 x -> !is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, x),
                 bidding_group_hydro_units[bg],
@@ -746,7 +746,7 @@ function must_read_hydro_unit_data_for_markup_wizard(inputs::Inputs)
     # Hydro representation
     if generate_heuristic_bids_for_clearing(inputs)
         if clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
             return false
         elseif clearing_hydro_representation(inputs) ==
                Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS

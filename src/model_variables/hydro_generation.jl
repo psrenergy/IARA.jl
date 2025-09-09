@@ -104,7 +104,7 @@ function hydro_generation!(
     # Generation costs are used as a penalty in the clearing problem if the hydro unit is not associated with a virtual reservoir
     if is_market_clearing(inputs)
         if clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
             model.obj_exp +=
                 money_to_thousand_money() *
                 sum(hydro_om_cost_expression[:, existing_hydro_units_associated_with_some_virtual_reservoir])

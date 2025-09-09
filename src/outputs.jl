@@ -104,7 +104,7 @@ function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
     model_action(outputs, inputs, run_time_options, InitializeOutput)
     if is_market_clearing(inputs) &&
        clearing_hydro_representation(inputs) ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
         initialize_virtual_reservoir_post_processing_outputs!(outputs, inputs, run_time_options)
     end
     return outputs

@@ -549,7 +549,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
     if is_market_clearing(inputs)
         model_type_warning = false
         if configurations.clearing_hydro_representation ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
             if (
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.HYBRID &&
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
@@ -627,7 +627,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
         end
     end
     if configurations.clearing_hydro_representation ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
         if !any_elements(inputs, VirtualReservoir)
             @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
             num_errors += 1

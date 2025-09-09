@@ -170,13 +170,11 @@ end
     Configurations_VirtualReservoirBidProcessing
 
   - `IGNORE_VIRTUAL_RESERVOIRS`: Pure bids (0)
-  - `HEURISTIC_BID_FROM_WATER_VALUES`: Virtual reservoirs (1)
-  - `HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE`: Virtual reservoirs with hydro reference curve (2)
+  - `HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE`: Virtual reservoirs (1)
 """
 @enumx Configurations_VirtualReservoirBidProcessing begin
     IGNORE_VIRTUAL_RESERVOIRS = 0
-    HEURISTIC_BID_FROM_WATER_VALUES = 1
-    HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE = 2
+    HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE = 1
 end
 
 """

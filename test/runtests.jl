@@ -111,6 +111,7 @@ reduced_test_list = Dict(
 #     "case_08/ex_post_settlement_case/test_case.jl",
 #     "case_08/double_settlement_case/test_case.jl",
 #     "case_08/initial_energy_account_as_input_case/test_case.jl",
+#     "case_08/initial_energy_account_not_in_pu_case/test_case.jl",
 # ],
 # "case_09" => [
 #     "case_09/base_case/test_case.jl",
@@ -163,6 +164,7 @@ reduced_test_list = Dict(
 # "case_19" => [
 #     "case_19/base_case/test_case.jl",
 #     "case_19/negative_bids_case/test_case.jl",
+#     "case_19/inflow_allocation_not_in_pu_case/test_case.jl",
 # ],
 # "case_20" => [
 #     "case_20/base_case/test_case.jl",

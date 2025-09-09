@@ -65,6 +65,16 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
 
     update_time_series_from_db!(virtual_reservoir, inputs.db, initial_date_time(inputs))
 
+    for vr in 1:num_virtual_reservoirs
+        virtual_reservoir.asset_owners_inflow_allocation[vr] = virtual_reservoir.asset_owners_inflow_allocation[vr] / sum(
+            virtual_reservoir.asset_owners_inflow_allocation[vr],
+        )
+        virtual_reservoir.asset_owners_initial_energy_account_share[vr] =
+            virtual_reservoir.asset_owners_initial_energy_account_share[vr] / sum(
+                virtual_reservoir.asset_owners_initial_energy_account_share[vr],
+            )
+    end
+
     return nothing
 end
 
@@ -98,33 +108,18 @@ function validate(virtual_reservoir::VirtualReservoir)
                 )
                 num_errors += 1
             end
-            if virtual_reservoir.asset_owners_inflow_allocation[i][j] <= 0 ||
-               virtual_reservoir.asset_owners_inflow_allocation[i][j] > 1
+            if virtual_reservoir.asset_owners_inflow_allocation[i][j] < 0
                 @error(
-                    "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than zero and less than or equal to one."
+                    "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero."
                 )
                 num_errors += 1
             end
-            if virtual_reservoir.asset_owners_initial_energy_account_share[i][j] < 0 ||
-               virtual_reservoir.asset_owners_initial_energy_account_share[i][j] > 1
+            if virtual_reservoir.asset_owners_initial_energy_account_share[i][j] < 0 
                 @error(
-                    "Initial energy account share for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero and less than or equal to one."
+                    "Initial energy account share for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero."
                 )
                 num_errors += 1
             end
-        end
-        if sum(virtual_reservoir.asset_owners_inflow_allocation[i]) != 1
-            @error(
-                "Sum of inflow allocation for virtual reservoir $(virtual_reservoir_label) must be equal to one. Found $(sum(virtual_reservoir.asset_owners_inflow_allocation[i]))."
-            )
-            num_errors += 1
-        end
-        sum_of_initial_energy_account_share = sum(virtual_reservoir.asset_owners_initial_energy_account_share[i])
-        if !is_null(sum_of_initial_energy_account_share) && sum_of_initial_energy_account_share != 1
-            @error(
-                "Sum of initial energy account share for virtual reservoir $(virtual_reservoir_label) must be equal to one. Found $(sum(virtual_reservoir.asset_owners_initial_energy_account_share[i]))."
-            )
-            num_errors += 1
         end
         if !is_null(virtual_reservoir.number_of_waveguide_points_for_file_template[i]) &&
            virtual_reservoir.number_of_waveguide_points_for_file_template[i] <= 0
@@ -143,6 +138,10 @@ function validate(virtual_reservoir::VirtualReservoir)
             @error(
                 "Virtual reservoir $(virtual_reservoir_label) has duplicate asset owner indices: $(virtual_reservoir.asset_owner_indices[i]). Each asset owner must be associated with a virtual reservoir only once."
             )
+            num_errors += 1
+        end
+        if iszero(virtual_reservoir.asset_owners_inflow_allocation[i]) 
+            @error("Inflow allocation for virtual reservoir $(virtual_reservoir_label) cannot be zero for all asset owners.")
             num_errors += 1
         end
     end

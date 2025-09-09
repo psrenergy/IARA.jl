@@ -43,7 +43,6 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
-    hydro_spillage_cost = 1.0,
     settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
@@ -82,6 +81,7 @@ IARA.add_hydro_unit!(db;
         min_outflow = [0.0],
         om_cost = [0.0],
     ),
+    spillage_cost = 1.0,
     initial_volume = 0.0,
     bus_id = "bus_1",
 )

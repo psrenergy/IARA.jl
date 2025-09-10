@@ -66,9 +66,10 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     update_time_series_from_db!(virtual_reservoir, inputs.db, initial_date_time(inputs))
 
     for vr in 1:num_virtual_reservoirs
-        virtual_reservoir.asset_owners_inflow_allocation[vr] = virtual_reservoir.asset_owners_inflow_allocation[vr] / sum(
-            virtual_reservoir.asset_owners_inflow_allocation[vr],
-        )
+        virtual_reservoir.asset_owners_inflow_allocation[vr] =
+            virtual_reservoir.asset_owners_inflow_allocation[vr] / sum(
+                virtual_reservoir.asset_owners_inflow_allocation[vr],
+            )
         virtual_reservoir.asset_owners_initial_energy_account_share[vr] =
             virtual_reservoir.asset_owners_initial_energy_account_share[vr] / sum(
                 virtual_reservoir.asset_owners_initial_energy_account_share[vr],
@@ -114,7 +115,7 @@ function validate(virtual_reservoir::VirtualReservoir)
                 )
                 num_errors += 1
             end
-            if virtual_reservoir.asset_owners_initial_energy_account_share[i][j] < 0 
+            if virtual_reservoir.asset_owners_initial_energy_account_share[i][j] < 0
                 @error(
                     "Initial energy account share for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero."
                 )
@@ -140,8 +141,10 @@ function validate(virtual_reservoir::VirtualReservoir)
             )
             num_errors += 1
         end
-        if iszero(virtual_reservoir.asset_owners_inflow_allocation[i]) 
-            @error("Inflow allocation for virtual reservoir $(virtual_reservoir_label) cannot be zero for all asset owners.")
+        if iszero(virtual_reservoir.asset_owners_inflow_allocation[i])
+            @error(
+                "Inflow allocation for virtual reservoir $(virtual_reservoir_label) cannot be zero for all asset owners."
+            )
             num_errors += 1
         end
     end

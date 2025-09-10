@@ -1,5 +1,5 @@
 db = IARA.load_study(PATH; read_only = false)
- 
+
 IARA.PSRDatabaseSQLite.update_vector_parameters!(
     db,
     "VirtualReservoir",

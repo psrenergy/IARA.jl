@@ -242,7 +242,7 @@ function hydro_generation!(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "hydro_minimum_outflow_slack",
+            output_name = "hydro_minimum_outflow_violation",
             dimensions = ["period", "scenario", "subperiod"],
             unit = "m3/s",
             labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
@@ -253,7 +253,7 @@ function hydro_generation!(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "hydro_minimum_outflow_violation_cost_expression",
+            output_name = "hydro_minimum_outflow_violation_cost",
             dimensions = ["period", "scenario", "subperiod"],
             unit = "\$",
             labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
@@ -392,7 +392,7 @@ function hydro_generation!(
             outputs,
             inputs,
             run_time_options,
-            "hydro_minimum_outflow_slack",
+            "hydro_minimum_outflow_violation",
             hydro_minimum_outflow_slack.data;
             period,
             scenario,
@@ -406,7 +406,7 @@ function hydro_generation!(
             outputs,
             inputs,
             run_time_options,
-            "hydro_minimum_outflow_violation_cost_expression",
+            "hydro_minimum_outflow_violation_cost",
             hydro_minimum_outflow_violation_cost.data;
             period,
             scenario,

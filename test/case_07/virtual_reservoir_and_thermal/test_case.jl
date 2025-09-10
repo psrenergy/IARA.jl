@@ -27,7 +27,6 @@ else
         test_only_subperiod_sum = [
             "deficit",
             "hydro_generation",
-            "hydro_minimum_outflow_violation",
             "hydro_om_costs",
             "hydro_turbining",
             "hydro_minimum_outflow_violation_cost",

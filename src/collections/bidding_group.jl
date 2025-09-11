@@ -467,8 +467,7 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
         bg_index = hydro_unit_bidding_group_index(inputs, h)
         if !is_null(bg_index)
             number_of_units[bg_index] += 1
-            if clearing_hydro_representation(inputs) ==
-               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE &&
+            if use_virtual_reservoirs(inputs) &&
                is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
                 number_of_hydro_units_in_virtual_reservoirs[bg_index] += 1
             end

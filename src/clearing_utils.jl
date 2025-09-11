@@ -21,8 +21,7 @@ function build_clearing_outputs(inputs::Inputs)
         if any_elements(inputs, BiddingGroup)
             initialize_heuristic_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
         end
-        if clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+        if use_virtual_reservoirs(inputs)
             initialize_virtual_reservoir_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
         end
     end

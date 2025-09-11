@@ -318,8 +318,7 @@ Store pre-calculated values for the collections.
 """
 
 function fill_caches!(inputs::Inputs)
-    if clearing_hydro_representation(inputs) ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+    if use_virtual_reservoirs(inputs)
         fill_hydro_unit_virtual_reservoir_index!(inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)
             fill_waveguide_points!(inputs, vr)

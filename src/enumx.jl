@@ -175,6 +175,7 @@ end
 @enumx Configurations_VirtualReservoirBidProcessing begin
     IGNORE_VIRTUAL_RESERVOIRS = 0
     HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE = 1
+    NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE = 2
 end
 
 """

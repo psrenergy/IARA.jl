@@ -534,8 +534,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
 
     if is_market_clearing(inputs)
         model_type_warning = false
-        if configurations.clearing_hydro_representation ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+        if use_virtual_reservoirs(inputs)
             if (
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.HYBRID &&
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
@@ -612,8 +611,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             num_errors += 1
         end
     end
-    if configurations.clearing_hydro_representation ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+    if use_virtual_reservoirs(inputs)
         if !any_elements(inputs, VirtualReservoir)
             @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
             num_errors += 1
@@ -1232,6 +1230,37 @@ Return the clearing hydro representation.
 """
 clearing_hydro_representation(inputs::AbstractInputs) =
     inputs.collections.configurations.clearing_hydro_representation
+
+"""
+    use_virtual_reservoirs(inputs::AbstractInputs)
+
+Return whether virtual reservoirs are used in clearing.
+"""
+use_virtual_reservoirs(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_hydro_representation !=
+    Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
+
+"""
+    should_build_reference_curve(inputs::AbstractInputs)
+
+Return whether the reference curve should be built.
+"""
+function should_build_reference_curve(inputs::AbstractInputs)
+    reference_curve_representations = [
+        Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE,
+        Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE,
+    ]
+    return clearing_hydro_representation(inputs) in reference_curve_representations
+end
+
+"""
+    should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+
+Return whether the Nash equilibrium from hydro reference curve should be run.
+"""
+function should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+    return clearing_hydro_representation(inputs) == Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
+end
 
 """
     construction_type_ex_ante_physical(inputs::AbstractInputs)

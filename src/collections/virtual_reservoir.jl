@@ -66,14 +66,16 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     update_time_series_from_db!(virtual_reservoir, inputs.db, initial_date_time(inputs))
 
     for vr in 1:num_virtual_reservoirs
-        virtual_reservoir.asset_owners_inflow_allocation[vr] =
-            virtual_reservoir.asset_owners_inflow_allocation[vr] / sum(
-                virtual_reservoir.asset_owners_inflow_allocation[vr],
-            )
-        virtual_reservoir.asset_owners_initial_energy_account_share[vr] =
-            virtual_reservoir.asset_owners_initial_energy_account_share[vr] / sum(
-                virtual_reservoir.asset_owners_initial_energy_account_share[vr],
-            )
+        sum_of_inflow_allocation = sum(virtual_reservoir.asset_owners_inflow_allocation[vr])
+        sum_of_account_share = sum(virtual_reservoir.asset_owners_initial_energy_account_share[vr])
+
+        for i in 1:length(virtual_reservoir.virtual_reservoir.asset_owner_indices[vr])
+            virtual_reservoir.asset_owners_inflow_allocation[vr][i] =
+                virtual_reservoir.asset_owners_inflow_allocation[vr][i] / sum_of_inflow_allocation
+
+            virtual_reservoir.asset_owners_initial_energy_account_share[vr][i] =
+                virtual_reservoir.asset_owners_initial_energy_account_share[vr][i] / sum_of_account_share
+        end
     end
 
     return nothing

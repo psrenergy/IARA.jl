@@ -260,8 +260,7 @@ Write the results for hydro
 - spillage
 - generation
 - spillage penalty
-- minimum outflow slack
-- minimum outflow violation cost expression
+- minimum outflow violation cost
 """
 function hydro_generation!(
     outputs::Outputs,

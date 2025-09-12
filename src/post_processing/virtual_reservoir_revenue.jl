@@ -254,7 +254,7 @@ function inflow_shareholder_residual_revenue(
                     end
 
                     for vr in index_of_elements(inputs, VirtualReservoir)
-                        for h in virtual_reservoir_asset_owner_indices(inputs, vr)
+                        for h in virtual_reservoir_hydro_unit_indices(inputs, vr)
                             if network_representation(inputs, commercial_variables_suffix) ==
                                Configurations_NetworkRepresentation.ZONAL
                                 load_price_index = hydro_unit_zone_index(inputs, h)
@@ -274,12 +274,10 @@ function inflow_shareholder_residual_revenue(
                 vr_ao_revenue = zeros(number_of_pairs)
                 idx = 0
                 for vr in index_of_elements(inputs, VirtualReservoir)
-                    sum_of_allocations = sum(virtual_reservoir_asset_owners_inflow_allocation(inputs, vr))
                     for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                         idx += 1
                         vr_ao_revenue[idx] =
-                            vr_total_revenue[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao) /
-                            sum_of_allocations
+                            vr_total_revenue[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
                     end
                 end
 
@@ -480,6 +478,194 @@ function spilled_responsibility_revenue(
     return joinpath(post_processing_path(inputs), output_name)
 end
 
+function hydro_constraints_violation_revenue(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::OutputReaders,
+    run_time_options::RunTimeOptions;
+    physical_variables_suffix::String,
+    commercial_variables_suffix::String,
+    output_suffix::String,
+    is_double_settlement_ex_post::Bool,
+    ex_ante_physical_suffix::String,
+    output_has_subscenario::Bool,
+)
+    outputs_dir = output_path(inputs)
+    violation_revenue_output_name = "virtual_reservoir_hydro_constraints_violation_revenue" * output_suffix
+    violation_adjusted_revenue_output_name =
+        "virtual_reservoir_hydro_constraints_violation_adjusted_revenue" * output_suffix
+
+    minimum_outflow_violation_reader = open_time_series_output(
+        inputs,
+        model_outputs_time_serie,
+        joinpath(post_processing_path(inputs), "hydro_minimum_outflow_violation" * physical_variables_suffix),
+    )
+
+    violation_marginal_cost_reader = open_time_series_output(
+        inputs,
+        model_outputs_time_serie,
+        joinpath(outputs_dir, "hydro_minimum_outflow_marginal_cost" * commercial_variables_suffix),
+    )
+
+    if is_double_settlement_ex_post
+        minimum_outflow_violation_ex_ante_reader = open_time_series_output(
+            inputs,
+            model_outputs_time_serie,
+            joinpath(post_processing_path(inputs), "hydro_minimum_outflow_violation" * ex_ante_physical_suffix),
+        )
+    end
+
+    dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = violation_revenue_output_name,
+        dimensions = dimensions,
+        unit = "\$",
+        labels = labels_for_output_by_pair_of_agents(
+            inputs,
+            run_time_options,
+            inputs.collections.virtual_reservoir,
+            inputs.collections.asset_owner;
+            index_getter = virtual_reservoir_asset_owner_indices,
+        ),
+        run_time_options,
+        dir_path = post_processing_path(inputs),
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = violation_adjusted_revenue_output_name,
+        dimensions = dimensions,
+        unit = "\$",
+        labels = labels_for_output_by_pair_of_agents(
+            inputs,
+            run_time_options,
+            inputs.collections.virtual_reservoir,
+            inputs.collections.asset_owner;
+            index_getter = virtual_reservoir_asset_owner_indices,
+        ),
+        run_time_options,
+        dir_path = post_processing_path(inputs),
+    )
+
+    violation_revenue_writer = outputs_post_processing.outputs[violation_revenue_output_name].writer
+    violation_adjusted_revenue_writer = outputs_post_processing.outputs[violation_adjusted_revenue_output_name].writer
+
+    num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
+
+    hydro_units_with_minimum_outflow =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
+
+    for period in 1:num_periods
+        for scenario in scenarios(inputs)
+            for subscenario in subscenarios(inputs, run_time_options)
+                vr_violation_revenue = zeros((number_of_elements(inputs, VirtualReservoir)))
+                vr_violation_adjusted_revenue = zeros((number_of_elements(inputs, VirtualReservoir)))
+                for subperiod in subperiods(inputs)
+                    if has_subscenario(minimum_outflow_violation_reader)
+                        Quiver.goto!(
+                            minimum_outflow_violation_reader;
+                            period,
+                            scenario,
+                            subscenario = subscenario,
+                            subperiod = subperiod,
+                        )
+                    else
+                        Quiver.goto!(minimum_outflow_violation_reader; period, scenario, subperiod = subperiod)
+                    end
+
+                    minimum_outflow_violation = minimum_outflow_violation_reader.data
+
+                    if is_double_settlement_ex_post
+                        Quiver.goto!(minimum_outflow_violation_ex_ante_reader; period, scenario, subperiod = subperiod)
+                        minimum_outflow_violation = minimum_outflow_violation_ex_ante_reader.data
+                    end
+
+                    if has_subscenario(violation_marginal_cost_reader)
+                        Quiver.goto!(
+                            violation_marginal_cost_reader;
+                            period,
+                            scenario,
+                            subscenario = subscenario,
+                            subperiod = subperiod,
+                        )
+                    else
+                        Quiver.goto!(violation_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                    end
+
+                    violation_marginal_cost = violation_marginal_cost_reader.data
+
+                    for vr in index_of_elements(inputs, VirtualReservoir)
+                        for (i, h) in enumerate(hydro_units_with_minimum_outflow)
+                            if h in virtual_reservoir_hydro_unit_indices(inputs, vr)
+                                violation_revenue = -max(0, minimum_outflow_violation[i]) * violation_marginal_cost[i]
+                                violation_adjusted_revenue =
+                                    violation_revenue +
+                                    hydro_unit_minimum_outflow_violation_benchmark(inputs, h) *
+                                    m3_per_second_to_hm3_per_hour() * subperiod_duration_in_hours(inputs, subperiod) *
+                                    violation_marginal_cost[i]
+                                vr_violation_revenue[vr] += violation_revenue
+                                vr_violation_adjusted_revenue[vr] += violation_adjusted_revenue
+                            end
+                        end
+                    end
+                end
+
+                number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
+                vr_ao_violation_revenue = zeros(number_of_pairs)
+                vr_ao_violation_adjusted_revenue = zeros(number_of_pairs)
+                idx = 0
+                for vr in index_of_elements(inputs, VirtualReservoir)
+                    for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+                        idx += 1
+                        vr_ao_violation_revenue[idx] =
+                            vr_violation_revenue[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
+                        vr_ao_violation_adjusted_revenue[idx] =
+                            vr_violation_adjusted_revenue[vr] *
+                            virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
+                    end
+                end
+
+                if output_has_subscenario
+                    Quiver.write!(
+                        violation_revenue_writer,
+                        vr_ao_violation_revenue;
+                        period,
+                        scenario,
+                        subscenario = subscenario,
+                    )
+                    Quiver.write!(
+                        violation_adjusted_revenue_writer,
+                        vr_ao_violation_adjusted_revenue;
+                        period,
+                        scenario,
+                        subscenario = subscenario,
+                    )
+                else
+                    Quiver.write!(violation_revenue_writer, vr_ao_violation_revenue; period, scenario)
+                    Quiver.write!(violation_adjusted_revenue_writer, vr_ao_violation_adjusted_revenue; period, scenario)
+                end
+            end
+        end
+    end
+
+    Quiver.close!(violation_revenue_writer)
+    Quiver.close!(violation_adjusted_revenue_writer)
+    Quiver.close!(violation_marginal_cost_reader)
+    Quiver.close!(minimum_outflow_violation_reader)
+    if is_double_settlement_ex_post
+        Quiver.close!(minimum_outflow_violation_ex_ante_reader)
+    end
+
+    return joinpath(post_processing_path(inputs), violation_revenue_output_name),
+    joinpath(post_processing_path(inputs), violation_adjusted_revenue_output_name)
+end
+
 function post_processing_virtual_reservoirs(
     inputs::Inputs,
     outputs_post_processing::Outputs,
@@ -493,6 +679,33 @@ function post_processing_virtual_reservoirs(
     output_has_subscenario::Bool = true,
 )
     @assert !(is_double_settlement_ex_post && isempty(ex_ante_physical_suffix))
+
+    if any_elements(inputs, HydroUnit; filters = [has_min_outflow])
+        hydro_constraints_violation_revenue_file, hydro_constraints_violation_adjusted_revenue_file =
+            hydro_constraints_violation_revenue(
+                inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
+                run_time_options;
+                physical_variables_suffix,
+                commercial_variables_suffix,
+                output_suffix,
+                is_double_settlement_ex_post,
+                ex_ante_physical_suffix,
+                output_has_subscenario,
+            )
+    else        
+        hydro_constraints_violation_adjusted_revenue_file = create_zero_file(
+            inputs, 
+            run_time_options, 
+            "virtual_reservoir_hydro_constraints_violation_adjusted_revenue" * output_suffix,
+            virtual_reservoir_label(inputs),
+            Quiver.csv, 
+            "\$"; 
+            has_subscenarios = output_has_subscenario,
+            has_subperiods = false,
+        )
+    end
     accepted_bid_revenue_file = accepted_bid_revenue(
         inputs,
         outputs_post_processing,
@@ -533,7 +746,12 @@ function post_processing_virtual_reservoirs(
     total_revenue_file = joinpath(post_processing_path(inputs), "virtual_reservoir_total_revenue" * output_suffix)
     Quiver.apply_expression(
         total_revenue_file,
-        [accepted_bid_revenue_file, inflow_shareholder_residual_revenue_file, spilled_responsibility_revenue_file],
+        [
+            accepted_bid_revenue_file,
+            inflow_shareholder_residual_revenue_file,
+            spilled_responsibility_revenue_file,
+            hydro_constraints_violation_adjusted_revenue_file,
+        ],
         +,
         Quiver.csv,
     )

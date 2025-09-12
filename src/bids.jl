@@ -861,17 +861,23 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             ao_quantity_bid = Float64[]
             ao_price_bid = Float64[]
 
-            account_upper_bounds = if clearing_hydro_representation(inputs) == Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
-                asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
-            elseif clearing_hydro_representation(inputs) == Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
-                [1.0]
-            end
-            markups = if clearing_hydro_representation(inputs) == Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
-                asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
-            elseif clearing_hydro_representation(inputs) == Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
-                # Markups are calculated via Nash equilibrium later. This function is only used to divide the reference curve between the asset owners.
-                [0.0]
-            end
+            account_upper_bounds =
+                if clearing_hydro_representation(inputs) ==
+                   Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+                    asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
+                elseif clearing_hydro_representation(inputs) ==
+                       Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
+                    [1.0]
+                end
+            markups =
+                if clearing_hydro_representation(inputs) ==
+                   Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+                    asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
+                elseif clearing_hydro_representation(inputs) ==
+                       Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
+                    # Markups are calculated via Nash equilibrium later. This function is only used to divide the reference curve between the asset owners.
+                    [0.0]
+                end
 
             #---------------
             # Energy to sell
@@ -936,7 +942,9 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             #--------------
             # Energy to buy
             #--------------
-            if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs) && clearing_hydro_representation(inputs) == Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+            if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs) &&
+               clearing_hydro_representation(inputs) ==
+               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
                 lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])
                 sell_segments = collect(1:seg)
                 buy_segments = Int[]

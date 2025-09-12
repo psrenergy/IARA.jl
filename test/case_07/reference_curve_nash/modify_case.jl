@@ -14,4 +14,14 @@ IARA.update_configuration!(db;
     clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE,
 )
 
+IARA.PSRDatabaseSQLite.update_vector_parameters!(
+    db,
+    "VirtualReservoir",
+    "inflow_allocation",
+    "reservoir_1",
+    [0.3, 0.7],
+)
+
+# TODO: add another asset owner
+
 IARA.close_study!(db)

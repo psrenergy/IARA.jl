@@ -694,14 +694,14 @@ function post_processing_virtual_reservoirs(
                 ex_ante_physical_suffix,
                 output_has_subscenario,
             )
-    else        
+    else
         hydro_constraints_violation_adjusted_revenue_file = create_zero_file(
-            inputs, 
-            run_time_options, 
+            inputs,
+            run_time_options,
             "virtual_reservoir_hydro_constraints_violation_adjusted_revenue" * output_suffix,
             virtual_reservoir_label(inputs),
-            Quiver.csv, 
-            "\$"; 
+            Quiver.csv,
+            "\$";
             has_subscenarios = output_has_subscenario,
             has_subperiods = false,
         )

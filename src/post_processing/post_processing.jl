@@ -70,7 +70,8 @@ function post_process_outputs(
         )
 
         if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
-            ex_ante_physical_suffix = is_skipped(inputs, "ex_ante_physical") ? "_ex_ante_commercial" : "_ex_ante_physical"
+            ex_ante_physical_suffix =
+                is_skipped(inputs, "ex_ante_physical") ? "_ex_ante_commercial" : "_ex_ante_physical"
             post_processing_minimum_outflow_violation(
                 inputs,
                 outputs_post_processing,

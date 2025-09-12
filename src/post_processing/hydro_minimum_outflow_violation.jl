@@ -26,7 +26,8 @@ function post_processing_minimum_outflow_violation(
     hydro_units_with_minimum_outflow =
         index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
 
-    dimensions = consider_subscenario ? ["period", "scenario", "subscenario", "subperiod"] : ["period", "scenario", "subperiod"]
+    dimensions =
+        consider_subscenario ? ["period", "scenario", "subscenario", "subperiod"] : ["period", "scenario", "subperiod"]
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -47,8 +48,20 @@ function post_processing_minimum_outflow_violation(
             for subscenario in subscenarios(inputs, run_time_options)
                 for subperiod in subperiods(inputs)
                     if consider_subscenario
-                        Quiver.goto!(hydro_turbining_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
-                        Quiver.goto!(hydro_spillage_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
+                        Quiver.goto!(
+                            hydro_turbining_reader;
+                            period,
+                            scenario,
+                            subscenario = subscenario,
+                            subperiod = subperiod,
+                        )
+                        Quiver.goto!(
+                            hydro_spillage_reader;
+                            period,
+                            scenario,
+                            subscenario = subscenario,
+                            subperiod = subperiod,
+                        )
                     else
                         Quiver.goto!(hydro_turbining_reader; period, scenario, subperiod = subperiod)
                         Quiver.goto!(hydro_spillage_reader; period, scenario, subperiod = subperiod)

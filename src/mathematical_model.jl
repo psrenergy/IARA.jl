@@ -454,8 +454,7 @@ function hybrid_market_clearing_model_action(args...)
         if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
             hydro_commitment!(args...)
         end
-        if clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+        if use_virtual_reservoirs(inputs)
             virtual_reservoir_generation!(args...)
             virtual_reservoir_volume_distance_to_waveguide!(args...)
             virtual_reservoir_energy_account!(args...)
@@ -550,8 +549,7 @@ function hybrid_market_clearing_model_action(args...)
             hydro_minimum_outflow!(args...)
         end
 
-        if clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+        if use_virtual_reservoirs(inputs)
             if virtual_reservoir_correspondence_type(inputs) ==
                Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
                 virtual_reservoir_correspondence_by_volume!(args...)

@@ -86,6 +86,7 @@ include("collections/zone.jl")
 
 include("args.jl")
 include("logs.jl")
+include("reference_curve_nash.jl")
 
 include("external_time_series/abstractions.jl")
 include("external_time_series/utils.jl")

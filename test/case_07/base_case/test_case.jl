@@ -37,10 +37,9 @@ else
         test_only_subperiod_sum = [
             "deficit",
             "hydro_generation",
-            "hydro_minimum_outflow_slack",
             "hydro_om_costs",
             "hydro_turbining",
-            "hydro_minimum_outflow_violation_cost_expression",
+            "hydro_minimum_outflow_violation_cost",
         ],
         skipped_outputs = [
             "hydro_final_volume",

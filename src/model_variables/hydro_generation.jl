@@ -242,18 +242,7 @@ function hydro_generation!(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "hydro_minimum_outflow_slack",
-            dimensions = ["period", "scenario", "subperiod"],
-            unit = "m3/s",
-            labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
-            run_time_options,
-        )
-
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            output_name = "hydro_minimum_outflow_violation_cost_expression",
+            output_name = "hydro_minimum_outflow_violation_cost",
             dimensions = ["period", "scenario", "subperiod"],
             unit = "\$",
             labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
@@ -271,8 +260,7 @@ Write the results for hydro
 - spillage
 - generation
 - spillage penalty
-- minimum outflow slack
-- minimum outflow violation cost expression
+- minimum outflow violation cost
 """
 function hydro_generation!(
     outputs::Outputs,
@@ -380,7 +368,6 @@ function hydro_generation!(
             filters = [is_existing, has_min_outflow],
         )
 
-        hydro_minimum_outflow_slack = simulation_results.data[:hydro_minimum_outflow_slack]
         hydro_minimum_outflow_violation_cost = simulation_results.data[:hydro_minimum_outflow_violation_cost_expression]
 
         indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
@@ -392,21 +379,7 @@ function hydro_generation!(
             outputs,
             inputs,
             run_time_options,
-            "hydro_minimum_outflow_slack",
-            hydro_minimum_outflow_slack.data;
-            period,
-            scenario,
-            subscenario,
-            multiply_by = 1 / m3_per_second_to_hm3_per_hour(),
-            divide_by_subperiod_duration_in_hours = true,
-            indices_of_elements_in_output,
-        )
-
-        write_output_per_subperiod!(
-            outputs,
-            inputs,
-            run_time_options,
-            "hydro_minimum_outflow_violation_cost_expression",
+            "hydro_minimum_outflow_violation_cost",
             hydro_minimum_outflow_violation_cost.data;
             period,
             scenario,

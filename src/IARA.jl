@@ -86,7 +86,6 @@ include("collections/zone.jl")
 
 include("args.jl")
 include("logs.jl")
-include("reference_curve_nash.jl")
 
 include("external_time_series/abstractions.jl")
 include("external_time_series/utils.jl")
@@ -126,6 +125,7 @@ include("bid_validations.jl")
 include("debugging_utils.jl")
 include("clearing_utils.jl")
 include("hydro_supply_reference_curve_utils.jl")
+include("reference_curve_nash.jl")
 include("virtual_reservoir.jl")
 include("main.jl")
 

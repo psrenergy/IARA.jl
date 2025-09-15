@@ -31,7 +31,7 @@ IARA.delete_element!(db, "VirtualReservoir", "reservoir_1")
 IARA.add_virtual_reservoir!(db;
     label = "reservoir_1",
     assetowner_id = ["asset_owner_1", "asset_owner_2", "asset_owner_3", "asset_owner_4"],
-    inflow_allocation = [0.4, 0.3, 0.2, 0.1],
+    inflow_allocation = [0.3, 0.3, 0.2, 0.2],
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 

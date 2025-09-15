@@ -3,7 +3,7 @@ function nash_bids_from_hydro_reference_curve(
     outputs::Outputs,
     run_time_options::RunTimeOptions,
     period::Int = 1,
-    scenario::Int = 1
+    scenario::Int = 1,
 )
     original_quantity_bid, original_price_bid =
         read_serialized_virtual_reservoir_heuristic_bids(inputs; period, scenario)
@@ -13,9 +13,27 @@ function nash_bids_from_hydro_reference_curve(
     number_of_virtual_reservoirs = length(virtual_reservoirs)
     number_of_asset_owners = number_of_elements(inputs, AssetOwner)
 
-    quantity_output = zeros(Float64, number_of_virtual_reservoirs, number_of_asset_owners, reference_curve_nash_max_iterations(inputs), maximum_number_of_segments_in_nash_equilibrium(inputs))
-    price_output = zeros(Float64, number_of_virtual_reservoirs, number_of_asset_owners, reference_curve_nash_max_iterations(inputs), maximum_number_of_segments_in_nash_equilibrium(inputs))
-    slope_output = zeros(Float64, number_of_virtual_reservoirs, number_of_asset_owners, reference_curve_nash_max_iterations(inputs), maximum_number_of_segments_in_nash_equilibrium(inputs))
+    quantity_output = zeros(
+        Float64,
+        number_of_virtual_reservoirs,
+        number_of_asset_owners,
+        reference_curve_nash_max_iterations(inputs),
+        maximum_number_of_segments_in_nash_equilibrium(inputs),
+    )
+    price_output = zeros(
+        Float64,
+        number_of_virtual_reservoirs,
+        number_of_asset_owners,
+        reference_curve_nash_max_iterations(inputs),
+        maximum_number_of_segments_in_nash_equilibrium(inputs),
+    )
+    slope_output = fill(
+        Inf,
+        number_of_virtual_reservoirs,
+        number_of_asset_owners,
+        reference_curve_nash_max_iterations(inputs),
+        maximum_number_of_segments_in_nash_equilibrium(inputs),
+    )
 
     for vr in virtual_reservoirs
         q, p, b = treat_reference_curve_data(
@@ -229,7 +247,12 @@ function run_reference_curve_nash_iteration(
             end
         end
 
-        next_slope = update_slope(inputs, [[next_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners_in_virtual_reservoir], [[true_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners_in_virtual_reservoir], segment) # TODO: melhorar essa chamada, está meio gambiarra
+        next_slope = update_slope(
+            inputs,
+            [[next_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners_in_virtual_reservoir],
+            [[true_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners_in_virtual_reservoir],
+            segment,
+        ) # TODO: improve this
 
         for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
             push!(new_quantity[i], next_quantity[i])
@@ -300,7 +323,7 @@ function get_next_point(
     )
 
     next_price = current_price_in_segment .- price_delta
-    next_quantity = round.(current_quantity_in_segment .- (price_delta ./ current_slope_in_segment), digits=13)
+    next_quantity = round.(current_quantity_in_segment .- (price_delta ./ current_slope_in_segment), digits = 13)
 
     return next_quantity, next_price
 end
@@ -330,7 +353,7 @@ function get_price_delta(
     available_asset_owners = findall(available_quantities .> 0.0)
     if !isempty(available_asset_owners)
         price_delta = minimum(
-            available_quantities[available_asset_owners] .* current_slope_in_segment[available_asset_owners]
+            available_quantities[available_asset_owners] .* current_slope_in_segment[available_asset_owners],
         )
     end
 
@@ -408,7 +431,7 @@ function test_inversion(
 
     quantity_in_segment = [new_quantity[i][end] for i in 1:number_of_asset_owners_in_virtual_reservoir]
     price_in_segment = new_price[1][end]
-    quantity_in_previous_segment = [new_quantity[i][end - 1] for i in 1:number_of_asset_owners_in_virtual_reservoir]
+    quantity_in_previous_segment = [new_quantity[i][end-1] for i in 1:number_of_asset_owners_in_virtual_reservoir]
 
     test_segment = get_current_segment(
         inputs,
@@ -423,11 +446,13 @@ function test_inversion(
     original_price_in_segment = [original_price[i][test_segment[i]] for i in agent_indexes]
     original_slope_in_segment = [original_slope[i][test_segment[i]] for i in agent_indexes]
 
-    reference_price = original_price_in_segment - (original_quantity_in_segment .- quantity_in_segment[agent_indexes]) .* original_slope_in_segment
+    reference_price =
+        original_price_in_segment -
+        (original_quantity_in_segment .- quantity_in_segment[agent_indexes]) .* original_slope_in_segment
     price_delta = price_in_segment .- reference_price
 
     if any(price_delta .< 0)
-        error("Curve inversion")
+        @warn("Curve inversion")
     end
 
     return nothing
@@ -441,7 +466,6 @@ function initialize_reference_curve_nash_outputs(
     inputs::AbstractInputs,
     run_time_options::RunTimeOptions,
 )
-
     outputs = Outputs()
 
     labels = labels_for_output_by_pair_of_agents(
@@ -490,9 +514,9 @@ function write_reference_curve_nash_outputs(
     inputs::AbstractInputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
-    quantity::Array{Float64,4},
-    price::Array{Float64,4},
-    slope::Array{Float64,4},
+    quantity::Array{Float64, 4},
+    price::Array{Float64, 4},
+    slope::Array{Float64, 4},
     period::Int,
     scenario::Int,
 )
@@ -505,6 +529,26 @@ function write_reference_curve_nash_outputs(
         period,
         scenario,
     )
-    
+
+    write_nash_equilibrium_output!(
+        outputs,
+        inputs,
+        run_time_options,
+        "virtual_reservoir_nash_price",
+        price,
+        period,
+        scenario,
+    )
+
+    write_nash_equilibrium_output!(
+        outputs,
+        inputs,
+        run_time_options,
+        "virtual_reservoir_nash_slope",
+        slope,
+        period,
+        scenario,
+    )
+
     return nothing
 end

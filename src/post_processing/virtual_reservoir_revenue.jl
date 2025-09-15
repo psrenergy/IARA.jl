@@ -254,7 +254,7 @@ function inflow_shareholder_residual_revenue(
                     end
 
                     for vr in index_of_elements(inputs, VirtualReservoir)
-                        for h in virtual_reservoir_asset_owner_indices(inputs, vr)
+                        for h in virtual_reservoir_hydro_unit_indices(inputs, vr)
                             if network_representation(inputs, commercial_variables_suffix) ==
                                Configurations_NetworkRepresentation.ZONAL
                                 load_price_index = hydro_unit_zone_index(inputs, h)
@@ -420,7 +420,7 @@ function spilled_responsibility_revenue(
                     price = load_marginal_cost_reader.data
 
                     for vr in index_of_elements(inputs, VirtualReservoir)
-                        for h in virtual_reservoir_asset_owner_indices(inputs, vr)
+                        for h in virtual_reservoir_hydro_unit_indices(inputs, vr)
                             if network_representation(inputs, commercial_variables_suffix) ==
                                Configurations_NetworkRepresentation.ZONAL
                                 load_price_index = hydro_unit_zone_index(inputs, h)

@@ -369,7 +369,13 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
                 run_time_options = RunTimeOptions()
                 for scenario in 1:number_of_scenarios(inputs)
-                    nash_bids_from_hydro_reference_curve(inputs, reference_curve_nash_outputs, run_time_options, period, scenario)
+                    nash_bids_from_hydro_reference_curve(
+                        inputs,
+                        reference_curve_nash_outputs,
+                        run_time_options,
+                        period,
+                        scenario,
+                    )
                 end
             end
 

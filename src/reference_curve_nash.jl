@@ -173,7 +173,7 @@ function validate_nash_input_data(
 
     for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
         @assert all(slope[i] .> reference_curve_nash_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_labels(inputs, ao)) in virtual reservoir $(virtual_reservoir_labels(inputs, vr_index)) has a segment with slope below the tolerance."
-        @assert all(price[i] .<= demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_labels(inputs, ao)) in virtual reservoir $(virtual_reservoir_labels(inputs, vr_index)) has a price point above the demand deficit cost."
+        @assert all(price[i] .<= 2.0 * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_labels(inputs, ao)) in virtual reservoir $(virtual_reservoir_labels(inputs, vr_index)) has a price point above the demand deficit cost."
     end
 
     return nothing
@@ -200,7 +200,7 @@ function run_reference_curve_nash_iteration(
     segment = 1
     for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
         new_quantity[i] = [current_quantity[i][segment]]
-        new_price[i] = [demand_deficit_cost(inputs)]
+        new_price[i] = [2.0 * demand_deficit_cost(inputs)]
         new_slope[i] = [update_slope(inputs, current_slope, original_slope, segment)[i]]
     end
 

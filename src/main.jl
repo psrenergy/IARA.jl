@@ -304,6 +304,14 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         )
     end
 
+    if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
+        run_time_options = RunTimeOptions()
+        reference_curve_nash_outputs = initialize_reference_curve_nash_outputs(
+            inputs,
+            run_time_options,
+        )
+    end
+
     # Build models
     run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
     ex_ante_physical_model = build_model(inputs, run_time_options)
@@ -359,8 +367,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
             # Nash equilibrium from reference curve
             if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
+                run_time_options = RunTimeOptions()
                 for scenario in 1:number_of_scenarios(inputs)
-                    nash_bids_from_hydro_reference_curve(inputs, period, scenario)
+                    nash_bids_from_hydro_reference_curve(inputs, reference_curve_nash_outputs, run_time_options, period, scenario)
                 end
             end
 
@@ -438,6 +447,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         )
         if should_build_reference_curve(inputs) && generate_heuristic_bids_for_clearing(inputs)
             finalize_outputs!(reference_curve_outputs)
+        end
+        if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
+            finalize_outputs!(reference_curve_nash_outputs)
         end
     end
 

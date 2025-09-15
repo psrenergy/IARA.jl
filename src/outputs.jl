@@ -244,6 +244,10 @@ function get_outputs_dimension_size(
             push!(dimension_size, maximum_number_of_profiles(inputs))
         elseif dimension == "reference_curve_segment"
             push!(dimension_size, reference_curve_number_of_segments(inputs))
+        elseif dimension == "nash_curve_segment"
+            push!(dimension_size, maximum_number_of_segments_in_nash_equilibrium(inputs))
+        elseif dimension == "nash_iteration"
+            push!(dimension_size, reference_curve_nash_max_iterations(inputs))
         else
             error("Dimension $dimension not recognized")
         end
@@ -554,6 +558,58 @@ function write_reference_curve_output!(
         reference_curve_segment,
         scenario,
     )
+    return nothing
+end
+
+function write_nash_equilibrium_output!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    data::Array{Float64, 4},
+    period::Int,
+    scenario::Int;
+    multiply_by::Float64 = 1.0,
+)
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options) # why run_time_options?
+    asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
+
+    # 4D array with dimensions: virtual_reservoir, asset_owner, nash_iteration, nash_curve_segment
+    @assert size(data, 1) == length(virtual_reservoirs)
+    @assert size(data, 2) == length(asset_owners)
+    number_of_iterations = size(data, 3)
+    number_of_segments = size(data, 4)
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    number_of_asset_owners_per_virtual_reservoir = length.(virtual_reservoir_asset_owner_indices(inputs))
+    treated_output = zeros(number_of_segments, number_of_iterations, sum(number_of_asset_owners_per_virtual_reservoir))
+
+    for iter in 1:number_of_iterations, seg in 1:number_of_segments
+        pair_index = 0
+        for vr in virtual_reservoirs
+            for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+                pair_index += 1
+                treated_output[seg, iter, pair_index] = data[vr, ao, iter, seg]
+            end
+        end
+
+        Quiver.write!(
+            output.writer,
+            round_output(treated_output[seg, iter, :] * multiply_by);
+            period,
+            scenario,
+            nash_iteration = iter,
+            nash_curve_segment = seg,
+        )
+    end
+
     return nothing
 end
 

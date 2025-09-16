@@ -68,7 +68,8 @@ function hydro_minimum_outflow!(
         constraint_dual_recorder(inputs, :hydro_minimum_outflow),
     )
 
-    hydro_units_with_minimum_outflow = index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
+    hydro_units_with_minimum_outflow =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
 
     initialize!(
         QuiverOutput,

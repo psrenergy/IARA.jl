@@ -69,7 +69,8 @@ function post_process_outputs(
             physical_variables_suffix = physical_variables_suffix,
         )
 
-        if is_market_clearing(inputs) && settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
+        if is_market_clearing(inputs) &&
+           settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
             ex_ante_physical_suffix =
                 is_skipped(inputs, "ex_ante_physical") ? "_ex_ante_commercial" : "_ex_ante_physical"
             post_processing_minimum_outflow_violation(

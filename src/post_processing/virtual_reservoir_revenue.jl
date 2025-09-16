@@ -695,11 +695,18 @@ function post_processing_virtual_reservoirs(
                 output_has_subscenario,
             )
     else
+        labels = labels_for_output_by_pair_of_agents(
+            inputs,
+            run_time_options,
+            inputs.collections.virtual_reservoir,
+            inputs.collections.asset_owner;
+            index_getter = virtual_reservoir_asset_owner_indices,
+        )
         hydro_constraints_violation_adjusted_revenue_file = create_zero_file(
             inputs,
             run_time_options,
             "virtual_reservoir_hydro_constraints_violation_adjusted_revenue" * output_suffix,
-            virtual_reservoir_label(inputs),
+            labels,
             Quiver.csv,
             "\$";
             has_subscenarios = output_has_subscenario,

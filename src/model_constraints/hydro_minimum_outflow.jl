@@ -68,6 +68,8 @@ function hydro_minimum_outflow!(
         constraint_dual_recorder(inputs, :hydro_minimum_outflow),
     )
 
+    hydro_units_with_minimum_outflow = index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
+
     initialize!(
         QuiverOutput,
         outputs;
@@ -75,7 +77,7 @@ function hydro_minimum_outflow!(
         output_name = "hydro_minimum_outflow_marginal_cost",
         dimensions = ["period", "scenario", "subperiod"],
         unit = "\$/hm3",
-        labels = hydro_unit_label(inputs),
+        labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
         run_time_options,
     )
     return nothing

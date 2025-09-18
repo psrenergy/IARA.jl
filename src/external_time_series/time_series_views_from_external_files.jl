@@ -450,8 +450,7 @@ function reinitialize_generation_time_series_for_nash_initialization!(
 )
     # Hydro generation
     num_errors = 0
-    if must_read_hydro_unit_data_for_markup_wizard(inputs; run_time_options) &&
-       nash_equilibrium_initialization(inputs) == Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
+    if must_read_hydro_unit_data_for_markup_wizard(inputs; run_time_options)
         # Close the time series views to reinitialize them
         close(inputs.time_series.hydro_generation)
         close(inputs.time_series.hydro_opportunity_cost)

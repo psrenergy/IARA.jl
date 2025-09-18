@@ -800,7 +800,7 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_opti
 
     if period != 1
         # The volume at the end of the period is the first subperiod of the next period
-        if nash_equilibrium_initialization_run_time(inputs, run_time_options)
+        if is_nash_equilibrium_initialization(run_time_options)
             hydro_volume_reader = inputs.time_series.hydro_volume
             previous_volume = hydro_volume_reader.data
         else

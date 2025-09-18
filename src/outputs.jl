@@ -40,7 +40,7 @@ function output_path(args::Args)
 end
 
 function output_path(inputs::Inputs, run_time_options::RunTimeOptions)
-    if nash_equilibrium_initialization_run_time(inputs, run_time_options)
+    if is_nash_equilibrium_initialization(run_time_options)
         return joinpath(output_path(inputs.args), "nash_equilibrium_initialization")
     end
     if nash_equilibrium_iteration(inputs, run_time_options) > 0
@@ -302,19 +302,6 @@ function initialize!(
     output_name *= run_time_file_suffixes(inputs, run_time_options; suppress_construction_type_suffix)
 
     file = joinpath(dir_path, output_name)
-    # if is_bidder(inputs, run_time_options)
-    #     folder = ""
-    #     if nash_equilibrium_initialization_run_time(inputs, run_time_options)
-    #         folder = "nash_equilibrium_initialization"
-    #     else
-    #         folder = "nash_equilibrium_iteration_" *
-    #             string(nash_equilibrium_iteration(inputs, run_time_options))
-    #     end
-    #     file = joinpath(dir_path, folder, output_name)
-    #     if !isdir(joinpath(dir_path, folder))
-    #         mkpath(joinpath(dir_path, folder))
-    #     end
-    # end
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
     if "bid_segment" in dimensions && consider_one_segment
         idx = findfirst(isequal("bid_segment"), dimensions)

@@ -733,7 +733,7 @@ function must_read_hydro_unit_data_for_markup_wizard(
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
         return false
     end
-    if !nash_equilibrium_initialization_run_time(inputs, run_time_options) && iterate_nash_equilibrium(inputs)
+    if !is_nash_equilibrium_initialization(run_time_options) && iterate_nash_equilibrium(inputs)
         return false
     end
     # Model type

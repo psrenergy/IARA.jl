@@ -21,7 +21,7 @@ function train_nash_equilibrium_model(inputs::Inputs)
             push!(files, bidding_group_price_bid_file(inputs))
         end
         # TODO: Add validation
-        if has_price_taker(inputs, run_time_options)
+        if any_asset_owner_is_price_taker(inputs, run_time_options)
             push!(files, "load_marginal_cost")
         end
         for ext in exts
@@ -33,9 +33,9 @@ function train_nash_equilibrium_model(inputs::Inputs)
             end
         end
     end
-    reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
     if nash_equilibrium_initialization(inputs) ==
        Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
+        reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
         reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
     end
     reinitialize_spot_time_series_for_nash_iteration!(inputs, run_time_options)
@@ -43,12 +43,12 @@ function train_nash_equilibrium_model(inputs::Inputs)
 
     for nash_equilibrium_iteration in 1:max_iteration_nash_equilibrium(inputs)
         # Train the model for the current iteration
-        price_taker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_price_taker])
+        price_taker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_current_asset_owner_price_taker])
         for asset_owner_index in price_taker_asset_owners
             run_time_options = RunTimeOptions(; asset_owner_index, nash_equilibrium_iteration)
             train_model_and_run_simulation(inputs, run_time_options)
         end
-        price_maker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_price_maker])
+        price_maker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_current_asset_owner_price_maker])
         for asset_owner_index in price_maker_asset_owners
             run_time_options = RunTimeOptions(; asset_owner_index, nash_equilibrium_iteration)
             train_model_and_run_simulation(inputs, run_time_options)
@@ -73,12 +73,9 @@ function train_nash_equilibrium_model(inputs::Inputs)
             finalize_outputs!(outputs_post_processing)
             finalize_outputs!(model_outputs_time_series)
         end
-
-        # Copy bidding group bids to the output folder in the last iteration
-        if nash_equilibrium_iteration == max_iteration_nash_equilibrium(inputs)
-            copy_bidding_group_bids_to_output_folder(inputs, run_time_options)
-        end
     end
+
+    copy_bidding_group_bids_to_output_folder(inputs, run_time_options)
 
     return nothing
 end

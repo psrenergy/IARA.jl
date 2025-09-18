@@ -82,35 +82,45 @@ function period_index_in_year(inputs::Inputs, period::Int)
     end
 end
 
+function get_total_max_generation(inputs::Inputs, run_time_options::RunTimeOptions)
+    max_generation = 0.0
+
+    # Sum max generation from all unit types
+    for h in index_of_elements(inputs, HydroUnit; run_time_options)
+        max_generation += hydro_unit_max_generation(inputs, h)
+    end
+    for t in index_of_elements(inputs, ThermalUnit; run_time_options)
+        max_generation += thermal_unit_max_generation(inputs, t)
+    end
+    for r in index_of_elements(inputs, RenewableUnit; run_time_options)
+        max_generation += renewable_unit_max_generation(inputs, r)
+    end
+
+    return max_generation
+end
+
 function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
-    if is_price_taker(inputs, run_time_options)
-        # max_price = get_max_price(inputs, run_time_options)
-        # max_generation = 0.0
-        # for h in index_of_elements(inputs, HydroUnit; run_time_options)
-        #     max_generation += hydro_unit_max_generation(inputs, h)
-        # end
-        # for t in index_of_elements(inputs, ThermalUnit; run_time_options)
-        #     max_generation += thermal_unit_max_generation(inputs, t)
-        # end
-        # for r in index_of_elements(inputs, RenewableUnit; run_time_options)
-        #     max_generation += renewable_unit_max_generation(inputs, r)
-        # end
-        # lower_bound =
-        #     -max_price * max_generation * sum(subperiod_duration_in_hours(inputs))
-        # return lower_bound
-        return 0.0
-    elseif is_price_maker(inputs, run_time_options)
-        @warn "Strategic Bid lower bound not implemented."
-        return 0.0
+    if is_current_asset_owner_price_taker(inputs, run_time_options)
+        # Price takers use historical spot prices as max price reference
+        max_price = get_max_price(inputs, run_time_options)
+    elseif is_current_asset_owner_price_maker(inputs, run_time_options)
+        # Price makers can potentially receive deficit cost when demand is unmet
+        max_price = demand_deficit_cost(inputs)
     else
         return 0.0
     end
+
+    max_generation = get_total_max_generation(inputs, run_time_options)
+    total_subperiod_hours = sum(subperiod_duration_in_hours(inputs))
+
+    # Lower bound represents worst-case negative revenue scenario
+    return -max_price * max_generation * total_subperiod_hours
 end
 
-# function get_max_price(inputs::Inputs, run_time_options::RunTimeOptions)
-#     spot_price_file = joinpath(output_path(inputs, run_time_options), "load_marginal_cost")
-#     return get_maximum_value_of_time_series(spot_price_file)
-# end
+function get_max_price(inputs::Inputs, run_time_options::RunTimeOptions)
+    spot_price_file = joinpath(output_path(inputs, run_time_options), "load_marginal_cost")
+    return get_maximum_value_of_time_series(spot_price_file)
+end
 
 function variable_aggregation_type(unit::String)
     aggregate_by_sum = ["MWh", "GWh", "\$"]

@@ -70,7 +70,7 @@ function link_bids_and_generation!(
         AffExpr(0),
     )
 
-    if is_price_maker(inputs, run_time_options) || is_price_taker(inputs, run_time_options)
+    if is_current_asset_owner_price_maker(inputs, run_time_options) || is_current_asset_owner_price_taker(inputs, run_time_options)
         bidding_group_energy_bid = get_model_object(model, :bidding_group_energy_bid)
     else
         if has_any_profile_bids(inputs)
@@ -83,7 +83,7 @@ function link_bids_and_generation!(
 
     for blk in blks, bg in bidding_groups, bus in buses
         all_bidding_group_generation[blk, bg, bus] =
-            if is_price_maker(inputs, run_time_options) || is_price_taker(inputs, run_time_options)
+            if is_current_asset_owner_price_maker(inputs, run_time_options) || is_current_asset_owner_price_taker(inputs, run_time_options)
                 sum(
                     bidding_group_energy_bid[blk, bg, bds, bus] for
                     bds in 1:number_of_bg_valid_bidding_segments(inputs, bg);
@@ -188,7 +188,7 @@ function link_bids_and_generation!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
-    if is_bidder(inputs, run_time_options)
+    if is_current_asset_owner_bidder(inputs, run_time_options)
         add_custom_recorder_to_query_from_subproblem_result!(
             outputs,
             :bidding_group_price_bid,
@@ -227,7 +227,7 @@ function link_bids_and_generation!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
-    if is_bidder(inputs, run_time_options)
+    if is_current_asset_owner_bidder(inputs, run_time_options)
         # Fill the 4 dimensional array with the same prices for all bidding segments
 
         max_bg_bidding_segments = maximum_number_of_bg_bidding_segments(inputs)

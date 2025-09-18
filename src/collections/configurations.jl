@@ -178,29 +178,15 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         end
     nash_equilibrium_strategy =
         PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_strategy")[1]
-    if is_null(nash_equilibrium_strategy)
-        configurations.nash_equilibrium_strategy =
-            Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
-    else
-        configurations.nash_equilibrium_strategy =
+    configurations.nash_equilibrium_strategy =
             convert_to_enum(nash_equilibrium_strategy, Configurations_NashEquilibriumStrategy.T)
-    end
     nash_equilibrium_initialization =
         PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_initialization")[1]
-    if is_null(nash_equilibrium_initialization)
-        configurations.nash_equilibrium_initialization =
-            Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
-    else
-        configurations.nash_equilibrium_initialization =
+    configurations.nash_equilibrium_initialization =
             convert_to_enum(nash_equilibrium_initialization, Configurations_NashEquilibriumInitialization.T)
-    end
     max_iteration_nash_equilibrium =
         PSRI.get_parms(inputs.db, "Configuration", "max_iteration_nash_equilibrium")[1]
-    if is_null(max_iteration_nash_equilibrium)
-        configurations.max_iteration_nash_equilibrium = 0
-    else
-        configurations.max_iteration_nash_equilibrium = max_iteration_nash_equilibrium
-    end
+    configurations.max_iteration_nash_equilibrium = max_iteration_nash_equilibrium
     configurations.renewable_scenarios_files =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "renewable_scenarios_files")[1],
@@ -1024,9 +1010,9 @@ cycle_duration_in_hours(inputs::AbstractInputs) =
     inputs.collections.configurations.cycle_duration_in_hours
 
 """
-    iterate_nash_equilibrium(inputs::AbstractInputs)
+    nash_equilibrium_strategy(inputs::AbstractInputs)
 
-Return the Nash equilibrium iteration option.
+Return the Nash equilibrium iteration strategy.
 """
 nash_equilibrium_strategy(inputs::AbstractInputs) =
     inputs.collections.configurations.nash_equilibrium_strategy
@@ -1058,14 +1044,10 @@ nash_equilibrium_iteration(inputs::AbstractInputs, run_time_options::RunTimeOpti
 """
     nash_equilibrium_initialization(inputs::AbstractInputs, run_time_options::RunTimeOptions)
 
-Return whether the problem is a initialization for Nash Equilibrium.
+Return whether the problem is an initialization for Nash Equilibrium.
 """
 nash_equilibrium_initialization(inputs::AbstractInputs) =
     inputs.collections.configurations.nash_equilibrium_initialization
-
-# TODO: Better name?
-nash_equilibrium_initialization_run_time(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
-    run_time_options.nash_equilibrium_initialization
 
 iteration_with_aggregate_buses(inputs::AbstractInputs) =
     nash_equilibrium_strategy(inputs) == Configurations_NashEquilibriumStrategy.ITERATION_WITH_AGGREGATE_BUSES

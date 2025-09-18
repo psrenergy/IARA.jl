@@ -36,7 +36,7 @@ function bidding_group_energy_bid!(
         ],
     )
 
-    if is_price_maker(inputs, run_time_options)
+    if is_current_asset_owner_price_maker(inputs, run_time_options)
         return nothing
     end
 
@@ -85,7 +85,7 @@ function bidding_group_energy_bid!(
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)
 
-    if is_price_maker(inputs, run_time_options)
+    if is_current_asset_owner_price_maker(inputs, run_time_options)
         return nothing
     end
 

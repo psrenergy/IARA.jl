@@ -85,8 +85,13 @@ function hydro_volume!(
     if !is_market_clearing(inputs)
         return nothing
     end
+    # If the current asset owner is a price maker or a price taker we do not need to
+    # update the hydro volume variables.
+    # The mincost model already has the hydro volume variables updated when it is built.
+    # This check is only for the Nash Equilibrium iterations with Min Cost initialization.
     if is_current_asset_owner_price_maker(inputs, run_time_options) ||
-       is_current_asset_owner_price_taker(inputs, run_time_options)
+       is_current_asset_owner_price_taker(inputs, run_time_options) ||
+       is_mincost(inputs, run_time_options)
         return nothing
     end
 

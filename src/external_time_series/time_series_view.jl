@@ -242,6 +242,18 @@ function read_time_series_view_from_external_file!(
             ts,
             period,
         )
+    elseif ts.dimensions == [:scenario, :lag]
+        read_scenario_lag!(
+            inputs,
+            ts,
+            scenario,
+        )
+    elseif ts.dimensions == [:scenario]
+        read_scenario!(
+            inputs,
+            ts,
+            scenario,
+        )
     else
         error("Time series with dimensions $(ts.dimensions) not supported.")
     end
@@ -483,6 +495,30 @@ function read_period!(
         initial_date_time = ts.reader.metadata.initial_date,
     )
     Quiver.goto!(ts.reader; period = file_period)
+    ts.exact_dimensions_data = ts.reader.data
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_scenario_lag!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    scenario::Int,
+) where {T, N}
+    for lag in 1:ts.reader.metadata.dimension_size[2]
+        Quiver.goto!(ts.reader; scenario, lag)
+        ts.exact_dimensions_data[:, lag] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_scenario!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    scenario::Int,
+) where {T, N}
+    Quiver.goto!(ts.reader; scenario)
     ts.exact_dimensions_data = ts.reader.data
     ts.data = ts.exact_dimensions_data
     return nothing

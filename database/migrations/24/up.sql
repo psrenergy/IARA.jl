@@ -1,6 +1,25 @@
 PRAGMA user_version = 24;
 PRAGMA foreign_keys = ON;
 
-ALTER TABLE Configuration ADD COLUMN nash_equilibrium_strategy INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE Configuration ADD COLUMN nash_equilibrium_initialization INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE Configuration ADD COLUMN max_iteration_nash_equilibrium INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE HydroUnit ADD COLUMN initial_volume_variation_type INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE GaugingStation ADD COLUMN inflow_initial_state_variation_type INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE GaugingStation_time_series_files ADD COLUMN inflow_initial_state_by_scenario TEXT;
+ALTER TABLE HydroUnit_time_series_files ADD COLUMN initial_volume_by_scenario TEXT;
+
+ALTER TABLE GaugingStation_time_series_files ADD COLUMN temp_inflow_noise TEXT;
+ALTER TABLE GaugingStation_time_series_files ADD COLUMN temp_parp_coefficients TEXT;
+ALTER TABLE GaugingStation_time_series_files ADD COLUMN temp_inflow_period_average TEXT;
+ALTER TABLE GaugingStation_time_series_files ADD COLUMN temp_inflow_period_std_dev TEXT;
+UPDATE GaugingStation_time_series_files SET temp_inflow_noise = inflow_noise;
+UPDATE GaugingStation_time_series_files SET temp_parp_coefficients = parp_coefficients;
+UPDATE GaugingStation_time_series_files SET temp_inflow_period_average = inflow_period_average;
+UPDATE GaugingStation_time_series_files SET temp_inflow_period_std_dev = inflow_period_std_dev;
+ALTER TABLE GaugingStation_time_series_files DROP COLUMN inflow_noise;
+ALTER TABLE GaugingStation_time_series_files DROP COLUMN parp_coefficients;
+ALTER TABLE GaugingStation_time_series_files DROP COLUMN inflow_period_average;
+ALTER TABLE GaugingStation_time_series_files DROP COLUMN inflow_period_std_dev;
+ALTER TABLE GaugingStation_time_series_files RENAME COLUMN temp_inflow_noise TO inflow_noise;
+ALTER TABLE GaugingStation_time_series_files RENAME COLUMN temp_parp_coefficients TO parp_coefficients;
+ALTER TABLE GaugingStation_time_series_files RENAME COLUMN temp_inflow_period_average TO inflow_period_average;
+ALTER TABLE GaugingStation_time_series_files RENAME COLUMN temp_inflow_period_std_dev TO inflow_period_std_dev;

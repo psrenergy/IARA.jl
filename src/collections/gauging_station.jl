@@ -23,11 +23,13 @@ Collection representing the gauging stations in the system.
     downstream_index::Vector{Int} = []
     historical_inflow::Vector{Vector{Float64}} = Vector{Vector{Float64}}()
     inflow_initial_state::Matrix{Float64} = Matrix{Float64}(undef, 0, 0)
+    inflow_initial_state_variation_type::Vector{GaugingStation_InflowInitialStateVariationType.T} = []
 
     inflow_noise_file::String = ""
     parp_coefficients_file::String = ""
     inflow_period_average_file::String = ""
     inflow_period_std_dev_file::String = ""
+    inflow_initial_state_by_scenario_file::String = ""
 end
 
 # ---------------------------------------------------------------------
@@ -51,6 +53,14 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
     if read_inflow_from_file(inputs)
         return nothing
     end
+
+    gauging_station.inflow_initial_state_variation_type =
+        convert_to_enum.(
+            PSRI.get_parms(inputs.db, "GaugingStation", "inflow_initial_state_variation_type"),
+            GaugingStation_InflowInitialStateVariationType.T,
+        )
+    gauging_station.inflow_initial_state_by_scenario_file =
+        PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_initial_state_by_scenario")
 
     if fit_parp_model(inputs)
         # When fitting the PAR(p) model, these files are output files, so we use the IARA standard.
@@ -183,6 +193,15 @@ Validate the gauging station collection.
 """
 function validate(gauging_station::GaugingStation)
     num_errors = 0
+    if any(
+        gauging_station.inflow_initial_state_variation_type .==
+        GaugingStation_InflowInitialStateVariationType.BY_SCENARIO,
+    ) && isempty(gauging_station.inflow_initial_state_by_scenario_file)
+        @error(
+            "At least one Gauging Station has inflow initial state variation type set to `BY_SCENARIO`, but no inflow initial state by scenario file was linked."
+        )
+        num_errors += 1
+    end
     return num_errors
 end
 
@@ -231,21 +250,35 @@ function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingSt
     return num_errors
 end
 
-# ---------------------------------------------------------------------
-# Collection getters
-# ---------------------------------------------------------------------
-
 function normalized_initial_inflow(inputs, period_idx::Integer, h::Integer, tau::Integer)
     gauging_station_idx = hydro_unit_gauging_station_index(inputs, h)
     if time_series_inflow_period_std_dev(inputs)[gauging_station_idx, period_idx] == 0
         return 0.0
     else
+        inflow_initial_state =
+            if gauging_station_inflow_initial_state_variation_type(inputs, gauging_station_idx) ==
+               GaugingStation_InflowInitialStateVariationType.BY_SCENARIO
+                inputs.time_series.inflow_initial_state_by_scenario[gauging_station_idx, tau]
+            else
+                gauging_station_inflow_initial_state(inputs)[gauging_station_idx, tau]
+            end
         return (
-            gauging_station_inflow_initial_state(inputs)[gauging_station_idx, tau] -
+            inflow_initial_state -
             time_series_inflow_period_average(inputs)[gauging_station_idx, period_idx]
         ) / time_series_inflow_period_std_dev(inputs)[gauging_station_idx, period_idx]
     end
 end
+
+"""
+    some_inflow_initial_state_varies_by_scenario(inputs::AbstractInputs)
+
+Check if it is necessary to read the inflow initial state by scenario timeseries file.
+"""
+some_inflow_initial_state_varies_by_scenario(inputs::AbstractInputs) =
+    any(
+        gauging_station_inflow_initial_state_variation_type(inputs) .==
+        GaugingStation_InflowInitialStateVariationType.BY_SCENARIO,
+    )
 
 """
     gauging_station_inflow_file(inputs::AbstractInputs)

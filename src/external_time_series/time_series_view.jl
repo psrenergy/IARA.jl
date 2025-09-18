@@ -254,6 +254,13 @@ function read_time_series_view_from_external_file!(
             ts,
             scenario,
         )
+    elseif ts.dimensions == [:season, :sample]
+        read_season_sample!(
+            inputs,
+            ts;
+            season = period,
+            sample = scenario,
+        )
     else
         error("Time series with dimensions $(ts.dimensions) not supported.")
     end
@@ -519,6 +526,18 @@ function read_scenario!(
     scenario::Int,
 ) where {T, N}
     Quiver.goto!(ts.reader; scenario)
+    ts.exact_dimensions_data = ts.reader.data
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_season_sample!(
+    inputs,
+    ts::TimeSeriesView{T, N};
+    season::Int,
+    sample::Int,
+) where {T, N}
+    Quiver.goto!(ts.reader; season, sample)
     ts.exact_dimensions_data = ts.reader.data
     ts.data = ts.exact_dimensions_data
     return nothing

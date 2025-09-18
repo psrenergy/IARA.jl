@@ -35,7 +35,6 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 500.0,
-    hydro_minimum_outflow_violation_cost = 600.0,
     clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES,
     bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
@@ -60,6 +59,7 @@ IARA.add_hydro_unit!(db;
     label = "hydro_1",
     initial_volume = 900.0,
     bus_id = "bus_1",
+    minimum_outflow_violation_cost = 600.0,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
@@ -77,6 +77,7 @@ IARA.add_hydro_unit!(db;
     label = "hydro_2",
     initial_volume = 0.0,
     bus_id = "bus_1",
+    minimum_outflow_violation_cost = 600.0,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),

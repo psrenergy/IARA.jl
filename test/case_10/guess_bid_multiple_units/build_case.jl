@@ -41,7 +41,6 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 3000.0,
-    hydro_spillage_cost = 1.0,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,

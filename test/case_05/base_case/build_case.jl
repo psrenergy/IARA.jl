@@ -36,7 +36,6 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.36,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 0.5,
-    hydro_spillage_cost = 1e-3,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.FIT_PARP_MODEL_FROM_DATA,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
@@ -210,6 +209,7 @@ IARA.add_hydro_unit!(db;
     initial_volume = 12.0 * m3_per_second_to_hm3,
     bus_id = "bus_2",
     gaugingstation_id = "gs_1",
+    spillage_cost = 1e-3,
 )
 
 IARA.add_thermal_unit!(db;

@@ -341,7 +341,7 @@ function is_mincost(inputs::Inputs, run_time_options::RunTimeOptions)
            (
                nash_equilibrium_initialization(inputs) ==
                Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC &&
-               run_time_options.nash_equilibrium_initialization
+               run_time_options.is_nash_equilibrium_initialization
            )
 end
 

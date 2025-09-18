@@ -1,6 +1,6 @@
 
 function train_nash_equilibrium_model(inputs::Inputs)
-    run_time_options = RunTimeOptions(; nash_equilibrium_initialization = true)
+    run_time_options = RunTimeOptions(; is_nash_equilibrium_initialization = true)
     initialization_dir = output_path(inputs, run_time_options)
     if !isdir(initialization_dir)
         mkdir(initialization_dir)

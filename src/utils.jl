@@ -141,7 +141,7 @@ function find_load_marginal_cost_file(dir_path::String)
         "_ex_ante_commercial",
         "_ex_post_physical",
         "_ex_ante_physical",
-        ""  # Try base name without suffix as fallback
+        "",  # Try base name without suffix as fallback
     ]
 
     for suffix in possible_suffixes
@@ -151,7 +151,7 @@ function find_load_marginal_cost_file(dir_path::String)
         end
     end
 
-    error("Load marginal cost file not found in directory: $dir_path")
+    return error("Load marginal cost file not found in directory: $dir_path")
 end
 
 function get_max_price(inputs::Inputs, run_time_options::RunTimeOptions)

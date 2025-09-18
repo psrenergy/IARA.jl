@@ -117,8 +117,46 @@ function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
     return -max_price * max_generation * total_subperiod_hours
 end
 
+function get_nash_equilibrium_previous_output_path(inputs::Inputs, run_time_options::RunTimeOptions)
+    # For Nash equilibrium iterations, get the path from the previous step
+    nash_iter = nash_equilibrium_iteration(inputs, run_time_options)
+    if nash_iter > 0
+        if nash_iter == 1
+            # For iteration 1, look in the initialization directory
+            return joinpath(output_path(inputs.args), "nash_equilibrium_initialization")
+        else
+            # For iteration N > 1, look in iteration N-1 directory
+            return joinpath(output_path(inputs.args), "nash_equilibrium_iteration_$(nash_iter - 1)")
+        end
+    else
+        return output_path(inputs, run_time_options)
+    end
+end
+
+function find_load_marginal_cost_file(dir_path::String)
+    # Try to find load_marginal_cost file with various suffixes in priority order
+    base_name = "load_marginal_cost"
+    possible_suffixes = [
+        "_ex_post_commercial",
+        "_ex_ante_commercial",
+        "_ex_post_physical",
+        "_ex_ante_physical",
+        ""  # Try base name without suffix as fallback
+    ]
+
+    for suffix in possible_suffixes
+        file_path = joinpath(dir_path, base_name * suffix)
+        if isfile(file_path * ".csv")
+            return file_path
+        end
+    end
+
+    error("Load marginal cost file not found in directory: $dir_path")
+end
+
 function get_max_price(inputs::Inputs, run_time_options::RunTimeOptions)
-    spot_price_file = joinpath(output_path(inputs, run_time_options), "load_marginal_cost")
+    dir_path = get_nash_equilibrium_previous_output_path(inputs, run_time_options)
+    spot_price_file = find_load_marginal_cost_file(dir_path)
     return get_maximum_value_of_time_series(spot_price_file)
 end
 

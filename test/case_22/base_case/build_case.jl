@@ -42,7 +42,6 @@ db = IARA.create_study!(PATH;
     max_iteration_nash_equilibrium = 3,
     nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.STANDARD_ITERATION,
     nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC,
-    hydro_spillage_cost = 1e-3,
 )
 
 # Conversion constants

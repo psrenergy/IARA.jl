@@ -466,7 +466,7 @@ function initialize_time_series_from_external_files(inputs)
     return nothing
 end
 
-function reinitialize_generation_time_series_for_nash_initialization!(
+function reopen_hydro_unit_time_series_from_output_directory!(
     inputs,
     run_time_options,
 )

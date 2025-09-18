@@ -35,7 +35,7 @@ function train_nash_equilibrium_model(inputs::Inputs)
     end
     if nash_equilibrium_initialization(inputs) ==
        Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
-        reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
+        reopen_hydro_unit_time_series_from_output_directory!(inputs, run_time_options)
         reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
     end
     reinitialize_spot_time_series_for_nash_iteration!(inputs, run_time_options)
@@ -87,7 +87,7 @@ function initialize_nash_equilibrium(
 )
     train_model_and_run_simulation(inputs, run_time_options)
     update_number_of_segments_for_heuristic_bids!(inputs)
-    reinitialize_generation_time_series_for_nash_initialization!(inputs, run_time_options)
+    reopen_hydro_unit_time_series_from_output_directory!(inputs, run_time_options)
     heuristic_bids_outputs = Outputs()
     initialize_heuristic_bids_outputs(inputs, heuristic_bids_outputs, run_time_options)
     for period in 1:number_of_periods(inputs)

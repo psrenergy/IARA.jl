@@ -29,4 +29,5 @@ function iara_log(inputs::AbstractInputs, run_time_options::RunTimeOptions)
     )
 end
 
-is_nash_equilibrium_initialization(run_time_options::RunTimeOptions) = run_time_options.is_nash_equilibrium_initialization
+is_nash_equilibrium_initialization(run_time_options::RunTimeOptions) =
+    run_time_options.is_nash_equilibrium_initialization

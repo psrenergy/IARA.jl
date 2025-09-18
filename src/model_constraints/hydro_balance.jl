@@ -67,7 +67,8 @@ function hydro_balance_aggregated_subperiods(
     # from the serialized results of the previous period
     hydro_volume_state =
         if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options) ||
-           is_current_asset_owner_price_maker(inputs, run_time_options) || is_current_asset_owner_price_taker(inputs, run_time_options)
+           is_current_asset_owner_price_maker(inputs, run_time_options) ||
+           is_current_asset_owner_price_taker(inputs, run_time_options)
             get_model_object(model, :hydro_volume_state)
         end
     hydro_previous_period_volume = if clearing_has_volume_variables(inputs, run_time_options)

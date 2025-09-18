@@ -177,11 +177,11 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     nash_equilibrium_strategy =
         PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_strategy")[1]
     configurations.nash_equilibrium_strategy =
-            convert_to_enum(nash_equilibrium_strategy, Configurations_NashEquilibriumStrategy.T)
+        convert_to_enum(nash_equilibrium_strategy, Configurations_NashEquilibriumStrategy.T)
     nash_equilibrium_initialization =
         PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_initialization")[1]
     configurations.nash_equilibrium_initialization =
-            convert_to_enum(nash_equilibrium_initialization, Configurations_NashEquilibriumInitialization.T)
+        convert_to_enum(nash_equilibrium_initialization, Configurations_NashEquilibriumInitialization.T)
     max_iteration_nash_equilibrium =
         PSRI.get_parms(inputs.db, "Configuration", "max_iteration_nash_equilibrium")[1]
     configurations.max_iteration_nash_equilibrium = max_iteration_nash_equilibrium

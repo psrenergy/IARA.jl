@@ -85,7 +85,8 @@ function hydro_volume!(
     if !is_market_clearing(inputs)
         return nothing
     end
-    if is_current_asset_owner_price_maker(inputs, run_time_options) || is_current_asset_owner_price_taker(inputs, run_time_options)
+    if is_current_asset_owner_price_maker(inputs, run_time_options) ||
+       is_current_asset_owner_price_taker(inputs, run_time_options)
         return nothing
     end
 

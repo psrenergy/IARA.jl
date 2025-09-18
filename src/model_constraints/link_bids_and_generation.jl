@@ -70,7 +70,8 @@ function link_bids_and_generation!(
         AffExpr(0),
     )
 
-    if is_current_asset_owner_price_maker(inputs, run_time_options) || is_current_asset_owner_price_taker(inputs, run_time_options)
+    if is_current_asset_owner_price_maker(inputs, run_time_options) ||
+       is_current_asset_owner_price_taker(inputs, run_time_options)
         bidding_group_energy_bid = get_model_object(model, :bidding_group_energy_bid)
     else
         if has_any_profile_bids(inputs)
@@ -83,7 +84,8 @@ function link_bids_and_generation!(
 
     for blk in blks, bg in bidding_groups, bus in buses
         all_bidding_group_generation[blk, bg, bus] =
-            if is_current_asset_owner_price_maker(inputs, run_time_options) || is_current_asset_owner_price_taker(inputs, run_time_options)
+            if is_current_asset_owner_price_maker(inputs, run_time_options) ||
+               is_current_asset_owner_price_taker(inputs, run_time_options)
                 sum(
                     bidding_group_energy_bid[blk, bg, bds, bus] for
                     bds in 1:number_of_bg_valid_bidding_segments(inputs, bg);

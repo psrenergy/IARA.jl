@@ -167,7 +167,7 @@ function bidding_group_profile_energy_bid!(
         run_time_options,
         output_name = "bidding_group_generation_profile",
         dimensions = ["period", "scenario", "subperiod", "profile"],
-        unit = "MWh",
+        unit = "GWh",
         labels,
     )
 
@@ -198,6 +198,7 @@ function bidding_group_profile_energy_bid!(
         period,
         scenario,
         subscenario,
+        multiply_by = MW_to_GW(),
         has_profile_bids = true,
     )
     return nothing

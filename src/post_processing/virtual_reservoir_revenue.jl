@@ -6,7 +6,7 @@ function accepted_bid_revenue(
     physical_variables_suffix::String,
     commercial_variables_suffix::String,
     output_suffix::String,
-    is_double_settlement_ex_post::Bool,
+    is_two_settlement_ex_post::Bool,
     ex_ante_physical_suffix::String,
     output_has_subscenario::Bool,
 )
@@ -24,7 +24,7 @@ function accepted_bid_revenue(
         joinpath(outputs_dir, "virtual_reservoir_marginal_cost" * commercial_variables_suffix),
     )
 
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         vr_generation_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
@@ -79,7 +79,7 @@ function accepted_bid_revenue(
                         Quiver.goto!(vr_generation_reader; period, scenario, bid_segment = bid_segment)
                     end
                     segment_generation = vr_generation_reader.data
-                    if is_double_settlement_ex_post
+                    if is_two_settlement_ex_post
                         Quiver.goto!(vr_generation_ex_ante_reader; period, scenario, bid_segment = bid_segment)
                         segment_generation = segment_generation - vr_generation_ex_ante_reader.data
                     end
@@ -108,7 +108,7 @@ function accepted_bid_revenue(
     Quiver.close!(writer)
     Quiver.close!(vr_generation_reader)
     Quiver.close!(vr_marginal_cost_reader)
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         Quiver.close!(vr_generation_ex_ante_reader)
     end
 
@@ -123,7 +123,7 @@ function inflow_shareholder_residual_revenue(
     physical_variables_suffix::String,
     commercial_variables_suffix::String,
     output_suffix::String,
-    is_double_settlement_ex_post::Bool,
+    is_two_settlement_ex_post::Bool,
     ex_ante_physical_suffix::String,
     output_has_subscenario::Bool,
 )
@@ -151,7 +151,7 @@ function inflow_shareholder_residual_revenue(
         joinpath(post_processing_path(inputs), "virtual_reservoir_accepted_bid_revenue" * output_suffix),
     )
 
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         hydro_generation_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
@@ -245,7 +245,7 @@ function inflow_shareholder_residual_revenue(
                     hydro_generation = hydro_generation_reader.data
                     spilled_energy = turbinable_spillage_reader.data
 
-                    if is_double_settlement_ex_post
+                    if is_two_settlement_ex_post
                         Quiver.goto!(hydro_generation_ex_ante_reader; period, scenario, subperiod = subperiod)
                         Quiver.goto!(turbinable_spillage_ex_ante_reader; period, scenario, subperiod = subperiod)
 
@@ -295,7 +295,7 @@ function inflow_shareholder_residual_revenue(
     Quiver.close!(hydro_generation_reader)
     Quiver.close!(turbinable_spillage_reader)
     Quiver.close!(vr_accepted_bid_revenue_reader)
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         Quiver.close!(hydro_generation_ex_ante_reader)
         Quiver.close!(turbinable_spillage_ex_ante_reader)
     end
@@ -311,7 +311,7 @@ function spilled_responsibility_revenue(
     physical_variables_suffix::String,
     commercial_variables_suffix::String,
     output_suffix::String,
-    is_double_settlement_ex_post::Bool,
+    is_two_settlement_ex_post::Bool,
     ex_ante_physical_suffix::String,
     output_has_subscenario::Bool,
 )
@@ -334,7 +334,7 @@ function spilled_responsibility_revenue(
         joinpath(outputs_dir, "virtual_reservoir_final_energy_account" * physical_variables_suffix),
     )
 
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         spilled_energy_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
@@ -379,7 +379,7 @@ function spilled_responsibility_revenue(
                 end
                 vr_energy_account = vr_energy_account_reader.data
 
-                if is_double_settlement_ex_post
+                if is_two_settlement_ex_post
                     Quiver.goto!(vr_energy_account_ex_ante_reader; period, scenario)
                     vr_energy_account = vr_energy_account_reader.data - vr_energy_account_ex_ante_reader.data
                 end
@@ -399,7 +399,7 @@ function spilled_responsibility_revenue(
                         Quiver.goto!(spilled_energy_reader; period, scenario, subperiod = subperiod)
                     end
                     spilled_energy = spilled_energy_reader.data
-                    if is_double_settlement_ex_post
+                    if is_two_settlement_ex_post
                         Quiver.goto!(spilled_energy_ex_ante_reader; period, scenario, subperiod = subperiod)
                         spilled_energy = spilled_energy_reader.data - spilled_energy_ex_ante_reader.data
                     end
@@ -470,7 +470,7 @@ function spilled_responsibility_revenue(
     Quiver.close!(spilled_energy_reader)
     Quiver.close!(load_marginal_cost_reader)
     Quiver.close!(vr_energy_account_reader)
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         Quiver.close!(spilled_energy_ex_ante_reader)
         Quiver.close!(vr_energy_account_ex_ante_reader)
     end
@@ -486,7 +486,7 @@ function hydro_constraints_violation_revenue(
     physical_variables_suffix::String,
     commercial_variables_suffix::String,
     output_suffix::String,
-    is_double_settlement_ex_post::Bool,
+    is_two_settlement_ex_post::Bool,
     ex_ante_physical_suffix::String,
     output_has_subscenario::Bool,
 )
@@ -507,7 +507,7 @@ function hydro_constraints_violation_revenue(
         joinpath(outputs_dir, "hydro_minimum_outflow_marginal_cost" * commercial_variables_suffix),
     )
 
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         minimum_outflow_violation_ex_ante_reader = open_time_series_output(
             inputs,
             model_outputs_time_serie,
@@ -517,6 +517,14 @@ function hydro_constraints_violation_revenue(
 
     dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
 
+    labels_by_pairs = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.virtual_reservoir,
+        inputs.collections.asset_owner;
+        index_getter = virtual_reservoir_asset_owner_indices,
+    )
+
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -524,13 +532,7 @@ function hydro_constraints_violation_revenue(
         output_name = violation_revenue_output_name,
         dimensions = dimensions,
         unit = "\$",
-        labels = labels_for_output_by_pair_of_agents(
-            inputs,
-            run_time_options,
-            inputs.collections.virtual_reservoir,
-            inputs.collections.asset_owner;
-            index_getter = virtual_reservoir_asset_owner_indices,
-        ),
+        labels = labels_by_pairs,
         run_time_options,
         dir_path = post_processing_path(inputs),
     )
@@ -542,13 +544,7 @@ function hydro_constraints_violation_revenue(
         output_name = violation_adjusted_revenue_output_name,
         dimensions = dimensions,
         unit = "\$",
-        labels = labels_for_output_by_pair_of_agents(
-            inputs,
-            run_time_options,
-            inputs.collections.virtual_reservoir,
-            inputs.collections.asset_owner;
-            index_getter = virtual_reservoir_asset_owner_indices,
-        ),
+        labels = labels_by_pairs,
         run_time_options,
         dir_path = post_processing_path(inputs),
     )
@@ -581,9 +577,10 @@ function hydro_constraints_violation_revenue(
 
                     minimum_outflow_violation = minimum_outflow_violation_reader.data
 
-                    if is_double_settlement_ex_post
+                    if is_two_settlement_ex_post
                         Quiver.goto!(minimum_outflow_violation_ex_ante_reader; period, scenario, subperiod = subperiod)
-                        minimum_outflow_violation = minimum_outflow_violation_ex_ante_reader.data
+                        minimum_outflow_violation =
+                            minimum_outflow_violation - minimum_outflow_violation_ex_ante_reader.data
                     end
 
                     if has_subscenario(violation_marginal_cost_reader)
@@ -658,7 +655,7 @@ function hydro_constraints_violation_revenue(
     Quiver.close!(violation_adjusted_revenue_writer)
     Quiver.close!(violation_marginal_cost_reader)
     Quiver.close!(minimum_outflow_violation_reader)
-    if is_double_settlement_ex_post
+    if is_two_settlement_ex_post
         Quiver.close!(minimum_outflow_violation_ex_ante_reader)
     end
 
@@ -674,11 +671,11 @@ function post_processing_virtual_reservoirs(
     physical_variables_suffix::String,
     commercial_variables_suffix::String,
     output_suffix::String,
-    is_double_settlement_ex_post::Bool = false,
+    is_two_settlement_ex_post::Bool = false,
     ex_ante_physical_suffix::String = "",
     output_has_subscenario::Bool = true,
 )
-    @assert !(is_double_settlement_ex_post && isempty(ex_ante_physical_suffix))
+    @assert !(is_two_settlement_ex_post && isempty(ex_ante_physical_suffix))
 
     if any_elements(inputs, HydroUnit; filters = [has_min_outflow])
         hydro_constraints_violation_revenue_file, hydro_constraints_violation_adjusted_revenue_file =
@@ -690,7 +687,7 @@ function post_processing_virtual_reservoirs(
                 physical_variables_suffix,
                 commercial_variables_suffix,
                 output_suffix,
-                is_double_settlement_ex_post,
+                is_two_settlement_ex_post,
                 ex_ante_physical_suffix,
                 output_has_subscenario,
             )
@@ -721,7 +718,7 @@ function post_processing_virtual_reservoirs(
         physical_variables_suffix,
         commercial_variables_suffix,
         output_suffix,
-        is_double_settlement_ex_post,
+        is_two_settlement_ex_post,
         ex_ante_physical_suffix,
         output_has_subscenario,
     )
@@ -733,7 +730,7 @@ function post_processing_virtual_reservoirs(
         physical_variables_suffix,
         commercial_variables_suffix,
         output_suffix,
-        is_double_settlement_ex_post,
+        is_two_settlement_ex_post,
         ex_ante_physical_suffix,
         output_has_subscenario,
     )
@@ -745,7 +742,7 @@ function post_processing_virtual_reservoirs(
         physical_variables_suffix,
         commercial_variables_suffix,
         output_suffix,
-        is_double_settlement_ex_post,
+        is_two_settlement_ex_post,
         ex_ante_physical_suffix,
         output_has_subscenario,
     )
@@ -795,7 +792,7 @@ function post_processing_virtual_reservoirs_double_settlement(
         physical_variables_suffix = ex_post_physical_suffix,
         commercial_variables_suffix = ex_post_commercial_suffix,
         output_suffix = "_ex_post",
-        is_double_settlement_ex_post = true,
+        is_two_settlement_ex_post = true,
         ex_ante_physical_suffix = ex_ante_physical_suffix,
     )
 

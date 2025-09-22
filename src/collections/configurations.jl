@@ -95,6 +95,8 @@ Configurations for the problem.
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
     virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
         Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
+    virtual_reservoir_residual_revenue_split_type::Configurations_VirtualReservoirResidualRevenueSplitType.T =
+        Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES
     bid_price_limit_markup_non_justified_profile::Float64 = 0.0
     bid_price_limit_markup_justified_profile::Float64 = 0.0
     bid_price_limit_markup_non_justified_independent::Float64 = 0.0
@@ -312,6 +314,11 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_initial_energy_account_share")[1],
             Configurations_VirtualReservoirInitialEnergyAccount.T,
+        )
+    configurations.virtual_reservoir_residual_revenue_split_type =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_residual_revenue_split_type")[1],
+            Configurations_VirtualReservoirResidualRevenueSplitType.T,
         )
     configurations.bid_price_limit_markup_non_justified_profile =
         PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_profile")[1]
@@ -1464,6 +1471,13 @@ virtual_reservoir_correspondence_type(inputs) =
 
 virtual_reservoir_initial_energy_account_share(inputs) =
     inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
+
+virtual_reservoir_residual_revenue_split_type(inputs) =
+    inputs.collections.configurations.virtual_reservoir_residual_revenue_split_type
+
+is_virtual_reservoir_residual_revenue_split_by_inflow_shares(inputs) =
+    virtual_reservoir_residual_revenue_split_type(inputs) ==
+    Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES
 
 """
     bid_price_limit_markup_non_justified_profile(inputs)

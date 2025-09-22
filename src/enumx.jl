@@ -534,6 +534,11 @@ end
     CALCULATED_USING_ENERGY_ACCOUNT_SHARES = 1
 end
 
+@enumx Configurations_VirtualReservoirResidualRevenueSplitType begin
+    BY_INFLOW_SHARES = 0
+    BY_ENERGY_ACCOUNT_SHARES = 1
+end
+
 @enumx Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid begin
     DO_NOT_CONSIDER = 0
     CONSIDER = 1

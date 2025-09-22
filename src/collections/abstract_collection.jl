@@ -68,7 +68,7 @@ function index_of_elements(
         for (i, bg_index) in enumerate(bidding_group_index)
             # Skip null/invalid bidding group indices to prevent BoundsError
             # when accessing bidding_group_asset_owner_index
-            if is_null(bg_index)
+            if isa(c, DemandUnit) && is_null(bg_index)
                 continue
             end
             if bidding_group_asset_owner_index(inputs, bg_index) == run_time_options.asset_owner_index

@@ -62,6 +62,25 @@ function hydro_minimum_outflow!(
     run_time_options::RunTimeOptions,
     ::Type{InitializeOutput},
 )
+    add_custom_recorder_to_query_from_subproblem_result!(
+        outputs,
+        :hydro_minimum_outflow_marginal_cost,
+        constraint_dual_recorder(inputs, :hydro_minimum_outflow),
+    )
+
+    hydro_units_with_minimum_outflow =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "hydro_minimum_outflow_marginal_cost",
+        dimensions = ["period", "scenario", "subperiod"],
+        unit = "\$/hm3",
+        labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
+        run_time_options,
+    )
     return nothing
 end
 
@@ -75,5 +94,30 @@ function hydro_minimum_outflow!(
     subscenario::Int,
     ::Type{WriteOutput},
 )
+    hydro_minimum_outflow_marginal_cost = simulation_results.data[:hydro_minimum_outflow_marginal_cost]
+
+    hydro_units_with_minimum_outflow =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
+    existing_hydro_units_with_min_outflow =
+        index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing, has_min_outflow])
+
+    indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
+        elements_in_output_file = hydro_units_with_minimum_outflow,
+        elements_to_write = existing_hydro_units_with_min_outflow,
+    )
+
+    write_output_per_subperiod!(
+        outputs,
+        inputs,
+        run_time_options,
+        "hydro_minimum_outflow_marginal_cost",
+        hydro_minimum_outflow_marginal_cost.data;
+        period,
+        scenario,
+        subscenario,
+        multiply_by = 1 / money_to_thousand_money(),
+        indices_of_elements_in_output,
+    )
+
     return nothing
 end

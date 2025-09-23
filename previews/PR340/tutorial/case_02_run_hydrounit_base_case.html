@@ -75,14 +75,14 @@ numerical stability report
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
-         1   7.782740e+01  7.999601e+01  1.940203e-02        26   1
-        20   8.195482e+01  7.999601e+01  1.463840e-01       720   1
+         1   1.039002e+02  7.999601e+01  1.954794e-02        26   1
+        20   8.216462e+01  7.999601e+01  1.492460e-01       720   1
 -------------------------------------------------------------------
 status         : simulation_stopping
-total time (s) : 1.463840e-01
+total time (s) : 1.492460e-01
 total solves   : 720
 best bound     :  7.999601e+01
-simulation ci  :  8.140057e+01 ± 8.544286e+00
+simulation ci  :  8.755449e+01 ± 5.757675e+00
 numeric issues : 0
 -------------------------------------------------------------------
 
@@ -134,10 +134,10 @@ IARA.close_study!(db)</code></pre><p>Now, let&#39;s run the case with <a href=".
     PATH_MARKET_CLEARING;
     delete_output_folder_before_execution = true,
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌ Warning: The output directory /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_2_execution/market_clearing/outputs is not empty, and the argument `delete_output_folder_before_execution` has been provided. The directory&#39;s contents will be deleted.
-└ @ IARA ~/work/IARA.jl/IARA.jl/src/outputs.jl:157
+└ @ IARA ~/work/IARA.jl/IARA.jl/src/outputs.jl:177
 [ Info: IARA - version: x.x.x
 ┌ Warning: Bidding group Price Taker has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you&#39;re not bidding all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and renewable units into different bidding groups.
-└ @ IARA ~/work/IARA.jl/IARA.jl/src/collections/bidding_group.jl:439
+└ @ IARA ~/work/IARA.jl/IARA.jl/src/collections/bidding_group.jl:441
 [ Info:
 [ Info: Execution options
 [ Info:    Path: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_2_execution/market_clearing
@@ -192,4 +192,4 @@ IARA.close_study!(db)</code></pre><p>Now, let&#39;s run the case with <a href=".
 [ Info:    Running simulation EX_POST_PHYSICAL
 [ Info:    Running simulation EX_POST_COMMERCIAL
 [ Info: Running post-processing routines
-[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Monday 15 September 2025 21:17">Monday 15 September 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_price_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_2_execution\\market_clearing\\outputs\\plots\\hydro_generation_ex_post_physical_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 23 September 2025 16:31">Tuesday 23 September 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

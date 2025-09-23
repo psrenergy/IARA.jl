@@ -48,6 +48,8 @@ in chunks.
     hydro_generation::TimeSeriesView{Float64, 2} = TimeSeriesView{Float64, 2}()
     hydro_opportunity_cost::TimeSeriesView{Float64, 2} =
         TimeSeriesView{Float64, 2}()
+    hydro_volume::TimeSeriesView{Float64, 2} =
+        TimeSeriesView{Float64, 2}()
 
     # BiddingGroups x buses x segments x subperiods
     quantity_bid::BidsView{Float64} = BidsView{Float64}()
@@ -269,24 +271,10 @@ function initialize_time_series_from_external_files(inputs)
         fill_flexible_demand_window_caches!(inputs, inputs.time_series.demand_window.data)
     end
 
-    # Spot price
-    if run_mode(inputs) == RunMode.PRICE_TAKER_BID
-        num_errors += initialize_time_series_view_from_external_file(
-            inputs.time_series.spot_price,
-            inputs,
-            joinpath(path_case(inputs), "load_marginal_cost");
-            expected_unit = raw"$/MWh",
-            labels_to_read = bus_label(inputs),
-        )
-    end
-
-    # Offers
+    # Bids
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-    if run_mode(inputs) == RunMode.STRATEGIC_BID ||
-       (
-        is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&
-        read_bids_from_file(inputs) && has_any_bid_simple_input_files(inputs)
-    )
+    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) && read_bids_from_file(inputs) &&
+       has_any_bid_simple_input_files(inputs)
         file = joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(
             inputs.time_series.quantity_bid,
@@ -373,10 +361,7 @@ function initialize_time_series_from_external_files(inputs)
         end
     end
     # Virtual reservoir bids
-    if (
-           run_mode(inputs) == RunMode.STRATEGIC_BID ||
-           is_market_clearing(inputs)
-       ) && any_elements(inputs, VirtualReservoir) && read_bids_from_file(inputs)
+    if is_market_clearing(inputs) && any_elements(inputs, VirtualReservoir) && read_bids_from_file(inputs)
         file = joinpath(path_case(inputs), virtual_reservoir_quantity_bid_file(inputs))
         num_errors += initialize_virtual_reservoir_bids_view_from_external_file!(
             inputs.time_series.virtual_reservoir_quantity_bid,
@@ -481,6 +466,154 @@ function initialize_time_series_from_external_files(inputs)
     return nothing
 end
 
+function reopen_hydro_unit_time_series_from_output_directory!(
+    inputs,
+    run_time_options,
+)
+    # Hydro generation
+    num_errors = 0
+    if must_read_hydro_unit_data_for_markup_wizard(inputs; run_time_options)
+        # Close the time series views to reinitialize them
+        close(inputs.time_series.hydro_generation)
+        close(inputs.time_series.hydro_opportunity_cost)
+        close(inputs.time_series.hydro_volume)
+
+        # Reinitialize the time series views
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.hydro_generation,
+            inputs,
+            joinpath(output_path(inputs, run_time_options), hydro_unit_generation_file(inputs));
+            expected_unit = "GWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
+            labels_to_read = hydro_unit_label(inputs),
+        )
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.hydro_opportunity_cost,
+            inputs,
+            joinpath(output_path(inputs, run_time_options), hydro_unit_opportunity_cost_file(inputs));
+            expected_unit = "\$/MWh",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
+            labels_to_read = hydro_unit_label(inputs),
+        )
+
+        num_errors += initialize_time_series_view_from_external_file(
+            inputs.time_series.hydro_volume,
+            inputs,
+            joinpath(output_path(inputs, run_time_options), hydro_unit_final_volume_file(inputs));
+            expected_unit = "hm3",
+            possible_expected_dimensions = [
+                [:period, :scenario, :subperiod],
+            ],
+            labels_to_read = hydro_unit_label(inputs),
+        )
+    end
+
+    if num_errors > 0
+        error("There were $num_errors errors in the time series files.")
+    end
+    return nothing
+end
+
+function reinitialize_spot_time_series_for_nash_iteration!(
+    inputs,
+    run_time_options,
+)
+    # Spot price
+    # Close the time series view to reinitialize it
+    close(inputs.time_series.spot_price)
+    spot_price_file = joinpath(output_path(inputs, run_time_options), "load_marginal_cost")
+    if nash_equilibrium_iteration(inputs, run_time_options) > 0
+        # If this is a Nash iteration, we will read the spot price from the output file
+        # from the ex ante physical
+        spot_price_file = joinpath(output_path(inputs, run_time_options), "load_marginal_cost_ex_ante_physical")
+    end
+
+    # Reinitialize the time series view
+    num_errors = 0
+    num_errors += initialize_time_series_view_from_external_file(
+        inputs.time_series.spot_price,
+        inputs,
+        spot_price_file;
+        expected_unit = raw"$/MWh",
+        labels_to_read = bus_label(inputs),
+    )
+
+    if num_errors > 0
+        error("There were $num_errors errors in the spot price file.")
+    end
+
+    return nothing
+end
+
+function reinitialize_bids_time_series_for_nash_iteration!(
+    inputs,
+    run_time_options,
+)
+    # Bids
+    num_errors = 0
+
+    # Close the time series views to reinitialize them
+    close(inputs.time_series.quantity_bid)
+    close(inputs.time_series.price_bid)
+
+    # Reinitialize the time series views
+    file = joinpath(output_path(inputs, run_time_options), "bidding_group_energy_bid")
+    exts = [".csv", ".toml"]
+    if !isfile(file * ".csv")
+        for ext in exts
+            # Copy the bidding group energy bid file to the output folder
+            cp(
+                joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs) * "$ext"),
+                file * "$ext",
+            )
+        end
+    end
+    num_errors += initialize_bids_view_from_external_file!(
+        inputs.time_series.quantity_bid,
+        inputs,
+        file;
+        expected_unit = "MWh",
+        possible_expected_dimensions = [
+            [:period, :scenario, :subperiod, :profile],
+            [:period, :scenario, :subperiod, :bid_segment],
+        ],
+        bidding_groups_to_read = bidding_group_label(inputs),
+        buses_to_read = bus_label(inputs),
+    )
+
+    file = joinpath(output_path(inputs, run_time_options), "bidding_group_price_bid")
+    if !isfile(file * ".csv")
+        for ext in exts
+            cp(
+                joinpath(path_case(inputs), bidding_group_price_bid_file(inputs) * "$ext"),
+                file * "$ext",
+            )
+        end
+    end
+    num_errors += initialize_bids_view_from_external_file!(
+        inputs.time_series.price_bid,
+        inputs,
+        file;
+        expected_unit = raw"$/MWh",
+        possible_expected_dimensions = [
+            [:period, :scenario, :subperiod, :profile],
+            [:period, :scenario, :subperiod, :bid_segment],
+        ],
+        bidding_groups_to_read = bidding_group_label(inputs),
+        buses_to_read = bus_label(inputs),
+    )
+
+    if num_errors > 0
+        error("There were $num_errors errors in the bids file.")
+    end
+
+    return nothing
+end
+
 function update_time_series_views_from_external_files!(
     inputs;
     period::Int,
@@ -549,17 +682,9 @@ function update_segments_profile_dimensions!(inputs, period)
     if !any_elements(inputs, BiddingGroup)
         return nothing
     end
-    if run_mode(inputs) in [RunMode.STRATEGIC_BID, RunMode.PRICE_TAKER_BID]
-        # Isso é necessário? Já não foi inicializado com 1?
-        update_number_of_bg_valid_bidding_segments!(
-            inputs,
-            ones(Int, number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])),
-        )
-        update_maximum_number_of_bg_bidding_segments!(inputs, 1)
-        return nothing
-    end
+
     if is_market_clearing(inputs)
-        if generate_heuristic_bids_for_clearing(inputs)
+        if generate_heuristic_bids_for_clearing(inputs) || iterate_nash_equilibrium(inputs)
             # TODO: In the heuristic case, the number of segments doesn't
             # change with the period
         elseif read_bids_from_file(inputs)

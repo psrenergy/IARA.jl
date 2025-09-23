@@ -39,6 +39,26 @@ function output_path(args::Args)
     return args.outputs_path
 end
 
+function output_path(inputs::Inputs, run_time_options::RunTimeOptions)
+    if is_nash_equilibrium_initialization(run_time_options)
+        return joinpath(output_path(inputs.args), "nash_equilibrium_initialization")
+    end
+    if nash_equilibrium_iteration(inputs, run_time_options) > 0
+        # If it is a Nash Equilibrium iteration, we create a subfolder for the iteration
+        # and the asset owner index
+        dir_nash = joinpath(
+            output_path(inputs.args),
+            "nash_equilibrium_iteration_" *
+            string(nash_equilibrium_iteration(inputs, run_time_options)),
+        )
+        if !isdir(dir_nash)
+            mkpath(dir_nash)
+        end
+        return dir_nash
+    end
+    return output_path(inputs.args)
+end
+
 function Base.getindex(outputs::Outputs, output::String)
     return outputs.outputs[output]
 end
@@ -259,7 +279,7 @@ function initialize!(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
     output_name::String,
-    dir_path::String = output_path(inputs),
+    dir_path::String = output_path(inputs, run_time_options),
     consider_one_segment = false,
     force_all_subscenarios::Bool = false,
     suppress_construction_type_suffix::Bool = false,
@@ -306,6 +326,7 @@ function initialize!(
     return nothing
 end
 
+post_processing_path(inputs, run_time_options) = joinpath(output_path(inputs, run_time_options), "post_processing")
 post_processing_path(inputs) = joinpath(output_path(inputs), "post_processing")
 
 function find_indices_of_elements_to_write_in_output(;

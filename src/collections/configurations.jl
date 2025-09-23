@@ -37,8 +37,11 @@ Configurations for the problem.
         Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
     cycle_discount_rate::Float64 = 0.0
     cycle_duration_in_hours::Float64 = 0.0
-    aggregate_buses_for_strategic_bidding::Configurations_BusesAggregationForStrategicBidding.T =
-        Configurations_BusesAggregationForStrategicBidding.DO_NOT_AGGREGATE
+    nash_equilibrium_strategy::Configurations_NashEquilibriumStrategy.T =
+        Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
+    nash_equilibrium_initialization::Configurations_NashEquilibriumInitialization.T =
+        Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
+    max_iteration_nash_equilibrium::Int = 0
     parp_max_lags::Int = 0
     renewable_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
@@ -171,14 +174,17 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
                 Configurations_ThermalUnitIntraPeriodOperation.T,
             )
         end
-    aggregate_buses_for_strategic_bidding =
-        PSRI.get_parms(inputs.db, "Configuration", "aggregate_buses_for_strategic_bidding")[1]
-    configurations.aggregate_buses_for_strategic_bidding =
-        if is_null(aggregate_buses_for_strategic_bidding)
-            Configurations_BusesAggregationForStrategicBidding.DO_NOT_AGGREGATE
-        else
-            convert_to_enum(aggregate_buses_for_strategic_bidding, Configurations_BusesAggregationForStrategicBidding.T)
-        end
+    nash_equilibrium_strategy =
+        PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_strategy")[1]
+    configurations.nash_equilibrium_strategy =
+        convert_to_enum(nash_equilibrium_strategy, Configurations_NashEquilibriumStrategy.T)
+    nash_equilibrium_initialization =
+        PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_initialization")[1]
+    configurations.nash_equilibrium_initialization =
+        convert_to_enum(nash_equilibrium_initialization, Configurations_NashEquilibriumInitialization.T)
+    max_iteration_nash_equilibrium =
+        PSRI.get_parms(inputs.db, "Configuration", "max_iteration_nash_equilibrium")[1]
+    configurations.max_iteration_nash_equilibrium = max_iteration_nash_equilibrium
     configurations.renewable_scenarios_files =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "renewable_scenarios_files")[1],
@@ -446,6 +452,17 @@ function validate(configurations::Configurations)
             end
         end
     end
+    if configurations.max_iteration_nash_equilibrium < 0
+        @error("Maximum number of iterations for Nash equilibrium must be non-negative.")
+        num_errors += 1
+    end
+    if configurations.max_iteration_nash_equilibrium == 0 &&
+       configurations.nash_equilibrium_strategy != Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
+        @error(
+            "Maximum number of iterations for Nash equilibrium must be greater than zero if Nash equilibrium is to be calculated."
+        )
+        num_errors += 1
+    end
     if length(configurations.subperiod_duration_in_hours) != configurations.number_of_subperiods
         @error("Subperiod duration in hours must have the same length as the number of subperiods.")
         num_errors += 1
@@ -640,6 +657,15 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration.
             """
             )
+        end
+    end
+
+    if iterate_nash_equilibrium(inputs)
+        if !read_bids_from_file(inputs) && !generate_heuristic_bids_for_clearing(inputs)
+            @error(
+                "Nash equilibrium calculation requires bid data to be read from file or heuristic bids to be generated."
+            )
+            num_errors += 1
         end
     end
 
@@ -970,13 +996,47 @@ cycle_duration_in_hours(inputs::AbstractInputs) =
     inputs.collections.configurations.cycle_duration_in_hours
 
 """
-    aggregate_buses_for_strategic_bidding(inputs::AbstractInputs)
+    nash_equilibrium_strategy(inputs::AbstractInputs)
 
-Return whether buses should be aggregated for strategic bidding.
+Return the Nash equilibrium iteration strategy.
 """
-aggregate_buses_for_strategic_bidding(inputs::AbstractInputs) =
-    inputs.collections.configurations.aggregate_buses_for_strategic_bidding ==
-    Configurations_BusesAggregationForStrategicBidding.AGGREGATE
+nash_equilibrium_strategy(inputs::AbstractInputs) =
+    inputs.collections.configurations.nash_equilibrium_strategy
+
+"""
+    iterate_nash_equilibrium(inputs::AbstractInputs)
+
+Return whether the Nash equilibrium should be calculated.
+"""
+iterate_nash_equilibrium(inputs::AbstractInputs) =
+    nash_equilibrium_strategy(inputs) != Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
+
+"""
+    max_iteration_nash_equilibrium(inputs::AbstractInputs)
+
+Return the maximum number of iterations for the Nash equilibrium.
+"""
+max_iteration_nash_equilibrium(inputs::AbstractInputs) =
+    inputs.collections.configurations.max_iteration_nash_equilibrium
+
+"""
+    nash_equilibrium_iteration(inputs::AbstractInputs, run_time_options::RunTimeOptions)
+
+Return the Nash equilibrium iteration.
+"""
+nash_equilibrium_iteration(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    run_time_options.nash_equilibrium_iteration
+
+"""
+    nash_equilibrium_initialization(inputs::AbstractInputs, run_time_options::RunTimeOptions)
+
+Return whether the problem is an initialization for Nash Equilibrium.
+"""
+nash_equilibrium_initialization(inputs::AbstractInputs) =
+    inputs.collections.configurations.nash_equilibrium_initialization
+
+iteration_with_aggregate_buses(inputs::AbstractInputs) =
+    nash_equilibrium_strategy(inputs) == Configurations_NashEquilibriumStrategy.ITERATION_WITH_AGGREGATE_BUSES
 
 """
     parp_max_lags(inputs::AbstractInputs)
@@ -1167,6 +1227,9 @@ end
 Return whether heuristic bids should be generated for clearing.
 """
 function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
+    if iterate_nash_equilibrium(inputs)
+        return false
+    end
     if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
         return true
     end
@@ -1540,7 +1603,7 @@ function integer_variable_representation(inputs::AbstractInputs, run_time_option
     # Always linearize the integer variables for the reference curve run mode
     if is_reference_curve(inputs, run_time_options)
         return Configurations_IntegerVariableRepresentation.LINEARIZE
-    elseif is_mincost(inputs)
+    elseif is_mincost(inputs, run_time_options)
         return integer_variable_representation_mincost(inputs)
     elseif is_ex_ante_problem(run_time_options)
         if is_physical_problem(run_time_options)
@@ -1566,7 +1629,7 @@ end
 Determine the network representation.
 """
 function network_representation(inputs::AbstractInputs, run_time_options)
-    if is_mincost(inputs)
+    if is_mincost(inputs, run_time_options)
         return network_representation_mincost(inputs)
     elseif is_ex_ante_problem(run_time_options)
         if is_physical_problem(run_time_options)

@@ -66,7 +66,7 @@ function build_model(
     return model
 end
 
-function train_model!(model::ProblemModel, inputs::Inputs)
+function train_model!(model::ProblemModel, inputs::Inputs, run_time_options::RunTimeOptions)
     SDDP.train(
         model.policy_graph;
         stopping_rules = [
@@ -74,10 +74,10 @@ function train_model!(model::ProblemModel, inputs::Inputs)
         ],
         iteration_limit = train_mincost_iteration_limit(inputs),
         time_limit = train_mincost_time_limit_sec(inputs),
-        log_file = joinpath(output_path(inputs), "sddp.log"),
+        log_file = joinpath(output_path(inputs, run_time_options), "sddp.log"),
     )
 
-    SDDP.write_cuts_to_file(model.policy_graph, joinpath(output_path(inputs), "cuts.json"))
+    SDDP.write_cuts_to_file(model.policy_graph, joinpath(output_path(inputs, run_time_options), "cuts.json"))
 
     return model
 end

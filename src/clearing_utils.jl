@@ -12,8 +12,11 @@
 
 Build the outputs for the clearing subproblem.
 """
-function build_clearing_outputs(inputs::Inputs)
-    run_time_options = RunTimeOptions()
+function build_clearing_outputs(
+    inputs::Inputs;
+    nash_equilibrium_iteration::Int = 0,
+)
+    run_time_options = RunTimeOptions(; nash_equilibrium_iteration)
     # TODO: this should be handled inside initialize_outputs()
     # but it probably requires another value in the RunTime_ClearingSubproblem enum
     heuristic_bids_outputs = Outputs()
@@ -39,19 +42,31 @@ function build_clearing_outputs(inputs::Inputs)
         )
     end
 
-    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+    )
     ex_ante_physical_outputs = initialize_outputs(inputs, run_time_options)
 
-    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+    )
     ex_ante_commercial_outputs = initialize_outputs(inputs, run_time_options)
 
-    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+    )
     ex_post_physical_outputs = initialize_outputs(inputs, run_time_options)
 
-    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
+    )
     ex_post_commercial_outputs = initialize_outputs(inputs, run_time_options)
 
-    run_time_options = RunTimeOptions(; force_all_subscenarios = true)
+    run_time_options = RunTimeOptions(; nash_equilibrium_iteration, force_all_subscenarios = true)
 
     if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
         if construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.SKIP &&
@@ -138,7 +153,7 @@ function serialize_clearing_variables(
     scenario::Int,
 )
     temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
-        output_path(inputs)
+        output_path(inputs, run_time_options)
     else
         temp_path = joinpath(path_case(inputs), "temp")
         if !isdir(temp_path)
@@ -317,8 +332,17 @@ function skip_clearing_subproblem(inputs::Inputs, run_time_options::RunTimeOptio
     return construction_type(inputs, run_time_options) == Configurations_ConstructionType.SKIP
 end
 
-function is_mincost(inputs::Inputs)
-    return run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST
+is_mincost(inputs::Inputs) = is_mincost(inputs, RunTimeOptions())
+
+function is_mincost(inputs::Inputs, run_time_options::RunTimeOptions)
+    # Check if the run mode is TRAIN_MIN_COST or MIN_COST
+    # Or if we want to initialize the Nash equilibrium with a heuristic min-cost solution
+    return run_mode(inputs) == RunMode.TRAIN_MIN_COST || run_mode(inputs) == RunMode.MIN_COST ||
+           (
+               nash_equilibrium_initialization(inputs) ==
+               Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC &&
+               run_time_options.is_nash_equilibrium_initialization
+           )
 end
 
 """

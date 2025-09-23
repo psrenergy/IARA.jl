@@ -132,12 +132,12 @@ function model_action(args...)
 
     if is_reference_curve(inputs, run_time_options)
         reference_curve_model_action(args...)
-    elseif is_mincost(inputs)
+    elseif is_mincost(inputs, run_time_options)
         train_min_cost_model_action(args...)
-    elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID
+    elseif is_current_asset_owner_price_taker(inputs, run_time_options)
         price_taker_bid_model_action(args...)
-    elseif run_mode(inputs) == RunMode.STRATEGIC_BID
-        strategic_bid_model_action(args...)
+    elseif is_current_asset_owner_price_maker(inputs, run_time_options)
+        price_maker_bid_model_action(args...)
     elseif is_market_clearing(inputs)
         market_clearing_model_action(args...)
     else
@@ -312,7 +312,7 @@ function price_taker_bid_model_action(args...)
 
     # Model constraints
     # -----------------
-    bidding_group_balance!(args...)
+    link_bids_and_generation!(args...)
     if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
         if any_valid_elements(inputs, run_time_options, HydroUnit, action; filters = [has_commitment])
@@ -343,11 +343,11 @@ function price_taker_bid_model_action(args...)
 end
 
 """
-    strategic_bid_model_action(args...)
+    price_maker_bid_model_action(args...)
 
 Strategic bid model action.
 """
-function strategic_bid_model_action(args...)
+function price_maker_bid_model_action(args...)
     inputs = locate_inputs_in_args(args...)
     action = locate_action_in_args(args...)
     run_time_options = locate_run_time_options_in_args(args...)
@@ -383,7 +383,7 @@ function strategic_bid_model_action(args...)
 
     # Model constraints
     # -----------------
-    bidding_group_balance!(args...)
+    link_bids_and_generation!(args...)
     revenue_convex_combination!(args...)
     if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)

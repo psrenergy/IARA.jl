@@ -584,9 +584,7 @@ function build_plots(
         push!(plot_configs, plot_config_renewable_curtailment)
     end
 
-    if number_of_elements(inputs, DCLine) > 0 &&
-       run_mode(inputs) != RunMode.STRATEGIC_BID &&
-       run_mode(inputs) != RunMode.PRICE_TAKER_BID
+    if number_of_elements(inputs, DCLine) > 0
         # DC Line Flow
         plot_config_dc_flow = PlotConfig(
             "DC Line Flow",
@@ -627,16 +625,14 @@ function build_plots(
         push!(plot_configs, plot_config_generation)
     end
 
-    if run_mode(inputs) != RunMode.STRATEGIC_BID
-        # Load Marginal Cost
-        plot_config_load_marginal_cost = PlotConfig(
-            "Load Marginal Cost",
-            "load_marginal_cost",
-            [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
-            inputs,
-        )
-        push!(plot_configs, plot_config_load_marginal_cost)
-    end
+    # Load Marginal Cost
+    plot_config_load_marginal_cost = PlotConfig(
+        "Load Marginal Cost",
+        "load_marginal_cost",
+        [PlotTimeSeriesAll, PlotTimeSeriesQuantiles],
+        inputs,
+    )
+    push!(plot_configs, plot_config_load_marginal_cost)
 
     if is_market_clearing(inputs)
         # Energy bid

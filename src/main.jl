@@ -72,30 +72,6 @@ function train_min_cost(path::String; kwargs...)
 end
 
 """
-    price_taker_bid(path::String; kwargs...)
-
-Run the model with the price taker bid strategy.
-
-$ARGS_KEYWORDS
-"""
-function price_taker_bid(path::String; kwargs...)
-    args = Args(path, RunMode.PRICE_TAKER_BID; kwargs...)
-    return main(args)
-end
-
-"""
-    strategic_bid(path::String; kwargs...)
-
-Run the model with the strategic bid strategy.
-
-$ARGS_KEYWORDS
-"""
-function strategic_bid(path::String; kwargs...)
-    args = Args(path, RunMode.STRATEGIC_BID; kwargs...)
-    return main(args)
-end
-
-"""
     market_clearing(path::String; kwargs...)
 
 Run the model with the market clearing strategy.
@@ -153,19 +129,10 @@ function run_algorithms(inputs)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST
         run_time_options = RunTimeOptions()
         train_model_and_run_simulation(inputs, run_time_options)
-    elseif run_mode(inputs) == RunMode.PRICE_TAKER_BID
-        price_taker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_price_taker])
-        for asset_owner_index in price_taker_asset_owners
-            run_time_options = RunTimeOptions(; asset_owner_index)
-            train_model_and_run_simulation(inputs, run_time_options)
-        end
-    elseif run_mode(inputs) == RunMode.STRATEGIC_BID
-        price_maker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_price_maker])
-        for asset_owner_index in price_maker_asset_owners
-            run_time_options = RunTimeOptions(; asset_owner_index)
-            train_model_and_run_simulation(inputs, run_time_options)
-        end
     elseif run_mode(inputs) == RunMode.MARKET_CLEARING
+        if iterate_nash_equilibrium(inputs)
+            train_nash_equilibrium_model(inputs)
+        end
         simulate_all_periods_and_scenarios_of_market_clearing(inputs)
     elseif run_mode(inputs) == RunMode.MIN_COST
         run_time_options = RunTimeOptions()
@@ -190,7 +157,7 @@ function train_model_and_run_simulation(
     run_time_options::RunTimeOptions,
 )
     model = build_model(inputs, run_time_options)
-    train_model!(model, inputs)
+    train_model!(model, inputs, run_time_options)
     outputs = initialize_outputs(inputs, run_time_options)
     try
         simulate_all_periods_and_scenarios_of_trained_model(model, inputs, outputs, run_time_options)
@@ -281,7 +248,8 @@ end
 Simulate all periods and scenarios of the market clearing.
 """
 function simulate_all_periods_and_scenarios_of_market_clearing(
-    inputs::Inputs,
+    inputs::Inputs;
+    nash_equilibrium_iteration::Int = 0,
 )
     update_number_of_segments_for_heuristic_bids!(inputs)
 
@@ -291,7 +259,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     ex_ante_commercial_outputs,
     ex_post_physical_outputs,
     ex_post_commercial_outputs =
-        build_clearing_outputs(inputs)
+        build_clearing_outputs(inputs; nash_equilibrium_iteration)
 
     if should_build_reference_curve(inputs) && generate_heuristic_bids_for_clearing(inputs)
         run_time_options =
@@ -313,15 +281,27 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     end
 
     # Build models
-    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+    )
     ex_ante_physical_model = build_model(inputs, run_time_options)
     run_time_options =
-        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL)
+        RunTimeOptions(;
+            nash_equilibrium_iteration,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+        )
     ex_ante_commercial_model = build_model(inputs, run_time_options)
-    run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+    run_time_options = RunTimeOptions(;
+        nash_equilibrium_iteration,
+        clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+    )
     ex_post_physical_model = build_model(inputs, run_time_options)
     run_time_options =
-        RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL)
+        RunTimeOptions(;
+            nash_equilibrium_iteration,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
+        )
     ex_post_commercial_model = build_model(inputs, run_time_options)
 
     # Build period-season map
@@ -402,7 +382,10 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             end
 
             # Clearing problems
-            run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+            run_time_options = RunTimeOptions(;
+                nash_equilibrium_iteration,
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+            )
             run_clearing_simulation(
                 ex_ante_physical_model,
                 inputs,
@@ -412,6 +395,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             )
 
             run_time_options = RunTimeOptions(;
+                nash_equilibrium_iteration,
                 clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
             )
             run_clearing_simulation(
@@ -422,7 +406,10 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 outputs = ex_ante_commercial_outputs,
             )
 
-            run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+            run_time_options = RunTimeOptions(;
+                nash_equilibrium_iteration,
+                clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+            )
 
             run_clearing_simulation(
                 ex_post_physical_model,
@@ -433,6 +420,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             )
 
             run_time_options = RunTimeOptions(;
+                nash_equilibrium_iteration,
                 clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
             )
             run_clearing_simulation(

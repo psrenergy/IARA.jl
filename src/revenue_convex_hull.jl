@@ -82,7 +82,6 @@ function pricemaker_revenue(
             first = false
         end
         push!(points, Point(demand_unit, demand_unit * duals[i]))
-        push!(points, Point(demand_unit, 0.0))
     end
     return points
 end
@@ -106,16 +105,23 @@ function upper_convex_hull(points::Vector{Point})
     return upper
 end
 
-function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
+function update_convex_hull_cache!(
+    inputs,
+    run_time_options::RunTimeOptions;
+    period::Int64,
+    scenario::Int64,
+)
     buses = index_of_elements(inputs, Bus)
+    # TODO: Think how to incorporate elastic demand
     demands = index_of_elements(inputs, DemandUnit; filters = [is_existing])
+    # Need to be all bidding groups, not only the ones of the asset owner
     bidding_groups = index_of_elements(inputs, BiddingGroup)
     blks = subperiods(inputs)
-    quantity_bids_ts = time_series_quantity_bid(inputs)
-    price_bids_ts = time_series_price_bid(inputs)
+    quantity_bids_ts = time_series_quantity_bid(inputs, period, scenario)
+    price_bids_ts = time_series_price_bid(inputs, period, scenario)
     demand_ts = time_series_demand(inputs, run_time_options)
 
-    if aggregate_buses_for_strategic_bidding(inputs)
+    if iteration_with_aggregate_buses(inputs)
         inputs.collections.asset_owner.revenue_convex_hull =
             Array{Vector{Point}, 2}(undef, 1, number_of_subperiods(inputs))
         for blk in blks
@@ -195,4 +201,21 @@ function update_convex_hull_cache!(inputs, run_time_options::RunTimeOptions)
         end
     end
     return nothing
+end
+
+function update_max_convex_hull_length!(
+    inputs,
+    run_time_options::RunTimeOptions,
+    node::Int64,
+)
+    # Maximum number of points (across scenarios) in the convex hull for each bus and subperiod
+    inputs.collections.asset_owner._max_convex_hull_length =
+        zeros(Int, length(buses_represented_for_strategic_bidding(inputs)), number_of_subperiods(inputs))
+    for scenario in scenarios(inputs)
+        update_time_series_views_from_external_files!(inputs; period = node, scenario)
+        update_convex_hull_cache!(inputs, run_time_options; period = node, scenario)
+        updated_convex_hull = asset_owner_revenue_convex_hull(inputs)
+        inputs.collections.asset_owner._max_convex_hull_length =
+            max.(inputs.collections.asset_owner._max_convex_hull_length, length.(updated_convex_hull))
+    end
 end

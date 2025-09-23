@@ -55,31 +55,25 @@ end
     RunMode
 
   - `TRAIN_MIN_COST`: Centralized operation (0)
-  - `PRICE_TAKER_BID`: Price taker bid (1)
-  - `STRATEGIC_BID`: Strategic bid (2)
-  - `MARKET_CLEARING`: Market clearing (3)
-  - `MIN_COST`: Centralized operation simulation (4)
-  - `SINGLE_PERIOD_MARKET_CLEARING`: Single period market clearing (5)
-  - `SINGLE_PERIOD_HEURISTIC_BID`: Single period heuristic bid (6)
-  - `INTERFACE_CALL`: Interface call (7)
+  - `MARKET_CLEARING`: Market clearing (1)
+  - `MIN_COST`: Centralized operation simulation (2)
+  - `SINGLE_PERIOD_MARKET_CLEARING`: Single period market clearing (3)
+  - `SINGLE_PERIOD_HEURISTIC_BID`: Single period heuristic bid (4)
+  - `INTERFACE_CALL`: Interface call (5)
 """
 @enumx RunMode begin
     TRAIN_MIN_COST = 0
-    PRICE_TAKER_BID = 1
-    STRATEGIC_BID = 2
-    MARKET_CLEARING = 3
-    MIN_COST = 4
-    SINGLE_PERIOD_MARKET_CLEARING = 5
-    SINGLE_PERIOD_HEURISTIC_BID = 6
-    INTERFACE_CALL = 7
+    MARKET_CLEARING = 1
+    MIN_COST = 2
+    SINGLE_PERIOD_MARKET_CLEARING = 3
+    SINGLE_PERIOD_HEURISTIC_BID = 4
+    INTERFACE_CALL = 5
 end
 
 const AVAILABLE_RUN_MODES_MESSAGE = """
     The available run modes are:
     - train-min-cost
     - min-cost
-    - price-taker-bid
-    - strategic-bid
     - market-clearing
     - single-period-market-clearing
     - single-period-heuristic-bid
@@ -90,10 +84,6 @@ const AVAILABLE_RUN_MODES_MESSAGE = """
 function parse_run_mode(run_mode::Union{String, Nothing})
     if run_mode == "train-min-cost"
         return RunMode.TRAIN_MIN_COST
-    elseif run_mode == "price-taker-bid"
-        return RunMode.PRICE_TAKER_BID
-    elseif run_mode == "strategic-bid"
-        return RunMode.STRATEGIC_BID
     elseif run_mode == "market-clearing"
         return RunMode.MARKET_CLEARING
     elseif run_mode == "min-cost"
@@ -136,6 +126,32 @@ function period_type_string(time_series_step::Configurations_TimeSeriesStep.T)
     else
         error("Time series step not implemented")
     end
+end
+
+"""
+    Configurations_NashEquilibriumInitialization
+
+    - `MIN_COST_HEURISTIC`: Min cost initialization (0)
+    - `EXTERNAL_BID`: External bid initialization (1)
+"""
+@enumx Configurations_NashEquilibriumInitialization begin
+    MIN_COST_HEURISTIC = 0
+    EXTERNAL_BID = 1
+end
+
+"""
+    Configurations_NashEquilibriumStrategy
+
+    - `DO_NOT_ITERATE`: Do not iterate (0)
+    - `SINGLE_PERIOD_ITERATE`: Single period iterate (1)
+    - `STANDARD_ITERATION`: Standard iteration (2)
+    - `ITERATION_WITH_AGGREGATE_BUSES`: Iteration with aggregate buses (3)
+"""
+@enumx Configurations_NashEquilibriumStrategy begin
+    DO_NOT_ITERATE = 0
+    SINGLE_PERIOD_ITERATE = 1
+    STANDARD_ITERATION = 2
+    ITERATION_WITH_AGGREGATE_BUSES = 3
 end
 
 """
@@ -267,17 +283,6 @@ end
 @enumx Configurations_ThermalUnitIntraPeriodOperation begin
     CYCLIC_WITH_FLEXIBLE_START = 1
     FLEXIBLE_START_FLEXIBLE_END = 0
-end
-
-"""
-    Configurations_BusesAggregationForStrategicBidding
-
-  - `AGGREGATE`: Aggregate buses for strategic bidding (1)
-  - `DO_NOT_AGGREGATE`: Do not aggregate buses for strategic bidding (0)
-  """
-@enumx Configurations_BusesAggregationForStrategicBidding begin
-    AGGREGATE = 1
-    DO_NOT_AGGREGATE = 0
 end
 
 """ 
@@ -531,6 +536,11 @@ end
 @enumx Configurations_VirtualReservoirInitialEnergyAccount begin
     CALCULATED_USING_INFLOW_SHARES = 0
     CALCULATED_USING_ENERGY_ACCOUNT_SHARES = 1
+end
+
+@enumx Configurations_VirtualReservoirResidualRevenueSplitType begin
+    BY_INFLOW_SHARES = 0
+    BY_ENERGY_ACCOUNT_SHARES = 1
 end
 
 @enumx Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid begin

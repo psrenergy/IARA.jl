@@ -46,10 +46,41 @@ function post_process_outputs(
     model_outputs_time_serie::OutputReaders,
     run_time_options::RunTimeOptions,
 )
-    gather_outputs_separated_by_asset_owners(inputs)
+    gather_outputs_separated_by_asset_owners(inputs; run_time_options)
     if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
        (is_market_clearing(inputs) && clearing_has_physical_variables(inputs, run_time_options))
         post_processing_generation(inputs, run_time_options)
+    end
+
+    if any_elements(inputs, HydroUnit; filters = [has_min_outflow])
+        physical_variables_suffix = if run_mode(inputs) == RunMode.TRAIN_MIN_COST
+            ""
+        elseif is_skipped(inputs, "ex_post_physical")
+            "_ex_post_commercial"
+        else
+            "_ex_post_physical"
+        end
+
+        post_processing_minimum_outflow_violation(
+            inputs,
+            outputs_post_processing,
+            model_outputs_time_serie,
+            run_time_options;
+            physical_variables_suffix = physical_variables_suffix,
+        )
+
+        if is_market_clearing(inputs) &&
+           settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
+            ex_ante_physical_suffix =
+                is_skipped(inputs, "ex_ante_physical") ? "_ex_ante_commercial" : "_ex_ante_physical"
+            post_processing_minimum_outflow_violation(
+                inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
+                run_time_options;
+                physical_variables_suffix = ex_ante_physical_suffix,
+            )
+        end
     end
     if is_market_clearing(inputs)
         if any_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
@@ -203,36 +234,36 @@ function create_zero_file(
     impl::Type{<:Quiver.Implementation},
     unit::String;
     has_subscenarios::Bool = false,
+    has_subperiods::Bool = true,
 )
     periods = if is_single_period(inputs)
         1
     else
         number_of_periods(inputs)
     end
-    temp_path = joinpath(output_path(inputs), "temp")
+    temp_path = joinpath(output_path(inputs, run_time_options), "temp")
+
+    dimensions = ["period", "scenario"]
     if has_subscenarios
-        zeros_array = zeros(
-            Float64,
-            length(labels),
-            number_of_subperiods(inputs),
-            number_of_subscenarios(inputs, run_time_options),
-            number_of_scenarios(inputs),
-            periods,
-        )
-        dimensions = ["period", "scenario", "subscenario", "subperiod"]
-        dimension_size = [
-            periods,
-            number_of_scenarios(inputs),
-            number_of_subscenarios(inputs, run_time_options),
-            number_of_subperiods(inputs),
-        ]
-    else
-        zeros_array = zeros(Float64, length(labels), number_of_subperiods(inputs), number_of_scenarios(inputs), periods)
-        dimensions = ["period", "scenario", "subperiod"]
-        dimension_size = [periods, number_of_scenarios(inputs), number_of_subperiods(inputs)]
+        push!(dimensions, "subscenario")
     end
+    if has_subperiods
+        push!(dimensions, "subperiod")
+    end
+
+    dimension_size_dict = Dict{String, Int}(
+        "period" => periods,
+        "scenario" => number_of_scenarios(inputs),
+        "subscenario" => number_of_subscenarios(inputs, run_time_options),
+        "subperiod" => number_of_subperiods(inputs),
+    )
+
+    dimension_size = [dimension_size_dict[d] for d in dimensions]
+    zeros_array = zeros(Float64, length(labels), reverse(dimension_size)...)
+
+    path = joinpath(temp_path, filename)
     write_timeseries_file(
-        joinpath(temp_path, filename),
+        path,
         zeros_array;
         dimensions = dimensions,
         labels = labels,
@@ -243,15 +274,16 @@ function create_zero_file(
         implementation = impl,
         frequency = period_type_string(inputs.collections.configurations.time_series_step),
     )
-    return nothing
+    return path
 end
 
 function create_temporary_file_with_subscenario_dimension(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     model_outputs_time_serie::OutputReaders,
     filename::String;
 )
-    tempdir = joinpath(output_path(inputs), "temp")
+    tempdir = joinpath(output_path(inputs, run_time_options), "temp")
     treated_filename = joinpath(tempdir, basename(filename))
 
     reader = Quiver.Reader{Quiver.csv}(filename)

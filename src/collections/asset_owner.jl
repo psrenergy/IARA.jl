@@ -28,6 +28,7 @@ Collection representing the asset owners in the problem.
     # Vector dimension is the number of points in the convex hull
     # Point is a struct with (x, y) coordinates
     revenue_convex_hull::Array{Vector{Point}, 2} = Array{Vector{Point}, 2}(undef, 0, 0)
+    _max_convex_hull_length::Array{Int, 2} = Array{Int, 2}(undef, 0, 0)
 end
 
 # ---------------------------------------------------------------------
@@ -225,9 +226,49 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
-is_price_taker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER
-is_price_maker(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
-is_supply_security_agent(a::AssetOwner, i::Int) = a.price_type[i] == AssetOwner_PriceType.SUPPLY_SECURITY_AGENT
+is_current_asset_owner_price_taker(a::AssetOwner, i::Int) =
+    if is_null(i)
+        false
+    else
+        a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER
+    end
+is_current_asset_owner_price_maker(a::AssetOwner, i::Int) =
+    if is_null(i)
+        false
+    else
+        a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
+    end
+is_current_asset_owner_supply_security_agent(a::AssetOwner, i::Int) =
+    if is_null(i)
+        false
+    else
+        a.price_type[i] == AssetOwner_PriceType.SUPPLY_SECURITY_AGENT
+    end
+is_current_asset_owner_price_taker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    is_current_asset_owner_price_taker(inputs.collections.asset_owner, run_time_options.asset_owner_index)
+is_current_asset_owner_price_maker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    is_current_asset_owner_price_maker(inputs.collections.asset_owner, run_time_options.asset_owner_index)
+is_current_asset_owner_supply_security_agent(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    is_current_asset_owner_supply_security_agent(inputs.collections.asset_owner, run_time_options.asset_owner_index)
+is_current_asset_owner_bidder(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    is_current_asset_owner_price_taker(inputs, run_time_options) ||
+    is_current_asset_owner_price_maker(inputs, run_time_options) ||
+    is_current_asset_owner_supply_security_agent(inputs, run_time_options)
+any_asset_owner_is_price_taker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    any(
+        is_current_asset_owner_price_taker(inputs.collections.asset_owner, i) for
+        i in 1:length(inputs.collections.asset_owner)
+    )
+any_asset_owner_is_price_maker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    any(
+        is_current_asset_owner_price_maker(inputs.collections.asset_owner, i) for
+        i in 1:length(inputs.collections.asset_owner)
+    )
+any_asset_owner_is_supply_security_agent(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
+    any(
+        is_current_asset_owner_supply_security_agent(inputs.collections.asset_owner, i) for
+        i in 1:length(inputs.collections.asset_owner)
+    )
 
 """
     asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, subperiod::Int, point_idx::Int)
@@ -236,4 +277,13 @@ Return a point in the revenue convex hull cache at a given bus and subperiod.
 """
 function asset_owner_revenue_convex_hull_point(inputs::AbstractInputs, bus::Int, subperiod::Int, point_idx::Int)
     return inputs.collections.asset_owner.revenue_convex_hull[bus, subperiod][point_idx]
+end
+
+"""
+    asset_owner_max_convex_hull_length(inputs::AbstractInputs, bus::Int, subperiod::Int)
+
+Return the maximum number of points in the revenue convex hull cache at a given bus and subperiod.
+"""
+function asset_owner_max_convex_hull_length(inputs::AbstractInputs, bus::Int, subperiod::Int)
+    return inputs.collections.asset_owner._max_convex_hull_length[bus, subperiod]
 end

@@ -22,6 +22,6 @@ Here is a table of the model attributes that need a external file:
 | HydroUnit | inflow\_ex\_post | Inflow data for the model in ex-post | $a_{j, \tau}$ | $m^3/s$ | `period`, `scenario`, `subscenario`, `subperiod` |
 | RenewableUnit | generation\_ex\_ante | Realized generation for the model in ex-ante, also used in the min cost module | $G^R_{j, \tau}(\omega)$ | $p.u.$ | `period`, `scenario`, `subperiod` |
 | RenewableUnit | generation\_ex\_post | Realized generation for the model in ex-post | $G^R_{j, \tau}(\omega)$ | $p.u.$ | `period`, `scenario`, `subscenario`, `subperiod` |
-| VirtualReservoir | quantity\_bid | Quantity of bids for virtual reservoirs | $Q^{VR}_{r, i, k}(\omega)$ | $MWh$ | `period`, `scenario`, `bid_segment` |
+| VirtualReservoir | quantity\_bid | Quantity of bids for virtual reservoirs | $Q^{VR}_{r, i, k}(\omega)$ | $GWh$ | `period`, `scenario`, `bid_segment` |
 | VirtualReservoir | price\_bid | Price of bids for virtual reservoirs | $P^{VR}_{r, i, k}(\omega)$ | ``\$/MWh`` | `period`, `scenario`, `bid_segment` |
 

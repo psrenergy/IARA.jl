@@ -329,11 +329,6 @@ function fill_caches!(inputs::Inputs)
             fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
         end
     end
-    if run_mode(inputs) == RunMode.PRICE_TAKER_BID ||
-       run_mode(inputs) == RunMode.STRATEGIC_BID
-        update_number_of_bg_valid_bidding_segments!(inputs, ones(Int, number_of_elements(inputs, BiddingGroup)))
-        update_maximum_number_of_bg_bidding_segments!(inputs, 1)
-    end
     fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs)
     fill_plot_strings_dict!(inputs)
     return nothing
@@ -353,11 +348,11 @@ path_case(db::DatabaseSQLite) = dirname(PSRDatabaseSQLite.database_path(db))
 """
     buses_represented_for_strategic_bidding(inputs::Inputs)
 
-If the 'aggregate_buses_for_strategic_bidding' attribute is set to AGGREGATE, return [1].
+If the 'iteration_with_aggregate_buses' attribute is set to AGGREGATE, return [1].
 Otherwise, return the index of all Buses.
 """
 function buses_represented_for_strategic_bidding(inputs)
-    if aggregate_buses_for_strategic_bidding(inputs)
+    if iteration_with_aggregate_buses(inputs)
         return [1]
     else
         return index_of_elements(inputs, Bus)
@@ -449,29 +444,7 @@ end
 Return the spot price time series.
 """
 function time_series_spot_price(inputs)
-    if run_mode(inputs) != RunMode.PRICE_TAKER_BID
-        error("Spot price time series is only available for PriceTakerBid run mode.")
-    end
     return inputs.time_series.spot_price
-end
-
-"""
-    time_series_quantity_bid(inputs::Inputs)
-
-Return the quantity bid time series.
-"""
-function time_series_quantity_bid(inputs)
-    if run_mode(inputs) != RunMode.STRATEGIC_BID
-        error(
-            "This function is only available for STRATEGIC_BID run mode. To access the quantity bid time series in MARKET_CLEARING run mode, use 'time_series_quantity_bid(inputs, period, scenario)'.",
-        )
-    end
-
-    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.quantity_bid)[3] > 1
-        error("Quantity bid time series is not available for StrategicBid run mode with multiple segments.")
-    end
-
-    return inputs.time_series.quantity_bid
 end
 
 """
@@ -484,12 +457,6 @@ function time_series_quantity_bid(
     period::Int,
     scenario::Int,
 )
-    if !is_market_clearing(inputs)
-        error(
-            "This function is only available for MARKET_CLEARING run mode. To access the quantity bid time series in STRATEGIC_BID run mode, use 'time_series_quantity_bid(inputs)'.",
-        )
-    end
-
     if read_bids_from_file(inputs)
         return inputs.time_series.quantity_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
@@ -503,24 +470,6 @@ function time_series_quantity_bid(
 end
 
 """
-    time_series_price_bid(inputs::Inputs)
-
-Return the price bid time series.
-"""
-function time_series_price_bid(inputs)
-    if run_mode(inputs) != RunMode.STRATEGIC_BID
-        error(
-            "This function is only available for STRATEGIC_BID run mode. To access the price bid time series in MARKET_CLEARING run mode, use 'time_series_price_bid(inputs, period, scenario)'.",
-        )
-    end
-
-    if run_mode(inputs) == RunMode.STRATEGIC_BID && size(inputs.time_series.price_bid)[3] > 1
-        error("Price bid time series is not available for StrategicBid run mode with multiple segments.")
-    end
-    return inputs.time_series.price_bid
-end
-
-"""
     time_series_price_bid(inputs, period::Int, scenario::Int)
 
 Return the price bid time series for the given period and scenario.
@@ -530,12 +479,6 @@ function time_series_price_bid(
     period::Int,
     scenario::Int,
 )
-    if !is_market_clearing(inputs)
-        error(
-            "This function is only available for MARKET_CLEARING run mode. To access the price bid time series in STRATEGIC_BID run mode, use 'time_series_price_bid(inputs)'.",
-        )
-    end
-
     if read_bids_from_file(inputs)
         return inputs.time_series.price_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
@@ -657,19 +600,6 @@ function time_series_minimum_activation_level_profile(
         error("Unrecognized bid source: $(bid_data_processing(inputs))")
     end
 end
-"""
-    time_series_virtual_reservoir_quantity_bid(inputs::Inputs)
-
-Return the virtual reservoir quantity bid time series.
-"""
-function time_series_virtual_reservoir_quantity_bid(inputs)
-    if run_mode(inputs) != RunMode.STRATEGIC_BID
-        error(
-            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir quantity bid time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_quantity_bid(inputs, period, scenario)'.",
-        )
-    end
-    return inputs.time_series.virtual_reservoir_quantity_bid
-end
 
 """
     time_series_virtual_reservoir_quantity_bid(inputs, period::Int, scenario::Int)
@@ -681,12 +611,6 @@ function time_series_virtual_reservoir_quantity_bid(
     period::Int,
     scenario::Int,
 )
-    if !(is_market_clearing(inputs))
-        error(
-            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir quantity bid time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_quantity_bid(inputs)'.",
-        )
-    end
-
     if read_bids_from_file(inputs)
         return inputs.time_series.virtual_reservoir_quantity_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
@@ -701,20 +625,6 @@ function time_series_virtual_reservoir_quantity_bid(
 end
 
 """
-    time_series_virtual_reservoir_price_bid(inputs)
-
-Return the virtual reservoir price bid time series.
-"""
-function time_series_virtual_reservoir_price_bid(inputs)
-    if run_mode(inputs) != RunMode.STRATEGIC_BID
-        error(
-            "This function is only available for STRATEGIC_BID run mode. To access the virtual reservoir price bid time series in MARKET_CLEARING run mode, use 'time_series_virtual_reservoir_price_bid(inputs, period, scenario)'.",
-        )
-    end
-    return inputs.time_series.virtual_reservoir_price_bid
-end
-
-"""
     time_series_virtual_reservoir_price_bid(inputs, period::Int, scenario::Int)
 
 Return the virtual reservoir price bid time series for the given period and scenario.
@@ -724,12 +634,6 @@ function time_series_virtual_reservoir_price_bid(
     period::Int,
     scenario::Int,
 )
-    if !(is_market_clearing(inputs))
-        error(
-            "This function is only available for MARKET_CLEARING run mode. To access the virtual reservoir price bid time series in STRATEGIC_BID run mode, use 'time_series_virtual_reservoir_price_bid(inputs)'.",
-        )
-    end
-
     if read_bids_from_file(inputs)
         return inputs.time_series.virtual_reservoir_price_bid
     elseif generate_heuristic_bids_for_clearing(inputs)

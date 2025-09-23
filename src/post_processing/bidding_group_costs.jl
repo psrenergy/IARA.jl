@@ -6,9 +6,9 @@ function _write_costs_bg_file(
     clearing_procedure::String;
     is_ex_post = false,
 )
-    outputs_dir = output_path(inputs)
-    post_processing_dir = post_processing_path(inputs)
-    tempdir = joinpath(output_path(inputs), "temp")
+    outputs_dir = output_path(inputs, run_time_options)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
+    tempdir = joinpath(output_path(inputs, run_time_options), "temp")
 
     num_bidding_groups = number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     num_buses = length(inputs.collections.bus)
@@ -60,7 +60,7 @@ function _write_costs_bg_file(
 
     total_costs_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
     for generation_technology in generation_technologies
-        costs_file = get_costs_files_from_tech(inputs, suffix, generation_technology)
+        costs_file = get_costs_files_from_tech(inputs, run_time_options, suffix, generation_technology)
         if isnothing(costs_file)
             continue
         end
@@ -218,9 +218,9 @@ function get_variable_costs_files(path::String; from_ex_post::Bool)
     end
 end
 
-function get_costs_files_from_tech(inputs::Inputs, suffix::String, technology::String)
-    post_processing_dir = post_processing_path(inputs)
-    tempdir = joinpath(output_path(inputs), "temp")
+function get_costs_files_from_tech(inputs::Inputs, run_time_options::RunTimeOptions, suffix::String, technology::String)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
+    tempdir = joinpath(output_path(inputs, run_time_options), "temp")
     costs_file = filter(
         x -> endswith(x, suffix * ".csv") && occursin(technology, x) && occursin("total_costs", x),
         readdir(tempdir),
@@ -234,17 +234,18 @@ end
 
 function _merge_costs_files(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     clearing_procedure::String,
 )
-    outputs_dir = output_path(inputs)
-    tempdir = joinpath(output_path(inputs), "temp")
+    outputs_dir = output_path(inputs, run_time_options)
+    tempdir = joinpath(output_path(inputs, run_time_options), "temp")
 
     generation_technologies = ["thermal", "hydro", "renewable", "battery"]
     for generation_technology in generation_technologies
         costs_files = filter(
             x ->
-                (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x) &&
-                    !occursin("opportunity_cost", x)
+                (occursin("cost", x) || occursin("penalty", x)) && occursin(generation_technology, x) && # TODO: a safer way is writing an exhaustive list
+                    !occursin("opportunity_cost", x) && !occursin("minimum_outflow_marginal_cost", x)
                     &&
                     (
                         endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".quiv") ||
@@ -280,7 +281,7 @@ function _write_fixed_costs_bg_file(
     clearing_procedure::String;
     is_ex_post::Bool = false,
 )
-    post_processing_dir = post_processing_path(inputs)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
 
     num_bidding_groups = number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     num_buses = length(inputs.collections.bus)
@@ -406,6 +407,7 @@ function create_bidding_group_cost_files(
         end
         _merge_costs_files(
             inputs,
+            run_time_options,
             clearing_procedure,
         )
         _write_fixed_costs_bg_file(

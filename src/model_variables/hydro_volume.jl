@@ -33,7 +33,7 @@ function hydro_volume!(
         upper_bound = hydro_unit_max_volume(inputs, h),
     )
 
-    if is_mincost(inputs) || clearing_has_volume_variables(inputs, run_time_options)
+    if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
         @variable(
             model.jump_model,
             hydro_volume_state[h in hydro_units_with_reservoir],
@@ -85,6 +85,15 @@ function hydro_volume!(
     if !is_market_clearing(inputs)
         return nothing
     end
+    # If the current asset owner is a price maker or a price taker we do not need to
+    # update the hydro volume variables.
+    # The mincost model already has the hydro volume variables updated when it is built.
+    # This check is only for the Nash Equilibrium iterations with Min Cost initialization.
+    if is_current_asset_owner_price_maker(inputs, run_time_options) ||
+       is_current_asset_owner_price_taker(inputs, run_time_options) ||
+       is_mincost(inputs, run_time_options)
+        return nothing
+    end
 
     if !clearing_has_volume_variables(inputs, run_time_options)
         return nothing
@@ -94,7 +103,8 @@ function hydro_volume!(
     hydro_previous_period_volume = get_model_object(model, :hydro_previous_period_volume)
 
     # Data from previous period
-    previous_volume = hydro_volume_from_previous_period(inputs, simulation_period, simulation_trajectory)
+    previous_volume =
+        hydro_volume_from_previous_period(inputs, run_time_options, simulation_period, simulation_trajectory)
 
     for h in hydro_units_with_reservoir
         MOI.set(

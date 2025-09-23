@@ -10,6 +10,8 @@
 
 @kwdef struct RunTimeOptions
     asset_owner_index::Int = PSRDatabaseSQLite._psrdatabasesqlite_null_value(Int)
+    nash_equilibrium_iteration::Int = 0
+    is_nash_equilibrium_initialization::Bool = false
     clearing_model_subproblem::Union{RunTime_ClearingSubproblem.T, Nothing} = nothing
     clearing_integer_variables_in_model::Vector{Symbol} = Symbol[]
     force_all_subscenarios::Bool = false
@@ -26,3 +28,6 @@ function iara_log(inputs::AbstractInputs, run_time_options::RunTimeOptions)
         )
     )
 end
+
+is_nash_equilibrium_initialization(run_time_options::RunTimeOptions) =
+    run_time_options.is_nash_equilibrium_initialization

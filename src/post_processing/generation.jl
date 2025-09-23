@@ -15,7 +15,7 @@ Run post-processing routines for generation.
 """
 function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOptions)
     file_suffix = ""
-    temp_path = joinpath(output_path(inputs), "temp")
+    temp_path = joinpath(output_path(inputs, run_time_options), "temp")
     if !isdir(temp_path)
         mkdir(temp_path)
     end
@@ -33,15 +33,15 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
     end
 
     files = String[]
-    for file in readdir(output_path(inputs))
-        if occursin(r"generation", file)
-            push!(files, joinpath(output_path(inputs), file))
+    for file in readdir(output_path(inputs, run_time_options))
+        if occursin(r"generation", file) && !occursin(r"asset_owner", file)
+            push!(files, joinpath(output_path(inputs, run_time_options), file))
         end
     end
     current_impl = _get_implementation_of_a_list_of_files(files)
     impl = Quiver.binary
     if number_of_elements(inputs, HydroUnit) > 0
-        filename = joinpath(output_path(inputs), "hydro_generation$file_suffix")
+        filename = joinpath(output_path(inputs, run_time_options), "hydro_generation$file_suffix")
         Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
         filename = joinpath(temp_path, "hydro_generation$file_suffix")
         filename_sum = joinpath(temp_path, "hydro_generation_sum$file_suffix")
@@ -74,7 +74,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
         end
     end
     if number_of_elements(inputs, ThermalUnit) > 0
-        filename = joinpath(output_path(inputs), "thermal_generation$file_suffix")
+        filename = joinpath(output_path(inputs, run_time_options), "thermal_generation$file_suffix")
         Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
         filename = joinpath(temp_path, "thermal_generation$file_suffix")
         filename_sum = joinpath(temp_path, "thermal_generation_sum$file_suffix")
@@ -107,7 +107,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
         end
     end
     if number_of_elements(inputs, RenewableUnit) > 0
-        filename = joinpath(output_path(inputs), "renewable_generation$file_suffix")
+        filename = joinpath(output_path(inputs, run_time_options), "renewable_generation$file_suffix")
         Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
         filename = joinpath(temp_path, "renewable_generation$file_suffix")
         filename_sum = joinpath(temp_path, "renewable_generation_sum$file_suffix")
@@ -147,7 +147,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
         end
     end
     if number_of_elements(inputs, BatteryUnit) > 0
-        filename = joinpath(output_path(inputs), "battery_generation$file_suffix")
+        filename = joinpath(output_path(inputs, run_time_options), "battery_generation$file_suffix")
         Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
         filename = joinpath(temp_path, "battery_generation$file_suffix")
         filename_sum = joinpath(temp_path, "battery_generation_sum$file_suffix")
@@ -186,7 +186,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
             )
         end
     end
-    filename = joinpath(output_path(inputs), "deficit$file_suffix")
+    filename = joinpath(output_path(inputs, run_time_options), "deficit$file_suffix")
     Quiver.convert(filename, Quiver.csv, Quiver.binary; destination_directory = temp_path)
     filename = joinpath(temp_path, "deficit$file_suffix")
     filename_sum = joinpath(temp_path, "deficit_sum$file_suffix")
@@ -214,7 +214,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
     if current_impl == Quiver.csv
         dir_path = temp_path
     else
-        dir_path = post_processing_path(inputs)
+        dir_path = post_processing_path(inputs, run_time_options)
     end
 
     if is_market_clearing(inputs)
@@ -250,7 +250,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
             joinpath(temp_path, "generation$file_suffix"),
             Quiver.binary,
             Quiver.csv;
-            destination_directory = post_processing_path(inputs),
+            destination_directory = post_processing_path(inputs, run_time_options),
         )
     end
 

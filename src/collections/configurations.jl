@@ -1479,6 +1479,10 @@ is_virtual_reservoir_residual_revenue_split_by_inflow_shares(inputs) =
     virtual_reservoir_residual_revenue_split_type(inputs) ==
     Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES
 
+is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs) =
+    virtual_reservoir_residual_revenue_split_type(inputs) ==
+    Configurations_VirtualReservoirResidualRevenueSplitType.BY_ENERGY_ACCOUNT_SHARES
+
 """
     bid_price_limit_markup_non_justified_profile(inputs)
 

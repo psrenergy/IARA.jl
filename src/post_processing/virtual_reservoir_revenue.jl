@@ -211,13 +211,12 @@ function inflow_shareholder_residual_revenue(
                 end
                 vr_accepted_bid_revenue = vr_accepted_bid_revenue_reader.data
 
-                if has_subscenario(vr_energy_account_reader)
-                    Quiver.goto!(vr_energy_account_reader; period, scenario, subscenario = subscenario)
-                else
-                    Quiver.goto!(vr_energy_account_reader; period, scenario)
-                end
-
                 if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+                    if has_subscenario(vr_energy_account_reader)
+                        Quiver.goto!(vr_energy_account_reader; period, scenario, subscenario = subscenario)
+                    else
+                        Quiver.goto!(vr_energy_account_reader; period, scenario)
+                    end
                     vr_energy_account = vr_energy_account_reader.data
 
                     if is_two_settlement_ex_post
@@ -348,11 +347,15 @@ function inflow_shareholder_residual_revenue(
     Quiver.close!(hydro_generation_reader)
     Quiver.close!(turbinable_spillage_reader)
     Quiver.close!(vr_accepted_bid_revenue_reader)
-    Quiver.close!(vr_energy_account_reader)
+    if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+        Quiver.close!(vr_energy_account_reader)
+    end
     if is_two_settlement_ex_post
         Quiver.close!(hydro_generation_ex_ante_reader)
         Quiver.close!(turbinable_spillage_ex_ante_reader)
-        Quiver.close!(vr_energy_account_ex_ante_reader)
+        if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+            Quiver.close!(vr_energy_account_ex_ante_reader)
+        end
     end
 
     return joinpath(post_processing_path(inputs), output_name)

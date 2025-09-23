@@ -36,6 +36,8 @@ function nash_bids_from_hydro_reference_curve(
     )
 
     for vr in virtual_reservoirs
+        asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr)
+        number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
         q, p, b = treat_reference_curve_data(
             inputs,
             original_quantity_bid,
@@ -48,7 +50,7 @@ function nash_bids_from_hydro_reference_curve(
         for iter in 1:reference_curve_nash_max_iterations(inputs)
             q, p, b = run_reference_curve_nash_iteration(
                 inputs,
-                vr;
+                number_of_asset_owners_in_virtual_reservoir;
                 current_quantity = q,
                 current_price = p,
                 current_slope = b,
@@ -182,7 +184,7 @@ end
 
 function run_reference_curve_nash_iteration(
     inputs::AbstractInputs,
-    vr_index::Int;
+    number_of_asset_owners::Int;
     current_quantity::Vector{Vector{Float64}},
     current_price::Vector{Vector{Float64}},
     current_slope::Vector{Vector{Float64}},
@@ -190,16 +192,13 @@ function run_reference_curve_nash_iteration(
     original_price::Vector{Vector{Float64}},
     original_slope::Vector{Vector{Float64}},
 )
-    asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
-    number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
-
-    new_quantity = Vector{Vector{Float64}}(undef, number_of_asset_owners_in_virtual_reservoir)
-    new_price = Vector{Vector{Float64}}(undef, number_of_asset_owners_in_virtual_reservoir)
-    new_slope = Vector{Vector{Float64}}(undef, number_of_asset_owners_in_virtual_reservoir)
+    new_quantity = Vector{Vector{Float64}}(undef, number_of_asset_owners)
+    new_price = Vector{Vector{Float64}}(undef, number_of_asset_owners)
+    new_slope = Vector{Vector{Float64}}(undef, number_of_asset_owners)
 
     # Get the first segment for each agent
     segment = 1
-    for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
+    for i in 1:number_of_asset_owners
         new_quantity[i] = [current_quantity[i][segment]]
         new_price[i] = [2.0 * demand_deficit_cost(inputs)] # TODO: review this, currently hard-coded as twice the deficit cost
         new_slope[i] = [update_slope(inputs, current_slope, original_slope, segment)[i]]
@@ -207,9 +206,9 @@ function run_reference_curve_nash_iteration(
 
     # Iterate over the segments
     for segment in 1:maximum_number_of_segments_in_nash_equilibrium(inputs)
-        minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners_in_virtual_reservoir]
+        minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners]
         if maximum(
-            [new_quantity[i][segment] for i in 1:number_of_asset_owners_in_virtual_reservoir] - minimum_quantities,
+            [new_quantity[i][segment] for i in 1:number_of_asset_owners] - minimum_quantities,
         ) == 0
             break
         end
@@ -220,7 +219,7 @@ function run_reference_curve_nash_iteration(
             new_price,
             new_slope,
             original_quantity,
-            vr_index,
+            number_of_asset_owners,
             segment,
         )
 
@@ -229,19 +228,19 @@ function run_reference_curve_nash_iteration(
             next_quantity,
             original_quantity,
             current_quantity,
-            vr_index,
+            number_of_asset_owners,
         )
         true_segment = get_current_segment(
             inputs,
             next_quantity,
             original_quantity,
             original_quantity,
-            vr_index,
+            number_of_asset_owners,
         )
 
-        next_slope = fill(Inf, number_of_asset_owners_in_virtual_reservoir)
-        true_slope = fill(Inf, number_of_asset_owners_in_virtual_reservoir)
-        for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
+        next_slope = fill(Inf, number_of_asset_owners)
+        true_slope = fill(Inf, number_of_asset_owners)
+        for i in 1:number_of_asset_owners
             if true_segment[i] > 0
                 next_slope[i] = current_slope[i][current_segment[i]]
                 true_slope[i] = original_slope[i][true_segment[i]]
@@ -250,12 +249,12 @@ function run_reference_curve_nash_iteration(
 
         next_slope = update_slope(
             inputs,
-            [[next_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners_in_virtual_reservoir],
-            [[true_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners_in_virtual_reservoir],
+            [[next_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners],
+            [[true_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners],
             segment,
         ) # TODO: improve this
 
-        for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
+        for i in 1:number_of_asset_owners
             push!(new_quantity[i], next_quantity[i])
             push!(new_price[i], next_price)
             push!(new_slope[i], next_slope[i])
@@ -268,7 +267,7 @@ function run_reference_curve_nash_iteration(
             original_slope,
             new_quantity,
             new_price,
-            vr_index,
+            number_of_asset_owners,
         )
     end
 
@@ -303,23 +302,20 @@ function get_next_point(
     current_price::Vector{Vector{Float64}},
     current_slope::Vector{Vector{Float64}},
     original_quantity::Vector{Vector{Float64}},
-    vr_index::Int,
+    number_of_asset_owners::Int,
     segment_index::Int,
 )
-    asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
-    number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
-
     current_quantity_in_segment =
-        [current_quantity[i][segment_index] for i in 1:number_of_asset_owners_in_virtual_reservoir]
+        [current_quantity[i][segment_index] for i in 1:number_of_asset_owners]
     current_price_in_segment = current_price[1][segment_index]
-    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:number_of_asset_owners_in_virtual_reservoir]
+    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:number_of_asset_owners]
 
     price_delta = get_price_delta(
         inputs,
         current_quantity,
         current_slope,
         original_quantity,
-        vr_index,
+        number_of_asset_owners,
         segment_index,
     )
 
@@ -334,19 +330,16 @@ function get_price_delta(
     current_quantity::Vector{Vector{Float64}},
     current_slope::Vector{Vector{Float64}},
     original_quantity::Vector{Vector{Float64}},
-    vr_index::Int,
+    number_of_asset_owners::Int,
     segment_index::Int,
 )
-    asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
-    number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
-
-    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:number_of_asset_owners_in_virtual_reservoir]
+    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:number_of_asset_owners]
 
     available_quantities = get_available_quantities(
         inputs,
         current_quantity,
         original_quantity,
-        vr_index,
+        number_of_asset_owners,
         segment_index,
     )
 
@@ -365,25 +358,22 @@ function get_available_quantities(
     inputs::AbstractInputs,
     current_quantity::Vector{Vector{Float64}},
     original_quantity::Vector{Vector{Float64}},
-    vr_index::Int,
+    number_of_asset_owners::Int,
     segment_index::Int,
 )
-    asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
-    number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
-
     current_quantity_in_segment =
-        [current_quantity[i][segment_index] for i in 1:number_of_asset_owners_in_virtual_reservoir]
+        [current_quantity[i][segment_index] for i in 1:number_of_asset_owners]
 
     segments = get_current_segment(
         inputs,
         current_quantity_in_segment,
         original_quantity,
         original_quantity,
-        vr_index,
+        number_of_asset_owners,
     )
 
-    available_quantities = zeros(number_of_asset_owners_in_virtual_reservoir)
-    for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
+    available_quantities = zeros(number_of_asset_owners)
+    for i in 1:number_of_asset_owners
         minimum_quantity = original_quantity[i][segments[i]+1]
         available_quantities[i] = max(current_quantity[i][segment_index] - minimum_quantity, 0)
     end
@@ -396,15 +386,12 @@ function get_current_segment(
     current_quantity_in_segment::Vector{Float64},
     original_quantity::Vector{Vector{Float64}},
     reference_quantity::Vector{Vector{Float64}},
-    vr_index::Int,
+    number_of_asset_owners::Int,
 )
-    asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
-    number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
-    segments = zeros(Int64, number_of_asset_owners_in_virtual_reservoir)
+    segments = zeros(Int64, number_of_asset_owners)
+    minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners]
 
-    minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners_in_virtual_reservoir]
-
-    for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
+    for i in 1:number_of_asset_owners
         if current_quantity_in_segment[i] > minimum_quantities[i]
             idx = findfirst(reference_quantity[i] .< current_quantity_in_segment[i])
             if isnothing(idx)
@@ -425,21 +412,18 @@ function test_inversion(
     original_slope::Vector{Vector{Float64}},
     new_quantity::Vector{Vector{Float64}},
     new_price::Vector{Vector{Float64}},
-    vr_index::Int,
+    number_of_asset_owners::Int,
 )
-    asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
-    number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
-
-    quantity_in_segment = [new_quantity[i][end] for i in 1:number_of_asset_owners_in_virtual_reservoir]
+    quantity_in_segment = [new_quantity[i][end] for i in 1:number_of_asset_owners]
     price_in_segment = new_price[1][end]
-    quantity_in_previous_segment = [new_quantity[i][end-1] for i in 1:number_of_asset_owners_in_virtual_reservoir]
+    quantity_in_previous_segment = [new_quantity[i][end-1] for i in 1:number_of_asset_owners]
 
     test_segment = get_current_segment(
         inputs,
         quantity_in_previous_segment,
         original_quantity,
         original_quantity,
-        vr_index,
+        number_of_asset_owners,
     )
 
     agent_indexes = findall(test_segment .> 0)

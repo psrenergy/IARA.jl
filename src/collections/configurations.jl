@@ -110,6 +110,9 @@ Configurations for the problem.
     reference_curve_final_segment_price_markup::Float64 = 0.0
     purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
         Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
+    reference_curve_nash_extra_bid_quantity::Float64 = 0.0
+    reference_curve_nash_tolerance::Float64 = 0.0
+    reference_curve_nash_max_iterations::Int = 0
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -347,6 +350,12 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "purchase_bids_for_virtual_reservoir_heuristic_bid")[1],
             Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T,
         )
+    configurations.reference_curve_nash_extra_bid_quantity =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_extra_bid_quantity")[1]
+    configurations.reference_curve_nash_tolerance =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_tolerance")[1]
+    configurations.reference_curve_nash_max_iterations =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_max_iterations")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
@@ -558,8 +567,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
 
     if is_market_clearing(inputs)
         model_type_warning = false
-        if configurations.clearing_hydro_representation ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+        if use_virtual_reservoirs(inputs)
             if (
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.HYBRID &&
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
@@ -636,8 +644,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             num_errors += 1
         end
     end
-    if configurations.clearing_hydro_representation ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+    if use_virtual_reservoirs(inputs)
         if !any_elements(inputs, VirtualReservoir)
             @error("Virtual reservoirs must be defined when using the virtual reservoirs clearing representation.")
             num_errors += 1
@@ -1304,6 +1311,38 @@ clearing_hydro_representation(inputs::AbstractInputs) =
     inputs.collections.configurations.clearing_hydro_representation
 
 """
+    use_virtual_reservoirs(inputs::AbstractInputs)
+
+Return whether virtual reservoirs are used in clearing.
+"""
+use_virtual_reservoirs(inputs::AbstractInputs) =
+    inputs.collections.configurations.clearing_hydro_representation !=
+    Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
+
+"""
+    should_build_reference_curve(inputs::AbstractInputs)
+
+Return whether the reference curve should be built.
+"""
+function should_build_reference_curve(inputs::AbstractInputs)
+    reference_curve_representations = [
+        Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE,
+        Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE,
+    ]
+    return clearing_hydro_representation(inputs) in reference_curve_representations
+end
+
+"""
+    should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+
+Return whether the Nash equilibrium from hydro reference curve should be run.
+"""
+function should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+    return clearing_hydro_representation(inputs) ==
+           Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
+end
+
+"""
     construction_type_ex_ante_physical(inputs::AbstractInputs)
 
 Return the ex-ante physical clearing model type.
@@ -1611,6 +1650,30 @@ Return the final segment price markup for the reference curve.
 """
 reference_curve_final_segment_price_markup(inputs::AbstractInputs) =
     inputs.collections.configurations.reference_curve_final_segment_price_markup
+
+"""
+    reference_curve_nash_extra_bid_quantity(inputs::AbstractInputs)
+
+Return the extra bid quantity for the Nash equilibrium from hydro reference curve.
+"""
+reference_curve_nash_extra_bid_quantity(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_nash_extra_bid_quantity
+
+"""
+    reference_curve_nash_tolerance(inputs)
+
+Return the tolerance for the bid slopes in the Nash equilibrium from hydro reference curve.
+"""
+reference_curve_nash_tolerance(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_nash_tolerance
+
+"""
+    reference_curve_nash_max_iterations(inputs)
+
+Return the maximum number of iterations for the Nash equilibrium from hydro reference curve.
+"""
+reference_curve_nash_max_iterations(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_nash_max_iterations
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

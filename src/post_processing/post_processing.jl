@@ -121,8 +121,7 @@ function post_process_outputs(
                 )
             end
         end
-        if clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+        if use_virtual_reservoirs(inputs)
             physical_variables_suffix =
                 is_skipped(inputs, "ex_post_physical") ? "_ex_post_commercial" : "_ex_post_physical"
 

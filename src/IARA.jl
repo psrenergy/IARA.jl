@@ -126,6 +126,7 @@ include("bid_validations.jl")
 include("debugging_utils.jl")
 include("clearing_utils.jl")
 include("hydro_supply_reference_curve_utils.jl")
+include("reference_curve_nash.jl")
 include("virtual_reservoir.jl")
 include("main.jl")
 

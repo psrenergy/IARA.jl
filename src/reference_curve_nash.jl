@@ -5,29 +5,28 @@ function nash_bids_from_hydro_reference_curve(
     period::Int = 1,
     scenario::Int = 1,
 )
-    original_quantity_bid, original_price_bid =
+    vr_original_quantity_bid, vr_original_price_bid =
         read_serialized_virtual_reservoir_heuristic_bids(inputs; period, scenario)
 
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-
     number_of_virtual_reservoirs = length(virtual_reservoirs)
     number_of_asset_owners = number_of_elements(inputs, AssetOwner)
 
-    quantity_output = zeros(
+    vr_quantity_output = zeros(
         Float64,
         number_of_virtual_reservoirs,
         number_of_asset_owners,
         reference_curve_nash_max_iterations(inputs),
         maximum_number_of_segments_in_nash_equilibrium(inputs),
     )
-    price_output = zeros(
+    vr_price_output = zeros(
         Float64,
         number_of_virtual_reservoirs,
         number_of_asset_owners,
         reference_curve_nash_max_iterations(inputs),
         maximum_number_of_segments_in_nash_equilibrium(inputs),
     )
-    slope_output = fill(
+    vr_slope_output = fill(
         Inf,
         number_of_virtual_reservoirs,
         number_of_asset_owners,
@@ -40,8 +39,8 @@ function nash_bids_from_hydro_reference_curve(
         number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
         q, p, b = treat_reference_curve_data(
             inputs,
-            original_quantity_bid,
-            original_price_bid,
+            vr_original_quantity_bid,
+            vr_original_price_bid,
             vr,
         )
         original_q = deepcopy(q)
@@ -60,20 +59,94 @@ function nash_bids_from_hydro_reference_curve(
             )
             for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
                 number_of_segments = length(q[i])
-                quantity_output[vr, ao, iter, 1:number_of_segments] = q[i]
-                price_output[vr, ao, iter, 1:number_of_segments] = p[i]
-                slope_output[vr, ao, iter, 1:number_of_segments] = b[i]
+                vr_quantity_output[vr, ao, iter, 1:number_of_segments] = q[i]
+                vr_price_output[vr, ao, iter, 1:number_of_segments] = p[i]
+                vr_slope_output[vr, ao, iter, 1:number_of_segments] = b[i]
             end
         end
     end
 
-    write_reference_curve_nash_outputs(
+    write_reference_curve_nash_vr_outputs(
         inputs,
         outputs,
         run_time_options,
-        quantity_output,
-        price_output,
-        slope_output,
+        vr_quantity_output,
+        vr_price_output,
+        vr_slope_output,
+        period,
+        scenario,
+    )
+
+    if !any_elements(inputs, BiddingGroup) || !has_any_simple_bids(inputs)
+        return nothing
+    end
+
+    bg_original_quantity_bid, bg_original_price_bid = read_serialized_heuristic_bids(inputs; period, scenario)
+    
+    buses = index_of_elements(inputs, Bus)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    number_of_buses = length(buses)
+    number_of_bidding_groups = length(bidding_groups)
+
+    bg_quantity_output = zeros(
+        Float64,
+        number_of_bidding_groups,
+        number_of_buses,
+        reference_curve_nash_max_iterations(inputs),
+        maximum_number_of_segments_in_nash_equilibrium(inputs),
+    )
+    bg_price_output = zeros(
+        Float64,
+        number_of_bidding_groups,
+        number_of_buses,
+        reference_curve_nash_max_iterations(inputs),
+        maximum_number_of_segments_in_nash_equilibrium(inputs),
+    )
+    bg_slope_output = fill(
+        Inf,
+        number_of_bidding_groups,
+        number_of_buses,
+        reference_curve_nash_max_iterations(inputs),
+        maximum_number_of_segments_in_nash_equilibrium(inputs),
+    )
+
+    for bus in buses
+        q, p, b = treat_bidding_group_data(
+            inputs,
+            bg_original_quantity_bid,
+            bg_original_price_bid,
+            bus,
+        )
+        original_q = deepcopy(q)
+        original_p = deepcopy(p)
+        original_b = deepcopy(b)
+        for iter in 1:reference_curve_nash_max_iterations(inputs)
+            q, p, b = run_reference_curve_nash_iteration(
+                inputs,
+                number_of_bidding_groups;
+                current_quantity = q,
+                current_price = p,
+                current_slope = b,
+                original_quantity = original_q,
+                original_price = original_p,
+                original_slope = original_b,
+            )
+            for i in 1:number_of_bidding_groups
+                number_of_segments = length(q[i])
+                bg_quantity_output[i, bus, iter, 1:number_of_segments] = q[i]
+                bg_price_output[i, bus, iter, 1:number_of_segments] = p[i]
+                bg_slope_output[i, bus, iter, 1:number_of_segments] = b[i]
+            end
+        end
+    end
+
+    write_reference_curve_nash_bg_outputs(
+        inputs,
+        outputs,
+        run_time_options,
+        bg_quantity_output,
+        bg_price_output,
+        bg_slope_output,
         period,
         scenario,
     )
@@ -115,6 +188,40 @@ function treat_reference_curve_data(
         treated_slopes,
         vr_index,
     )
+
+    return treated_quantity_bids, treated_price_bids, treated_slopes
+end
+
+function treat_bidding_group_data(
+    inputs::AbstractInputs,
+    quantity::Array{Float64, 4},
+    price::Array{Float64, 4},
+    bus_index::Int,
+)
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    number_of_bidding_groups = length(bidding_groups)
+    # Input dimensions are (bidding_group, bus, segment, subperiod)
+    # Aggregated dimensions are (bidding_group, segment)
+    aggregated_quantity = dropdims(sum(quantity[bidding_groups, bus_index, :, :], dims = 3), dims = 3)
+    aggregated_price = dropdims(sum(price[bidding_groups, bus_index, :, :] .* quantity[bidding_groups, bus_index, :, :], dims = 3) ./ aggregated_quantity, dims = 3)
+
+    treated_quantity_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
+    treated_price_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
+    treated_slopes = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
+
+    for (i, bg) in enumerate(bidding_groups)
+        treated_quantity_bids[i], treated_price_bids[i] = remove_redundant_reference_curve_segments(
+            aggregated_quantity[i, :],
+            aggregated_price[i, :],
+        )
+        treated_quantity_bids[i] = quantity_points_from_segments(treated_quantity_bids[i])
+        treated_quantity_bids[i], treated_price_bids[i] = reverse_bid_order_and_add_point(
+            inputs,
+            treated_quantity_bids[i],
+            treated_price_bids[i],
+        )
+        treated_slopes[i] = diff(treated_price_bids[i]) ./ diff(treated_quantity_bids[i])
+    end
 
     return treated_quantity_bids, treated_price_bids, treated_slopes
 end
@@ -205,7 +312,7 @@ function run_reference_curve_nash_iteration(
     end
 
     # Iterate over the segments
-    for segment in 1:maximum_number_of_segments_in_nash_equilibrium(inputs)
+    for segment in 1:number_of_segments_for_vr_in_nash_equilibrium(inputs, number_of_asset_owners)
         minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners]
         if maximum(
             [new_quantity[i][segment] for i in 1:number_of_asset_owners] - minimum_quantities,
@@ -395,7 +502,7 @@ function get_current_segment(
         if current_quantity_in_segment[i] > minimum_quantities[i]
             idx = findfirst(reference_quantity[i] .< current_quantity_in_segment[i])
             if isnothing(idx)
-                segments[i] = maximum_number_of_segments_in_nash_equilibrium(inputs)
+                segments[i] = number_of_segments_for_vr_in_nash_equilibrium(inputs, number_of_asset_owners)
             else
                 segments[i] = idx - 1
             end
@@ -447,6 +554,13 @@ function maximum_number_of_segments_in_nash_equilibrium(inputs::AbstractInputs)
     return reference_curve_number_of_segments(inputs) * number_of_elements(inputs, AssetOwner)
 end
 
+function number_of_segments_for_vr_in_nash_equilibrium(
+    inputs::AbstractInputs,
+    number_of_asset_owners_in_vr::Int,
+)
+    return reference_curve_number_of_segments(inputs) * number_of_asset_owners_in_vr
+end
+
 function initialize_reference_curve_nash_outputs(
     inputs::AbstractInputs,
     run_time_options::RunTimeOptions,
@@ -495,7 +609,7 @@ function initialize_reference_curve_nash_outputs(
     return outputs
 end
 
-function write_reference_curve_nash_outputs(
+function write_reference_curve_nash_vr_outputs(
     inputs::AbstractInputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
@@ -534,6 +648,51 @@ function write_reference_curve_nash_outputs(
         period,
         scenario,
     )
+
+    return nothing
+end
+
+function write_reference_curve_nash_bg_outputs(
+    inputs::AbstractInputs,
+    outputs::Outputs,
+    run_time_options::RunTimeOptions,
+    quantity::Array{Float64, 4},
+    price::Array{Float64, 4},
+    slope::Array{Float64, 4},
+    period::Int,
+    scenario::Int,
+)
+    # write_nash_equilibrium_output!(
+    #     outputs,
+    #     inputs,
+    #     run_time_options,
+    #     "bidding_group_nash_quantity",
+    #     quantity,
+    #     period,
+    #     scenario,
+    # )
+
+    # write_nash_equilibrium_output!(
+    #     outputs,
+    #     inputs,
+    #     run_time_options,
+    #     "bidding_group_nash_price",
+    #     price,
+    #     period,
+    #     scenario,
+    # )
+
+    # write_nash_equilibrium_output!(
+    #     outputs,
+    #     inputs,
+    #     run_time_options,
+    #     "bidding_group_nash_slope",
+    #     slope,
+    #     period,
+    #     scenario,
+    # )
+
+    # TODO: add function to write bg outputs with subperiod dimension
 
     return nothing
 end

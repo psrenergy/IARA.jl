@@ -151,6 +151,14 @@ function inflow_shareholder_residual_revenue(
         joinpath(post_processing_path(inputs), "virtual_reservoir_accepted_bid_revenue" * output_suffix),
     )
 
+    if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+        vr_energy_account_reader = open_time_series_output(
+            inputs,
+            model_outputs_time_serie,
+            joinpath(outputs_dir, "virtual_reservoir_final_energy_account" * physical_variables_suffix),
+        )
+    end
+
     if is_two_settlement_ex_post
         hydro_generation_ex_ante_reader = open_time_series_output(
             inputs,
@@ -162,6 +170,13 @@ function inflow_shareholder_residual_revenue(
             model_outputs_time_serie,
             joinpath(outputs_dir, "hydro_turbinable_spilled_energy" * ex_ante_physical_suffix),
         )
+        if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+            vr_energy_account_ex_ante_reader = open_time_series_output(
+                inputs,
+                model_outputs_time_serie,
+                joinpath(outputs_dir, "virtual_reservoir_final_energy_account" * ex_ante_physical_suffix),
+            )
+        end
     end
 
     dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
@@ -195,6 +210,22 @@ function inflow_shareholder_residual_revenue(
                     Quiver.goto!(vr_accepted_bid_revenue_reader; period, scenario)
                 end
                 vr_accepted_bid_revenue = vr_accepted_bid_revenue_reader.data
+
+                if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+                    if has_subscenario(vr_energy_account_reader)
+                        Quiver.goto!(vr_energy_account_reader; period, scenario, subscenario = subscenario)
+                    else
+                        Quiver.goto!(vr_energy_account_reader; period, scenario)
+                    end
+                    vr_energy_account = vr_energy_account_reader.data
+
+                    if is_two_settlement_ex_post
+                        Quiver.goto!(vr_energy_account_ex_ante_reader; period, scenario)
+                        vr_energy_account = vr_energy_account_reader.data - vr_energy_account_ex_ante_reader.data
+                        # Is this correct? Will we split it based on diffs?
+                    end
+                    vr_energy_account = vr_energy_account / MW_to_GW()
+                end
 
                 accepted_bid_revenue = zeros(number_of_elements(inputs, VirtualReservoir))
                 idx = 0
@@ -274,10 +305,31 @@ function inflow_shareholder_residual_revenue(
                 vr_ao_revenue = zeros(number_of_pairs)
                 idx = 0
                 for vr in index_of_elements(inputs, VirtualReservoir)
+                    first_pair = idx + 1
+                    last_pair = idx + length(virtual_reservoir_asset_owner_indices(inputs, vr))
+                    if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+                        total_energy_account = sum(vr_energy_account[first_pair:last_pair])
+                    end
                     for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                         idx += 1
-                        vr_ao_revenue[idx] =
-                            vr_total_revenue[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
+                        if is_virtual_reservoir_residual_revenue_split_by_inflow_shares(inputs)
+                            vr_ao_revenue[idx] =
+                                vr_total_revenue[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
+                        else # split by energy account share
+                            if total_energy_account == 0.0
+                                if vr_total_revenue[vr] > 0.0
+                                    @warn "Virtual reservoir $vr residual revenue is positive, but the total energy account is zero. The revenue will be split according to inflow allocation instead."
+                                    vr_ao_revenue[idx] =
+                                        vr_total_revenue[vr] *
+                                        virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
+                                else
+                                    vr_ao_revenue[idx] = 0.0
+                                end
+                            else
+                                vr_ao_revenue[idx] =
+                                    vr_total_revenue[vr] * vr_energy_account[idx] / total_energy_account
+                            end
+                        end
                     end
                 end
 
@@ -295,9 +347,15 @@ function inflow_shareholder_residual_revenue(
     Quiver.close!(hydro_generation_reader)
     Quiver.close!(turbinable_spillage_reader)
     Quiver.close!(vr_accepted_bid_revenue_reader)
+    if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+        Quiver.close!(vr_energy_account_reader)
+    end
     if is_two_settlement_ex_post
         Quiver.close!(hydro_generation_ex_ante_reader)
         Quiver.close!(turbinable_spillage_ex_ante_reader)
+        if is_virtual_reservoir_residual_revenue_split_by_energy_account_shares(inputs)
+            Quiver.close!(vr_energy_account_ex_ante_reader)
+        end
     end
 
     return joinpath(post_processing_path(inputs), output_name)
@@ -382,6 +440,7 @@ function spilled_responsibility_revenue(
                 if is_two_settlement_ex_post
                     Quiver.goto!(vr_energy_account_ex_ante_reader; period, scenario)
                     vr_energy_account = vr_energy_account_reader.data - vr_energy_account_ex_ante_reader.data
+                    # Is this correct? Will we split it based on diffs?
                 end
                 vr_energy_account = vr_energy_account / MW_to_GW()
 

@@ -60,7 +60,9 @@ function accepted_bid_revenue(
                 if has_subscenario(vr_marginal_cost_reader)
                     Quiver.goto!(vr_marginal_cost_reader; period, scenario, subscenario = subscenario)
                 else
-                    Quiver.goto!(vr_marginal_cost_reader; period, scenario)
+                    if subscenario == 1
+                        Quiver.goto!(vr_marginal_cost_reader; period, scenario)
+                    end
                 end
                 price = vr_marginal_cost_reader.data
 
@@ -76,7 +78,9 @@ function accepted_bid_revenue(
                             bid_segment = bid_segment,
                         )
                     else
-                        Quiver.goto!(vr_generation_reader; period, scenario, bid_segment = bid_segment)
+                        if subscenario == 1
+                            Quiver.goto!(vr_generation_reader; period, scenario, bid_segment = bid_segment)
+                        end
                     end
                     segment_generation = vr_generation_reader.data
                     if is_two_settlement_ex_post
@@ -207,7 +211,9 @@ function inflow_shareholder_residual_revenue(
                 if has_subscenario(vr_accepted_bid_revenue_reader)
                     Quiver.goto!(vr_accepted_bid_revenue_reader; period, scenario, subscenario = subscenario)
                 else
-                    Quiver.goto!(vr_accepted_bid_revenue_reader; period, scenario)
+                    if subscenario == 1
+                        Quiver.goto!(vr_accepted_bid_revenue_reader; period, scenario)
+                    end
                 end
                 vr_accepted_bid_revenue = vr_accepted_bid_revenue_reader.data
 
@@ -215,7 +221,9 @@ function inflow_shareholder_residual_revenue(
                     if has_subscenario(vr_energy_account_reader)
                         Quiver.goto!(vr_energy_account_reader; period, scenario, subscenario = subscenario)
                     else
-                        Quiver.goto!(vr_energy_account_reader; period, scenario)
+                        if subscenario == 1
+                            Quiver.goto!(vr_energy_account_reader; period, scenario)
+                        end
                     end
                     vr_energy_account = vr_energy_account_reader.data
 
@@ -256,8 +264,10 @@ function inflow_shareholder_residual_revenue(
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.goto!(hydro_generation_reader; period, scenario, subperiod = subperiod)
-                        Quiver.goto!(turbinable_spillage_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(hydro_generation_reader; period, scenario, subperiod = subperiod)
+                            Quiver.goto!(turbinable_spillage_reader; period, scenario, subperiod = subperiod)
+                        end
                     end
 
                     if has_subscenario(load_marginal_cost_reader)
@@ -269,7 +279,9 @@ function inflow_shareholder_residual_revenue(
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.goto!(load_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(load_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                        end
                     end
 
                     load_price = load_marginal_cost_reader.data
@@ -433,7 +445,9 @@ function spilled_responsibility_revenue(
                 if has_subscenario(vr_energy_account_reader)
                     Quiver.goto!(vr_energy_account_reader; period, scenario, subscenario = subscenario)
                 else
-                    Quiver.goto!(vr_energy_account_reader; period, scenario)
+                    if subscenario == 1
+                        Quiver.goto!(vr_energy_account_reader; period, scenario)
+                    end
                 end
                 vr_energy_account = vr_energy_account_reader.data
 
@@ -455,7 +469,9 @@ function spilled_responsibility_revenue(
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.goto!(spilled_energy_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(spilled_energy_reader; period, scenario, subperiod = subperiod)
+                        end
                     end
                     spilled_energy = spilled_energy_reader.data
                     if is_two_settlement_ex_post
@@ -472,7 +488,9 @@ function spilled_responsibility_revenue(
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.goto!(load_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(load_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                        end
                     end
                     price = load_marginal_cost_reader.data
 
@@ -631,7 +649,9 @@ function hydro_constraints_violation_revenue(
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.goto!(minimum_outflow_violation_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(minimum_outflow_violation_reader; period, scenario, subperiod = subperiod)
+                        end
                     end
 
                     minimum_outflow_violation = minimum_outflow_violation_reader.data
@@ -651,7 +671,9 @@ function hydro_constraints_violation_revenue(
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.goto!(violation_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(violation_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                        end
                     end
 
                     violation_marginal_cost = violation_marginal_cost_reader.data

@@ -63,8 +63,10 @@ function post_processing_minimum_outflow_violation(
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.goto!(hydro_turbining_reader; period, scenario, subperiod = subperiod)
-                        Quiver.goto!(hydro_spillage_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(hydro_turbining_reader; period, scenario, subperiod = subperiod)
+                            Quiver.goto!(hydro_spillage_reader; period, scenario, subperiod = subperiod)
+                        end
                     end
 
                     outflow = hydro_turbining_reader.data + hydro_spillage_reader.data

@@ -64,7 +64,7 @@ function energy_from_inflows(
     for b in subperiods(inputs)
         for h in hydro_units
             max_turbining =
-                hydro_unit_max_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
+                hydro_unit_max_available_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
                 subperiod_duration_in_hours(inputs, b)
 
             spillage = max(volume[h] + inflow_as_volume[h, b] - (hydro_unit_max_volume(inputs, h) + max_turbining), 0)

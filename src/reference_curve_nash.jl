@@ -82,7 +82,7 @@ function nash_bids_from_hydro_reference_curve(
     end
 
     bg_original_quantity_bid, bg_original_price_bid = read_serialized_heuristic_bids(inputs; period, scenario)
-    
+
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     number_of_buses = length(buses)
@@ -202,8 +202,13 @@ function treat_bidding_group_data(
     number_of_bidding_groups = length(bidding_groups)
     # Input dimensions are (bidding_group, bus, segment, subperiod)
     # Aggregated dimensions are (bidding_group, segment)
-    aggregated_quantity = dropdims(sum(quantity[bidding_groups, bus_index, :, :], dims = 3), dims = 3)
-    aggregated_price = dropdims(sum(price[bidding_groups, bus_index, :, :] .* quantity[bidding_groups, bus_index, :, :], dims = 3) ./ aggregated_quantity, dims = 3)
+    # "dims = 3" means we are summing over the fourth dimension (subperiod), because accessing the scalar "bus_index" dimension transforms the data into a 3D array
+    aggregated_quantity = dropdims(sum(quantity[bidding_groups, bus_index, :, :]; dims = 3); dims = 3)
+    aggregated_price = dropdims(
+        sum(price[bidding_groups, bus_index, :, :] .* quantity[bidding_groups, bus_index, :, :]; dims = 3) ./
+        aggregated_quantity;
+        dims = 3,
+    )
 
     treated_quantity_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
     treated_price_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
@@ -567,7 +572,7 @@ function initialize_reference_curve_nash_outputs(
 )
     outputs = Outputs()
 
-    labels = labels_for_output_by_pair_of_agents(
+    vr_labels = labels_for_output_by_pair_of_agents(
         inputs,
         run_time_options,
         inputs.collections.virtual_reservoir,
@@ -582,7 +587,7 @@ function initialize_reference_curve_nash_outputs(
         output_name = "virtual_reservoir_nash_quantity",
         dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
         unit = "MWh",
-        labels = labels,
+        labels = vr_labels,
         run_time_options,
     )
     initialize!(
@@ -592,7 +597,7 @@ function initialize_reference_curve_nash_outputs(
         output_name = "virtual_reservoir_nash_price",
         dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
         unit = "\$/MWh",
-        labels = labels,
+        labels = vr_labels,
         run_time_options,
     )
     initialize!(
@@ -602,7 +607,51 @@ function initialize_reference_curve_nash_outputs(
         output_name = "virtual_reservoir_nash_slope",
         dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
         unit = "\$/MWh2",
-        labels = labels,
+        labels = vr_labels,
+        run_time_options,
+    )
+
+    if !any_elements(inputs, BiddingGroup) || !has_any_simple_bids(inputs)
+        return outputs
+    end
+
+    bg_labels = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.bidding_group,
+        inputs.collections.bus;
+        index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "bidding_group_nash_quantity",
+        dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+        unit = "MWh",
+        labels = bg_labels,
+        run_time_options,
+    )
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "bidding_group_nash_price",
+        dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+        unit = "\$/MWh",
+        labels = bg_labels,
+        run_time_options,
+    )
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        output_name = "bidding_group_nash_slope",
+        dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+        unit = "\$/MWh2",
+        labels = bg_labels,
         run_time_options,
     )
 
@@ -619,7 +668,7 @@ function write_reference_curve_nash_vr_outputs(
     period::Int,
     scenario::Int,
 )
-    write_nash_equilibrium_output!(
+    write_nash_equilibrium_vr_output!(
         outputs,
         inputs,
         run_time_options,
@@ -629,7 +678,7 @@ function write_reference_curve_nash_vr_outputs(
         scenario,
     )
 
-    write_nash_equilibrium_output!(
+    write_nash_equilibrium_vr_output!(
         outputs,
         inputs,
         run_time_options,
@@ -639,7 +688,7 @@ function write_reference_curve_nash_vr_outputs(
         scenario,
     )
 
-    write_nash_equilibrium_output!(
+    write_nash_equilibrium_vr_output!(
         outputs,
         inputs,
         run_time_options,
@@ -662,37 +711,81 @@ function write_reference_curve_nash_bg_outputs(
     period::Int,
     scenario::Int,
 )
-    # write_nash_equilibrium_output!(
-    #     outputs,
-    #     inputs,
-    #     run_time_options,
-    #     "bidding_group_nash_quantity",
-    #     quantity,
-    #     period,
-    #     scenario,
-    # )
+    reshaped_quantity, reshaped_price, reshaped_slope = disaggregate_bg_output_in_subperiods(inputs, quantity, price, slope)
 
-    # write_nash_equilibrium_output!(
-    #     outputs,
-    #     inputs,
-    #     run_time_options,
-    #     "bidding_group_nash_price",
-    #     price,
-    #     period,
-    #     scenario,
-    # )
+    write_nash_equilibrium_bg_output!(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_nash_quantity",
+        reshaped_quantity,
+        period,
+        scenario,
+    )
 
-    # write_nash_equilibrium_output!(
-    #     outputs,
-    #     inputs,
-    #     run_time_options,
-    #     "bidding_group_nash_slope",
-    #     slope,
-    #     period,
-    #     scenario,
-    # )
+    write_nash_equilibrium_bg_output!(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_nash_price",
+        reshaped_price,
+        period,
+        scenario,
+    )
 
-    # TODO: add function to write bg outputs with subperiod dimension
+    write_nash_equilibrium_bg_output!(
+        outputs,
+        inputs,
+        run_time_options,
+        "bidding_group_nash_slope",
+        reshaped_slope,
+        period,
+        scenario,
+    )
 
     return nothing
+end
+
+function disaggregate_bg_output_in_subperiods(
+    inputs::AbstractInputs,
+    quantity::Array{Float64, 4},
+    price::Array{Float64, 4},
+    slope::Array{Float64, 4},
+)
+    number_of_bidding_groups, number_of_buses, number_of_iterations, number_of_segments = size(quantity)
+    subperiod_duration_sum = sum(subperiod_duration_in_hours(inputs))
+
+    reshaped_quantity = zeros(
+        Float64,
+        number_of_bidding_groups,
+        number_of_buses,
+        number_of_subperiods(inputs),
+        number_of_iterations,
+        number_of_segments,
+    )
+    reshaped_price = zeros(
+        Float64,
+        number_of_bidding_groups,
+        number_of_buses,
+        number_of_subperiods(inputs),
+        number_of_iterations,
+        number_of_segments,
+    )
+    reshaped_slope = zeros(
+        Float64,
+        number_of_bidding_groups,
+        number_of_buses,
+        number_of_subperiods(inputs),
+        number_of_iterations,
+        number_of_segments,
+    )
+
+    for subperiod in subperiods(inputs)
+        duration = subperiod_duration_in_hours(inputs, subperiod)
+        reshaped_quantity[:, :, subperiod, :, :] .= quantity .* (duration / subperiod_duration_sum) # quantity is divided into the subperiods
+        reshaped_price[:, :, subperiod, :, :] .= price # price is repeated
+        reshaped_slope[:, :, subperiod, :, :] .= slope .* (subperiod_duration_sum / duration) # slope is multiplied by the inverse of the quantity factor
+    end
+
+    return reshaped_quantity, reshaped_price, reshaped_slope
 end

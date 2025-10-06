@@ -160,7 +160,7 @@ function read_cuts_to_model!(
     end
 
     # When current_period is provided, we read the cuts for that period only
-    if current_period !== nothing
+    if current_period !== nothing && linear_policy_graph(inputs)
         function current_period_node_name_parser(::Type{Int}, name::String)
             node = parse(Int, name)
             if node != current_period
@@ -184,6 +184,15 @@ function read_cuts_to_model!(
         end
 
         SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser = all_periods_node_name_parser)
+        return model
+    end
+
+    # Single period cyclic policy graphs must read all cuts
+    if current_period !== nothing && cyclic_policy_graph(inputs)
+        function node_name_parser(::Type{Int}, name::String)
+            return parse(Int, name)
+        end
+        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser)
         return model
     end
 

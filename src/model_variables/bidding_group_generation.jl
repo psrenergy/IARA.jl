@@ -116,8 +116,8 @@ function bidding_group_generation!(
     bidding_group_price_bid = get_model_object(model, :bidding_group_price_bid)
 
     # Time series
-    quantity_bid_series = time_series_quantity_bid(inputs, model.node, scenario)
-    price_bid_series = time_series_price_bid(inputs, model.node, scenario)
+    quantity_bid_series = time_series_quantity_bid(inputs, simulation_period, simulation_trajectory)
+    price_bid_series = time_series_price_bid(inputs, simulation_period, simulation_trajectory)
 
     adjust_quantity_bid_for_ex_post!(inputs, run_time_options, quantity_bid_series, subscenario)
 

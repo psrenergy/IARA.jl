@@ -4,8 +4,6 @@ Pkg.instantiate()
 
 using ArgParse
 using PSRContinuousDeployment
-
-
 function main(args::Vector{String})
     s = ArgParseSettings()
     @add_arg_table! s begin
@@ -36,9 +34,9 @@ function main(args::Vector{String})
 
     aws_zip_url = PSRContinuousDeployment.find_aws_linux_zip(configuration)
 
-    println(aws_zip_url)
+    version_tag = "$(configuration.version)"
 
-    return aws_zip_url
+    return  version_tag, aws_zip_url
 end
 
 main(ARGS)

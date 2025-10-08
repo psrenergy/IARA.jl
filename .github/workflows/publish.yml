@@ -37,7 +37,7 @@ jobs:
   build-publish-windows:
     if: github.event.inputs.windows == 'true'
     name: Build and publish windows
-    runs-on: self-hosted
+    runs-on: [self-hosted, windows]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,7 +58,7 @@ jobs:
   build-publish-linux:
     if: github.event.inputs.linux == 'true'
     name: Build and publish linux
-    runs-on: self-hosted
+    runs-on: [self-hosted, windows]
     steps:
       - uses: actions/checkout@v4
         with:

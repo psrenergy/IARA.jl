@@ -12,11 +12,6 @@ on:
         required: true
         type: boolean
         default: true
-      create_release:
-        description: 'Create GitHub release (default true if stable release)'
-        required: false
-        type: boolean
-        default: false
       development_stage:
           type: choice
           description: 'Development stage'
@@ -42,7 +37,7 @@ jobs:
   build-publish-windows:
     if: github.event.inputs.windows == 'true'
     name: Build and publish windows
-    runs-on: self-hosted
+    runs-on: [self-hosted, windows]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,7 +58,7 @@ jobs:
   build-publish-linux:
     if: github.event.inputs.linux == 'true'
     name: Build and publish linux
-    runs-on: self-hosted
+    runs-on: [self-hosted, windows]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,7 +80,7 @@ jobs:
     name: Create release
     runs-on: self-hosted
     needs: [build-publish-windows, build-publish-linux]
-    if: github.event.inputs.create_release == 'true' || github.event.inputs.development_stage == 'Stable release'
+    if: github.event.inputs.development_stage == 'Stable release'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -97,25 +92,7 @@ jobs:
           file: 'Project.toml'
           field: 'version'
 
-      - name: Build version tag
-        id: version_tag
-        run: |
-          BASE_VERSION="${{ steps.project_toml.outputs.value }}"
-          if [ "${{ github.event.inputs.development_stage }}" != "Stable release" ]; then
-            STAGE=$(echo "${{ github.event.inputs.development_stage }}" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-            SUFFIX="${{ github.event.inputs.version_suffix }}"
-            if [ -n "$SUFFIX" ]; then
-              TAG="${BASE_VERSION}-${STAGE}.${SUFFIX}"
-            else
-              TAG="${BASE_VERSION}-${STAGE}"
-            fi
-          else
-            TAG="${BASE_VERSION}"
-          fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.version_tag.outputs.tag }}
-          generateReleaseNotes: true
-          prerelease: ${{ github.event.inputs.development_stage != 'Stable release' }}   
+          tag: v${{ steps.project_toml.outputs.value }}
+          generateReleaseNotes: true   

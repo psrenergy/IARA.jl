@@ -81,6 +81,8 @@ function main(args::Vector{String})
         url = url,
     )
 
+    create_release(configuration, PERSONAL_ACCESS_TOKEN)
+
     return 0
 end
 

@@ -121,7 +121,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           deployData=$(./compile/retrieve_deploy_data.sh --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}")
-          version=$(echo "$deployData" | grep "^VERSION=" | cut -d'=' -f2)
-          awsUrl=$(echo "$deployData" | grep "^URL=" | cut -d'=' -f2)
-          docker build -t ghcr.io/psrenergy/iara:$version --build-arg IARA_URL=$awsUrl -f docker/Dockerfile .
-          docker push ghcr.io/psrenergy/iara:$version
+          versionTag=$(echo "$deployData" | sed -n '1p')
+          awsUrl=$(echo "$deployData" | sed -n '2p')
+          commitHash=$(git rev-parse --short HEAD)
+          docker build -t ghcr.io/psrenergy/iara:latest --build-arg IARA_URL=$awsUrl --build-arg COMMIT_HASH=$commitHash --build-arg VERSION=$versionTag -f docker/Dockerfile .
+          docker push ghcr.io/psrenergy/iara:latest

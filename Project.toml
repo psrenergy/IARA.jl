@@ -1,6 +1,6 @@
 name = "IARA"
 uuid = "8de1ee9a-e440-4915-91b7-d1711c31e0f9"
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"

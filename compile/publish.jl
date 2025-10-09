@@ -45,7 +45,7 @@ function main(args::Vector{String})
     stable_release = is_stable_release(configuration)
 
     if !is_release_tag_available(configuration, PERSONAL_ACCESS_TOKEN)
-        Log.fatal_error("Version $(configuration.version) already exists")
+        error("Version $(configuration.version) already exists")
     end
 
     if Sys.iswindows()

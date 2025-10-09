@@ -860,7 +860,12 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             push!(vr_quantity_bid, vr_total_account - sum(vr_quantity_bid))
             push!(vr_price_bid, vr_price_bid[end] * (1.0 + reference_curve_final_segment_price_markup(inputs)))
         end
-        @assert issorted(vr_price_bid)
+        if !issorted(vr_price_bid)
+            sorted_indices = sortperm(vr_price_bid)
+            vr_price_bid = vr_price_bid[sorted_indices]
+            vr_quantity_bid = vr_quantity_bid[sorted_indices]
+            @warn "Reference curve for virtual reservoir $(vr) was not sorted by price. It has been sorted accordingly."
+        end
         for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
             # The reference curve for the asset owner is proportional to the original reference curve, but scaled by the
             # share of the asset owner's account in the total account of the virtual reservoir.

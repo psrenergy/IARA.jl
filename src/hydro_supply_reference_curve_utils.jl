@@ -24,19 +24,25 @@ function update_virtual_reservoir_reference_multiplier!(
     reference_multiplier::Float64,
     period::Int,
 )
-    subproblem_model = model.policy_graph[period].subproblem
-
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    # In cyclic policy graphs, this multiplier must be set for all nodes
+    subproblem_models = if cyclic_policy_graph(inputs)
+        [model.policy_graph[node].subproblem for node in 1:number_of_nodes(inputs)]
+    else
+        [model.policy_graph[period].subproblem]
+    end
 
     # Model parameters
-    virtual_reservoir_reference_multiplier = get_model_object(subproblem_model, :virtual_reservoir_reference_multiplier)
+    for subproblem_model in subproblem_models
+        virtual_reservoir_reference_multiplier =
+            get_model_object(subproblem_model, :virtual_reservoir_reference_multiplier)
 
-    MOI.set(
-        subproblem_model,
-        POI.ParameterValue(),
-        virtual_reservoir_reference_multiplier,
-        reference_multiplier,
-    )
+        MOI.set(
+            subproblem_model,
+            POI.ParameterValue(),
+            virtual_reservoir_reference_multiplier,
+            reference_multiplier,
+        )
+    end
     return nothing
 end
 

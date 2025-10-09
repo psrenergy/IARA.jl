@@ -803,6 +803,7 @@ function build_reference_curve(
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
             update_time_series_views_from_external_files!(inputs; period, scenario)
+
             simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
                 simulation_results,
                 1, # since we simulate one period at a time, the simulation_results period dimension is always 1

@@ -98,8 +98,9 @@ function virtual_reservoir_generation!(
 
     # Time series
     virtual_reservoir_quantity_bid_series =
-        time_series_virtual_reservoir_quantity_bid(inputs, model.node, scenario)
-    virtual_reservoir_price_bid_series = time_series_virtual_reservoir_price_bid(inputs, model.node, scenario)
+        time_series_virtual_reservoir_quantity_bid(inputs, simulation_period, simulation_trajectory)
+    virtual_reservoir_price_bid_series =
+        time_series_virtual_reservoir_price_bid(inputs, simulation_period, simulation_trajectory)
 
     for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr),
         seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)

@@ -223,18 +223,20 @@ function read_time_series_view_from_external_file!(
             ts,
         )
     elseif ts.dimensions == [:season, :sample, :subscenario, :subperiod]
+        season, sample, _ = consult_period_season_map(inputs; period, scenario)
         read_season_sample_subscenario_subperiod!(
             inputs,
             ts;
-            season = period,
-            sample = scenario,
+            season,
+            sample,
         )
     elseif ts.dimensions == [:season, :sample, :subperiod]
+        season, sample, _ = consult_period_season_map(inputs; period, scenario)
         read_season_sample_subperiod!(
             inputs,
             ts;
-            season = period,
-            sample = scenario,
+            season,
+            sample,
         )
     elseif ts.dimensions == [:period]
         read_period!(
@@ -255,11 +257,12 @@ function read_time_series_view_from_external_file!(
             scenario,
         )
     elseif ts.dimensions == [:season, :sample]
+        season, sample, _ = consult_period_season_map(inputs; period, scenario)
         read_season_sample!(
             inputs,
             ts;
-            season = period,
-            sample = scenario,
+            season,
+            sample,
         )
     else
         error("Time series with dimensions $(ts.dimensions) not supported.")

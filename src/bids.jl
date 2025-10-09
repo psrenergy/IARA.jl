@@ -179,7 +179,8 @@ function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::Abs
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_bid_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
                 asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments +
-                asset_owner_number_of_markdowns[ao] - 1
+                asset_owner_number_of_markdowns[ao] + 1
+            # TODO: calculate exactly the maximum number of segments necessary after markdown inclusion. -1 didn't work and +1 is conservative
         end
     end
     number_per_virtual_reservoir = [
@@ -854,13 +855,17 @@ function virtual_reservoir_markup_bids_for_period_scenario(
         vr_total_account = sum(accounts[vr])
         vr_quantity_bid =
             [quantity_bid_reference_curve[seg][vr] for seg in eachindex(quantity_bid_reference_curve)]
-        first_warning = false
-        if vr_total_account - sum(vr_quantity_bid) > 1e-6
-            @warn "Virtual reservoir $(vr) has a total account of $(vr_total_account) MWh, but the sum of the reference curve bids is $(sum(vr_quantity_bid)) MWh."
-            first_warning = true
-        end
         vr_price_bid = [price_bid_reference_curve[seg][vr] for seg in eachindex(price_bid_reference_curve)]
-        @assert issorted(vr_price_bid)
+        if vr_total_account - sum(vr_quantity_bid) > 1e-6
+            push!(vr_quantity_bid, vr_total_account - sum(vr_quantity_bid))
+            push!(vr_price_bid, vr_price_bid[end] * (1.0 + reference_curve_final_segment_price_markup(inputs)))
+        end
+        if !issorted(vr_price_bid)
+            sorted_indices = sortperm(vr_price_bid)
+            vr_price_bid = vr_price_bid[sorted_indices]
+            vr_quantity_bid = vr_quantity_bid[sorted_indices]
+            @warn "Reference curve for virtual reservoir $(vr) was not sorted by price. It has been sorted accordingly."
+        end
         for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
             # The reference curve for the asset owner is proportional to the original reference curve, but scaled by the
             # share of the asset owner's account in the total account of the virtual reservoir.
@@ -922,9 +927,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                         if current_reference_segment > length(ao_reference_quantity_bid)
                             # We have reached the end of the reference curve, so we stop defining bids for this asset owner
                             if current_account > 1e-6
-                                if !first_warning
-                                    @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
-                                end
+                                @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
                                 current_account = 0 # break the external while loop
                             end
                             break

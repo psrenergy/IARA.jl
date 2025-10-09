@@ -715,13 +715,21 @@ function hydro_unit_downstream_cumulative_production_factor(hydro_unit::HydroUni
 end
 
 function hydro_unit_max_available_turbining(inputs::AbstractInputs, idx::Int)
-    if hydro_unit_production_factor(inputs, idx) <= 1e-6
-        return hydro_unit_max_turbining(inputs, idx)
+    if is_null(hydro_unit_max_turbining(inputs, idx))
+        if hydro_unit_production_factor(inputs, idx) <= 1e-6
+            return 0.0
+        else
+            return inputs.collections.hydro_unit.max_generation[idx] / hydro_unit_production_factor(inputs, idx)
+        end
     else
-        return min(
-            hydro_unit_max_turbining(inputs, idx),
-            inputs.collections.hydro_unit.max_generation[idx] / hydro_unit_production_factor(inputs, idx),
-        )
+        if hydro_unit_production_factor(inputs, idx) <= 1e-6
+            return hydro_unit_max_turbining(inputs, idx)
+        else
+            return min(
+                hydro_unit_max_turbining(inputs, idx),
+                inputs.collections.hydro_unit.max_generation[idx] / hydro_unit_production_factor(inputs, idx),
+            )
+        end
     end
 end
 

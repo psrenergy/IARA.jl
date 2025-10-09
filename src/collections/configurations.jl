@@ -362,7 +362,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.period_season_map_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "period_season_map")
 
-    configurations.period_season_map = ones(Int, 3, configurations.number_of_periods, configurations.number_of_scenarios)
+    configurations.period_season_map =
+        ones(Int, 3, configurations.number_of_periods, configurations.number_of_scenarios)
 
     update_time_series_from_db!(configurations, inputs.db, initial_date_time(inputs))
 

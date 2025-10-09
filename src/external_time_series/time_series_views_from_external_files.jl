@@ -678,6 +678,18 @@ function update_time_series_views_from_external_files!(
     return nothing
 end
 
+function update_period_season_map_from_external_files!(inputs; period::Int, scenario::Int)
+    ts = inputs.time_series.period_season_map
+    if isa(ts, TimeSeriesView) && ts.reader !== nothing
+        read_time_series_view_from_external_file!(
+            inputs,
+            ts;
+            period,
+            scenario,
+        )
+    end
+end
+
 function update_segments_profile_dimensions!(inputs, period)
     if !any_elements(inputs, BiddingGroup)
         return nothing

@@ -33,6 +33,14 @@ function accepted_bid_revenue(
     end
 
     dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
+    labels = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.virtual_reservoir,
+        inputs.collections.asset_owner;
+        index_getter = virtual_reservoir_asset_owner_indices,
+    )
+    number_of_pairs = length(labels)
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -40,13 +48,7 @@ function accepted_bid_revenue(
         output_name = output_name,
         dimensions = dimensions,
         unit = "\$",
-        labels = labels_for_output_by_pair_of_agents(
-            inputs,
-            run_time_options,
-            inputs.collections.virtual_reservoir,
-            inputs.collections.asset_owner;
-            index_getter = virtual_reservoir_asset_owner_indices,
-        ),
+        labels = labels,
         run_time_options,
         dir_path = post_processing_path(inputs),
     )
@@ -56,8 +58,9 @@ function accepted_bid_revenue(
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
     for period in 1:num_periods
         for scenario in scenarios(inputs)
-            vr_generation_per_bid_segment =
-                zeros((number_of_elements(inputs, VirtualReservoir), maximum_number_of_vr_bidding_segments(inputs)))
+            vr_generation_per_bid_segment = zeros(number_of_pairs, maximum_number_of_vr_bidding_segments(inputs))
+            vr_generation_ex_ante_per_bid_segment =
+                zeros(number_of_pairs, maximum_number_of_vr_bidding_segments(inputs))
 
             for subscenario in subscenarios(inputs, run_time_options)
                 if has_subscenario(vr_marginal_cost_reader)
@@ -69,7 +72,6 @@ function accepted_bid_revenue(
                 end
                 price = vr_marginal_cost_reader.data
 
-                number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_ao_generation = zeros(number_of_pairs)
                 for bid_segment in 1:maximum_number_of_vr_bidding_segments(inputs)
                     if has_subscenario(vr_generation_reader)
@@ -90,8 +92,11 @@ function accepted_bid_revenue(
 
                     segment_generation = vr_generation_per_bid_segment[:, bid_segment]
                     if is_two_settlement_ex_post
-                        Quiver.goto!(vr_generation_ex_ante_reader; period, scenario, bid_segment = bid_segment)
-                        segment_generation = segment_generation - vr_generation_ex_ante_reader.data
+                        if subscenario == 1
+                            Quiver.goto!(vr_generation_ex_ante_reader; period, scenario, bid_segment = bid_segment)
+                            vr_generation_ex_ante_per_bid_segment[:, bid_segment] = vr_generation_ex_ante_reader.data
+                        end
+                        segment_generation = segment_generation - vr_generation_ex_ante_per_bid_segment[:, bid_segment]
                     end
                     vr_ao_generation = vr_ao_generation + segment_generation
                 end
@@ -190,6 +195,14 @@ function inflow_shareholder_residual_revenue(
     end
 
     dimensions = output_has_subscenario ? ["period", "scenario", "subscenario"] : ["period", "scenario"]
+    labels = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.virtual_reservoir,
+        inputs.collections.asset_owner;
+        index_getter = virtual_reservoir_asset_owner_indices,
+    )
+    number_of_pairs = length(labels)
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -197,13 +210,7 @@ function inflow_shareholder_residual_revenue(
         output_name = output_name,
         dimensions = dimensions,
         unit = "\$",
-        labels = labels_for_output_by_pair_of_agents(
-            inputs,
-            run_time_options,
-            inputs.collections.virtual_reservoir,
-            inputs.collections.asset_owner;
-            index_getter = virtual_reservoir_asset_owner_indices,
-        ),
+        labels = labels,
         run_time_options,
         dir_path = post_processing_path(inputs),
     )
@@ -360,7 +367,6 @@ function inflow_shareholder_residual_revenue(
                 end
 
                 vr_total_revenue = physical_generation_revenue .- accepted_bid_revenue .- om_cost
-                number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_ao_revenue = zeros(number_of_pairs)
                 idx = 0
                 for vr in index_of_elements(inputs, VirtualReservoir)
@@ -673,6 +679,8 @@ function hydro_constraints_violation_revenue(
         index_getter = virtual_reservoir_asset_owner_indices,
     )
 
+    number_of_pairs = length(labels_by_pairs)
+
     initialize!(
         QuiverOutput,
         outputs_post_processing;
@@ -786,7 +794,6 @@ function hydro_constraints_violation_revenue(
                     end
                 end
 
-                number_of_pairs = sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
                 vr_ao_violation_revenue = zeros(number_of_pairs)
                 vr_ao_violation_adjusted_revenue = zeros(number_of_pairs)
                 idx = 0

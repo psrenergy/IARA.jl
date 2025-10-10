@@ -56,6 +56,9 @@ function accepted_bid_revenue(
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
     for period in 1:num_periods
         for scenario in scenarios(inputs)
+            vr_generation_per_bid_segment =
+                zeros((number_of_elements(inputs, VirtualReservoir), maximum_number_of_vr_bidding_segments(inputs)))
+
             for subscenario in subscenarios(inputs, run_time_options)
                 if has_subscenario(vr_marginal_cost_reader)
                     Quiver.goto!(vr_marginal_cost_reader; period, scenario, subscenario = subscenario)
@@ -77,12 +80,15 @@ function accepted_bid_revenue(
                             subscenario = subscenario,
                             bid_segment = bid_segment,
                         )
+                        vr_generation_per_bid_segment[:, bid_segment] = vr_generation_reader.data
                     else
                         if subscenario == 1
                             Quiver.goto!(vr_generation_reader; period, scenario, bid_segment = bid_segment)
+                            vr_generation_per_bid_segment[:, bid_segment] = vr_generation_reader.data
                         end
                     end
-                    segment_generation = vr_generation_reader.data
+
+                    segment_generation = vr_generation_per_bid_segment[:, bid_segment]
                     if is_two_settlement_ex_post
                         Quiver.goto!(vr_generation_ex_ante_reader; period, scenario, bid_segment = bid_segment)
                         segment_generation = segment_generation - vr_generation_ex_ante_reader.data
@@ -207,6 +213,25 @@ function inflow_shareholder_residual_revenue(
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
     for period in 1:num_periods
         for scenario in scenarios(inputs)
+            hydro_generation_per_subperiod = zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+            hydro_generation_ex_ante_per_subperiod =
+                zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+            turbinable_spillage_per_subperiod =
+                zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+            turbinable_spillage_ex_ante_per_subperiod =
+                zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+
+            if network_representation(inputs, commercial_variables_suffix) == Configurations_NetworkRepresentation.ZONAL
+                load_marginal_cost_per_subperiod = zeros(number_of_elements(inputs, Zone), number_of_subperiods(inputs))
+            elseif network_representation(inputs, commercial_variables_suffix) ==
+                   Configurations_NetworkRepresentation.NODAL
+                load_marginal_cost_per_subperiod = zeros(number_of_elements(inputs, Bus), number_of_subperiods(inputs))
+            else
+                error(
+                    "Unsupported network representation: $(network_representation(inputs, commercial_variables_suffix))",
+                )
+            end
+
             for subscenario in subscenarios(inputs, run_time_options)
                 if has_subscenario(vr_accepted_bid_revenue_reader)
                     Quiver.goto!(vr_accepted_bid_revenue_reader; period, scenario, subscenario = subscenario)
@@ -256,6 +281,8 @@ function inflow_shareholder_residual_revenue(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        hydro_generation_per_subperiod[:, subperiod] = hydro_generation_reader.data
+
                         Quiver.goto!(
                             turbinable_spillage_reader;
                             period,
@@ -263,10 +290,14 @@ function inflow_shareholder_residual_revenue(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        turbinable_spillage_per_subperiod[:, subperiod] = turbinable_spillage_reader.data
                     else
                         if subscenario == 1
                             Quiver.goto!(hydro_generation_reader; period, scenario, subperiod = subperiod)
+                            hydro_generation_per_subperiod[:, subperiod] = hydro_generation_reader.data
+
                             Quiver.goto!(turbinable_spillage_reader; period, scenario, subperiod = subperiod)
+                            turbinable_spillage_per_subperiod[:, subperiod] = turbinable_spillage_reader.data
                         end
                     end
 
@@ -278,22 +309,34 @@ function inflow_shareholder_residual_revenue(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        load_marginal_cost_per_subperiod[:, subperiod] = load_marginal_cost_reader.data
                     else
                         if subscenario == 1
                             Quiver.goto!(load_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                            load_marginal_cost_per_subperiod[:, subperiod] = load_marginal_cost_reader.data
                         end
                     end
 
-                    load_price = load_marginal_cost_reader.data
-                    hydro_generation = hydro_generation_reader.data
-                    spilled_energy = turbinable_spillage_reader.data
+                    load_price = load_marginal_cost_per_subperiod[:, subperiod]
+                    hydro_generation = hydro_generation_per_subperiod[:, subperiod]
+                    spilled_energy = turbinable_spillage_per_subperiod[:, subperiod]
 
                     if is_two_settlement_ex_post
-                        Quiver.goto!(hydro_generation_ex_ante_reader; period, scenario, subperiod = subperiod)
-                        Quiver.goto!(turbinable_spillage_ex_ante_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(hydro_generation_ex_ante_reader; period, scenario, subperiod = subperiod)
+                            hydro_generation_ex_ante_per_subperiod[:, subperiod] = hydro_generation_ex_ante_reader.data
 
-                        hydro_generation = hydro_generation_reader.data - hydro_generation_ex_ante_reader.data
-                        spilled_energy = turbinable_spillage_reader.data - turbinable_spillage_ex_ante_reader.data
+                            Quiver.goto!(turbinable_spillage_ex_ante_reader; period, scenario, subperiod = subperiod)
+                            turbinable_spillage_ex_ante_per_subperiod[:, subperiod] =
+                                turbinable_spillage_ex_ante_reader.data
+                        end
+
+                        hydro_generation =
+                            hydro_generation_per_subperiod[:, subperiod] -
+                            hydro_generation_ex_ante_per_subperiod[:, subperiod]
+                        spilled_energy =
+                            turbinable_spillage_per_subperiod[:, subperiod] -
+                            turbinable_spillage_ex_ante_per_subperiod[:, subperiod]
                     end
 
                     for vr in index_of_elements(inputs, VirtualReservoir)
@@ -304,6 +347,10 @@ function inflow_shareholder_residual_revenue(
                             elseif network_representation(inputs, commercial_variables_suffix) ==
                                    Configurations_NetworkRepresentation.NODAL
                                 load_price_index = hydro_unit_bus_index(inputs, h)
+                            else
+                                error(
+                                    "Unsupported network representation: $(network_representation(inputs, commercial_variables_suffix))",
+                                )
                             end
                             physical_generation_revenue[vr] +=
                                 (hydro_generation[h] + spilled_energy[h]) / MW_to_GW() * load_price[load_price_index]
@@ -441,6 +488,21 @@ function spilled_responsibility_revenue(
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
     for period in 1:num_periods
         for scenario in scenarios(inputs)
+            spilled_energy_per_subperiod = zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+            spilled_energy_ex_ante_per_subperiod =
+                zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+
+            if network_representation(inputs, commercial_variables_suffix) == Configurations_NetworkRepresentation.ZONAL
+                load_marginal_cost_per_subperiod = zeros(number_of_elements(inputs, Zone), number_of_subperiods(inputs))
+            elseif network_representation(inputs, commercial_variables_suffix) ==
+                   Configurations_NetworkRepresentation.NODAL
+                load_marginal_cost_per_subperiod = zeros(number_of_elements(inputs, Bus), number_of_subperiods(inputs))
+            else
+                error(
+                    "Unsupported network representation: $(network_representation(inputs, commercial_variables_suffix))",
+                )
+            end
+
             for subscenario in subscenarios(inputs, run_time_options)
                 if has_subscenario(vr_energy_account_reader)
                     Quiver.goto!(vr_energy_account_reader; period, scenario, subscenario = subscenario)
@@ -468,15 +530,22 @@ function spilled_responsibility_revenue(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        spilled_energy_per_subperiod[:, subperiod] = spilled_energy_reader.data
                     else
                         if subscenario == 1
                             Quiver.goto!(spilled_energy_reader; period, scenario, subperiod = subperiod)
+                            spilled_energy_per_subperiod[:, subperiod] = spilled_energy_reader.data
                         end
                     end
-                    spilled_energy = spilled_energy_reader.data
+                    spilled_energy = spilled_energy_per_subperiod[:, subperiod]
                     if is_two_settlement_ex_post
-                        Quiver.goto!(spilled_energy_ex_ante_reader; period, scenario, subperiod = subperiod)
-                        spilled_energy = spilled_energy_reader.data - spilled_energy_ex_ante_reader.data
+                        if subscenario == 1
+                            Quiver.goto!(spilled_energy_ex_ante_reader; period, scenario, subperiod = subperiod)
+                            spilled_energy_ex_ante_per_subperiod[:, subperiod] = spilled_energy_ex_ante_reader.data
+                        end
+                        spilled_energy =
+                            spilled_energy_per_subperiod[:, subperiod] -
+                            spilled_energy_ex_ante_per_subperiod[:, subperiod]
                     end
 
                     if has_subscenario(load_marginal_cost_reader)
@@ -487,12 +556,14 @@ function spilled_responsibility_revenue(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        load_marginal_cost_per_subperiod[:, subperiod] = load_marginal_cost_reader.data
                     else
                         if subscenario == 1
                             Quiver.goto!(load_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                            load_marginal_cost_per_subperiod[:, subperiod] = load_marginal_cost_reader.data
                         end
                     end
-                    price = load_marginal_cost_reader.data
+                    price = load_marginal_cost_per_subperiod[:, subperiod]
 
                     for vr in index_of_elements(inputs, VirtualReservoir)
                         for h in virtual_reservoir_asset_owner_indices(inputs, vr)
@@ -519,7 +590,7 @@ function spilled_responsibility_revenue(
                         idx += 1
                         if total_energy_account == 0.0
                             if vr_spilled_energy_cost[vr] > 0.0
-                                @warn "Virtual reservoir $vr spilled energy cost is positive, but the total energy account is zero. The cost will be allocated according to inflow allocation instead."
+                                @warn "At period $period, scenario $scenario, subscenario $subscenario, virtual reservoir $vr spilled energy cost is positive, but the total energy account is zero. The cost will be allocated according to inflow allocation instead."
                                 vr_ao_spilled_energy_cost[idx] =
                                     -vr_spilled_energy_cost[vr] *
                                     virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
@@ -636,6 +707,13 @@ function hydro_constraints_violation_revenue(
 
     for period in 1:num_periods
         for scenario in scenarios(inputs)
+            minimum_outflow_violation_per_subperiod =
+                zeros((length(hydro_units_with_minimum_outflow), number_of_subperiods(inputs)))
+            minimum_outflow_violation_ex_ante_per_subperiod =
+                zeros((length(hydro_units_with_minimum_outflow), number_of_subperiods(inputs)))
+            violation_marginal_cost_per_subperiod =
+                zeros((length(hydro_units_with_minimum_outflow), number_of_subperiods(inputs)))
+
             for subscenario in subscenarios(inputs, run_time_options)
                 vr_violation_revenue = zeros((number_of_elements(inputs, VirtualReservoir)))
                 vr_violation_adjusted_revenue = zeros((number_of_elements(inputs, VirtualReservoir)))
@@ -648,18 +726,30 @@ function hydro_constraints_violation_revenue(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        minimum_outflow_violation_per_subperiod[:, subperiod] = minimum_outflow_violation_reader.data
                     else
                         if subscenario == 1
                             Quiver.goto!(minimum_outflow_violation_reader; period, scenario, subperiod = subperiod)
+                            minimum_outflow_violation_per_subperiod[:, subperiod] =
+                                minimum_outflow_violation_reader.data
                         end
                     end
 
-                    minimum_outflow_violation = minimum_outflow_violation_reader.data
+                    minimum_outflow_violation = minimum_outflow_violation_per_subperiod[:, subperiod]
 
                     if is_two_settlement_ex_post
-                        Quiver.goto!(minimum_outflow_violation_ex_ante_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(
+                                minimum_outflow_violation_ex_ante_reader;
+                                period,
+                                scenario,
+                                subperiod = subperiod,
+                            )
+                            minimum_outflow_violation_ex_ante_per_subperiod[:, subperiod] =
+                                minimum_outflow_violation_ex_ante_reader.data
+                        end
                         minimum_outflow_violation =
-                            minimum_outflow_violation - minimum_outflow_violation_ex_ante_reader.data
+                            minimum_outflow_violation - minimum_outflow_violation_ex_ante_per_subperiod[:, subperiod]
                     end
 
                     if has_subscenario(violation_marginal_cost_reader)
@@ -670,13 +760,15 @@ function hydro_constraints_violation_revenue(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        violation_marginal_cost_per_subperiod[:, subperiod] = violation_marginal_cost_reader.data
                     else
                         if subscenario == 1
                             Quiver.goto!(violation_marginal_cost_reader; period, scenario, subperiod = subperiod)
+                            violation_marginal_cost_per_subperiod[:, subperiod] = violation_marginal_cost_reader.data
                         end
                     end
 
-                    violation_marginal_cost = violation_marginal_cost_reader.data
+                    violation_marginal_cost = violation_marginal_cost_per_subperiod[:, subperiod]
 
                     for vr in index_of_elements(inputs, VirtualReservoir)
                         for (i, h) in enumerate(hydro_units_with_minimum_outflow)

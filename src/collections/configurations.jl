@@ -572,7 +572,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             end
             if (
                 configurations.construction_type_ex_ante_commercial != Configurations_ConstructionType.HYBRID &&
-                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
+                configurations.construction_type_ex_ante_commercial != Configurations_ConstructionType.SKIP
             )
                 model_type_warning = true
                 configurations.construction_type_ex_ante_commercial = Configurations_ConstructionType.HYBRID
@@ -586,13 +586,13 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             end
             if (
                 configurations.construction_type_ex_post_commercial != Configurations_ConstructionType.HYBRID &&
-                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
+                configurations.construction_type_ex_post_commercial != Configurations_ConstructionType.SKIP
             )
                 model_type_warning = true
                 configurations.construction_type_ex_post_commercial = Configurations_ConstructionType.HYBRID
             end
             if model_type_warning
-                @warn("All clearing models must be hybrid when using virtual reservoirs.")
+                @warn("All clearing models must be hybrid or skipped when using virtual reservoirs.")
             end
         end
         if settlement_type(inputs) == Configurations_FinancialSettlementType.NONE

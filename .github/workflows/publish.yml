@@ -32,10 +32,15 @@ on:
         required: true
         type: boolean
         default: false
+      docker_only:
+        description: 'Skip builds and only publish Docker image'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build-publish-windows:
-    if: github.event.inputs.windows == 'true'
+    if: github.event.inputs.windows == 'true' && github.event.inputs.docker_only == 'false'
     name: Build and publish windows
     runs-on: [self-hosted, windows]
     steps:
@@ -56,7 +61,7 @@ jobs:
           .\compile\ecs.bat --development_stage "$developmentStage" --version_suffix $versionSuffix --overwrite $overwrite --os windows
 
   build-publish-linux:
-    if: github.event.inputs.linux == 'true'
+    if: github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false'
     name: Build and publish linux
     runs-on: [self-hosted, windows]
     steps:
@@ -102,7 +107,7 @@ jobs:
     name: Retrieve deployment data
     runs-on: [self-hosted, windows]
     needs: [build-publish-windows, build-publish-linux]
-    if: always() && (needs.build-publish-linux.result == 'success')
+    if: always() && (needs.build-publish-linux.result == 'success' || github.event.inputs.docker_only == 'true')
     outputs:
       version_tag: ${{ steps.deploy_data.outputs.version_tag }}
       aws_url: ${{ steps.deploy_data.outputs.aws_url }}
@@ -119,10 +124,18 @@ jobs:
         run: |
           $developmentStage = "${{ github.event.inputs.development_stage }}"
           $versionSuffix = "${{ github.event.inputs.version_suffix }}"
-          $output = .\compile\retrieve_deploy_data.bat --development_stage "$developmentStage" --version_suffix "$versionSuffix"
-          $lines = $output -split "`n"
-          $versionTag = $lines[0].Trim()
-          $awsUrl = $lines[1].Trim()
+          $output = .\compile\retrieve_deploy_data.bat --development_stage "$developmentStage" --version_suffix "$versionSuffix" 2>&1
+          $lines = ($output -split "`n") | Where-Object { $_.Trim() -ne "" }
+          
+          # Find version tag (should match semantic version pattern)
+          $versionTag = ($lines | Where-Object { $_ -match '^\d+\.\d+\.\d+' } | Select-Object -First 1).Trim()
+          
+          # Find AWS URL (should contain https://psrimago-public)
+          $awsUrl = ($lines | Where-Object { $_ -match 'https://psrimago-public' } | Select-Object -First 1).Trim()
+          
+          Write-Host "Version Tag: $versionTag"
+          Write-Host "AWS URL: $awsUrl"
+          
           echo "version_tag=$versionTag" >> $env:GITHUB_OUTPUT
           echo "aws_url=$awsUrl" >> $env:GITHUB_OUTPUT
 

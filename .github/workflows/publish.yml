@@ -144,6 +144,9 @@ jobs:
     runs-on: [self-hosted, linux]
     needs: [retrieve-deployment-data]
     if: always() && needs.retrieve-deployment-data.result == 'success'
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:

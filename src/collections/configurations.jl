@@ -859,6 +859,12 @@ Return the number of periods per year.
 function periods_per_year(inputs::AbstractInputs)
     if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return 12
+    elseif time_series_step(inputs) == Configurations_TimeSeriesStep.FROZEN_TIME
+        if cyclic_policy_graph(inputs)
+            return number_of_nodes(inputs)
+        else
+            error("Periods per year is undefined for linear policy graphs with frozen time step.")
+        end
     else
         error("Time series step $(time_series_step(inputs)) not implemented.")
     end

@@ -143,6 +143,7 @@ jobs:
     name: Build and publish container to ghcr.io
     runs-on: [self-hosted, linux]
     needs: [retrieve-deployment-data]
+    if: needs.retrieve-deployment-data.result == 'success'
     steps:
       - uses: actions/checkout@v4
         with:

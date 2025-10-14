@@ -159,5 +159,5 @@ jobs:
       - name: Build and push Docker image
         run: |
           commitHash=$(git rev-parse --short HEAD)
-          docker build -t ghcr.io/psrenergy/iara:latest --build-arg IARA_URL=${{ needs.retrieve-deployment-data.outputs.aws_url }} --build-arg COMMIT_HASH=$commitHash --build-arg VERSION=${{ needs.retrieve-deployment-data.outputs.version_tag }} -f docker/Dockerfile .
+          docker build -t ghcr.io/psrenergy/iara:latest --build-arg IARA_URL=${{ needs.retrieve-deployment-data.outputs.aws_url }} --build-arg COMMIT_HASH=$commitHash --build-arg VERSION=${{ needs.retrieve-deployment-data.outputs.version_tag }} -f docker/Dockerfile docker/
           docker push ghcr.io/psrenergy/iara:latest

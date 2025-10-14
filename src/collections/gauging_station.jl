@@ -212,7 +212,7 @@ Validate the GaugingStation within the inputs context. Return the number of erro
 """
 function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingStation)
     num_errors = 0
-    if fit_parp_model(inputs)
+    if !read_inflow_from_file(inputs)
         if any(isempty.(gauging_station.historical_inflow))
             @error("Inflow is set to use fit a PAR(p) model, but GaugingStation historical inflow data is missing.")
             num_errors += 1

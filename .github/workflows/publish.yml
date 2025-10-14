@@ -130,8 +130,8 @@ jobs:
           # Find version tag (should match semantic version pattern)
           $versionTag = ($lines | Where-Object { $_ -match '^\d+\.\d+\.\d+' } | Select-Object -First 1).Trim()
           
-          # Find AWS URL (should contain https://psrimago-public)
-          $awsUrl = ($lines | Where-Object { $_ -match 'https://psrimago-public' } | Select-Object -First 1).Trim()
+          # Find AWS URL (should contain https://)
+          $awsUrl = ($lines | Where-Object { $_ -match 'https://' } | Select-Object -First 1).Trim()
           
           Write-Host "Version Tag: $versionTag"
           Write-Host "AWS URL: $awsUrl"

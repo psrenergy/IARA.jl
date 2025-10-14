@@ -78,7 +78,7 @@ jobs:
 
   post-publish:
     name: Create release
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux]
     needs: [build-publish-windows, build-publish-linux]
     if: github.event.inputs.development_stage == 'Stable release'
     steps:
@@ -100,7 +100,7 @@ jobs:
   
   docker-publish:
     name: Build and publish container to ghcr.io
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux]
     needs: [build-publish-windows, build-publish-linux]
     if: needs.build-publish-linux.result == 'success'
     steps:

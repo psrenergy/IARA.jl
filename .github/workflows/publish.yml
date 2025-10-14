@@ -98,11 +98,38 @@ jobs:
           generateReleaseNotes: true   
 
   
+  retrieve-deployment-data:
+    name: Retrieve deployment data
+    runs-on: [self-hosted, windows]
+    needs: [build-publish-windows, build-publish-linux]
+    if: always() && (needs.build-publish-linux.result == 'success')
+    outputs:
+      version_tag: ${{ steps.deploy_data.outputs.version_tag }}
+      aws_url: ${{ steps.deploy_data.outputs.aws_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve deployment data
+        id: deploy_data
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          $developmentStage = "${{ github.event.inputs.development_stage }}"
+          $versionSuffix = "${{ github.event.inputs.version_suffix }}"
+          $output = .\compile\retrieve_deploy_data.bat --development_stage "$developmentStage" --version_suffix "$versionSuffix"
+          $lines = $output -split "`n"
+          $versionTag = $lines[0].Trim()
+          $awsUrl = $lines[1].Trim()
+          echo "version_tag=$versionTag" >> $env:GITHUB_OUTPUT
+          echo "aws_url=$awsUrl" >> $env:GITHUB_OUTPUT
+
   docker-publish:
     name: Build and publish container to ghcr.io
     runs-on: [self-hosted, linux]
-    needs: [build-publish-windows, build-publish-linux]
-    if: always() && (needs.build-publish-linux.result == 'success')
+    needs: [retrieve-deployment-data]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -115,15 +142,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Retrieve deployment data and build Docker image
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Build and push Docker image
         run: |
-          chmod +x ./compile/retrieve_deploy_data.sh
-          deployData=$(./compile/retrieve_deploy_data.sh --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}")
-          versionTag=$(echo "$deployData" | sed -n '1p')
-          awsUrl=$(echo "$deployData" | sed -n '2p')
           commitHash=$(git rev-parse --short HEAD)
-          docker build -t ghcr.io/psrenergy/iara:latest --build-arg IARA_URL=$awsUrl --build-arg COMMIT_HASH=$commitHash --build-arg VERSION=$versionTag -f docker/Dockerfile .
+          docker build -t ghcr.io/psrenergy/iara:latest --build-arg IARA_URL=${{ needs.retrieve-deployment-data.outputs.aws_url }} --build-arg COMMIT_HASH=$commitHash --build-arg VERSION=${{ needs.retrieve-deployment-data.outputs.version_tag }} -f docker/Dockerfile .
           docker push ghcr.io/psrenergy/iara:latest

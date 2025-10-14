@@ -13,7 +13,7 @@ function main(args::Vector{String})
         default = "Stable release"
         "--version_suffix"
         nargs = '?'
-        constant = ""        
+        constant = ""
         default = ""
         "--overwrite"
         nargs = '?'
@@ -23,7 +23,6 @@ function main(args::Vector{String})
     end
     #! format: on
     parsed_args = parse_args(args, s)
-
 
     package_path = dirname(@__DIR__)
     configuration = build_configuration(;
@@ -36,7 +35,7 @@ function main(args::Vector{String})
 
     version_tag = "$(configuration.version)"
 
-    return  version_tag, aws_zip_url
+    return version_tag, aws_zip_url
 end
 
 main(ARGS)

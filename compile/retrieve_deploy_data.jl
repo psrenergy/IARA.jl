@@ -35,7 +35,8 @@ function main(args::Vector{String})
 
     version_tag = "$(configuration.version)"
 
-    return version_tag, aws_zip_url
+    println(version_tag)
+    println(aws_zip_url)
 end
 
 main(ARGS)

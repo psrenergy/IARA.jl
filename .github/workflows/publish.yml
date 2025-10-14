@@ -102,7 +102,7 @@ jobs:
     name: Build and publish container to ghcr.io
     runs-on: [self-hosted, linux]
     needs: [build-publish-windows, build-publish-linux]
-    if: needs.build-publish-linux.result == 'success'
+    if: always() && (needs.build-publish-linux.result == 'success')
     steps:
       - uses: actions/checkout@v4
         with:

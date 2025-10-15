@@ -35,4 +35,17 @@ IARA.add_virtual_reservoir!(db;
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 
+# Modify time series
+new_demand = demand .* 2.0
+IARA.write_timeseries_file(
+    joinpath(PATH, "demand"),
+    new_demand;
+    dimensions = ["period", "scenario", "subperiod"],
+    labels = ["dem_1"],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
+    initial_date = "2020",
+    unit = "p.u.",
+)
+
 IARA.close_study!(db)

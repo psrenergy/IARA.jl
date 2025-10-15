@@ -198,7 +198,7 @@ function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
     num_errors = 0
     if generate_heuristic_bids_for_clearing(inputs) &&
        clearing_hydro_representation(inputs) ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
         all_virtual_reservoir_asset_owner_indices = union(virtual_reservoir_asset_owner_indices(inputs)...)
         for i in 1:length(asset_owner)
             if i in all_virtual_reservoir_asset_owner_indices

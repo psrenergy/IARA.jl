@@ -122,9 +122,7 @@ Initialize the outputs struct.
 function initialize_outputs(inputs::Inputs, run_time_options::RunTimeOptions)
     outputs = Outputs()
     model_action(outputs, inputs, run_time_options, InitializeOutput)
-    if is_market_clearing(inputs) &&
-       clearing_hydro_representation(inputs) ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_WATER_VALUES
+    if is_market_clearing(inputs) && use_virtual_reservoirs(inputs)
         initialize_virtual_reservoir_post_processing_outputs!(outputs, inputs, run_time_options)
     end
     return outputs
@@ -266,6 +264,10 @@ function get_outputs_dimension_size(
             push!(dimension_size, maximum_number_of_profiles(inputs))
         elseif dimension == "reference_curve_segment"
             push!(dimension_size, reference_curve_number_of_segments(inputs))
+        elseif dimension == "nash_curve_segment"
+            push!(dimension_size, maximum_number_of_segments_in_nash_equilibrium(inputs))
+        elseif dimension == "nash_iteration"
+            push!(dimension_size, reference_curve_nash_max_iterations(inputs))
         else
             error("Dimension $dimension not recognized")
         end
@@ -577,6 +579,117 @@ function write_reference_curve_output!(
         reference_curve_segment,
         scenario,
     )
+    return nothing
+end
+
+function write_nash_equilibrium_vr_output!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    data::Array{Float64, 4},
+    period::Int,
+    scenario::Int;
+    multiply_by::Float64 = 1.0,
+)
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options) # why run_time_options?
+    asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
+
+    # 4D array with dimensions: virtual_reservoir, asset_owner, nash_iteration, nash_curve_segment
+    @assert size(data, 1) == length(virtual_reservoirs)
+    @assert size(data, 2) == length(asset_owners)
+    number_of_iterations = size(data, 3)
+    number_of_segments = size(data, 4)
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    number_of_asset_owners_per_virtual_reservoir = length.(virtual_reservoir_asset_owner_indices(inputs))
+    treated_output = zeros(number_of_segments, number_of_iterations, sum(number_of_asset_owners_per_virtual_reservoir))
+
+    for iter in 1:number_of_iterations, seg in 1:number_of_segments
+        pair_index = 0
+        for vr in virtual_reservoirs
+            for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+                pair_index += 1
+                treated_output[seg, iter, pair_index] = data[vr, ao, iter, seg]
+            end
+        end
+
+        Quiver.write!(
+            output.writer,
+            round_output(treated_output[seg, iter, :] * multiply_by);
+            period,
+            scenario,
+            nash_iteration = iter,
+            nash_curve_segment = seg,
+        )
+    end
+
+    return nothing
+end
+
+function write_nash_equilibrium_bg_output!(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    output_name::String,
+    data::Array{Float64, 5},
+    period::Int,
+    scenario::Int;
+    multiply_by::Float64 = 1.0,
+)
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    bidding_groups =
+        index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs]) # why run_time_options?
+    buses = index_of_elements(inputs, Bus; run_time_options)
+
+    # 5D array with dimensions: bidding_group, bus, subperiod, nash_iteration, nash_curve_segment
+    @assert size(data, 1) == length(bidding_groups)
+    @assert size(data, 2) == length(buses)
+    @assert size(data, 3) == number_of_subperiods(inputs)
+    number_of_iterations = size(data, 4)
+    number_of_segments = size(data, 5)
+
+    # Pick the correct output based on the run time options
+    output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
+
+    treated_output = zeros(
+        number_of_segments,
+        number_of_iterations,
+        number_of_subperiods(inputs),
+        length(bidding_groups) * length(buses),
+    )
+
+    for subperiod in subperiods(inputs), iter in 1:number_of_iterations, seg in 1:number_of_segments
+        pair_index = 0
+        for (i, bg) in enumerate(bidding_groups)
+            for bus in buses
+                pair_index += 1
+                treated_output[seg, iter, subperiod, pair_index] = data[i, bus, subperiod, iter, seg]
+            end
+        end
+
+        Quiver.write!(
+            output.writer,
+            round_output(treated_output[seg, iter, subperiod, :] * multiply_by);
+            period,
+            scenario,
+            subperiod,
+            nash_iteration = iter,
+            nash_curve_segment = seg,
+        )
+    end
+
     return nothing
 end
 

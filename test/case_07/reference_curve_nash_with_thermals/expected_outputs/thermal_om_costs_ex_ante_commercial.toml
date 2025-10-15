@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subperiod"]
+dimension_size = [3, 2, 4]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "period"
+frequency = "monthly"
+unit = "$"
+labels = ["thermal_1a", "thermal_1b", "thermal_2a", "thermal_2b", "thermal_3a", "thermal_3b", "thermal_4a", "thermal_4b", "thermal_5a", "thermal_5b", "thermal_6a", "thermal_6b", "thermal_7a", "thermal_7b", "thermal_8a", "thermal_8b"]

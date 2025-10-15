@@ -113,6 +113,7 @@ Configurations for the problem.
     reference_curve_nash_extra_bid_quantity::Float64 = 0.0
     reference_curve_nash_tolerance::Float64 = 0.0
     reference_curve_nash_max_iterations::Int = 0
+    reference_curve_nash_max_cost_multiplier::Float64 = 0.0
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -356,6 +357,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_tolerance")[1]
     configurations.reference_curve_nash_max_iterations =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_max_iterations")[1]
+    configurations.reference_curve_nash_max_cost_multiplier =
+        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_max_cost_multiplier")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
@@ -1674,6 +1677,14 @@ Return the maximum number of iterations for the Nash equilibrium from hydro refe
 """
 reference_curve_nash_max_iterations(inputs::AbstractInputs) =
     inputs.collections.configurations.reference_curve_nash_max_iterations
+
+"""
+    reference_curve_nash_max_cost_multiplier(inputs)
+
+Return the maximum cost multiplier for the Nash equilibrium from hydro reference curve.
+"""
+reference_curve_nash_max_cost_multiplier(inputs::AbstractInputs) =
+    inputs.collections.configurations.reference_curve_nash_max_cost_multiplier
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

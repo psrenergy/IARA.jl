@@ -25,6 +25,20 @@
 
 IARA is a computational model that provides the capability to simulate mechanism designs for economic dispatch and price formation in electricity markets. Through hourly simulations of large-scale systems, incorporating uncertainties, and with detailed representation of the physical components of generation, transmission, storage, and consumption, it is possible to assess the impacts on agents and the system of price formation mechanisms based on "cost," "bid," or any hybrid model between the two.
 
+## Docker image
+
+You can obtain the latest Docker image for IARA.jl from the GitHub Container Registry:
+
+```sh
+docker pull ghcr.io/psrenergy/iara:latest
+```
+
+Each image is linked to a specific Git commit. To find the commit hash associated with the image, run:
+
+```sh
+docker inspect --format='{{.Config.Labels}}' ghcr.io/psrenergy/iara:latest
+```
+
 ## Funding 
 
 The code development was funded by the project [**Meta II Formação de Preço**](https://www.meta2formacaodepreco.com.br/), "A study about short-term electric energy price formation: an analysis of the Brazilian market".

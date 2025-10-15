@@ -54,6 +54,12 @@ end
 function date_time_from_period(inputs::Inputs, period::Int)
     if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return initial_date_time(inputs) + Dates.Month(period - 1)
+    elseif time_series_step(inputs) == Configurations_TimeSeriesStep.FROZEN_TIME
+        if cyclic_policy_graph(inputs)
+            return initial_date_time(inputs)
+        else
+            error("Date time from period is undefined for linear policy graphs with frozen time step.")
+        end
     else
         error("Time series step $(time_series_step(inputs)) not supported.")
     end
@@ -74,9 +80,15 @@ function period_from_date_time(
 end
 
 function period_index_in_year(inputs::Inputs, period::Int)
-    date_time = date_time_from_period(inputs, period)
     if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
+        date_time = date_time_from_period(inputs, period)
         return Dates.month(date_time)
+    elseif time_series_step(inputs) == Configurations_TimeSeriesStep.FROZEN_TIME
+        if cyclic_policy_graph(inputs)
+            return mod1(period, periods_per_year(inputs))
+        else
+            error("Period index in year is undefined for linear policy graphs with frozen time step.")
+        end
     else
         error("Time series step $(time_series_step(inputs)) not supported.")
     end

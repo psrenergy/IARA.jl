@@ -109,9 +109,11 @@ end
     Configurations_TimeSeriesStep
 
   - `ONE_MONTH_PER_PERIOD`: Monthly period (0)
+  - `FROZEN_TIME`: Frozen time (1)
 """
 @enumx Configurations_TimeSeriesStep begin
     ONE_MONTH_PER_PERIOD = 0
+    FROZEN_TIME = 1
 end
 
 @enumx Configurations_HydroBalanceSubperiodRepresentation begin
@@ -123,6 +125,8 @@ end
 function period_type_string(time_series_step::Configurations_TimeSeriesStep.T)
     if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return "monthly"
+    elseif time_series_step == Configurations_TimeSeriesStep.FROZEN_TIME
+        return "frozen_time"
     else
         error("Time series step not implemented")
     end

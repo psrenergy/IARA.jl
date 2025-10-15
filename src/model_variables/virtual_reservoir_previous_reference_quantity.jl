@@ -62,14 +62,16 @@ function virtual_reservoir_previous_reference_quantity!(
     )
 
     # If the reference curve is complete, this constraint is not needed
-    if sum_of_previous_reference_curve_quantities == virtual_reservoir_stored_energy(
+    stored_energy = virtual_reservoir_stored_energy(
         inputs,
         run_time_options,
         simulation_period,
         simulation_trajectory,
         subscenario,
     )
-        sum_of_previous_reference_curve_quantities = 0.0
+
+    if isapprox(sum_of_previous_reference_curve_quantities, stored_energy)
+        sum_of_previous_reference_curve_quantities .= 0.0
     end
 
     for vr in virtual_reservoirs

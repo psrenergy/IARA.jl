@@ -45,6 +45,9 @@ function post_processing_minimum_outflow_violation(
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
     for period in 1:num_periods
         for scenario in scenarios(inputs)
+            hydro_turbining_per_subperiod = zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+            hydro_spillage_per_subperiod = zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
+
             for subscenario in subscenarios(inputs, run_time_options)
                 for subperiod in subperiods(inputs)
                     if consider_subscenario
@@ -55,6 +58,8 @@ function post_processing_minimum_outflow_violation(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        hydro_turbining_per_subperiod[:, subperiod] = hydro_turbining_reader.data
+
                         Quiver.goto!(
                             hydro_spillage_reader;
                             period,
@@ -62,12 +67,18 @@ function post_processing_minimum_outflow_violation(
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
+                        hydro_spillage_per_subperiod[:, subperiod] = hydro_spillage_reader.data
                     else
-                        Quiver.goto!(hydro_turbining_reader; period, scenario, subperiod = subperiod)
-                        Quiver.goto!(hydro_spillage_reader; period, scenario, subperiod = subperiod)
+                        if subscenario == 1
+                            Quiver.goto!(hydro_turbining_reader; period, scenario, subperiod = subperiod)
+                            hydro_turbining_per_subperiod[:, subperiod] = hydro_turbining_reader.data
+
+                            Quiver.goto!(hydro_spillage_reader; period, scenario, subperiod = subperiod)
+                            hydro_spillage_per_subperiod[:, subperiod] = hydro_spillage_reader.data
+                        end
                     end
 
-                    outflow = hydro_turbining_reader.data + hydro_spillage_reader.data
+                    outflow = hydro_turbining_per_subperiod[:, subperiod] + hydro_spillage_per_subperiod[:, subperiod]
                     hydro_units_minimum_outflow_violation = zeros(length(hydro_units_with_minimum_outflow))
 
                     for (i, h) in enumerate(hydro_units_with_minimum_outflow)

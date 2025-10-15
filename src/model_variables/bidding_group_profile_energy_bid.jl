@@ -27,8 +27,9 @@ function bidding_group_profile_energy_bid!(
     blks = subperiods(inputs)
 
     placeholder_scenario = 1
-    quantity_bid_profile_series = time_series_quantity_bid_profile(inputs, model.node, placeholder_scenario)
-    price_bid_profile_series = time_series_price_bid_profile(inputs, model.node, placeholder_scenario)
+    placeholder_period = 1
+    quantity_bid_profile_series = time_series_quantity_bid_profile(inputs, placeholder_period, placeholder_scenario)
+    price_bid_profile_series = time_series_price_bid_profile(inputs, placeholder_period, placeholder_scenario)
 
     # Variables
     @variable(
@@ -110,8 +111,8 @@ function bidding_group_profile_energy_bid!(
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
     blks = subperiods(inputs)
 
-    quantity_bid_profile_series = time_series_quantity_bid_profile(inputs, model.node, scenario)
-    price_bid_profile_series = time_series_price_bid_profile(inputs, model.node, scenario)
+    quantity_bid_profile_series = time_series_quantity_bid_profile(inputs, simulation_period, simulation_trajectory)
+    price_bid_profile_series = time_series_price_bid_profile(inputs, simulation_period, simulation_trajectory)
 
     bidding_group_price_bid_profile = get_model_object(model, :bidding_group_price_bid_profile)
     bidding_group_quantity_bid_profile = get_model_object(model, :bidding_group_quantity_bid_profile)

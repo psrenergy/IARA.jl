@@ -371,6 +371,9 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.period_season_map_file =
         PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "period_season_map")
 
+    configurations.period_season_map =
+        ones(Int, 3, configurations.number_of_scenarios, configurations.number_of_periods)
+
     update_time_series_from_db!(configurations, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -577,7 +580,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             end
             if (
                 configurations.construction_type_ex_ante_commercial != Configurations_ConstructionType.HYBRID &&
-                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
+                configurations.construction_type_ex_ante_commercial != Configurations_ConstructionType.SKIP
             )
                 model_type_warning = true
                 configurations.construction_type_ex_ante_commercial = Configurations_ConstructionType.HYBRID
@@ -591,13 +594,13 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             end
             if (
                 configurations.construction_type_ex_post_commercial != Configurations_ConstructionType.HYBRID &&
-                configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
+                configurations.construction_type_ex_post_commercial != Configurations_ConstructionType.SKIP
             )
                 model_type_warning = true
                 configurations.construction_type_ex_post_commercial = Configurations_ConstructionType.HYBRID
             end
             if model_type_warning
-                @warn("All clearing models must be hybrid when using virtual reservoirs.")
+                @warn("All clearing models must be hybrid or skipped when using virtual reservoirs.")
             end
         end
         if settlement_type(inputs) == Configurations_FinancialSettlementType.NONE
@@ -863,6 +866,12 @@ Return the number of periods per year.
 function periods_per_year(inputs::AbstractInputs)
     if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         return 12
+    elseif time_series_step(inputs) == Configurations_TimeSeriesStep.FROZEN_TIME
+        if cyclic_policy_graph(inputs)
+            return number_of_nodes(inputs)
+        else
+            error("Periods per year is undefined for linear policy graphs with frozen time step.")
+        end
     else
         error("Time series step $(time_series_step(inputs)) not implemented.")
     end

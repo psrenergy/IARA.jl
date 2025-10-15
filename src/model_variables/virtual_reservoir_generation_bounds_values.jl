@@ -60,7 +60,7 @@ function virtual_reservoir_generation_bounds_values!(
 
     # Time series
     virtual_reservoir_quantity_bid_series =
-        time_series_virtual_reservoir_quantity_bid(inputs, model.node, scenario)
+        time_series_virtual_reservoir_quantity_bid(inputs, simulation_period, simulation_trajectory)
 
     # Variables
     virtual_reservoir_generation_upper_bound_value =

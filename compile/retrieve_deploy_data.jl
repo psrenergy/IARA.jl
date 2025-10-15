@@ -37,6 +37,8 @@ function main(args::Vector{String})
 
     println(version_tag)
     println(aws_zip_url)
+
+    return nothing
 end
 
 main(ARGS)

@@ -913,8 +913,9 @@ function virtual_reservoir_markup_bids_for_period_scenario(
 
                 # We have defined the quantity bid for the current markup. Now we split it considering the prices of the reference curve.
                 sum_of_bids_for_current_markup = 0.0
-                while sum_of_bids_for_current_markup < maximum_bid_considering_markup && !isapprox(
-                    sum_of_bids_for_current_markup, maximum_bid_considering_markup)
+                while sum_of_bids_for_current_markup < maximum_bid_considering_markup &&
+                    !isapprox(
+                        sum_of_bids_for_current_markup, maximum_bid_considering_markup)
                     maximum_bid_considering_reference =
                         sum(ao_reference_quantity_bid[1:current_reference_segment]) - sum_of_ao_selling_bids
                     if maximum_bid_considering_reference == 0

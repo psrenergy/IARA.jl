@@ -508,19 +508,21 @@ function validate(hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME &&
-           !(0.0 <= hydro_unit.initial_volume[i] <= 1.0)
-            @error(
-                "Hydro Unit $(hydro_unit.label[i]) Initial volume type is `PerUnit` must be between 0 and 1. Current value is $(hydro_unit.initial_volume[i])."
-            )
-            num_errors += 1
-        elseif hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.ABSOLUTE_VOLUME_IN_HM3 &&
-               !(hydro_unit.min_volume[i] <= hydro_unit.initial_volume[i] <= hydro_unit.max_volume[i])
-            # TODO: Could min volume be null?
-            @error(
-                "Hydro Unit $(hydro_unit.label[i]) Initial volume type is `Volume` must be between minimum and maximum volume [$(hydro_unit.min_volume[i]), $(hydro_unit.max_volume[i])]. Current value is $(hydro_unit.initial_volume[i])."
-            )
-            num_errors += 1
+        if hydro_unit.initial_volume_variation_type[i] == HydroUnit_InitialVolumeVariationType.CONSTANT_VALUE
+            if hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME &&
+               !(0.0 <= hydro_unit.initial_volume[i] <= 1.0)
+                @error(
+                    "Hydro Unit $(hydro_unit.label[i]) Initial volume type is `PerUnit` must be between 0 and 1. Current value is $(hydro_unit.initial_volume[i])."
+                )
+                num_errors += 1
+            elseif hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.ABSOLUTE_VOLUME_IN_HM3 &&
+                   !(hydro_unit.min_volume[i] <= hydro_unit.initial_volume[i] <= hydro_unit.max_volume[i])
+                # TODO: Could min volume be null?
+                @error(
+                    "Hydro Unit $(hydro_unit.label[i]) Initial volume type is `Volume` must be between minimum and maximum volume [$(hydro_unit.min_volume[i]), $(hydro_unit.max_volume[i])]. Current value is $(hydro_unit.initial_volume[i])."
+                )
+                num_errors += 1
+            end
         end
         if !is_null(hydro_unit.turbine_to[i]) &&
            !(hydro_unit.turbine_to[i] in 1:length(hydro_unit))

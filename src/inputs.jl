@@ -166,8 +166,8 @@ function initialize!(inputs::Inputs)
         initialize!(getfield(inputs.collections, fieldname), inputs)
     end
 
-    # Fill caches with collection data
-    fill_caches!(inputs)
+    # Fill relation caches with collection data
+    fill_relation_caches!(inputs)
 
     # Validate all collections
     try
@@ -189,6 +189,9 @@ function initialize!(inputs::Inputs)
         clean_up(inputs)
         rethrow(e)
     end
+
+    # Fill data caches with collection data
+    fill_data_caches!(inputs)
 
     return nothing
 end
@@ -312,25 +315,35 @@ function log_inputs(inputs::Inputs)
 end
 
 """
-    fill_caches!(inputs::Inputs)
+    fill_relation_caches!(inputs::Inputs)
 
-Store pre-calculated values for the collections.
+Store pre-processed relations for the collections.
 """
-
-function fill_caches!(inputs::Inputs)
+function fill_relation_caches!(inputs::Inputs)
     if use_virtual_reservoirs(inputs)
         fill_hydro_unit_virtual_reservoir_index!(inputs)
-        for vr in index_of_elements(inputs, VirtualReservoir)
-            fill_waveguide_points!(inputs, vr)
-            fill_water_to_energy_factors!(inputs, vr)
-            fill_initial_energy_account!(inputs, vr)
-        end
         for h in index_of_elements(inputs, HydroUnit)
             fill_whether_hydro_unit_is_associated_with_some_virtual_reservoir!(inputs, h)
         end
     end
     fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs)
     fill_plot_strings_dict!(inputs)
+    return nothing
+end
+
+"""
+    fill_data_caches!(inputs::Inputs)
+
+Store pre-processed data for the collections.
+"""
+function fill_data_caches!(inputs::Inputs)
+    if use_virtual_reservoirs(inputs)
+        for vr in index_of_elements(inputs, VirtualReservoir)
+            fill_waveguide_points!(inputs, vr)
+            fill_water_to_energy_factors!(inputs, vr)
+            fill_initial_energy_account!(inputs, vr)
+        end
+    end
     return nothing
 end
 

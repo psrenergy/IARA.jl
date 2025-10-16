@@ -5,8 +5,8 @@ function train_nash_equilibrium_model(inputs::Inputs)
     if !isdir(initialization_dir)
         mkdir(initialization_dir)
     end
-    if nash_equilibrium_initialization(inputs) ==
-       Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
+    if max_rev_equilibrium_bid_initialization(inputs) ==
+       Configurations_MaxRevEquilibriumBidInitialization.PARAMETERIZED_HEURISTIC_BIDS
         @info("Initializing Nash Equilibrium: MIN COST HEURISTIC")
         initialize_nash_equilibrium(
             inputs,
@@ -33,8 +33,8 @@ function train_nash_equilibrium_model(inputs::Inputs)
             end
         end
     end
-    if nash_equilibrium_initialization(inputs) ==
-       Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
+    if max_rev_equilibrium_bid_initialization(inputs) ==
+       Configurations_MaxRevEquilibriumBidInitialization.PARAMETERIZED_HEURISTIC_BIDS
         reopen_hydro_unit_time_series_from_output_directory!(inputs, run_time_options)
         reinitialize_bids_time_series_for_nash_iteration!(inputs, run_time_options)
     end

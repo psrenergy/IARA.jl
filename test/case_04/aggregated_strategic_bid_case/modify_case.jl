@@ -17,9 +17,10 @@ IARA.update_configuration!(db;
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
     settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
-    nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.ITERATION_WITH_AGGREGATE_BUSES,
+    bid_processing = IARA.Configurations_BidProcessing.ITERATED_BIDS_FROM_MAXIMIZE_REVENUE_EQUILIBRIUM,
     max_iteration_nash_equilibrium = 3,
-    nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.EXTERNAL_BID,
+    max_rev_equilibrium_bid_initialization = IARA.Configurations_MaxRevEquilibriumBidInitialization.READ_BIDS_FROM_FILE,
+    max_rev_equilibrium_bus_aggregation_type = IARA.Configurations_MaxRevEquilibriumBusAggregationType.AGGREGATE_ALL_BUSES,
 )
 IARA.update_asset_owner!(db, "asset_owner_1";
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,

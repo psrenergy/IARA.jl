@@ -52,9 +52,9 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "AssetOwner", "price_type"),
             AssetOwner_PriceType.T,
         )
-    asset_owner.purchase_discount_rate = PSRI.get_vectors(inputs.db, "AssetOwner", "purchase_discount_rate")
 
     # Load vectors
+    asset_owner.purchase_discount_rate = PSRI.get_vectors(inputs.db, "AssetOwner", "purchase_discount_rate")
     asset_owner.virtual_reservoir_energy_account_upper_bound =
         PSRI.get_vectors(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
     asset_owner.risk_factor_for_virtual_reservoir_bids =
@@ -196,9 +196,7 @@ Validate the AssetOwner within the inputs context. Return the number of errors f
 """
 function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
     num_errors = 0
-    if generate_heuristic_bids_for_clearing(inputs) &&
-       clearing_hydro_representation(inputs) ==
-       Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+    if generate_heuristic_bids_for_clearing(inputs) && use_virtual_reservoirs(inputs)
         all_virtual_reservoir_asset_owner_indices = union(virtual_reservoir_asset_owner_indices(inputs)...)
         for i in 1:length(asset_owner)
             if i in all_virtual_reservoir_asset_owner_indices

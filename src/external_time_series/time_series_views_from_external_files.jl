@@ -390,7 +390,7 @@ function initialize_time_series_from_external_files(inputs)
     end
 
     # Bid price limit
-    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) && must_read_bid_price_limit_file(inputs)
+    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) && use_bid_price_limits_from_file(inputs)
         if has_any_simple_bids(inputs)
             file = joinpath(path_case(inputs), bidding_group_bid_price_limit_justified_independent_file(inputs))
             num_errors += initialize_time_series_view_from_external_file(

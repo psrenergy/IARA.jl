@@ -133,29 +133,53 @@ function period_type_string(time_series_step::Configurations_TimeSeriesStep.T)
 end
 
 """
-    Configurations_NashEquilibriumInitialization
+    Configurations_BidPriceValidation
 
-    - `MIN_COST_HEURISTIC`: Min cost initialization (0)
-    - `EXTERNAL_BID`: External bid initialization (1)
+  - `DO_NOT_VALIDATE`: (0)
+  - `VALIDATE_WITH_DEFAULT_LIMIT`: (1)
+  - `VALIDATE_WITH_LIMIT_READ_FROM_FILE`: (2)
 """
-@enumx Configurations_NashEquilibriumInitialization begin
-    MIN_COST_HEURISTIC = 0
-    EXTERNAL_BID = 1
+@enumx Configurations_BidPriceValidation begin
+    DO_NOT_VALIDATE = 0
+    VALIDATE_WITH_DEFAULT_LIMIT = 1
+    VALIDATE_WITH_LIMIT_READ_FROM_FILE = 2
 end
 
 """
-    Configurations_NashEquilibriumStrategy
+    Configurations_BidProcessing
 
-    - `DO_NOT_ITERATE`: Do not iterate (0)
-    - `SINGLE_PERIOD_ITERATE`: Single period iterate (1)
-    - `STANDARD_ITERATION`: Standard iteration (2)
-    - `ITERATION_WITH_AGGREGATE_BUSES`: Iteration with aggregate buses (3)
+  - `READ_BIDS_FROM_FILE`: (0)
+  - `PARAMETERIZED_HEURISTIC_BIDS`: (1)
+  - `ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM`: (2)
+  - `ITERATED_BIDS_FROM_MAXIMIZE_REVENUE_EQUILIBRIUM`: (3)
 """
-@enumx Configurations_NashEquilibriumStrategy begin
-    DO_NOT_ITERATE = 0
-    SINGLE_PERIOD_ITERATE = 1
-    STANDARD_ITERATION = 2
-    ITERATION_WITH_AGGREGATE_BUSES = 3
+@enumx Configurations_BidProcessing begin
+    READ_BIDS_FROM_FILE = 0
+    PARAMETERIZED_HEURISTIC_BIDS = 1
+    ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM = 2
+    ITERATED_BIDS_FROM_MAXIMIZE_REVENUE_EQUILIBRIUM = 3
+end
+
+"""
+    Configurations_MaxRevEquilibriumBusAggregationType
+
+  - `DO_NOT_AGGREGATE`: (0)
+  - `AGGREGATE_ALL_BUSES`: (1)
+"""
+@enumx Configurations_MaxRevEquilibriumBusAggregationType begin
+    DO_NOT_AGGREGATE = 0
+    AGGREGATE_ALL_BUSES = 1
+end
+
+"""
+    Configurations_MaxRevEquilibriumBidInitialization
+
+  - `READ_BIDS_FROM_FILE`: (0)
+  - `PARAMETERIZED_HEURISTIC_BIDS`: (1)
+"""
+@enumx Configurations_MaxRevEquilibriumBidInitialization begin
+    READ_BIDS_FROM_FILE = 0
+    PARAMETERIZED_HEURISTIC_BIDS = 1
 end
 
 """
@@ -169,34 +193,6 @@ end
     SUM = 0
     AVERAGE = 1
     LAST_VALUE = 2
-end
-
-"""
-  Configurations_BiddingGroupBidProcessing
-
-  - `EXTERNAL_UNVALIDATED_BID`: Read from file (0)
-  - `EXTERNAL_VALIDATED_BID`: Read from file and validated (1)
-  - `HEURISTIC_UNVALIDATED_BID`: Run the heuristic bids module concurrently with clearing, one period at a time (2)
-  - `HEURISTIC_VALIDATED_BID`: Run the heuristic bids module concurrently with clearing, one period at a time and validated (3)
-"""
-@enumx Configurations_BiddingGroupBidProcessing begin
-    EXTERNAL_UNVALIDATED_BID = 0
-    EXTERNAL_VALIDATED_BID = 1
-    HEURISTIC_UNVALIDATED_BID = 2
-    HEURISTIC_VALIDATED_BID = 3
-end
-
-"""
-    Configurations_VirtualReservoirBidProcessing
-
-  - `IGNORE_VIRTUAL_RESERVOIRS`: (0)
-  - `HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE`: (1)
-  - `NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE`: (2)
-"""
-@enumx Configurations_VirtualReservoirBidProcessing begin
-    IGNORE_VIRTUAL_RESERVOIRS = 0
-    HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE = 1
-    NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE = 2
 end
 
 """
@@ -257,26 +253,6 @@ end
     EX_ANTE = 0
     EX_POST = 1
     TWO_SETTLEMENT = 2
-end
-
-"""
-    Configurations_MakeWholePayments
-
-  - `IGNORE`: Ignore (0)
-"""
-@enumx Configurations_MakeWholePayments begin
-    IGNORE = 0
-end
-
-"""
-    Configurations_PriceLimits
-
-  - `REPRESENT`: Represent (0)
-  - `IGNORE`: Ignore (1)
-"""
-@enumx Configurations_PriceLimits begin
-    REPRESENT = 0
-    IGNORE = 1
 end
 
 """
@@ -350,13 +326,13 @@ end
 """
     AssetOwner_PriceType
 
-  - `PRICE_MAKER`: Price maker (1)
   - `PRICE_TAKER`: Price taker (0)
+  - `PRICE_MAKER`: Price maker (1)
   - `SUPPLY_SECURITY_AGENT`: Supply security agent (2)
 """
 @enumx AssetOwner_PriceType begin
-    PRICE_MAKER = 1
     PRICE_TAKER = 0
+    PRICE_MAKER = 1
     SUPPLY_SECURITY_AGENT = 2
 end
 
@@ -551,11 +527,6 @@ end
 @enumx Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid begin
     DO_NOT_CONSIDER = 0
     CONSIDER = 1
-end
-
-@enumx BiddingGroup_BidPriceLimitSource begin
-    DEFAULT_LIMIT = 0
-    READ_FROM_FILE = 1
 end
 
 """

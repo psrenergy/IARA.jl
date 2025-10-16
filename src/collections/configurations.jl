@@ -1033,7 +1033,8 @@ nash_equilibrium_iteration(inputs::AbstractInputs, run_time_options::RunTimeOpti
     run_time_options.nash_equilibrium_iteration
 
 iteration_with_aggregate_buses(inputs::AbstractInputs) =
-    max_rev_equilibrium_bus_aggregation_type(inputs) == Configurations_MaxRevEquilibriumBusAggregationType.AGGREGATE_ALL_BUSES
+    max_rev_equilibrium_bus_aggregation_type(inputs) ==
+    Configurations_MaxRevEquilibriumBusAggregationType.AGGREGATE_ALL_BUSES
 
 """
     parp_max_lags(inputs::AbstractInputs)

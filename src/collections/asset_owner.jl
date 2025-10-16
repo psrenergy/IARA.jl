@@ -52,8 +52,8 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "AssetOwner", "price_type"),
             AssetOwner_PriceType.T,
         )
-        
-        # Load vectors
+
+    # Load vectors
     asset_owner.purchase_discount_rate = PSRI.get_vectors(inputs.db, "AssetOwner", "purchase_discount_rate")
     asset_owner.virtual_reservoir_energy_account_upper_bound =
         PSRI.get_vectors(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")

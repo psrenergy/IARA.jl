@@ -24,7 +24,6 @@ Collection representing the bidding groups in the system.
     ex_post_adjust_mode::Vector{BiddingGroup_ExPostAdjustMode.T} = []
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
-    bid_price_limit_source::Vector{BiddingGroup_BidPriceLimitSource.T} = []
     fixed_cost::Vector{Float64} = []
     quantity_bid_file::String = ""
     price_bid_file::String = ""
@@ -63,11 +62,6 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 
     bidding_group.label = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
     bidding_group.asset_owner_index = PSRI.get_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
-    bidding_group.bid_price_limit_source =
-        convert_to_enum.(
-            PSRI.get_parms(inputs.db, "BiddingGroup", "bid_price_limit_source"),
-            BiddingGroup_BidPriceLimitSource.T,
-        )
     bidding_group.fixed_cost = PSRI.get_parms(inputs.db, "BiddingGroup", "fixed_cost")
 
     # Load vectors
@@ -315,7 +309,7 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     end
 
     # Check if the bid price limit files are necessary, and if so, if they are provided
-    if must_read_bid_price_limit_file(inputs)
+    if use_bid_price_limits_from_file(inputs)
         if has_any_simple_bids(inputs)
             if bidding_group.bid_price_limit_justified_independent_file == ""
                 @error(
@@ -631,18 +625,6 @@ function update_number_of_valid_profiles!(inputs::AbstractInputs, values::Vector
     end
     inputs.collections.bidding_group._number_of_valid_profiles .= values
     return nothing
-end
-
-function use_bid_price_limits_from_file(inputs::AbstractInputs, bidding_group_index::Int)
-    return bidding_group_bid_price_limit_source(inputs)[bidding_group_index] ==
-           BiddingGroup_BidPriceLimitSource.READ_FROM_FILE
-end
-
-function must_read_bid_price_limit_file(inputs::AbstractInputs)
-    return any(
-        bidding_group_bid_price_limit_source(inputs) .==
-        BiddingGroup_BidPriceLimitSource.READ_FROM_FILE,
-    ) && validate_bidding_group_bids(inputs)
 end
 
 function bids_justifications_exist(inputs::AbstractInputs)

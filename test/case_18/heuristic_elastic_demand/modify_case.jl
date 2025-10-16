@@ -27,7 +27,8 @@ end
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
-    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
+    bid_processing = IARA.Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS,
+    bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
 )
 
 IARA.update_bidding_group!(

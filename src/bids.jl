@@ -752,8 +752,7 @@ function must_read_hydro_unit_data_for_markup_wizard(
     if generate_heuristic_bids_for_clearing(inputs) || iterate_nash_equilibrium(inputs)
         if use_virtual_reservoirs(inputs)
             return false
-        elseif clearing_hydro_representation(inputs) ==
-               Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
+        else
             bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
             if isempty(bidding_group_indexes)
                 return false
@@ -767,8 +766,6 @@ function must_read_hydro_unit_data_for_markup_wizard(
     else
         return false
     end
-
-    return false
 end
 
 """
@@ -873,19 +870,19 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             ao_price_bid = Float64[]
 
             account_upper_bounds =
-                if clearing_hydro_representation(inputs) ==
-                   Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+                if bid_processing(inputs) ==
+                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
                     asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
-                elseif clearing_hydro_representation(inputs) ==
-                       Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
+                elseif bid_processing(inputs) ==
+                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     [1.0]
                 end
             markups =
-                if clearing_hydro_representation(inputs) ==
-                   Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+                if bid_processing(inputs) ==
+                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
                     asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
-                elseif clearing_hydro_representation(inputs) ==
-                       Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
+                elseif bid_processing(inputs) ==
+                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     # Markups are calculated via Nash equilibrium later. This function is only used to divide the reference curve between the asset owners.
                     [0.0]
                 end
@@ -954,8 +951,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             # Energy to buy
             #--------------
             if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs) &&
-               clearing_hydro_representation(inputs) ==
-               Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE
+               bid_processing(inputs) == Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
                 lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])
                 sell_segments = collect(1:seg)
                 buy_segments = Int[]
@@ -1350,9 +1346,7 @@ function adjust_quantity_bid_for_ex_post!(
         end
         # Check if the bidding group has hydro units
         # If the bidding group has hydro units, we skip the adjustment
-        if bidding_group_has_hydro_units(inputs, bg) &&
-           clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
+        if bidding_group_has_hydro_units(inputs, bg)
             continue
         end
         for bus in 1:number_of_elements(inputs, Bus)

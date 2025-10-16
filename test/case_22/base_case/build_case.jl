@@ -40,8 +40,9 @@ db = IARA.create_study!(PATH;
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     max_iteration_nash_equilibrium = 3,
-    nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.STANDARD_ITERATION,
-    nash_equilibrium_initialization = IARA.Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC,
+    bid_processing = IARA.Configurations_BidProcessing.ITERATED_BIDS_FROM_MAXIMIZE_REVENUE_EQUILIBRIUM,
+    max_rev_equilibrium_bid_initialization = IARA.Configurations_MaxRevEquilibriumBidInitialization.PARAMETERIZED_HEURISTIC_BIDS,
+    max_rev_equilibrium_bus_aggregation_type = IARA.Configurations_MaxRevEquilibriumBusAggregationType.DO_NOT_AGGREGATE,
 )
 
 # Conversion constants

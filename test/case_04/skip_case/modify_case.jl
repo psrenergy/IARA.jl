@@ -16,7 +16,6 @@ IARA.update_configuration!(db;
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.SKIP,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
     settlement_type = IARA.Configurations_FinancialSettlementType.NONE,
-    nash_equilibrium_strategy = IARA.Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE,
 )
 
 IARA.close_study!(db)

@@ -37,10 +37,6 @@ Configurations for the problem.
         Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
     cycle_discount_rate::Float64 = 0.0
     cycle_duration_in_hours::Float64 = 0.0
-    nash_equilibrium_strategy::Configurations_NashEquilibriumStrategy.T =
-        Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
-    nash_equilibrium_initialization::Configurations_NashEquilibriumInitialization.T =
-        Configurations_NashEquilibriumInitialization.MIN_COST_HEURISTIC
     max_iteration_nash_equilibrium::Int = 0
     parp_max_lags::Int = 0
     renewable_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
@@ -49,10 +45,14 @@ Configurations for the problem.
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
     demand_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
-    bid_data_processing::Configurations_BiddingGroupBidProcessing.T =
-        Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID
-    clearing_hydro_representation::Configurations_VirtualReservoirBidProcessing.T =
-        Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
+    bid_price_validation::Configurations_BidPriceValidation.T =
+        Configurations_BidPriceValidation.DO_NOT_VALIDATE
+    bid_processing::Configurations_BidProcessing.T =
+        Configurations_BidProcessing.READ_BIDS_FROM_FILE
+    max_rev_equilibrium_bus_aggregation_type::Configurations_MaxRevEquilibriumBusAggregationType.T =
+        Configurations_MaxRevEquilibriumBusAggregationType.DO_NOT_AGGREGATE
+    max_rev_equilibrium_bid_initialization::Configurations_MaxRevEquilibriumBidInitialization.T =
+        Configurations_MaxRevEquilibriumBidInitialization.READ_BIDS_FROM_FILE
     construction_type_ex_ante_physical::Configurations_ConstructionType.T =
         Configurations_ConstructionType.SKIP
     construction_type_ex_ante_commercial::Configurations_ConstructionType.T =
@@ -83,8 +83,6 @@ Configurations for the problem.
     network_representation_ex_post_commercial::Configurations_NetworkRepresentation.T =
         Configurations_NetworkRepresentation.NODAL
     settlement_type::Configurations_FinancialSettlementType.T = Configurations_FinancialSettlementType.EX_ANTE
-    make_whole_payments::Configurations_MakeWholePayments.T =
-        Configurations_MakeWholePayments.IGNORE
     vr_curveguide_data_source::Configurations_VRCurveguideDataSource.T =
         Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
     vr_curveguide_data_format::Configurations_VRCurveguideDataFormat.T =
@@ -180,14 +178,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
                 Configurations_ThermalUnitIntraPeriodOperation.T,
             )
         end
-    nash_equilibrium_strategy =
-        PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_strategy")[1]
-    configurations.nash_equilibrium_strategy =
-        convert_to_enum(nash_equilibrium_strategy, Configurations_NashEquilibriumStrategy.T)
-    nash_equilibrium_initialization =
-        PSRI.get_parms(inputs.db, "Configuration", "nash_equilibrium_initialization")[1]
-    configurations.nash_equilibrium_initialization =
-        convert_to_enum(nash_equilibrium_initialization, Configurations_NashEquilibriumInitialization.T)
     max_iteration_nash_equilibrium =
         PSRI.get_parms(inputs.db, "Configuration", "max_iteration_nash_equilibrium")[1]
     configurations.max_iteration_nash_equilibrium = max_iteration_nash_equilibrium
@@ -206,25 +196,30 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "demand_scenarios_files")[1],
             Configurations_UncertaintyScenariosFiles.T,
         )
-    configurations.bid_data_processing =
+    configurations.bid_price_validation =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "bid_data_processing")[1],
-            Configurations_BiddingGroupBidProcessing.T,
+            PSRI.get_parms(inputs.db, "Configuration", "bid_price_validation")[1],
+            Configurations_BidPriceValidation.T,
         )
-    configurations.clearing_hydro_representation =
+    configurations.bid_processing =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "clearing_hydro_representation")[1],
-            Configurations_VirtualReservoirBidProcessing.T,
+            PSRI.get_parms(inputs.db, "Configuration", "bid_processing")[1],
+            Configurations_BidProcessing.T,
+        )
+    configurations.max_rev_equilibrium_bus_aggregation_type =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "max_rev_equilibrium_bus_aggregation_type")[1],
+            Configurations_MaxRevEquilibriumBusAggregationType.T,
+        )
+    configurations.max_rev_equilibrium_bid_initialization =
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "max_rev_equilibrium_bid_initialization")[1],
+            Configurations_MaxRevEquilibriumBidInitialization.T,
         )
     configurations.settlement_type =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "settlement_type")[1],
             Configurations_FinancialSettlementType.T,
-        )
-    configurations.make_whole_payments =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "make_whole_payments")[1],
-            Configurations_MakeWholePayments.T,
         )
     configurations.cycle_discount_rate =
         PSRI.get_parms(inputs.db, "Configuration", "cycle_discount_rate")[1]
@@ -478,8 +473,9 @@ function validate(configurations::Configurations)
         @error("Maximum number of iterations for Nash equilibrium must be non-negative.")
         num_errors += 1
     end
+    # Check if Nash equilibrium is enabled (bid_processing == 3 means MAX_REVENUE_ITERATED_BIDS)
     if configurations.max_iteration_nash_equilibrium == 0 &&
-       configurations.nash_equilibrium_strategy != Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
+       configurations.bid_processing == Configurations_BidProcessing.ITERATED_BIDS_FROM_MAXIMIZE_REVENUE_EQUILIBRIUM
         @error(
             "Maximum number of iterations for Nash equilibrium must be greater than zero if Nash equilibrium is to be calculated."
         )
@@ -553,8 +549,8 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
-    if configurations.bid_data_processing in [Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
-        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID]
+    # Check if bid price validation is enabled (bid_price_validation != DO_NOT_VALIDATE)
+    if configurations.bid_price_validation != Configurations_BidPriceValidation.DO_NOT_VALIDATE
         if is_null(configurations.bid_price_limit_low_reference)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
@@ -677,15 +673,6 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration.
             """
             )
-        end
-    end
-
-    if iterate_nash_equilibrium(inputs)
-        if !read_bids_from_file(inputs) && !generate_heuristic_bids_for_clearing(inputs)
-            @error(
-                "Nash equilibrium calculation requires bid data to be read from file or heuristic bids to be generated."
-            )
-            num_errors += 1
         end
     end
 
@@ -1022,20 +1009,12 @@ cycle_duration_in_hours(inputs::AbstractInputs) =
     inputs.collections.configurations.cycle_duration_in_hours
 
 """
-    nash_equilibrium_strategy(inputs::AbstractInputs)
-
-Return the Nash equilibrium iteration strategy.
-"""
-nash_equilibrium_strategy(inputs::AbstractInputs) =
-    inputs.collections.configurations.nash_equilibrium_strategy
-
-"""
     iterate_nash_equilibrium(inputs::AbstractInputs)
 
 Return whether the Nash equilibrium should be calculated.
 """
 iterate_nash_equilibrium(inputs::AbstractInputs) =
-    nash_equilibrium_strategy(inputs) != Configurations_NashEquilibriumStrategy.DO_NOT_ITERATE
+    bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_MAXIMIZE_REVENUE_EQUILIBRIUM
 
 """
     max_iteration_nash_equilibrium(inputs::AbstractInputs)
@@ -1053,16 +1032,8 @@ Return the Nash equilibrium iteration.
 nash_equilibrium_iteration(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     run_time_options.nash_equilibrium_iteration
 
-"""
-    nash_equilibrium_initialization(inputs::AbstractInputs, run_time_options::RunTimeOptions)
-
-Return whether the problem is an initialization for Nash Equilibrium.
-"""
-nash_equilibrium_initialization(inputs::AbstractInputs) =
-    inputs.collections.configurations.nash_equilibrium_initialization
-
 iteration_with_aggregate_buses(inputs::AbstractInputs) =
-    nash_equilibrium_strategy(inputs) == Configurations_NashEquilibriumStrategy.ITERATION_WITH_AGGREGATE_BUSES
+    max_rev_equilibrium_bus_aggregation_type(inputs) == Configurations_MaxRevEquilibriumBusAggregationType.AGGREGATE_ALL_BUSES
 
 """
     parp_max_lags(inputs::AbstractInputs)
@@ -1241,10 +1212,7 @@ function read_bids_from_file(inputs::AbstractInputs)
        construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
-    return inputs.collections.configurations.bid_data_processing in
-           [Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
-        Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
-    ]
+    return bid_processing(inputs) == Configurations_BidProcessing.READ_BIDS_FROM_FILE
 end
 
 """
@@ -1253,9 +1221,6 @@ end
 Return whether heuristic bids should be generated for clearing.
 """
 function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
-    if iterate_nash_equilibrium(inputs)
-        return false
-    end
     if run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
         return true
     end
@@ -1269,11 +1234,11 @@ function generate_heuristic_bids_for_clearing(inputs::AbstractInputs)
        construction_type_ex_post_commercial(inputs) in no_file_model_types
         return false
     end
-    return inputs.collections.configurations.bid_data_processing in
-           [
-        Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
-        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
+    heuristic_bid_processing_types = [
+        Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS,
+        Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM,
     ]
+    return bid_processing(inputs) in heuristic_bid_processing_types
 end
 
 function is_any_construction_type_cost_based(
@@ -1308,28 +1273,41 @@ function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_option
 end
 
 """
-    bid_data_processing(inputs::AbstractInputs)
+    bid_price_validation(inputs::AbstractInputs)
 
-Return the clearing bid source.
+Return the bid price validation strategy.
 """
-bid_data_processing(inputs::AbstractInputs) = inputs.collections.configurations.bid_data_processing
+bid_price_validation(inputs::AbstractInputs) = inputs.collections.configurations.bid_price_validation
 
 """
-    clearing_hydro_representation(inputs::AbstractInputs)
+    bid_processing(inputs::AbstractInputs)
 
-Return the clearing hydro representation.
+Return the bid processing strategy.
 """
-clearing_hydro_representation(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_hydro_representation
+bid_processing(inputs::AbstractInputs) = inputs.collections.configurations.bid_processing
+
+"""
+    max_rev_equilibrium_bus_aggregation_type(inputs::AbstractInputs)
+
+Return the maximum revenue equilibrium bus aggregation type.
+"""
+max_rev_equilibrium_bus_aggregation_type(inputs::AbstractInputs) =
+    inputs.collections.configurations.max_rev_equilibrium_bus_aggregation_type
+
+"""
+    max_rev_equilibrium_bid_initialization(inputs::AbstractInputs)
+
+Return the maximum revenue equilibrium bid initialization strategy.
+"""
+max_rev_equilibrium_bid_initialization(inputs::AbstractInputs) =
+    inputs.collections.configurations.max_rev_equilibrium_bid_initialization
 
 """
     use_virtual_reservoirs(inputs::AbstractInputs)
 
 Return whether virtual reservoirs are used in clearing.
 """
-use_virtual_reservoirs(inputs::AbstractInputs) =
-    inputs.collections.configurations.clearing_hydro_representation !=
-    Configurations_VirtualReservoirBidProcessing.IGNORE_VIRTUAL_RESERVOIRS
+use_virtual_reservoirs(inputs::AbstractInputs) = number_of_elements(inputs, VirtualReservoir) > 0
 
 """
     should_build_reference_curve(inputs::AbstractInputs)
@@ -1337,11 +1315,13 @@ use_virtual_reservoirs(inputs::AbstractInputs) =
 Return whether the reference curve should be built.
 """
 function should_build_reference_curve(inputs::AbstractInputs)
-    reference_curve_representations = [
-        Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE,
-        Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE,
-    ]
-    return clearing_hydro_representation(inputs) in reference_curve_representations
+    if bid_processing(inputs) == Configurations_BidProcessing.READ_BIDS_FROM_FILE
+        return false
+    end
+    if !use_virtual_reservoirs(inputs)
+        return false
+    end
+    return true
 end
 
 """
@@ -1350,8 +1330,8 @@ end
 Return whether the Nash equilibrium from hydro reference curve should be run.
 """
 function should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
-    return clearing_hydro_representation(inputs) ==
-           Configurations_VirtualReservoirBidProcessing.NASH_EQUILIBRIUM_FROM_HYDRO_REFERENCE_CURVE
+    return bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM &&
+           use_virtual_reservoirs(inputs)
 end
 
 """
@@ -1479,13 +1459,6 @@ use_fcf_in_clearing(inputs::AbstractInputs) = inputs.collections.configurations.
 Return the settlement type.
 """
 settlement_type(inputs::AbstractInputs) = inputs.collections.configurations.settlement_type
-
-"""
-    make_whole_payments(inputs::AbstractInputs)
-
-Return the make whole payments type.
-"""
-make_whole_payments(inputs::AbstractInputs) = inputs.collections.configurations.make_whole_payments
 
 """
     demand_deficit_cost(inputs::AbstractInputs)
@@ -1789,9 +1762,9 @@ function is_skipped(inputs::AbstractInputs, construction_type::String)
 end
 
 function validate_bidding_group_bids(inputs::AbstractInputs)
-    return inputs.collections.configurations.bid_data_processing in
-           [
-        Configurations_BiddingGroupBidProcessing.EXTERNAL_VALIDATED_BID,
-        Configurations_BiddingGroupBidProcessing.HEURISTIC_VALIDATED_BID,
-    ]
+    return bid_price_validation(inputs) != Configurations_BidPriceValidation.DO_NOT_VALIDATE
+end
+
+function use_bid_price_limits_from_file(inputs::AbstractInputs)
+    return bid_price_validation(inputs) == Configurations_BidPriceValidation.VALIDATE_WITH_LIMIT_READ_FROM_FILE
 end

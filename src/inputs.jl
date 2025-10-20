@@ -457,7 +457,7 @@ function time_series_quantity_bid(
     period::Int,
     scenario::Int,
 )
-    if read_bids_from_file(inputs)
+    if read_bids_from_file(inputs) || iterate_nash_equilibrium(inputs)
         return inputs.time_series.quantity_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_bid, price_bid = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
@@ -479,7 +479,7 @@ function time_series_price_bid(
     period::Int,
     scenario::Int,
 )
-    if read_bids_from_file(inputs)
+    if read_bids_from_file(inputs) || iterate_nash_equilibrium(inputs)
         return inputs.time_series.price_bid
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_bid, price_bid = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)

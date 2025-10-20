@@ -766,6 +766,7 @@ function must_read_hydro_unit_data_for_markup_wizard(
     else
         return false
     end
+    return false
 end
 
 """

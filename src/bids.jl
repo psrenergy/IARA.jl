@@ -950,6 +950,10 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 end
             end
 
+            if seg == 0
+                continue
+            end
+
             #--------------
             # Energy to buy
             #--------------

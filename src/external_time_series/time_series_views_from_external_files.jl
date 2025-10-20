@@ -273,7 +273,8 @@ function initialize_time_series_from_external_files(inputs)
 
     # Bids
     bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) && read_bids_from_file(inputs) &&
+    if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup) &&
+       (read_bids_from_file(inputs) || iterate_nash_equilibrium(inputs)) &&
        has_any_bid_simple_input_files(inputs)
         file = joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs))
         num_errors += initialize_bids_view_from_external_file!(

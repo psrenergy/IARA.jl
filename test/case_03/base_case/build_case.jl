@@ -28,6 +28,7 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.1,
     demand_deficit_cost = 0.5,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    inflow_model = IARA.Configurations_InflowModel.READ_INFLOW_FROM_FILE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )

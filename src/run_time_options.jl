@@ -16,6 +16,7 @@
     clearing_integer_variables_in_model::Vector{Symbol} = Symbol[]
     force_all_subscenarios::Bool = false
     is_reference_curve::Bool = false
+    is_parp_only_model::Bool = false
 end
 
 function iara_log(inputs::AbstractInputs, run_time_options::RunTimeOptions)
@@ -31,3 +32,6 @@ end
 
 is_nash_equilibrium_initialization(run_time_options::RunTimeOptions) =
     run_time_options.is_nash_equilibrium_initialization
+
+is_parp_only_model(run_time_options::RunTimeOptions) =
+    run_time_options.is_parp_only_model

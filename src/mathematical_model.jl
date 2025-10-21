@@ -130,7 +130,9 @@ function model_action(args...)
     inputs = locate_inputs_in_args(args...)
     run_time_options = locate_run_time_options_in_args(args...)
 
-    if is_reference_curve(inputs, run_time_options)
+    if is_parp_only_model(run_time_options)
+        parp_inflow_model_action(args...)
+    elseif is_reference_curve(inputs, run_time_options)
         reference_curve_model_action(args...)
     elseif is_mincost(inputs, run_time_options)
         train_min_cost_model_action(args...)
@@ -815,6 +817,21 @@ function reference_curve_model_action(args...)
         virtual_reservoir_total_generation_correspondence!(args...)
         virtual_reservoir_generation_reference!(args...)
         virtual_reservoir_non_decreasing_reference_quantity!(args...)
+    end
+
+    return nothing
+end
+
+function parp_inflow_model_action(args...)
+    inputs = locate_inputs_in_args(args...)
+    action = locate_action_in_args(args...)
+    run_time_options = locate_run_time_options_in_args(args...)
+
+    if any_valid_elements(inputs, run_time_options, HydroUnit, action)
+        hydro_inflow!(args...)
+        if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
+            parp!(args...)
+        end
     end
 
     return nothing

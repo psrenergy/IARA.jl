@@ -682,15 +682,33 @@ Return the hydro opportunity cost time series.
 time_series_hydro_opportunity_cost(inputs) = inputs.time_series.hydro_opportunity_cost
 
 """
-    time_series_inflow_noise(inputs)
+    time_series_inflow_noise(inputs, run_time_options; subscenario::Union{Int, Nothing} = nothing)
 
 Return the inflow noise time series.
 """
-function time_series_inflow_noise(inputs)
+function time_series_inflow_noise(inputs, run_time_options; subscenario::Union{Int, Nothing} = nothing)
     if read_inflow_from_file(inputs)
         error("Inflow noise is not available when 'read_inflow_from_file' is set to true.")
     end
-    return inputs.time_series.inflow_noise
+    if is_ex_post_problem(run_time_options)
+        if read_ex_post_inflow_file(inputs)
+            if isnothing(subscenario)
+                error("Always provide a subscenario when reading the ex-post inflow noise during ex-post problems.")
+            end
+            return inputs.time_series.inflow_noise.ex_post[:, subscenario]
+        elseif read_ex_ante_inflow_file(inputs)
+            return inputs.time_series.inflow_noise.ex_ante.data
+        end
+    else
+        if read_ex_ante_inflow_file(inputs)
+            return inputs.time_series.inflow_noise.ex_ante.data
+        elseif read_ex_post_inflow_file(inputs)
+            return mean(inputs.time_series.inflow_noise.ex_post.data; dims = 2)[:, 1]
+        end
+    end
+    return error(
+        "The inflow noise time series is not available. Check your inflow_scenarios_files configuration.",
+    )
 end
 
 """

@@ -36,7 +36,8 @@ db = IARA.create_study!(PATH;
     cycle_discount_rate = 0.36,
     cycle_duration_in_hours = 8760.0,
     demand_deficit_cost = 0.5,
-    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.FIT_PARP_MODEL_FROM_DATA,
+    inflow_model = IARA.Configurations_InflowModel.FIT_PARP_MODEL_FROM_DATA,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )

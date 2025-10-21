@@ -18,7 +18,8 @@ parp_max_lags = 6
 
 IARA.update_configuration!(
     db;
-    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.READ_PARP_COEFFICIENTS,
+    inflow_model = IARA.Configurations_InflowModel.READ_PARP_COEFFICIENTS,
+    inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )
 inflow_noise_vector = [
     -0.359729, 1.087208, -0.41959, 0.71891, 0.420247, -0.685671, 2.054763, 0.324893, -0.304901, 0.461695, -0.844958,
@@ -139,7 +140,17 @@ inflow_period_std_dev = zeros(1, months_in_year)
 inflow_period_std_dev[1, :] = inflow_period_std_dev_vector
 
 IARA.write_timeseries_file(
-    joinpath(PATH, "parp", "inflow_noise"),
+    joinpath(PATH, "parp", "inflow_noise_ex_ante"),
+    inflow_noise;
+    dimensions = ["period", "scenario"],
+    labels = ["gs_1"],
+    time_dimension = "period",
+    dimension_size = [number_of_periods, number_of_scenarios],
+    initial_date = "2020-01-01T00:00:00",
+    unit = "m3/s",
+)
+IARA.write_timeseries_file(
+    joinpath(PATH, "parp", "inflow_noise_ex_post"),
     inflow_noise;
     dimensions = ["period", "scenario"],
     labels = ["gs_1"],
@@ -182,7 +193,8 @@ IARA.write_timeseries_file(
 IARA.link_time_series_to_file(
     db,
     "GaugingStation";
-    inflow_noise = "inflow_noise",
+    inflow_noise_ex_ante = "inflow_noise_ex_ante",
+    inflow_noise_ex_post = "inflow_noise_ex_post",
     parp_coefficients = "parp_coefficients",
     inflow_period_average = "inflow_period_average",
     inflow_period_std_dev = "inflow_period_std_dev",

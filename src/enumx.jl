@@ -233,11 +233,15 @@ end
   - `READ_PARP_COEFFICIENTS`: Read PAR(p) coefficients (4)
 """
 @enumx Configurations_UncertaintyScenariosFiles begin
-    FIT_PARP_MODEL_FROM_DATA = 0
-    ONLY_EX_ANTE = 1
-    ONLY_EX_POST = 2
-    EX_ANTE_AND_EX_POST = 3
-    READ_PARP_COEFFICIENTS = 4
+    ONLY_EX_ANTE = 0
+    ONLY_EX_POST = 1
+    EX_ANTE_AND_EX_POST = 2
+end
+
+@enumx Configurations_InflowModel begin
+    READ_INFLOW_FROM_FILE = 0
+    FIT_PARP_MODEL_FROM_DATA = 1
+    READ_PARP_COEFFICIENTS = 2
 end
 
 """

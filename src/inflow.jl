@@ -105,7 +105,7 @@ function write_parp_outputs(inputs::Inputs,
         unit = "m3/s",
     )
     write_timeseries_file(
-        joinpath(path_parp(inputs), gauging_station_inflow_noise_file(inputs)),
+        joinpath(path_parp(inputs), gauging_station_inflow_noise_ex_ante_file(inputs)),
         noise;
         dimensions = dimension_names,
         labels = gauging_station_label(inputs),

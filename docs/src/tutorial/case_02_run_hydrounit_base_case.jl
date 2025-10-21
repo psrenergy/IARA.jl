@@ -132,13 +132,14 @@ cp(
 )
 ; #hide
 
-# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and the clearing bid source to `HEURISTIC_UNVALIDATED_BID`.
+# Before running, we need to load the case and set the run mode to `MARKET_CLEARING` and configure the bid processing to use parameterized heuristic bids without validation.
 
 db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false)
 
 IARA.update_configuration!(
     db;
-    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
+    bid_processing = IARA.Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS,
+    bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,

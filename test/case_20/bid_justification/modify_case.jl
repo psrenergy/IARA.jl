@@ -11,10 +11,9 @@
 db = IARA.load_study(PATH; read_only = false)
 
 # Modify database
-IARA.update_bidding_group!(
-    db,
-    "Azul";
-    bid_price_limit_source = IARA.BiddingGroup_BidPriceLimitSource.READ_FROM_FILE,
+IARA.update_configuration!(
+    db, ;
+    bid_price_validation = IARA.Configurations_BidPriceValidation.VALIDATE_WITH_LIMIT_READ_FROM_FILE,
 )
 
 # Modify timeseries
@@ -63,10 +62,14 @@ end
 bid_price_limit_justified_independent =
     zeros(number_of_bidding_groups, number_of_periods)
 bid_price_limit_justified_independent[1, :] .= 30.0
+bid_price_limit_justified_independent[2, :] .= 60.0
+bid_price_limit_justified_independent[3, :] .= 18.0
 
 bid_price_limit_non_justified_independent =
     zeros(number_of_bidding_groups, number_of_periods)
 bid_price_limit_non_justified_independent[1, :] .= 20.0
+bid_price_limit_non_justified_independent[2, :] .= 45.0
+bid_price_limit_non_justified_independent[3, :] .= 13.5
 
 IARA.write_timeseries_file(
     joinpath(PATH, "bid_price_limit_justified_independent"),

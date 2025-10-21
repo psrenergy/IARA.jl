@@ -242,7 +242,7 @@ function bidding_group_bid_price_limits_for_period(
         end
 
         if has_any_simple_bids(inputs)
-            if use_bid_price_limits_from_file(inputs, bg)
+            if use_bid_price_limits_from_file(inputs)
                 bidding_group_bid_price_limit_not_justified_independent[idx] =
                     time_series_bid_price_limit_non_justified_independent(inputs)[bg]
                 bidding_group_bid_price_limit_justified_independent[idx] =
@@ -256,7 +256,7 @@ function bidding_group_bid_price_limits_for_period(
         end
 
         if has_any_profile_bids(inputs)
-            if use_bid_price_limits_from_file(inputs, bg)
+            if use_bid_price_limits_from_file(inputs)
                 bidding_group_bid_price_limit_not_justified_profile[idx] =
                     time_series_bid_price_limit_non_justified_profile(inputs)[bg]
                 bidding_group_bid_price_limit_justified_profile[idx] =

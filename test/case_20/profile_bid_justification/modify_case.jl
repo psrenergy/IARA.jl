@@ -105,8 +105,13 @@ IARA.write_timeseries_file(
 # Build bid price limit files
 bid_price_limit_justified_profile =
     zeros(number_of_bidding_groups, number_of_periods)
+bid_price_limit_justified_profile[2, :] .= 36.0
+bid_price_limit_justified_profile[3, :] .= 10.8
+
 bid_price_limit_non_justified_profile =
     zeros(number_of_bidding_groups, number_of_periods)
+bid_price_limit_non_justified_profile[2, :] .= 33.0
+bid_price_limit_non_justified_profile[3, :] .= 9.9
 
 IARA.write_timeseries_file(
     joinpath(PATH, "bid_price_limit_justified_profile"),

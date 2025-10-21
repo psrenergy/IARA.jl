@@ -58,7 +58,8 @@ db = IARA.load_study(PATH_EXECUTION; read_only = false);
 
 IARA.update_configuration!(
     db;
-    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
+    bid_processing = IARA.Configurations_BidProcessing.READ_BIDS_FROM_FILE,
+    bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,

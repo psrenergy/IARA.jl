@@ -91,12 +91,13 @@ db = IARA.load_study(PATH_MARKET_CLEARING; read_only = false);
 #hide
 
 # In order to run the case in `Market Clearing`, we need to set the run mode and the clearing bid source (where the bid quantity and price offers will come from).
-# For this example we will be using the `HEURISTIC_UNVALIDATED_BID` as the clearing bid source. This setting will automatically generate bids for each Bidding Group.
-# We can set these two parameters in the configurations, with [`IARA.update_configuration!`](@ref).
+# For this example we will be using parameterized heuristic bids without validation. This setting will automatically generate bids for each Bidding Group.
+# We can set these parameters in the configurations, with [`IARA.update_configuration!`](@ref).
 
 IARA.update_configuration!(
     db;
-    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.HEURISTIC_UNVALIDATED_BID,
+    bid_processing = IARA.Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS,
+    bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,

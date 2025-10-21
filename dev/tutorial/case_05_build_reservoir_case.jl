@@ -63,8 +63,8 @@ db = IARA.create_study!(PATH_CASE;
     cycle_discount_rate = 0.0,
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 500.0,
-    clearing_hydro_representation = IARA.Configurations_VirtualReservoirBidProcessing.HEURISTIC_BID_FROM_HYDRO_REFERENCE_CURVE,
-    bid_data_processing = IARA.Configurations_BiddingGroupBidProcessing.EXTERNAL_UNVALIDATED_BID,
+    bid_processing = IARA.Configurations_BidProcessing.READ_BIDS_FROM_FILE,
+    bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
 )

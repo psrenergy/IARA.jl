@@ -286,8 +286,8 @@ function validate_nash_input_data(
     asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
 
     for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
-        @assert all(slope[i] .> reference_curve_nash_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_labels(inputs, ao)) in virtual reservoir $(virtual_reservoir_labels(inputs, vr_index)) has a segment with slope below the tolerance."
-        @assert all(price[i] .<= reference_curve_nash_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_labels(inputs, ao)) in virtual reservoir $(virtual_reservoir_labels(inputs, vr_index)) has a price point above the demand deficit cost."
+        @assert all(slope[i] .> reference_curve_nash_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a segment with slope below the tolerance: $(slope[i])"
+        @assert all(price[i] .<= reference_curve_nash_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a price point above the demand deficit cost: $(price[i])"
     end
 
     return nothing
@@ -555,7 +555,10 @@ function test_inversion(
 end
 
 function maximum_number_of_segments_in_nash_equilibrium(inputs::AbstractInputs)
-    return reference_curve_number_of_segments(inputs) * number_of_elements(inputs, AssetOwner)
+    return reference_curve_number_of_segments(inputs) * max(
+        number_of_elements(inputs, AssetOwner),
+        number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs]),
+    ) + 1
 end
 
 function number_of_segments_for_vr_in_nash_equilibrium(

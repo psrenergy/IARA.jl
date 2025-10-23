@@ -246,6 +246,7 @@ function hydro_inflow!(
        run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL &&
        parp_max_lags(inputs) > 0
         add_symbol_to_serialize!(outputs, :normalized_inflow)
+        add_symbol_to_query_from_subproblem_result!(outputs, :normalized_inflow)
     end
 
     initialize!(

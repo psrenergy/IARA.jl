@@ -699,27 +699,31 @@ function update_inflow_series_from_serialized_file!(
         return nothing
     end
 
+    num_subscenarios = inputs.collections.configurations.number_of_subscenarios
+
     if read_ex_ante_inflow_file(inputs)
         inflow_ex_ante = deserialize_parp_inflow(
             inputs;
             period,
             scenario,
         )
-        for subperiod in subperiods(inputs)
-            inputs.time_series.inflow.ex_ante.data[:, subperiod] = inflow_ex_ante
-        end
+        inputs.time_series.inflow.ex_ante.data = inflow_ex_ante
     end
     if read_ex_post_inflow_file(inputs)
-        for subscenario in 1:inputs.collections.configurations.number_of_subscenarios
+        inputs.time_series.inflow.ex_post.data = zeros(
+            Float64,
+            number_of_elements(inputs, HydroUnit),
+            number_of_subperiods(inputs),
+            num_subscenarios,
+        )
+        for subscenario in 1:num_subscenarios
             inflow_ex_post = deserialize_parp_inflow(
                 inputs;
                 period,
                 scenario,
                 subscenario,
             )
-            for subperiod in 1:number_of_subperiods(inputs)
-                inputs.time_series.inflow.ex_post.data[:, subperiod, subscenario] = inflow_ex_post
-            end
+            inputs.time_series.inflow.ex_post.data[:, :, subscenario] = inflow_ex_post
         end
     end
 

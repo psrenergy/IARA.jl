@@ -174,6 +174,7 @@ function initialize_parp_only_outputs(
 )
     outputs = Outputs()
     add_symbol_to_serialize!(outputs, :inflow)
+    add_symbol_to_query_from_subproblem_result!(outputs, :inflow)
     return outputs
 end
 

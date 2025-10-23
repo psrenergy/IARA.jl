@@ -119,6 +119,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,1,118,Inf,Inf,Inf,Inf
 1,1,1,119,Inf,Inf,Inf,Inf
 1,1,1,120,Inf,Inf,Inf,Inf
+1,1,1,121,Inf,Inf,Inf,Inf
 1,1,2,1,5.410075,5.410075,5.410075,5.410075
 1,1,2,2,2.9e-5,2.9e-5,3.8e-5,3.8e-5
 1,1,2,3,2.3e-5,2.3e-5,1.2e-5,1.2e-5
@@ -239,6 +240,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,2,118,Inf,Inf,Inf,Inf
 1,1,2,119,Inf,Inf,Inf,Inf
 1,1,2,120,Inf,Inf,Inf,Inf
+1,1,2,121,Inf,Inf,Inf,Inf
 1,1,3,1,5.582029,5.582029,5.582029,5.582029
 1,1,3,2,3.0e-5,3.0e-5,3.9e-5,3.9e-5
 1,1,3,3,2.4e-5,2.4e-5,1.3e-5,1.3e-5
@@ -359,6 +361,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,3,118,Inf,Inf,Inf,Inf
 1,1,3,119,Inf,Inf,Inf,Inf
 1,1,3,120,Inf,Inf,Inf,Inf
+1,1,3,121,Inf,Inf,Inf,Inf
 1,1,4,1,5.650221,5.650221,5.650221,5.650221
 1,1,4,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,4,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -479,6 +482,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,4,118,Inf,Inf,Inf,Inf
 1,1,4,119,Inf,Inf,Inf,Inf
 1,1,4,120,Inf,Inf,Inf,Inf
+1,1,4,121,Inf,Inf,Inf,Inf
 1,1,5,1,5.677406,5.677406,5.677406,5.677406
 1,1,5,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,5,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -599,6 +603,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,5,118,Inf,Inf,Inf,Inf
 1,1,5,119,Inf,Inf,Inf,Inf
 1,1,5,120,Inf,Inf,Inf,Inf
+1,1,5,121,Inf,Inf,Inf,Inf
 1,1,6,1,5.688265,5.688265,5.688265,5.688265
 1,1,6,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,6,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -719,6 +724,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,6,118,Inf,Inf,Inf,Inf
 1,1,6,119,Inf,Inf,Inf,Inf
 1,1,6,120,Inf,Inf,Inf,Inf
+1,1,6,121,Inf,Inf,Inf,Inf
 1,1,7,1,5.692606,5.692606,5.692606,5.692606
 1,1,7,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,7,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -839,6 +845,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,7,118,Inf,Inf,Inf,Inf
 1,1,7,119,Inf,Inf,Inf,Inf
 1,1,7,120,Inf,Inf,Inf,Inf
+1,1,7,121,Inf,Inf,Inf,Inf
 1,1,8,1,5.694343,5.694343,5.694343,5.694343
 1,1,8,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,8,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -959,6 +966,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,8,118,Inf,Inf,Inf,Inf
 1,1,8,119,Inf,Inf,Inf,Inf
 1,1,8,120,Inf,Inf,Inf,Inf
+1,1,8,121,Inf,Inf,Inf,Inf
 1,1,9,1,5.695037,5.695037,5.695037,5.695037
 1,1,9,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,9,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -1079,6 +1087,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,9,118,Inf,Inf,Inf,Inf
 1,1,9,119,Inf,Inf,Inf,Inf
 1,1,9,120,Inf,Inf,Inf,Inf
+1,1,9,121,Inf,Inf,Inf,Inf
 1,1,10,1,5.695315,5.695315,5.695315,5.695315
 1,1,10,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,10,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -1199,6 +1208,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,10,118,Inf,Inf,Inf,Inf
 1,1,10,119,Inf,Inf,Inf,Inf
 1,1,10,120,Inf,Inf,Inf,Inf
+1,1,10,121,Inf,Inf,Inf,Inf
 1,1,11,1,5.695426,5.695426,5.695426,5.695426
 1,1,11,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,11,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -1319,6 +1329,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,11,118,Inf,Inf,Inf,Inf
 1,1,11,119,Inf,Inf,Inf,Inf
 1,1,11,120,Inf,Inf,Inf,Inf
+1,1,11,121,Inf,Inf,Inf,Inf
 1,1,12,1,5.69547,5.69547,5.69547,5.69547
 1,1,12,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,12,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -1439,6 +1450,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,12,118,Inf,Inf,Inf,Inf
 1,1,12,119,Inf,Inf,Inf,Inf
 1,1,12,120,Inf,Inf,Inf,Inf
+1,1,12,121,Inf,Inf,Inf,Inf
 1,1,13,1,5.695488,5.695488,5.695488,5.695488
 1,1,13,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,13,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -1559,6 +1571,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,13,118,Inf,Inf,Inf,Inf
 1,1,13,119,Inf,Inf,Inf,Inf
 1,1,13,120,Inf,Inf,Inf,Inf
+1,1,13,121,Inf,Inf,Inf,Inf
 1,1,14,1,5.695495,5.695495,5.695495,5.695495
 1,1,14,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,14,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -1679,6 +1692,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,14,118,Inf,Inf,Inf,Inf
 1,1,14,119,Inf,Inf,Inf,Inf
 1,1,14,120,Inf,Inf,Inf,Inf
+1,1,14,121,Inf,Inf,Inf,Inf
 1,1,15,1,5.695498,5.695498,5.695498,5.695498
 1,1,15,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,15,3,3.1e-5,3.1e-5,4.0e-5,4.0e-5
@@ -1799,6 +1813,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,15,118,Inf,Inf,Inf,Inf
 1,1,15,119,Inf,Inf,Inf,Inf
 1,1,15,120,Inf,Inf,Inf,Inf
+1,1,15,121,Inf,Inf,Inf,Inf
 1,1,16,1,5.695499,5.695499,5.695499,5.695499
 1,1,16,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,16,3,2.7e-5,2.7e-5,1.7e-5,1.7e-5
@@ -1919,6 +1934,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,16,118,Inf,Inf,Inf,Inf
 1,1,16,119,Inf,Inf,Inf,Inf
 1,1,16,120,Inf,Inf,Inf,Inf
+1,1,16,121,Inf,Inf,Inf,Inf
 1,1,17,1,5.6955,5.6955,5.6955,5.6955
 1,1,17,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,17,3,2.6e-5,2.6e-5,1.5e-5,1.5e-5
@@ -2039,6 +2055,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,17,118,Inf,Inf,Inf,Inf
 1,1,17,119,Inf,Inf,Inf,Inf
 1,1,17,120,Inf,Inf,Inf,Inf
+1,1,17,121,Inf,Inf,Inf,Inf
 1,1,18,1,5.6955,5.6955,5.6955,5.6955
 1,1,18,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,18,3,2.6e-5,2.6e-5,1.5e-5,1.5e-5
@@ -2159,6 +2176,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,18,118,Inf,Inf,Inf,Inf
 1,1,18,119,Inf,Inf,Inf,Inf
 1,1,18,120,Inf,Inf,Inf,Inf
+1,1,18,121,Inf,Inf,Inf,Inf
 1,1,19,1,5.6955,5.6955,5.6955,5.6955
 1,1,19,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,19,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -2279,6 +2297,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,19,118,Inf,Inf,Inf,Inf
 1,1,19,119,Inf,Inf,Inf,Inf
 1,1,19,120,Inf,Inf,Inf,Inf
+1,1,19,121,Inf,Inf,Inf,Inf
 1,1,20,1,5.6955,5.6955,5.6955,5.6955
 1,1,20,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,1,20,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -2399,6 +2418,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,1,20,118,Inf,Inf,Inf,Inf
 1,1,20,119,Inf,Inf,Inf,Inf
 1,1,20,120,Inf,Inf,Inf,Inf
+1,1,20,121,Inf,Inf,Inf,Inf
 1,2,1,1,4.970338,4.970338,4.970338,4.970338
 1,2,1,2,2.6e-5,2.6e-5,3.5e-5,3.5e-5
 1,2,1,3,2.2e-5,2.2e-5,1.0e-5,1.0e-5
@@ -2519,6 +2539,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,1,118,Inf,Inf,Inf,Inf
 1,2,1,119,Inf,Inf,Inf,Inf
 1,2,1,120,Inf,Inf,Inf,Inf
+1,2,1,121,Inf,Inf,Inf,Inf
 1,2,2,1,5.410075,5.410075,5.410075,5.410075
 1,2,2,2,2.9e-5,2.9e-5,3.8e-5,3.8e-5
 1,2,2,3,2.3e-5,2.3e-5,1.2e-5,1.2e-5
@@ -2639,6 +2660,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,2,118,Inf,Inf,Inf,Inf
 1,2,2,119,Inf,Inf,Inf,Inf
 1,2,2,120,Inf,Inf,Inf,Inf
+1,2,2,121,Inf,Inf,Inf,Inf
 1,2,3,1,5.582029,5.582029,5.582029,5.582029
 1,2,3,2,3.0e-5,3.0e-5,3.9e-5,3.9e-5
 1,2,3,3,2.4e-5,2.4e-5,1.3e-5,1.3e-5
@@ -2759,6 +2781,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,3,118,Inf,Inf,Inf,Inf
 1,2,3,119,Inf,Inf,Inf,Inf
 1,2,3,120,Inf,Inf,Inf,Inf
+1,2,3,121,Inf,Inf,Inf,Inf
 1,2,4,1,5.650221,5.650221,5.650221,5.650221
 1,2,4,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,4,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -2879,6 +2902,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,4,118,Inf,Inf,Inf,Inf
 1,2,4,119,Inf,Inf,Inf,Inf
 1,2,4,120,Inf,Inf,Inf,Inf
+1,2,4,121,Inf,Inf,Inf,Inf
 1,2,5,1,5.677406,5.677406,5.677406,5.677406
 1,2,5,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,5,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -2999,6 +3023,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,5,118,Inf,Inf,Inf,Inf
 1,2,5,119,Inf,Inf,Inf,Inf
 1,2,5,120,Inf,Inf,Inf,Inf
+1,2,5,121,Inf,Inf,Inf,Inf
 1,2,6,1,5.688265,5.688265,5.688265,5.688265
 1,2,6,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,6,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3119,6 +3144,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,6,118,Inf,Inf,Inf,Inf
 1,2,6,119,Inf,Inf,Inf,Inf
 1,2,6,120,Inf,Inf,Inf,Inf
+1,2,6,121,Inf,Inf,Inf,Inf
 1,2,7,1,5.692606,5.692606,5.692606,5.692606
 1,2,7,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,7,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3239,6 +3265,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,7,118,Inf,Inf,Inf,Inf
 1,2,7,119,Inf,Inf,Inf,Inf
 1,2,7,120,Inf,Inf,Inf,Inf
+1,2,7,121,Inf,Inf,Inf,Inf
 1,2,8,1,5.694343,5.694343,5.694343,5.694343
 1,2,8,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,8,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3359,6 +3386,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,8,118,Inf,Inf,Inf,Inf
 1,2,8,119,Inf,Inf,Inf,Inf
 1,2,8,120,Inf,Inf,Inf,Inf
+1,2,8,121,Inf,Inf,Inf,Inf
 1,2,9,1,5.695037,5.695037,5.695037,5.695037
 1,2,9,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,9,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3479,6 +3507,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,9,118,Inf,Inf,Inf,Inf
 1,2,9,119,Inf,Inf,Inf,Inf
 1,2,9,120,Inf,Inf,Inf,Inf
+1,2,9,121,Inf,Inf,Inf,Inf
 1,2,10,1,5.695315,5.695315,5.695315,5.695315
 1,2,10,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,10,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3599,6 +3628,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,10,118,Inf,Inf,Inf,Inf
 1,2,10,119,Inf,Inf,Inf,Inf
 1,2,10,120,Inf,Inf,Inf,Inf
+1,2,10,121,Inf,Inf,Inf,Inf
 1,2,11,1,5.695426,5.695426,5.695426,5.695426
 1,2,11,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,11,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3719,6 +3749,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,11,118,Inf,Inf,Inf,Inf
 1,2,11,119,Inf,Inf,Inf,Inf
 1,2,11,120,Inf,Inf,Inf,Inf
+1,2,11,121,Inf,Inf,Inf,Inf
 1,2,12,1,5.69547,5.69547,5.69547,5.69547
 1,2,12,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,12,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3839,6 +3870,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,12,118,Inf,Inf,Inf,Inf
 1,2,12,119,Inf,Inf,Inf,Inf
 1,2,12,120,Inf,Inf,Inf,Inf
+1,2,12,121,Inf,Inf,Inf,Inf
 1,2,13,1,5.695488,5.695488,5.695488,5.695488
 1,2,13,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,13,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -3959,6 +3991,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,13,118,Inf,Inf,Inf,Inf
 1,2,13,119,Inf,Inf,Inf,Inf
 1,2,13,120,Inf,Inf,Inf,Inf
+1,2,13,121,Inf,Inf,Inf,Inf
 1,2,14,1,5.695495,5.695495,5.695495,5.695495
 1,2,14,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,14,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -4079,6 +4112,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,14,118,Inf,Inf,Inf,Inf
 1,2,14,119,Inf,Inf,Inf,Inf
 1,2,14,120,Inf,Inf,Inf,Inf
+1,2,14,121,Inf,Inf,Inf,Inf
 1,2,15,1,5.695498,5.695498,5.695498,5.695498
 1,2,15,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,15,3,3.1e-5,3.1e-5,4.0e-5,4.0e-5
@@ -4199,6 +4233,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,15,118,Inf,Inf,Inf,Inf
 1,2,15,119,Inf,Inf,Inf,Inf
 1,2,15,120,Inf,Inf,Inf,Inf
+1,2,15,121,Inf,Inf,Inf,Inf
 1,2,16,1,5.695499,5.695499,5.695499,5.695499
 1,2,16,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,16,3,2.7e-5,2.7e-5,1.7e-5,1.7e-5
@@ -4319,6 +4354,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,16,118,Inf,Inf,Inf,Inf
 1,2,16,119,Inf,Inf,Inf,Inf
 1,2,16,120,Inf,Inf,Inf,Inf
+1,2,16,121,Inf,Inf,Inf,Inf
 1,2,17,1,5.6955,5.6955,5.6955,5.6955
 1,2,17,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,17,3,2.6e-5,2.6e-5,1.5e-5,1.5e-5
@@ -4439,6 +4475,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,17,118,Inf,Inf,Inf,Inf
 1,2,17,119,Inf,Inf,Inf,Inf
 1,2,17,120,Inf,Inf,Inf,Inf
+1,2,17,121,Inf,Inf,Inf,Inf
 1,2,18,1,5.6955,5.6955,5.6955,5.6955
 1,2,18,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,18,3,2.6e-5,2.6e-5,1.5e-5,1.5e-5
@@ -4559,6 +4596,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,18,118,Inf,Inf,Inf,Inf
 1,2,18,119,Inf,Inf,Inf,Inf
 1,2,18,120,Inf,Inf,Inf,Inf
+1,2,18,121,Inf,Inf,Inf,Inf
 1,2,19,1,5.6955,5.6955,5.6955,5.6955
 1,2,19,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,19,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -4679,6 +4717,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,19,118,Inf,Inf,Inf,Inf
 1,2,19,119,Inf,Inf,Inf,Inf
 1,2,19,120,Inf,Inf,Inf,Inf
+1,2,19,121,Inf,Inf,Inf,Inf
 1,2,20,1,5.6955,5.6955,5.6955,5.6955
 1,2,20,2,3.1e-5,3.1e-5,4.0e-5,4.0e-5
 1,2,20,3,2.5e-5,2.5e-5,1.4e-5,1.4e-5
@@ -4799,6 +4838,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 1,2,20,118,Inf,Inf,Inf,Inf
 1,2,20,119,Inf,Inf,Inf,Inf
 1,2,20,120,Inf,Inf,Inf,Inf
+1,2,20,121,Inf,Inf,Inf,Inf
 2,1,1,1,4.970338,4.970338,4.970338,4.970338
 2,1,1,2,5.7e-5,5.7e-5,7.6e-5,7.6e-5
 2,1,1,3,4.4e-5,4.4e-5,1.1e-5,1.1e-5
@@ -4919,6 +4959,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,1,118,Inf,Inf,Inf,Inf
 2,1,1,119,Inf,Inf,Inf,Inf
 2,1,1,120,Inf,Inf,Inf,Inf
+2,1,1,121,Inf,Inf,Inf,Inf
 2,1,2,1,5.410075,5.410075,5.410075,5.410075
 2,1,2,2,6.3e-5,6.3e-5,8.2e-5,8.2e-5
 2,1,2,3,4.6e-5,4.6e-5,1.4e-5,1.4e-5
@@ -5039,6 +5080,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,2,118,Inf,Inf,Inf,Inf
 2,1,2,119,Inf,Inf,Inf,Inf
 2,1,2,120,Inf,Inf,Inf,Inf
+2,1,2,121,Inf,Inf,Inf,Inf
 2,1,3,1,5.582029,5.582029,5.582029,5.582029
 2,1,3,2,6.5e-5,6.5e-5,8.4e-5,8.4e-5
 2,1,3,3,4.7e-5,4.7e-5,1.6e-5,1.6e-5
@@ -5159,6 +5201,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,3,118,Inf,Inf,Inf,Inf
 2,1,3,119,Inf,Inf,Inf,Inf
 2,1,3,120,Inf,Inf,Inf,Inf
+2,1,3,121,Inf,Inf,Inf,Inf
 2,1,4,1,5.650221,5.650221,5.650221,5.650221
 2,1,4,2,6.6e-5,6.6e-5,8.5e-5,8.5e-5
 2,1,4,3,4.8e-5,4.8e-5,1.7e-5,1.7e-5
@@ -5279,6 +5322,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,4,118,Inf,Inf,Inf,Inf
 2,1,4,119,Inf,Inf,Inf,Inf
 2,1,4,120,Inf,Inf,Inf,Inf
+2,1,4,121,Inf,Inf,Inf,Inf
 2,1,5,1,5.677406,5.677406,5.677406,5.677406
 2,1,5,2,6.7e-5,6.7e-5,8.5e-5,8.5e-5
 2,1,5,3,4.9e-5,4.9e-5,1.8e-5,1.8e-5
@@ -5399,6 +5443,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,5,118,Inf,Inf,Inf,Inf
 2,1,5,119,Inf,Inf,Inf,Inf
 2,1,5,120,Inf,Inf,Inf,Inf
+2,1,5,121,Inf,Inf,Inf,Inf
 2,1,6,1,5.688265,5.688265,5.688265,5.688265
 2,1,6,2,6.7e-5,6.7e-5,8.5e-5,8.5e-5
 2,1,6,3,4.9e-5,4.9e-5,1.8e-5,1.8e-5
@@ -5519,6 +5564,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,6,118,Inf,Inf,Inf,Inf
 2,1,6,119,Inf,Inf,Inf,Inf
 2,1,6,120,Inf,Inf,Inf,Inf
+2,1,6,121,Inf,Inf,Inf,Inf
 2,1,7,1,5.692606,5.692606,5.692606,5.692606
 2,1,7,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,7,3,4.9e-5,4.9e-5,1.8e-5,1.8e-5
@@ -5639,6 +5685,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,7,118,Inf,Inf,Inf,Inf
 2,1,7,119,Inf,Inf,Inf,Inf
 2,1,7,120,Inf,Inf,Inf,Inf
+2,1,7,121,Inf,Inf,Inf,Inf
 2,1,8,1,5.694343,5.694343,5.694343,5.694343
 2,1,8,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,8,3,4.9e-5,4.9e-5,1.9e-5,1.9e-5
@@ -5759,6 +5806,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,8,118,Inf,Inf,Inf,Inf
 2,1,8,119,Inf,Inf,Inf,Inf
 2,1,8,120,Inf,Inf,Inf,Inf
+2,1,8,121,Inf,Inf,Inf,Inf
 2,1,9,1,5.695037,5.695037,5.695037,5.695037
 2,1,9,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,9,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -5879,6 +5927,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,9,118,Inf,Inf,Inf,Inf
 2,1,9,119,Inf,Inf,Inf,Inf
 2,1,9,120,Inf,Inf,Inf,Inf
+2,1,9,121,Inf,Inf,Inf,Inf
 2,1,10,1,5.695315,5.695315,5.695315,5.695315
 2,1,10,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,10,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -5999,6 +6048,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,10,118,Inf,Inf,Inf,Inf
 2,1,10,119,Inf,Inf,Inf,Inf
 2,1,10,120,Inf,Inf,Inf,Inf
+2,1,10,121,Inf,Inf,Inf,Inf
 2,1,11,1,5.695426,5.695426,5.695426,5.695426
 2,1,11,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,11,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6119,6 +6169,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,11,118,Inf,Inf,Inf,Inf
 2,1,11,119,Inf,Inf,Inf,Inf
 2,1,11,120,Inf,Inf,Inf,Inf
+2,1,11,121,Inf,Inf,Inf,Inf
 2,1,12,1,5.69547,5.69547,5.69547,5.69547
 2,1,12,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,12,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6239,6 +6290,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,12,118,Inf,Inf,Inf,Inf
 2,1,12,119,Inf,Inf,Inf,Inf
 2,1,12,120,Inf,Inf,Inf,Inf
+2,1,12,121,Inf,Inf,Inf,Inf
 2,1,13,1,5.695488,5.695488,5.695488,5.695488
 2,1,13,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,13,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6359,6 +6411,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,13,118,Inf,Inf,Inf,Inf
 2,1,13,119,Inf,Inf,Inf,Inf
 2,1,13,120,Inf,Inf,Inf,Inf
+2,1,13,121,Inf,Inf,Inf,Inf
 2,1,14,1,5.695495,5.695495,5.695495,5.695495
 2,1,14,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,14,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6479,6 +6532,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,14,118,Inf,Inf,Inf,Inf
 2,1,14,119,Inf,Inf,Inf,Inf
 2,1,14,120,Inf,Inf,Inf,Inf
+2,1,14,121,Inf,Inf,Inf,Inf
 2,1,15,1,5.695498,5.695498,5.695498,5.695498
 2,1,15,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,15,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6599,6 +6653,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,15,118,Inf,Inf,Inf,Inf
 2,1,15,119,Inf,Inf,Inf,Inf
 2,1,15,120,Inf,Inf,Inf,Inf
+2,1,15,121,Inf,Inf,Inf,Inf
 2,1,16,1,5.695499,5.695499,5.695499,5.695499
 2,1,16,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,16,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6719,6 +6774,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,16,118,Inf,Inf,Inf,Inf
 2,1,16,119,Inf,Inf,Inf,Inf
 2,1,16,120,Inf,Inf,Inf,Inf
+2,1,16,121,Inf,Inf,Inf,Inf
 2,1,17,1,5.6955,5.6955,5.6955,5.6955
 2,1,17,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,17,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6839,6 +6895,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,17,118,Inf,Inf,Inf,Inf
 2,1,17,119,Inf,Inf,Inf,Inf
 2,1,17,120,Inf,Inf,Inf,Inf
+2,1,17,121,Inf,Inf,Inf,Inf
 2,1,18,1,5.6955,5.6955,5.6955,5.6955
 2,1,18,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,18,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -6959,6 +7016,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,18,118,Inf,Inf,Inf,Inf
 2,1,18,119,Inf,Inf,Inf,Inf
 2,1,18,120,Inf,Inf,Inf,Inf
+2,1,18,121,Inf,Inf,Inf,Inf
 2,1,19,1,5.6955,5.6955,5.6955,5.6955
 2,1,19,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,19,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -7079,6 +7137,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,19,118,Inf,Inf,Inf,Inf
 2,1,19,119,Inf,Inf,Inf,Inf
 2,1,19,120,Inf,Inf,Inf,Inf
+2,1,19,121,Inf,Inf,Inf,Inf
 2,1,20,1,5.6955,5.6955,5.6955,5.6955
 2,1,20,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,1,20,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -7199,6 +7258,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,1,20,118,Inf,Inf,Inf,Inf
 2,1,20,119,Inf,Inf,Inf,Inf
 2,1,20,120,Inf,Inf,Inf,Inf
+2,1,20,121,Inf,Inf,Inf,Inf
 2,2,1,1,4.970338,4.970338,4.970338,4.970338
 2,2,1,2,5.7e-5,5.7e-5,7.6e-5,7.6e-5
 2,2,1,3,4.4e-5,4.4e-5,1.1e-5,1.1e-5
@@ -7319,6 +7379,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,1,118,Inf,Inf,Inf,Inf
 2,2,1,119,Inf,Inf,Inf,Inf
 2,2,1,120,Inf,Inf,Inf,Inf
+2,2,1,121,Inf,Inf,Inf,Inf
 2,2,2,1,5.410075,5.410075,5.410075,5.410075
 2,2,2,2,6.3e-5,6.3e-5,8.2e-5,8.2e-5
 2,2,2,3,4.6e-5,4.6e-5,1.4e-5,1.4e-5
@@ -7439,6 +7500,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,2,118,Inf,Inf,Inf,Inf
 2,2,2,119,Inf,Inf,Inf,Inf
 2,2,2,120,Inf,Inf,Inf,Inf
+2,2,2,121,Inf,Inf,Inf,Inf
 2,2,3,1,5.582029,5.582029,5.582029,5.582029
 2,2,3,2,6.5e-5,6.5e-5,8.4e-5,8.4e-5
 2,2,3,3,4.7e-5,4.7e-5,1.6e-5,1.6e-5
@@ -7559,6 +7621,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,3,118,Inf,Inf,Inf,Inf
 2,2,3,119,Inf,Inf,Inf,Inf
 2,2,3,120,Inf,Inf,Inf,Inf
+2,2,3,121,Inf,Inf,Inf,Inf
 2,2,4,1,5.650221,5.650221,5.650221,5.650221
 2,2,4,2,6.6e-5,6.6e-5,8.5e-5,8.5e-5
 2,2,4,3,4.8e-5,4.8e-5,1.7e-5,1.7e-5
@@ -7679,6 +7742,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,4,118,Inf,Inf,Inf,Inf
 2,2,4,119,Inf,Inf,Inf,Inf
 2,2,4,120,Inf,Inf,Inf,Inf
+2,2,4,121,Inf,Inf,Inf,Inf
 2,2,5,1,5.677406,5.677406,5.677406,5.677406
 2,2,5,2,6.7e-5,6.7e-5,8.5e-5,8.5e-5
 2,2,5,3,4.9e-5,4.9e-5,1.8e-5,1.8e-5
@@ -7799,6 +7863,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,5,118,Inf,Inf,Inf,Inf
 2,2,5,119,Inf,Inf,Inf,Inf
 2,2,5,120,Inf,Inf,Inf,Inf
+2,2,5,121,Inf,Inf,Inf,Inf
 2,2,6,1,5.688265,5.688265,5.688265,5.688265
 2,2,6,2,6.7e-5,6.7e-5,8.5e-5,8.5e-5
 2,2,6,3,4.9e-5,4.9e-5,1.8e-5,1.8e-5
@@ -7919,6 +7984,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,6,118,Inf,Inf,Inf,Inf
 2,2,6,119,Inf,Inf,Inf,Inf
 2,2,6,120,Inf,Inf,Inf,Inf
+2,2,6,121,Inf,Inf,Inf,Inf
 2,2,7,1,5.692606,5.692606,5.692606,5.692606
 2,2,7,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,7,3,4.9e-5,4.9e-5,1.8e-5,1.8e-5
@@ -8039,6 +8105,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,7,118,Inf,Inf,Inf,Inf
 2,2,7,119,Inf,Inf,Inf,Inf
 2,2,7,120,Inf,Inf,Inf,Inf
+2,2,7,121,Inf,Inf,Inf,Inf
 2,2,8,1,5.694343,5.694343,5.694343,5.694343
 2,2,8,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,8,3,4.9e-5,4.9e-5,1.9e-5,1.9e-5
@@ -8159,6 +8226,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,8,118,Inf,Inf,Inf,Inf
 2,2,8,119,Inf,Inf,Inf,Inf
 2,2,8,120,Inf,Inf,Inf,Inf
+2,2,8,121,Inf,Inf,Inf,Inf
 2,2,9,1,5.695037,5.695037,5.695037,5.695037
 2,2,9,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,9,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -8279,6 +8347,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,9,118,Inf,Inf,Inf,Inf
 2,2,9,119,Inf,Inf,Inf,Inf
 2,2,9,120,Inf,Inf,Inf,Inf
+2,2,9,121,Inf,Inf,Inf,Inf
 2,2,10,1,5.695315,5.695315,5.695315,5.695315
 2,2,10,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,10,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -8399,6 +8468,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,10,118,Inf,Inf,Inf,Inf
 2,2,10,119,Inf,Inf,Inf,Inf
 2,2,10,120,Inf,Inf,Inf,Inf
+2,2,10,121,Inf,Inf,Inf,Inf
 2,2,11,1,5.695426,5.695426,5.695426,5.695426
 2,2,11,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,11,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -8519,6 +8589,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,11,118,Inf,Inf,Inf,Inf
 2,2,11,119,Inf,Inf,Inf,Inf
 2,2,11,120,Inf,Inf,Inf,Inf
+2,2,11,121,Inf,Inf,Inf,Inf
 2,2,12,1,5.69547,5.69547,5.69547,5.69547
 2,2,12,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,12,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -8639,6 +8710,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,12,118,Inf,Inf,Inf,Inf
 2,2,12,119,Inf,Inf,Inf,Inf
 2,2,12,120,Inf,Inf,Inf,Inf
+2,2,12,121,Inf,Inf,Inf,Inf
 2,2,13,1,5.695488,5.695488,5.695488,5.695488
 2,2,13,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,13,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -8759,6 +8831,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,13,118,Inf,Inf,Inf,Inf
 2,2,13,119,Inf,Inf,Inf,Inf
 2,2,13,120,Inf,Inf,Inf,Inf
+2,2,13,121,Inf,Inf,Inf,Inf
 2,2,14,1,5.695495,5.695495,5.695495,5.695495
 2,2,14,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,14,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -8879,6 +8952,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,14,118,Inf,Inf,Inf,Inf
 2,2,14,119,Inf,Inf,Inf,Inf
 2,2,14,120,Inf,Inf,Inf,Inf
+2,2,14,121,Inf,Inf,Inf,Inf
 2,2,15,1,5.695498,5.695498,5.695498,5.695498
 2,2,15,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,15,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -8999,6 +9073,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,15,118,Inf,Inf,Inf,Inf
 2,2,15,119,Inf,Inf,Inf,Inf
 2,2,15,120,Inf,Inf,Inf,Inf
+2,2,15,121,Inf,Inf,Inf,Inf
 2,2,16,1,5.695499,5.695499,5.695499,5.695499
 2,2,16,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,16,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -9119,6 +9194,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,16,118,Inf,Inf,Inf,Inf
 2,2,16,119,Inf,Inf,Inf,Inf
 2,2,16,120,Inf,Inf,Inf,Inf
+2,2,16,121,Inf,Inf,Inf,Inf
 2,2,17,1,5.6955,5.6955,5.6955,5.6955
 2,2,17,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,17,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -9239,6 +9315,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,17,118,Inf,Inf,Inf,Inf
 2,2,17,119,Inf,Inf,Inf,Inf
 2,2,17,120,Inf,Inf,Inf,Inf
+2,2,17,121,Inf,Inf,Inf,Inf
 2,2,18,1,5.6955,5.6955,5.6955,5.6955
 2,2,18,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,18,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -9359,6 +9436,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,18,118,Inf,Inf,Inf,Inf
 2,2,18,119,Inf,Inf,Inf,Inf
 2,2,18,120,Inf,Inf,Inf,Inf
+2,2,18,121,Inf,Inf,Inf,Inf
 2,2,19,1,5.6955,5.6955,5.6955,5.6955
 2,2,19,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,19,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -9479,6 +9557,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,19,118,Inf,Inf,Inf,Inf
 2,2,19,119,Inf,Inf,Inf,Inf
 2,2,19,120,Inf,Inf,Inf,Inf
+2,2,19,121,Inf,Inf,Inf,Inf
 2,2,20,1,5.6955,5.6955,5.6955,5.6955
 2,2,20,2,6.7e-5,6.7e-5,8.6e-5,8.6e-5
 2,2,20,3,5.0e-5,5.0e-5,1.9e-5,1.9e-5
@@ -9599,6 +9678,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 2,2,20,118,Inf,Inf,Inf,Inf
 2,2,20,119,Inf,Inf,Inf,Inf
 2,2,20,120,Inf,Inf,Inf,Inf
+2,2,20,121,Inf,Inf,Inf,Inf
 3,1,1,1,785.410197,785.410197,785.410197,785.410197
 3,1,1,2,Inf,Inf,Inf,Inf
 3,1,1,3,Inf,Inf,Inf,Inf
@@ -9719,6 +9799,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,1,118,Inf,Inf,Inf,Inf
 3,1,1,119,Inf,Inf,Inf,Inf
 3,1,1,120,Inf,Inf,Inf,Inf
+3,1,1,121,Inf,Inf,Inf,Inf
 3,1,2,1,854.897279,854.897279,854.897279,854.897279
 3,1,2,2,Inf,Inf,Inf,Inf
 3,1,2,3,Inf,Inf,Inf,Inf
@@ -9839,6 +9920,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,2,118,Inf,Inf,Inf,Inf
 3,1,2,119,Inf,Inf,Inf,Inf
 3,1,2,120,Inf,Inf,Inf,Inf
+3,1,2,121,Inf,Inf,Inf,Inf
 3,1,3,1,882.069382,882.069382,882.069382,882.069382
 3,1,3,2,Inf,Inf,Inf,Inf
 3,1,3,3,Inf,Inf,Inf,Inf
@@ -9959,6 +10041,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,3,118,Inf,Inf,Inf,Inf
 3,1,3,119,Inf,Inf,Inf,Inf
 3,1,3,120,Inf,Inf,Inf,Inf
+3,1,3,121,Inf,Inf,Inf,Inf
 3,1,4,1,892.845023,892.845023,892.845023,892.845023
 3,1,4,2,Inf,Inf,Inf,Inf
 3,1,4,3,Inf,Inf,Inf,Inf
@@ -10079,6 +10162,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,4,118,Inf,Inf,Inf,Inf
 3,1,4,119,Inf,Inf,Inf,Inf
 3,1,4,120,Inf,Inf,Inf,Inf
+3,1,4,121,Inf,Inf,Inf,Inf
 3,1,5,1,897.140747,897.140747,897.140747,897.140747
 3,1,5,2,Inf,Inf,Inf,Inf
 3,1,5,3,Inf,Inf,Inf,Inf
@@ -10199,6 +10283,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,5,118,Inf,Inf,Inf,Inf
 3,1,5,119,Inf,Inf,Inf,Inf
 3,1,5,120,Inf,Inf,Inf,Inf
+3,1,5,121,Inf,Inf,Inf,Inf
 3,1,6,1,898.856736,898.856736,898.856736,898.856736
 3,1,6,2,Inf,Inf,Inf,Inf
 3,1,6,3,Inf,Inf,Inf,Inf
@@ -10319,6 +10404,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,6,118,Inf,Inf,Inf,Inf
 3,1,6,119,Inf,Inf,Inf,Inf
 3,1,6,120,Inf,Inf,Inf,Inf
+3,1,6,121,Inf,Inf,Inf,Inf
 3,1,7,1,899.542764,899.542764,899.542764,899.542764
 3,1,7,2,Inf,Inf,Inf,Inf
 3,1,7,3,Inf,Inf,Inf,Inf
@@ -10439,6 +10525,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,7,118,Inf,Inf,Inf,Inf
 3,1,7,119,Inf,Inf,Inf,Inf
 3,1,7,120,Inf,Inf,Inf,Inf
+3,1,7,121,Inf,Inf,Inf,Inf
 3,1,8,1,899.817117,899.817117,899.817117,899.817117
 3,1,8,2,Inf,Inf,Inf,Inf
 3,1,8,3,Inf,Inf,Inf,Inf
@@ -10559,6 +10646,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,8,118,Inf,Inf,Inf,Inf
 3,1,8,119,Inf,Inf,Inf,Inf
 3,1,8,120,Inf,Inf,Inf,Inf
+3,1,8,121,Inf,Inf,Inf,Inf
 3,1,9,1,899.926848,899.926848,899.926848,899.926848
 3,1,9,2,Inf,Inf,Inf,Inf
 3,1,9,3,Inf,Inf,Inf,Inf
@@ -10679,6 +10767,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,9,118,Inf,Inf,Inf,Inf
 3,1,9,119,Inf,Inf,Inf,Inf
 3,1,9,120,Inf,Inf,Inf,Inf
+3,1,9,121,Inf,Inf,Inf,Inf
 3,1,10,1,899.97074,899.97074,899.97074,899.97074
 3,1,10,2,Inf,Inf,Inf,Inf
 3,1,10,3,Inf,Inf,Inf,Inf
@@ -10799,6 +10888,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,10,118,Inf,Inf,Inf,Inf
 3,1,10,119,Inf,Inf,Inf,Inf
 3,1,10,120,Inf,Inf,Inf,Inf
+3,1,10,121,Inf,Inf,Inf,Inf
 3,1,11,1,899.988296,899.988296,899.988296,899.988296
 3,1,11,2,Inf,Inf,Inf,Inf
 3,1,11,3,Inf,Inf,Inf,Inf
@@ -10919,6 +11009,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,11,118,Inf,Inf,Inf,Inf
 3,1,11,119,Inf,Inf,Inf,Inf
 3,1,11,120,Inf,Inf,Inf,Inf
+3,1,11,121,Inf,Inf,Inf,Inf
 3,1,12,1,899.995318,899.995318,899.995318,899.995318
 3,1,12,2,Inf,Inf,Inf,Inf
 3,1,12,3,Inf,Inf,Inf,Inf
@@ -11039,6 +11130,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,12,118,Inf,Inf,Inf,Inf
 3,1,12,119,Inf,Inf,Inf,Inf
 3,1,12,120,Inf,Inf,Inf,Inf
+3,1,12,121,Inf,Inf,Inf,Inf
 3,1,13,1,899.998127,899.998127,899.998127,899.998127
 3,1,13,2,Inf,Inf,Inf,Inf
 3,1,13,3,Inf,Inf,Inf,Inf
@@ -11159,6 +11251,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,13,118,Inf,Inf,Inf,Inf
 3,1,13,119,Inf,Inf,Inf,Inf
 3,1,13,120,Inf,Inf,Inf,Inf
+3,1,13,121,Inf,Inf,Inf,Inf
 3,1,14,1,899.999251,899.999251,899.999251,899.999251
 3,1,14,2,Inf,Inf,Inf,Inf
 3,1,14,3,Inf,Inf,Inf,Inf
@@ -11279,6 +11372,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,14,118,Inf,Inf,Inf,Inf
 3,1,14,119,Inf,Inf,Inf,Inf
 3,1,14,120,Inf,Inf,Inf,Inf
+3,1,14,121,Inf,Inf,Inf,Inf
 3,1,15,1,899.9997,899.9997,899.9997,899.9997
 3,1,15,2,Inf,Inf,Inf,Inf
 3,1,15,3,Inf,Inf,Inf,Inf
@@ -11399,6 +11493,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,15,118,Inf,Inf,Inf,Inf
 3,1,15,119,Inf,Inf,Inf,Inf
 3,1,15,120,Inf,Inf,Inf,Inf
+3,1,15,121,Inf,Inf,Inf,Inf
 3,1,16,1,899.99988,899.99988,899.99988,899.99988
 3,1,16,2,Inf,Inf,Inf,Inf
 3,1,16,3,Inf,Inf,Inf,Inf
@@ -11519,6 +11614,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,16,118,Inf,Inf,Inf,Inf
 3,1,16,119,Inf,Inf,Inf,Inf
 3,1,16,120,Inf,Inf,Inf,Inf
+3,1,16,121,Inf,Inf,Inf,Inf
 3,1,17,1,899.999952,899.999952,899.999952,899.999952
 3,1,17,2,Inf,Inf,Inf,Inf
 3,1,17,3,Inf,Inf,Inf,Inf
@@ -11639,6 +11735,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,17,118,Inf,Inf,Inf,Inf
 3,1,17,119,Inf,Inf,Inf,Inf
 3,1,17,120,Inf,Inf,Inf,Inf
+3,1,17,121,Inf,Inf,Inf,Inf
 3,1,18,1,899.999981,899.999981,899.999981,899.999981
 3,1,18,2,Inf,Inf,Inf,Inf
 3,1,18,3,Inf,Inf,Inf,Inf
@@ -11759,6 +11856,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,18,118,Inf,Inf,Inf,Inf
 3,1,18,119,Inf,Inf,Inf,Inf
 3,1,18,120,Inf,Inf,Inf,Inf
+3,1,18,121,Inf,Inf,Inf,Inf
 3,1,19,1,899.999992,899.999992,899.999992,899.999992
 3,1,19,2,Inf,Inf,Inf,Inf
 3,1,19,3,Inf,Inf,Inf,Inf
@@ -11879,6 +11977,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,19,118,Inf,Inf,Inf,Inf
 3,1,19,119,Inf,Inf,Inf,Inf
 3,1,19,120,Inf,Inf,Inf,Inf
+3,1,19,121,Inf,Inf,Inf,Inf
 3,1,20,1,899.999997,899.999997,899.999997,899.999997
 3,1,20,2,Inf,Inf,Inf,Inf
 3,1,20,3,Inf,Inf,Inf,Inf
@@ -11999,6 +12098,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,1,20,118,Inf,Inf,Inf,Inf
 3,1,20,119,Inf,Inf,Inf,Inf
 3,1,20,120,Inf,Inf,Inf,Inf
+3,1,20,121,Inf,Inf,Inf,Inf
 3,2,1,1,785.410197,785.410197,785.410197,785.410197
 3,2,1,2,Inf,Inf,Inf,Inf
 3,2,1,3,Inf,Inf,Inf,Inf
@@ -12119,6 +12219,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,1,118,Inf,Inf,Inf,Inf
 3,2,1,119,Inf,Inf,Inf,Inf
 3,2,1,120,Inf,Inf,Inf,Inf
+3,2,1,121,Inf,Inf,Inf,Inf
 3,2,2,1,854.897279,854.897279,854.897279,854.897279
 3,2,2,2,Inf,Inf,Inf,Inf
 3,2,2,3,Inf,Inf,Inf,Inf
@@ -12239,6 +12340,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,2,118,Inf,Inf,Inf,Inf
 3,2,2,119,Inf,Inf,Inf,Inf
 3,2,2,120,Inf,Inf,Inf,Inf
+3,2,2,121,Inf,Inf,Inf,Inf
 3,2,3,1,882.069382,882.069382,882.069382,882.069382
 3,2,3,2,Inf,Inf,Inf,Inf
 3,2,3,3,Inf,Inf,Inf,Inf
@@ -12359,6 +12461,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,3,118,Inf,Inf,Inf,Inf
 3,2,3,119,Inf,Inf,Inf,Inf
 3,2,3,120,Inf,Inf,Inf,Inf
+3,2,3,121,Inf,Inf,Inf,Inf
 3,2,4,1,892.845023,892.845023,892.845023,892.845023
 3,2,4,2,Inf,Inf,Inf,Inf
 3,2,4,3,Inf,Inf,Inf,Inf
@@ -12479,6 +12582,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,4,118,Inf,Inf,Inf,Inf
 3,2,4,119,Inf,Inf,Inf,Inf
 3,2,4,120,Inf,Inf,Inf,Inf
+3,2,4,121,Inf,Inf,Inf,Inf
 3,2,5,1,897.140747,897.140747,897.140747,897.140747
 3,2,5,2,Inf,Inf,Inf,Inf
 3,2,5,3,Inf,Inf,Inf,Inf
@@ -12599,6 +12703,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,5,118,Inf,Inf,Inf,Inf
 3,2,5,119,Inf,Inf,Inf,Inf
 3,2,5,120,Inf,Inf,Inf,Inf
+3,2,5,121,Inf,Inf,Inf,Inf
 3,2,6,1,898.856736,898.856736,898.856736,898.856736
 3,2,6,2,Inf,Inf,Inf,Inf
 3,2,6,3,Inf,Inf,Inf,Inf
@@ -12719,6 +12824,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,6,118,Inf,Inf,Inf,Inf
 3,2,6,119,Inf,Inf,Inf,Inf
 3,2,6,120,Inf,Inf,Inf,Inf
+3,2,6,121,Inf,Inf,Inf,Inf
 3,2,7,1,899.542764,899.542764,899.542764,899.542764
 3,2,7,2,Inf,Inf,Inf,Inf
 3,2,7,3,Inf,Inf,Inf,Inf
@@ -12839,6 +12945,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,7,118,Inf,Inf,Inf,Inf
 3,2,7,119,Inf,Inf,Inf,Inf
 3,2,7,120,Inf,Inf,Inf,Inf
+3,2,7,121,Inf,Inf,Inf,Inf
 3,2,8,1,899.817117,899.817117,899.817117,899.817117
 3,2,8,2,Inf,Inf,Inf,Inf
 3,2,8,3,Inf,Inf,Inf,Inf
@@ -12959,6 +13066,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,8,118,Inf,Inf,Inf,Inf
 3,2,8,119,Inf,Inf,Inf,Inf
 3,2,8,120,Inf,Inf,Inf,Inf
+3,2,8,121,Inf,Inf,Inf,Inf
 3,2,9,1,899.926848,899.926848,899.926848,899.926848
 3,2,9,2,Inf,Inf,Inf,Inf
 3,2,9,3,Inf,Inf,Inf,Inf
@@ -13079,6 +13187,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,9,118,Inf,Inf,Inf,Inf
 3,2,9,119,Inf,Inf,Inf,Inf
 3,2,9,120,Inf,Inf,Inf,Inf
+3,2,9,121,Inf,Inf,Inf,Inf
 3,2,10,1,899.97074,899.97074,899.97074,899.97074
 3,2,10,2,Inf,Inf,Inf,Inf
 3,2,10,3,Inf,Inf,Inf,Inf
@@ -13199,6 +13308,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,10,118,Inf,Inf,Inf,Inf
 3,2,10,119,Inf,Inf,Inf,Inf
 3,2,10,120,Inf,Inf,Inf,Inf
+3,2,10,121,Inf,Inf,Inf,Inf
 3,2,11,1,899.988296,899.988296,899.988296,899.988296
 3,2,11,2,Inf,Inf,Inf,Inf
 3,2,11,3,Inf,Inf,Inf,Inf
@@ -13319,6 +13429,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,11,118,Inf,Inf,Inf,Inf
 3,2,11,119,Inf,Inf,Inf,Inf
 3,2,11,120,Inf,Inf,Inf,Inf
+3,2,11,121,Inf,Inf,Inf,Inf
 3,2,12,1,899.995318,899.995318,899.995318,899.995318
 3,2,12,2,Inf,Inf,Inf,Inf
 3,2,12,3,Inf,Inf,Inf,Inf
@@ -13439,6 +13550,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,12,118,Inf,Inf,Inf,Inf
 3,2,12,119,Inf,Inf,Inf,Inf
 3,2,12,120,Inf,Inf,Inf,Inf
+3,2,12,121,Inf,Inf,Inf,Inf
 3,2,13,1,899.998127,899.998127,899.998127,899.998127
 3,2,13,2,Inf,Inf,Inf,Inf
 3,2,13,3,Inf,Inf,Inf,Inf
@@ -13559,6 +13671,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,13,118,Inf,Inf,Inf,Inf
 3,2,13,119,Inf,Inf,Inf,Inf
 3,2,13,120,Inf,Inf,Inf,Inf
+3,2,13,121,Inf,Inf,Inf,Inf
 3,2,14,1,899.999251,899.999251,899.999251,899.999251
 3,2,14,2,Inf,Inf,Inf,Inf
 3,2,14,3,Inf,Inf,Inf,Inf
@@ -13679,6 +13792,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,14,118,Inf,Inf,Inf,Inf
 3,2,14,119,Inf,Inf,Inf,Inf
 3,2,14,120,Inf,Inf,Inf,Inf
+3,2,14,121,Inf,Inf,Inf,Inf
 3,2,15,1,899.9997,899.9997,899.9997,899.9997
 3,2,15,2,Inf,Inf,Inf,Inf
 3,2,15,3,Inf,Inf,Inf,Inf
@@ -13799,6 +13913,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,15,118,Inf,Inf,Inf,Inf
 3,2,15,119,Inf,Inf,Inf,Inf
 3,2,15,120,Inf,Inf,Inf,Inf
+3,2,15,121,Inf,Inf,Inf,Inf
 3,2,16,1,899.99988,899.99988,899.99988,899.99988
 3,2,16,2,Inf,Inf,Inf,Inf
 3,2,16,3,Inf,Inf,Inf,Inf
@@ -13919,6 +14034,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,16,118,Inf,Inf,Inf,Inf
 3,2,16,119,Inf,Inf,Inf,Inf
 3,2,16,120,Inf,Inf,Inf,Inf
+3,2,16,121,Inf,Inf,Inf,Inf
 3,2,17,1,899.999952,899.999952,899.999952,899.999952
 3,2,17,2,Inf,Inf,Inf,Inf
 3,2,17,3,Inf,Inf,Inf,Inf
@@ -14039,6 +14155,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,17,118,Inf,Inf,Inf,Inf
 3,2,17,119,Inf,Inf,Inf,Inf
 3,2,17,120,Inf,Inf,Inf,Inf
+3,2,17,121,Inf,Inf,Inf,Inf
 3,2,18,1,899.999981,899.999981,899.999981,899.999981
 3,2,18,2,Inf,Inf,Inf,Inf
 3,2,18,3,Inf,Inf,Inf,Inf
@@ -14159,6 +14276,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,18,118,Inf,Inf,Inf,Inf
 3,2,18,119,Inf,Inf,Inf,Inf
 3,2,18,120,Inf,Inf,Inf,Inf
+3,2,18,121,Inf,Inf,Inf,Inf
 3,2,19,1,899.999992,899.999992,899.999992,899.999992
 3,2,19,2,Inf,Inf,Inf,Inf
 3,2,19,3,Inf,Inf,Inf,Inf
@@ -14279,6 +14397,7 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,19,118,Inf,Inf,Inf,Inf
 3,2,19,119,Inf,Inf,Inf,Inf
 3,2,19,120,Inf,Inf,Inf,Inf
+3,2,19,121,Inf,Inf,Inf,Inf
 3,2,20,1,899.999997,899.999997,899.999997,899.999997
 3,2,20,2,Inf,Inf,Inf,Inf
 3,2,20,3,Inf,Inf,Inf,Inf
@@ -14399,3 +14518,4 @@ period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,re
 3,2,20,118,Inf,Inf,Inf,Inf
 3,2,20,119,Inf,Inf,Inf,Inf
 3,2,20,120,Inf,Inf,Inf,Inf
+3,2,20,121,Inf,Inf,Inf,Inf

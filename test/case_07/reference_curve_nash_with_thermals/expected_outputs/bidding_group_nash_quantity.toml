@@ -1,6 +1,6 @@
 version = 1
 dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"]
-dimension_size = [3, 2, 4, 20, 120]
+dimension_size = [3, 2, 4, 20, 121]
 initial_date = "2020-01-01 00:00:00"
 time_dimension = "period"
 frequency = "monthly"

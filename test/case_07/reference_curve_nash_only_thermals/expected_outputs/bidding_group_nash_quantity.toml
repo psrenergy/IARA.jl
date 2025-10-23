@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"]
+dimension_size = [3, 2, 4, 20, 101]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "period"
+frequency = "monthly"
+unit = "MWh"
+labels = ["thermal_bg_1 - bus_1", "thermal_bg_2 - bus_1", "thermal_bg_3 - bus_1", "thermal_bg_4 - bus_1", "thermal_bg_5 - bus_1", "thermal_bg_6 - bus_1", "thermal_bg_7 - bus_1", "thermal_bg_8 - bus_1"]

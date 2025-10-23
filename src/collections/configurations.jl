@@ -1329,8 +1329,7 @@ end
 Return whether the Nash equilibrium from hydro reference curve should be run.
 """
 function should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
-    return bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM &&
-           use_virtual_reservoirs(inputs)
+    return bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
 end
 
 """

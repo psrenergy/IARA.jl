@@ -320,7 +320,6 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
 
     try
         for period in 1:number_of_periods(inputs)
-            @info("Running clearing for period: $period")
             # Update the time series in the database to the current period
             update_time_series_from_db!(inputs, period)
 
@@ -353,6 +352,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             # Nash equilibrium from reference curve
             if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
                 run_time_options = RunTimeOptions()
+                @info("Running supply function equilibrium for period: $period")
                 for scenario in 1:number_of_scenarios(inputs)
                     nash_bids_from_hydro_reference_curve(
                         inputs,
@@ -387,6 +387,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             end
 
             # Clearing problems
+            @info("Running clearing for period: $period")
             run_time_options = RunTimeOptions(;
                 nash_equilibrium_iteration,
                 clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,

@@ -1,3 +1,12 @@
+# Data structure to map agents back to their source (VR or BG at specific location)
+struct AgentMapping
+    agent_index_in_global::Int       # Index in the global q, p, b vectors
+    source_type::Symbol              # :vr or :bg
+    location_index::Int              # VR index or Bus index
+    agent_local_index::Int           # Index within the VR's asset owners or BG index
+    original_agent_id::Int           # Asset owner ID or Bidding group ID
+end
+
 function nash_bids_from_hydro_reference_curve(
     inputs::AbstractInputs,
     outputs::Outputs,
@@ -5,151 +14,211 @@ function nash_bids_from_hydro_reference_curve(
     period::Int = 1,
     scenario::Int = 1,
 )
-    vr_original_quantity_bid, vr_original_price_bid =
-        read_serialized_virtual_reservoir_heuristic_bids(inputs; period, scenario)
+    # Prepare virtual reservoir data if applicable
+    virtual_reservoirs = Int[]
+    number_of_virtual_reservoirs = 0
+    number_of_asset_owners = 0
+    vr_original_quantity_bid = nothing
+    vr_original_price_bid = nothing
+    vr_quantity_output = nothing
+    vr_price_output = nothing
+    vr_slope_output = nothing
+    has_virtual_reservoirs = use_virtual_reservoirs(inputs)
 
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    number_of_virtual_reservoirs = length(virtual_reservoirs)
-    number_of_asset_owners = number_of_elements(inputs, AssetOwner)
+    if has_virtual_reservoirs
+        vr_original_quantity_bid, vr_original_price_bid =
+            read_serialized_virtual_reservoir_heuristic_bids(inputs; period, scenario)
 
-    vr_quantity_output = zeros(
-        Float64,
-        number_of_virtual_reservoirs,
-        number_of_asset_owners,
-        reference_curve_nash_max_iterations(inputs),
-        maximum_number_of_segments_in_nash_equilibrium(inputs),
-    )
-    vr_price_output = zeros(
-        Float64,
-        number_of_virtual_reservoirs,
-        number_of_asset_owners,
-        reference_curve_nash_max_iterations(inputs),
-        maximum_number_of_segments_in_nash_equilibrium(inputs),
-    )
-    vr_slope_output = fill(
-        Inf,
-        number_of_virtual_reservoirs,
-        number_of_asset_owners,
-        reference_curve_nash_max_iterations(inputs),
-        maximum_number_of_segments_in_nash_equilibrium(inputs),
-    )
+        virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+        number_of_virtual_reservoirs = length(virtual_reservoirs)
+        number_of_asset_owners = number_of_elements(inputs, AssetOwner)
 
-    for vr in virtual_reservoirs
-        asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr)
-        number_of_asset_owners_in_virtual_reservoir = length(asset_owners_in_virtual_reservoir)
-        q, p, b = treat_reference_curve_data(
-            inputs,
-            vr_original_quantity_bid,
-            vr_original_price_bid,
-            vr,
+        vr_quantity_output = zeros(
+            Float64,
+            number_of_virtual_reservoirs,
+            number_of_asset_owners,
+            reference_curve_nash_max_iterations(inputs),
+            maximum_number_of_segments_in_nash_equilibrium(inputs),
         )
-        original_q = deepcopy(q)
-        original_p = deepcopy(p)
-        original_b = deepcopy(b)
-        for iter in 1:reference_curve_nash_max_iterations(inputs)
-            q, p, b = run_reference_curve_nash_iteration(
+        vr_price_output = zeros(
+            Float64,
+            number_of_virtual_reservoirs,
+            number_of_asset_owners,
+            reference_curve_nash_max_iterations(inputs),
+            maximum_number_of_segments_in_nash_equilibrium(inputs),
+        )
+        vr_slope_output = fill(
+            Inf,
+            number_of_virtual_reservoirs,
+            number_of_asset_owners,
+            reference_curve_nash_max_iterations(inputs),
+            maximum_number_of_segments_in_nash_equilibrium(inputs),
+        )
+    end
+
+    # Prepare bidding group data if applicable
+    buses = Int[]
+    bidding_groups = Int[]
+    number_of_buses = 0
+    number_of_bidding_groups = 0
+    bg_original_quantity_bid = nothing
+    bg_original_price_bid = nothing
+    bg_quantity_output = nothing
+    bg_price_output = nothing
+    bg_slope_output = nothing
+    has_bidding_groups = any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
+
+    if has_bidding_groups
+        bg_original_quantity_bid, bg_original_price_bid = read_serialized_heuristic_bids(inputs; period, scenario)
+
+        buses = index_of_elements(inputs, Bus)
+        bidding_groups =
+            index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+        number_of_buses = length(buses)
+        number_of_bidding_groups = length(bidding_groups)
+
+        bg_quantity_output = zeros(
+            Float64,
+            number_of_bidding_groups,
+            number_of_buses,
+            reference_curve_nash_max_iterations(inputs),
+            maximum_number_of_segments_in_nash_equilibrium(inputs),
+        )
+        bg_price_output = zeros(
+            Float64,
+            number_of_bidding_groups,
+            number_of_buses,
+            reference_curve_nash_max_iterations(inputs),
+            maximum_number_of_segments_in_nash_equilibrium(inputs),
+        )
+        bg_slope_output = fill(
+            Inf,
+            number_of_bidding_groups,
+            number_of_buses,
+            reference_curve_nash_max_iterations(inputs),
+            maximum_number_of_segments_in_nash_equilibrium(inputs),
+        )
+    end
+
+    # Aggregate all bids into a single (q, p, b) triple
+    # Build mapping to track which agent corresponds to which VR/bus
+    agent_mappings = AgentMapping[]
+    global_q = Vector{Vector{Float64}}()
+    global_p = Vector{Vector{Float64}}()
+    global_b = Vector{Vector{Float64}}()
+    global_agent_index = 0
+
+    # Add all VR bids
+    if has_virtual_reservoirs
+        for vr in virtual_reservoirs
+            asset_owners_in_vr = virtual_reservoir_asset_owner_indices(inputs, vr)
+            q, p, b = treat_reference_curve_data(
                 inputs,
-                number_of_asset_owners_in_virtual_reservoir;
-                current_quantity = q,
-                current_price = p,
-                current_slope = b,
-                original_quantity = original_q,
-                original_price = original_p,
-                original_slope = original_b,
+                vr_original_quantity_bid,
+                vr_original_price_bid,
+                vr,
             )
-            for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
-                number_of_segments = length(q[i])
-                vr_quantity_output[vr, ao, iter, 1:number_of_segments] = q[i]
-                vr_price_output[vr, ao, iter, 1:number_of_segments] = p[i]
-                vr_slope_output[vr, ao, iter, 1:number_of_segments] = b[i]
+            for (local_idx, ao) in enumerate(asset_owners_in_vr)
+                global_agent_index += 1
+                push!(global_q, q[local_idx])
+                push!(global_p, p[local_idx])
+                push!(global_b, b[local_idx])
+                push!(
+                    agent_mappings,
+                    AgentMapping(global_agent_index, :vr, vr, local_idx, ao),
+                )
             end
         end
     end
 
-    write_reference_curve_nash_vr_outputs(
-        inputs,
-        outputs,
-        run_time_options,
-        vr_quantity_output,
-        vr_price_output,
-        vr_slope_output,
-        period,
-        scenario,
-    )
-
-    if !any_elements(inputs, BiddingGroup) || !has_any_simple_bids(inputs)
-        return nothing
-    end
-
-    bg_original_quantity_bid, bg_original_price_bid = read_serialized_heuristic_bids(inputs; period, scenario)
-
-    buses = index_of_elements(inputs, Bus)
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-    number_of_buses = length(buses)
-    number_of_bidding_groups = length(bidding_groups)
-
-    bg_quantity_output = zeros(
-        Float64,
-        number_of_bidding_groups,
-        number_of_buses,
-        reference_curve_nash_max_iterations(inputs),
-        maximum_number_of_segments_in_nash_equilibrium(inputs),
-    )
-    bg_price_output = zeros(
-        Float64,
-        number_of_bidding_groups,
-        number_of_buses,
-        reference_curve_nash_max_iterations(inputs),
-        maximum_number_of_segments_in_nash_equilibrium(inputs),
-    )
-    bg_slope_output = fill(
-        Inf,
-        number_of_bidding_groups,
-        number_of_buses,
-        reference_curve_nash_max_iterations(inputs),
-        maximum_number_of_segments_in_nash_equilibrium(inputs),
-    )
-
-    for bus in buses
-        q, p, b = treat_bidding_group_data(
-            inputs,
-            bg_original_quantity_bid,
-            bg_original_price_bid,
-            bus,
-        )
-        original_q = deepcopy(q)
-        original_p = deepcopy(p)
-        original_b = deepcopy(b)
-        for iter in 1:reference_curve_nash_max_iterations(inputs)
-            q, p, b = run_reference_curve_nash_iteration(
+    # Add all BG bids
+    if has_bidding_groups
+        for bus in buses
+            q, p, b = treat_bidding_group_data(
                 inputs,
-                number_of_bidding_groups;
-                current_quantity = q,
-                current_price = p,
-                current_slope = b,
-                original_quantity = original_q,
-                original_price = original_p,
-                original_slope = original_b,
+                bg_original_quantity_bid,
+                bg_original_price_bid,
+                bus,
             )
-            for i in 1:number_of_bidding_groups
-                number_of_segments = length(q[i])
-                bg_quantity_output[i, bus, iter, 1:number_of_segments] = q[i]
-                bg_price_output[i, bus, iter, 1:number_of_segments] = p[i]
-                bg_slope_output[i, bus, iter, 1:number_of_segments] = b[i]
+            for (local_idx, bg) in enumerate(bidding_groups)
+                global_agent_index += 1
+                push!(global_q, q[local_idx])
+                push!(global_p, p[local_idx])
+                push!(global_b, b[local_idx])
+                push!(
+                    agent_mappings,
+                    AgentMapping(global_agent_index, :bg, bus, local_idx, bg),
+                )
             end
         end
     end
 
-    write_reference_curve_nash_bg_outputs(
-        inputs,
-        outputs,
-        run_time_options,
-        bg_quantity_output,
-        bg_price_output,
-        bg_slope_output,
-        period,
-        scenario,
-    )
+    # Store original bids
+    original_global_q = deepcopy(global_q)
+    original_global_p = deepcopy(global_p)
+    original_global_b = deepcopy(global_b)
+
+    total_number_of_agents = length(global_q)
+
+    # Run unified Nash iteration on ALL bids simultaneously
+    for iter in 1:reference_curve_nash_max_iterations(inputs)
+        global_q, global_p, global_b = run_reference_curve_nash_iteration(
+            inputs,
+            total_number_of_agents;
+            current_quantity = global_q,
+            current_price = global_p,
+            current_slope = global_b,
+            original_quantity = original_global_q,
+            original_price = original_global_p,
+            original_slope = original_global_b,
+        )
+
+        # Disaggregate results back to VR and BG outputs
+        for mapping in agent_mappings
+            agent_idx = mapping.agent_index_in_global
+            number_of_segments = length(global_q[agent_idx])
+
+            if mapping.source_type == :vr
+                vr = mapping.location_index
+                ao = mapping.original_agent_id
+                vr_quantity_output[vr, ao, iter, 1:number_of_segments] = global_q[agent_idx]
+                vr_price_output[vr, ao, iter, 1:number_of_segments] = global_p[agent_idx]
+                vr_slope_output[vr, ao, iter, 1:number_of_segments] = global_b[agent_idx]
+            elseif mapping.source_type == :bg
+                bus = mapping.location_index
+                bg_local_idx = mapping.agent_local_index
+                bg_quantity_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_q[agent_idx]
+                bg_price_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_p[agent_idx]
+                bg_slope_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_b[agent_idx]
+            end
+        end
+    end
+
+    if has_virtual_reservoirs
+        write_reference_curve_nash_vr_outputs(
+            inputs,
+            outputs,
+            run_time_options,
+            vr_quantity_output,
+            vr_price_output,
+            vr_slope_output,
+            period,
+            scenario,
+        )
+    end
+
+    if has_bidding_groups
+        write_reference_curve_nash_bg_outputs(
+            inputs,
+            outputs,
+            run_time_options,
+            bg_quantity_output,
+            bg_price_output,
+            bg_slope_output,
+            period,
+            scenario,
+        )
+    end
 
     return nothing
 end
@@ -210,6 +279,10 @@ function treat_bidding_group_data(
         dims = 3,
     )
 
+    agg_price_nan_indexes = findall(isnan, aggregated_price)
+    aggregated_price[agg_price_nan_indexes] .=
+        dropdims(sum(price[bidding_groups, bus_index, :, :]; dims = 3); dims = 3)[agg_price_nan_indexes]
+
     treated_quantity_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
     treated_price_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
     treated_slopes = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
@@ -244,10 +317,15 @@ function remove_redundant_reference_curve_segments(
         new_quantity[i] = sum(quantity[positions])
     end
 
-    if new_price[end] == 0.0 && new_quantity[end] == 0.0
+    if new_price[end] == 0.0 && new_quantity[end] == 0.0 && length(new_price) > 1
         new_price = new_price[1:end-1]
         new_quantity = new_quantity[1:end-1]
     end
+
+    # Sort by ascending price order
+    sorted_indices = sortperm(new_price)
+    new_price = new_price[sorted_indices]
+    new_quantity = new_quantity[sorted_indices]
 
     return new_quantity, new_price
 end
@@ -286,8 +364,8 @@ function validate_nash_input_data(
     asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
 
     for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
-        @assert all(slope[i] .> reference_curve_nash_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_labels(inputs, ao)) in virtual reservoir $(virtual_reservoir_labels(inputs, vr_index)) has a segment with slope below the tolerance."
-        @assert all(price[i] .<= reference_curve_nash_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_labels(inputs, ao)) in virtual reservoir $(virtual_reservoir_labels(inputs, vr_index)) has a price point above the demand deficit cost."
+        @assert all(slope[i] .> reference_curve_nash_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a segment with slope below the tolerance: $(slope[i])"
+        @assert all(price[i] .<= reference_curve_nash_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a price point above the demand deficit cost: $(price[i])"
     end
 
     return nothing
@@ -555,7 +633,24 @@ function test_inversion(
 end
 
 function maximum_number_of_segments_in_nash_equilibrium(inputs::AbstractInputs)
-    return reference_curve_number_of_segments(inputs) * number_of_elements(inputs, AssetOwner)
+    total_agents = 0
+
+    # Add all VR asset owner pairs
+    if use_virtual_reservoirs(inputs)
+        for vr in index_of_elements(inputs, VirtualReservoir)
+            total_agents += length(virtual_reservoir_asset_owner_indices(inputs, vr))
+        end
+    end
+
+    # Add all BG bus pairs
+    if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
+        bidding_groups =
+            index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+        buses = index_of_elements(inputs, Bus)
+        total_agents += length(bidding_groups) * length(buses)
+    end
+
+    return reference_curve_number_of_segments(inputs) * total_agents + 1
 end
 
 function number_of_segments_for_vr_in_nash_equilibrium(
@@ -571,88 +666,88 @@ function initialize_reference_curve_nash_outputs(
 )
     outputs = Outputs()
 
-    vr_labels = labels_for_output_by_pair_of_agents(
-        inputs,
-        run_time_options,
-        inputs.collections.virtual_reservoir,
-        inputs.collections.asset_owner;
-        index_getter = virtual_reservoir_asset_owner_indices,
-    )
+    if use_virtual_reservoirs(inputs)
+        vr_labels = labels_for_output_by_pair_of_agents(
+            inputs,
+            run_time_options,
+            inputs.collections.virtual_reservoir,
+            inputs.collections.asset_owner;
+            index_getter = virtual_reservoir_asset_owner_indices,
+        )
 
-    initialize!(
-        QuiverOutput,
-        outputs;
-        inputs,
-        output_name = "virtual_reservoir_nash_quantity",
-        dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
-        unit = "MWh",
-        labels = vr_labels,
-        run_time_options,
-    )
-    initialize!(
-        QuiverOutput,
-        outputs;
-        inputs,
-        output_name = "virtual_reservoir_nash_price",
-        dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
-        unit = "\$/MWh",
-        labels = vr_labels,
-        run_time_options,
-    )
-    initialize!(
-        QuiverOutput,
-        outputs;
-        inputs,
-        output_name = "virtual_reservoir_nash_slope",
-        dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
-        unit = "\$/MWh2",
-        labels = vr_labels,
-        run_time_options,
-    )
-
-    if !any_elements(inputs, BiddingGroup) || !has_any_simple_bids(inputs)
-        return outputs
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "virtual_reservoir_nash_quantity",
+            dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
+            unit = "MWh",
+            labels = vr_labels,
+            run_time_options,
+        )
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "virtual_reservoir_nash_price",
+            dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
+            unit = "\$/MWh",
+            labels = vr_labels,
+            run_time_options,
+        )
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "virtual_reservoir_nash_slope",
+            dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
+            unit = "\$/MWh2",
+            labels = vr_labels,
+            run_time_options,
+        )
     end
 
-    bg_labels = labels_for_output_by_pair_of_agents(
-        inputs,
-        run_time_options,
-        inputs.collections.bidding_group,
-        inputs.collections.bus;
-        index_getter = all_buses,
-        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
-    )
+    if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
+        bg_labels = labels_for_output_by_pair_of_agents(
+            inputs,
+            run_time_options,
+            inputs.collections.bidding_group,
+            inputs.collections.bus;
+            index_getter = all_buses,
+            filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+        )
 
-    initialize!(
-        QuiverOutput,
-        outputs;
-        inputs,
-        output_name = "bidding_group_nash_quantity",
-        dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
-        unit = "MWh",
-        labels = bg_labels,
-        run_time_options,
-    )
-    initialize!(
-        QuiverOutput,
-        outputs;
-        inputs,
-        output_name = "bidding_group_nash_price",
-        dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
-        unit = "\$/MWh",
-        labels = bg_labels,
-        run_time_options,
-    )
-    initialize!(
-        QuiverOutput,
-        outputs;
-        inputs,
-        output_name = "bidding_group_nash_slope",
-        dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
-        unit = "\$/MWh2",
-        labels = bg_labels,
-        run_time_options,
-    )
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "bidding_group_nash_quantity",
+            dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+            unit = "MWh",
+            labels = bg_labels,
+            run_time_options,
+        )
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "bidding_group_nash_price",
+            dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+            unit = "\$/MWh",
+            labels = bg_labels,
+            run_time_options,
+        )
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "bidding_group_nash_slope",
+            dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+            unit = "\$/MWh2",
+            labels = bg_labels,
+            run_time_options,
+        )
+    end
 
     return outputs
 end

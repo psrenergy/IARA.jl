@@ -279,6 +279,10 @@ function treat_bidding_group_data(
         dims = 3,
     )
 
+    agg_price_nan_indexes = findall(isnan, aggregated_price)
+    aggregated_price[agg_price_nan_indexes] .=
+        dropdims(sum(price[bidding_groups, bus_index, :, :]; dims = 3); dims = 3)[agg_price_nan_indexes]
+
     treated_quantity_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
     treated_price_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
     treated_slopes = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
@@ -313,10 +317,15 @@ function remove_redundant_reference_curve_segments(
         new_quantity[i] = sum(quantity[positions])
     end
 
-    if new_price[end] == 0.0 && new_quantity[end] == 0.0
+    if new_price[end] == 0.0 && new_quantity[end] == 0.0 && length(new_price) > 1
         new_price = new_price[1:end-1]
         new_quantity = new_quantity[1:end-1]
     end
+
+    # Sort by ascending price order
+    sorted_indices = sortperm(new_price)
+    new_price = new_price[sorted_indices]
+    new_quantity = new_quantity[sorted_indices]
 
     return new_quantity, new_price
 end
@@ -624,10 +633,24 @@ function test_inversion(
 end
 
 function maximum_number_of_segments_in_nash_equilibrium(inputs::AbstractInputs)
-    return reference_curve_number_of_segments(inputs) * max(
-        number_of_elements(inputs, AssetOwner),
-        number_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs]),
-    ) + 1
+    total_agents = 0
+
+    # Add all VR asset owner pairs
+    if use_virtual_reservoirs(inputs)
+        for vr in index_of_elements(inputs, VirtualReservoir)
+            total_agents += length(virtual_reservoir_asset_owner_indices(inputs, vr))
+        end
+    end
+
+    # Add all BG bus pairs
+    if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
+        bidding_groups =
+            index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+        buses = index_of_elements(inputs, Bus)
+        total_agents += length(bidding_groups) * length(buses)
+    end
+
+    return reference_curve_number_of_segments(inputs) * total_agents + 1
 end
 
 function number_of_segments_for_vr_in_nash_equilibrium(

@@ -25,7 +25,8 @@ Collection representing the gauging stations in the system.
     inflow_initial_state::Matrix{Float64} = Matrix{Float64}(undef, 0, 0)
     inflow_initial_state_variation_type::Vector{GaugingStation_InflowInitialStateVariationType.T} = []
 
-    inflow_noise_file::String = ""
+    inflow_noise_ex_ante_file::String = ""
+    inflow_noise_ex_post_file::String = ""
     parp_coefficients_file::String = ""
     inflow_period_average_file::String = ""
     inflow_period_std_dev_file::String = ""
@@ -64,14 +65,17 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
 
     if fit_parp_model(inputs)
         # When fitting the PAR(p) model, these files are output files, so we use the IARA standard.
-        gauging_station.inflow_noise_file = "inflow_noise"
+        gauging_station.inflow_noise_ex_ante_file = "inflow_noise_ex_ante"
+        gauging_station.inflow_noise_ex_post_file = "inflow_noise_ex_post"
         gauging_station.parp_coefficients_file = "parp_coefficients"
         gauging_station.inflow_period_average_file = "inflow_period_average"
         gauging_station.inflow_period_std_dev_file = "inflow_period_std_dev"
     else
         # When reading the coefficients, these are input files with user-defined names
-        gauging_station.inflow_noise_file =
-            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_noise")
+        gauging_station.inflow_noise_ex_ante_file =
+            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_noise_ex_ante")
+        gauging_station.inflow_noise_ex_post_file =
+            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_noise_ex_post")
         gauging_station.parp_coefficients_file =
             PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "parp_coefficients")
         gauging_station.inflow_period_average_file =
@@ -233,8 +237,16 @@ function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingSt
         end
     end
     if read_parp_coefficients(inputs)
-        if gauging_station.inflow_noise_file == ""
-            @error("Defining the inflow noise file name is required when reading PAR(p) coefficients.")
+        if read_ex_post_inflow_file(inputs) && gauging_station.inflow_noise_ex_post_file == ""
+            @error(
+                "Defining the ex-post inflow noise file name is required when reading PAR(p) coefficients and using the ex-post file."
+            )
+            num_errors += 1
+        end
+        if read_ex_ante_inflow_file(inputs) && gauging_station.inflow_noise_ex_ante_file == ""
+            @error(
+                "Defining the ex-ante inflow noise file name is required when reading PAR(p) coefficients and using the ex-ante file."
+            )
             num_errors += 1
         end
         if gauging_station.parp_coefficients_file == ""
@@ -291,3 +303,42 @@ some_inflow_initial_state_varies_by_scenario(inputs::AbstractInputs) =
 Return the inflow time series file for all gauging stations.
 """
 gauging_station_inflow_file(inputs::AbstractInputs) = "inflow"
+
+"""
+    normalized_inflow_from_previous_period(inputs::AbstractInputs, run_time_options, period::Int, scenario::Int)
+
+Get the normalized inflow state variables from the previous period for PAR(p) model.
+
+If the period is the first one, the initial state is returned. Otherwise, it is read from the serialized results of the previous stage.
+"""
+function normalized_inflow_from_previous_period(inputs::AbstractInputs, run_time_options, period::Int, scenario::Int)
+    num_hydro_units = number_of_elements(inputs, HydroUnit; run_time_options)
+    existing_hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    previous_normalized_inflow = zeros(Float64, num_hydro_units, parp_max_lags(inputs))
+
+    # Always initialize with the initial state
+    for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
+        period_idx = mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
+        previous_normalized_inflow[h, tau] = normalized_initial_inflow(inputs, period_idx, h, tau)
+    end
+
+    if period != 1
+        # Read from serialized results
+        if is_nash_equilibrium_initialization(run_time_options)
+            error("Nash equilibrium initialization not yet supported for PAR(p) model.")
+        else
+            normalized_inflow_state = read_serialized_clearing_variable(
+                inputs,
+                RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+                :normalized_inflow;
+                period = period - 1,
+                scenario = scenario,
+            )
+            # Update with the values from the previous period
+            for h in axes(normalized_inflow_state, 1), tau in axes(normalized_inflow_state, 2)
+                previous_normalized_inflow[h, tau] = normalized_inflow_state[h, tau].out
+            end
+        end
+    end
+    return previous_normalized_inflow
+end

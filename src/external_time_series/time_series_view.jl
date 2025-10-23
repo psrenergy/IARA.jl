@@ -180,6 +180,13 @@ function read_time_series_view_from_external_file!(
             period,
             scenario,
         )
+    elseif ts.dimensions == [:period, :scenario, :subscenario]
+        read_period_scenario_subscenario!(
+            inputs,
+            ts,
+            period,
+            scenario,
+        )
     elseif ts.dimensions == [:period, :scenario, :profile]
         read_period_scenario_profile!(
             inputs,
@@ -334,6 +341,27 @@ function read_period_scenario_subscenario_subperiod!(
 
         Quiver.goto!(ts.reader; period = file_period, scenario, subscenario, subperiod)
         ts.exact_dimensions_data[:, subperiod, subscenario] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_period_scenario_subscenario!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    period::Int,
+    scenario::Int,
+) where {T, N}
+    date_time_to_read = date_time_from_period(inputs, period)
+    file_period = period_from_date_time(
+        inputs,
+        date_time_to_read;
+        initial_date_time = ts.reader.metadata.initial_date,
+    )
+    # Loop in subperiods
+    for subscenario in 1:ts.reader.metadata.dimension_size[3]
+        Quiver.goto!(ts.reader; period = file_period, scenario, subscenario)
+        ts.exact_dimensions_data[:, subscenario] = ts.reader.data
     end
     ts.data = ts.exact_dimensions_data
     return nothing

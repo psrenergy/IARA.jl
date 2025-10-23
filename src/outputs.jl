@@ -168,6 +168,16 @@ function initialize_virtual_reservoir_post_processing_outputs!(
     return nothing
 end
 
+function initialize_parp_only_outputs(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+)
+    outputs = Outputs()
+    add_symbol_to_serialize!(outputs, :inflow)
+    add_symbol_to_query_from_subproblem_result!(outputs, :inflow)
+    return outputs
+end
+
 function initialize_output_dir(args::Args)
     if !isdir(args.outputs_path)
         mkpath(args.outputs_path)

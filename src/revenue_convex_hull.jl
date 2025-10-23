@@ -212,7 +212,7 @@ function update_max_convex_hull_length!(
     inputs.collections.asset_owner._max_convex_hull_length =
         zeros(Int, length(buses_represented_for_strategic_bidding(inputs)), number_of_subperiods(inputs))
     for scenario in scenarios(inputs)
-        update_time_series_views_from_external_files!(inputs; period = node, scenario)
+        update_time_series_views_from_external_files!(inputs, run_time_options; period = node, scenario)
         update_convex_hull_cache!(inputs, run_time_options; period = node, scenario)
         updated_convex_hull = asset_owner_revenue_convex_hull(inputs)
         inputs.collections.asset_owner._max_convex_hull_length =

@@ -26,7 +26,7 @@ in chunks.
     hour_subperiod_mapping::HourSubperiodMapping = HourSubperiodMapping()
 
     # Agents
-    inflow_noise::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
+    inflow_noise::ExAnteAndExPostTimeSeriesView{Float64, 1, 2} = ExAnteAndExPostTimeSeriesView{Float64, 1, 2}()
     period_season_map::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
     initial_volume_by_scenario::TimeSeriesView{Float64, 1} = TimeSeriesView{Float64, 1}()
 
@@ -140,10 +140,12 @@ function initialize_time_series_from_external_files(inputs)
             else
                 [[:period, :scenario]]
             end
-            num_errors += initialize_time_series_view_from_external_file(
+            num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
                 inputs.time_series.inflow_noise,
-                inputs,
-                joinpath(path_parp(inputs), gauging_station_inflow_noise_file(inputs));
+                inputs;
+                ex_ante_file_path = joinpath(path_parp(inputs), gauging_station_inflow_noise_ex_ante_file(inputs)),
+                ex_post_file_path = joinpath(path_parp(inputs), gauging_station_inflow_noise_ex_post_file(inputs)),
+                files_to_read = inflow_scenarios_files(inputs),
                 expected_unit = "m3/s",
                 possible_expected_dimensions = possible_dimensions,
                 labels_to_read = gauging_station_label(inputs),
@@ -616,7 +618,8 @@ function reinitialize_bids_time_series_for_nash_iteration!(
 end
 
 function update_time_series_views_from_external_files!(
-    inputs;
+    inputs::AbstractInputs,
+    run_time_options::RunTimeOptions;
     period::Int,
     scenario::Int,
 )
@@ -674,6 +677,54 @@ function update_time_series_views_from_external_files!(
     end
     if any_elements(inputs, DemandUnit; filters = [is_flexible])
         fill_flexible_demand_window_caches!(inputs, time_series.demand_window.data)
+    end
+    update_inflow_series_from_serialized_file!(
+        inputs,
+        run_time_options;
+        period,
+        scenario,
+    )
+
+    return nothing
+end
+
+function update_inflow_series_from_serialized_file!(
+    inputs::AbstractInputs,
+    run_time_options::RunTimeOptions;
+    period::Int,
+    scenario::Int,
+)
+    if read_inflow_from_file(inputs) || parp_max_lags(inputs) == 0 || is_parp_only_model(run_time_options) ||
+       !is_market_clearing(inputs)
+        return nothing
+    end
+
+    num_subscenarios = inputs.collections.configurations.number_of_subscenarios
+
+    if read_ex_ante_inflow_file(inputs)
+        inflow_ex_ante = deserialize_parp_inflow(
+            inputs;
+            period,
+            scenario,
+        )
+        inputs.time_series.inflow.ex_ante.data = inflow_ex_ante
+    end
+    if read_ex_post_inflow_file(inputs)
+        inputs.time_series.inflow.ex_post.data = zeros(
+            Float64,
+            number_of_elements(inputs, HydroUnit),
+            number_of_subperiods(inputs),
+            num_subscenarios,
+        )
+        for subscenario in 1:num_subscenarios
+            inflow_ex_post = deserialize_parp_inflow(
+                inputs;
+                period,
+                scenario,
+                subscenario,
+            )
+            inputs.time_series.inflow.ex_post.data[:, :, subscenario] = inflow_ex_post
+        end
     end
 
     return nothing

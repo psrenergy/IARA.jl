@@ -95,7 +95,7 @@ function initialize_nash_equilibrium(
         update_time_series_from_db!(inputs, period)
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
-            update_time_series_views_from_external_files!(inputs; period, scenario)
+            update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
             markup_bids_for_period_scenario(
                 inputs,
                 run_time_options,

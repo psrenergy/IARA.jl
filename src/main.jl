@@ -217,7 +217,7 @@ function simulate_all_periods_and_scenarios_of_trained_model(
         update_time_series_from_db!(inputs, period)
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
-            update_time_series_views_from_external_files!(inputs; period, scenario)
+            update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
 
             simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
                 simulation_results,
@@ -324,6 +324,11 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             # Update the time series in the database to the current period
             update_time_series_from_db!(inputs, period)
 
+            # PAR(p) inflow
+            if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
+                calculate_inflow_from_parp_model(inputs, period)
+            end
+
             # Reference curve
             if should_build_reference_curve(inputs) && generate_heuristic_bids_for_clearing(inputs)
                 build_reference_curve(inputs, reference_curve_outputs, period)
@@ -334,7 +339,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 run_time_options = RunTimeOptions()
                 for scenario in 1:number_of_scenarios(inputs)
                     # Update the time series in the external files to the current period and scenario
-                    update_time_series_views_from_external_files!(inputs; period, scenario)
+                    update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
                     markup_bids_for_period_scenario(
                         inputs,
                         run_time_options,
@@ -370,7 +375,7 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
                 )
                 for scenario in 1:number_of_scenarios(inputs)
                     # Update the time series in the external files to the current period and scenario
-                    update_time_series_views_from_external_files!(inputs; period, scenario)
+                    update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
                     validate_bids_for_period_scenario(
                         inputs,
                         heuristic_bids_outputs,
@@ -512,7 +517,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             run_time_options = RunTimeOptions()
             for scenario in 1:number_of_scenarios(inputs)
                 # Update the time series in the external files to the current period and scenario
-                update_time_series_views_from_external_files!(inputs; period, scenario)
+                update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
                 markup_bids_for_period_scenario(
                     inputs,
                     run_time_options,
@@ -534,7 +539,7 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             )
             for scenario in 1:number_of_scenarios(inputs)
                 # Update the time series in the external files to the current period and scenario
-                update_time_series_views_from_external_files!(inputs; period, scenario)
+                update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
                 validate_bids_for_period_scenario(
                     inputs,
                     heuristic_bids_outputs,
@@ -634,7 +639,7 @@ function run_clearing_simulation(
 
     for scenario in 1:number_of_scenarios(inputs)
         # Update the time series in the external files to the current period and scenario
-        update_time_series_views_from_external_files!(inputs; period, scenario)
+        update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
 
         for subscenario in 1:number_of_subscenarios(inputs, run_time_options)
             simulation_results_from_period_scenario_subscenario =
@@ -751,7 +756,7 @@ function single_period_heuristic_bid(
         # Heuristic bids
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
-            update_time_series_views_from_external_files!(inputs; period, scenario)
+            update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
             markup_bids_for_period_scenario(
                 inputs,
                 run_time_options,
@@ -809,7 +814,7 @@ function build_reference_curve(
         # Get results
         for scenario in 1:number_of_scenarios(inputs)
             # Update the time series in the external files to the current period and scenario
-            update_time_series_views_from_external_files!(inputs; period, scenario)
+            update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
 
             simulation_results_from_period_scenario = get_simulation_results_from_period_scenario(
                 simulation_results,
@@ -825,6 +830,97 @@ function build_reference_curve(
                 period,
                 reference_curve_segment,
                 scenario,
+            )
+        end
+    end
+
+    return nothing
+end
+
+function calculate_inflow_from_parp_model(
+    inputs::Inputs,
+    period::Int,
+)
+    # Update the time series in the database to the current period
+    update_time_series_from_db!(inputs, period)
+
+    construction_types_to_run_parp_inflow_problem = [
+        Configurations_ConstructionType.COST_BASED,
+        Configurations_ConstructionType.HYBRID,
+    ]
+
+    # Ex-ante
+    should_run_ex_ante_parp_inflow_problem = false
+    run_time_options = RunTimeOptions()
+    if construction_type_ex_ante_physical(inputs) in construction_types_to_run_parp_inflow_problem
+        should_run_ex_ante_parp_inflow_problem = true
+        run_time_options = RunTimeOptions(;
+            is_parp_only_model = true,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+        )
+    elseif construction_type_ex_ante_commercial(inputs) in construction_types_to_run_parp_inflow_problem
+        should_run_ex_ante_parp_inflow_problem = true
+        run_time_options = RunTimeOptions(;
+            is_parp_only_model = true,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL,
+        )
+    end
+
+    if should_run_ex_ante_parp_inflow_problem
+        ex_ante_outputs = initialize_parp_only_outputs(inputs, run_time_options)
+        run_parp_inflow_simulation(inputs, ex_ante_outputs, run_time_options, period)
+    end
+
+    # Ex-post
+    should_run_ex_post_parp_inflow_problem = false
+    if construction_type_ex_post_physical(inputs) in construction_types_to_run_parp_inflow_problem
+        should_run_ex_post_parp_inflow_problem = true
+        run_time_options = RunTimeOptions(;
+            is_parp_only_model = true,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+        )
+    elseif construction_type_ex_post_commercial(inputs) in construction_types_to_run_parp_inflow_problem
+        run_time_options = RunTimeOptions(;
+            is_parp_only_model = true,
+            clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_COMMERCIAL,
+        )
+        should_run_ex_post_parp_inflow_problem = true
+    end
+
+    if should_run_ex_post_parp_inflow_problem
+        ex_post_outputs = initialize_parp_only_outputs(inputs, run_time_options)
+        run_parp_inflow_simulation(inputs, ex_post_outputs, run_time_options, period)
+    end
+
+    return nothing
+end
+
+function run_parp_inflow_simulation(inputs::Inputs, outputs::Outputs, run_time_options::RunTimeOptions, period::Int)
+    model = build_model(inputs, run_time_options)
+    simulation_results = simulate(model, inputs, outputs, run_time_options; current_period = period)
+
+    for scenario in 1:number_of_scenarios(inputs)
+        # Update the time series in the external files to the current period and scenario
+        update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
+
+        for subscenario in 1:number_of_subscenarios(inputs, run_time_options)
+            simulation_results_from_period_scenario_subscenario =
+                get_simulation_results_from_period_scenario_subscenario(
+                    simulation_results,
+                    inputs,
+                    run_time_options,
+                    1, # since we simulate one period at a time, the simulation_results period dimension is always 1
+                    scenario,
+                    subscenario,
+                )
+
+            serialize_parp_inflow(
+                inputs,
+                run_time_options,
+                simulation_results_from_period_scenario_subscenario.data[:inflow].data;
+                period,
+                scenario,
+                subscenario,
             )
         end
     end

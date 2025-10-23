@@ -649,29 +649,31 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
             num_errors += 1
         end
     end
-    if read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file == "" && length(hydro_unit) > 0
-        @error(
-            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_ante inflow file was linked."
-        )
-        num_errors += 1
-    end
-    if read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file == "" && length(hydro_unit) > 0
-        @error(
-            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_post inflow file was linked."
-        )
-        num_errors += 1
-    end
-    if !read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file != "" && length(hydro_unit) > 0
-        @warn(
-            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_ante inflow file was linked.
-            This file will be ignored."
-        )
-    end
-    if !read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file != "" && length(hydro_unit) > 0
-        @warn(
-            "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_post inflow file was linked.
-            This file will be ignored."
-        )
+    if read_inflow_from_file(inputs)
+        if read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file == "" && length(hydro_unit) > 0
+            @error(
+                "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_ante inflow file was linked."
+            )
+            num_errors += 1
+        end
+        if read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file == "" && length(hydro_unit) > 0
+            @error(
+                "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_post inflow file was linked."
+            )
+            num_errors += 1
+        end
+        if !read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file != "" && length(hydro_unit) > 0
+            @warn(
+                "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_ante inflow file was linked.
+                This file will be ignored."
+            )
+        end
+        if !read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file != "" && length(hydro_unit) > 0
+            @warn(
+                "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_post inflow file was linked.
+                This file will be ignored."
+            )
+        end
     end
     if some_initial_volume_varies_by_scenario(inputs) && hydro_unit.initial_volume_by_scenario_file != ""
         @warn(

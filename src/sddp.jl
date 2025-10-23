@@ -24,7 +24,6 @@ function build_model(
         optimizer = optimizer,
     ) do subproblem, node
         update_segments_profile_dimensions!(inputs, node)
-        update_time_series_views_from_external_files!(inputs; period = node, scenario = 1)
         update_time_series_from_db!(inputs, node)
 
         sp_model = build_subproblem_model(
@@ -45,7 +44,8 @@ function build_model(
         ) do (scenario, subscenario, simulation_period, simulation_trajectory)
             update_segments_profile_dimensions!(inputs, node)
             update_time_series_views_from_external_files!(
-                inputs;
+                inputs,
+                run_time_options;
                 period = simulation_period,
                 scenario = simulation_trajectory,
             )

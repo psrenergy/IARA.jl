@@ -104,8 +104,26 @@ function write_parp_outputs(inputs::Inputs,
         initial_date = initial_date_time(inputs),
         unit = "m3/s",
     )
+    if read_ex_post_inflow_file(inputs)
+        @warn("Copying the inflow ex-ante noise for the ex-post scenarios.")
+        num_subscenarios = inputs.collections.configurations.number_of_subscenarios
+        noise_ex_post = zeros(size(noise, 1), num_subscenarios, size(noise, 2), size(noise, 3))
+        for subscenario in 1:num_subscenarios
+            noise_ex_post[:, subscenario, :, :] = noise
+        end
+        write_timeseries_file(
+            joinpath(path_parp(inputs), gauging_station_inflow_noise_ex_post_file(inputs)),
+            noise_ex_post;
+            dimensions = vcat(dimension_names, "subscenario"),
+            labels = gauging_station_label(inputs),
+            time_dimension = time_dimension,
+            dimension_size = vcat(dimension_sizes, num_subscenarios),
+            initial_date = initial_date_time(inputs),
+            unit = "m3/s",
+        )
+    end
     write_timeseries_file(
-        joinpath(path_parp(inputs), gauging_station_inflow_noise_file(inputs)),
+        joinpath(path_parp(inputs), gauging_station_inflow_noise_ex_ante_file(inputs)),
         noise;
         dimensions = dimension_names,
         labels = gauging_station_label(inputs),

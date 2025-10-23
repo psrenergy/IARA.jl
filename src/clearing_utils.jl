@@ -464,6 +464,27 @@ function clearing_has_volume_variables(inputs::Inputs, run_time_options::RunTime
 end
 
 """
+    clearing_has_parp_variables(inputs::Inputs, run_time_options::RunTimeOptions)
+
+Check if the clearing has PAR(p) normalized inflow state variables.
+"""
+function clearing_has_parp_variables(inputs::Inputs, run_time_options::RunTimeOptions)
+    if !is_market_clearing(inputs)
+        return false
+    end
+    if read_inflow_from_file(inputs)
+        return false
+    end
+    if parp_max_lags(inputs) == 0
+        return false
+    end
+    if number_of_elements(inputs, HydroUnit) == 0
+        return false
+    end
+    return construction_type(inputs, run_time_options) != Configurations_ConstructionType.BID_BASED
+end
+
+"""
     clearing_has_physical_variables(inputs::Inputs)
 
 Check if the market clearing has physical variables in at least one of its problems.
@@ -520,6 +541,69 @@ function read_serialized_virtual_reservoir_energy_account(inputs::Inputs, period
         if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
             error_message *= " In single period market clearing, make sure the previous period has been solved, and the .json files have been copied from the previous execution's output directory."
         end
+        error(error_message)
+    end
+
+    data = Serialization.deserialize(serialized_file_name)
+
+    return data
+end
+
+"""
+    serialize_parp_inflow(inputs::Inputs, inflow_values::Matrix{Float64}; period::Int, scenario::Int)
+
+Serialize PAR(p) inflow expression values for use in subsequent clearing problems.
+The inflow_values matrix should have dimensions [subperiods, hydro_units].
+"""
+function serialize_parp_inflow(
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    inflow_values::Matrix{Float64};
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+    serialized_file_name =
+        joinpath(temp_path, "parp_inflow_period_$(period)_scenario_$(scenario)")
+    if is_ex_post_problem(run_time_options)
+        serialized_file_name *= "_subscenario_$(subscenario)"
+    end
+    serialized_file_name *= ".json"
+
+    Serialization.serialize(serialized_file_name, inflow_values)
+    return nothing
+end
+
+"""
+    deserialize_parp_inflow(inputs::Inputs; period::Int, scenario::Int)
+
+Deserialize PAR(p) inflow expression values from a previous clearing problem.
+Returns a matrix with dimensions [subperiods, hydro_units].
+"""
+function deserialize_parp_inflow(
+    inputs::Inputs;
+    period::Int,
+    scenario::Int,
+    subscenario::Union{Int, Nothing} = nothing,
+)
+    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+        path_case(inputs)
+    else
+        joinpath(path_case(inputs), "temp")
+    end
+    serialized_file_name =
+        joinpath(temp_path, "parp_inflow_period_$(period)_scenario_$(scenario)")
+    if !isnothing(subscenario)
+        serialized_file_name *= "_subscenario_$(subscenario)"
+    end
+    serialized_file_name *= ".json"
+
+    if !isfile(serialized_file_name)
+        error_message = "File $serialized_file_name not found."
         error(error_message)
     end
 

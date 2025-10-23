@@ -40,7 +40,8 @@ function hydro_inflow!(
         )
     else
         # Time series
-        inflow_noise_series = time_series_inflow_noise(inputs)
+        subscenario = 1 # placeholder as time-series data is replaced in SubproblemUpdate functions
+        inflow_noise_series = time_series_inflow_noise(inputs, run_time_options; subscenario)
 
         # Parameters
         @variable(
@@ -59,8 +60,6 @@ function hydro_inflow!(
                 period_idx = mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
                 normalized_initial_state[h, tau] = normalized_initial_inflow(inputs, period_idx, h, tau)
             end
-            # Time series
-            inflow_noise_series = time_series_inflow_noise(inputs)
             # State variables
             @variable(
                 model.jump_model,
@@ -164,7 +163,7 @@ function hydro_inflow!(
         inflow_noise = get_model_object(model, :inflow_noise)
 
         # Time series
-        inflow_noise_series = time_series_inflow_noise(inputs)
+        inflow_noise_series = time_series_inflow_noise(inputs, run_time_options; subscenario)
 
         for h in existing_hydro_units
             MOI.set(
@@ -192,6 +191,36 @@ function hydro_inflow!(
         end
     end
 
+    # Fix normalized inflow state for clearing with PAR(p)
+    if !is_market_clearing(inputs)
+        return nothing
+    end
+    # If the current asset owner is a price maker or a price taker we do not need to
+    # update the normalized inflow variables.
+    # The mincost model already has the normalized inflow variables updated when it is built.
+    # This check is only for the Nash Equilibrium iterations with Min Cost initialization.
+    if is_current_asset_owner_price_maker(inputs, run_time_options) ||
+       is_current_asset_owner_price_taker(inputs, run_time_options) ||
+       is_mincost(inputs, run_time_options)
+        return nothing
+    end
+
+    if !clearing_has_parp_variables(inputs, run_time_options)
+        return nothing
+    end
+
+    # Model variables
+    normalized_inflow = get_model_object(model, :normalized_inflow)
+
+    # Data from previous period
+    previous_normalized_inflow =
+        normalized_inflow_from_previous_period(inputs, run_time_options, simulation_period, simulation_trajectory)
+
+    # Fix the initial state to the values from the previous period
+    for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
+        JuMP.fix(normalized_inflow[h, tau].in, previous_normalized_inflow[h, tau])
+    end
+
     return nothing
 end
 
@@ -211,6 +240,14 @@ function hydro_inflow!(
     hydros = index_of_elements(inputs, HydroUnit; run_time_options)
 
     add_symbol_to_query_from_subproblem_result!(outputs, [:inflow_slack, :inflow])
+
+    # Serialize normalized_inflow state variable when using PAR(p) model
+    if !read_inflow_from_file(inputs) &&
+       run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL &&
+       parp_max_lags(inputs) > 0
+        add_symbol_to_serialize!(outputs, :normalized_inflow)
+        add_symbol_to_query_from_subproblem_result!(outputs, :normalized_inflow)
+    end
 
     initialize!(
         QuiverOutput,

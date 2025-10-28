@@ -114,17 +114,6 @@ tooltip.en = "Spill to of the hydro unit"
 hide = true
 
 [[attribute_group]]
-id = "waveguide"
-label.en = "Tiebreaker Curve"
-icon = "lucide/settings-2.svg"
-
-[[attribute]]
-id = "waveguide_volume"
-label.en = "Tiebreaker Curve Values"
-tooltip.en = "Tiebreaker curve values of the virtual reservoir"
-unit = "GWh"
-
-[[attribute_group]]
 id = "parameters"
 label.en = "Parameters"
 icon = "lucide/settings-2.svg"

@@ -197,22 +197,6 @@ tooltip.en = "Virtual reservoir correspondence type of the configuration"
 hide = true
 
 [[attribute]]
-id = "vr_curveguide_data_source"
-type = "enum"
-enum = "vr_curveguide_data_source"
-label.en = "VR Curveguide Data Source"
-tooltip.en = "VR curveguide data source of the configuration"
-hide = true
-
-[[attribute]]
-id = "vr_curveguide_data_format"
-type = "enum"
-enum = "vr_curveguide_data_format"
-label.en = "VR Curveguide Data Format"
-tooltip.en = "VR curveguide data format of the configuration"
-hide = true
-
-[[attribute]]
 id = "number_of_periods"
 label.en = "Periods"
 tooltip.en = "Number of periods in the configuration"

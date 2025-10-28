@@ -94,21 +94,6 @@ function energy_from_inflows(
     return vr_additional_energy, hydro_unit_non_turbinable_inflow_energy
 end
 
-function fill_waveguide_points_by_uniform_volume_percentage!(inputs::AbstractInputs, vr::Int)
-    hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
-    waveguide_points = zeros(length(index_of_elements(inputs, HydroUnit)), 2)
-    fill!(waveguide_points, NaN)
-
-    for h in hydro_units
-        waveguide_points[h, 1] = hydro_unit_min_volume(inputs, h)
-        waveguide_points[h, 2] = hydro_unit_max_volume(inputs, h)
-    end
-    inputs.collections.virtual_reservoir.waveguide_points[vr] = waveguide_points
-    @assert all((!isnan).(waveguide_points[hydro_units, :]))
-    @assert all(isnan.(waveguide_points[setdiff(1:end, hydro_units), :]))
-    return nothing
-end
-
 function fill_water_to_energy_factors!(inputs::AbstractInputs, vr::Int)
     hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
     inputs.collections.virtual_reservoir.water_to_energy_factors[vr] .= water_to_energy_factors(inputs, hydro_units)
@@ -252,31 +237,6 @@ function virtual_reservoir_energy_account_from_previous_period(inputs::AbstractI
         return read_serialized_virtual_reservoir_energy_account(inputs, period - 1, scenario)
     end
 end
-
-function fill_waveguide_points!(inputs::AbstractInputs, vr::Int)
-    if vr_curveguide_data_source(inputs) == Configurations_VRCurveguideDataSource.READ_FROM_FILE
-        fill_waveguide_points_provided_by_user!(inputs, vr)
-    elseif vr_curveguide_data_source(inputs) ==
-           Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
-        fill_waveguide_points_by_uniform_volume_percentage!(inputs, vr)
-    else
-        error("Waveguide source $(vr_curveguide_data_source(inputs)) not implemented.")
-    end
-end
-
-function fill_waveguide_points_provided_by_user!(inputs::AbstractInputs, vr::Int)
-    hydro_units_idx = virtual_reservoir_hydro_unit_indices(inputs, vr)
-    virtual_reservoir_waveguide_points = vcat(
-        [hydro_unit_waveguide_volume(inputs, h)' for h in hydro_units_idx]...,
-    )
-    inputs.collections.virtual_reservoir.waveguide_points[vr] = virtual_reservoir_waveguide_points
-    return nothing
-end
-
-virtual_reservoir_waveguide_filename(inputs::AbstractInputs, vr::Int) =
-    "$(path_case(inputs))/waveguide_points_$(virtual_reservoir_label(inputs, vr)).csv"
-
-virtual_reservoir_waveguide_filename(path_case::String, vr::String) = "$(path_case)/waveguide_points_$vr.csv"
 
 function virtual_reservoir_stored_energy(
     inputs::AbstractInputs,

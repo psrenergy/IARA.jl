@@ -84,10 +84,6 @@ Configurations for the problem.
     network_representation_ex_post_commercial::Configurations_NetworkRepresentation.T =
         Configurations_NetworkRepresentation.NODAL
     settlement_type::Configurations_FinancialSettlementType.T = Configurations_FinancialSettlementType.EX_ANTE
-    vr_curveguide_data_source::Configurations_VRCurveguideDataSource.T =
-        Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
-    vr_curveguide_data_format::Configurations_VRCurveguideDataFormat.T =
-        Configurations_VRCurveguideDataFormat.CSV_FILE
     hour_subperiod_map_file::String = ""
     fcf_cuts_file::String = ""
     period_season_map_file::String = ""
@@ -240,16 +236,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_om_costs")[1]
     configurations.market_clearing_tiebreaker_weight_for_fcf =
         PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_fcf")[1]
-    configurations.vr_curveguide_data_source =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_source")[1],
-            Configurations_VRCurveguideDataSource.T,
-        )
-    configurations.vr_curveguide_data_format =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_format")[1],
-            Configurations_VRCurveguideDataFormat.T,
-        )
     configurations.construction_type_ex_ante_physical =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_ante_physical")[1],
@@ -1560,22 +1546,6 @@ Return the hydro balance subperiod resolution.
 """
 hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
     inputs.collections.configurations.hydro_balance_subperiod_resolution
-
-"""
-    vr_curveguide_data_source(inputs)
-
-Return the source of the waveguide points for virtual reservoirs.
-"""
-vr_curveguide_data_source(inputs) =
-    inputs.collections.configurations.vr_curveguide_data_source
-
-"""
-    vr_curveguide_data_format(inputs)
-
-Return the source of the user-provided waveguide points.
-"""
-vr_curveguide_data_format(inputs) =
-    inputs.collections.configurations.vr_curveguide_data_format
 
 """
     virtual_reservoir_correspondence_type(inputs)

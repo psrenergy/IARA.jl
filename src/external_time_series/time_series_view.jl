@@ -245,6 +245,14 @@ function read_time_series_view_from_external_file!(
             season,
             sample,
         )
+    elseif ts.dimensions == [:season, :sample, :subscenario]
+        season, sample, _ = consult_period_season_map(inputs; period, scenario)
+        read_season_sample_subscenario!(
+            inputs,
+            ts;
+            season,
+            sample,
+        )
     elseif ts.dimensions == [:period]
         read_period!(
             inputs,
@@ -516,6 +524,21 @@ function read_season_sample_subperiod!(
     for subperiod in 1:ts.reader.metadata.dimension_size[3]
         Quiver.goto!(ts.reader; season, sample, subperiod)
         ts.exact_dimensions_data[:, subperiod] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_season_sample_subscenario!(
+    inputs,
+    ts::TimeSeriesView{T, N};
+    season::Int,
+    sample::Int,
+) where {T, N}
+    # Loop in subperiods
+    for subscenario in 1:ts.reader.metadata.dimension_size[3]
+        Quiver.goto!(ts.reader; season, sample, subscenario)
+        ts.exact_dimensions_data[:, subscenario] = ts.reader.data
     end
     ts.data = ts.exact_dimensions_data
     return nothing

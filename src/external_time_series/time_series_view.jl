@@ -537,7 +537,6 @@ function read_season_sample_subscenario!(
 ) where {T, N}
     # Loop in subperiods
     for subscenario in 1:ts.reader.metadata.dimension_size[3]
-
         Quiver.goto!(ts.reader; season, sample, subscenario)
         ts.exact_dimensions_data[:, subscenario] = ts.reader.data
     end

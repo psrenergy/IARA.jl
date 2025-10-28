@@ -155,14 +155,6 @@ tooltip.en = "Construction type ex post commercial of the configuration"
 hide = true
 
 [[attribute]]
-id = "use_fcf_in_clearing"
-type = "enum"
-enum = "boolean"
-label.en = "Use FCF in Clearing"
-tooltip.en = "Use FCF in clearing of the configuration"
-hide = true
-
-[[attribute]]
 id = "integer_variable_representation_ex_ante_physical"
 label.en = "Integer Variable Representation Ex Ante Physical"
 tooltip.en = "Integer variable representation ex ante physical of the configuration"
@@ -275,7 +267,7 @@ tooltip.en = "Demand scenarios files of the configuration"
 hide = true
 
 [[attribute]]
-id = "market_clearing_tiebreaker_weight"
+id = "market_clearing_tiebreaker_weight_for_om_costs"
 label.en = "Market Clearing Tiebreaker Weight"
 tooltip.en = "Market clearing tiebreaker weight of the configuration"
 hide = true

@@ -43,7 +43,7 @@ function virtual_reservoir_volume_distance_to_waveguide!(
     model.obj_exp = @expression(
         model.jump_model,
         model.obj_exp +
-        money_to_thousand_money() * sum(hydro_volume_distance_to_waveguide) * market_clearing_tiebreaker_weight(inputs),
+        money_to_thousand_money() * sum(hydro_volume_distance_to_waveguide) * market_clearing_tiebreaker_weight_for_om_costs(inputs),
     )
 
     return nothing

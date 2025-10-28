@@ -417,10 +417,9 @@ function read_cuts_into_clearing_model!(
     run_time_options::RunTimeOptions,
     period::Int,
 )
-    # We could choose to add cuts to the model as a user
-    if use_fcf_in_clearing(inputs)
+    if use_scaled_fcf_in_clearing(inputs)
         read_cuts_to_model!(model, inputs, run_time_options; current_period = period)
-    elseif clearing_representation_must_read_cuts(inputs, run_time_options)
+    elseif use_fcf_in_clearing(inputs, run_time_options)
         if !has_fcf_cuts_to_read(inputs)
             error("Construction type is COST_BASED, the problem has state variables and no cuts file was provided.")
         end
@@ -430,14 +429,14 @@ function read_cuts_into_clearing_model!(
 end
 
 """
-    clearing_representation_must_read_cuts(
+    use_fcf_in_clearing(
         inputs::Inputs, 
         run_time_options::RunTimeOptions
     )
 
 Check if the clearing representation must read cuts.
 """
-function clearing_representation_must_read_cuts(
+function use_fcf_in_clearing(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
 )

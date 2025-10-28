@@ -458,7 +458,6 @@ function hybrid_market_clearing_model_action(args...)
         end
         if use_virtual_reservoirs(inputs)
             virtual_reservoir_generation!(args...)
-            virtual_reservoir_volume_distance_to_waveguide!(args...)
             virtual_reservoir_energy_account!(args...)
             virtual_reservoir_generation_bounds_values!(args...)
         end
@@ -560,8 +559,6 @@ function hybrid_market_clearing_model_action(args...)
                 virtual_reservoir_correspondence_by_generation!(args...)
             end
             virtual_reservoir_generation_bounds!(args...)
-            waveguide_convex_combination_sum!(args...)
-            waveguide_distance_bounds!(args...)
         end
     end
 

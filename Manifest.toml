@@ -2,7 +2,7 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "a49a19ffc6c762f88910c3ced3cd117853ae8d7d"
+project_hash = "0d3c237a820da186d09f5c5b17bc57c0669f34f6"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -342,9 +342,9 @@ version = "1.14.2"
 
 [[deps.JuMP]]
 deps = ["LinearAlgebra", "MacroTools", "MathOptInterface", "MutableArithmetics", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays"]
-git-tree-sha1 = "82bc707a67639be45ec9abf3a7640af19c4172fe"
+git-tree-sha1 = "d6ece925e8798b6f078731ab04ce82c5433b0d64"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
-version = "1.23.1"
+version = "1.29.2"
 
     [deps.JuMP.extensions]
     JuMPDimensionalDataExt = "DimensionalData"
@@ -561,9 +561,9 @@ version = "0.17.9"
 
 [[deps.ParametricOptInterface]]
 deps = ["MathOptInterface"]
-git-tree-sha1 = "215201d5dbdd9f6d55d22dc698a6ec4c23091890"
+git-tree-sha1 = "76616eb7280b0558d0c23f871fa6b74e3071ddbf"
 uuid = "0ce4ce61-57bf-432b-a095-efac525d185e"
-version = "0.11.1"
+version = "0.14.0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]

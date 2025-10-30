@@ -1341,6 +1341,11 @@ function adjust_quantity_bid_for_ex_post!(
     end
 
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
+    thermal_units_indexes = index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing])
+    renewable_units_indexes = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
+    battery_units_indexes = index_of_elements(inputs, BatteryUnit; run_time_options, filters = [is_existing])
+    hydro_units_indexes = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
+    demand_units_indexes = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing])
 
     adjustment_factors = ones(size(quantity_bid_series))
 
@@ -1369,6 +1374,10 @@ function adjust_quantity_bid_for_ex_post!(
                             bus,
                             blk,
                             subscenario,
+                            thermal_units_indexes,
+                            renewable_units_indexes,
+                            battery_units_indexes,
+                            hydro_units_indexes,
                         )
                         total_demand_ex_ante = sum_demand_per_bg(
                             inputs,
@@ -1377,6 +1386,7 @@ function adjust_quantity_bid_for_ex_post!(
                             bus,
                             blk,
                             subscenario,
+                            demand_units_indexes,
                         )
                     elseif bidding_group_ex_post_adjust(inputs, bg) ==
                            BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
@@ -1392,6 +1402,10 @@ function adjust_quantity_bid_for_ex_post!(
                         bus,
                         blk,
                         subscenario,
+                        thermal_units_indexes,
+                        renewable_units_indexes,
+                        battery_units_indexes,
+                        hydro_units_indexes,
                     )
                     total_demand_ex_post = sum_demand_per_bg(
                         inputs,
@@ -1400,6 +1414,7 @@ function adjust_quantity_bid_for_ex_post!(
                         bus,
                         blk,
                         subscenario,
+                        demand_units_indexes,
                     )
                     if quantity_bid_series.data[bg, bus, bds, blk] > 0.0
                         if total_energy_ex_ante == 0.0
@@ -1432,42 +1447,41 @@ function sum_units_energy_ub_per_bg(
     bg::Int,
     bus::Int,
     subperiod::Int,
-    subscenario::Int;
+    subscenario::Int,
+    thermal_units::Vector{Int},
+    renewable_units::Vector{Int},
+    battery_units::Vector{Int},
+    hydro_units::Vector{Int},
 )
-    thermal_units = index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing])
-    renewable_units = index_of_elements(inputs, RenewableUnit; run_time_options, filters = [is_existing])
-    battery_units = index_of_elements(inputs, BatteryUnit; run_time_options, filters = [is_existing])
-    hydro_units = index_of_elements(inputs, HydroUnit; run_time_options, filters = [is_existing])
-
-    thermal_energy_ub = sum(
-        thermal_unit_max_generation(inputs, t) *
-        subperiod_duration_in_hours(inputs, subperiod) for t in thermal_units
+    energy_ub_per_bg = 0.0
+    for t in thermal_units
         if thermal_unit_bus_index(inputs, t) == bus &&
-        thermal_unit_bidding_group_index(inputs, t) == bg;
-        init = 0.0,
-    )
-
-    renewable_energy_ub = sum(
-        renewable_unit_max_generation(inputs, r) * subperiod_duration_in_hours(inputs, subperiod) *
-        time_series_renewable_generation(inputs, run_time_options; subscenario)[r, subperiod]
-        for r in renewable_units
+           thermal_unit_bidding_group_index(inputs, t) == bg
+            energy_ub_per_bg +=
+                thermal_unit_max_generation(inputs, t) *
+                subperiod_duration_in_hours(inputs, subperiod)
+        end
+    end
+    for r in renewable_units
         if renewable_unit_bus_index(inputs, r) == bus &&
-        renewable_unit_bidding_group_index(inputs, r) == bg;
-        init = 0.0,
-    )
-
-    battery_energy_ub = sum(
-        battery_unit_max_capacity(inputs, b) *
-        subperiod_duration_in_hours(inputs, subperiod) for b in battery_units
+           renewable_unit_bidding_group_index(inputs, r) == bg
+            energy_ub_per_bg +=
+                renewable_unit_max_generation(inputs, r) * subperiod_duration_in_hours(inputs, subperiod) *
+                time_series_renewable_generation(inputs, run_time_options; subscenario)[r, subperiod]
+        end
+    end
+    for b in battery_units
         if battery_unit_bus_index(inputs, b) == bus &&
-        battery_unit_bidding_group_index(inputs, b) == bg;
-        init = 0.0,
-    )
-
-    # TODO: Implement hydro energy upper bound
+           battery_unit_bidding_group_index(inputs, b) == bg
+            energy_ub_per_bg +=
+                battery_unit_max_capacity(inputs, b) *
+                subperiod_duration_in_hours(inputs, subperiod)
+        end
+    end
     hydro_energy_ub = 0.0
+    energy_ub_per_bg += hydro_energy_ub
 
-    return thermal_energy_ub + renewable_energy_ub + battery_energy_ub + hydro_energy_ub
+    return energy_ub_per_bg
 end
 
 function sum_demand_per_bg(
@@ -1476,19 +1490,18 @@ function sum_demand_per_bg(
     bg::Int,
     bus::Int,
     subperiod::Int,
-    subscenario::Int;
+    subscenario::Int,
+    demand_units::Vector{Int};
 )
-    demand_units = index_of_elements(inputs, DemandUnit; run_time_options, filters = [is_existing])
-
-    total_demand =
-        -sum(
-            demand_unit_max_demand(inputs, d) * subperiod_duration_in_hours(inputs, subperiod) *
-            time_series_demand(inputs, run_time_options; subscenario)[d, subperiod]
-            for d in demand_units
-            if demand_unit_bus_index(inputs, d) == bus &&
-            demand_unit_bidding_group_index(inputs, d) == bg;
-            init = 0.0,
-        )
+    total_demand = 0.0
+    for d in demand_units
+        if demand_unit_bus_index(inputs, d) == bus &&
+           demand_unit_bidding_group_index(inputs, d) == bg
+            total_demand -=
+                demand_unit_max_demand(inputs, d) * subperiod_duration_in_hours(inputs, subperiod) *
+                time_series_demand(inputs, run_time_options; subscenario)[d, subperiod]
+        end
+    end
 
     return total_demand
 end

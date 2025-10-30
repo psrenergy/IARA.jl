@@ -1386,7 +1386,7 @@ function adjust_quantity_bid_for_ex_post!(
                             bus,
                             blk,
                             subscenario,
-                            demand_units_indexes
+                            demand_units_indexes,
                         )
                     elseif bidding_group_ex_post_adjust(inputs, bg) ==
                            BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
@@ -1414,7 +1414,7 @@ function adjust_quantity_bid_for_ex_post!(
                         bus,
                         blk,
                         subscenario,
-                        demand_units_indexes
+                        demand_units_indexes,
                     )
                     if quantity_bid_series.data[bg, bus, bds, blk] > 0.0
                         if total_energy_ex_ante == 0.0
@@ -1453,7 +1453,6 @@ function sum_units_energy_ub_per_bg(
     battery_units::Vector{Int},
     hydro_units::Vector{Int},
 )
-
     energy_ub_per_bg = 0.0
     for t in thermal_units
         if thermal_unit_bus_index(inputs, t) == bus &&
@@ -1494,7 +1493,6 @@ function sum_demand_per_bg(
     subscenario::Int,
     demand_units::Vector{Int};
 )
-
     total_demand = 0.0
     for d in demand_units
         if demand_unit_bus_index(inputs, d) == bus &&

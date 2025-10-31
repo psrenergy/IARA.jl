@@ -448,14 +448,17 @@ function initialize_time_series_from_external_files(inputs)
 
     # Elastic demand price
     if any_elements(inputs, DemandUnit; filters = [is_elastic]) && need_demand_price_input_data(inputs)
+        possible_dimensions = if cyclic_policy_graph(inputs)
+            [[:season, :sample, :subperiod]]
+        else
+            [[:period, :scenario, :subperiod]]
+        end
         num_errors += initialize_time_series_view_from_external_file(
             inputs.time_series.elastic_demand_price,
             inputs,
             joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs));
             expected_unit = raw"$/MWh",
-            possible_expected_dimensions = [
-                [:period, :scenario, :subperiod],
-            ],
+            possible_expected_dimensions = possible_dimensions,
             labels_to_read = elastic_demand_labels(inputs),
         )
     end

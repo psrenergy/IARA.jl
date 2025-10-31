@@ -265,6 +265,13 @@ function read_time_series_view_from_external_file!(
             ts,
             scenario,
         )
+    elseif ts.dimensions == [:sample, :lag]
+        _, sample, _ = consult_period_season_map(inputs; period, scenario)
+        read_sample_lag!(
+            inputs,
+            ts,
+            sample,
+        )
     elseif ts.dimensions == [:scenario]
         read_scenario!(
             inputs,
@@ -568,6 +575,19 @@ function read_scenario_lag!(
 ) where {T, N}
     for lag in 1:ts.reader.metadata.dimension_size[2]
         Quiver.goto!(ts.reader; scenario, lag)
+        ts.exact_dimensions_data[:, lag] = ts.reader.data
+    end
+    ts.data = ts.exact_dimensions_data
+    return nothing
+end
+
+function read_sample_lag!(
+    inputs,
+    ts::TimeSeriesView{T, N},
+    sample::Int,
+) where {T, N}
+    for lag in 1:ts.reader.metadata.dimension_size[2]
+        Quiver.goto!(ts.reader; sample, lag)
         ts.exact_dimensions_data[:, lag] = ts.reader.data
     end
     ts.data = ts.exact_dimensions_data

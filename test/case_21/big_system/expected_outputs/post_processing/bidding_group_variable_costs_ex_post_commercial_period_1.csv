@@ -1,5 +1,5 @@
 period,scenario,subscenario,subperiod,Portfolio - Sistema,Termico - Sistema,Renovavel - Sistema,Portfolio 2 - Sistema,Termico 2 - Sistema,Renovavel 2 - Sistema
-1,1,1,1,150.0,0.0,274.0,150.0,0.0,326.0
+1,1,1,1,150.0,0.0,230.0,150.0,0.0,270.0
 1,1,2,1,150.0,1119.9998779296875,440.0,150.0,0.0,440.0
 1,1,3,1,409.9996337890625,3360.0,360.0,4050.0,3360.0,360.0
 1,1,4,1,5260.0,5600.0,430.0,5260.0,5440.0,430.0

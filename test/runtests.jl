@@ -15,7 +15,7 @@ using IARA
 Random.seed!(1234)
 include("utils.jl")
 
-const UPDATE_RESULTS = true
+const UPDATE_RESULTS = "update_results" in ARGS
 const RUN_BIG_TESTS = "run_big_tests" in ARGS
 
 if UPDATE_RESULTS

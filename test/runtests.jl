@@ -15,7 +15,7 @@ using IARA
 Random.seed!(1234)
 include("utils.jl")
 
-const UPDATE_RESULTS = "update_test_results" in ARGS
+const UPDATE_RESULTS = "update_results" in ARGS
 const RUN_BIG_TESTS = "run_big_tests" in ARGS
 
 if UPDATE_RESULTS
@@ -61,7 +61,7 @@ reduced_test_list = Dict(
 #     "case_01/hydro_minimum_outflow_case/test_case.jl",
 #     "case_01/price_takers_case/test_case.jl",
 #     "case_01/renewable_curtailment_case/test_case.jl",
-#     "case_01/renewable_om_cost_case/test_case.jl",
+# "case_01/renewable_om_cost_case/test_case.jl",
 #     "case_01/repeating_nodes_case/test_case.jl",
 #     "case_01/thermal_commitment_case/test_case.jl",
 #     "case_01/thermal_ramp_case/test_case.jl",
@@ -84,7 +84,12 @@ reduced_test_list = Dict(
 # ],
 # "case_05" => [
 #     "case_05/base_case/test_case.jl",
+#     "case_05/fit_parp_in_clearing/test_case.jl",
+#     "case_05/hydro_stops_existing/test_case.jl",
 #     "case_05/incremental_inflow_case/test_case.jl",
+# "case_05/initial_states_by_scenario/test_case.jl",
+#     "case_05/read_parp_coefficients/test_case.jl",
+#     "case_05/read_parp_coefficients_in_clearing/test_case.jl",
 # ],
 # "case_06" => [
 #     "case_06/base_case/test_case.jl",
@@ -94,21 +99,23 @@ reduced_test_list = Dict(
 #     "case_06/profile_simple/test_case.jl",
 # ],
 # "case_07" => [
-#     "case_07/base_case/test_case.jl",
-#     "case_07/skip_case/test_case.jl",
-#     "case_07/virtual_reservoir_and_thermal/test_case.jl",
-#     "case_07/ex_post_settlement_case/test_case.jl",
-#     "case_07/double_settlement_case/test_case.jl",
-#     "case_07/min_cost_case/test_case.jl",
-#     "case_07/skip_purchase_bids_case/test_case.jl",
-#     "case_07/thermal_unit_with_exclusive_asset_owner_case/test_case.jl",
-#     "case_07/multiple_markdowns_case/test_case.jl",
-#     "case_07/violation_benchmark_case/test_case.jl"
+# "case_07/base_case/test_case.jl",
+# "case_07/skip_case/test_case.jl",
+# "case_07/virtual_reservoir_and_thermal/test_case.jl",
+# "case_07/ex_post_settlement_case/test_case.jl",
+# "case_07/double_settlement_case/test_case.jl",
+# "case_07/min_cost_case/test_case.jl",
+# "case_07/skip_purchase_bids_case/test_case.jl",
+# "case_07/thermal_unit_with_exclusive_asset_owner_case/test_case.jl",
+# "case_07/multiple_markdowns_case/test_case.jl",
+# "case_07/violation_benchmark_case/test_case.jl"
+#     "case_07/reference_curve_nash/test_case.jl",
+#     "case_07/reference_curve_nash_with_thermals/test_case.jl",
 # ],
 # "case_08" => [
 #     "case_08/base_case/test_case.jl",
 #     "case_08/physical_virtual_correspondence_by_volume_case/test_case.jl",
-#     "case_08/vr_and_non_vr_hydro_units_case/test_case.jl",
+# "case_08/vr_and_non_vr_hydro_units_case/test_case.jl",
 #     "case_08/ex_post_settlement_case/test_case.jl",
 #     "case_08/double_settlement_case/test_case.jl",
 #     "case_08/initial_energy_account_as_input_case/test_case.jl",
@@ -117,9 +124,9 @@ reduced_test_list = Dict(
 # "case_09" => [
 #     "case_09/base_case/test_case.jl",
 #     "case_09/nohydro_case/test_case.jl",
-#     "case_09/single_period_case/test_case.jl",
+# "case_09/single_period_case/test_case.jl",
 #     "case_09/seasonal_case/test_case.jl",
-#     "case_09/seasonal_mapping_case/test_case.jl",
+# "case_09/seasonal_mapping_case/test_case.jl",
 #     "case_09/seasonal_clearing_case/test_case.jl",
 #     "case_09/seasonal_mapping_clearing_case/test_case.jl",  
 # ],
@@ -174,6 +181,13 @@ reduced_test_list = Dict(
 #     "case_20/single_period_heuristic_bid/test_case.jl",
 #     "case_20/bid_justification/test_case.jl",
 #     "case_20/profile_bid_justification/test_case.jl",
+# ],
+# "case_21" => [
+#     "case_21/base_case/test_case.jl",
+#     "case_21/big_system/test_case.jl",
+# ],
+# "case_22" => [
+#     "case_22/base_case/test_case.jl",
 # ],
 )
 

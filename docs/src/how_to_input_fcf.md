@@ -34,7 +34,7 @@ For a complete working example, refer to the [modify_case.jl](https://github.com
 1. Minimum Cost Run:
    If you have already trained a policy and wish to run a decoupled simulation using that trained policy, you can input an FCF file to ensure that the simulation utilizes the expected cost function.
 2. Clearing Simulations:
-   - `HYBRID`: If you are running a clearing simulation with the `HYBRID` construction type, you may to input a FCF file to define the water values for the simulation. This option is enabled when there are virtual reservoirs in the system and the `market_clearing_tiebreaker_weight_for_fcf` parameter is set to a value greater than zero. In that case, the FCF will be scaled according to the `market_clearing_tiebreaker_weight_for_fcf` value.
+   - `HYBRID`: If you are running a clearing simulation with the `HYBRID` construction type, you may input a FCF file to define the water values for the simulation. This option is enabled when there are virtual reservoirs in the system and the `market_clearing_tiebreaker_weight_for_fcf` parameter is set to a value greater than zero. In that case, the FCF will be scaled according to the `market_clearing_tiebreaker_weight_for_fcf` value.
    - `COST_BASED`: If you are running a clearing simulation with the `COST_BASED` construction type, inputting an FCF file is **mandatory** to define the water values for the simulation.
 
 !!! tip "Tip"

@@ -104,7 +104,6 @@ reduced_test_list = Dict(
 #     "case_07/ex_post_settlement_case/test_case.jl",
 #     "case_07/min_cost_case/test_case.jl",
 #     "case_07/multiple_markdowns_case/test_case.jl",
-#     "case_07/reference_curve_case/test_case.jl",
 #     "case_07/reference_curve_nash/test_case.jl",
 #     "case_07/reference_curve_nash_only_thermals/test_case.jl",
 #     "case_07/reference_curve_nash_with_thermals/test_case.jl",
@@ -117,7 +116,7 @@ reduced_test_list = Dict(
 # "case_08" => [
 #     "case_08/base_case/test_case.jl",
 #     "case_08/physical_virtual_correspondence_by_volume_case/test_case.jl",
-# "case_08/vr_and_non_vr_hydro_units_case/test_case.jl",
+#     "case_08/vr_and_non_vr_hydro_units_case/test_case.jl",
 #     "case_08/ex_post_settlement_case/test_case.jl",
 #     "case_08/double_settlement_case/test_case.jl",
 #     "case_08/initial_energy_account_as_input_case/test_case.jl",

@@ -266,8 +266,10 @@ function set_custom_hook(
     end
 
     function treat_infeasibilities_hook(model::JuMP.Model, filename::String)
-        status = JuMP.termination_status(model)
         if JuMP.termination_status(model) == MOI.INFEASIBLE
+            # First write the lp file
+            @info("Model is infeasible. Writing to file: $filename")
+            JuMP.write_to_file(model, filename)
             try
                 compute_conflict!(model)
                 if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND

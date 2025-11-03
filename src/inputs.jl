@@ -146,16 +146,6 @@ function summarize(path::String; run_mode::String = "market-clearing")
 end
 
 """
-    load_new_attributes_from_db!(inputs::Inputs, db_temp::DatabaseSQLite)   
-
-Load new attributes from the database.
-"""
-function load_new_attributes_from_db!(inputs::Inputs, db_temp)
-    load_new_attributes_from_db!(inputs.collections.hydro_unit, db_temp)
-    return nothing
-end
-
-"""
     initialize!(inputs::Inputs)
 
 Initialize the inputs.
@@ -339,7 +329,6 @@ Store pre-processed data for the collections.
 function fill_data_caches!(inputs::Inputs)
     if use_virtual_reservoirs(inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)
-            fill_waveguide_points!(inputs, vr)
             fill_water_to_energy_factors!(inputs, vr)
             fill_initial_energy_account!(inputs, vr)
         end

@@ -73,7 +73,7 @@ function renewable_generation!(
 
     # Generation costs are used as a penalty in the clearing problem
     if is_market_clearing(inputs)
-        model.obj_exp += renewable_total_om_cost * market_clearing_tiebreaker_weight(inputs)
+        model.obj_exp += renewable_total_om_cost * market_clearing_tiebreaker_weight_for_om_costs(inputs)
     else
         model.obj_exp += renewable_total_om_cost
     end

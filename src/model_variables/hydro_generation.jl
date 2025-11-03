@@ -111,11 +111,12 @@ function hydro_generation!(
                 model.obj_exp +=
                     money_to_thousand_money() *
                     sum(hydro_om_cost_expression[:, existing_hydro_units_out_of_virtual_reservoirs]) *
-                    market_clearing_tiebreaker_weight(inputs)
+                    market_clearing_tiebreaker_weight_for_om_costs(inputs)
             end
         else
             model.obj_exp +=
-                money_to_thousand_money() * sum(hydro_om_cost_expression) * market_clearing_tiebreaker_weight(inputs)
+                money_to_thousand_money() * sum(hydro_om_cost_expression) *
+                market_clearing_tiebreaker_weight_for_om_costs(inputs)
         end
     else
         model.obj_exp += money_to_thousand_money() * sum(hydro_om_cost_expression)

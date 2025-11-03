@@ -254,22 +254,6 @@ label.en = "On"
 id = 2
 label.en = "Undefined"
 
-[[vr_curveguide_data_source]]
-id = 0
-label.en = "Read From File"
-
-[[vr_curveguide_data_source]]
-id = 1
-label.en = "Uniform Across Reservoirs"
-
-[[vr_curveguide_data_format]]
-id = 0
-label.en = "CSV File"
-
-[[vr_curveguide_data_format]]
-id = 1
-label.en = "Formatted Data"
-
 [[virtual_reservoir_correspondence_type]]
 id = 0
 label.en = "Ignore"

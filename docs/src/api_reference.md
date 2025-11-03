@@ -22,8 +22,6 @@ IARA.Configurations_FinancialSettlementType
 IARA.Configurations_ThermalUnitIntraPeriodOperation
 IARA.Configurations_NetworkRepresentation
 IARA.Configurations_UncertaintyScenariosFiles
-IARA.Configurations_VRCurveguideDataSource
-IARA.Configurations_VRCurveguideDataFormat
 IARA.BatteryUnit_Existence
 IARA.Branch_Existence
 IARA.DCLine_Existence

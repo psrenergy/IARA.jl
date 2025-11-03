@@ -41,7 +41,8 @@ else
             "hydro_generation",
             "hydro_om_costs",
             "hydro_turbining",
-            "hydro_minimum_outflow_violation_cost_expression",
+            "hydro_minimum_outflow_violation_cost",
+            "hydro_minimum_outflow_violation",
         ],
         skipped_outputs = [
             "hydro_final_volume",

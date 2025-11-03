@@ -153,7 +153,7 @@ function read_cuts_to_model!(
     # Check if the file exists in the case or output directory
     if construction_type(inputs, run_time_options) == Configurations_ConstructionType.HYBRID &&
        clearing_has_state_variables(inputs, run_time_options) &&
-       market_clearing_tiebreaker_weight(inputs) > 0
+       market_clearing_tiebreaker_weight_for_fcf(inputs) > 0
         fcf_cuts_filepath = joinpath(path_case(inputs), "scaled_" * fcf_cuts_file(inputs))
     else
         fcf_cuts_filepath = fcf_cuts_path(inputs)

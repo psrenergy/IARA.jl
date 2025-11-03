@@ -886,7 +886,17 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_opti
             )
             # The volume at the end of the period is the first subperiod of the next period
             for h in axes(volume, 2)
-                previous_volume[h] = volume[end, h]
+                tol = 1e-6
+                if volume[end, h] < hydro_unit_min_volume(inputs, h) - tol ||
+                   volume[end, h] > hydro_unit_max_volume(inputs, h) + tol
+                    @debug(
+                        "Hydro Unit $(inputs.collections.hydro_unit.label[h]) volume at the end of period $(period - 1) " *
+                        "is out of bounds: $(volume[end, h]). Clamping to valid range: " *
+                        "[$(hydro_unit_min_volume(inputs, h)), $(hydro_unit_max_volume(inputs, h))]."
+                    )
+                end
+                previous_volume[h] =
+                    clamp(volume[end, h], hydro_unit_min_volume(inputs, h), hydro_unit_max_volume(inputs, h))
             end
         end
     end

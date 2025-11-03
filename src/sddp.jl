@@ -60,7 +60,7 @@ function build_model(
                 subscenario,
                 SubproblemUpdate,
             )
-            set_custom_hook(subproblem, inputs, run_time_options, node, scenario, subscenario)
+            set_custom_hook(subproblem, inputs, run_time_options, simulation_period, simulation_trajectory, subscenario)
             return
         end
     end

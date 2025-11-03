@@ -243,34 +243,6 @@ function delete_virtual_reservoir!(db::DatabaseSQLite, label::String)
 end
 
 """
-    update_virtual_reservoir!(db::DatabaseSQLite, label::String; kwargs...)
-
-Update the VirtualReservoir named 'label' in the database.
-
-Example:
-```julia
-IARA.update_virtual_reservoir!(db, "virtual_reservoir_1")
-```
-"""
-function update_virtual_reservoir!(
-    db::DatabaseSQLite,
-    label::String;
-    kwargs...,
-)
-    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "VirtualReservoir",
-            string(attribute),
-            label,
-            value,
-        )
-    end
-    return db
-end
-
-"""
     virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs, vr::Int, ao::Int)
 
 Return the inflow allocation of the asset owner `ao` in the VirtualReservoir `vr`.

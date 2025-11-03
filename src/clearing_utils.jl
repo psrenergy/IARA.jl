@@ -573,6 +573,9 @@ function serialize_parp_inflow(
     end
     serialized_file_name *= ".json"
 
+    # Change dimensions from [subperiods, hydro_units] to [hydro_units, subperiods]
+    inflow_values = permutedims(inflow_values)
+
     Serialization.serialize(serialized_file_name, inflow_values)
     return nothing
 end

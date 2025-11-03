@@ -52,7 +52,11 @@ db = IARA.create_study!(PATH;
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     language = "pt",
+<<<<<<< HEAD
     market_clearing_tiebreaker_weight_for_om_costs = 1e-6,
+=======
+    market_clearing_tiebreaker_weight = 1e-4,
+>>>>>>> main
     bid_price_limit_low_reference = 100.0,
     bid_price_limit_markup_non_justified_independent = 0.2,
     bid_price_limit_markup_justified_independent = 1.0,

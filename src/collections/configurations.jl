@@ -682,6 +682,9 @@ function iara_log_configurations(inputs::AbstractInputs)
     @info("   periods: $(number_of_periods(inputs))")
     @info("   scenarios: $(number_of_scenarios(inputs))")
     @info("   subperiods: $(number_of_subperiods(inputs))")
+    if is_market_clearing(inputs)
+        @info("   subscenarios: $(inputs.collections.configurations.number_of_subscenarios)")
+    end
     @info("")
 
     if is_market_clearing(inputs)

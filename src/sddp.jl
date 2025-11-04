@@ -261,15 +261,26 @@ function set_custom_hook(
 
     # Definition of what should be the name of the lp file in case we wish to write it.
     lp_file = lp_filename(inputs, run_time_options, t, scen, subscenario)
-    function write_lp_hook(model::JuMP.Model, filename::String)
-        return JuMP.write_to_file(model, filename)
+    lp_file_jump = lp_filename(inputs, run_time_options, t, scen, subscenario; suffix = "jump")
+    function write_lp_hook(model::JuMP.Model)
+        # Always write the JuMP version
+        try
+            MOI.write_to_file(backend(model), lp_file)
+        finally
+            JuMP.write_to_file(model, lp_file_jump)
+        end
+        return nothing
     end
 
-    function treat_infeasibilities_hook(model::JuMP.Model, filename::String)
+    function treat_infeasibilities_hook(model::JuMP.Model)
         if JuMP.termination_status(model) == MOI.INFEASIBLE
             # First write the lp file
-            @info("Model is infeasible. Writing to file: $filename")
-            JuMP.write_to_file(model, filename)
+            @info("Model is infeasible. Writing to file: $lp_file")
+            try
+                MOI.write_to_file(backend(model), lp_file)
+            finally
+                JuMP.write_to_file(model, lp_file_jump)
+            end
             try
                 compute_conflict!(model)
                 if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
@@ -282,7 +293,7 @@ function set_custom_hook(
                         end
                     end
                     if length(list_of_conflicting_constraints) > 0
-                        conflict_file_path = filename * ".iis"
+                        conflict_file_path = lp_file * ".iis"
                         @info("Conflicting constraints found! Writing to file: $conflict_file_path")
                         # Write the conflicting constraints to a file
                         open(conflict_file_path, "w") do io
@@ -296,8 +307,8 @@ function set_custom_hook(
                 end
             catch e
                 @info("Model was infeasible but unable to compute conflict due to: $e")
-                @info("Writing the model to file: $filename")
-                JuMP.write_to_file(model, filename)
+                @info("Writing the model to file: $lp_file")
+                JuMP.write_to_file(model, lp_file)
             end
             error("Model is infeasible.")
         end

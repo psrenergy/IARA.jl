@@ -265,7 +265,7 @@ function set_custom_hook(
     function write_lp_hook(model::JuMP.Model)
         # Always write the JuMP version
         try
-            MOI.write_to_file(backend(model), lp_file)
+            MOI.write_to_file(backend(model).optimizer.model.optimizer, lp_file)
         finally
             JuMP.write_to_file(model, lp_file_jump)
         end
@@ -277,7 +277,8 @@ function set_custom_hook(
             # First write the lp file
             @info("Model is infeasible. Writing to file: $lp_file")
             try
-                MOI.write_to_file(backend(model), lp_file)
+                # Hack to access the inner optimizer in HiGHS
+                MOI.write_to_file(backend(model).optimizer.model.optimizer, lp_file)
             finally
                 JuMP.write_to_file(model, lp_file_jump)
             end
@@ -333,9 +334,9 @@ function set_custom_hook(
         JuMP.optimize!(model; ignore_optimize_hook = true)
 
         if inputs.args.write_lp
-            write_lp_hook(model, lp_file)
+            write_lp_hook(model)
         end
-        treat_infeasibilities_hook(model, lp_file)
+        treat_infeasibilities_hook(model)
         return nothing
     end
     set_optimize_hook(subproblem, all_optimize_hooks)

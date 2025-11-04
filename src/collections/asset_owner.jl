@@ -177,10 +177,10 @@ function validate(asset_owner::AssetOwner)
                     "Purchase discount rate for asset owner $(asset_owner.label[i]) at index $j is null. " *
                     "This is not allowed."
                 )
-            elseif asset_owner.purchase_discount_rate[i][j] <= 0.0
+            elseif asset_owner.purchase_discount_rate[i][j] < 0.0
                 num_errors += 1
                 @error(
-                    "Purchase discount rate for asset owner $(asset_owner.label[i]) at index $j is less than or equal to zero. " *
+                    "Purchase discount rate for asset owner $(asset_owner.label[i]) at index $j is less than zero. " *
                     "This is not allowed."
                 )
             end

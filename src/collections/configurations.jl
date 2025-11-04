@@ -63,7 +63,6 @@ Configurations for the problem.
         Configurations_ConstructionType.SKIP
     construction_type_ex_post_commercial::Configurations_ConstructionType.T =
         Configurations_ConstructionType.SKIP
-    use_fcf_in_clearing::Bool = false
     integer_variable_representation_mincost::Configurations_IntegerVariableRepresentation.T =
         Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
     integer_variable_representation_ex_ante_physical::Configurations_IntegerVariableRepresentation.T =
@@ -85,10 +84,6 @@ Configurations for the problem.
     network_representation_ex_post_commercial::Configurations_NetworkRepresentation.T =
         Configurations_NetworkRepresentation.NODAL
     settlement_type::Configurations_FinancialSettlementType.T = Configurations_FinancialSettlementType.EX_ANTE
-    vr_curveguide_data_source::Configurations_VRCurveguideDataSource.T =
-        Configurations_VRCurveguideDataSource.UNIFORM_ACROSS_RESERVOIRS
-    vr_curveguide_data_format::Configurations_VRCurveguideDataFormat.T =
-        Configurations_VRCurveguideDataFormat.CSV_FILE
     hour_subperiod_map_file::String = ""
     fcf_cuts_file::String = ""
     period_season_map_file::String = ""
@@ -117,7 +112,8 @@ Configurations for the problem.
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
-    market_clearing_tiebreaker_weight::Float64 = 0.0
+    market_clearing_tiebreaker_weight_for_om_costs::Float64 = 0.0
+    market_clearing_tiebreaker_weight_for_fcf::Float64 = 0.0
 
     # Caches
     period_season_map = Array{Float64, 3}(undef, 3, 0, 0)
@@ -236,18 +232,10 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "parp_max_lags")[1]
     configurations.demand_deficit_cost =
         PSRI.get_parms(inputs.db, "Configuration", "demand_deficit_cost")[1]
-    configurations.market_clearing_tiebreaker_weight =
-        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight")[1]
-    configurations.vr_curveguide_data_source =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_source")[1],
-            Configurations_VRCurveguideDataSource.T,
-        )
-    configurations.vr_curveguide_data_format =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "vr_curveguide_data_format")[1],
-            Configurations_VRCurveguideDataFormat.T,
-        )
+    configurations.market_clearing_tiebreaker_weight_for_om_costs =
+        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_om_costs")[1]
+    configurations.market_clearing_tiebreaker_weight_for_fcf =
+        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_fcf")[1]
     configurations.construction_type_ex_ante_physical =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_ante_physical")[1],
@@ -268,8 +256,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_post_commercial")[1],
             Configurations_ConstructionType.T,
         )
-    configurations.use_fcf_in_clearing =
-        PSRI.get_parms(inputs.db, "Configuration", "use_fcf_in_clearing")[1] |> Bool
     configurations.integer_variable_representation_ex_ante_physical =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_physical")[1],
@@ -496,9 +482,15 @@ function validate(configurations::Configurations)
         @error("Demand Unit deficit cost must be non-negative.")
         num_errors += 1
     end
-    if configurations.market_clearing_tiebreaker_weight < 0
+    if configurations.market_clearing_tiebreaker_weight_for_om_costs < 0
         @error(
-            "Market clearing tiebreaker weight cannot be less than zero. Current value: $(configurations.market_clearing_tiebreaker_weight)"
+            "Market clearing tiebreaker weight cannot be less than zero. Current value: $(configurations.market_clearing_tiebreaker_weight_for_om_costs)"
+        )
+        num_errors += 1
+    end
+    if configurations.market_clearing_tiebreaker_weight_for_fcf < 0
+        @error(
+            "Market clearing tiebreaker weight cannot be less than zero. Current value: $(configurations.market_clearing_tiebreaker_weight_for_fcf)"
         )
         num_errors += 1
     end
@@ -566,6 +558,11 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
     if is_market_clearing(inputs)
         model_type_warning = false
         if use_virtual_reservoirs(inputs)
+            if market_clearing_tiebreaker_weight_for_fcf(inputs) > 0.0 && !has_fcf_cuts_to_read(inputs)
+                @error(
+                    "When using virtual reservoirs and a non-zero market clearing tiebreaker weight for FCF, the FCF cuts file must be provided. If no FCF data is available, set the tiebreaker weight to zero."
+                )
+            end
             if (
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.HYBRID &&
                 configurations.construction_type_ex_ante_physical != Configurations_ConstructionType.SKIP
@@ -596,6 +593,12 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             end
             if model_type_warning
                 @warn("All clearing models must be hybrid or skipped when using virtual reservoirs.")
+            end
+        else
+            if market_clearing_tiebreaker_weight_for_fcf(inputs) > 0.0
+                @warn(
+                    "Market clearing tiebreaker weight for FCF is greater than zero, but virtual reservoirs clearing representation is not being used. FCF data will not be considered, and the tiebreaker weight will have no effect."
+                )
             end
         end
         if settlement_type(inputs) == Configurations_FinancialSettlementType.NONE
@@ -1448,11 +1451,19 @@ network_representation_ex_post_commercial(inputs::AbstractInputs) =
     inputs.collections.configurations.network_representation_ex_post_commercial
 
 """
-    use_fcf_in_clearing(inputs::AbstractInputs)
+    use_scaled_fcf_in_clearing(inputs::AbstractInputs)
 
 Return whether the FCF should be used in clearing.
 """
-use_fcf_in_clearing(inputs::AbstractInputs) = inputs.collections.configurations.use_fcf_in_clearing
+function use_scaled_fcf_in_clearing(inputs::AbstractInputs)
+    if market_clearing_tiebreaker_weight_for_fcf(inputs) == 0.0
+        return false
+    elseif use_virtual_reservoirs(inputs)
+        return true
+    else
+        return false
+    end
+end
 
 """
     settlement_type(inputs::AbstractInputs)
@@ -1469,12 +1480,15 @@ Return the deficit cost of demands.
 demand_deficit_cost(inputs::AbstractInputs) = inputs.collections.configurations.demand_deficit_cost
 
 """
-    market_clearing_tiebreaker_weight(inputs::AbstractInputs)
+    market_clearing_tiebreaker_weight_for_om_costs(inputs::AbstractInputs)
 
 Return the market clearing tiebreaker weight applied to physical generation costs.
 """
-market_clearing_tiebreaker_weight(inputs::AbstractInputs) =
-    inputs.collections.configurations.market_clearing_tiebreaker_weight
+market_clearing_tiebreaker_weight_for_om_costs(inputs::AbstractInputs) =
+    inputs.collections.configurations.market_clearing_tiebreaker_weight_for_om_costs
+
+market_clearing_tiebreaker_weight_for_fcf(inputs::AbstractInputs) =
+    inputs.collections.configurations.market_clearing_tiebreaker_weight_for_fcf
 
 """
     hour_subperiod_map_file(inputs::AbstractInputs)
@@ -1532,22 +1546,6 @@ Return the hydro balance subperiod resolution.
 """
 hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
     inputs.collections.configurations.hydro_balance_subperiod_resolution
-
-"""
-    vr_curveguide_data_source(inputs)
-
-Return the source of the waveguide points for virtual reservoirs.
-"""
-vr_curveguide_data_source(inputs) =
-    inputs.collections.configurations.vr_curveguide_data_source
-
-"""
-    vr_curveguide_data_format(inputs)
-
-Return the source of the user-provided waveguide points.
-"""
-vr_curveguide_data_format(inputs) =
-    inputs.collections.configurations.vr_curveguide_data_format
 
 """
     virtual_reservoir_correspondence_type(inputs)

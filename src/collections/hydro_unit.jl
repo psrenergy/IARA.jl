@@ -45,7 +45,6 @@ Hydro units are high-level data structures that represent hydro electricity gene
     turbine_to::Vector{Int} = []
     # index of the downstream spillage hydro Plant in the collection HydroUnit
     spill_to::Vector{Int} = []
-    waveguide_volume::Vector{Vector{Float64}} = []
     inflow_ex_ante_file::String = ""
     inflow_ex_post_file::String = ""
     initial_volume_by_scenario_file::String = ""
@@ -101,8 +100,6 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
     hydro_unit.gauging_station_index = PSRI.get_map(inputs.db, "HydroUnit", "GaugingStation", "id")
     hydro_unit.turbine_to = PSRI.get_map(inputs.db, "HydroUnit", "HydroUnit", "turbine_to")
     hydro_unit.spill_to = PSRI.get_map(inputs.db, "HydroUnit", "HydroUnit", "spill_to")
-    hydro_unit.waveguide_volume =
-        PSRDatabaseSQLite.read_vector_parameters(inputs.db, "HydroUnit", "waveguide_volume")
 
     # Load time series files
     hydro_unit.inflow_ex_ante_file =
@@ -117,12 +114,6 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
 
     update_time_series_from_db!(hydro_unit, inputs.db, initial_date_time(inputs))
 
-    return nothing
-end
-
-function load_new_attributes_from_db!(hydro_unit::HydroUnit, db_temp)
-    hydro_unit.waveguide_volume =
-        PSRDatabaseSQLite.read_vector_parameters(db_temp, "HydroUnit", "waveguide_volume")
     return nothing
 end
 

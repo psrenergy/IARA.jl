@@ -177,8 +177,9 @@ function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::Abs
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_bid_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
                 asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments +
-                asset_owner_number_of_markdowns[ao] + 1
+                asset_owner_number_of_markdowns[ao] + 3
             # TODO: calculate exactly the maximum number of segments necessary after markdown inclusion. -1 didn't work and +1 is conservative
+            # Update: +1 is not sufficient, +3 may do the job for now
         end
     end
     number_per_virtual_reservoir = [

@@ -47,7 +47,7 @@ db = IARA.create_study!(PATH;
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     language = "pt",
-    market_clearing_tiebreaker_weight = 0.0,
+    market_clearing_tiebreaker_weight_for_om_costs = 0.0,
     bid_price_limit_low_reference = 9.0,
 )
 

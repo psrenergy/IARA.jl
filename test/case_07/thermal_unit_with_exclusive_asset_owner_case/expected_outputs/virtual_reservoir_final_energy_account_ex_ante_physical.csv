@@ -4,4 +4,4 @@ period,scenario,reservoir_1 - asset_owner_1,reservoir_1 - asset_owner_2
 2,1,389.423077,360.576923
 2,2,338.541667,261.458333
 3,1,0.0,0.0
-3,2,-0.0,0.0
+3,2,0.0,0.0

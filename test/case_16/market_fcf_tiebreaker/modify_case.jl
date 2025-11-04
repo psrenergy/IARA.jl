@@ -75,8 +75,7 @@ IARA.update_hydro_unit_relation!(db, "hyd_1";
 
 IARA.update_configuration!(
     db;
-    market_clearing_tiebreaker_weight = 1e-4,
-    use_fcf_in_clearing = 1,
+    market_clearing_tiebreaker_weight_for_om_costs = 1e-4,
     bid_processing = IARA.Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS,
     bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
     construction_type_ex_ante_physical = IARA.Configurations_ConstructionType.HYBRID,

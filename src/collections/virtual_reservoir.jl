@@ -19,12 +19,10 @@ Collection representing the virtual reservoir.
     asset_owner_indices::Vector{Vector{Int}} = []
     asset_owners_inflow_allocation::Vector{Vector{Float64}} = []
     asset_owners_initial_energy_account_share::Vector{Vector{Float64}} = []
-    number_of_waveguide_points_for_file_template::Vector{Int} = []
     quantity_bid_file::String = ""
     price_bid_file::String = ""
     # caches
     initial_energy_account::Vector{Vector{Float64}} = []
-    waveguide_points::Vector{Matrix{Float64}} = []
     water_to_energy_factors::Vector{Vector{Float64}} = []
     _number_of_valid_bidding_segments::Vector{Int} = Int[]
     _maximum_number_of_bidding_segments::Int = 0
@@ -46,8 +44,6 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     virtual_reservoir.asset_owner_indices = PSRI.get_vector_map(inputs.db, "VirtualReservoir", "AssetOwner", "id")
     virtual_reservoir.asset_owners_inflow_allocation =
         PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "inflow_allocation")
-    virtual_reservoir.number_of_waveguide_points_for_file_template =
-        PSRI.get_parms(inputs.db, "VirtualReservoir", "number_of_waveguide_points_for_file_template")
     virtual_reservoir.asset_owners_initial_energy_account_share =
         PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "initial_energy_account_share")
     # Load time series files
@@ -58,8 +54,6 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     # Initialize caches
     virtual_reservoir.initial_energy_account =
         [zeros(Float64, length(index_of_elements(inputs, AssetOwner))) for vr in 1:num_virtual_reservoirs]
-    virtual_reservoir.waveguide_points =
-        [zeros(Float64, length(virtual_reservoir.hydro_unit_indices[vr]), 0) for vr in 1:num_virtual_reservoirs]
     virtual_reservoir.water_to_energy_factors =
         [zeros(Float64, length(index_of_elements(inputs, HydroUnit))) for vr in 1:num_virtual_reservoirs]
 
@@ -123,13 +117,6 @@ function validate(virtual_reservoir::VirtualReservoir)
                 )
                 num_errors += 1
             end
-        end
-        if !is_null(virtual_reservoir.number_of_waveguide_points_for_file_template[i]) &&
-           virtual_reservoir.number_of_waveguide_points_for_file_template[i] <= 0
-            @error(
-                "Number of waveguide points for file template for virtual reservoir $(virtual_reservoir_label) must be greater than zero."
-            )
-            num_errors += 1
         end
         if !allunique(virtual_reservoir.hydro_unit_indices[i])
             @error(
@@ -254,42 +241,6 @@ function delete_virtual_reservoir!(db::DatabaseSQLite, label::String)
     PSRI.delete_element!(db, "VirtualReservoir", label)
     return nothing
 end
-
-"""
-    update_virtual_reservoir!(db::DatabaseSQLite, label::String; kwargs...)
-
-Update the VirtualReservoir named 'label' in the database.
-
-Example:
-```julia
-IARA.update_virtual_reservoir!(db, "virtual_reservoir_1"; number_of_waveguide_points_for_file_template = 3)
-```
-"""
-function update_virtual_reservoir!(
-    db::DatabaseSQLite,
-    label::String;
-    kwargs...,
-)
-    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "VirtualReservoir",
-            string(attribute),
-            label,
-            value,
-        )
-    end
-    return db
-end
-
-"""
-    number_of_waveguide_points(inputs::AbstractInputs, vr::Int)
-
-Return the number of waveguide points for the VirtualReservoir `vr`.
-"""
-number_of_waveguide_points(inputs::AbstractInputs, vr::Int) =
-    size(inputs.collections.virtual_reservoir.waveguide_points[vr], 2)
 
 """
     virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs, vr::Int, ao::Int)

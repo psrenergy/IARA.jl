@@ -13,10 +13,10 @@
 Return the filename to write the lp file.
 """
 function lp_filename(
-    inputs::Inputs, 
-    run_time_options::RunTimeOptions, 
-    t::Integer, 
-    scen::Integer, 
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    t::Integer,
+    scen::Integer,
     subscenario::Integer;
     suffix::String = "",
 )

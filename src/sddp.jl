@@ -261,15 +261,27 @@ function set_custom_hook(
 
     # Definition of what should be the name of the lp file in case we wish to write it.
     lp_file = lp_filename(inputs, run_time_options, t, scen, subscenario)
-    function write_lp_hook(model::JuMP.Model, filename::String)
-        return JuMP.write_to_file(model, filename)
+    lp_file_jump = lp_filename(inputs, run_time_options, t, scen, subscenario; suffix = "jump")
+    function write_lp_hook(model::JuMP.Model)
+        # Always write the JuMP version
+        try
+            MOI.write_to_file(backend(model).optimizer.model.optimizer, lp_file)
+        finally
+            JuMP.write_to_file(model, lp_file_jump)
+        end
+        return nothing
     end
 
-    function treat_infeasibilities_hook(model::JuMP.Model, filename::String)
+    function treat_infeasibilities_hook(model::JuMP.Model)
         if JuMP.termination_status(model) == MOI.INFEASIBLE
             # First write the lp file
-            @info("Model is infeasible. Writing to file: $filename")
-            JuMP.write_to_file(model, filename)
+            @info("Model is infeasible. Writing to file: $lp_file")
+            try
+                # Hack to access the inner optimizer in HiGHS
+                MOI.write_to_file(backend(model).optimizer.model.optimizer, lp_file)
+            finally
+                JuMP.write_to_file(model, lp_file_jump)
+            end
             try
                 compute_conflict!(model)
                 if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
@@ -282,7 +294,7 @@ function set_custom_hook(
                         end
                     end
                     if length(list_of_conflicting_constraints) > 0
-                        conflict_file_path = filename * ".iis"
+                        conflict_file_path = lp_file * ".iis"
                         @info("Conflicting constraints found! Writing to file: $conflict_file_path")
                         # Write the conflicting constraints to a file
                         open(conflict_file_path, "w") do io
@@ -296,8 +308,8 @@ function set_custom_hook(
                 end
             catch e
                 @info("Model was infeasible but unable to compute conflict due to: $e")
-                @info("Writing the model to file: $filename")
-                JuMP.write_to_file(model, filename)
+                @info("Writing the model to file: $lp_file")
+                JuMP.write_to_file(model, lp_file)
             end
             error("Model is infeasible.")
         end
@@ -322,9 +334,9 @@ function set_custom_hook(
         JuMP.optimize!(model; ignore_optimize_hook = true)
 
         if inputs.args.write_lp
-            write_lp_hook(model, lp_file)
+            write_lp_hook(model)
         end
-        treat_infeasibilities_hook(model, lp_file)
+        treat_infeasibilities_hook(model)
         return nothing
     end
     set_optimize_hook(subproblem, all_optimize_hooks)

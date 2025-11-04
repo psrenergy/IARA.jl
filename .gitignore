@@ -49,6 +49,7 @@ revise/Manifest.toml
 *.html
 *.json
 *.sol
+*.iis
 
 # Compile directory
 compile/build/

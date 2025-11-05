@@ -852,7 +852,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
         vr_quantity_bid =
             [quantity_bid_reference_curve[seg][vr] for seg in eachindex(quantity_bid_reference_curve)]
         vr_price_bid = [price_bid_reference_curve[seg][vr] for seg in eachindex(price_bid_reference_curve)]
-        if vr_total_account - sum(vr_quantity_bid) > 1e-6
+        if vr_total_account - sum(vr_quantity_bid) > DEFAULT_TOLERANCE
             push!(vr_quantity_bid, vr_total_account - sum(vr_quantity_bid))
             push!(vr_price_bid, vr_price_bid[end] * (1.0 + reference_curve_final_segment_price_markup(inputs)))
         end
@@ -898,11 +898,11 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             sum_of_ao_selling_bids = 0.0
             # Assuming that this asset owner is the only one selling, the segment of the reference curve only changes when
             # the sum of bids for the current asset owner is greater than the sum of quantity bids until this segment.
-            while current_account > 1e-6
+            while current_account > DEFAULT_TOLERANCE
                 # In this iteration we define the quantity bid for the current markup, which is based on the account share of the
                 # asset owner in the total account of the virtual reservoir. The calculation assumes that the total account of the
                 # virtual reservoir is static, does not change according to the asset owner bids
-                current_account_share = current_account / vr_total_account
+                current_account_share = round(current_account / vr_total_account; digits = 3)
                 markup_index =
                     findfirst(i -> account_upper_bounds[i] >= current_account_share, 1:length(account_upper_bounds))
                 account_share_lower_bound_for_markup = markup_index == 1 ? 0.0 : account_upper_bounds[markup_index-1]
@@ -939,7 +939,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                         current_reference_segment += 1
                         if current_reference_segment > length(ao_reference_quantity_bid)
                             # We have reached the end of the reference curve, so we stop defining bids for this asset owner
-                            if current_account > 1e-6
+                            if current_account > DEFAULT_TOLERANCE
                                 @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
                                 current_account = 0 # break the external while loop
                             end
@@ -1058,12 +1058,10 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
         segments = 1:dimension_dict[:bid_segment]
     end
 
-    tol = 1e-6
-
     if is_virtual_reservoir
         for vr in 1:number_elements
             for segment in reverse(segments)
-                if any(.!isapprox.(bids_view.data[vr, :, segment], 0.0; atol = tol))
+                if any(.!isapprox.(bids_view.data[vr, :, segment], 0.0; atol = DEFAULT_TOLERANCE))
                     valid_segments_per_timeseries[vr] = segment
                     break
                 end
@@ -1072,7 +1070,7 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
     else
         for bg in 1:number_elements
             for segment in reverse(segments)
-                if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
+                if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = DEFAULT_TOLERANCE))
                     valid_segments_per_timeseries[bg] = segment
                     break
                 end

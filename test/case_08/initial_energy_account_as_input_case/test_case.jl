@@ -35,7 +35,7 @@ else
     Main.compare_outputs(PATH;
         test_only_subperiod_sum = [
             "hydro_spillage",
-        ]
+        ],
     )
 end
 

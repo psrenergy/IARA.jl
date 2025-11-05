@@ -42,7 +42,7 @@ else
             "hydro_turbining",
             "hydro_generation",
             "hydro_spillage",
-        ]
+        ],
     )
 end
 

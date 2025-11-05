@@ -35,7 +35,7 @@ else
         test_only_subperiod_sum = [
             "hydro_om_costs",
             "hydro_turbining",
-        ]
+        ],
     )
 end
 

@@ -895,12 +895,19 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_opti
                         "[$(hydro_unit_min_volume(inputs, h)), $(hydro_unit_max_volume(inputs, h))]."
                     )
                 end
-                previous_volume[h] =
+                previous_volume[h] = if hydro_unit_max_volume(inputs, h) == hydro_unit_min_volume(inputs, h)
+                    clamp(
+                        volume[end, h],
+                        hydro_unit_min_volume(inputs, h),
+                        hydro_unit_max_volume(inputs, h),
+                    )
+                else
                     clamp(
                         volume[end, h],
                         hydro_unit_min_volume(inputs, h) + tol,
                         hydro_unit_max_volume(inputs, h) - tol,
                     )
+                end
             end
         end
     end

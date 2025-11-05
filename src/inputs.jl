@@ -118,10 +118,14 @@ function load_inputs(args::Args)
     db = load_study(args.path)
     inputs = Inputs(; db, args)
 
-    PSRBridge.initialize!(inputs)
-
     # Initialize or allocate all fields from collections
-    initialize!(inputs)
+    try
+        PSRBridge.initialize!(inputs)
+        initialize!(inputs)
+    catch e
+        clean_up(inputs)
+        rethrow(e)
+    end
 
     return inputs
 end

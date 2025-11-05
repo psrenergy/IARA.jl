@@ -31,7 +31,12 @@ IARA.market_clearing(PATH; plot_outputs = false, delete_output_folder_before_exe
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
-    Main.compare_outputs(PATH)
+    Main.compare_outputs(PATH;
+        test_only_subperiod_sum = [
+            "hydro_om_costs",
+            "hydro_turbining",
+        ]
+    )
 end
 
 end

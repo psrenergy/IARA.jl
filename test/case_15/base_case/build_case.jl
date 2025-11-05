@@ -46,7 +46,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
     settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
-    market_clearing_tiebreaker_weight = 0.0,
+    market_clearing_tiebreaker_weight_for_om_costs = 0.0,
 )
 
 # Add collection elements

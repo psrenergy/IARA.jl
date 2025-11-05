@@ -490,28 +490,6 @@ end
     UNDEFINED = 2
 end
 
-"""
-  Configurations_VRCurveguideDataSource
-
-  - `EXTERNAL_UNVALIDATED_BID`: User provided (0)
-  - `UNIFORM_ACROSS_RESERVOIRS`: Uniform volume percentage (1)
-"""
-@enumx Configurations_VRCurveguideDataSource begin
-    READ_FROM_FILE = 0
-    UNIFORM_ACROSS_RESERVOIRS = 1
-end
-
-"""
-  Configurations_VRCurveguideDataFormat
-
-  - `CSV_FILE`: CSV file (0)
-  - `FORMATTED_DATA`: Existing data (1)
-"""
-@enumx Configurations_VRCurveguideDataFormat begin
-    CSV_FILE = 0
-    FORMATTED_DATA = 1
-end
-
 @enumx Configurations_VirtualReservoirCorrespondenceType begin
     IGNORE = 0
     STANDARD_CORRESPONDENCE_CONSTRAINT = 1

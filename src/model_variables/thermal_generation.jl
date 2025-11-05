@@ -45,7 +45,7 @@ function thermal_generation!(
        construction_type(inputs, run_time_options) != IARA.Configurations_ConstructionType.COST_BASED
         model.obj_exp = @expression(
             model.jump_model,
-            model.obj_exp + thermal_total_om_cost * market_clearing_tiebreaker_weight(inputs)
+            model.obj_exp + thermal_total_om_cost * market_clearing_tiebreaker_weight_for_om_costs(inputs)
         )
     else
         model.obj_exp = @expression(

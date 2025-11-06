@@ -61,9 +61,12 @@ function list_asset_owners_and_their_bidding_groups(inputs::IARA.AbstractInputs)
     asset_onwer_list = []
     for (asset_onwer_index, asset_onwer_label) in enumerate(IARA.asset_owner_label(inputs))
         bidding_group_indexes = IARA.bidding_group_asset_owner_index(inputs) .== asset_onwer_index
+        is_supply_security_agent =
+            asset_owner_price_type(inputs, asset_onwer_index) == AssetOwner_PriceType.SupplySecurityAgent
         asset_owner_dict = Dict(
             "label" => asset_onwer_label,
             "bidding_groups" => IARA.bidding_group_label(inputs)[bidding_group_indexes],
+            "is_supply_security_agent" => is_supply_security_agent,
         )
         push!(asset_onwer_list, asset_owner_dict)
     end

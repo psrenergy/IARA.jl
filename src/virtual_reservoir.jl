@@ -51,11 +51,12 @@ function energy_from_inflows(
     volume::Vector{Float64}, # hm3
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    hydro_units_in_original_order = index_of_elements(inputs, HydroUnit)
     hydro_units_in_cascade_order = order_to_spill_excess_of_inflow(inputs)
 
-    inflow_as_volume = zeros(length(hydro_units_in_cascade_order), number_of_subperiods(inputs))
+    inflow_as_volume = zeros(length(hydro_units_in_original_order), number_of_subperiods(inputs))
     for b in subperiods(inputs)
-        for h in hydro_units_in_cascade_order
+        for h in hydro_units_in_original_order
             inflow_as_volume[h, b] =
                 inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
                 subperiod_duration_in_hours(inputs, b) # hm3

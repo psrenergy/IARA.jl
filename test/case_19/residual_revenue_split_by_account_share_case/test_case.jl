@@ -39,6 +39,11 @@ else
             "hydro_turbining",
             "thermal_generation",
             "thermal_om_costs",
+            "virtual_reservoir_total_revenue",
+            "bidding_group_profit",
+            "bidding_group_variable_costs",
+            "bidding_group_revenue",
+            "virtual_reservoir_inflow_shareholder_residual_revenue",
         ],
         skipped_outputs = [
             "hydro_final_volume",

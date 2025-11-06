@@ -159,17 +159,11 @@ function initialize!(inputs::Inputs)
     for fieldname in fieldnames(Collections)
         initialize!(getfield(inputs.collections, fieldname), inputs)
     end
-
     # Fill relation caches with collection data
     fill_relation_caches!(inputs)
 
     # Validate all collections
-    try
-        validate(inputs)
-    catch e
-        clean_up(inputs)
-        rethrow(e)
-    end
+    validate(inputs)
 
     # Fit PAR(p) and generate scenarios
     if fit_parp_model(inputs)
@@ -177,12 +171,7 @@ function initialize!(inputs::Inputs)
     end
 
     # Load time series from files
-    try
-        initialize_time_series_from_external_files(inputs)
-    catch e
-        clean_up(inputs)
-        rethrow(e)
-    end
+    initialize_time_series_from_external_files(inputs)
 
     # Fill data caches with collection data
     fill_data_caches!(inputs)

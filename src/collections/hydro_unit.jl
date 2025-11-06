@@ -711,13 +711,13 @@ end
 
 function hydro_unit_max_available_turbining(inputs::AbstractInputs, idx::Int)
     if is_null(hydro_unit_max_turbining(inputs, idx))
-        if hydro_unit_production_factor(inputs, idx) <= 1e-6
+        if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE
             return 0.0
         else
             return inputs.collections.hydro_unit.max_generation[idx] / hydro_unit_production_factor(inputs, idx)
         end
     else
-        if hydro_unit_production_factor(inputs, idx) <= 1e-6
+        if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE
             return hydro_unit_max_turbining(inputs, idx)
         else
             return min(
@@ -877,9 +877,8 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_opti
             )
             # The volume at the end of the period is the first subperiod of the next period
             for h in axes(volume, 2)
-                tol = 1e-6
-                if volume[end, h] < hydro_unit_min_volume(inputs, h) - tol ||
-                   volume[end, h] > hydro_unit_max_volume(inputs, h) + tol
+                if volume[end, h] < hydro_unit_min_volume(inputs, h) - DEFAULT_TOLERANCE ||
+                   volume[end, h] > hydro_unit_max_volume(inputs, h) + DEFAULT_TOLERANCE
                     @debug(
                         "Hydro Unit $(inputs.collections.hydro_unit.label[h]) volume at the end of period $(period - 1) " *
                         "is out of bounds: $(volume[end, h]). Clamping to valid range: " *
@@ -895,8 +894,8 @@ function hydro_volume_from_previous_period(inputs::AbstractInputs, run_time_opti
                 else
                     clamp(
                         volume[end, h],
-                        hydro_unit_min_volume(inputs, h) + tol,
-                        hydro_unit_max_volume(inputs, h) - tol,
+                        hydro_unit_min_volume(inputs, h) + DEFAULT_TOLERANCE,
+                        hydro_unit_max_volume(inputs, h) - DEFAULT_TOLERANCE,
                     )
                 end
             end

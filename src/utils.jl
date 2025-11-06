@@ -79,6 +79,27 @@ function period_from_date_time(
     end
 end
 
+function get_file_period_from_problem_period(
+    inputs::Inputs,
+    period::Int,
+    file_initial_date_time::DateTime,
+)
+    file_period = if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
+        date_time_to_read = date_time_from_period(inputs, period)
+        period_from_date_time(
+            inputs,
+            date_time_to_read;
+            initial_date_time = file_initial_date_time,
+        )
+    elseif time_series_step(inputs) == Configurations_TimeSeriesStep.FROZEN_TIME
+        period
+    else
+        error("Time series step $(time_series_step(inputs)) not supported.")
+    end
+
+    return file_period
+end
+
 function period_index_in_year(inputs::Inputs, period::Int)
     if time_series_step(inputs) == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
         date_time = date_time_from_period(inputs, period)

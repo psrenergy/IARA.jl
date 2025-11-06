@@ -251,7 +251,7 @@ function calculate_energy_account_and_spilled_energy!(
         hydro_spillage,
         volume_by_subperiod,
     ) # MWh
-        
+
     virtual_reservoir_post_processed_energy_account =
         [zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr))) for vr in virtual_reservoirs]
     for vr in virtual_reservoirs

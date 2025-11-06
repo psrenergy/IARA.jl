@@ -119,7 +119,7 @@ function post_process_reference_curve_outputs(
     price /= money_to_thousand_money()
     price = zeros(number_of_virtual_reservoirs) .+ price
 
-    if !isapprox(sum(inflow_slack), 0.0; atol = 1e-4) || any(price .> demand_deficit_cost(inputs))
+    if any(price .> demand_deficit_cost(inputs))
         subscenario = 1 # The reference curve model has no subscenario dimension
         # If the problem is infeasible, use the total virtual reservoir energy
         quantity = virtual_reservoir_stored_energy(
@@ -130,7 +130,11 @@ function post_process_reference_curve_outputs(
             subscenario,
         )
         # If the problem is infeasible, use the last price and add a markup
-        price = reference_price[end] * (1.0 + reference_curve_final_segment_price_markup(inputs))
+        price = if isempty(reference_price)
+            demand_deficit_cost(inputs) * (1.0 + reference_curve_final_segment_price_markup(inputs))
+        else
+            reference_price[end] * (1.0 + reference_curve_final_segment_price_markup(inputs))
+        end
     end
 
     # Get segment size from absolute quantity

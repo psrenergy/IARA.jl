@@ -43,6 +43,7 @@ const PSRI = PSRClassesInterface
 const PSRDatabaseSQLite = PSRI.PSRDatabaseSQLite
 const DatabaseSQLite = PSRI.PSRDatabaseSQLite.DatabaseSQLite
 const POI = ParametricOptInterface
+const DEFAULT_TOLERANCE = 1e-6
 
 function initialize(args)
     # Initialize dlls and other possible defaults

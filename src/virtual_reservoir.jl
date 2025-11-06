@@ -47,32 +47,34 @@ end
 
 function energy_from_inflows(
     inputs::AbstractInputs,
-    inflow_series::Matrix{Float64},
-    volume::Vector{Float64},
+    inflow_series::Matrix{Float64}, # m3/s
+    volume::Vector{Float64}, # hm3
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    hydro_units = order_to_spill_excess_of_inflow(inputs)
+    hydro_units_in_original_order = index_of_elements(inputs, HydroUnit)
+    hydro_units_in_cascade_order = order_to_spill_excess_of_inflow(inputs)
 
-    inflow_as_volume = [
-        inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
-        subperiod_duration_in_hours(inputs, b) for h in hydro_units, b in subperiods(inputs)
-    ]
+    inflow_as_volume = zeros(length(hydro_units_in_original_order), number_of_subperiods(inputs))
+    for b in subperiods(inputs)
+        for h in hydro_units_in_original_order
+            inflow_as_volume[h, b] =
+                inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
+                subperiod_duration_in_hours(inputs, b) # hm3
+        end
+    end
 
-    hydro_unit_additional_energy = zeros(length(hydro_units), number_of_subperiods(inputs))
-    hydro_unit_non_turbinable_inflow_energy = zeros(number_of_subperiods(inputs), length(hydro_units))
+    hydro_unit_additional_energy = zeros(length(hydro_units_in_cascade_order), number_of_subperiods(inputs))
 
     for b in subperiods(inputs)
-        for h in hydro_units
+        for h in hydro_units_in_cascade_order
             max_turbining =
                 hydro_unit_max_available_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
-                subperiod_duration_in_hours(inputs, b)
+                subperiod_duration_in_hours(inputs, b) # hm3
 
-            spillage = max(volume[h] + inflow_as_volume[h, b] - (hydro_unit_max_volume(inputs, h) + max_turbining), 0)
+            spillage = max(volume[h] + inflow_as_volume[h, b] - (hydro_unit_max_volume(inputs, h) + max_turbining), 0) # hm3
 
             vr = hydro_unit_virtual_reservoir_index(inputs, h)
             if !is_null(vr)
-                hydro_unit_non_turbinable_inflow_energy[b, h] =
-                    spillage * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
                 hydro_unit_additional_energy[h, b] =
                     (inflow_as_volume[h, b] - spillage) * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
             end
@@ -91,7 +93,48 @@ function energy_from_inflows(
         end
     end
 
-    return vr_additional_energy, hydro_unit_non_turbinable_inflow_energy
+    return vr_additional_energy
+end
+
+function calculate_turbinable_spilled_energy(
+    inputs::AbstractInputs,
+    inflow_series::Matrix{Float64}, # m3/s
+    turbining::AbstractArray{Float64, 2}, # hm3
+    spillage::AbstractArray{Float64, 2}, # hm3
+    volume::AbstractArray{Float64, 2}, # hm3
+)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    hydro_units_in_cascade_order = order_to_spill_excess_of_inflow(inputs)
+
+    inflow_as_volume = zeros(length(hydro_units_in_cascade_order), number_of_subperiods(inputs))
+    for b in subperiods(inputs)
+        for h in hydro_units_in_cascade_order
+            inflow_as_volume[h, b] =
+                inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
+                subperiod_duration_in_hours(inputs, b) # hm3
+        end
+    end
+
+    hydro_unit_turbinable_spilled_energy = zeros(number_of_subperiods(inputs), length(hydro_units_in_cascade_order))
+
+    for b in subperiods(inputs)
+        for h in hydro_units_in_cascade_order
+            max_turbining =
+                hydro_unit_max_available_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
+                subperiod_duration_in_hours(inputs, b) # hm3
+
+            available_volume = hydro_unit_max_volume(inputs, h) - volume[b, h]
+
+            vr = hydro_unit_virtual_reservoir_index(inputs, h)
+            if !is_null(vr)
+                hydro_unit_turbinable_spilled_energy[b, h] =
+                    virtual_reservoir_water_to_energy_factors(inputs, vr, h) *
+                    (spillage[b, h] - max(0, inflow_as_volume[h, b] - max_turbining - available_volume))
+            end
+        end
+    end
+
+    return hydro_unit_turbinable_spilled_energy
 end
 
 function fill_water_to_energy_factors!(inputs::AbstractInputs, vr::Int)
@@ -154,6 +197,7 @@ function post_process_virtual_reservoirs!(
         period = period,
         scenario = scenario,
         subscenario = subscenario,
+        multiply_by = MW_to_GW(),
     )
 
     treated_energy_account = treat_energy_account_for_writing_by_pairs_of_agents(
@@ -187,16 +231,28 @@ function calculate_energy_account_and_spilled_energy!(
     hydro_units = index_of_elements(inputs, HydroUnit)
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
-    hydro_volume = simulation_results.data[:hydro_volume]
-    virtual_reservoir_generation = simulation_results.data[:virtual_reservoir_generation]
+    hydro_volume = simulation_results.data[:hydro_volume] # hm3
+    virtual_reservoir_generation = simulation_results.data[:virtual_reservoir_generation] # MWh
+    hydro_spillage = simulation_results.data[:hydro_spillage] # hm3
+    hydro_turbining = simulation_results.data[:hydro_turbining] # hm3
+    volume_by_subperiod = simulation_results.data[:hydro_volume] # hm3
 
-    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, run_time_options, period, scenario)
+    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, run_time_options, period, scenario) # hm3
     energy_account_at_beginning_of_period =
         virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
 
-    inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
-    vr_energy_arrival, hydro_spilled_energy =
+    inflow_series = time_series_inflow(inputs, run_time_options; subscenario) # m3/s
+
+    vr_energy_arrival =
         energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+    hydro_spilled_energy = calculate_turbinable_spilled_energy(
+        inputs,
+        inflow_series,
+        hydro_turbining,
+        hydro_spillage,
+        volume_by_subperiod,
+    ) # MWh
+
     virtual_reservoir_post_processed_energy_account =
         [zeros(length(virtual_reservoir_asset_owner_indices(inputs, vr))) for vr in virtual_reservoirs]
     for vr in virtual_reservoirs
@@ -253,7 +309,7 @@ function virtual_reservoir_stored_energy(
         virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
     volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, run_time_options, period, scenario)
 
-    vr_energy_arrival, _ = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+    vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
     energy_accounts = [
         sum(virtual_reservoir_energy_account_at_beginning_of_period[vr]) + vr_energy_arrival[vr]
         for vr in virtual_reservoirs

@@ -710,7 +710,12 @@ function update_inflow_series_from_serialized_file!(
             period,
             scenario,
         )
-        inputs.time_series.inflow.ex_ante.data = inflow_ex_ante
+        if any(inflow_ex_ante .< 0.0)
+            @debug(
+                "Negative inflow values found in ex-ante inflow for period $period, scenario $scenario. They will be set to zero."
+            )
+        end
+        inputs.time_series.inflow.ex_ante.data = max.(0.0, inflow_ex_ante)
     end
     if read_ex_post_inflow_file(inputs)
         inputs.time_series.inflow.ex_post.data = zeros(
@@ -726,7 +731,12 @@ function update_inflow_series_from_serialized_file!(
                 scenario,
                 subscenario,
             )
-            inputs.time_series.inflow.ex_post.data[:, :, subscenario] = inflow_ex_post
+            if any(inflow_ex_post .< 0.0)
+                @debug(
+                    "Negative inflow values found in ex-post inflow for period $period, scenario $scenario. They will be set to zero."
+                )
+            end
+            inputs.time_series.inflow.ex_post.data[:, :, subscenario] = max.(0.0, inflow_ex_post)
         end
     end
 

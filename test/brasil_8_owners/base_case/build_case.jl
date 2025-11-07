@@ -27,8 +27,8 @@ demand_deficit_cost = 8327.76
 train_mincost_iteration_limit = 125
 train_mincost_time_limit_sec = 10000 # ~ 2.5h
 parp_max_lags = 1
-initial_date_time = string(DateTime(2025,1))
-use_parp = false
+initial_date_time = "2024-01-01"
+use_parp = true
 
 inflow_model = if use_parp
     IARA.Configurations_InflowModel.READ_PARP_COEFFICIENTS
@@ -435,4 +435,14 @@ IARA.link_time_series_to_file(
     db,
     "HydroUnit";
     initial_volume_by_scenario = "initial_volume_by_scenario",
+)
+
+IARA.link_time_series_to_file(
+    db,
+    "GaugingStation";
+    inflow_initial_state_by_scenario = "inflow_initial_state_by_scenario",
+    inflow_noise_ex_ante = "inflow_noise_ex_ante",
+    parp_coefficients = "parp_coefficients",
+    inflow_period_average = "inflow_period_average",
+    inflow_period_std_dev = "inflow_period_std_dev"
 )

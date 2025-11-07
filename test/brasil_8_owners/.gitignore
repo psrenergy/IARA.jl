@@ -9,3 +9,7 @@
 !inflow_initial_state_by_scenario.*
 !inflow_ex_ante.*
 !cuts.json
+!inflow_noise_ex_ante.*
+!parp_coefficients.*
+!inflow_period_average.*
+!inflow_period_std_dev.*

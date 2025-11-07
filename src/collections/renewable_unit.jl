@@ -227,19 +227,19 @@ function validate(renewable_unit::RenewableUnit)
             @error("Renewable Unit Label cannot be empty.")
             num_errors += 1
         end
-        if renewable_unit.max_generation[i] < 0
+        if renewable_unit.max_generation[i] < 0 || isnan(renewable_unit.max_generation[i])
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Maximum generation must be non-negative. Current value is $(renewable_unit.max_generation[i])."
             )
             num_errors += 1
         end
-        if renewable_unit.om_cost[i] < 0
+        if renewable_unit.om_cost[i] < 0 || isnan(renewable_unit.om_cost[i])
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) O&M cost must be non-negative. Current value is $(renewable_unit.om_cost[i])."
             )
             num_errors += 1
         end
-        if renewable_unit.curtailment_cost[i] < 0
+        if renewable_unit.curtailment_cost[i] < 0 || isnan(renewable_unit.curtailment_cost[i])
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Curtailment cost must be non-negative. Current value is $(renewable_unit.curtailment_cost[i])."
             )

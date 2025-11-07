@@ -27,6 +27,7 @@ demand_deficit_cost = 8327.76
 train_mincost_iteration_limit = 125
 train_mincost_time_limit_sec = 10000 # ~ 2.5h
 parp_max_lags = 1
+initial_date_time = string(DateTime(2025,1))
 use_parp = false
 
 inflow_model = if use_parp
@@ -42,6 +43,7 @@ db = IARA.create_study!(PATH;
     number_of_subscenarios,
     number_of_nodes = number_of_seasons,
     subperiod_duration_in_hours = fill(subperiod_duration_in_hours, number_of_subperiods),
+    initial_date_time,
     policy_graph_type = IARA.Configurations_PolicyGraphType.CYCLIC_WITH_SEASON_ROOT,
     cycle_discount_rate,
     expected_number_of_repeats_per_node = fill(season_number_of_repeats, number_of_seasons),
@@ -151,14 +153,14 @@ IARA.add_asset_owner!(db;
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     purchase_discount_rate = [0.05],
 )
-IARA.add_asset_owner!(
-    db;
-    label = "Supply_Security_Agent",
-    price_type = IARA.AssetOwner_PriceType.SUPPLY_SECURITY_AGENT,
-    purchase_discount_rate = [0.25],
-    virtual_reservoir_energy_account_upper_bound = [0.15, 0.5, 1.0],
-    risk_factor_for_virtual_reservoir_bids = [0.2, 0.1, 0.0],
-)
+# IARA.add_asset_owner!(
+#     db;
+#     label = "Supply_Security_Agent",
+#     price_type = IARA.AssetOwner_PriceType.SUPPLY_SECURITY_AGENT,
+#     purchase_discount_rate = [0.25],
+#     virtual_reservoir_energy_account_upper_bound = [0.15, 0.5, 1.0],
+#     risk_factor_for_virtual_reservoir_bids = [0.2, 0.1, 0.0],
+# )
 
 # Bidding groups
 IARA.add_bidding_group!(db; 
@@ -273,20 +275,20 @@ IARA.add_bidding_group!(db;
     risk_factor = [0.1],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
-IARA.add_bidding_group!(db; 
-    label = "Agent_7_Demand", 
-    assetowner_id = "Agent_7",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
-    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
-)
-IARA.add_bidding_group!(db; 
-    label = "Agent_8_Demand", 
-    assetowner_id = "Agent_8",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
-    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
-)
+# IARA.add_bidding_group!(db; 
+#     label = "Agent_7_Demand", 
+#     assetowner_id = "Agent_7",
+#     segment_fraction = [0.1],
+#     risk_factor = [0.1],
+#     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+# )
+# IARA.add_bidding_group!(db; 
+#     label = "Agent_8_Demand", 
+#     assetowner_id = "Agent_8",
+#     segment_fraction = [0.1],
+#     risk_factor = [0.1],
+#     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+# )
 
 # demands
 df_demands = CSV.read(joinpath(PATH, "demands.csv"), DataFrame)
@@ -294,7 +296,7 @@ for row in eachrow(df_demands)
     IARA.add_demand_unit!(db;
         label = String(row.label),
         bus_id = String(row.bus_id),
-        biddinggroup_id = String(row.biddinggroup_id),
+        # biddinggroup_id = String(row.biddinggroup_id),
         max_demand = row.max_capacity_pu,
         parameters = DataFrame(;
             date_time = [DateTime(0)],
@@ -334,6 +336,8 @@ for row in eachrow(df_renewables)
             date_time = [DateTime(0)],
             existing = [Int(IARA.RenewableUnit_Existence.EXISTS)],
             max_generation = [row.capacity],
+            om_cost = [row.cost],
+            curtailment_cost = [0.5]
         ),
     )
 end
@@ -369,6 +373,7 @@ for row in eachrow(df_hydros)
         initial_volume_type = IARA.HydroUnit_InitialVolumeDataType.ABSOLUTE_VOLUME_IN_HM3,
         minimum_outflow_violation_cost = Float64(row.minimum_outflow_violation_cost),
         intra_period_operation = op_type,
+        parameters,
     )
 end
 

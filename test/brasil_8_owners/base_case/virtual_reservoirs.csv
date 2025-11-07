@@ -1,0 +1,17 @@
+﻿assetowner_id,label,inflow_share,start_vol_share
+Agent_1,Southeast_VR,0.23,0.46
+Agent_2,Southeast_VR,0.46,0.23
+Agent_3,Southeast_VR,0.12,0.12
+Agent_4,Southeast_VR,0.15,0.15
+Agent_5,Southeast_VR,0.04,0.04
+Agent_1,North_VR,0.47,0.47
+Agent_2,North_VR,0.06,0.06
+Agent_3,North_VR,0.40,0.40
+Agent_4,North_VR,0.06,0.06
+Agent_1,Northeast_VR,0.52,0.52
+Agent_2,Northeast_VR,0.33,0.33
+Agent_4,Northeast_VR,0.15,0.15
+Agent_1,South_VR,0.13,0.13
+Agent_2,South_VR,0.66,0.66
+Agent_5,South_VR,0.06,0.06
+Agent_6,South_VR,0.15,0.15

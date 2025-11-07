@@ -1,0 +1,11 @@
+!demands.csv
+!thermals.csv
+!renewables.csv
+!hydros.csv
+!virtual_reservoirs.csv
+!r_ex_post.*
+!d_ex_post.*
+!initial_volume_by_scenario.*
+!inflow_initial_state_by_scenario.*
+!inflow_ex_ante.*
+!cuts.json

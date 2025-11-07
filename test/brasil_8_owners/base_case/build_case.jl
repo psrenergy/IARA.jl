@@ -79,12 +79,12 @@ IARA.add_bus!(db; label = "North_1", zone_id = "N-NE")
 IARA.add_bus!(db; label = "Imperatriz_1", zone_id = "N-NE")
 
 # DCLines
-df_dcline = DataFrame(label = String[], bus_from = String[], bus_to = String[], capacity_from = Float64[], capacity_to = Float64[])
-push!(df_dcline, ("SE-SU_SubmarketLink", "South_1", "Southeast_1", 7900.12, 6999.99))
-push!(df_dcline, ("SE-NI_SubmarketLink", "Imperatriz_1", "Southeast_1", 5000.00, 3200.22))
+df_dcline = DataFrame(label = String[], bus_to = String[], bus_from = String[], capacity_to = Float64[], capacity_from = Float64[])
+push!(df_dcline, ("SE-SU_SubmarketLink", "South_1", "Southeast_1", 7900.119, 6999.993))
+push!(df_dcline, ("SE-NI_SubmarketLink", "Imperatriz_1", "Southeast_1", 5000.00, 3200.224))
 push!(df_dcline, ("NE-NI_SubmarketLink", "Imperatriz_1", "Northeast_1", 5600.00, 7800.00))
 push!(df_dcline, ("NO-NI_SubmarketLink", "Imperatriz_1", "North_1", 99999.00, 99999.00))
-push!(df_dcline, ("SE-NE_SubmarketLink", "Northeast_1", "Southeast_1", 6000.00, 5599.67))
+push!(df_dcline, ("SE-NE_SubmarketLink", "Northeast_1", "Southeast_1", 6000.00, 5599.669))
 push!(df_dcline, ("SE-NO_SubmarketLink", "North_1", "Southeast_1", 4200.00, 8000.00))
 for row in eachrow(df_dcline)
     IARA.add_dc_line!(db;
@@ -105,43 +105,43 @@ IARA.add_asset_owner!(db;
     label = "Agent_1",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     purchase_discount_rate = [0.05],
-    virtual_reservoir_energy_account_upper_bound = [0.25, 1.0],
-    risk_factor_for_virtual_reservoir_bids = [-0.1, -0.3]
+    # virtual_reservoir_energy_account_upper_bound = [0.25, 1.0],
+    # risk_factor_for_virtual_reservoir_bids = [-0.1, -0.3]
 )
 IARA.add_asset_owner!(db; 
     label = "Agent_2",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     purchase_discount_rate = [0.05],
-    virtual_reservoir_energy_account_upper_bound = [0.1, 0.4, 1.0],
-    risk_factor_for_virtual_reservoir_bids = [-0.05, -0.2, -0.5]
+    # virtual_reservoir_energy_account_upper_bound = [0.1, 0.4, 1.0],
+    # risk_factor_for_virtual_reservoir_bids = [-0.05, -0.2, -0.5]
 )
 IARA.add_asset_owner!(db; 
     label = "Agent_3",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     purchase_discount_rate = [0.05],
-    virtual_reservoir_energy_account_upper_bound =  [1.0],
-    risk_factor_for_virtual_reservoir_bids = [-0.15]
+    # virtual_reservoir_energy_account_upper_bound =  [1.0],
+    # risk_factor_for_virtual_reservoir_bids = [-0.15]
 )
 IARA.add_asset_owner!(db; 
     label = "Agent_4",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     purchase_discount_rate = [0.05],
-    virtual_reservoir_energy_account_upper_bound = [1.0],
-    risk_factor_for_virtual_reservoir_bids = [-0.15]
+    # virtual_reservoir_energy_account_upper_bound = [1.0],
+    # risk_factor_for_virtual_reservoir_bids = [-0.15]
 )
 IARA.add_asset_owner!(db; 
     label = "Agent_5",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     purchase_discount_rate = [0.05],
-    virtual_reservoir_energy_account_upper_bound = [1.0],
-    risk_factor_for_virtual_reservoir_bids = [-0.15]
+    # virtual_reservoir_energy_account_upper_bound = [1.0],
+    # risk_factor_for_virtual_reservoir_bids = [-0.15]
 )
 IARA.add_asset_owner!(db; 
     label = "Agent_6",
     price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
     purchase_discount_rate = [0.05],
-    virtual_reservoir_energy_account_upper_bound = [1.0],
-    risk_factor_for_virtual_reservoir_bids = [-0.15]
+    # virtual_reservoir_energy_account_upper_bound = [1.0],
+    # risk_factor_for_virtual_reservoir_bids = [-0.15]
 )
 IARA.add_asset_owner!(db; 
     label = "Agent_7",
@@ -158,135 +158,135 @@ IARA.add_asset_owner!(db;
 #     label = "Supply_Security_Agent",
 #     price_type = IARA.AssetOwner_PriceType.SUPPLY_SECURITY_AGENT,
 #     purchase_discount_rate = [0.25],
-#     virtual_reservoir_energy_account_upper_bound = [0.15, 0.5, 1.0],
-#     risk_factor_for_virtual_reservoir_bids = [0.2, 0.1, 0.0],
+    # virtual_reservoir_energy_account_upper_bound = [0.15, 0.5, 1.0],
+    # risk_factor_for_virtual_reservoir_bids = [0.2, 0.1, 0.0],
 # )
 
 # Bidding groups
 IARA.add_bidding_group!(db; 
     label = "Agent_2_Other", 
     assetowner_id = "Agent_2",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_3_Other", 
     assetowner_id = "Agent_3",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_4_Other", 
     assetowner_id = "Agent_4",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_6_Other", 
     assetowner_id = "Agent_6",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_7_Other", 
     assetowner_id = "Agent_7",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_8_Other", 
     assetowner_id = "Agent_8",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_1_Thermal", 
     assetowner_id = "Agent_1",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_3_Thermal", 
     assetowner_id = "Agent_3",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_4_Thermal", 
     assetowner_id = "Agent_4",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_5_Thermal", 
     assetowner_id = "Agent_5",
-    segment_fraction = [0.1],
-    risk_factor = [0.4],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_1_HydroMRE", 
     assetowner_id = "Agent_1",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_2_HydroMRE", 
     assetowner_id = "Agent_2",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_3_HydroMRE", 
     assetowner_id = "Agent_3",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_4_HydroMRE", 
     assetowner_id = "Agent_4",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_5_HydroMRE", 
     assetowner_id = "Agent_5",
-    segment_fraction = [0.1],
-    risk_factor = [0.4],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 IARA.add_bidding_group!(db; 
     label = "Agent_6_HydroMRE", 
     assetowner_id = "Agent_6",
-    segment_fraction = [0.1],
-    risk_factor = [0.1],
+    segment_fraction = [1.0],
+    risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
 # IARA.add_bidding_group!(db; 
 #     label = "Agent_7_Demand", 
 #     assetowner_id = "Agent_7",
-#     segment_fraction = [0.1],
-#     risk_factor = [0.1],
+#     segment_fraction = [1.0],
+#     risk_factor = [0.0],
 #     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 # )
 # IARA.add_bidding_group!(db; 
 #     label = "Agent_8_Demand", 
 #     assetowner_id = "Agent_8",
-#     segment_fraction = [0.1],
-#     risk_factor = [0.1],
+#     segment_fraction = [1.0],
+#     risk_factor = [0.0],
 #     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 # )
 
@@ -298,6 +298,7 @@ for row in eachrow(df_demands)
         bus_id = String(row.bus_id),
         # biddinggroup_id = String(row.biddinggroup_id),
         max_demand = row.max_capacity_pu,
+        curtailment_cost_flexible_demand = row.cost,
         parameters = DataFrame(;
             date_time = [DateTime(0)],
             existing = [Int(IARA.DemandUnit_Existence.EXISTS)],

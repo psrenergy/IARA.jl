@@ -131,9 +131,9 @@ function post_process_reference_curve_outputs(
         )
         # If the problem is infeasible, use the last price and add a markup
         price = if isempty(reference_price)
-            demand_deficit_cost(inputs) * (1.0 + reference_curve_final_segment_price_markup(inputs))
+            ones(number_of_virtual_reservoirs) .* demand_deficit_cost(inputs) * (1.0 + reference_curve_final_segment_price_markup(inputs))
         else
-            reference_price[end] * (1.0 + reference_curve_final_segment_price_markup(inputs))
+            ones(number_of_virtual_reservoirs) .* reference_price[end] * (1.0 + reference_curve_final_segment_price_markup(inputs))
         end
     end
 

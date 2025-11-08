@@ -811,6 +811,9 @@ function reference_curve_model_action(args...)
     # Constraints
     if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
+        if parp_max_lags(inputs) > 0
+            parp!(args...)
+        end
         virtual_reservoir_total_generation_correspondence!(args...)
         virtual_reservoir_generation_reference!(args...)
         virtual_reservoir_non_decreasing_reference_quantity!(args...)

@@ -29,6 +29,7 @@ db = IARA.create_study!(PATH;
     settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES,
 )
 
 IARA.add_zone!(db; label = "zone_1")

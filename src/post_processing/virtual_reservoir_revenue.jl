@@ -130,7 +130,7 @@ function accepted_bid_revenue(
     return joinpath(post_processing_path(inputs), output_name)
 end
 
-function inflow_shareholder_residual_revenue(
+function shareholder_residual_revenue(
     inputs::Inputs,
     outputs_post_processing::Outputs,
     model_outputs_time_serie::OutputReaders,
@@ -143,7 +143,7 @@ function inflow_shareholder_residual_revenue(
     output_has_subscenario::Bool,
 )
     outputs_dir = output_path(inputs)
-    output_name = "virtual_reservoir_inflow_shareholder_residual_revenue" * output_suffix
+    output_name = "virtual_reservoir_shareholder_residual_revenue" * output_suffix
 
     load_marginal_cost_reader = open_time_series_output(
         inputs,
@@ -902,7 +902,7 @@ function post_processing_virtual_reservoirs(
         ex_ante_physical_suffix,
         output_has_subscenario,
     )
-    inflow_shareholder_residual_revenue_file = inflow_shareholder_residual_revenue(
+    shareholder_residual_revenue_file = shareholder_residual_revenue(
         inputs,
         outputs_post_processing,
         model_outputs_time_serie,
@@ -932,7 +932,7 @@ function post_processing_virtual_reservoirs(
         total_revenue_file,
         [
             accepted_bid_revenue_file,
-            inflow_shareholder_residual_revenue_file,
+            shareholder_residual_revenue_file,
             spilled_responsibility_revenue_file,
             hydro_constraints_violation_adjusted_revenue_file,
         ],

@@ -46,6 +46,7 @@ db = IARA.create_study!(PATH;
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     reference_curve_number_of_segments = 10,
+    virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES,
 )
 
 # Add collection elements

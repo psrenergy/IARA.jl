@@ -318,7 +318,13 @@ function normalized_inflow_from_previous_period(inputs::AbstractInputs, run_time
 
     # Always initialize with the initial state
     for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
-        period_idx = mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
+        period_idx = if cyclic_policy_graph(inputs)
+            # In cyclic graphs, we consider all lags are from the same season as the first period
+            consult_period_season_map(inputs; period = 1, scenario, index = 1)
+        else
+            # Non-cyclic graphs, use the default calculation
+            mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
+        end
         previous_normalized_inflow[h, tau] = normalized_initial_inflow(inputs, period_idx, h, tau)
     end
 

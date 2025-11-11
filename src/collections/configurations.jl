@@ -721,6 +721,13 @@ Return the path to the case.
 path_case(inputs::AbstractInputs) = inputs.collections.configurations.path_case
 
 """
+    debug_path(inputs::AbstractInputs)
+
+Return the debug path for the case.
+"""
+debug_path(inputs::AbstractInputs) = joinpath(path_case(inputs), "debug")
+
+"""
     language(inputs::AbstractInputs)
 
 Return the language of the case.

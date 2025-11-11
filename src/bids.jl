@@ -831,7 +831,28 @@ function virtual_reservoir_markup_bids_for_period_scenario(
     scenario::Int;
     outputs::Union{Outputs, Nothing} = nothing,
 )
-    accounts = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    # Initial account
+    initial_accounts = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    # Energy arrival from inflows
+    inflow_series = time_series_inflow(inputs, run_time_options)
+    volume_at_beginning_of_period =
+        hydro_volume_from_previous_period(inputs, run_time_options, period, scenario)
+    vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+    # Current accounts
+    accounts = Vector{Vector{Float64}}(
+        undef,
+        number_of_elements(inputs, VirtualReservoir),
+    )
+    for vr in virtual_reservoirs
+        accounts[vr] =
+            initial_accounts[vr] +
+            vr_energy_arrival[vr] .* [
+                virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao) for
+                ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+            ]
+    end
+
     quantity_bid_reference_curve, price_bid_reference_curve =
         read_serialized_reference_curve(inputs, period, scenario)
 

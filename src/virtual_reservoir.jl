@@ -63,33 +63,36 @@ function energy_from_inflows(
         end
     end
 
-    hydro_unit_additional_energy = zeros(length(hydro_units_in_cascade_order), number_of_subperiods(inputs))
+    hydro_unit_additional_energy = zeros(length(hydro_units_in_cascade_order))
+    total_inflow_as_volume = dropdims(sum(inflow_as_volume; dims = 2); dims = 2)
 
-    for b in subperiods(inputs)
-        for h in hydro_units_in_cascade_order
-            max_turbining =
-                hydro_unit_max_available_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
-                subperiod_duration_in_hours(inputs, b) # hm3
+    for h in hydro_units_in_cascade_order
+        max_turbining = [
+            hydro_unit_max_available_turbining(inputs, h) * m3_per_second_to_hm3_per_hour() *
+            subperiod_duration_in_hours(inputs, b) # hm3
+            for b in subperiods(inputs)
+        ]
+        total_max_turbining = sum(max_turbining)
 
-            spillage = max(volume[h] + inflow_as_volume[h, b] - (hydro_unit_max_volume(inputs, h) + max_turbining), 0) # hm3
+        total_spillage =
+            max(volume[h] + total_inflow_as_volume[h] - (hydro_unit_max_volume(inputs, h) + total_max_turbining), 0) # hm3
 
-            vr = hydro_unit_virtual_reservoir_index(inputs, h)
-            if !is_null(vr)
-                hydro_unit_additional_energy[h, b] =
-                    (inflow_as_volume[h, b] - spillage) * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
-            end
+        vr = hydro_unit_virtual_reservoir_index(inputs, h)
+        if !is_null(vr)
+            hydro_unit_additional_energy[h] =
+                (total_inflow_as_volume[h] - total_spillage) * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
+        end
 
-            h_downstream = hydro_unit_spill_to(inputs, h)
-            if !is_null(h_downstream)
-                inflow_as_volume[h_downstream, b] += spillage
-            end
+        h_downstream = hydro_unit_spill_to(inputs, h)
+        if !is_null(h_downstream)
+            total_inflow_as_volume[h_downstream] += total_spillage
         end
     end
 
     vr_additional_energy = zeros(length(virtual_reservoirs))
     for vr in virtual_reservoirs
         for h in virtual_reservoir_hydro_unit_indices(inputs, vr)
-            vr_additional_energy[vr] += sum(hydro_unit_additional_energy[h, :])
+            vr_additional_energy[vr] += hydro_unit_additional_energy[h]
         end
     end
 

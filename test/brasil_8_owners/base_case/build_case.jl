@@ -388,16 +388,6 @@ try
         initial_volume_by_scenario = "initial_volume_by_scenario",
     )
 
-    IARA.link_time_series_to_file(
-        db,
-        "GaugingStation";
-        inflow_initial_state_by_scenario = "inflow_initial_state_by_scenario",
-        inflow_noise_ex_ante = "inflow_noise_ex_ante",
-        parp_coefficients = "parp_coefficients",
-        inflow_period_average = "inflow_period_average",
-        inflow_period_std_dev = "inflow_period_std_dev",
-    )
-
 finally
     IARA.close_study!(db)
 end

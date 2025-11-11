@@ -19,8 +19,8 @@ number_of_seasons = 4
 number_of_scenarios = 20
 number_of_subscenarios = 5
 number_of_subperiods = 24
-season_number_of_repeats = 5.0 
-subperiod_duration_in_hours = 8760.0/number_of_seasons/season_number_of_repeats/number_of_subperiods
+season_number_of_repeats = 5.0
+subperiod_duration_in_hours = 8760.0 / number_of_seasons / season_number_of_repeats / number_of_subperiods
 cycle_discount_rate = 0.10
 reference_curve_number_of_segments = 10
 demand_deficit_cost = 8327.76
@@ -87,159 +87,159 @@ try
     end
 
     # Asset owners
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_1",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_2",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_3",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_4",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_5",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_6",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_7",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
-    IARA.add_asset_owner!(db; 
+    IARA.add_asset_owner!(db;
         label = "Agent_8",
         price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
         purchase_discount_rate = [0.05],
     )
 
     # Bidding groups
-    IARA.add_bidding_group!(db; 
-        label = "Agent_2_Other", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_2_Other",
         assetowner_id = "Agent_2",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_3_Other", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_3_Other",
         assetowner_id = "Agent_3",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_4_Other", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_4_Other",
         assetowner_id = "Agent_4",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_6_Other", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_6_Other",
         assetowner_id = "Agent_6",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_7_Other", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_7_Other",
         assetowner_id = "Agent_7",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_8_Other", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_8_Other",
         assetowner_id = "Agent_8",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_1_Thermal", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_1_Thermal",
         assetowner_id = "Agent_1",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_3_Thermal", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_3_Thermal",
         assetowner_id = "Agent_3",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_4_Thermal", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_4_Thermal",
         assetowner_id = "Agent_4",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_5_Thermal", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_5_Thermal",
         assetowner_id = "Agent_5",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_1_HydroMRE", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_1_HydroMRE",
         assetowner_id = "Agent_1",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_2_HydroMRE", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_2_HydroMRE",
         assetowner_id = "Agent_2",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_3_HydroMRE", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_3_HydroMRE",
         assetowner_id = "Agent_3",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_4_HydroMRE", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_4_HydroMRE",
         assetowner_id = "Agent_4",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_5_HydroMRE", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_5_HydroMRE",
         assetowner_id = "Agent_5",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-    IARA.add_bidding_group!(db; 
-        label = "Agent_6_HydroMRE", 
+    IARA.add_bidding_group!(db;
+        label = "Agent_6_HydroMRE",
         assetowner_id = "Agent_6",
         segment_fraction = [1.0],
         risk_factor = [0.0],
-        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+        ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
 
     # demands
@@ -289,7 +289,7 @@ try
                 existing = [Int(IARA.RenewableUnit_Existence.EXISTS)],
                 max_generation = [row.capacity],
                 om_cost = [row.cost],
-                curtailment_cost = [0.5]
+                curtailment_cost = [0.5],
             ),
         )
     end
@@ -298,9 +298,9 @@ try
     df_hydros = CSV.read(joinpath(PATH, "hydros.csv"), DataFrame)
     for row in eachrow(df_hydros)
         IARA.add_gauging_station!(db;
-                label = String(row.label),
-                inflow_initial_state_variation_type = IARA.GaugingStation_InflowInitialStateVariationType.BY_SCENARIO,
-            )
+            label = String(row.label),
+            inflow_initial_state_variation_type = IARA.GaugingStation_InflowInitialStateVariationType.BY_SCENARIO,
+        )
         parameters = DataFrame(;
             date_time = [DateTime(0)],
             existing = Int(IARA.HydroUnit_Existence.EXISTS),
@@ -359,21 +359,21 @@ try
     # Link time series
     IARA.link_time_series_to_file(
         db,
-        "RenewableUnit",
-        generation_ex_post = "r_ex_post"
+        "RenewableUnit";
+        generation_ex_post = "r_ex_post",
     )
 
     IARA.link_time_series_to_file(
         db,
-        "DemandUnit",
+        "DemandUnit";
         demand_ex_post = "d_ex_post",
-        elastic_demand_price = "demand_price"
+        elastic_demand_price = "demand_price",
     )
 
     IARA.link_time_series_to_file(
         db,
-        "HydroUnit",
-        inflow_ex_ante = "inflow_ex_ante"
+        "HydroUnit";
+        inflow_ex_ante = "inflow_ex_ante",
     )
 
     IARA.link_time_series_to_file(
@@ -395,7 +395,7 @@ try
         inflow_noise_ex_ante = "inflow_noise_ex_ante",
         parp_coefficients = "parp_coefficients",
         inflow_period_average = "inflow_period_average",
-        inflow_period_std_dev = "inflow_period_std_dev"
+        inflow_period_std_dev = "inflow_period_std_dev",
     )
 
 finally

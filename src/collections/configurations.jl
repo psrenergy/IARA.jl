@@ -103,8 +103,6 @@ Configurations for the problem.
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
-    purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
-        Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
     reference_curve_nash_extra_bid_quantity::Float64 = 0.0
     reference_curve_nash_tolerance::Float64 = 0.0
     reference_curve_nash_max_iterations::Int = 0
@@ -334,11 +332,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
-    configurations.purchase_bids_for_virtual_reservoir_heuristic_bid =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "purchase_bids_for_virtual_reservoir_heuristic_bid")[1],
-            Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T,
-        )
     configurations.reference_curve_nash_extra_bid_quantity =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_extra_bid_quantity")[1]
     configurations.reference_curve_nash_tolerance =
@@ -1621,10 +1614,6 @@ bid_price_limit_low_reference(inputs) = inputs.collections.configurations.bid_pr
 Return the high reference price for bid price limits.
 """
 bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_price_limit_high_reference
-
-consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs::AbstractInputs) =
-    inputs.collections.configurations.purchase_bids_for_virtual_reservoir_heuristic_bid ==
-    Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
 
 """
     reference_curve_number_of_segments(inputs::AbstractInputs)

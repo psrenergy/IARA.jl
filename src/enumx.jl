@@ -506,11 +506,6 @@ end
     BY_ENERGY_ACCOUNT_SHARES = 1
 end
 
-@enumx Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid begin
-    DO_NOT_CONSIDER = 0
-    CONSIDER = 1
-end
-
 """
   GaugingStation_InflowInitialStateVariationType
 

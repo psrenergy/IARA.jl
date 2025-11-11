@@ -1,9 +1,11 @@
+module TestBrasil8OwnersBaseCase
+
 using Test
 using IARA
 
 const PATH = @__DIR__
 
-# if Main.RUN_BIG_TESTS
+if Main.RUN_BIG_TESTS
     db = nothing
     try
         include("build_case.jl")
@@ -14,4 +16,12 @@ const PATH = @__DIR__
     end
 
     IARA.market_clearing(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
-# end
+
+    if Main.UPDATE_RESULTS
+        Main.update_outputs!(PATH)
+    else
+        Main.compare_outputs(PATH)
+    end
+end
+
+end

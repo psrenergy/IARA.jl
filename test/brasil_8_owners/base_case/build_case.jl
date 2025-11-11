@@ -14,7 +14,7 @@ using CSV
 
 # Case dimensions
 # ---------------
-number_of_periods = 15
+number_of_periods = 50
 number_of_seasons = 4
 number_of_scenarios = 20
 number_of_subscenarios = 1
@@ -28,13 +28,6 @@ train_mincost_iteration_limit = 125
 train_mincost_time_limit_sec = 10000 # ~ 2.5h
 parp_max_lags = 1
 initial_date_time = "2024-01-01"
-use_parp = true
-
-inflow_model = if use_parp
-    IARA.Configurations_InflowModel.READ_PARP_COEFFICIENTS
-else
-    IARA.Configurations_InflowModel.READ_INFLOW_FROM_FILE
-end
 
 db = IARA.create_study!(PATH;
     number_of_periods,
@@ -61,7 +54,7 @@ db = IARA.create_study!(PATH;
     train_mincost_iteration_limit,
     train_mincost_time_limit_sec,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    inflow_model,
+    inflow_model = IARA.Configurations_InflowModel.READ_INFLOW_FROM_FILE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_ENERGY_ACCOUNT_SHARES,
     parp_max_lags,
@@ -79,18 +72,12 @@ IARA.add_bus!(db; label = "North_1", zone_id = "N-NE")
 IARA.add_bus!(db; label = "Imperatriz_1", zone_id = "N-NE")
 
 # DCLines
-df_dcline = DataFrame(label = String[], bus_to = String[], bus_from = String[], capacity_to = Float64[], capacity_from = Float64[])
-push!(df_dcline, ("SE-SU_SubmarketLink", "South_1", "Southeast_1", 7900.119, 6999.993))
-push!(df_dcline, ("SE-NI_SubmarketLink", "Imperatriz_1", "Southeast_1", 5000.00, 3200.224))
-push!(df_dcline, ("NE-NI_SubmarketLink", "Imperatriz_1", "Northeast_1", 5600.00, 7800.00))
-push!(df_dcline, ("NO-NI_SubmarketLink", "Imperatriz_1", "North_1", 99999.00, 99999.00))
-push!(df_dcline, ("SE-NE_SubmarketLink", "Northeast_1", "Southeast_1", 6000.00, 5599.669))
-push!(df_dcline, ("SE-NO_SubmarketLink", "North_1", "Southeast_1", 4200.00, 8000.00))
+df_dcline = CSV.read(joinpath(PATH, "dclines.csv"), DataFrame)
 for row in eachrow(df_dcline)
     IARA.add_dc_line!(db;
-        label = row.label,
-        bus_from = row.bus_from,
-        bus_to = row.bus_to,
+        label = String(row.label),
+        bus_from = String(row.bus_from),
+        bus_to = String(row.bus_to),
         parameters = DataFrame(;
             date_time = [DateTime(0)],
             existing = [Int(IARA.DCLine_Existence.EXISTS)],
@@ -275,20 +262,6 @@ IARA.add_bidding_group!(db;
     risk_factor = [0.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
 )
-# IARA.add_bidding_group!(db; 
-#     label = "Agent_7_Demand", 
-#     assetowner_id = "Agent_7",
-#     segment_fraction = [1.0],
-#     risk_factor = [0.0],
-#     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
-# )
-# IARA.add_bidding_group!(db; 
-#     label = "Agent_8_Demand", 
-#     assetowner_id = "Agent_8",
-#     segment_fraction = [1.0],
-#     risk_factor = [0.0],
-#     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
-# )
 
 # demands
 df_demands = CSV.read(joinpath(PATH, "demands.csv"), DataFrame)
@@ -445,4 +418,10 @@ IARA.link_time_series_to_file(
     parp_coefficients = "parp_coefficients",
     inflow_period_average = "inflow_period_average",
     inflow_period_std_dev = "inflow_period_std_dev"
+)
+
+IARA.link_time_series_to_file(
+    db,
+    "Configuration";
+    period_season_map = "period_season_map",
 )

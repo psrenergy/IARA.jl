@@ -1010,7 +1010,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
 
             if seg == 0 ||
                sum(quantity_bids[vr, ao, seg] for seg in buy_segments) <
-               asset_owner_minimum_virtual_reservoir_purchase_bid_quantity(inputs, ao)
+               asset_owner_minimum_virtual_reservoir_purchase_bid_quantity_in_mwh(inputs, ao)
                 current_seg = 1
                 if seg != 0
                     quantity_bids[vr, ao, buy_segments] .= 0.0
@@ -1020,7 +1020,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 number_of_purchase_segments = length(asset_owner_purchase_discount_rate(inputs, ao))
                 for markdown_index in 1:number_of_purchase_segments
                     quantity_bids[vr, ao, current_seg] =
-                        -asset_owner_minimum_virtual_reservoir_purchase_bid_quantity(inputs, ao) /
+                        -asset_owner_minimum_virtual_reservoir_purchase_bid_quantity_in_mwh(inputs, ao) /
                         number_of_purchase_segments
                     price_bids[vr, ao, current_seg] =
                         vr_price_bid[1] * (1 + markups[1]) *

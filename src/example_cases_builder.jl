@@ -94,6 +94,16 @@ function build_example_case(path::AbstractString, case_name::String; force::Bool
     build_case_path = joinpath(test_case_dir, case_base_dir, "base_case", "build_case.jl")
     modify_case_path = joinpath(test_case_dir, case_base_dir, case_directory, "modify_case.jl")
 
+    # Copy all file *.csv, *.json, *.toml from the base_case to the new case path
+    for file in readdir(joinpath(test_case_dir, case_base_dir, "base_case"))
+        if endswith(file, r"(.csv|.json|.toml)$")
+            cp(
+                joinpath(test_case_dir, case_base_dir, "base_case", file),
+                joinpath(path, file),
+            )
+        end
+    end
+
     include(build_case_path)
     if isfile(modify_case_path)
         include(modify_case_path)

@@ -1061,8 +1061,6 @@ function virtual_reservoir_markup_bids_for_period_scenario(
         )
     end
 
-    error()
-
     return nothing
 end
 

@@ -91,8 +91,6 @@ Configurations for the problem.
     spot_price_cap::Float64 = 0.0
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
-    virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
-        Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
     virtual_reservoir_residual_revenue_split_type::Configurations_VirtualReservoirResidualRevenueSplitType.T =
         Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES
     bid_price_limit_markup_non_justified_profile::Float64 = 0.0
@@ -305,11 +303,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
             Configurations_VirtualReservoirCorrespondenceType.T,
-        )
-    configurations.virtual_reservoir_initial_energy_account_share =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_initial_energy_account_share")[1],
-            Configurations_VirtualReservoirInitialEnergyAccount.T,
         )
     configurations.virtual_reservoir_residual_revenue_split_type =
         convert_to_enum(

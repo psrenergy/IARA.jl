@@ -496,11 +496,6 @@ end
     DELTA_CORRESPONDENCE_CONSTRAINT = 2
 end
 
-@enumx Configurations_VirtualReservoirInitialEnergyAccount begin
-    CALCULATED_USING_INFLOW_SHARES = 0
-    CALCULATED_USING_ENERGY_ACCOUNT_SHARES = 1
-end
-
 @enumx Configurations_VirtualReservoirResidualRevenueSplitType begin
     BY_INFLOW_SHARES = 0
     BY_ENERGY_ACCOUNT_SHARES = 1

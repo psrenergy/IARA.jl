@@ -970,15 +970,11 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 end
             end
 
-            if seg == 0
-                continue
-            end
-
             #--------------
             # Energy to buy
             #--------------
             if !iszero(asset_owner_purchase_discount_rate(inputs, ao)) &&
-               bid_processing(inputs) == Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
+               bid_processing(inputs) == Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS && seg != 0
                 lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])
                 sell_segments = collect(1:seg)
                 buy_segments = Int[]
@@ -1009,6 +1005,27 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                     end
 
                     push!(buy_segments, seg)
+                end
+            end
+
+            if seg == 0 ||
+               sum(quantity_bids[vr, ao, seg] for seg in buy_segments) <
+               asset_owner_minimum_virtual_reservoir_purchase_bid_quantity(inputs, ao)
+                current_seg = 1
+                if seg != 0
+                    quantity_bids[vr, ao, buy_segments] .= 0.0
+                    price_bids[vr, ao, buy_segments] .= 0.0
+                    current_seg += sell_segments[end]
+                end
+                number_of_purchase_segments = length(asset_owner_purchase_discount_rate(inputs, ao))
+                for markdown_index in 1:number_of_purchase_segments
+                    quantity_bids[vr, ao, current_seg] =
+                        -asset_owner_minimum_virtual_reservoir_purchase_bid_quantity(inputs, ao) /
+                        number_of_purchase_segments
+                    price_bids[vr, ao, current_seg] =
+                        vr_price_bid[1] * (1 + markups[1]) *
+                        (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                    current_seg += 1
                 end
             end
         end
@@ -1043,6 +1060,8 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             scenario,
         )
     end
+
+    error()
 
     return nothing
 end

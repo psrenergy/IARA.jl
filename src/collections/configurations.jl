@@ -669,8 +669,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             @warn(
                 """
             Cycle duration in hours is $(configurations.cycle_duration_in_hours). This parameter is used to determine the node discount rate from the cycle discount rate. 
-            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration.
-            """
+            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration."""
             )
         end
     end

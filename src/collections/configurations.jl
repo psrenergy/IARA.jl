@@ -1548,9 +1548,6 @@ Return the type of physical-virtual correspondence for the virtual reservoirs.
 virtual_reservoir_correspondence_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_correspondence_type
 
-virtual_reservoir_initial_energy_account_share(inputs) =
-    inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
-
 virtual_reservoir_residual_revenue_split_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_residual_revenue_split_type
 

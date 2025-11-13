@@ -91,8 +91,6 @@ Configurations for the problem.
     spot_price_cap::Float64 = 0.0
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
-    virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
-        Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
     virtual_reservoir_residual_revenue_split_type::Configurations_VirtualReservoirResidualRevenueSplitType.T =
         Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES
     bid_price_limit_markup_non_justified_profile::Float64 = 0.0
@@ -103,8 +101,6 @@ Configurations for the problem.
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
-    purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
-        Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
     reference_curve_nash_extra_bid_quantity::Float64 = 0.0
     reference_curve_nash_tolerance::Float64 = 0.0
     reference_curve_nash_max_iterations::Int = 0
@@ -308,11 +304,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
             Configurations_VirtualReservoirCorrespondenceType.T,
         )
-    configurations.virtual_reservoir_initial_energy_account_share =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_initial_energy_account_share")[1],
-            Configurations_VirtualReservoirInitialEnergyAccount.T,
-        )
     configurations.virtual_reservoir_residual_revenue_split_type =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_residual_revenue_split_type")[1],
@@ -334,11 +325,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
-    configurations.purchase_bids_for_virtual_reservoir_heuristic_bid =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "purchase_bids_for_virtual_reservoir_heuristic_bid")[1],
-            Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T,
-        )
     configurations.reference_curve_nash_extra_bid_quantity =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_extra_bid_quantity")[1]
     configurations.reference_curve_nash_tolerance =
@@ -1561,9 +1547,6 @@ Return the type of physical-virtual correspondence for the virtual reservoirs.
 virtual_reservoir_correspondence_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_correspondence_type
 
-virtual_reservoir_initial_energy_account_share(inputs) =
-    inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
-
 virtual_reservoir_residual_revenue_split_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_residual_revenue_split_type
 
@@ -1620,10 +1603,6 @@ bid_price_limit_low_reference(inputs) = inputs.collections.configurations.bid_pr
 Return the high reference price for bid price limits.
 """
 bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_price_limit_high_reference
-
-consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs::AbstractInputs) =
-    inputs.collections.configurations.purchase_bids_for_virtual_reservoir_heuristic_bid ==
-    Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
 
 """
     reference_curve_number_of_segments(inputs::AbstractInputs)

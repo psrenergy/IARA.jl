@@ -51,6 +51,7 @@ function accepted_bid_revenue(
         labels = labels,
         run_time_options,
         dir_path = post_processing_path(inputs),
+        suppress_period_suffix = true,
     )
 
     writer = outputs_post_processing.outputs[output_name].writer
@@ -213,6 +214,7 @@ function shareholder_residual_revenue(
         labels = labels,
         run_time_options,
         dir_path = post_processing_path(inputs),
+        suppress_period_suffix = true,
     )
 
     writer = outputs_post_processing.outputs[output_name].writer
@@ -491,6 +493,7 @@ function spilled_responsibility_revenue(
         ),
         run_time_options,
         dir_path = post_processing_path(inputs),
+        suppress_period_suffix = true,
     )
 
     writer = outputs_post_processing.outputs[output_name].writer
@@ -699,6 +702,7 @@ function hydro_constraints_violation_revenue(
         labels = labels_by_pairs,
         run_time_options,
         dir_path = post_processing_path(inputs),
+        suppress_period_suffix = true,
     )
 
     initialize!(
@@ -711,6 +715,7 @@ function hydro_constraints_violation_revenue(
         labels = labels_by_pairs,
         run_time_options,
         dir_path = post_processing_path(inputs),
+        suppress_period_suffix = true,
     )
 
     violation_revenue_writer = outputs_post_processing.outputs[violation_revenue_output_name].writer
@@ -864,6 +869,13 @@ function post_processing_virtual_reservoirs(
     output_has_subscenario::Bool = true,
 )
     @assert !(is_two_settlement_ex_post && isempty(ex_ante_physical_suffix))
+
+    if is_single_period(inputs)
+        physical_variables_suffix *= "_period_$(inputs.args.period)"
+        commercial_variables_suffix *= "_period_$(inputs.args.period)"
+        output_suffix *= "_period_$(inputs.args.period)"
+        ex_ante_physical_suffix *= "_period_$(inputs.args.period)"
+    end
 
     if any_elements(inputs, HydroUnit; filters = [has_min_outflow])
         hydro_constraints_violation_revenue_file, hydro_constraints_violation_adjusted_revenue_file =

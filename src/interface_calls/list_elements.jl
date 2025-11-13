@@ -62,7 +62,7 @@ function list_asset_owners_and_their_bidding_groups(inputs::IARA.AbstractInputs)
     for (asset_onwer_index, asset_onwer_label) in enumerate(IARA.asset_owner_label(inputs))
         bidding_group_indexes = IARA.bidding_group_asset_owner_index(inputs) .== asset_onwer_index
         is_supply_security_agent =
-            asset_owner_price_type(inputs, asset_onwer_index) == AssetOwner_PriceType.SupplySecurityAgent
+            IARA.asset_owner_price_type(inputs, asset_onwer_index) == IARA.AssetOwner_PriceType.SUPPLY_SECURITY_AGENT
         asset_owner_dict = Dict(
             "label" => asset_onwer_label,
             "bidding_groups" => IARA.bidding_group_label(inputs)[bidding_group_indexes],
@@ -104,22 +104,18 @@ end
 function list_virtual_reservoirs(inputs::IARA.AbstractInputs)
     virtual_reservoirs_list = []
     for (virtual_reservoir_index, virtual_reservoir_label) in enumerate(IARA.virtual_reservoir_label(inputs))
-        list_of_hydros = String[]
-        list_of_asset_owners = String[]
-        for (hydro_unit_index, hydro_unit_label) in enumerate(IARA.hydro_unit_label(inputs))
-            if hydro_unit_index in IARA.virtual_reservoir_hydro_unit_indices(inputs)[virtual_reservoir_index]
-                push!(list_of_hydros, hydro_unit_label)
-            end
-        end
-        for (asset_owner_index, asset_owner_label) in enumerate(IARA.asset_owner_label(inputs))
-            if asset_owner_index in IARA.virtual_reservoir_asset_owner_indices(inputs)[virtual_reservoir_index]
-                push!(list_of_asset_owners, asset_owner_label)
-            end
-        end
+        list_of_hydros =
+            IARA.hydro_unit_label(inputs)[IARA.virtual_reservoir_hydro_unit_indices(inputs, virtual_reservoir_index)]
+        list_of_asset_owners =
+            IARA.asset_owner_label(inputs)[IARA.virtual_reservoir_asset_owner_indices(inputs, virtual_reservoir_index)]
         virtual_reservoir_dict = Dict(
             "label" => virtual_reservoir_label,
             "hydro_units" => list_of_hydros,
             "asset_owners" => list_of_asset_owners,
+            "inflow_allocation" =>
+                IARA.virtual_reservoir_asset_owners_inflow_allocation(inputs, virtual_reservoir_index),
+            "initial_energy_account" =>
+                IARA.virtual_reservoir_initial_energy_account(inputs, virtual_reservoir_index),
         )
         push!(virtual_reservoirs_list, virtual_reservoir_dict)
     end
@@ -134,6 +130,7 @@ function list_assets(inputs::IARA.AbstractInputs)
             "type" => "hydro",
             "min_generation" => IARA.hydro_unit_min_generation(inputs)[hydro_unit_index],
             "max_generation" => IARA.hydro_unit_max_generation(inputs)[hydro_unit_index],
+            "initial_volume" => IARA.hydro_unit_initial_volume(inputs)[hydro_unit_index],
             "om_cost" => IARA.hydro_unit_om_cost(inputs)[hydro_unit_index],
         )
         push!(assets_list, asset_dict)

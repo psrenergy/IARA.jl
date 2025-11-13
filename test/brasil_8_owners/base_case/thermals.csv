@@ -1,0 +1,148 @@
+label,bus_id,biddinggroup_id,capacity,om_cost,ramp_up,ramp_down
+APARECIDA,North_1,Agent_3_Thermal,93.5,134.59,0.83,0.0
+AZULAO,North_1,Agent_1_Thermal,361.5,1113.1,2.24,5.53
+AZULAO II,North_1,Agent_3_Thermal,295.43,164.58,2.24,5.53
+AZULAO IV,North_1,Agent_3_Thermal,295.43,164.58,2.24,5.53
+BBF BALIZA,North_1,Agent_3_Thermal,11.52,843.29,0.03,0.07
+BONFIM,North_1,Agent_3_Thermal,8.11,534.67,0.05,0.0
+C. ROCHA,North_1,Agent_3_Thermal,85.38,0.0,0.0,0.0
+CANTA,North_1,Agent_1_Thermal,8.11,534.67,0.05,0.0
+GERAMAR I,North_1,Agent_5_Thermal,159.24,1335.0,1.39,1.76
+GERAMAR II,North_1,Agent_5_Thermal,159.24,1335.0,1.39,1.76
+JAGUATIRI II,North_1,Agent_5_Thermal,140.83,276.32,0.19,0.89
+JARAQUI,North_1,Agent_3_Thermal,65.67,134.59,0.13,0.15
+M.CRISTO SUC,North_1,Agent_5_Thermal,40.56,1053.2,0.54,0.0
+MANAUARA,North_1,Agent_1_Thermal,73.4,0.0,0.0,0.0
+MANAUS I,North_1,Agent_5_Thermal,162.91,107.4,2.24,5.53
+MARANHAO III,North_1,Agent_5_Thermal,279.14,110.91,1.33,6.67
+MARANHAO IV,North_1,Agent_5_Thermal,337.6,262.36,3.33,0.0
+MARANHAO V,North_1,Agent_5_Thermal,337.6,262.36,3.33,0.0
+MAUA 3,North_1,Agent_5_Thermal,326.75,134.59,0.93,4.27
+N.VENECIA 2,North_1,Agent_1_Thermal,230.03,294.56,0.83,0.0
+NT BARCARENA,North_1,Agent_5_Thermal,338.96,513.75,2.24,5.53
+PALMAPLAN 2,North_1,Agent_5_Thermal,11.55,870.96,0.05,0.0
+PARNAIBA IV,North_1,Agent_5_Thermal,56.28,453.66,0.57,0.76
+PARNAIBA V,North_1,Agent_5_Thermal,365.32,236.82,0.57,5.31
+PAU RAINHA,North_1,Agent_5_Thermal,8.11,534.67,0.05,0.0
+PONTA NEGRA,North_1,Agent_1_Thermal,73.4,0.0,0.0,0.0
+PORTO ITAQUI,North_1,Agent_5_Thermal,360.14,320.76,1.14,2.67
+PORTOCEM I,North_1,Agent_5_Thermal,1571.89,1121.7,2.24,5.53
+SANTA LUZ,North_1,Agent_5_Thermal,8.11,534.67,0.05,0.0
+TAMBAQUI,North_1,Agent_5_Thermal,77.66,134.59,0.14,0.17
+C. ROCHA_N,North_1,Agent_5_Thermal,59.07,0.0,0.0,0.0
+JARAQUI_N,North_1,Agent_1_Thermal,38.97,134.59,2.24,5.53
+MANAUARA_N,North_1,Agent_5_Thermal,40.24,0.0,0.0,0.0
+P NEGRA_N,North_1,Agent_5_Thermal,40.29,0.0,0.0,0.0
+TAMBAQUI_N,North_1,Agent_5_Thermal,35.44,134.59,2.24,5.53
+ARAUCARIA,South_1,Agent_5_Thermal,484.15,796.3,0.65,4.11
+B. BONITA I,South_1,Agent_5_Thermal,10.32,778.35,0.02,0.0
+CAMBARA,South_1,Agent_1_Thermal,43.33,235.33,2.24,5.53
+CANDIOTA 3,South_1,Agent_5_Thermal,350.0,0.0,0.3,1.09
+CANOAS,South_1,Agent_5_Thermal,248.57,1340.4,1.38,2.89
+FIGUEIRA,South_1,Agent_5_Thermal,20.0,580.3,0.06,0.33
+J.LACERDA A1,South_1,Agent_3_Thermal,80.0,475.13,0.17,0.67
+J.LACERDA A2,South_1,Agent_3_Thermal,80.0,475.13,0.17,0.67
+J.LACERDA B,South_1,Agent_1_Thermal,220.0,397.24,0.44,1.67
+J.LACERDA C,South_1,Agent_5_Thermal,330.0,341.04,0.6,2.67
+PAMPA SUL,South_1,Agent_5_Thermal,203.44,101.2,0.64,1.67
+SAO SEPE,South_1,Agent_5_Thermal,8.0,113.53,0.05,0.0
+TROMBUDO,South_1,Agent_3_Thermal,28.02,704.09,2.24,5.53
+URUGUAIANA,South_1,Agent_5_Thermal,639.9,868.41,0.47,0.0
+J.LAC C RES,South_1,Agent_1_Thermal,190.38,341.04,2.24,5.53
+J.LAC B RES,South_1,Agent_5_Thermal,164.0,397.24,2.24,5.53
+J.LAC A1 RES,South_1,Agent_5_Thermal,73.13,475.13,2.24,5.53
+J.LAC A2 RES,South_1,Agent_5_Thermal,81.04,406.63,2.24,5.53
+CAMACARI MII,Northeast_1,Agent_3_Thermal,144.45,2570.1,2.24,5.53
+CAMPINA GDE,Northeast_1,Agent_5_Thermal,169.08,1106.5,0.28,0.0
+ERB CANDEIAS,Northeast_1,Agent_1_Thermal,13.66,113.61,0.02,0.07
+GLOBAL I,Northeast_1,Agent_5_Thermal,136.4,1130.8,0.31,1.42
+GLOBAL II,Northeast_1,Agent_5_Thermal,136.4,1130.8,0.31,1.42
+MARACANAU I,Northeast_1,Agent_5_Thermal,147.0,1069.6,0.19,0.0
+P. PECEM I,Northeast_1,Agent_3_Thermal,720.28,319.73,1.0,0.0
+P. PECEM II,Northeast_1,Agent_5_Thermal,365.0,328.63,1.14,2.67
+P. SERGIPE I,Northeast_1,Agent_1_Thermal,1593.2,354.03,2.24,5.53
+PECEM II,Northeast_1,Agent_5_Thermal,144.45,2597.0,0.2,0.2
+PERNAMBU_III,Northeast_1,Agent_5_Thermal,200.79,903.13,0.29,0.0
+PETROLINA,Northeast_1,Agent_5_Thermal,136.2,976.42,0.85,0.17
+POTIGUAR,Northeast_1,Agent_3_Thermal,48.14,2116.7,0.17,0.04
+POTIGUAR III,Northeast_1,Agent_5_Thermal,51.46,2116.7,0.17,0.03
+PROSPERI III,Northeast_1,Agent_1_Thermal,55.99,209.0,0.15,0.01
+PROSPERID II,Northeast_1,Agent_5_Thermal,37.44,359.41,0.15,0.01
+PROSPERIDADE,Northeast_1,Agent_5_Thermal,28.02,205.12,0.15,0.01
+SUAPE II,Northeast_1,Agent_5_Thermal,381.26,1069.8,2.27,2.13
+TERMOBAHIA,Northeast_1,Agent_3_Thermal,159.87,720.96,0.63,3.17
+TERMOCABO,Northeast_1,Agent_5_Thermal,49.73,1106.5,0.33,0.2
+TERMOCEARA,Northeast_1,Agent_1_Thermal,223.0,2086.6,1.67,1.24
+TERMONE,Northeast_1,Agent_5_Thermal,162.31,1130.0,0.32,0.0
+TERMOPB,Northeast_1,Agent_5_Thermal,162.31,1130.0,2.24,5.53
+TERMOPE,Northeast_1,Agent_5_Thermal,550.0,1002.5,0.89,0.0
+VALE DO ACU,Northeast_1,Agent_3_Thermal,110.0,450.86,3.67,0.0
+ANGRA 1,Southeast_1,Agent_1_Thermal,130.18,31.17,1.73,3.45
+ANGRA 2,Southeast_1,Agent_1_Thermal,270.0,20.12,5.14,9.6
+BAIXADA FLU,Southeast_1,Agent_5_Thermal,530.0,280.6,0.76,5.24
+CIDADE LIVRO,Southeast_1,Agent_5_Thermal,80.0,253.65,2.24,5.53
+CUBATAO,Southeast_1,Agent_5_Thermal,249.9,476.82,0.31,1.37
+CUIABA G CC,Southeast_1,Agent_3_Thermal,489.99,1163.7,0.65,2.63
+DAIA,Southeast_1,Agent_1_Thermal,44.44,0.0,0.0,0.0
+DO ATLAN_CSA,Southeast_1,Agent_1_Thermal,17.04,0.0,0.0,0.0
+DO_ATLANTICO,Southeast_1,Agent_5_Thermal,21.67,256.07,2.24,5.53
+GNA I,Southeast_1,Agent_4_Thermal,1338.3,548.61,3.41,11.11
+GNA II,Southeast_1,Agent_5_Thermal,1033.33,732.03,5.29,15.0
+IBIRITE,Southeast_1,Agent_3_Thermal,235.0,836.34,1.5,1.67
+JUIZ DE FORA,Southeast_1,Agent_1_Thermal,87.05,1204.2,1.33,0.0
+KARKEY 013,Southeast_1,Agent_1_Thermal,256.22,969.23,3.58,0.0
+KARKEY 019,Southeast_1,Agent_5_Thermal,115.92,969.23,1.41,0.0
+LINHARES,Southeast_1,Agent_4_Thermal,204.0,435.27,0.28,0.63
+LINHARES PCS,Southeast_1,Agent_5_Thermal,36.0,1416.8,0.36,0.18
+MARLIM AZUL,Southeast_1,Agent_3_Thermal,355.08,156.46,1.84,5.13
+N.PIRATINING,Southeast_1,Agent_1_Thermal,385.99,1441.6,3.17,2.57
+NORTEFLU,Southeast_1,Agent_1_Thermal,826.78,1124.3,1.37,7.4
+ONCA PINTADA,Southeast_1,Agent_5_Thermal,45.43,145.52,0.25,0.0
+PALMEIRAS GO,Southeast_1,Agent_4_Thermal,140.45,1438.0,0.55,0.0
+PAULINIA VER,Southeast_1,Agent_5_Thermal,15.95,1387.0,0.31,0.0
+PIRAT.12 G,Southeast_1,Agent_3_Thermal,200.0,470.34,2.24,5.53
+PORSUD I,Southeast_1,Agent_1_Thermal,115.92,1133.1,1.7,0.0
+PORSUD II,Southeast_1,Agent_1_Thermal,78.32,1131.7,0.86,0.0
+POVOACAO 1,Southeast_1,Agent_5_Thermal,74.96,1416.8,0.44,0.18
+SEROPEDICA,Southeast_1,Agent_4_Thermal,360.0,1254.5,2.82,1.54
+ST.CRUZ NOVA,Southeast_1,Agent_5_Thermal,500.0,284.79,0.03,0.0
+STA VITORIA,Southeast_1,Agent_3_Thermal,25.0,157.2,0.15,0.0
+T. NORTE 2,Southeast_1,Agent_4_Thermal,328.06,910.86,0.87,0.0
+TERMOMACAE,Southeast_1,Agent_5_Thermal,922.62,956.38,4.12,3.42
+TERMORIO,Southeast_1,Agent_3_Thermal,989.2,944.72,1.02,6.55
+TRES LAGOAS,Southeast_1,Agent_1_Thermal,350.0,994.68,0.63,2.74
+VIANA,Southeast_1,Agent_1_Thermal,174.6,1277.9,0.78,2.47
+VIANA 1,Southeast_1,Agent_5_Thermal,37.48,1416.8,0.14,0.03
+W. ARJONA,Southeast_1,Agent_4_Thermal,177.12,1624.0,0.93,0.0
+XAVANTES,Southeast_1,Agent_5_Thermal,53.58,0.0,0.0,0.0
+ANGRA 1_INFLEX,Southeast_1,Agent_1_Thermal,509.82,0.0,0.0,0.0
+ANGRA 2_INFLEX,Southeast_1,Agent_1_Thermal,1080.0,0.0,0.0,0.0
+DO ATLAN_CSA_INFLEX,Southeast_1,Agent_1_Thermal,131.0,0.0,0.0,0.0
+DO_ATLANTICO_INFLEX,Southeast_1,Agent_5_Thermal,197.07,0.0,0.0,0.0
+GNA II_INFLEX,Southeast_1,Agent_5_Thermal,639.27,0.0,0.0,0.0
+KARKEY 013_INFLEX,Southeast_1,Agent_1_Thermal,2.42,0.0,0.0,0.0
+MARLIM AZUL_INFLEX,Southeast_1,Agent_3_Thermal,210.42,0.0,0.0,0.0
+ONCA PINTADA_INFLEX,Southeast_1,Agent_5_Thermal,4.57,0.0,0.0,0.0
+STA VITORIA_INFLEX,Southeast_1,Agent_3_Thermal,16.0,0.0,0.0,0.0
+CAMBARA_INFLEX,South_1,Agent_1_Thermal,6.67,0.0,0.0,0.0
+PAMPA SUL_INFLEX,South_1,Agent_5_Thermal,141.56,0.0,0.0,0.0
+J.LAC C RES_INFLEX,South_1,Agent_1_Thermal,172.62,0.0,0.0,0.0
+J.LAC B RES_INFLEX,South_1,Agent_5_Thermal,98.0,0.0,0.0,0.0
+J.LAC A1 RES_INFLEX,South_1,Agent_5_Thermal,26.87,0.0,0.0,0.0
+J.LAC A2 RES_INFLEX,South_1,Agent_5_Thermal,50.96,0.0,0.0,0.0
+ERB CANDEIAS_INFLEX,Northeast_1,Agent_1_Thermal,3.13,0.0,0.0,0.0
+APARECIDA_INFLEX,North_1,Agent_3_Thermal,72.5,0.0,0.0,0.0
+BBF BALIZA_INFLEX,North_1,Agent_3_Thermal,5.54,0.0,0.0,0.0
+BONFIM_INFLEX,North_1,Agent_3_Thermal,3.39,0.0,0.0,0.0
+CANTA_INFLEX,North_1,Agent_1_Thermal,3.39,0.0,0.0,0.0
+MARANHAO III_INFLEX,North_1,Agent_5_Thermal,239.66,0.0,0.0,0.0
+MAUA 3_INFLEX,North_1,Agent_5_Thermal,264.0,0.0,0.0,0.0
+N.VENECIA 2_INFLEX,North_1,Agent_1_Thermal,40.44,0.0,0.0,0.0
+NT BARCARENA_INFLEX,North_1,Agent_5_Thermal,290.41,0.0,0.0,0.0
+PAU RAINHA_INFLEX,North_1,Agent_5_Thermal,3.39,0.0,0.0,0.0
+SANTA LUZ_INFLEX,North_1,Agent_5_Thermal,3.39,0.0,0.0,0.0
+C. ROCHA_N_INFLEX,North_1,Agent_5_Thermal,26.31,0.0,0.0,0.0
+JARAQUI_N_INFLEX,North_1,Agent_1_Thermal,26.7,0.0,0.0,0.0
+MANAUARA_N_INFLEX,North_1,Agent_5_Thermal,33.16,0.0,0.0,0.0
+P NEGRA_N_INFLEX,North_1,Agent_5_Thermal,33.11,0.0,0.0,0.0
+TAMBAQUI_N_INFLEX,North_1,Agent_5_Thermal,30.62,0.0,0.0,0.0

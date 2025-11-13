@@ -218,6 +218,7 @@ function inflow_shareholder_residual_revenue(
     writer = outputs_post_processing.outputs[output_name].writer
 
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
+    warning_shown = false
     for period in 1:num_periods
         for scenario in scenarios(inputs)
             hydro_generation_per_subperiod = zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
@@ -383,7 +384,10 @@ function inflow_shareholder_residual_revenue(
                         else # split by energy account share
                             if total_energy_account == 0.0
                                 if vr_total_revenue[vr] > 0.0
-                                    @warn "Virtual reservoir $vr residual revenue is positive, but the total energy account is zero. The revenue will be split according to inflow allocation instead."
+                                    if !warning_shown
+                                        @warn "Virtual reservoir residual revenue is positive, but the total energy account is zero. When this is the case, the revenue will be split according to inflow allocation instead."
+                                        warning_shown = true
+                                    end
                                     vr_ao_revenue[idx] =
                                         vr_total_revenue[vr] *
                                         virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
@@ -492,6 +496,7 @@ function spilled_responsibility_revenue(
     writer = outputs_post_processing.outputs[output_name].writer
 
     num_periods = is_single_period(inputs) ? 1 : number_of_periods(inputs)
+    warning_shown = false
     for period in 1:num_periods
         for scenario in scenarios(inputs)
             spilled_energy_per_subperiod = zeros(number_of_elements(inputs, HydroUnit), number_of_subperiods(inputs))
@@ -596,7 +601,10 @@ function spilled_responsibility_revenue(
                         idx += 1
                         if total_energy_account == 0.0
                             if vr_spilled_energy_cost[vr] > 0.0
-                                @warn "At period $period, scenario $scenario, subscenario $subscenario, virtual reservoir $vr spilled energy cost is positive, but the total energy account is zero. The cost will be allocated according to inflow allocation instead."
+                                if !warning_shown
+                                    @warn "Virtual reservoir spilled energy cost is positive, but the total energy account is zero. When this is the case, the cost will be allocated according to inflow allocation instead."
+                                    warning_shown = true
+                                end
                                 vr_ao_spilled_energy_cost[idx] =
                                     -vr_spilled_energy_cost[vr] *
                                     virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)

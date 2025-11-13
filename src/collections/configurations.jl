@@ -669,8 +669,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             @warn(
                 """
             Cycle duration in hours is $(configurations.cycle_duration_in_hours). This parameter is used to determine the node discount rate from the cycle discount rate. 
-            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration.
-            """
+            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration."""
             )
         end
     end
@@ -719,6 +718,13 @@ end
 Return the path to the case.
 """
 path_case(inputs::AbstractInputs) = inputs.collections.configurations.path_case
+
+"""
+    debug_path(inputs::AbstractInputs)
+
+Return the debug path for the case.
+"""
+debug_path(inputs::AbstractInputs) = joinpath(path_case(inputs), "debug")
 
 """
     language(inputs::AbstractInputs)

@@ -14,6 +14,7 @@ module ExampleCases
 import ..IARA
 
 const MAP_OF_CASES = Dict(
+    "brasil_8owners_01" => "brasil_8_owners/base_case",
     "boto_base_01" => "case_09/base_case",
     "boto_nohydro_01" => "case_09/nohydro_case",
     "ui_c1" => "case_14/base_case",
@@ -92,6 +93,16 @@ function build_example_case(path::AbstractString, case_name::String; force::Bool
 
     build_case_path = joinpath(test_case_dir, case_base_dir, "base_case", "build_case.jl")
     modify_case_path = joinpath(test_case_dir, case_base_dir, case_directory, "modify_case.jl")
+
+    # Copy all file *.csv, *.json, *.toml from the base_case to the new case path
+    for file in readdir(joinpath(test_case_dir, case_base_dir, "base_case"))
+        if endswith(file, r"(.csv|.json|.toml)$")
+            cp(
+                joinpath(test_case_dir, case_base_dir, "base_case", file),
+                joinpath(path, file),
+            )
+        end
+    end
 
     include(build_case_path)
     if isfile(modify_case_path)

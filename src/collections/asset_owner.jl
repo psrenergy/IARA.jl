@@ -208,13 +208,13 @@ function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
     num_errors = 0
     if generate_heuristic_bids_for_clearing(inputs) && use_virtual_reservoirs(inputs)
         all_virtual_reservoir_asset_owner_indices = union(virtual_reservoir_asset_owner_indices(inputs)...)
+
+        # Check if any asset owner needs to set default risk factor and energy account upper bound
+        has_missing_risk_factor = false
         for i in 1:length(asset_owner)
             if i in all_virtual_reservoir_asset_owner_indices
                 if isempty(asset_owner.risk_factor_for_virtual_reservoir_bids[i])
-                    @warn(
-                        "Asset owner $(asset_owner.label[i]) has no risk factor and energy account upper bound for virtual reservoir bids. " *
-                        "They will be set to zero and one, respectively, which may not be intended."
-                    )
+                    has_missing_risk_factor = true
                     asset_owner.risk_factor_for_virtual_reservoir_bids[i] = [0.0]
                     asset_owner.virtual_reservoir_energy_account_upper_bound[i] = [1.0]
                 end
@@ -225,6 +225,13 @@ function advanced_validations(inputs::AbstractInputs, asset_owner::AssetOwner)
                     num_errors += 1
                 end
             end
+        end
+
+        if has_missing_risk_factor
+            @warn(
+                "Some asset owners have no risk factor and energy account upper bound for virtual reservoir bids. " *
+                "They will be set to zero and one, respectively, which may not be intended."
+            )
         end
     end
     return num_errors

@@ -25,7 +25,7 @@ cp(PATH_ORIGINAL, PATH_MARKET_CLEARING; force = true);</code></pre><h2 id="Centr
 [ Info:    Path: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized
 [ Info:    Output path: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized/outputs
 [ Info:    Run mode: TRAIN_MIN_COST
-[ Info:    Plot results: false
+[ Info:    Plot results: true
 [ Info:    periods: 2
 [ Info:    scenarios: 4
 [ Info:    subperiods: 1
@@ -76,18 +76,19 @@ numerical stability report
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
-         1   5.953474e+01  8.172276e+01  1.269661e+01        10   1
-        20   6.068628e+01  8.172276e+01  1.368838e+01       232   1
+         1   5.496748e+01  8.172276e+01  1.265784e+01        10   1
+        20   1.027592e+02  8.172276e+01  1.364543e+01       232   1
 -------------------------------------------------------------------
 status         : simulation_stopping
-total time (s) : 1.368838e+01
+total time (s) : 1.364543e+01
 total solves   : 232
 best bound     :  8.172276e+01
-simulation ci  :  7.955005e+01 ± 6.218934e+00
+simulation ci  :  7.703611e+01 ± 7.463662e+00
 numeric issues : 0
 -------------------------------------------------------------------
 
-[ Info: Running post-processing routines</code></pre><h3 id="Analyzing-the-results"><a class="docs-heading-anchor" href="#Analyzing-the-results">Analyzing the results</a><a id="Analyzing-the-results-1"></a><a class="docs-heading-anchor-permalink" href="#Analyzing-the-results" title="Permalink"></a></h3><p>After running the case, the outputs are saved in the <code>outputs</code> folder inside the case folder. Inside this directory, you will find the raw results and some plots (inside the plots subdirectory).</p><pre><code class="nohighlight hljs">case_folder
+[ Info: Running post-processing routines
+[ Info: Building plots</code></pre><h3 id="Analyzing-the-results"><a class="docs-heading-anchor" href="#Analyzing-the-results">Analyzing the results</a><a id="Analyzing-the-results-1"></a><a class="docs-heading-anchor-permalink" href="#Analyzing-the-results" title="Permalink"></a></h3><p>After running the case, the outputs are saved in the <code>outputs</code> folder inside the case folder. Inside this directory, you will find the raw results and some plots (inside the plots subdirectory).</p><pre><code class="nohighlight hljs">case_folder
  ├── outputs
  │    ├── plots
  │    │   └── ...
@@ -105,14 +106,14 @@ IARA.close_study!(db)</code></pre><p>Now we are able to run the case with <a hre
     PATH_MARKET_CLEARING;
     delete_output_folder_before_execution = true,
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: IARA - version: x.x.x
-┌ Warning: Some bidding groups have renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that not all the renewable energy available will be bid in the ex post problem. To avoid this distortion, consider splitting thermal and renewable units into different bidding groups.
-└ @ IARA ~/work/IARA.jl/IARA.jl/src/collections/bidding_group.jl:438
+┌ Warning: Bidding group Price Taker has renewable units and the ex post adjustment mode is proportional to ex post generation over ex ante generation. This means that you&#39;re not bidding all the energy available in the ex post problem. To avoid this distortion, consider splitting thermal and renewable units into different bidding groups.
+└ @ IARA ~/work/IARA.jl/IARA.jl/src/collections/bidding_group.jl:435
 [ Info:
 [ Info: Execution options
 [ Info:    Path: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing
 [ Info:    Output path: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing/outputs
 [ Info:    Run mode: MARKET_CLEARING
-[ Info:    Plot results: false
+[ Info:    Plot results: true
 [ Info:    periods: 2
 [ Info:    scenarios: 4
 [ Info:    subperiods: 1
@@ -156,4 +157,5 @@ IARA.close_study!(db)</code></pre><p>Now we are able to run the case with <a hre
 [ Info:    Running simulation EX_ANTE_COMMERCIAL
 [ Info:    Running simulation EX_POST_PHYSICAL
 [ Info:    Running simulation EX_POST_COMMERCIAL
-[ Info: Running post-processing routines</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Thursday 13 November 2025 17:14">Thursday 13 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[ Info: Running post-processing routines
+[ Info: Building plots</code></pre><p>Let&#39;s take a look into some of the plots generated automatically.</p><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_price_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_energy_bid_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_ante_commercial_all.html" style="height:500px;width:100%;"></iframe><iframe src="case_1_execution\\market_clearing\\outputs\\plots\\bidding_group_generation_ex_post_commercial_all.html" style="height:500px;width:100%;"></iframe><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Friday 14 November 2025 22:24">Friday 14 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

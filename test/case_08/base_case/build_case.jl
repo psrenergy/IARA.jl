@@ -45,7 +45,6 @@ db = IARA.create_study!(PATH;
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES,
 )
 
 # Add collection elements
@@ -103,7 +102,6 @@ IARA.add_virtual_reservoir!(db;
     label = "virtual_reservoir_1",
     assetowner_id = ["asset_owner_1", "asset_owner_2"],
     inflow_allocation = [0.2, 0.8],
-    initial_energy_account_share = [0.2, 0.8],
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 

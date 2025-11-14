@@ -48,7 +48,7 @@ function Args(
     output_path::String = joinpath(abspath(path), "outputs"),
     delete_output_folder_before_execution::Bool = false,
     write_lp::Bool = false,
-    plot_outputs::Bool = false,
+    plot_outputs::Bool = true,
     plot_ui_outputs::Bool = false,
     period::Int = -1,
     optimizer::Any = HiGHS.Optimizer,

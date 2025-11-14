@@ -218,8 +218,7 @@ function train_min_cost_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
-       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
+    if any_valid_elements(inputs, run_time_options, Interconnection, action)
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
@@ -476,8 +475,7 @@ function hybrid_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
-       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
+    if any_valid_elements(inputs, run_time_options, Interconnection, action)
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
@@ -631,8 +629,7 @@ function cost_based_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
-       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
+    if any_valid_elements(inputs, run_time_options, Interconnection, action)
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
@@ -751,8 +748,7 @@ function bid_based_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
-       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
+    if any_valid_elements(inputs, run_time_options, Interconnection, action)
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)

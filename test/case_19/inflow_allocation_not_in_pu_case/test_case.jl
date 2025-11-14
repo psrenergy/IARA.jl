@@ -43,7 +43,7 @@ else
             "bidding_group_profit",
             "bidding_group_variable_costs",
             "bidding_group_revenue",
-            "virtual_reservoir_shareholder_residual_revenue",
+            "virtual_reservoir_inflow_shareholder_residual_revenue",
         ],
         skipped_outputs = [
             "hydro_final_volume",

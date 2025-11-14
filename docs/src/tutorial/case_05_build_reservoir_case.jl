@@ -9,14 +9,13 @@
 # A virtual reservoir is a mechanism to aggregate multiple hydro units into a single entity. 
 # More than one Asset Owner can be linked into the same Virtual Reservoir
 
-# Each Asset Owner has an inflow allocation and an initial energy account share. The inflow allocation is the percentage of inflow that each Asset Owner has in the Virtual Reservoir.
-# The initial energy account share is used to compute the initial energy in the Virtual Reservoir for each Asset Owner.
+# Each Asset Owner has an inflow allocation, which is the percentage of inflow that each Asset Owner has in the Virtual Reservoir.
+# This percentage is also used to compute the initial energy in the Virtual Reservoir for each Asset Owner.
 
 # ## Case overview
 
 # In this case, we will have two Hydro Units and two Asset Owners linked to a single Virtual Reservoir.
 # The inflow allocation for the first Asset Owner is 40%, and for the second Asset Owner is 60%.
-# The initial energy account share will be the same as the inflow allocation.
 
 # The second Asset Owner will place higher bids than the first Asset Owner.
 # So what we expect is that the first Asset Owner will be generating more energy in the beginning and, as the energy of the first Asset Owner decreases, the second Asset Owner will start generating more energy.
@@ -134,13 +133,12 @@ IARA.add_asset_owner!(db; label = "asset_owner_2")
 
 # ## Virtual Reservoir
 
-# Now we can add the virtual reservoir to our case. Notice that we are setting the inflow allocation, the initial energy account share, and linking the asset owners and hydro units.
+# Now we can add the virtual reservoir to our case. Notice that we are setting the inflow allocation and linking the asset owners and hydro units.
 
 IARA.add_virtual_reservoir!(db;
     label = "reservoir_1",
     assetowner_id = ["asset_owner_1", "asset_owner_2"],
     inflow_allocation = [0.4, 0.6],
-    initial_energy_account_share = [0.4, 0.6],
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 

@@ -1,7 +1,0 @@
-label,bus_to,bus_from,capacity_to,capacity_from
-SE-SU_SubmarketLink,South_1,Southeast_1,7900.119,6999.993
-SE-NI_SubmarketLink,Imperatriz_1,Southeast_1,5000.00,3200.224
-NE-NI_SubmarketLink,Imperatriz_1,Northeast_1,5600.00,7800.00
-NO-NI_SubmarketLink,Imperatriz_1,North_1,99999.00,99999.00
-SE-NE_SubmarketLink,Northeast_1,Southeast_1,6000.00,5599.669
-SE-NO_SubmarketLink,North_1,Southeast_1,4200.00,8000.00

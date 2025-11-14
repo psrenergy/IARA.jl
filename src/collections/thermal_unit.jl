@@ -414,22 +414,6 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
 
     num_errors = 0
-
-    # Track heuristic bid warning characteristics
-    has_commitment_units = false
-    has_startup_cost = false
-    has_shutdown_cost = false
-    has_max_startups = false
-    has_max_shutdowns = false
-    has_min_uptime = false
-    has_min_downtime = false
-    has_generation_initial_condition = false
-    has_uptime_initial_condition = false
-    has_downtime_initial_condition = false
-    has_min_generation = false
-    has_ramp_constraints_flag = false
-    has_commitment_initial_condition_flag = false
-
     for i in 1:length(thermal_unit)
         if !(thermal_unit.bus_index[i] in buses)
             @error(
@@ -444,102 +428,74 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-
         if generate_heuristic_bids_for_clearing(inputs)
             if thermal_unit.has_commitment[i] == ThermalUnit_HasCommitment.HAS_COMMITMENT
-                has_commitment_units = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Commitment status of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.startup_cost[i]) && thermal_unit.startup_cost[i] > 0
-                has_startup_cost = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Startup cost of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.shutdown_cost[i]) && thermal_unit.shutdown_cost[i] > 0
-                has_shutdown_cost = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Shutdown cost of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.max_startups[i])
-                has_max_startups = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Max Startups of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.max_shutdowns[i])
-                has_max_shutdowns = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Max Shutdowns of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.min_uptime[i])
-                has_min_uptime = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Min Uptime of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.min_downtime[i])
-                has_min_downtime = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Min Downtime of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.generation_initial_condition[i])
-                has_generation_initial_condition = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Generation Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.uptime_initial_condition[i])
-                has_uptime_initial_condition = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Uptime Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if !is_null(thermal_unit.downtime_initial_condition[i])
-                has_downtime_initial_condition = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Downtime Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if thermal_unit_min_generation(inputs, i) > 0
-                has_min_generation = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Min Generation of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if has_ramp_constraints(thermal_unit, i)
-                has_ramp_constraints_flag = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Ramp constraints of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
             if has_commitment_initial_condition(thermal_unit, i)
-                has_commitment_initial_condition_flag = true
+                @warn(
+                    "Heuristic bids for clearing are enabled. Commitment Initial Condition of Thermal Unit $(thermal_unit.label[i]) will not be reflected in the bid."
+                )
             end
         end
     end
-
-    # Print consolidated warning if any characteristics are present
-    if generate_heuristic_bids_for_clearing(inputs)
-        characteristics = String[]
-        if has_commitment_units
-            push!(characteristics, "Commitment status")
-        end
-        if has_startup_cost
-            push!(characteristics, "Startup costs")
-        end
-        if has_shutdown_cost
-            push!(characteristics, "Shutdown costs")
-        end
-        if has_max_startups
-            push!(characteristics, "Max Startups")
-        end
-        if has_max_shutdowns
-            push!(characteristics, "Max Shutdowns")
-        end
-        if has_min_uptime
-            push!(characteristics, "Min Uptime")
-        end
-        if has_min_downtime
-            push!(characteristics, "Min Downtime")
-        end
-        if has_generation_initial_condition
-            push!(characteristics, "Generation Initial Condition")
-        end
-        if has_uptime_initial_condition
-            push!(characteristics, "Uptime Initial Condition")
-        end
-        if has_downtime_initial_condition
-            push!(characteristics, "Downtime Initial Condition")
-        end
-        if has_min_generation
-            push!(characteristics, "Min Generation")
-        end
-        if has_ramp_constraints_flag
-            push!(characteristics, "Ramp constraints")
-        end
-        if has_commitment_initial_condition_flag
-            push!(characteristics, "Commitment Initial Condition")
-        end
-
-        if !isempty(characteristics)
-            characteristics_list = join(["    - " * char for char in characteristics], "\n")
-            @warn(
-                "Heuristic bids for clearing are enabled. The following thermal unit characteristics are present in the database and will not be reflected in the bids:\n" *
-                characteristics_list
-            )
-        end
-    end
-
     return num_errors
 end
 

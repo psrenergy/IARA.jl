@@ -1,8 +1,0 @@
-version = 1
-dimensions = ["season", "sample", "subscenario", "subperiod"]
-dimension_size = [4, 20, 5, 24]
-initial_date = "2024-01-01 00:00:00"
-time_dimension = "season"
-frequency = "month"
-unit = "p.u."
-labels = ["Demand_SE_ACR","Demand_S_ACR","Demand_NE_ACR","Demand_N_ACR","Demand_SE_ACL","Demand_S_ACL","Demand_NE_ACL","Demand_N_ACL","Demand_SE_ACL_FLEX","Demand_S_ACL_FLEX","Demand_NE_ACL_FLEX","Demand_N_ACL_FLEX"]

@@ -29,7 +29,6 @@ db = IARA.create_study!(PATH;
     settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES,
 )
 
 IARA.add_zone!(db; label = "zone_1")
@@ -140,7 +139,6 @@ IARA.add_virtual_reservoir!(db;
     label = "VR 1",
     assetowner_id = ["AO 1", "AO 2"],
     inflow_allocation = [0.7, 0.3],
-    initial_energy_account_share = [0.7, 0.3],
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 
@@ -148,7 +146,6 @@ IARA.add_virtual_reservoir!(db;
     label = "VR 2",
     assetowner_id = ["AO 1", "AO 2"],
     inflow_allocation = [0.5, 0.5],
-    initial_energy_account_share = [0.5, 0.5],
     hydrounit_id = ["hydro_3", "hydro_4"],
 )
 

@@ -23,7 +23,6 @@ IARA.add_virtual_reservoir!(db;
     label = "reservoir_1",
     assetowner_id = ["asset_owner_1", "asset_owner_2"],
     inflow_allocation = [0.5, 0.5],
-    initial_energy_account_share = [0.5, 0.5],
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 

@@ -973,7 +973,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             #--------------
             # Energy to buy
             #--------------
-            if !iszero(asset_owner_purchase_discount_rate(inputs, ao)) &&
+            if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs) &&
                bid_processing(inputs) == Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
                 if seg != 0
                     lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])

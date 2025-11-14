@@ -238,11 +238,13 @@ function read_serialized_clearing_variable(
     period::Int,
     scenario::Int,
 )
-    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
-        path_case(inputs)
-    else
-        joinpath(path_case(inputs), "temp")
-    end
+    temp_path =
+        if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING ||
+           run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+            path_case(inputs)
+        else
+            joinpath(path_case(inputs), "temp")
+        end
     serialized_file_name =
         joinpath(temp_path, "$(clearing_model_subproblem)_period_$(period)_scenario_$(scenario).json")
 
@@ -509,14 +511,21 @@ end
 
 function serialize_virtual_reservoir_energy_account(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     energy_account::Vector{Vector{Float64}},
     period::Int,
     scenario::Int,
 )
-    temp_path = joinpath(path_case(inputs), "temp")
-    if !isdir(temp_path)
-        mkdir(temp_path)
+    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+        output_path(inputs, run_time_options)
+    else
+        temp_path = joinpath(path_case(inputs), "temp")
+        if !isdir(temp_path)
+            mkdir(temp_path)
+        end
+        temp_path
     end
+
     serialized_file_name =
         joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
 
@@ -527,11 +536,13 @@ function serialize_virtual_reservoir_energy_account(
 end
 
 function read_serialized_virtual_reservoir_energy_account(inputs::Inputs, period::Int, scenario::Int)
-    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
-        path_case(inputs)
-    else
-        joinpath(path_case(inputs), "temp")
-    end
+    temp_path =
+        if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING ||
+           run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+            path_case(inputs)
+        else
+            joinpath(path_case(inputs), "temp")
+        end
     serialized_file_name =
         joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
 

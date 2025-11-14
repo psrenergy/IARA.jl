@@ -26,6 +26,7 @@ finally
     end
 end
 
+# Setup
 IARA.train_min_cost(
     PATH;
     plot_outputs = false,
@@ -40,6 +41,7 @@ IARA.InterfaceCalls.interface_call(
     output_path = "outputs/interface_call",
 )
 
+# Period 1
 IARA.single_period_heuristic_bid(
     PATH;
     plot_outputs = false,
@@ -48,12 +50,41 @@ IARA.single_period_heuristic_bid(
     plot_ui_outputs = true,
     output_path = "outputs/heuristic_bid",
 )
-
 IARA.single_period_market_clearing(
     PATH;
     plot_outputs = false,
     delete_output_folder_before_execution = true,
     period = 1,
+    plot_ui_outputs = true,
+    output_path = "outputs/market_clearing",
+)
+
+# Inter-period
+mv(
+    joinpath(PATH, "outputs/market_clearing", "EX_POST_PHYSICAL_period_1_scenario_1.json"),
+    joinpath(PATH, "EX_POST_PHYSICAL_period_1_scenario_1.json");
+    force = true,
+)
+mv(
+    joinpath(PATH, "outputs/market_clearing", "virtual_reservoir_energy_account_period_1_scenario_1.json"),
+    joinpath(PATH, "virtual_reservoir_energy_account_period_1_scenario_1.json");
+    force = true,
+)
+
+# Period 2
+IARA.single_period_heuristic_bid(
+    PATH;
+    plot_outputs = false,
+    delete_output_folder_before_execution = true,
+    period = 2,
+    plot_ui_outputs = true,
+    output_path = "outputs/heuristic_bid",
+)
+IARA.single_period_market_clearing(
+    PATH;
+    plot_outputs = false,
+    delete_output_folder_before_execution = true,
+    period = 2,
     plot_ui_outputs = true,
     output_path = "outputs/market_clearing",
 )

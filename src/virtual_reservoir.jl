@@ -185,6 +185,7 @@ function post_process_virtual_reservoirs!(
         # The result that goes to the next period
         serialize_virtual_reservoir_energy_account(
             inputs,
+            run_time_options,
             energy_account,
             period,
             scenario,

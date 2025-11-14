@@ -1,8 +1,0 @@
-version = 1
-dimensions = ["period", "scenario", "subscenario"]
-dimension_size = [3, 2, 1]
-initial_date = "2024-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "GWh"
-labels = ["virtual_reservoir_1 - asset_owner_1", "virtual_reservoir_1 - asset_owner_2"]

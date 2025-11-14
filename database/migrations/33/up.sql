@@ -11,3 +11,5 @@ ALTER TABLE Configuration DROP COLUMN old_virtual_reservoir_residual_revenue_spl
 ALTER TABLE Configuration DROP COLUMN purchase_bids_for_virtual_reservoir_heuristic_bid;
 
 ALTER TABLE Configuration DROP COLUMN virtual_reservoir_initial_energy_account_share;
+
+ALTER TABLE Configuration DROP COLUMN virtual_reservoir_correspondence_type;

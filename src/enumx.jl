@@ -490,12 +490,6 @@ end
     UNDEFINED = 2
 end
 
-@enumx Configurations_VirtualReservoirCorrespondenceType begin
-    IGNORE = 0
-    STANDARD_CORRESPONDENCE_CONSTRAINT = 1
-    DELTA_CORRESPONDENCE_CONSTRAINT = 2
-end
-
 @enumx Configurations_VirtualReservoirResidualRevenueSplitType begin
     BY_INFLOW_SHARES = 0
     BY_ENERGY_ACCOUNT_SHARES = 1

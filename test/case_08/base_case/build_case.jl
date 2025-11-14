@@ -41,7 +41,6 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    virtual_reservoir_correspondence_type = IARA.Configurations_VirtualReservoirCorrespondenceType.DELTA_CORRESPONDENCE_CONSTRAINT,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,

@@ -89,8 +89,6 @@ Configurations for the problem.
     period_season_map_file::String = ""
     spot_price_floor::Float64 = 0.0
     spot_price_cap::Float64 = 0.0
-    virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
-        Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
     virtual_reservoir_residual_revenue_split_type::Configurations_VirtualReservoirResidualRevenueSplitType.T =
         Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES
     bid_price_limit_markup_non_justified_profile::Float64 = 0.0
@@ -299,11 +297,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         )
     configurations.spot_price_floor = PSRI.get_parms(inputs.db, "Configuration", "spot_price_floor")[1]
     configurations.spot_price_cap = PSRI.get_parms(inputs.db, "Configuration", "spot_price_cap")[1]
-    configurations.virtual_reservoir_correspondence_type =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
-            Configurations_VirtualReservoirCorrespondenceType.T,
-        )
     configurations.virtual_reservoir_residual_revenue_split_type =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_residual_revenue_split_type")[1],
@@ -1538,14 +1531,6 @@ Return the hydro balance subperiod resolution.
 """
 hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
     inputs.collections.configurations.hydro_balance_subperiod_resolution
-
-"""
-    virtual_reservoir_correspondence_type(inputs)
-
-Return the type of physical-virtual correspondence for the virtual reservoirs.
-"""
-virtual_reservoir_correspondence_type(inputs) =
-    inputs.collections.configurations.virtual_reservoir_correspondence_type
 
 virtual_reservoir_residual_revenue_split_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_residual_revenue_split_type

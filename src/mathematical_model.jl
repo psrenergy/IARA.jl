@@ -553,13 +553,7 @@ function hybrid_market_clearing_model_action(args...)
         end
 
         if use_virtual_reservoirs(inputs)
-            if virtual_reservoir_correspondence_type(inputs) ==
-               Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
-                virtual_reservoir_correspondence_by_volume!(args...)
-            elseif virtual_reservoir_correspondence_type(inputs) ==
-                   Configurations_VirtualReservoirCorrespondenceType.DELTA_CORRESPONDENCE_CONSTRAINT
-                virtual_reservoir_correspondence_by_generation!(args...)
-            end
+            virtual_reservoir_correspondence_by_volume!(args...)
             virtual_reservoir_generation_bounds!(args...)
         end
     end

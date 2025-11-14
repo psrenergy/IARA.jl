@@ -191,12 +191,6 @@ tooltip.en = "Spot price cap of the configuration"
 hide = true
 
 [[attribute]]
-id = "virtual_reservoir_correspondence_type"
-label.en = "Virtual Reservoir Correspondence Type"
-tooltip.en = "Virtual reservoir correspondence type of the configuration"
-hide = true
-
-[[attribute]]
 id = "number_of_periods"
 label.en = "Periods"
 tooltip.en = "Number of periods in the configuration"

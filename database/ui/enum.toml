@@ -253,15 +253,3 @@ label.en = "On"
 [[commitment_initial_condition]]
 id = 2
 label.en = "Undefined"
-
-[[virtual_reservoir_correspondence_type]]
-id = 0
-label.en = "Ignore"
-
-[[virtual_reservoir_correspondence_type]]
-id = 1
-label.en = "Standard Correspondence Constraint"
-
-[[virtual_reservoir_correspondence_type]]
-id = 2
-label.en = "Delta Correspondence Constraint"

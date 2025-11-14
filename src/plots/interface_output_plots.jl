@@ -567,11 +567,19 @@ function plot_agent_output(
     end
     @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
 
-    asset_onwer_bidding_groups = bidding_group_asset_owner_index(inputs) .== asset_owner_index
+    bidding_group_indexes =
+        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+
+    asset_owner_bidding_groups = Int[]
     labels_to_read = String[]
-    for bg in bidding_group_label(inputs)[asset_onwer_bidding_groups]
+    for bg in bidding_group_indexes
+        if bidding_group_asset_owner_index(inputs, bg) != asset_owner_index
+            continue
+        end
+        push!(asset_owner_bidding_groups, bg)
+        bg_label = bidding_group_label(inputs, bg)
         for bus in bus_label(inputs)
-            push!(labels_to_read, "$bg - $bus")
+            push!(labels_to_read, "$bg_label - $bus")
         end
     end
     # If the asset owner has no bidding groups, there is no profit to plot
@@ -583,7 +591,7 @@ function plot_agent_output(
     # Fixed scenario, fixed period, sum for all bidding groups
     reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
     if !isempty(fixed_component)
-        fixed_component = sum(fixed_component[asset_onwer_bidding_groups]; dims = 1) / num_subperiods
+        fixed_component = sum(fixed_component[asset_owner_bidding_groups]; dims = 1) / num_subperiods
     end
 
     configs = Vector{Config}()
@@ -762,14 +770,20 @@ function plot_operator_output(
     end
     @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
 
-    asset_onwer_indexes = index_of_elements(inputs, AssetOwner)
-    reshaped_data = Array{Float64, 3}(undef, length(asset_onwer_indexes), num_subperiods, num_subscenarios)
+    asset_owner_indexes = index_of_elements(inputs, AssetOwner)
+    bidding_group_indexes =
+        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    reshaped_data = Array{Float64, 3}(undef, length(asset_owner_indexes), num_subperiods, num_subscenarios)
 
-    for (i, asset_owner_index) in enumerate(asset_onwer_indexes)
+    for (i, asset_owner_index) in enumerate(asset_owner_indexes)
         labels_to_read = String[]
-        for bg in bidding_group_label(inputs)[bidding_group_asset_owner_index(inputs).==asset_owner_index]
+        for bg in bidding_group_indexes
+            if bidding_group_asset_owner_index(inputs, bg) != asset_owner_index
+                continue
+            end
+            bg_label = bidding_group_label(inputs, bg)
             for bus in bus_label(inputs)
-                push!(labels_to_read, "$bg - $bus")
+                push!(labels_to_read, "$bg_label - $bus")
             end
         end
         indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
@@ -785,7 +799,7 @@ function plot_operator_output(
     if subperiod_on_x_axis && num_subperiods != 1
         for subscenario in 1:num_subscenarios
             configs = Vector{Config}()
-            for asset_owner_index in asset_onwer_indexes
+            for asset_owner_index in asset_owner_indexes
                 ao_label = asset_owner_label(inputs, asset_owner_index)
                 push!(
                     configs,
@@ -835,7 +849,7 @@ function plot_operator_output(
     else
         for subperiod in 1:num_subperiods
             configs = Vector{Config}()
-            for asset_owner_index in asset_onwer_indexes
+            for asset_owner_index in asset_owner_indexes
                 ao_label = asset_owner_label(inputs, asset_owner_index)
                 push!(
                     configs,

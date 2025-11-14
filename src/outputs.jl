@@ -295,6 +295,7 @@ function initialize!(
     consider_one_segment = false,
     force_all_subscenarios::Bool = false,
     suppress_construction_type_suffix::Bool = false,
+    suppress_period_suffix::Bool = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -311,7 +312,8 @@ function initialize!(
     unit = kwargs[:unit]
     labels = kwargs[:labels]
 
-    output_name *= run_time_file_suffixes(inputs, run_time_options; suppress_construction_type_suffix)
+    output_name *=
+        run_time_file_suffixes(inputs, run_time_options; suppress_construction_type_suffix, suppress_period_suffix)
 
     file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
@@ -503,7 +505,7 @@ function write_output_without_subperiod!(
 
     # Validate that the indices of the outputs match the jump_container
     if indices_of_elements_in_output === nothing
-        @assert length(vector_of_results) == num_time_series
+        @assert length(vector_of_results) == num_time_series "$(length(vector_of_results)), $num_time_series"
     else
         @assert length(indices_of_elements_in_output) == length(vector_of_results)
     end
@@ -980,6 +982,7 @@ function run_time_file_suffixes(
     inputs::Inputs,
     run_time_options::RunTimeOptions;
     suppress_construction_type_suffix::Bool = false,
+    suppress_period_suffix::Bool = false,
 )
     suffix = ""
     if !is_null(run_time_options.asset_owner_index)
@@ -990,7 +993,7 @@ function run_time_file_suffixes(
             suffix *= "_$(lowercase(string(run_time_options.clearing_model_subproblem)))"
         end
     end
-    if is_single_period(inputs)
+    if is_single_period(inputs) && !suppress_period_suffix
         suffix *= "_period_$(inputs.args.period)"
     end
 

@@ -229,7 +229,7 @@ function build_ui_general_plots(
     end
 
     # Offer curve
-    plot_bid_curve(inputs, plots_path)
+    # plot_bid_curve(inputs, plots_path)
 
     return nothing
 end

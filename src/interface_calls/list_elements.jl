@@ -96,6 +96,8 @@ function list_bidding_groups_and_their_assets(inputs::IARA.AbstractInputs)
         end
         bidding_group_dict = Dict(
             "label" => bidding_group_label,
+            "has_generation_besides_virtual_reservoirs" =>
+                IARA.has_generation_besides_virtual_reservoirs(inputs.collections.bidding_group, bidding_group_index),
             "assets" => assets_of_bidding_group,
         )
         push!(bidding_groups_list, bidding_group_dict)

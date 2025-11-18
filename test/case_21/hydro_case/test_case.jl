@@ -48,7 +48,7 @@ IARA.single_period_heuristic_bid(
     delete_output_folder_before_execution = true,
     period = 1,
     plot_ui_outputs = true,
-    output_path = "outputs/heuristic_bid",
+    output_path = "outputs/heuristic_bid_1",
 )
 IARA.single_period_market_clearing(
     PATH;
@@ -56,18 +56,58 @@ IARA.single_period_market_clearing(
     delete_output_folder_before_execution = true,
     period = 1,
     plot_ui_outputs = true,
-    output_path = "outputs/market_clearing",
+    output_path = "outputs/market_clearing_1",
 )
 
 # Inter-period
 mv(
-    joinpath(PATH, "outputs/market_clearing", "EX_POST_PHYSICAL_period_1_scenario_1.json"),
+    joinpath(PATH, "outputs/market_clearing_1", "EX_POST_PHYSICAL_period_1_scenario_1.json"),
     joinpath(PATH, "EX_POST_PHYSICAL_period_1_scenario_1.json");
     force = true,
 )
 mv(
-    joinpath(PATH, "outputs/market_clearing", "virtual_reservoir_energy_account_period_1_scenario_1.json"),
+    joinpath(PATH, "outputs/market_clearing_1", "virtual_reservoir_energy_account_period_1_scenario_1.json"),
     joinpath(PATH, "virtual_reservoir_energy_account_period_1_scenario_1.json");
+    force = true,
+)
+mv(
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_1.csv"),
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_2.csv");
+    force = true,
+)
+mv(
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_1.toml"),
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_2.toml");
+    force = true,
+)
+mv(
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_1.csv"),
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_2.csv");
+    force = true,
+)
+mv(
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_1.toml"),
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_2.toml");
+    force = true,
+)
+mv(
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1.csv"),
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_2.csv");
+    force = true,
+)
+mv(
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1.toml"),
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_2.toml");
+    force = true,
+)
+mv(
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_1.csv"),
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_2.csv");
+    force = true,
+)
+mv(
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_1.toml"),
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_2.toml");
     force = true,
 )
 
@@ -78,7 +118,7 @@ IARA.single_period_heuristic_bid(
     delete_output_folder_before_execution = true,
     period = 2,
     plot_ui_outputs = true,
-    output_path = "outputs/heuristic_bid",
+    output_path = "outputs/heuristic_bid_2",
 )
 IARA.single_period_market_clearing(
     PATH;
@@ -86,7 +126,7 @@ IARA.single_period_market_clearing(
     delete_output_folder_before_execution = true,
     period = 2,
     plot_ui_outputs = true,
-    output_path = "outputs/market_clearing",
+    output_path = "outputs/market_clearing_2",
 )
 
 if Main.UPDATE_RESULTS

@@ -1,4 +1,4 @@
-function get_bid_file_paths(inputs::AbstractInputs)
+function get_bidding_group_bid_file_paths(inputs::AbstractInputs)
     bid_files = String[]
     if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup)
         if read_bids_from_file(inputs)
@@ -24,6 +24,45 @@ function get_bid_file_paths(inputs::AbstractInputs)
             joinpath(no_markup_price_folder, "bidding_group_no_markup_price_bid_period_$(inputs.args.period).csv")
         no_markup_quantity_path =
             joinpath(no_markup_price_folder, "bidding_group_no_markup_energy_bid_period_$(inputs.args.period).csv")
+        if isfile(no_markup_price_path) && isfile(no_markup_quantity_path)
+            push!(bid_files, no_markup_price_path)
+            push!(bid_files, no_markup_quantity_path)
+        else
+            @warn(
+                "Reference price and quantity bid files not found: $(no_markup_price_path), $(no_markup_quantity_path)"
+            )
+        end
+    end
+
+    return bid_files
+end
+
+function get_virtual_reservoir_bid_file_paths(inputs::AbstractInputs)
+    bid_files = String[]
+    if is_market_clearing(inputs) && any_elements(inputs, VirtualReservoir)
+        if read_bids_from_file(inputs)
+            push!(bid_files, joinpath(path_case(inputs), virtual_reservoir_quantity_bid_file(inputs) * ".csv"))
+            push!(bid_files, joinpath(path_case(inputs), virtual_reservoir_price_bid_file(inputs) * ".csv"))
+        elseif generate_heuristic_bids_for_clearing(inputs)
+            push!(
+                bid_files,
+                joinpath(output_path(inputs), "virtual_reservoir_energy_bid_period_$(inputs.args.period).csv"),
+            )
+            push!(
+                bid_files,
+                joinpath(output_path(inputs), "virtual_reservoir_price_bid_period_$(inputs.args.period).csv"),
+            )
+        end
+        @assert all(isfile.(bid_files)) "Offer files not found: $(bid_files)"
+        no_markup_price_folder = if read_bids_from_file(inputs)
+            path_case(inputs)
+        else
+            output_path(inputs)
+        end
+        no_markup_price_path =
+            joinpath(no_markup_price_folder, "virtual_reservoir_no_markup_price_bid_period_$(inputs.args.period).csv")
+        no_markup_quantity_path =
+            joinpath(no_markup_price_folder, "virtual_reservoir_no_markup_energy_bid_period_$(inputs.args.period).csv")
         if isfile(no_markup_price_path) && isfile(no_markup_quantity_path)
             push!(bid_files, no_markup_price_path)
             push!(bid_files, no_markup_quantity_path)
@@ -419,11 +458,24 @@ function convert_generation_data_from_GWh_to_MW!(
             data[:, subperiod, :, :, :] .*= 1000 / subperiod_duration_in_hours(inputs, subperiod)
         end
     elseif N == 4
-        @assert metadata.dimensions == [:period, :scenario, :subperiod]
-        num_subperiods = metadata.dimension_size[3]
-        for subperiod in 1:num_subperiods
-            data[:, subperiod, :, :] .*= 1000 / subperiod_duration_in_hours(inputs, subperiod)
+        if metadata.dimensions == [:period, :scenario, :subscenario]
+            # Virtual reservoir data without subperiods - convert using period duration
+            # Assuming the energy is for the entire period, convert using total period duration
+            total_period_hours = sum(subperiod_duration_in_hours(inputs, sp) for sp in 1:number_of_subperiods(inputs))
+            data .*= 1000 / total_period_hours
+        elseif metadata.dimensions == [:period, :scenario, :subperiod]
+            num_subperiods = metadata.dimension_size[3]
+            for subperiod in 1:num_subperiods
+                data[:, subperiod, :, :] .*= 1000 / subperiod_duration_in_hours(inputs, subperiod)
+            end
+        else
+            @error("Unit conversion not implemented for dimensions $(metadata.dimensions)")
         end
+    elseif N == 3
+        @assert metadata.dimensions == [:period, :scenario] "Unit conversion not implemented for dimensions $(metadata.dimensions)"
+        # Virtual reservoir data without subperiods or subscenarios - convert using period duration
+        total_period_hours = sum(subperiod_duration_in_hours(inputs, sp) for sp in 1:number_of_subperiods(inputs))
+        data .*= 1000 / total_period_hours
     else
         @error("Unit conversion not implemented for data with $(N) dimensions")
     end

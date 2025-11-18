@@ -810,6 +810,17 @@ function initialize_virtual_reservoir_bids_outputs(
         labels,
     )
 
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        run_time_options,
+        output_name = "virtual_reservoir_no_markup_price_bid",
+        dimensions = ["period", "scenario", "bid_segment"],
+        unit = "\$/MWh",
+        labels,
+    )
+
     return nothing
 end
 
@@ -863,6 +874,12 @@ function virtual_reservoir_markup_bids_for_period_scenario(
     )
 
     price_bids = zeros(
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
+    )
+
+    no_markup_price_bids = zeros(
         number_of_elements(inputs, VirtualReservoir),
         number_of_elements(inputs, AssetOwner),
         maximum_number_of_vr_bidding_segments(inputs),
@@ -947,6 +964,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                     )
                     quantity_bids[vr, ao, seg] = bid
                     price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment] * (1 + markups[markup_index])
+                    no_markup_price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment]
 
                     sum_of_bids_for_current_markup += bid
                     sum_of_ao_selling_bids += bid
@@ -1035,6 +1053,16 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             run_time_options,
             "virtual_reservoir_price_bid",
             price_bids,
+            period,
+            scenario,
+        )
+
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_no_markup_price_bid",
+            no_markup_price_bids,
             period,
             scenario,
         )

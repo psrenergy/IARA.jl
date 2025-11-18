@@ -192,26 +192,26 @@ vr_price_bid = zeros(
 # VR 1, AO 1
 vr_quantity_bid[1, 1, 1, :, :] .= 100.0
 vr_quantity_bid[1, 1, 2, :, :] .= 100.0
-vr_price_bid[1, 1, 1, :, :] .= 30.0
-vr_price_bid[1, 1, 2, :, :] .= 100.0
+vr_price_bid[1, 1, 1, :, :] .= 33.0
+vr_price_bid[1, 1, 2, :, :] .= 110.0
 
 # VR 2, AO 1
 vr_quantity_bid[2, 1, 1, :, :] .= 100.0
 vr_quantity_bid[2, 1, 2, :, :] .= 100.0
-vr_price_bid[2, 1, 1, :, :] .= 33.0
-vr_price_bid[2, 1, 2, :, :] .= 110.0
+vr_price_bid[2, 1, 1, :, :] .= 36.0
+vr_price_bid[2, 1, 2, :, :] .= 120.0
 
 # VR 1, AO 2
 vr_quantity_bid[1, 2, 1, :, :] .= 100.0
 vr_quantity_bid[1, 2, 2, :, :] .= 100.0
-vr_price_bid[1, 2, 1, :, :] .= 36.0
-vr_price_bid[1, 2, 2, :, :] .= 120.0
+vr_price_bid[1, 2, 1, :, :] .= 39.0
+vr_price_bid[1, 2, 2, :, :] .= 130.0
 
 # VR 2, AO 2 
 vr_quantity_bid[2, 2, 1, :, :] .= 100.0
 vr_quantity_bid[2, 2, 2, :, :] .= 100.0
-vr_price_bid[2, 2, 1, :, :] .= 39.0
-vr_price_bid[2, 2, 2, :, :] .= 130.0
+vr_price_bid[2, 2, 1, :, :] .= 42.0
+vr_price_bid[2, 2, 2, :, :] .= 140.0
 
 vr_ao_map = Dict(
     "Cascata 1" => ["Agente Hidro 1", "Agente Hidro 2"],
@@ -257,6 +257,50 @@ IARA.link_time_series_to_file(
     "VirtualReservoir";
     quantity_bid = "vr_quantity_bid",
     price_bid = "vr_price_bid",
+)
+
+vr_price_bid_no_markup = zeros(
+    number_of_virtual_reservoirs,
+    number_of_asset_owners,
+    number_of_vr_segments,
+    number_of_scenarios,
+    number_of_periods,
+)
+vr_price_bid_no_markup[:, :, 1, :, :] .= 30.0
+vr_price_bid_no_markup[:, :, 2, :, :] .= 100.0
+
+IARA.write_virtual_reservoir_bids_time_series_file(
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1"),
+    vr_quantity_bid;
+    dimensions = ["period", "scenario", "bid_segment"],
+    labels_virtual_reservoirs = ["Cascata 1", "Cascata 2"],
+    labels_asset_owners = ["Agente Hidro 1", "Agente Hidro 2"],
+    virtual_reservoirs_to_asset_owners_map = vr_ao_map,
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_vr_segments,
+    ],
+    initial_date = "2025-01-01T00:00:00",
+    unit = "\$/MWh",
+)
+
+IARA.write_virtual_reservoir_bids_time_series_file(
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_1"),
+    vr_price_bid_no_markup;
+    dimensions = ["period", "scenario", "bid_segment"],
+    labels_virtual_reservoirs = ["Cascata 1", "Cascata 2"],
+    labels_asset_owners = ["Agente Hidro 1", "Agente Hidro 2"],
+    virtual_reservoirs_to_asset_owners_map = vr_ao_map,
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_vr_segments,
+    ],
+    initial_date = "2025-01-01T00:00:00",
+    unit = "\$/MWh",
 )
 
 # FCF

@@ -229,144 +229,278 @@ function build_ui_general_plots(
     end
 
     # Offer curve
-    # plot_bid_curve(inputs, plots_path)
+    plot_bid_curve(inputs, plots_path)
 
     return nothing
 end
 
 function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
-    bid_files = get_bid_file_paths(inputs)
-    if !isempty(bid_files)
+    bidding_group_bid_files = get_bidding_group_bid_file_paths(inputs)
+    virtual_reservoir_bid_files = get_virtual_reservoir_bid_file_paths(inputs)
+    if !isempty(bidding_group_bid_files)
         plot_no_markup_price = false
-        quantity_bid_file = bid_files[1]
-        price_bid_file = bid_files[2]
-        if length(bid_files) == 4
-            no_markup_price_bid_file = bid_files[3]
-            no_markup_quantity_bid_file = bid_files[4]
+        plot_virtual_reservoir_data = false
+        bg_quantity_bid_file = bidding_group_bid_files[1]
+        bg_price_bid_file = bidding_group_bid_files[2]
+        if length(bidding_group_bid_files) == 4
+            bg_no_markup_price_bid_file = bidding_group_bid_files[3]
+            bg_no_markup_quantity_bid_file = bidding_group_bid_files[4]
             plot_no_markup_price = true
         end
-
-        quantity_data, quantity_metadata = read_timeseries_file(quantity_bid_file)
-        price_data, price_metadata = read_timeseries_file(price_bid_file)
-        if plot_no_markup_price
-            no_markup_price_data, no_markup_price_metadata = read_timeseries_file(no_markup_price_bid_file)
-            no_markup_quantity_data, no_markup_quantity_metadata = read_timeseries_file(no_markup_quantity_bid_file)
+        if !isempty(virtual_reservoir_bid_files)
+            plot_virtual_reservoir_data = true
+            vr_quantity_bid_file = virtual_reservoir_bid_files[1]
+            vr_price_bid_file = virtual_reservoir_bid_files[2]
+            if plot_no_markup_price
+                if length(virtual_reservoir_bid_files) == 4
+                    vr_no_markup_price_bid_file = virtual_reservoir_bid_files[3]
+                    vr_no_markup_quantity_bid_file = virtual_reservoir_bid_files[4]
+                else
+                    plot_no_markup_price = false
+                end
+            end
         end
 
-        @assert quantity_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between quantity and price bid file columns"
-        @assert quantity_metadata.dimension_size == price_metadata.dimension_size "Mismatch between quantity and price bid file dimensions"
-        @assert quantity_metadata.labels == price_metadata.labels "Mismatch between quantity and price bid file labels"
+        bg_quantity_data, bg_quantity_metadata = read_timeseries_file(bg_quantity_bid_file)
+        bg_price_data, bg_price_metadata = read_timeseries_file(bg_price_bid_file)
+        if plot_virtual_reservoir_data
+            vr_quantity_data, vr_quantity_metadata = read_timeseries_file(vr_quantity_bid_file)
+            vr_price_data, vr_price_metadata = read_timeseries_file(vr_price_bid_file)
+        end
+        if plot_no_markup_price
+            bg_no_markup_price_data, bg_no_markup_price_metadata = read_timeseries_file(bg_no_markup_price_bid_file)
+            bg_no_markup_quantity_data, bg_no_markup_quantity_metadata =
+                read_timeseries_file(bg_no_markup_quantity_bid_file)
+            if plot_virtual_reservoir_data
+                vr_no_markup_quantity_data, vr_no_markup_quantity_metadata =
+                    read_timeseries_file(vr_no_markup_quantity_bid_file)
+                vr_no_markup_price_data, vr_no_markup_price_metadata = read_timeseries_file(vr_no_markup_price_bid_file)
+            end
+        end
+
+        @assert bg_quantity_metadata.number_of_time_series == bg_price_metadata.number_of_time_series "Mismatch between quantity and price bid file columns"
+        @assert bg_quantity_metadata.dimension_size == bg_price_metadata.dimension_size "Mismatch between quantity and price bid file dimensions"
+        @assert bg_quantity_metadata.labels == bg_price_metadata.labels "Mismatch between quantity and price bid file labels"
         if plot_no_markup_price
             # Compare the price files
-            @assert no_markup_price_metadata.number_of_time_series == price_metadata.number_of_time_series "Mismatch between reference price and price bid file columns"
+            @assert bg_no_markup_price_metadata.number_of_time_series == bg_price_metadata.number_of_time_series "Mismatch between reference price and price bid file columns"
             # The number of periods in the reference price file is always 1
             # The number of bid segments does not need to match
-            @assert no_markup_price_metadata.dimension_size[2:end-1] == price_metadata.dimension_size[2:end-1] "Mismatch between reference price and price bid file dimensions"
-            @assert sort(no_markup_price_metadata.labels) == sort(price_metadata.labels) "Mismatch between reference price and price bid file labels"
+            @assert bg_no_markup_price_metadata.dimension_size[2:(end-1)] == bg_price_metadata.dimension_size[2:(end-1)] "Mismatch between reference price and price bid file dimensions"
+            @assert sort(bg_no_markup_price_metadata.labels) == sort(bg_price_metadata.labels) "Mismatch between reference price and price bid file labels"
             # Compare both "no_markup" files
-            @assert no_markup_price_metadata.number_of_time_series == no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity bid file columns"
-            @assert no_markup_price_metadata.dimension_size == no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity bid file dimensions"
-            @assert no_markup_price_metadata.labels == no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity bid file labels"
+            @assert bg_no_markup_price_metadata.number_of_time_series ==
+                    bg_no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity bid file columns"
+            @assert bg_no_markup_price_metadata.dimension_size == bg_no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity bid file dimensions"
+            @assert bg_no_markup_price_metadata.labels == bg_no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity bid file labels"
         end
 
-        num_labels = quantity_metadata.number_of_time_series
-        num_periods, num_scenarios, num_subperiods, num_bid_segments = quantity_metadata.dimension_size
-        num_buses = number_of_elements(inputs, Bus)
+        num_labels = bg_quantity_metadata.number_of_time_series
+        num_periods, num_scenarios, num_subperiods, num_bid_segments = bg_quantity_metadata.dimension_size
 
         if plot_no_markup_price
-            num_bid_segments_no_markup = no_markup_price_metadata.dimension_size[end]
+            num_bid_segments_no_markup = bg_no_markup_price_metadata.dimension_size[end]
         end
 
         # Remove the period dimension
         if num_periods > 1
             # From input files, with all periods
-            quantity_data = quantity_data[:, :, :, :, inputs.args.period]
-            price_data = price_data[:, :, :, :, inputs.args.period]
+            bg_quantity_data = bg_quantity_data[:, :, :, :, inputs.args.period]
+            bg_price_data = bg_price_data[:, :, :, :, inputs.args.period]
         else
             # Or from heuristic bid output files, with a single period
-            quantity_data = dropdims(quantity_data; dims = 5)
-            price_data = dropdims(price_data; dims = 5)
+            bg_quantity_data = dropdims(bg_quantity_data; dims = 5)
+            bg_price_data = dropdims(bg_price_data; dims = 5)
         end
         if plot_no_markup_price
-            no_markup_price_data = dropdims(no_markup_price_data; dims = 5)
-            no_markup_quantity_data = dropdims(no_markup_quantity_data; dims = 5)
+            bg_no_markup_price_data = dropdims(bg_no_markup_price_data; dims = 5)
+            bg_no_markup_quantity_data = dropdims(bg_no_markup_quantity_data; dims = 5)
+        end
+
+        # Process virtual reservoir data if available
+        num_vr_labels = 0
+        if plot_virtual_reservoir_data
+            num_vr_labels = vr_quantity_metadata.number_of_time_series
+            vr_num_periods, vr_num_scenarios, vr_num_bid_segments = vr_quantity_metadata.dimension_size
+
+            # VR data doesn't have subperiod dimension, so we add it artificially
+            # Remove period dimension and add subperiod dimension
+            if vr_num_periods > 1
+                vr_quantity_data = vr_quantity_data[:, :, :, inputs.args.period]
+                vr_price_data = vr_price_data[:, :, :, inputs.args.period]
+            else
+                vr_quantity_data = dropdims(vr_quantity_data; dims = 4)
+                vr_price_data = dropdims(vr_price_data; dims = 4)
+            end
+
+            # Add artificial subperiod dimension: [labels, segments, scenarios] -> [labels, segments, subperiods, scenarios]
+            # Divide quantity by num_subperiods, repeat price for all subperiods
+            vr_quantity_data_with_subperiods =
+                Array{Float64, 4}(undef, num_vr_labels, vr_num_bid_segments, num_subperiods, vr_num_scenarios)
+            vr_price_data_with_subperiods =
+                Array{Float64, 4}(undef, num_vr_labels, vr_num_bid_segments, num_subperiods, vr_num_scenarios)
+
+            for label_idx in 1:num_vr_labels
+                for segment in 1:vr_num_bid_segments
+                    for scenario in 1:vr_num_scenarios
+                        for subperiod in 1:num_subperiods
+                            vr_quantity_data_with_subperiods[label_idx, segment, subperiod, scenario] =
+                                vr_quantity_data[label_idx, segment, scenario] / num_subperiods
+                            vr_price_data_with_subperiods[label_idx, segment, subperiod, scenario] =
+                                vr_price_data[label_idx, segment, scenario]
+                        end
+                    end
+                end
+            end
+
+            vr_quantity_data = vr_quantity_data_with_subperiods
+            vr_price_data = vr_price_data_with_subperiods
+
+            if plot_no_markup_price
+                vr_no_markup_num_periods, vr_no_markup_num_scenarios, vr_no_markup_num_bid_segments =
+                    vr_no_markup_quantity_metadata.dimension_size
+
+                if vr_no_markup_num_periods > 1
+                    vr_no_markup_quantity_data = vr_no_markup_quantity_data[:, :, :, inputs.args.period]
+                    vr_no_markup_price_data = vr_no_markup_price_data[:, :, :, inputs.args.period]
+                else
+                    vr_no_markup_quantity_data = dropdims(vr_no_markup_quantity_data; dims = 4)
+                    vr_no_markup_price_data = dropdims(vr_no_markup_price_data; dims = 4)
+                end
+
+                # Add artificial subperiod dimension for no_markup VR data
+                vr_no_markup_quantity_data_with_subperiods = Array{Float64, 4}(
+                    undef,
+                    num_vr_labels,
+                    vr_no_markup_num_bid_segments,
+                    num_subperiods,
+                    vr_no_markup_num_scenarios,
+                )
+                vr_no_markup_price_data_with_subperiods = Array{Float64, 4}(
+                    undef,
+                    num_vr_labels,
+                    vr_no_markup_num_bid_segments,
+                    num_subperiods,
+                    vr_no_markup_num_scenarios,
+                )
+
+                for label_idx in 1:num_vr_labels
+                    for segment in 1:vr_no_markup_num_bid_segments
+                        for scenario in 1:vr_no_markup_num_scenarios
+                            for subperiod in 1:num_subperiods
+                                vr_no_markup_quantity_data_with_subperiods[label_idx, segment, subperiod, scenario] =
+                                    vr_no_markup_quantity_data[label_idx, segment, scenario] / num_subperiods
+                                vr_no_markup_price_data_with_subperiods[label_idx, segment, subperiod, scenario] =
+                                    vr_no_markup_price_data[label_idx, segment, scenario]
+                            end
+                        end
+                    end
+                end
+
+                vr_no_markup_quantity_data = vr_no_markup_quantity_data_with_subperiods
+                vr_no_markup_price_data = vr_no_markup_price_data_with_subperiods
+            end
         end
 
         for subperiod in 1:num_subperiods
-            reshaped_quantity = [Float64[] for bus in 1:num_buses]
-            reshaped_price = [Float64[] for bus in 1:num_buses]
+            reshaped_quantity = Float64[]
+            reshaped_price = Float64[]
             if plot_no_markup_price
-                reshaped_no_markup_price = [Float64[] for bus in 1:num_buses]
+                reshaped_no_markup_price = Float64[]
                 # the second quantity is necessary because we will sort both vectors in increasing price order
-                reshaped_no_markup_quantity = [Float64[] for bus in 1:num_buses]
+                reshaped_no_markup_quantity = Float64[]
             end
 
+            # Collect bidding group data
             for segment in 1:num_bid_segments
                 for label_index in 1:num_labels
-                    bus_index = _extract_bus_idx(quantity_metadata.labels[label_index], inputs.collections.bus)
                     # mean across scenarios
-                    quantity = mean(quantity_data[label_index, segment, subperiod, :])
-                    price = mean(price_data[label_index, segment, subperiod, :])
+                    quantity = mean(bg_quantity_data[label_index, segment, subperiod, :])
+                    price = mean(bg_price_data[label_index, segment, subperiod, :])
                     # push point
-                    push!(reshaped_quantity[bus_index], quantity)
-                    push!(reshaped_price[bus_index], price)
+                    push!(reshaped_quantity, quantity)
+                    push!(reshaped_price, price)
+                end
+            end
+
+            # Append virtual reservoir data
+            if plot_virtual_reservoir_data
+                vr_num_bid_segments = size(vr_quantity_data, 2)
+                for segment in 1:vr_num_bid_segments
+                    for label_index in 1:num_vr_labels
+                        # mean across scenarios
+                        quantity = mean(vr_quantity_data[label_index, segment, subperiod, :])
+                        price = mean(vr_price_data[label_index, segment, subperiod, :])
+                        # push point
+                        push!(reshaped_quantity, quantity)
+                        push!(reshaped_price, price)
+                    end
                 end
             end
 
             if plot_no_markup_price
+                # Collect bidding group no_markup data
                 for segment in 1:num_bid_segments_no_markup
                     for label_index in 1:num_labels
-                        bus_index = _extract_bus_idx(quantity_metadata.labels[label_index], inputs.collections.bus)
                         # mean across scenarios
-                        no_markup_price = mean(no_markup_price_data[label_index, segment, subperiod, :])
-                        no_markup_quantity = mean(no_markup_quantity_data[label_index, segment, subperiod, :])
+                        no_markup_price = mean(bg_no_markup_price_data[label_index, segment, subperiod, :])
+                        no_markup_quantity = mean(bg_no_markup_quantity_data[label_index, segment, subperiod, :])
                         # push point
-                        push!(reshaped_no_markup_price[bus_index], no_markup_price)
-                        push!(reshaped_no_markup_quantity[bus_index], no_markup_quantity)
+                        push!(reshaped_no_markup_price, no_markup_price)
+                        push!(reshaped_no_markup_quantity, no_markup_quantity)
+                    end
+                end
+
+                # Append virtual reservoir no_markup data
+                if plot_virtual_reservoir_data
+                    vr_no_markup_num_bid_segments = size(vr_no_markup_quantity_data, 2)
+                    for segment in 1:vr_no_markup_num_bid_segments
+                        for label_index in 1:num_vr_labels
+                            # mean across scenarios
+                            no_markup_price = mean(vr_no_markup_price_data[label_index, segment, subperiod, :])
+                            no_markup_quantity = mean(vr_no_markup_quantity_data[label_index, segment, subperiod, :])
+                            # push point
+                            push!(reshaped_no_markup_price, no_markup_price)
+                            push!(reshaped_no_markup_quantity, no_markup_quantity)
+                        end
                     end
                 end
             end
 
-            for bus in 1:num_buses
-                sort_order = sortperm(reshaped_price[bus])
-                reshaped_quantity[bus] = reshaped_quantity[bus][sort_order]
-                reshaped_quantity[bus] = cumsum(reshaped_quantity[bus])
-                reshaped_price[bus] = reshaped_price[bus][sort_order]
-                if plot_no_markup_price
-                    no_markup_sort_order = sortperm(reshaped_no_markup_price[bus])
-                    reshaped_no_markup_quantity[bus] = reshaped_no_markup_quantity[bus][no_markup_sort_order]
-                    reshaped_no_markup_quantity[bus] = cumsum(reshaped_no_markup_quantity[bus])
-                    reshaped_no_markup_price[bus] = reshaped_no_markup_price[bus][no_markup_sort_order]
-                end
+            sort_order = sortperm(reshaped_price)
+            reshaped_quantity = reshaped_quantity[sort_order]
+            reshaped_quantity = cumsum(reshaped_quantity)
+            reshaped_price = reshaped_price[sort_order]
+            if plot_no_markup_price
+                no_markup_sort_order = sortperm(reshaped_no_markup_price)
+                reshaped_no_markup_quantity = reshaped_no_markup_quantity[no_markup_sort_order]
+                reshaped_no_markup_quantity = cumsum(reshaped_no_markup_quantity)
+                reshaped_no_markup_price = reshaped_no_markup_price[no_markup_sort_order]
             end
 
-            quantity_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
-            price_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
+            quantity_data_to_plot = Float64[0.0]
+            price_data_to_plot = Float64[0.0]
 
-            for bus in 1:num_buses
-                for (quantity, price) in zip(reshaped_quantity[bus], reshaped_price[bus])
-                    # old point
-                    push!(quantity_data_to_plot[bus], quantity_data_to_plot[bus][end])
-                    push!(price_data_to_plot[bus], price)
-                    # new point
-                    push!(quantity_data_to_plot[bus], quantity)
-                    push!(price_data_to_plot[bus], price)
-                end
+            for (quantity, price) in zip(reshaped_quantity, reshaped_price)
+                # old point
+                push!(quantity_data_to_plot, quantity_data_to_plot[end])
+                push!(price_data_to_plot, price)
+                # new point
+                push!(quantity_data_to_plot, quantity)
+                push!(price_data_to_plot, price)
             end
 
             if plot_no_markup_price
-                no_markup_quantity_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
-                no_markup_price_data_to_plot = [Float64[0.0] for bus in 1:num_buses]
+                no_markup_quantity_data_to_plot = Float64[0.0]
+                no_markup_price_data_to_plot = Float64[0.0]
 
-                for bus in 1:num_buses
-                    for (quantity, price) in zip(reshaped_no_markup_quantity[bus], reshaped_no_markup_price[bus])
-                        # old point
-                        push!(no_markup_quantity_data_to_plot[bus], no_markup_quantity_data_to_plot[bus][end])
-                        push!(no_markup_price_data_to_plot[bus], price)
-                        # new point
-                        push!(no_markup_quantity_data_to_plot[bus], quantity)
-                        push!(no_markup_price_data_to_plot[bus], price)
-                    end
+                for (quantity, price) in zip(reshaped_no_markup_quantity, reshaped_no_markup_price)
+                    # old point
+                    push!(no_markup_quantity_data_to_plot, no_markup_quantity_data_to_plot[end])
+                    push!(no_markup_price_data_to_plot, price)
+                    # new point
+                    push!(no_markup_quantity_data_to_plot, quantity)
+                    push!(no_markup_price_data_to_plot, price)
                 end
             end
 
@@ -377,39 +511,31 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                 title *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
             color_idx = 0
-            for bus in 1:num_buses
+            color_idx += 1
+            name = get_name(inputs, "bids")
+            push!(
+                configs,
+                Config(;
+                    x = quantity_data_to_plot,
+                    y = price_data_to_plot,
+                    name = name,
+                    line = Dict("color" => _get_plot_color(color_idx)),
+                    type = "line",
+                ),
+            )
+            if plot_no_markup_price
                 color_idx += 1
-                name = get_name(inputs, "bids")
-                if num_buses > 1
-                    name *= " - $(bus_label(inputs, bus))"
-                end
+                name = get_name(inputs, "operating_cost")
                 push!(
                     configs,
                     Config(;
-                        x = quantity_data_to_plot[bus],
-                        y = price_data_to_plot[bus],
+                        x = no_markup_quantity_data_to_plot,
+                        y = no_markup_price_data_to_plot,
                         name = name,
                         line = Dict("color" => _get_plot_color(color_idx)),
                         type = "line",
                     ),
                 )
-                if plot_no_markup_price
-                    color_idx += 1
-                    name = get_name(inputs, "operating_cost")
-                    if num_buses > 1
-                        name *= " - $(bus_label(inputs, bus))"
-                    end
-                    push!(
-                        configs,
-                        Config(;
-                            x = no_markup_quantity_data_to_plot[bus],
-                            y = no_markup_price_data_to_plot[bus],
-                            name = name,
-                            line = Dict("color" => _get_plot_color(color_idx)),
-                            type = "line",
-                        ),
-                    )
-                end
             end
 
             # Add demand lines
@@ -549,17 +675,34 @@ function plot_agent_output(
     end
 
     has_subscenarios = :subscenario in metadata.dimensions
+    has_subperiods = :subperiod in metadata.dimensions
+    # TODO: check if we really need to treat subperiods here
 
     if has_subscenarios
-        @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
-        reshaped_data = data[:, :, :, 1, 1]
+        if has_subperiods
+            @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+            reshaped_data = data[:, :, :, 1, 1]
+        else
+            @assert metadata.dimensions == [:period, :scenario, :subscenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subscenarios = metadata.dimension_size
+            num_subperiods = 1
+            reshaped_data = data[:, :, 1, 1]
+        end
     else
-        @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
         num_subscenarios = 1
-        reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
-        reshaped_data[:, :, 1] = data[:, :, 1, 1]
+        if has_subperiods
+            @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            reshaped_data[:, :, 1] = data[:, :, 1, 1]
+        else
+            @assert metadata.dimensions == [:period, :scenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios = metadata.dimension_size
+            num_subperiods = 1
+            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            reshaped_data[:, 1, 1] = data[:, 1, 1]
+        end
     end
 
     if num_scenarios > 1 && asset_owner_index == first(index_of_elements(inputs, AssetOwner))
@@ -582,7 +725,7 @@ function plot_agent_output(
             push!(labels_to_read, "$bg_label - $bus")
         end
     end
-    # If the asset owner has no bidding groups, there is no profit to plot
+    # If the asset owner has no bidding groups, there is nothing to plot
     if isempty(labels_to_read)
         return nothing
     end

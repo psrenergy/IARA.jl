@@ -149,7 +149,7 @@ end
 function fill_initial_energy_account!(inputs::AbstractInputs, vr::Int)
     hydro_units = virtual_reservoir_hydro_unit_indices(inputs, vr)
     total_energy_account = sum(
-        hydro_unit_initial_volume(inputs, h) * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
+        (hydro_unit_initial_volume(inputs, h) - hydro_unit_min_volume(inputs, h)) * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
         h in hydro_units
     )
     inputs.collections.virtual_reservoir.initial_energy_account[vr] =
@@ -268,7 +268,7 @@ function calculate_energy_account_and_spilled_energy!(
                 sum(virtual_reservoir_generation[vr, ao, :]) # sum over bid_segment dimension
         end
         total_actual_energy_account = sum(
-            hydro_volume[end, h] * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
+            ((hydro_volume[end, h] - hydro_unit_min_volume(inputs, h))) * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
             h in virtual_reservoir_hydro_unit_indices(inputs, vr)
         )
         if sum(pre_processed_energy_account) == 0

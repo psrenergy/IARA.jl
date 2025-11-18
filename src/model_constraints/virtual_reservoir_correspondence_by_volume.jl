@@ -36,7 +36,7 @@ function virtual_reservoir_correspondence_by_volume!(
         model.jump_model,
         virtual_reservoir_volume_balance[vr in 1:number_of_virtual_reservoirs],
         sum(
-            hydro_volume[end, h] * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
+            (hydro_volume[end, h] - hydro_unit_min_volume(inputs, h)) * virtual_reservoir_water_to_energy_factors(inputs, vr, h) for
             h in virtual_reservoir_hydro_unit_indices(inputs, vr)
         )
         ==

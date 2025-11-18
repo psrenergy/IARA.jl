@@ -53,6 +53,8 @@ function list_case_configurations(inputs::IARA.AbstractInputs)
         "period_type" => IARA.period_type_string(IARA.time_series_step(inputs)),
         "price_bid_file" => IARA.bidding_group_price_bid_file(inputs),
         "quantity_bid_file" => IARA.bidding_group_quantity_bid_file(inputs),
+        "vr_price_bid_file" => IARA.virtual_reservoir_price_bid_file(inputs),
+        "vr_quantity_bid_file" => IARA.virtual_reservoir_quantity_bid_file(inputs),
         "demand_deficit_cost" => IARA.demand_deficit_cost(inputs),
     )
 end

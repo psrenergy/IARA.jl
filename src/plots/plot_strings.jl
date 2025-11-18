@@ -80,6 +80,22 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Average Renewable Generation",
             "pt" => "Geração Renovável Média",
         ),
+        "inflow_energy" => Dict(
+            "en" => "Inflow Energy",
+            "pt" => "Energia Afluente",
+        ),
+        "maximum_inflow_energy" => Dict(
+            "en" => "Maximum Inflow Energy",
+            "pt" => "Energia Afluente Máxima",
+        ),
+        "minimum_inflow_energy" => Dict(
+            "en" => "Minimum Inflow Energy",
+            "pt" => "Energia Afluente Mínima",
+        ),
+        "average_inflow_energy" => Dict(
+            "en" => "Average Inflow Energy",
+            "pt" => "Energia Afluente Média",
+        ),
         "total_profit" => Dict(
             "en" => "Total Profit",
             "pt" => "Lucro Total",

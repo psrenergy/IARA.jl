@@ -134,7 +134,7 @@ IARA.set_hydro_spill_to!(db, "Hidro 2 M", "Hidro 1 J")
 IARA.add_virtual_reservoir!(db;
     label = "Cascata 1",
     assetowner_id = ["Agente Hidro 1", "Agente Hidro 2"],
-    inflow_allocation = [0.5, 0.5],
+    inflow_allocation = [0.3, 0.7],
     initial_energy_account_share = [0.5, 0.5],
     hydrounit_id = ["Hidro 1 M", "Hidro 2 J"],
 )
@@ -142,7 +142,7 @@ IARA.add_virtual_reservoir!(db;
 IARA.add_virtual_reservoir!(db;
     label = "Cascata 2",
     assetowner_id = ["Agente Hidro 1", "Agente Hidro 2"],
-    inflow_allocation = [0.5, 0.5],
+    inflow_allocation = [0.3, 0.7],
     initial_energy_account_share = [0.5, 0.5],
     hydrounit_id = ["Hidro 1 J", "Hidro 2 M"],
 )
@@ -150,7 +150,8 @@ IARA.add_virtual_reservoir!(db;
 # Time series data
 # ----------------
 # Inflow
-inflow = zeros(4, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
+IARA.Random.seed!(1234)
+inflow = rand(4, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow"),
     inflow;

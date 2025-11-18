@@ -318,6 +318,90 @@ function get_renewable_generation_to_plot(
     return ex_ante_generation, ex_post_generation
 end
 
+function get_inflow_energy_to_plot(
+    inputs::AbstractInputs;
+    asset_owner_index::Int,
+    virtual_reservoir_index::Int,
+)
+    num_periods = number_of_periods(inputs)
+    num_subperiods = number_of_subperiods(inputs)
+
+    # Check if this asset owner is part of this virtual reservoir
+    vr_asset_owners = virtual_reservoir_asset_owner_indices(inputs, virtual_reservoir_index)
+    if !(asset_owner_index in vr_asset_owners)
+        return [], []
+    end
+
+    # Get inflow allocation factor for this asset owner in this virtual reservoir
+    inflow_allocation =
+        virtual_reservoir_asset_owners_inflow_allocation(inputs, virtual_reservoir_index, asset_owner_index)
+
+    # Initialize hydro unit volumes (using initial volumes as a simplification for plotting)
+    volume_at_beginning_of_period = zeros(number_of_elements(inputs, HydroUnit))
+    for h in index_of_elements(inputs, HydroUnit)
+        volume_at_beginning_of_period[h] = hydro_unit_initial_volume(inputs, h)
+    end
+
+    # Ex-ante inflow energy calculation
+    ex_ante_inflow_energy = zeros(num_periods * num_subperiods)
+    if read_ex_ante_inflow_file(inputs)
+        # Process inflow data period by period
+        run_time_options = RunTimeOptions()
+        for period in 1:num_periods
+            update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario = 1)
+            inflow_series = time_series_inflow(inputs, run_time_options)
+            vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+
+            # Distribute energy evenly across subperiods for this period
+            for subperiod in 1:num_subperiods
+                idx = (period - 1) * num_subperiods + subperiod
+                ex_ante_inflow_energy[idx] =
+                    vr_energy_arrival[virtual_reservoir_index] * inflow_allocation / num_subperiods
+            end
+        end
+    end
+
+    # Ex-post inflow energy calculation
+    num_subscenarios = 1
+    if read_ex_post_inflow_file(inputs)
+        # Determine number of subscenarios from the ex-post data
+        if isdefined(inputs.time_series.inflow.ex_post, :data)
+            num_subscenarios = size(inputs.time_series.inflow.ex_post.data, 3)
+        end
+    end
+
+    ex_post_inflow_energy = zeros(num_subscenarios, num_periods * num_subperiods)
+
+    if read_ex_post_inflow_file(inputs)
+        run_time_options_ex_post =
+            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL)
+        for subscenario in 1:num_subscenarios
+            for period in 1:num_periods
+                update_time_series_views_from_external_files!(inputs, run_time_options_ex_post; period, scenario = 1)
+                inflow_series = time_series_inflow(inputs, run_time_options_ex_post; subscenario = subscenario)
+                vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+
+                # Distribute energy evenly across subperiods
+                for subperiod in 1:num_subperiods
+                    idx = (period - 1) * num_subperiods + subperiod
+                    ex_post_inflow_energy[subscenario, idx] =
+                        vr_energy_arrival[virtual_reservoir_index] * inflow_allocation / num_subperiods
+                end
+            end
+        end
+
+        # If there is no ex-ante inflow file, use average of ex-post
+        if !read_ex_ante_inflow_file(inputs)
+            ex_ante_inflow_energy = dropdims(mean(ex_post_inflow_energy; dims = 1); dims = 1)
+        end
+    else
+        # If no ex-post data, use ex-ante for ex-post
+        ex_post_inflow_energy[1, :] = copy(ex_ante_inflow_energy)
+    end
+
+    return ex_ante_inflow_energy, ex_post_inflow_energy
+end
+
 function convert_generation_data_from_GWh_to_MW!(
     data::Array{T, N},
     metadata::Quiver.Metadata,

@@ -133,21 +133,55 @@ function get_total_max_generation(inputs::Inputs, run_time_options::RunTimeOptio
 end
 
 function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
+    lower_bound = 0.0
+
     if is_current_asset_owner_price_taker(inputs, run_time_options)
         # Price takers use historical spot prices as max price reference
         max_price = get_max_price(inputs, run_time_options)
+        max_generation = get_total_max_generation(inputs, run_time_options)
+        total_subperiod_hours = sum(subperiod_duration_in_hours(inputs))
+        # Lower bound represents worst-case negative revenue scenario
+        lower_bound = -max_price * max_generation * total_subperiod_hours
     elseif is_current_asset_owner_price_maker(inputs, run_time_options)
         # Price makers can potentially receive deficit cost when demand is unmet
         max_price = demand_deficit_cost(inputs)
-    else
-        return 0.0
+        max_generation = get_total_max_generation(inputs, run_time_options)
+        total_subperiod_hours = sum(subperiod_duration_in_hours(inputs))
+        # Lower bound represents worst-case negative revenue scenario
+        lower_bound = -max_price * max_generation * total_subperiod_hours
     end
 
-    max_generation = get_total_max_generation(inputs, run_time_options)
-    total_subperiod_hours = sum(subperiod_duration_in_hours(inputs))
+    # Account for elastic demand revenue in MIN_COST and COST_BASED modes
+    # Elastic demand creates negative cost terms in the objective (revenue)
+    if (is_mincost(inputs, run_time_options) ||
+        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED) &&
+       any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
+        # Get maximum elastic demand price across all time series
+        elastic_demand_price_file_path = joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs))
+        max_elastic_price = get_maximum_value_of_time_series(elastic_demand_price_file_path)
 
-    # Lower bound represents worst-case negative revenue scenario
-    return -max_price * max_generation * total_subperiod_hours
+        # Get maximum demand factor from time series (p.u.)
+        # Follow the same logic as time_series_demand for MIN_COST mode
+        demand_file_path = if read_ex_ante_demand_file(inputs)
+            joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs))
+        elseif read_ex_post_demand_file(inputs)
+            joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs))
+        else
+            error("No demand file configured for elastic demand lower bound calculation.")
+        end
+        max_demand_factor = get_maximum_value_of_time_series(demand_file_path)
+
+        # Get total maximum elastic demand quantity (max_demand * max_demand_factor)
+        elastic_demands = index_of_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
+        total_max_elastic_demand = sum(demand_unit_max_demand(inputs, d) * max_demand_factor for d in elastic_demands)
+
+        total_subperiod_hours = sum(subperiod_duration_in_hours(inputs))
+
+        # Elastic demand revenue acts as negative cost, so it lowers the bound further
+        lower_bound -= max_elastic_price * total_max_elastic_demand * total_subperiod_hours
+    end
+
+    return lower_bound
 end
 
 function get_nash_equilibrium_previous_output_path(inputs::Inputs, run_time_options::RunTimeOptions)

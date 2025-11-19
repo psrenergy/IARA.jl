@@ -903,34 +903,36 @@ function plot_operator_output(
 
     for subperiod in 1:num_subperiods
         configs = Vector{Config}()
-        for asset_owner_index in asset_owner_indexes
+        for asset_owner_index in reverse(asset_owner_indexes)
             ao_label_for_bg = asset_owner_label(inputs, asset_owner_index)
             if !isempty(vr_file_path)
                 ao_label_for_vr = ao_label_for_bg * " - Reservatório Virtual"
                 ao_label_for_bg *= " - Grupo Ofertante"
+                push!(
+                    configs,
+                    Config(;
+                        # x = 1:num_subscenarios,
+                        x = asset_owner_index:(length(asset_owner_indexes) + 1):num_subscenarios*(length(asset_owner_indexes) + 1),
+                        y = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0), # VR data has no subperiod dimension
+                        name = ao_label_for_vr,
+                        marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
+                        type = "bar",
+                        hovertemplate = "(%{y})",
+                    ),
+                )
             end
             push!(
                 configs,
                 Config(;
-                    x = 1:num_subscenarios,
-                    y = bg_data[asset_owner_index, subperiod, :],
+                    # x = 1:num_subscenarios,
+                    x = asset_owner_index:(length(asset_owner_indexes) + 1):num_subscenarios*(length(asset_owner_indexes) + 1),
+                    y = vcat(bg_data[asset_owner_index, subperiod, :], 0.0),
                     name = ao_label_for_bg,
                     marker = Dict("color" => _get_plot_color(asset_owner_index)),
                     type = "bar",
+                    hovertemplate = "(%{y})",
                 ),
             )
-            if !isempty(vr_file_path)
-                push!(
-                    configs,
-                    Config(;
-                        x = 1:num_subscenarios,
-                        y = vr_data[asset_owner_index, 1, :] ./ num_subperiods, # VR data has no subperiod dimension
-                        name = ao_label_for_vr,
-                        marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
-                        type = "bar",
-                    ),
-                )
-            end
         end
 
         if ex_ante_plot
@@ -940,14 +942,23 @@ function plot_operator_output(
         else
             # This is actually the subscenario, with a simplified name for UI cases
             x_axis_title = get_name(inputs, "scenario")
-            x_axis_tickvals = 1:num_subscenarios
-            x_axis_ticktext = string.(1:num_subscenarios)
+            x_axis_tickvals = 1:num_subscenarios*(length(asset_owner_indexes) + 1)
+            ref_ao_for_ticktext = Int(round((length(asset_owner_indexes) + 1) / 2))
+            x_axis_ticktext = String[]
+            for tick in 1:num_subscenarios*(length(asset_owner_indexes) + 1)
+                if mod(tick - ref_ao_for_ticktext, length(asset_owner_indexes) + 1) == 0
+                    push!(x_axis_ticktext, string(div(tick - ref_ao_for_ticktext, length(asset_owner_indexes) + 1) + 1))
+                else
+                    push!(x_axis_ticktext, "")
+                end
+            end
         end
         plot_title = title
         if num_subperiods > 1
             plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
         end
         main_configuration = Config(;
+            barmode = "stack",
             title = Dict(
                 "text" => plot_title,
                 "font" => Dict("size" => title_font_size()),

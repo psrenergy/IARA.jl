@@ -117,7 +117,7 @@ function _get_plot_color(index::Int; transparent::Bool = false, dark_shade::Bool
     color = colors[mod1(index, length(colors))]
 
     color = if dark_shade
-        "rgb$(Int.(round.(color ./ 2)))"
+        "rgb$(Int.(round.(color .* 0.6)))"
     else
         "rgb$color"
     end

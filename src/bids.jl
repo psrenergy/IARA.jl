@@ -810,6 +810,17 @@ function initialize_virtual_reservoir_bids_outputs(
         labels,
     )
 
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        run_time_options,
+        output_name = "virtual_reservoir_no_markup_price_bid",
+        dimensions = ["period", "scenario", "bid_segment"],
+        unit = "\$/MWh",
+        labels,
+    )
+
     return nothing
 end
 
@@ -868,6 +879,12 @@ function virtual_reservoir_markup_bids_for_period_scenario(
         maximum_number_of_vr_bidding_segments(inputs),
     )
 
+    no_markup_price_bids = zeros(
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
+    )
+
     for vr in index_of_elements(inputs, VirtualReservoir)
         vr_total_account = sum(accounts[vr])
         vr_quantity_bid =
@@ -893,21 +910,17 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             ao_price_bid = Float64[]
 
             account_upper_bounds =
-                if bid_processing(inputs) ==
-                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
-                    asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
-                elseif bid_processing(inputs) ==
-                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
+                if bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     [1.0]
+                else
+                    asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
                 end
             markups =
-                if bid_processing(inputs) ==
-                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
-                    asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
-                elseif bid_processing(inputs) ==
-                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
+                if bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     # Markups are calculated via Nash equilibrium later. This function is only used to divide the reference curve between the asset owners.
                     [0.0]
+                else
+                    asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
                 end
 
             #---------------
@@ -951,6 +964,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                     )
                     quantity_bids[vr, ao, seg] = bid
                     price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment] * (1 + markups[markup_index])
+                    no_markup_price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment]
 
                     sum_of_bids_for_current_markup += bid
                     sum_of_ao_selling_bids += bid
@@ -1059,6 +1073,16 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             run_time_options,
             "virtual_reservoir_price_bid",
             price_bids,
+            period,
+            scenario,
+        )
+
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_no_markup_price_bid",
+            no_markup_price_bids,
             period,
             scenario,
         )

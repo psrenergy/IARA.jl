@@ -722,7 +722,7 @@ function single_period_heuristic_bid(
             run_time_options,
         )
     end
-    if should_build_reference_curve(inputs)
+    if use_virtual_reservoirs(inputs)
         run_time_options =
             RunTimeOptions(;
                 is_reference_curve = true,
@@ -740,7 +740,7 @@ function single_period_heuristic_bid(
         update_time_series_from_db!(inputs, period)
 
         # Reference curve
-        if should_build_reference_curve(inputs)
+        if use_virtual_reservoirs(inputs)
             build_reference_curve(inputs, reference_curve_outputs, period)
         end
 
@@ -769,7 +769,7 @@ function single_period_heuristic_bid(
         end
     finally
         finalize_outputs!(outputs)
-        if should_build_reference_curve(inputs)
+        if use_virtual_reservoirs(inputs)
             finalize_outputs!(reference_curve_outputs)
         end
     end

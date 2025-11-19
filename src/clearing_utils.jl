@@ -576,6 +576,12 @@ function serialize_parp_inflow(
     # Change dimensions from [subperiods, hydro_units] to [hydro_units, subperiods]
     inflow_values = permutedims(inflow_values)
 
+    # Convert from [hm3] to [m3/s]
+    for subperiod in subperiods(inputs)
+        inflow_values[:, subperiod] /=
+            (m3_per_second_to_hm3_per_hour() * subperiod_duration_in_hours(inputs, subperiod))
+    end
+
     Serialization.serialize(serialized_file_name, inflow_values)
     return nothing
 end

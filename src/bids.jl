@@ -1011,7 +1011,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 end
 
                 if seg == 0 || isempty(buy_segments) ||
-                   sum(quantity_bids[vr, ao, seg] for seg in buy_segments) <
+                   sum(-quantity_bids[vr, ao, seg] for seg in buy_segments) <
                    asset_owner_minimum_virtual_reservoir_purchase_bid_quantity_in_mwh(inputs, ao)
                     current_seg = 1
                     if seg != 0

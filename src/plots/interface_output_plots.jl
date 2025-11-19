@@ -20,9 +20,15 @@ function build_ui_operator_plots(
 )
     plots_path = joinpath(output_path(inputs), "plots", "operator")
     mkdir(plots_path)
+    plot_virtual_reservoir_results = any_elements(inputs, VirtualReservoir)
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
+    vr_revenue_files = if plot_virtual_reservoir_results
+        get_virtual_reservoir_revenue_files(inputs)
+    else
+        ["" for _ in revenue_files]
+    end
     if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(revenue_files) == 2
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
@@ -33,6 +39,7 @@ function build_ui_operator_plots(
             get_name(inputs, "ex_ante_revenue");
             round_data = true,
             ex_ante_plot = true,
+            vr_file_path = vr_revenue_files[1],
         )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
         plot_operator_output(
@@ -41,15 +48,28 @@ function build_ui_operator_plots(
             plot_path,
             get_name(inputs, "ex_post_revenue");
             round_data = true,
+            vr_file_path = vr_revenue_files[2],
         )
     else
         @assert length(revenue_files) == 1
         plot_path = joinpath(plots_path, "total_revenue")
-        plot_operator_output(inputs, revenue_files[1], plot_path, get_name(inputs, "total_revenue"); round_data = true)
+        plot_operator_output(
+            inputs,
+            revenue_files[1],
+            plot_path,
+            get_name(inputs, "total_revenue");
+            round_data = true,
+            vr_file_path = vr_revenue_files[1],
+        )
     end
 
     # Generation
     generation_files = get_generation_files(inputs)
+    vr_generation_files = if plot_virtual_reservoir_results
+        get_virtual_reservoir_generation_files(inputs)
+    else
+        ["" for _ in generation_files]
+    end
     if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(generation_files) == 2
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
@@ -59,13 +79,26 @@ function build_ui_operator_plots(
             plot_path,
             get_name(inputs, "ex_ante_generation");
             ex_ante_plot = true,
+            vr_file_path = vr_generation_files[1],
         )
         plot_path = joinpath(plots_path, "total_generation_ex_post")
-        plot_operator_output(inputs, generation_files[2], plot_path, get_name(inputs, "ex_post_generation"))
+        plot_operator_output(
+            inputs,
+            generation_files[2],
+            plot_path,
+            get_name(inputs, "ex_post_generation");
+            vr_file_path = vr_generation_files[2],
+        )
     else
         @assert length(generation_files) == 1
         plot_path = joinpath(plots_path, "total_generation")
-        plot_operator_output(inputs, generation_files[1], plot_path, get_name(inputs, "total_generation"))
+        plot_operator_output(
+            inputs,
+            generation_files[1],
+            plot_path,
+            get_name(inputs, "total_generation");
+            vr_file_path = vr_generation_files[1],
+        )
     end
 
     return nothing
@@ -76,20 +109,39 @@ function build_ui_agents_plots(
 )
     plots_path = joinpath(output_path(inputs), "plots", "agents")
     mkdir(plots_path)
+    plot_virtual_reservoir_results = any_elements(inputs, VirtualReservoir)
 
     # Profit
     profit_file_path = get_profit_file(inputs)
+    vr_profit_file_path = if plot_virtual_reservoir_results
+        get_virtual_reservoir_profit_file(inputs)
+    else
+        ""
+    end
     if isfile(profit_file_path)
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - $(get_name(inputs, "total_profit"))"
             plot_path = joinpath(plots_path, "profit_$ao_label.html")
-            plot_agent_output(inputs, profit_file_path, plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(
+                inputs,
+                profit_file_path,
+                plot_path,
+                asset_owner_index,
+                title;
+                round_data = true,
+                vr_file_path = vr_profit_file_path,
+            )
         end
     end
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
+    vr_revenue_files = if plot_virtual_reservoir_results
+        get_virtual_reservoir_revenue_files(inputs)
+    else
+        ["" for _ in revenue_files]
+    end
     if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(revenue_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
@@ -104,13 +156,22 @@ function build_ui_agents_plots(
                 title;
                 round_data = true,
                 ex_ante_plot = true,
+                vr_file_path = vr_revenue_files[1],
             )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - $(get_name(inputs, "ex_post_revenue"))"
             plot_path = joinpath(plots_path, "revenue_ex_post_$ao_label.html")
-            plot_agent_output(inputs, revenue_files[2], plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(
+                inputs,
+                revenue_files[2],
+                plot_path,
+                asset_owner_index,
+                title;
+                round_data = true,
+                vr_file_path = vr_revenue_files[2],
+            )
         end
     else
         @assert length(revenue_files) == 1
@@ -118,25 +179,53 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - $(get_name(inputs, "total_revenue"))"
             plot_path = joinpath(plots_path, "revenue_$ao_label.html")
-            plot_agent_output(inputs, revenue_files[1], plot_path, asset_owner_index, title; round_data = true)
+            plot_agent_output(
+                inputs,
+                revenue_files[1],
+                plot_path,
+                asset_owner_index,
+                title;
+                round_data = true,
+                vr_file_path = vr_revenue_files[1],
+            )
         end
     end
 
     # Generation
     generation_files = get_generation_files(inputs)
+    vr_generation_files = if plot_virtual_reservoir_results
+        get_virtual_reservoir_generation_files(inputs)
+    else
+        ["" for _ in generation_files]
+    end
     if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
         @assert length(generation_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - $(get_name(inputs, "ex_ante_generation"))"
             plot_path = joinpath(plots_path, "generation_ex_ante_$ao_label.html")
-            plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title; ex_ante_plot = true)
+            plot_agent_output(
+                inputs,
+                generation_files[1],
+                plot_path,
+                asset_owner_index,
+                title;
+                ex_ante_plot = true,
+                vr_file_path = vr_generation_files[1],
+            )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - $(get_name(inputs, "ex_post_generation"))"
             plot_path = joinpath(plots_path, "generation_ex_post_$ao_label.html")
-            plot_agent_output(inputs, generation_files[2], plot_path, asset_owner_index, title)
+            plot_agent_output(
+                inputs,
+                generation_files[2],
+                plot_path,
+                asset_owner_index,
+                title;
+                vr_file_path = vr_generation_files[2],
+            )
         end
     else
         @assert length(generation_files) == 1
@@ -144,7 +233,14 @@ function build_ui_agents_plots(
             ao_label = asset_owner_label(inputs, asset_owner_index)
             title = "$ao_label - $(get_name(inputs, "total_generation"))"
             plot_path = joinpath(plots_path, "generation_$ao_label.html")
-            plot_agent_output(inputs, generation_files[1], plot_path, asset_owner_index, title)
+            plot_agent_output(
+                inputs,
+                generation_files[1],
+                plot_path,
+                asset_owner_index,
+                title;
+                vr_file_path = vr_generation_files[1],
+            )
         end
     end
 
@@ -206,28 +302,6 @@ function build_ui_general_plots(
         )
     end
 
-    # Generation by technology
-    generation_file_path = joinpath(post_processing_path(inputs), "generation.csv")
-    if isfile(generation_file_path)
-        # Generation
-        plot_general_output(
-            inputs;
-            file_path = generation_file_path,
-            plot_path = joinpath(plots_path, "generation_by_technology"),
-            title = get_name(inputs, "generation_by_technology"),
-            agent_labels = ["hydro", "thermal", "renewable", "battery_unit"], # Does not include deficit
-            stack = true,
-        )
-        # Deficit
-        plot_general_output(
-            inputs;
-            file_path = generation_file_path,
-            plot_path = joinpath(plots_path, "deficit"),
-            title = get_name(inputs, "deficit"),
-            agent_labels = ["deficit"],
-        )
-    end
-
     # Offer curve
     plot_bid_curve(inputs, plots_path)
 
@@ -235,6 +309,7 @@ function build_ui_general_plots(
 end
 
 function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
+    # Determine which files should be read
     bidding_group_bid_files = get_bidding_group_bid_file_paths(inputs)
     virtual_reservoir_bid_files = get_virtual_reservoir_bid_file_paths(inputs)
     if !isempty(bidding_group_bid_files)
@@ -261,6 +336,7 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
             end
         end
 
+        # Read files
         bg_quantity_data, bg_quantity_metadata = read_timeseries_file(bg_quantity_bid_file)
         bg_price_data, bg_price_metadata = read_timeseries_file(bg_price_bid_file)
         if plot_virtual_reservoir_data
@@ -278,6 +354,7 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
             end
         end
 
+        # Validate file metadata
         @assert bg_quantity_metadata.number_of_time_series == bg_price_metadata.number_of_time_series "Mismatch between quantity and price bid file columns"
         @assert bg_quantity_metadata.dimension_size == bg_price_metadata.dimension_size "Mismatch between quantity and price bid file dimensions"
         @assert bg_quantity_metadata.labels == bg_price_metadata.labels "Mismatch between quantity and price bid file labels"
@@ -650,176 +727,210 @@ end
 
 function plot_agent_output(
     inputs::AbstractInputs,
-    file_path::String,
+    bg_file_path::String,
     plot_path::String,
     asset_owner_index::Int,
     title::String;
-    subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
     fixed_component::Vector{Float64} = Float64[],
+    vr_file_path::String = "",
 )
-    data, metadata = read_timeseries_file(file_path)
-
-    if :bid_segment in metadata.dimensions
-        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
-        # The data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
-        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
-        data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
-        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
-        metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
+    # Read and format BG data
+    bg_data, bg_metadata, num_subperiods, num_subscenarios = format_data_to_plot(
+        inputs,
+        bg_file_path;
+        asset_owner_index,
+    )
+    if round_data
+        bg_data = round.(bg_data; digits = 1)
     end
 
-    if occursin("generation", file_path)
-        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
-    end
-
-    has_subscenarios = :subscenario in metadata.dimensions
-    has_subperiods = :subperiod in metadata.dimensions
-    # TODO: check if we really need to treat subperiods here
-
-    if has_subscenarios
-        if has_subperiods
-            @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
-            reshaped_data = data[:, :, :, 1, 1]
-        else
-            @assert metadata.dimensions == [:period, :scenario, :subscenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios, num_subscenarios = metadata.dimension_size
-            num_subperiods = 1
-            reshaped_data = data[:, :, 1, 1]
-        end
-    else
-        num_subscenarios = 1
-        if has_subperiods
-            @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios, num_subperiods = metadata.dimension_size
-            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
-            reshaped_data[:, :, 1] = data[:, :, 1, 1]
-        else
-            @assert metadata.dimensions == [:period, :scenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios = metadata.dimension_size
-            num_subperiods = 1
-            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
-            reshaped_data[:, 1, 1] = data[:, 1, 1]
+    # Read and format VR data
+    if !isempty(vr_file_path)
+        @assert isempty(fixed_component) "Fixed component plotting not supported for virtual reservoir data"
+        vr_data, vr_metadata, _, _ = format_data_to_plot(
+            inputs,
+            vr_file_path;
+            asset_owner_index,
+        )
+        if round_data
+            vr_data = round.(vr_data; digits = 1)
         end
     end
 
-    if num_scenarios > 1 && asset_owner_index == first(index_of_elements(inputs, AssetOwner))
-        @warn "Plotting asset owner $title for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
-    end
-    @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
-
-    bidding_group_indexes =
-        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-
-    asset_owner_bidding_groups = Int[]
-    labels_to_read = String[]
-    for bg in bidding_group_indexes
-        if bidding_group_asset_owner_index(inputs, bg) != asset_owner_index
-            continue
-        end
-        push!(asset_owner_bidding_groups, bg)
-        bg_label = bidding_group_label(inputs, bg)
-        for bus in bus_label(inputs)
-            push!(labels_to_read, "$bg_label - $bus")
-        end
-    end
-    # If the asset owner has no bidding groups, there is nothing to plot
-    if isempty(labels_to_read)
-        return nothing
-    end
-    indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
-
-    # Fixed scenario, fixed period, sum for all bidding groups
-    reshaped_data = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
+    # Read and format fixed component data
     if !isempty(fixed_component)
+        asset_owner_bidding_groups = Int[]
+        bidding_group_indexes =
+            index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+        for bg in bidding_group_indexes
+            if bidding_group_asset_owner_index(inputs, bg) == asset_owner_index
+                push!(asset_owner_bidding_groups, bg)
+            end
+        end
         fixed_component = sum(fixed_component[asset_owner_bidding_groups]; dims = 1) / num_subperiods
     end
 
     configs = Vector{Config}()
-
-    if round_data
-        reshaped_data = round.(reshaped_data; digits = 1)
-    end
-
-    if subperiod_on_x_axis && num_subperiods != 1
-        for subscenario in 1:num_subscenarios
-            push!(
-                configs,
-                Config(;
-                    x = 1:num_subperiods,
-                    y = reshaped_data[:, subscenario],
-                    name = "$(get_name(inputs, "subscenario")) $subscenario",
-                    line = Dict("color" => _get_plot_color(subscenario)),
-                    type = "line",
-                ),
-            )
-        end
-
-        main_configuration = Config(;
-            title = Dict(
-                "text" => title,
-                "font" => Dict("size" => title_font_size()),
-            ),
-            xaxis = Dict(
-                "title" => Dict(
-                    "text" => get_name(inputs, "subperiod"),
-                    "font" => Dict("size" => axis_title_font_size()),
-                ),
-                "tickmode" => "array",
-                "tickvals" => 1:num_subperiods,
-                "ticktext" => string.(1:num_subperiods),
-                "tickfont" => Dict("size" => axis_tick_font_size()),
-            ),
-            yaxis = Dict(
-                "title" => Dict(
-                    "text" => "$(metadata.unit)",
-                    "font" => Dict("size" => axis_title_font_size()),
-                ),
-                "tickfont" => Dict("size" => axis_tick_font_size()),
-            ),
-            legend = Dict(
-                "yanchor" => "bottom",
-                "xanchor" => "left",
-                "yref" => "container",
-                "orientation" => "h",
-                "font" => Dict("size" => legend_font_size()),
-            ),
-        )
-    else
-        for subperiod in 1:num_subperiods
-            variable_component_name = ""
-            if !isempty(fixed_component)
-                fixed_component_name = get_name(inputs, "fixed_cost")
-                variable_component_name = get_name(inputs, "variable_cost")
-                if num_subperiods > 1
-                    fixed_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
-                end
-                push!(
-                    configs,
-                    Config(;
-                        x = 1:num_subscenarios,
-                        y = repeat(fixed_component, num_subscenarios),
-                        name = fixed_component_name,
-                        marker = Dict("color" => _get_plot_color(num_subperiods + subperiod)),
-                        type = "bar",
-                    ),
-                )
-            end
+    for subperiod in 1:num_subperiods
+        variable_component_name = ""
+        if !isempty(fixed_component)
+            fixed_component_name = get_name(inputs, "fixed_cost")
+            variable_component_name = get_name(inputs, "variable_cost")
             if num_subperiods > 1
-                variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+                fixed_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
             push!(
                 configs,
                 Config(;
                     x = 1:num_subscenarios,
-                    y = reshaped_data[subperiod, :],
-                    name = variable_component_name,
-                    marker = Dict("color" => _get_plot_color(subperiod)),
+                    y = repeat(fixed_component, num_subscenarios),
+                    name = fixed_component_name,
+                    marker = Dict("color" => _get_plot_color(num_subperiods + subperiod)),
                     type = "bar",
                 ),
             )
+        end
+        if !isempty(vr_file_path)
+            variable_component_name = title * " - Grupo Ofertante"
+            vr_component_name = title * " - Reservatório Virtual"
+            if num_subperiods > 1
+                vr_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subscenarios,
+                    y = vr_data[1, :] ./ num_subperiods, # VR data has no subperiod dimension
+                    name = vr_component_name,
+                    marker = Dict("color" => _get_plot_color(subperiod; dark_shade = true)),
+                    type = "bar",
+                ),
+            )
+        end
+        if num_subperiods > 1
+            variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+        end
+        push!(
+            configs,
+            Config(;
+                x = 1:num_subscenarios,
+                y = bg_data[subperiod, :],
+                name = variable_component_name,
+                marker = Dict("color" => _get_plot_color(subperiod)),
+                type = "bar",
+            ),
+        )
+    end
+
+    if ex_ante_plot
+        x_axis_title = ""
+        x_axis_tickvals = []
+        x_axis_ticktext = []
+    else
+        # This is actually the subscenario, with a simplified name for UI cases
+        x_axis_title = get_name(inputs, "scenario")
+        x_axis_tickvals = 1:num_subscenarios
+        x_axis_ticktext = string.(1:num_subscenarios)
+    end
+    main_configuration = Config(;
+        barmode = "stack",
+        title = Dict(
+            "text" => title,
+            "font" => Dict("size" => title_font_size()),
+        ),
+        xaxis = Dict(
+            "title" => Dict(
+                "text" => x_axis_title,
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
+            "tickmode" => "array",
+            "tickvals" => x_axis_tickvals,
+            "ticktext" => x_axis_ticktext,
+            "tickfont" => Dict("size" => axis_tick_font_size()),
+        ),
+        yaxis = Dict(
+            "title" => Dict(
+                "text" => "$(bg_metadata.unit)",
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
+            "tickfont" => Dict("size" => axis_tick_font_size()),
+        ),
+        legend = Dict(
+            "yanchor" => "bottom",
+            "xanchor" => "left",
+            "yref" => "container",
+            "orientation" => "h",
+            "font" => Dict("size" => legend_font_size()),
+        ),
+    )
+
+    _save_plot(Plot(configs, main_configuration), plot_path)
+
+    return nothing
+end
+
+function plot_operator_output(
+    inputs::AbstractInputs,
+    bg_file_path::String,
+    plot_path::String,
+    title::String;
+    round_data::Bool = false,
+    ex_ante_plot::Bool = false,
+    vr_file_path::String = "",
+)
+    bg_data, bg_metadata, num_subperiods, num_subscenarios = format_data_to_plot(
+        inputs,
+        bg_file_path;
+    )
+    if round_data
+        bg_data = round.(bg_data; digits = 1)
+    end
+
+    # Read and format VR data
+    if !isempty(vr_file_path)
+        vr_data, vr_metadata, _, _ = format_data_to_plot(
+            inputs,
+            vr_file_path;
+        )
+        if round_data
+            vr_data = round.(vr_data; digits = 1)
+        end
+    end
+
+    asset_owner_indexes = index_of_elements(inputs, AssetOwner)
+
+    for subperiod in 1:num_subperiods
+        configs = Vector{Config}()
+        for asset_owner_index in asset_owner_indexes
+            ao_label_for_bg = asset_owner_label(inputs, asset_owner_index)
+            if !isempty(vr_file_path)
+                ao_label_for_vr = ao_label_for_bg * " - Reservatório Virtual"
+                ao_label_for_bg *= " - Grupo Ofertante"
+            end
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subscenarios,
+                    y = bg_data[asset_owner_index, subperiod, :],
+                    name = ao_label_for_bg,
+                    marker = Dict("color" => _get_plot_color(asset_owner_index)),
+                    type = "bar",
+                ),
+            )
+            if !isempty(vr_file_path)
+                push!(
+                    configs,
+                    Config(;
+                        x = 1:num_subscenarios,
+                        y = vr_data[asset_owner_index, 1, :] ./ num_subperiods, # VR data has no subperiod dimension
+                        name = ao_label_for_vr,
+                        marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
+                        type = "bar",
+                    ),
+                )
+            end
         end
 
         if ex_ante_plot
@@ -832,10 +943,13 @@ function plot_agent_output(
             x_axis_tickvals = 1:num_subscenarios
             x_axis_ticktext = string.(1:num_subscenarios)
         end
+        plot_title = title
+        if num_subperiods > 1
+            plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
+        end
         main_configuration = Config(;
-            barmode = "stack",
             title = Dict(
-                "text" => title,
+                "text" => plot_title,
                 "font" => Dict("size" => title_font_size()),
             ),
             xaxis = Dict(
@@ -850,7 +964,7 @@ function plot_agent_output(
             ),
             yaxis = Dict(
                 "title" => Dict(
-                    "text" => "$(metadata.unit)",
+                    "text" => "$(bg_metadata.unit)",
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -863,196 +977,8 @@ function plot_agent_output(
                 "font" => Dict("size" => legend_font_size()),
             ),
         )
-    end
 
-    _save_plot(Plot(configs, main_configuration), plot_path)
-
-    return nothing
-end
-
-function plot_operator_output(
-    inputs::AbstractInputs,
-    file_path::String,
-    plot_path::String,
-    title::String;
-    subperiod_on_x_axis::Bool = false,
-    round_data::Bool = false,
-    ex_ante_plot::Bool = false,
-)
-    data, metadata = read_timeseries_file(file_path)
-
-    if :bid_segment in metadata.dimensions
-        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
-        # the data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
-        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
-        data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
-        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
-        metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
-    end
-
-    if occursin("generation", file_path)
-        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
-    end
-
-    has_subscenarios = :subscenario in metadata.dimensions
-
-    if has_subscenarios
-        @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
-        reshaped_data = data[:, :, :, 1, 1]
-    else
-        @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
-        num_subscenarios = 1
-        reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
-        reshaped_data[:, :, 1] = data[:, :, 1, 1]
-    end
-
-    if num_scenarios > 1
-        @warn "Plotting $title for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
-    end
-    @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
-
-    asset_owner_indexes = index_of_elements(inputs, AssetOwner)
-    bidding_group_indexes =
-        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-    reshaped_data = Array{Float64, 3}(undef, length(asset_owner_indexes), num_subperiods, num_subscenarios)
-
-    for (i, asset_owner_index) in enumerate(asset_owner_indexes)
-        labels_to_read = String[]
-        for bg in bidding_group_indexes
-            if bidding_group_asset_owner_index(inputs, bg) != asset_owner_index
-                continue
-            end
-            bg_label = bidding_group_label(inputs, bg)
-            for bus in bus_label(inputs)
-                push!(labels_to_read, "$bg_label - $bus")
-            end
-        end
-        indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
-
-        # Fixed scenario, fixed period, sum for the asset owner's bidding groups
-        reshaped_data[i, :, :] = dropdims(sum(data[indexes_to_read, :, :, 1, 1]; dims = 1); dims = 1)
-    end
-
-    if round_data
-        reshaped_data = round.(reshaped_data; digits = 1)
-    end
-
-    if subperiod_on_x_axis && num_subperiods != 1
-        for subscenario in 1:num_subscenarios
-            configs = Vector{Config}()
-            for asset_owner_index in asset_owner_indexes
-                ao_label = asset_owner_label(inputs, asset_owner_index)
-                push!(
-                    configs,
-                    Config(;
-                        x = 1:num_subperiods,
-                        y = reshaped_data[asset_owner_index, :, subscenario],
-                        name = ao_label,
-                        line = Dict("color" => _get_plot_color(asset_owner_index)),
-                        type = "line",
-                    ),
-                )
-            end
-
-            main_configuration = Config(;
-                title = Dict(
-                    "text" => title * " - $(get_name(inputs, "subscenario")) $subscenario",
-                    "font" => Dict("size" => title_font_size()),
-                ),
-                xaxis = Dict(
-                    "title" => Dict(
-                        "text" => get_name(inputs, "subperiod"),
-                        "font" => Dict("size" => axis_title_font_size()),
-                    ),
-                    "tickmode" => "array",
-                    "tickvals" => 1:num_subperiods,
-                    "ticktext" => string.(1:num_subperiods),
-                    "tickfont" => Dict("size" => axis_tick_font_size()),
-                ),
-                yaxis = Dict(
-                    "title" => Dict(
-                        "text" => "$(metadata.unit)",
-                        "font" => Dict("size" => axis_title_font_size()),
-                    ),
-                    "tickfont" => Dict("size" => axis_tick_font_size()),
-                ),
-                legend = Dict(
-                    "yanchor" => "bottom",
-                    "xanchor" => "left",
-                    "yref" => "container",
-                    "orientation" => "h",
-                    "font" => Dict("size" => legend_font_size()),
-                ),
-            )
-
-            _save_plot(Plot(configs, main_configuration), plot_path * "_subscenario_$subscenario.html")
-        end
-    else
-        for subperiod in 1:num_subperiods
-            configs = Vector{Config}()
-            for asset_owner_index in asset_owner_indexes
-                ao_label = asset_owner_label(inputs, asset_owner_index)
-                push!(
-                    configs,
-                    Config(;
-                        x = 1:num_subscenarios,
-                        y = reshaped_data[asset_owner_index, subperiod, :],
-                        name = ao_label,
-                        marker = Dict("color" => _get_plot_color(asset_owner_index)),
-                        type = "bar",
-                    ),
-                )
-            end
-
-            if ex_ante_plot
-                x_axis_title = ""
-                x_axis_tickvals = []
-                x_axis_ticktext = []
-            else
-                # This is actually the subscenario, with a simplified name for UI cases
-                x_axis_title = get_name(inputs, "scenario")
-                x_axis_tickvals = 1:num_subscenarios
-                x_axis_ticktext = string.(1:num_subscenarios)
-            end
-            plot_title = title
-            if num_subperiods > 1
-                plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
-            end
-            main_configuration = Config(;
-                title = Dict(
-                    "text" => plot_title,
-                    "font" => Dict("size" => title_font_size()),
-                ),
-                xaxis = Dict(
-                    "title" => Dict(
-                        "text" => x_axis_title,
-                        "font" => Dict("size" => axis_title_font_size()),
-                    ),
-                    "tickmode" => "array",
-                    "tickvals" => x_axis_tickvals,
-                    "ticktext" => x_axis_ticktext,
-                    "tickfont" => Dict("size" => axis_tick_font_size()),
-                ),
-                yaxis = Dict(
-                    "title" => Dict(
-                        "text" => "$(metadata.unit)",
-                        "font" => Dict("size" => axis_title_font_size()),
-                    ),
-                    "tickfont" => Dict("size" => axis_tick_font_size()),
-                ),
-                legend = Dict(
-                    "yanchor" => "bottom",
-                    "xanchor" => "left",
-                    "yref" => "container",
-                    "orientation" => "h",
-                    "font" => Dict("size" => legend_font_size()),
-                ),
-            )
-
-            _save_plot(Plot(configs, main_configuration), plot_path * "_subperiod_$subperiod.html")
-        end
+        _save_plot(Plot(configs, main_configuration), plot_path * "_subperiod_$subperiod.html")
     end
 
     return nothing
@@ -1063,47 +989,20 @@ function plot_general_output(
     file_path::String,
     plot_path::String,
     title::String,
-    agent_labels::Vector{String} = String[],
     stack::Bool = false,
-    subperiod_on_x_axis::Bool = false,
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
+    vr_file_path::String = "",
 )
-    data, metadata = read_timeseries_file(file_path)
-
-    if isempty(agent_labels)
-        agent_labels = String.(metadata.labels)
-        number_of_agents = length(agent_labels)
-        agent_indexes = 1:number_of_agents
-    else
-        number_of_agents = length(agent_labels)
-        agent_indexes = [findfirst(isequal(agent), metadata.labels) for agent in agent_labels]
+    data, metadata, num_subperiods, num_subscenarios = format_data_to_plot(
+        inputs,
+        file_path;
+        aggregate_header_by_asset_owner = false,
+    )
+    if round_data
+        data = round.(data; digits = 1)
     end
-
-    if occursin("generation", file_path)
-        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
-    end
-
-    has_subscenarios = :subscenario in metadata.dimensions
-
-    if has_subscenarios
-        @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
-        reshaped_data = data[agent_indexes, :, :, 1, 1]
-    else
-        @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
-        num_subscenarios = 1
-        reshaped_data = Array{Float64, 3}(undef, number_of_agents, num_subperiods, num_subscenarios)
-        reshaped_data[:, :, 1] = data[agent_indexes, :, 1, 1]
-    end
-    if num_scenarios > 1
-        @warn "Plotting $title for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
-    end
-    @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
-
-    configs = Vector{Config}()
-    color_idx = 0
+    number_of_agents = size(data, 1)
 
     plot_kwargs = if stack
         Dict(
@@ -1114,117 +1013,67 @@ function plot_general_output(
         Dict()
     end
 
-    if round_data
-        reshaped_data = round.(reshaped_data; digits = 1)
-    end
-
-    if subperiod_on_x_axis && num_subperiods != 1
-        for agent in 1:number_of_agents, subscenario in 1:num_subscenarios
-            label = agent_labels[agent] * " - $(get_name(inputs, "subscenario")) $subscenario"
-            color_idx += 1
-            push!(
-                configs,
-                Config(;
-                    x = 1:num_subperiods,
-                    y = reshaped_data[agent, :, subscenario],
-                    name = label,
-                    line = Dict("color" => _get_plot_color(color_idx)),
-                    type = "line",
-                    plot_kwargs...,
-                ),
-            )
+    color_idx = 0
+    configs = Vector{Config}()
+    for agent in 1:number_of_agents, subperiod in 1:num_subperiods
+        label = metadata.labels[agent]
+        if num_subperiods > 1
+            label *= " - $(get_name(inputs, "subperiod")) $subperiod"
         end
-        main_configuration = Config(;
-            title = Dict(
-                "text" => title,
-                "font" => Dict("size" => title_font_size()),
-            ),
-            xaxis = Dict(
-                "title" => Dict(
-                    "text" => get_name(inputs, "subperiod"),
-                    "font" => Dict("size" => axis_title_font_size()),
-                ),
-                "tickmode" => "array",
-                "tickvals" => 1:num_subperiods,
-                "ticktext" => string(1:num_subperiods),
-                "tickfont" => Dict("size" => axis_tick_font_size()),
-            ),
-            yaxis = Dict(
-                "title" => Dict(
-                    "text" => "$(metadata.unit)",
-                    "font" => Dict("size" => axis_title_font_size()),
-                ),
-                "tickfont" => Dict("size" => axis_tick_font_size()),
-            ),
-            legend = Dict(
-                "yanchor" => "bottom",
-                "xanchor" => "left",
-                "yref" => "container",
-                "orientation" => "h",
-                "font" => Dict("size" => legend_font_size()),
+        color_idx += 1
+        push!(
+            configs,
+            Config(;
+                x = 1:num_subscenarios,
+                y = data[agent, subperiod, :],
+                name = label,
+                marker = Dict("color" => _get_plot_color(color_idx)),
+                type = "bar",
+                plot_kwargs...,
             ),
         )
+    end
+
+    if ex_ante_plot
+        x_axis_title = ""
+        x_axis_tickvals = []
+        x_axis_ticktext = []
     else
-        for agent in 1:number_of_agents, subperiod in 1:num_subperiods
-            label = agent_labels[agent]
-            if num_subperiods > 1
-                label *= " - $(get_name(inputs, "subperiod")) $subperiod"
-            end
-            color_idx += 1
-            push!(
-                configs,
-                Config(;
-                    x = 1:num_subscenarios,
-                    y = reshaped_data[agent, subperiod, :],
-                    name = label,
-                    marker = Dict("color" => _get_plot_color(color_idx)),
-                    type = "bar",
-                    plot_kwargs...,
-                ),
-            )
-        end
-
-        if ex_ante_plot
-            x_axis_title = ""
-            x_axis_tickvals = []
-            x_axis_ticktext = []
-        else
-            # This is actually the subscenario, with a simplified name for UI cases
-            x_axis_title = get_name(inputs, "scenario")
-            x_axis_tickvals = 1:num_subscenarios
-            x_axis_ticktext = string.(1:num_subscenarios)
-        end
-        main_configuration = Config(;
-            title = Dict(
-                "text" => title,
-                "font" => Dict("size" => title_font_size()),
-            ),
-            xaxis = Dict(
-                "title" => Dict(
-                    "text" => x_axis_title,
-                    "font" => Dict("size" => axis_title_font_size()),
-                ),
-                "tickmode" => "array",
-                "tickvals" => x_axis_tickvals,
-                "ticktext" => x_axis_ticktext,
-                "tickfont" => Dict("size" => axis_tick_font_size()),
-            ),
-            yaxis = Dict(
-                "title" => Dict(
-                    "text" => "$(metadata.unit)",
-                    "font" => Dict("size" => axis_title_font_size()),
-                ),
-                "tickfont" => Dict("size" => axis_tick_font_size()),
-            ),
-            legend = Dict(
-                "yanchor" => "bottom",
-                "xanchor" => "left",
-                "yref" => "container",
-                "orientation" => "h",
-                "font" => Dict("size" => legend_font_size()),
-            ),
-        )
+        # This is actually the subscenario, with a simplified name for UI cases
+        x_axis_title = get_name(inputs, "scenario")
+        x_axis_tickvals = 1:num_subscenarios
+        x_axis_ticktext = string.(1:num_subscenarios)
     end
+    main_configuration = Config(;
+        title = Dict(
+            "text" => title,
+            "font" => Dict("size" => title_font_size()),
+        ),
+        xaxis = Dict(
+            "title" => Dict(
+                "text" => x_axis_title,
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
+            "tickmode" => "array",
+            "tickvals" => x_axis_tickvals,
+            "ticktext" => x_axis_ticktext,
+            "tickfont" => Dict("size" => axis_tick_font_size()),
+        ),
+        yaxis = Dict(
+            "title" => Dict(
+                "text" => "$(metadata.unit)",
+                "font" => Dict("size" => axis_title_font_size()),
+            ),
+            "tickfont" => Dict("size" => axis_tick_font_size()),
+        ),
+        legend = Dict(
+            "yanchor" => "bottom",
+            "xanchor" => "left",
+            "yref" => "container",
+            "orientation" => "h",
+            "font" => Dict("size" => legend_font_size()),
+        ),
+    )
 
     _save_plot(Plot(configs, main_configuration), plot_path * ".html")
 

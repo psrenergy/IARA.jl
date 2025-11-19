@@ -100,6 +100,22 @@ function get_revenue_files(inputs::AbstractInputs)
     return joinpath.(post_processing_path(inputs), filenames)
 end
 
+function get_virtual_reservoir_revenue_files(inputs::AbstractInputs)
+    filenames = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
+        ["virtual_reservoir_total_revenue_ex_ante"]
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
+        ["virtual_reservoir_total_revenue_ex_post"]
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
+        ["virtual_reservoir_total_revenue_ex_ante", "virtual_reservoir_total_revenue_ex_post"]
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.NONE
+        [""]
+    end
+    filenames .*= "_period_$(inputs.args.period)"
+    filenames .*= ".csv"
+
+    return joinpath.(post_processing_path(inputs), filenames)
+end
+
 function get_profit_file(inputs::AbstractInputs)
     filename = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
         "bidding_group_profit_ex_ante"
@@ -114,6 +130,70 @@ function get_profit_file(inputs::AbstractInputs)
     filename *= ".csv"
 
     return joinpath(post_processing_path(inputs), filename)
+end
+
+function get_virtual_reservoir_profit_file(inputs::AbstractInputs)
+    # For the virtual reservoirs, the profit files are the same as the revenue files
+    filename = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
+        "virtual_reservoir_total_revenue_ex_ante"
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
+        "virtual_reservoir_total_revenue_ex_post"
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
+        "virtual_reservoir_total_revenue"
+    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.NONE
+        ""
+    end
+    if occursin("_ex_", filename)
+        filename *= "_period_$(inputs.args.period)"
+    end
+    filename *= ".csv"
+
+    return joinpath(post_processing_path(inputs), filename)
+end
+
+function get_virtual_reservoir_generation_files(inputs::AbstractInputs)
+    base_name = "virtual_reservoir_generation"
+    period_suffix = "_period_$(inputs.args.period)"
+    extension = ".csv"
+
+    filenames = String[]
+
+    if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
+        ex_ante_suffixes = ["_ex_ante_commercial", "_ex_ante_physical"]
+        ex_post_suffixes = ["_ex_post_commercial", "_ex_post_physical"]
+
+        for subproblem_suffix in ex_ante_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            end
+        end
+
+        for subproblem_suffix in ex_post_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            end
+        end
+    else
+        subproblem_suffixes = ["_ex_post_commercial", "_ex_post_physical", "_ex_ante_commercial", "_ex_ante_physical"]
+
+        for subproblem_suffix in subproblem_suffixes
+            filename = base_name * subproblem_suffix * period_suffix * extension
+            if isfile(joinpath(output_path(inputs), filename))
+                push!(filenames, joinpath(output_path(inputs), filename))
+                break
+            end
+        end
+    end
+
+    if isempty(filenames)
+        error("Virtual reservoir generation file not found")
+    end
+
+    return filenames
 end
 
 function get_variable_cost_file(inputs::AbstractInputs)
@@ -503,4 +583,148 @@ end
 function axis_tick_font_size()
     # Plotly default is 12
     return 12
+end
+
+function format_data_to_plot(
+    inputs::AbstractInputs,
+    file_path::String;
+    asset_owner_index::Union{Int, Nothing} = nothing,
+    aggregate_header_by_asset_owner::Bool = true,
+)
+    data, metadata = read_timeseries_file(file_path)
+
+    if :bid_segment in metadata.dimensions
+        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
+        # The data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
+        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
+        data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
+        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
+        metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
+    end
+
+    if occursin("generation", file_path)
+        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
+    end
+
+    is_virtual_reservoir_file = occursin("virtual_reservoir", file_path)
+
+    has_subscenarios = :subscenario in metadata.dimensions
+    has_subperiods = :subperiod in metadata.dimensions
+
+    if has_subscenarios
+        if has_subperiods
+            @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+            reshaped_data = data[:, :, :, 1, 1]
+        else
+            @assert metadata.dimensions == [:period, :scenario, :subscenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subscenarios = metadata.dimension_size
+            num_subperiods = 1
+            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            reshaped_data[:, 1, :] = data[:, :, 1, 1]
+        end
+    else
+        num_subscenarios = 1
+        if has_subperiods
+            @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            reshaped_data[:, :, 1] = data[:, :, 1, 1]
+        else
+            @assert metadata.dimensions == [:period, :scenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
+            num_periods, num_scenarios = metadata.dimension_size
+            num_subperiods = 1
+            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            reshaped_data[:, 1, 1] = data[:, 1, 1]
+        end
+    end
+
+    if num_scenarios > 1 &&
+       (isnothing(asset_owner_index) || asset_owner_index == first(index_of_elements(inputs, AssetOwner)))
+        @warn "Plotting asset owner $title for scenario 1 and ignoring the other scenarios. Total number of scenarios: $num_scenarios"
+    end
+    @assert num_periods == 1 "$title plot only implemented for single period run mode. Number of periods: $num_periods"
+
+    if aggregate_header_by_asset_owner
+        reshaped_data = aggregate_data_header(
+            inputs,
+            reshaped_data,
+            metadata;
+            asset_owner_index,
+            is_virtual_reservoir_file,
+        )
+    end
+
+    return reshaped_data, metadata, num_subperiods, num_subscenarios
+end
+
+function aggregate_data_header(
+    inputs::AbstractInputs,
+    data::Array{T, 3},
+    metadata::Quiver.Metadata;
+    asset_owner_index::Union{Int, Nothing} = nothing,
+    is_virtual_reservoir_file::Bool,
+) where {T <: Real}
+    num_subperiods, num_subscenarios = size(data, 2), size(data, 3)
+
+    if isnothing(asset_owner_index)
+        asset_owner_indexes = index_of_elements(inputs, AssetOwner)
+        reshaped_data = Array{Float64, 3}(undef, length(asset_owner_indexes), num_subperiods, num_subscenarios)
+        for (i, asset_owner_index) in enumerate(asset_owner_indexes)
+            labels_to_read = if is_virtual_reservoir_file
+                vr_ao_labels_for_asset_owner(inputs, asset_owner_index)
+            else
+                bg_bus_labels_for_asset_owner(inputs, asset_owner_index)
+            end
+            indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
+            reshaped_data[i, :, :] = dropdims(sum(data[indexes_to_read, :, :]; dims = 1); dims = 1)
+        end
+    else
+        reshaped_data = Array{Float64, 2}(undef, num_subperiods, num_subscenarios)
+        labels_to_read = if is_virtual_reservoir_file
+            vr_ao_labels_for_asset_owner(inputs, asset_owner_index)
+        else
+            bg_bus_labels_for_asset_owner(inputs, asset_owner_index)
+        end
+        indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
+        reshaped_data = dropdims(sum(data[indexes_to_read, :, :]; dims = 1); dims = 1)
+    end
+
+    return reshaped_data
+end
+
+function bg_bus_labels_for_asset_owner(
+    inputs::AbstractInputs,
+    asset_owner_index::Int,
+)
+    labels_to_read = String[]
+    bidding_group_indexes =
+        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+    for bg in bidding_group_indexes
+        if bidding_group_asset_owner_index(inputs, bg) != asset_owner_index
+            continue
+        end
+        bg_label = bidding_group_label(inputs, bg)
+        for bus in bus_label(inputs)
+            push!(labels_to_read, "$bg_label - $bus")
+        end
+    end
+    return labels_to_read
+end
+
+function vr_ao_labels_for_asset_owner(
+    inputs::AbstractInputs,
+    asset_owner_index::Int,
+)
+    labels_to_read = String[]
+    virtual_reservoir_indexes = index_of_elements(inputs, VirtualReservoir)
+    for vr in virtual_reservoir_indexes
+        if !(asset_owner_index in virtual_reservoir_asset_owner_indices(inputs, vr))
+            continue
+        end
+        vr_label = virtual_reservoir_label(inputs, vr)
+        ao_label = asset_owner_label(inputs, asset_owner_index)
+        push!(labels_to_read, "$vr_label - $ao_label")
+    end
+    return labels_to_read
 end

@@ -100,21 +100,27 @@ function initialize_plotly()
     return nothing
 end
 
-function _get_plot_color(index::Int; transparent::Bool = false)
+function _get_plot_color(index::Int; transparent::Bool = false, dark_shade::Bool = false)
     colors = [
-        "rgb(31, 119, 180)",
-        "rgb(255, 127, 14)",
-        "rgb(44, 160, 44)",
-        "rgb(148, 103, 189)",
-        "rgb(214, 39, 40)",
-        "rgb(188, 189, 34)",
-        "rgb(140, 86, 75)",
-        "rgb(227, 119, 194)",
-        "rgb(127, 127, 127)",
-        "rgb(23, 190, 207)",
+        (31, 119, 180),
+        (255, 127, 14),
+        (44, 160, 44),
+        (148, 103, 189),
+        (214, 39, 40),
+        (188, 189, 34),
+        (140, 86, 75),
+        (227, 119, 194),
+        (127, 127, 127),
+        (23, 190, 207),
     ]
 
     color = colors[mod1(index, length(colors))]
+
+    color = if dark_shade
+        "rgb$(Int.(round.(color ./ 2)))"
+    else
+        "rgb$color"
+    end
 
     if transparent
         color = replace(color, "rgb" => "rgba")

@@ -153,8 +153,10 @@ function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
 
     # Account for elastic demand revenue in MIN_COST and COST_BASED modes
     # Elastic demand creates negative cost terms in the objective (revenue)
-    if (is_mincost(inputs, run_time_options) ||
-        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED) &&
+    if (
+        is_mincost(inputs, run_time_options) ||
+        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
+    ) &&
        any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
         # Get maximum elastic demand price across all time series
         elastic_demand_price_file_path = joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs))

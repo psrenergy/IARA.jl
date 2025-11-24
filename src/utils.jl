@@ -151,12 +151,9 @@ function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
         lower_bound = -max_price * max_generation * total_subperiod_hours
     end
 
-    # Account for elastic demand revenue in MIN_COST and COST_BASED modes
+    # Account for elastic demand revenue in MIN_COST
     # Elastic demand creates negative cost terms in the objective (revenue)
-    if (
-        is_mincost(inputs, run_time_options) ||
-        construction_type(inputs, run_time_options) == IARA.Configurations_ConstructionType.COST_BASED
-    ) &&
+    if is_mincost(inputs, run_time_options) &&
        any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic])
         # Get maximum elastic demand price across all time series
         elastic_demand_price_file_path = joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs))
@@ -182,6 +179,7 @@ function get_lower_bound(inputs::Inputs, run_time_options::RunTimeOptions)
         # Elastic demand revenue acts as negative cost, so it lowers the bound further
         lower_bound -= max_elastic_price * total_max_elastic_demand * total_subperiod_hours
     end
+    lower_bound *= money_to_thousand_money()
 
     return lower_bound
 end

@@ -23,6 +23,8 @@ number_of_buses = 1
 number_of_bidding_groups = 6
 number_of_thermal_units = 6
 number_of_renewable_units = 0
+number_of_bg_segments = 1
+number_of_asset_owners = 6
 
 # Conversion constants
 # --------------------
@@ -51,7 +53,7 @@ db = IARA.create_study!(PATH;
     language = "pt",
     market_clearing_tiebreaker_weight_for_om_costs = 0.0,
     # bidding_group_bid_validation = IARA.Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE,
-    bid_processing = IARA.Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS,
+    bid_processing = IARA.Configurations_BidProcessing.READ_BIDS_FROM_FILE,
     bid_price_limit_low_reference = 9999.0,
     bid_price_limit_markup_non_justified_independent = 9999.0,
     bid_price_limit_markup_justified_independent = 9999.0,
@@ -118,6 +120,67 @@ IARA.add_bidding_group!(
     risk_factor = [0.0],
     segment_fraction = [1.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
+)
+
+IARA.link_time_series_to_file(
+    db,
+    "BiddingGroup";
+    quantity_bid = "bidding_group_energy_bid",
+    price_bid = "bidding_group_price_bid",
+)
+
+bg_quantity_bid =
+    zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        number_of_bg_segments,
+        number_of_subperiods,
+        number_of_scenarios,
+        number_of_periods,
+    )
+
+bg_price_bid =
+    zeros(
+        number_of_bidding_groups,
+        number_of_buses,
+        number_of_bg_segments,
+        number_of_subperiods,
+        number_of_scenarios,
+        number_of_periods,
+    )
+
+IARA.write_bids_time_series_file(
+    joinpath(PATH, "bidding_group_energy_bid"),
+    bg_quantity_bid;
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Peaker 1", "Peaker 2", "Peaker 3"],
+    labels_buses = ["Sistema"],
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_subperiods,
+        number_of_bg_segments,
+    ],
+    initial_date = "2025-01-01",
+    unit = "MWh",
+)
+
+IARA.write_bids_time_series_file(
+    joinpath(PATH, "bidding_group_price_bid"),
+    bg_price_bid;
+    dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Peaker 1", "Peaker 2", "Peaker 3"],
+    labels_buses = ["Sistema"],
+    time_dimension = "period",
+    dimension_size = [
+        number_of_periods,
+        number_of_scenarios,
+        number_of_subperiods,
+        number_of_bg_segments,
+    ],
+    initial_date = "2025-01-01",
+    unit = "\$/MWh",
 )
 
 # Thermal units

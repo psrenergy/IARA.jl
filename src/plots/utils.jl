@@ -602,11 +602,11 @@ function format_data_to_plot(
         metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
     end
 
-    if occursin("generation", file_path)
+    if occursin("generation", basename(file_path))
         convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
     end
 
-    is_virtual_reservoir_file = occursin("virtual_reservoir", file_path)
+    is_virtual_reservoir_file = occursin("virtual_reservoir", basename(file_path))
 
     has_subscenarios = :subscenario in metadata.dimensions
     has_subperiods = :subperiod in metadata.dimensions

@@ -120,9 +120,7 @@ function save_iara_case_to_next_round() {
     echo "Completed."
 }
 
-function save_heuristic_bids_to_next_round() {
-    echo "Preparing heuristic bids to next round..."
-    next_round=$((IARA_GAME_ROUND + 1))
+function save_heuristic_bids_to_current_round() {
     
     echo "Checking for virtual reservoir heuristic bids..."
     if [ -f "$CASE_PATH/heuristic_bids/virtual_reservoir_energy_bid_period_$IARA_GAME_ROUND.csv" ]; then
@@ -138,7 +136,7 @@ function save_heuristic_bids_to_next_round() {
         cd -    
 
         echo "Uploading zip to S3..."
-        aws s3 cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$next_round/game_inputs.zip  
+        aws s3 cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip  
     else
         echo "No virtual reservoir heuristic bids found, skipping zip and upload."
     fi
@@ -254,7 +252,7 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/heuristic_bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/heuristic_bids.zip 
     
-    save_heuristic_bids_to_next_round
+    save_heuristic_bids_to_current_round
     exit 0
 fi
 

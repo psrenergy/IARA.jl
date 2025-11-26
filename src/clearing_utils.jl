@@ -474,7 +474,6 @@ function single_period_heuristic_bid_has_volume_variables(inputs::Inputs)
     return true
 end
 
-
 """
     clearing_has_parp_variables(inputs::Inputs, run_time_options::RunTimeOptions)
 

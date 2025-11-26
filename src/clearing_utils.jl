@@ -464,6 +464,17 @@ function clearing_has_volume_variables(inputs::Inputs, run_time_options::RunTime
     return construction_type(inputs, run_time_options) != Configurations_ConstructionType.BID_BASED
 end
 
+function single_period_heuristic_bid_has_volume_variables(inputs::Inputs)
+    if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
+        return false
+    end
+    if number_of_elements(inputs, HydroUnit) == 0
+        return false
+    end
+    return true
+end
+
+
 """
     clearing_has_parp_variables(inputs::Inputs, run_time_options::RunTimeOptions)
 

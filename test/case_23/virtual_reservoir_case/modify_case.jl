@@ -71,7 +71,7 @@ IARA.add_hydro_unit!(db;
     ),
 )
 
-inflow_ex_ante = zeros(number_of_hydro_units, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 300.0
+inflow_ex_ante = zeros(number_of_hydro_units, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 600.0
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow_ex_ante"),
     inflow_ex_ante;

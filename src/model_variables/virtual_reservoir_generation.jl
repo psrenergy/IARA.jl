@@ -179,6 +179,11 @@ function virtual_reservoir_generation!(
         maximum_dimension_size = maximum_number_of_vr_bidding_segments(inputs),
     )
 
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
     output = outputs.outputs["virtual_reservoir_generation"*run_time_file_suffixes(inputs, run_time_options)]
     if is_ex_post_problem(run_time_options)
         for bid_segment in 1:maximum_number_of_vr_bidding_segments(inputs)

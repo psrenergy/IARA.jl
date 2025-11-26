@@ -621,7 +621,7 @@ function format_data_to_plot(
             num_periods, num_scenarios, num_subscenarios = metadata.dimension_size
             num_subperiods = 1
             reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
-            reshaped_data[:, 1, :] = data[:, :, 1, 1]
+            reshaped_data[:, 1, :] = data[:, :, 1]
         end
     else
         num_subscenarios = 1

@@ -1349,9 +1349,6 @@ function write_individual_virtual_reservoir_bids_files(
                 quantity = inputs.time_series.virtual_reservoir_quantity_bid[vr, asset_owner_index, segment]
                 quantity = round(quantity; digits = 6)
                 price = inputs.time_series.virtual_reservoir_price_bid[vr, asset_owner_index, segment]
-                if quantity == 0.0
-                    continue
-                end
                 if segment == 1
                     index_at_vectors = nothing
                 else

@@ -924,10 +924,20 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 # asset owner in the total account of the virtual reservoir. The calculation assumes that the total account of the
                 # virtual reservoir is static, does not change according to the asset owner bids
                 current_account_share = round(current_account / vr_total_account; digits = 3)
-                markup_index =
+                markup_index_raw =
                     findfirst(i -> account_upper_bounds[i] >= current_account_share, 1:length(account_upper_bounds))
+                if isnothing(markup_index_raw)
+                    # This case occurs when the account share exceeds all configured bounds.
+                    # It's a data error, but we can handle it by using the highest markup.
+                    # Log a warning so the user can fix their data
+                    @warn "Account share ($(current_account_share)) for virtual reservoir $(vr) and asset owner $(ao) is higher than any configured upper bound. Using the highest available markup tier. Please check your input data and ensure the last bound is 1.0."
+    
+                    # Use the last valid index
+                    markup_index = length(account_upper_bounds) + 1
+                else
+                    markup_index = markup_index_raw
+                end
                 account_share_lower_bound_for_markup = markup_index == 1 ? 0.0 : account_upper_bounds[markup_index-1]
-
                 maximum_bid_considering_markup =
                     current_account - account_share_lower_bound_for_markup * vr_total_account
 

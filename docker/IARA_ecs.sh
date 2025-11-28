@@ -283,12 +283,20 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     aws s3 cp $IARA_VOLUME/${IARA_CASE}_bids_round_${IARA_GAME_ROUND}/bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip
 
     echo "Saving energy account Ex-post results..."
-    aws s3 cp ./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/final_energy_account_ex_post.csv
-    echo "Energy account Ex-post results saved."
+    if [ -f "./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/final_energy_account_ex_post.csv
+        echo "Energy account Ex-post results saved."
+    else
+        echo "Energy account Ex-post results file not found, skipping upload."
+    fi
 
     echo "Saving hydro assets volume after round..."
-    aws s3 cp ./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/hydro_assets_volume.csv
-    echo "Hydro assets volume after round saved."
+    if [ -f "./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/hydro_assets_volume.csv
+        echo "Hydro assets volume after round saved."
+    else
+        echo "Hydro assets volume file not found, skipping upload."
+    fi
 
 
     echo "Removing temp dir $IARA_VOLUME/$IARA_CASE..."

@@ -931,7 +931,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                     # It's a data error, but we can handle it by using the highest markup.
                     # Log a warning so the user can fix their data
                     @warn "Account share ($(current_account_share)) for virtual reservoir $(vr) and asset owner $(ao) is higher than any configured upper bound. Using the highest available markup tier. Please check your input data and ensure the last bound is 1.0."
-    
+
                     # Use the last valid index
                     markup_index = length(account_upper_bounds) + 1
                 else

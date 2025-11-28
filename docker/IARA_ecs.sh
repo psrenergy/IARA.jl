@@ -298,6 +298,13 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
         echo "Hydro assets volume file not found, skipping upload."
     fi
 
+    echo "Saving inflow energy arrival after round..."
+    if [ -f "./$CASE_PATH/results/virtual_reservoir_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
+        echo "Inflow energy arrival after round saved."
+    else
+        echo "Inflow energy arrival file not found, skipping upload."
+    fi
 
     echo "Removing temp dir $IARA_VOLUME/$IARA_CASE..."
     rm -rf $IARA_VOLUME/${IARA_CASE}_bids_round_${IARA_GAME_ROUND}

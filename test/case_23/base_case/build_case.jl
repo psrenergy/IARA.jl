@@ -15,7 +15,7 @@ using DataFrames
 # ---------------
 number_of_periods = 4
 number_of_scenarios = 1
-number_of_subscenarios = 1
+number_of_subscenarios = 4
 number_of_subperiods = 1
 subperiod_duration_in_hours = 1.0
 
@@ -48,15 +48,14 @@ db = IARA.create_study!(PATH;
     construction_type_ex_ante_commercial = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.HYBRID,
-    settlement_type = IARA.Configurations_FinancialSettlementType.EX_POST,
-    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
+    settlement_type = IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
+    demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     language = "pt",
     market_clearing_tiebreaker_weight_for_om_costs = 0.0,
-    # bidding_group_bid_validation = IARA.Configurations_BiddingGroupBidValidation.DO_NOT_VALIDATE,
     bid_processing = IARA.Configurations_BidProcessing.READ_BIDS_FROM_FILE,
     bid_price_limit_low_reference = 9999.0,
-    bid_price_limit_markup_non_justified_independent = 9999.0,
-    bid_price_limit_markup_justified_independent = 9999.0,
+    bid_price_limit_markup_non_justified_independent = 0.25,
+    bid_price_limit_markup_justified_independent = 3.0,
 )
 
 # Add collection elements
@@ -273,33 +272,13 @@ IARA.add_demand_unit!(
 # Time series data
 # ----------------
 # Demand
-demand_ex_ante = [400.0, 460.0, 520.0, 580.0]
-demand_ex_post = [350.0, 490.0, 530.0, 560.0]
+demand_ex_post = [200.0, 250.0, 300.0, 350.0]
 
-demand_factor_ex_ante = zeros(number_of_buses, number_of_subperiods, number_of_scenarios, number_of_periods)
 demand_factor_ex_post =
     zeros(number_of_buses, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)
-for period in 1:number_of_periods
-    demand_factor_ex_ante[:, :, :, period] .= demand_ex_ante[period] / max_demand
-    demand_factor_ex_post[:, :, :, :, period] .= demand_ex_post[period] / max_demand
+for subscenario in 1:number_of_subscenarios
+    demand_factor_ex_post[:, :, subscenario, :, :] .= demand_ex_post[subscenario] / max_demand
 end
-
-IARA.write_timeseries_file(
-    joinpath(PATH, "demand_ex_ante"),
-    demand_factor_ex_ante;
-    dimensions = ["period", "scenario", "subperiod"],
-    labels = ["Demanda"],
-    time_dimension = "period",
-    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
-    initial_date = "2025-01-01T00:00:00",
-    unit = "p.u.",
-)
-
-IARA.link_time_series_to_file(
-    db,
-    "DemandUnit";
-    demand_ex_ante = "demand_ex_ante",
-)
 
 IARA.write_timeseries_file(
     joinpath(PATH, "demand_ex_post"),

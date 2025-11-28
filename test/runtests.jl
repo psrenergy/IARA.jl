@@ -193,6 +193,7 @@ reduced_test_list = Dict(
 # "case_23" => [
 #     "case_23/base_case/test_case.jl",
 #     "case_23/virtual_reservoir_case/test_case.jl",
+#     "case_23/multiple_subscenarios_case/test_case.jl",
 # ],
 )
 

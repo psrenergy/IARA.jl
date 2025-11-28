@@ -321,3 +321,152 @@ function virtual_reservoir_stored_energy(
 
     return energy_accounts
 end
+
+"""
+    initialize_virtual_reservoir_inflow_energy_arrival_output(
+        outputs::Outputs,
+        inputs::Inputs,
+        run_time_options::RunTimeOptions,
+    )
+
+Initialize the output file for virtual reservoir inflow energy arrival in the next period.
+This output is used in single_period_heuristic_bid mode.
+
+When read_ex_post_inflow_file is true, the output will have an additional subscenario dimension.
+"""
+function initialize_virtual_reservoir_inflow_energy_arrival_output(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+)
+    labels = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.virtual_reservoir,
+        inputs.collections.asset_owner;
+        index_getter = virtual_reservoir_asset_owner_indices,
+    )
+
+    # If we have ex-post inflow files, we need to include subscenarios in the output
+    force_all_subscenarios = read_ex_post_inflow_file(inputs)
+
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        run_time_options,
+        output_name = "virtual_reservoir_inflow_energy_arrival",
+        dimensions = ["period", "scenario"],
+        unit = "GWh",
+        labels,
+        force_all_subscenarios,
+    )
+
+    return nothing
+end
+
+"""
+    write_virtual_reservoir_inflow_energy_arrival(
+        outputs::Outputs,
+        inputs::Inputs,
+        run_time_options::RunTimeOptions,
+        period::Int,
+        scenario::Int,
+        subscenario::Int,
+    )
+
+Write the virtual reservoir inflow energy arrival for the next period.
+This is calculated using energy_from_inflows with the volume at the beginning of the period
+and the inflow series for the given scenario/subscenario.
+
+Note: The inflow varies by scenario for ONLY_EX_ANTE, and by scenario and subscenario
+for ONLY_EX_POST or EX_ANTE_AND_EX_POST.
+"""
+function write_virtual_reservoir_inflow_energy_arrival(
+    outputs::Outputs,
+    inputs::Inputs,
+    run_time_options::RunTimeOptions,
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+
+    # Get volume at beginning of period
+    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, run_time_options, period, scenario)
+
+    # Get inflow series for this scenario/subscenario
+    inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
+
+    # Calculate energy arrival from inflows
+    vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+
+    # Prepare output by asset owner
+    treated_energy_arrival = treat_energy_arrival_by_pairs_of_agents(
+        inputs,
+        run_time_options,
+        vr_energy_arrival,
+    )
+
+    # Quiver file dimensions are always 1:N, so we need to set the period to 1
+    if is_single_period(inputs)
+        period = 1
+    end
+
+    output = outputs.outputs["virtual_reservoir_inflow_energy_arrival"*run_time_file_suffixes(inputs, run_time_options)]
+
+    # Write with subscenario dimension if we have ex-post inflow files
+    if read_ex_post_inflow_file(inputs)
+        Quiver.write!(
+            output.writer,
+            round_output(treated_energy_arrival * MW_to_GW());
+            period,
+            scenario,
+            subscenario,
+        )
+    else
+        Quiver.write!(
+            output.writer,
+            round_output(treated_energy_arrival * MW_to_GW());
+            period,
+            scenario,
+        )
+    end
+
+    return nothing
+end
+
+"""
+    treat_energy_arrival_by_pairs_of_agents(
+        inputs::AbstractInputs,
+        run_time_options::RunTimeOptions,
+        vr_energy_arrival::Vector{Float64},
+    )
+
+Distribute the virtual reservoir energy arrival across asset owners based on their inflow allocation.
+"""
+function treat_energy_arrival_by_pairs_of_agents(
+    inputs::AbstractInputs,
+    run_time_options::RunTimeOptions,
+    vr_energy_arrival::Vector{Float64},
+)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+
+    # Count total number of (vr, ao) pairs
+    total_pairs = sum(
+        length(virtual_reservoir_asset_owner_indices(inputs, vr)) for vr in virtual_reservoirs
+    )
+
+    treated_energy_arrival = zeros(total_pairs)
+    pair_idx = 1
+
+    for vr in virtual_reservoirs
+        for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+            treated_energy_arrival[pair_idx] =
+                vr_energy_arrival[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
+            pair_idx += 1
+        end
+    end
+
+    return treated_energy_arrival
+end

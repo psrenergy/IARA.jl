@@ -46,6 +46,13 @@ function build_clearing_outputs(
         clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
     )
     ex_ante_physical_outputs = initialize_outputs(inputs, run_time_options)
+    if use_virtual_reservoirs(inputs)
+        initialize_virtual_reservoir_inflow_energy_arrival_output(
+            ex_ante_physical_outputs,
+            inputs,
+            run_time_options,
+        )
+    end
 
     run_time_options = RunTimeOptions(;
         nash_equilibrium_iteration,
@@ -58,6 +65,13 @@ function build_clearing_outputs(
         clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
     )
     ex_post_physical_outputs = initialize_outputs(inputs, run_time_options)
+    if use_virtual_reservoirs(inputs)
+        initialize_virtual_reservoir_inflow_energy_arrival_output(
+            ex_post_physical_outputs,
+            inputs,
+            run_time_options,
+        )
+    end
 
     run_time_options = RunTimeOptions(;
         nash_equilibrium_iteration,

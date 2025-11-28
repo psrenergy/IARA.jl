@@ -107,11 +107,40 @@ end
 
 function list_virtual_reservoirs(inputs::IARA.AbstractInputs)
     virtual_reservoirs_list = []
+
+    # TODO: validate that inflow don't vary across scenarios for now
+    
+    # Calculate inflow energy arrival for period 1, scenario 1
+    # This is the energy that will arrive in period 1 from inflows
+    run_time_options = IARA.RunTimeOptions()
+    
+    # Update time series to period 1
+    IARA.update_time_series_from_db!(inputs, 1)
+    
+    # Get initial volumes
+    volume_at_beginning_of_period_1 = [IARA.hydro_unit_initial_volume(inputs, h) for h in IARA.index_of_elements(inputs, IARA.HydroUnit)]
+    
+    # Get inflow series for period 1, scenario 1, subscenario 1
+    IARA.update_time_series_views_from_external_files!(inputs, run_time_options; period = 1, scenario = 1)
+    inflow_series = IARA.time_series_inflow(inputs, run_time_options; subscenario = 1)
+    
+    # Calculate energy arrival from inflows
+    vr_energy_arrival = IARA.energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period_1)
+    
     for (virtual_reservoir_index, virtual_reservoir_label) in enumerate(IARA.virtual_reservoir_label(inputs))
         list_of_hydros =
             IARA.hydro_unit_label(inputs)[IARA.virtual_reservoir_hydro_unit_indices(inputs, virtual_reservoir_index)]
         list_of_asset_owners =
             IARA.asset_owner_label(inputs)[IARA.virtual_reservoir_asset_owner_indices(inputs, virtual_reservoir_index)]
+        
+        # Calculate energy arrival for each asset owner based on their inflow allocation
+        inflow_energy_arrival_period_1 = [
+            vr_energy_arrival[virtual_reservoir_index] * 
+            IARA.virtual_reservoir_asset_owners_inflow_allocation(inputs, virtual_reservoir_index, ao) * 
+            IARA.MW_to_GW()  # Convert to GWh to match output format
+            for ao in IARA.virtual_reservoir_asset_owner_indices(inputs, virtual_reservoir_index)
+        ]
+        
         virtual_reservoir_dict = Dict(
             "label" => virtual_reservoir_label,
             "hydro_units" => list_of_hydros,
@@ -120,7 +149,9 @@ function list_virtual_reservoirs(inputs::IARA.AbstractInputs)
                 IARA.virtual_reservoir_asset_owners_inflow_allocation(inputs, virtual_reservoir_index),
             "initial_energy_account" =>
                 IARA.virtual_reservoir_initial_energy_account(inputs, virtual_reservoir_index),
+            "inflow_energy_arrival_period_1" => inflow_energy_arrival_period_1,
         )
+        
         push!(virtual_reservoirs_list, virtual_reservoir_dict)
     end
     return virtual_reservoirs_list

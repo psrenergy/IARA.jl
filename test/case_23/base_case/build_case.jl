@@ -53,9 +53,10 @@ db = IARA.create_study!(PATH;
     language = "pt",
     market_clearing_tiebreaker_weight_for_om_costs = 0.0,
     bid_processing = IARA.Configurations_BidProcessing.READ_BIDS_FROM_FILE,
-    bid_price_limit_low_reference = 9999.0,
+    bid_price_limit_low_reference = 10.0,
     bid_price_limit_markup_non_justified_independent = 0.25,
     bid_price_limit_markup_justified_independent = 3.0,
+    bid_price_validation = IARA.Configurations_BidPriceValidation.VALIDATE_WITH_DEFAULT_LIMIT,
 )
 
 # Add collection elements
@@ -180,6 +181,33 @@ IARA.write_bids_time_series_file(
     ],
     initial_date = "2025-01-01",
     unit = "\$/MWh",
+)
+
+# Build bid justifications file
+justifications = []
+for period in 1:number_of_periods
+    period_justification = Dict(
+        "period" => period,
+        "justifications" => Dict(
+            "Termico 1" => "foo bar baz",
+            "Termico 2" => "foo bar baz",
+            "Termico 3" => "foo bar baz",
+            "Peaker 1" => "foo bar baz",
+            "Peaker 2" => "foo bar baz",
+            "Peaker 3" => "foo bar baz",
+        ),
+    )
+    push!(justifications, period_justification)
+end
+
+open(joinpath(PATH, "bid_justifications.json"), "w") do file
+    return write(file, IARA.JSON.json(justifications))
+end
+
+IARA.link_time_series_to_file(
+    db,
+    "BiddingGroup";
+    bid_justifications = "bid_justifications.json",
 )
 
 # Thermal units

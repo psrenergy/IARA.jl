@@ -562,6 +562,40 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             end
         end
 
+        # Virtual reservoir inflow energy arrival for the NEXT period
+        if use_virtual_reservoirs(inputs)
+            if period < number_of_periods(inputs)
+                # TODO: verificar como ele ta usando o volume da rodada anterior
+                for scenario in 1:number_of_scenarios(inputs)
+                    if read_ex_ante_inflow_file(inputs)
+                        run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+                        # Update the time series in the external files to the current period and scenario
+                        update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
+                        write_virtual_reservoir_next_period_inflow_energy_arrival(
+                            ex_ante_physical_outputs,
+                            inputs,
+                            run_time_options,
+                            period,
+                            scenario,
+                            1,
+                        )
+                    end
+                    if read_ex_post_inflow_file(inputs)
+                        for subscenario in 1:inputs.collections.configurations.number_of_subscenarios
+                            write_virtual_reservoir_next_period_inflow_energy_arrival(
+                                ex_post_physical_outputs,
+                                inputs,
+                                run_time_options,
+                                period,
+                                scenario,
+                                subscenario,
+                            )
+                        end
+                    end
+                end
+            end
+        end
+
         # Clearing problems
         run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
         run_clearing_simulation(
@@ -724,7 +758,6 @@ function single_period_heuristic_bid(
     end
     if use_virtual_reservoirs(inputs)
         initialize_virtual_reservoir_bids_outputs(inputs, outputs, run_time_options)
-        initialize_virtual_reservoir_inflow_energy_arrival_output(outputs, inputs, run_time_options)
     end
     if validate_bidding_group_bids(inputs)
         initialize_bid_price_limit_outputs(
@@ -779,37 +812,6 @@ function single_period_heuristic_bid(
             )
         end
 
-        # Virtual reservoir inflow energy arrival
-        if use_virtual_reservoirs(inputs)
-            run_time_options = RunTimeOptions()
-            for scenario in 1:number_of_scenarios(inputs)
-                # Update the time series in the external files to the current period and scenario
-                update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
-                # If we have ex-post inflow files, we need to iterate over subscenarios
-                if read_ex_post_inflow_file(inputs)
-                    for subscenario in 1:inputs.collections.configurations.number_of_subscenarios
-                        write_virtual_reservoir_inflow_energy_arrival(
-                            outputs,
-                            inputs,
-                            run_time_options,
-                            period,
-                            scenario,
-                            subscenario,
-                        )
-                    end
-                else
-                    # For ex-ante only, we write once per scenario with subscenario = 1
-                    write_virtual_reservoir_inflow_energy_arrival(
-                        outputs,
-                        inputs,
-                        run_time_options,
-                        period,
-                        scenario,
-                        1,
-                    )
-                end
-            end
-        end
     finally
         finalize_outputs!(outputs)
         if use_virtual_reservoirs(inputs)

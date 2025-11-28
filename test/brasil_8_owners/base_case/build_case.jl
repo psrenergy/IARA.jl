@@ -27,6 +27,7 @@ demand_deficit_cost = 8327.76
 train_mincost_iteration_limit = 125
 train_mincost_time_limit_sec = 10000 # ~ 2.5h
 initial_date_time = "2024-01-01"
+parp_max_lags = 1
 
 db = IARA.create_study!(PATH;
     number_of_periods,
@@ -53,9 +54,10 @@ db = IARA.create_study!(PATH;
     train_mincost_iteration_limit,
     train_mincost_time_limit_sec,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    inflow_model = IARA.Configurations_InflowModel.READ_INFLOW_FROM_FILE,
+    inflow_model = IARA.Configurations_InflowModel.READ_PARP_COEFFICIENTS,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_ENERGY_ACCOUNT_SHARES,
+    parp_max_lags
 );
 
 try
@@ -387,6 +389,16 @@ try
         "HydroUnit";
         initial_volume_by_scenario = "initial_volume_by_scenario",
     )
+
+    IARA.link_time_series_to_file(
+        db,
+        "GaugingStation";
+        inflow_initial_state_by_scenario = "inflow_initial_state_by_scenario",
+        inflow_noise_ex_ante = "inflow_noise_ex_ante",
+        parp_coefficients = "parp_coefficients",
+        inflow_period_average = "inflow_period_average",
+        inflow_period_std_dev = "inflow_period_std_dev")
+
 
 finally
     IARA.close_study!(db)

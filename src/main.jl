@@ -562,40 +562,6 @@ function simulate_all_scenarios_of_single_period_market_clearing(
             end
         end
 
-        # Virtual reservoir inflow energy arrival for the NEXT period
-        if use_virtual_reservoirs(inputs)
-            if period < number_of_periods(inputs)
-                # TODO: verificar como ele ta usando o volume da rodada anterior
-                for scenario in 1:number_of_scenarios(inputs)
-                    if read_ex_ante_inflow_file(inputs)
-                        run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
-                        # Update the time series in the external files to the current period and scenario
-                        update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
-                        write_virtual_reservoir_next_period_inflow_energy_arrival(
-                            ex_ante_physical_outputs,
-                            inputs,
-                            run_time_options,
-                            period,
-                            scenario,
-                            1,
-                        )
-                    end
-                    if read_ex_post_inflow_file(inputs)
-                        for subscenario in 1:inputs.collections.configurations.number_of_subscenarios
-                            write_virtual_reservoir_next_period_inflow_energy_arrival(
-                                ex_post_physical_outputs,
-                                inputs,
-                                run_time_options,
-                                period,
-                                scenario,
-                                subscenario,
-                            )
-                        end
-                    end
-                end
-            end
-        end
-
         # Clearing problems
         run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
         run_clearing_simulation(
@@ -732,6 +698,36 @@ function run_clearing_simulation(
                     period,
                     scenario,
                 )
+
+                # Write virtual reservoir inflow energy arrival for the NEXT period
+                # This must be done AFTER serializing the volumes because it needs to read them
+                # Only write if we're not in the last period and this is ex_post_physical
+                if use_virtual_reservoirs(inputs) && period < number_of_periods(inputs)
+                    if read_ex_post_inflow_file(inputs)
+                        if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+                            write_virtual_reservoir_next_period_inflow_energy_arrival(
+                                outputs,
+                                inputs,
+                                run_time_options,
+                                period,
+                                scenario,
+                                subscenario,
+                            )
+                        end
+                    end
+                    if read_ex_ante_inflow_file(inputs) && subscenario == 1 &&
+                       run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
+                        write_virtual_reservoir_next_period_inflow_energy_arrival(
+                            outputs,
+                            inputs,
+                            run_time_options,
+                            period,
+                            scenario,
+                            subscenario;
+                            clearing_subproblem_to_read = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
+                        )
+                    end
+                end
             end
         end
     end

@@ -349,13 +349,13 @@ function initialize_virtual_reservoir_inflow_energy_arrival_output(
 
     # If we have ex-post inflow files, we need to include subscenarios in the output
     if read_ex_post_inflow_file(inputs) &&
-        run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+       run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
         initialize!(
             QuiverOutput,
             outputs;
             inputs,
             run_time_options,
-            output_name = "virtual_reservoir_inflow_energy_arrival",
+            output_name = "virtual_reservoir_next_period_inflow_energy_arrival",
             dimensions = ["period", "scenario"],
             unit = "GWh",
             labels,
@@ -369,81 +369,10 @@ function initialize_virtual_reservoir_inflow_energy_arrival_output(
             outputs;
             inputs,
             run_time_options,
-            output_name = "virtual_reservoir_inflow_energy_arrival",
+            output_name = "virtual_reservoir_next_period_inflow_energy_arrival",
             dimensions = ["period", "scenario"],
             unit = "GWh",
             labels,
-        )
-    end
-
-    return nothing
-end
-
-"""
-    write_virtual_reservoir_inflow_energy_arrival(
-        outputs::Outputs,
-        inputs::Inputs,
-        run_time_options::RunTimeOptions,
-        period::Int,
-        scenario::Int,
-        subscenario::Int,
-    )
-
-Write the virtual reservoir inflow energy arrival for the next period.
-This is calculated using energy_from_inflows with the volume at the beginning of the period
-and the inflow series for the given scenario/subscenario.
-
-Note: The inflow varies by scenario for ONLY_EX_ANTE, and by scenario and subscenario
-for ONLY_EX_POST or EX_ANTE_AND_EX_POST.
-"""
-function write_virtual_reservoir_inflow_energy_arrival(
-    outputs::Outputs,
-    inputs::Inputs,
-    run_time_options::RunTimeOptions,
-    period::Int,
-    scenario::Int,
-    subscenario::Int,
-)
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-
-    # Get volume at beginning of period
-    volume_at_beginning_of_period = hydro_volume_from_previous_period(inputs, run_time_options, period, scenario)
-
-    # Get inflow series for this scenario/subscenario
-    inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
-
-    # Calculate energy arrival from inflows
-    vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
-
-    # Prepare output by asset owner
-    treated_energy_arrival = treat_energy_arrival_by_pairs_of_agents(
-        inputs,
-        run_time_options,
-        vr_energy_arrival,
-    )
-
-    # Quiver file dimensions are always 1:N, so we need to set the period to 1
-    if is_single_period(inputs)
-        period = 1
-    end
-
-    output = outputs.outputs["virtual_reservoir_inflow_energy_arrival"*run_time_file_suffixes(inputs, run_time_options)]
-
-    # Write with subscenario dimension if we have ex-post inflow files
-    if read_ex_post_inflow_file(inputs)
-        Quiver.write!(
-            output.writer,
-            round_output(treated_energy_arrival * MW_to_GW());
-            period,
-            scenario,
-            subscenario,
-        )
-    else
-        Quiver.write!(
-            output.writer,
-            round_output(treated_energy_arrival * MW_to_GW());
-            period,
-            scenario,
         )
     end
 
@@ -500,6 +429,9 @@ This is used in single_period_market_clearing to show what energy will arrive in
 The calculation uses the volume at the END of the current period (from the clearing results)
 and the inflow series for the next period.
 
+For period 1, we use the volumes directly from simulation_results (if provided).
+For period > 1, we read from the serialized file using hydro_volume_from_previous_period.
+
 Note: The inflow varies by scenario for ONLY_EX_ANTE, and by scenario and subscenario
 for ONLY_EX_POST or EX_ANTE_AND_EX_POST.
 """
@@ -509,41 +441,52 @@ function write_virtual_reservoir_next_period_inflow_energy_arrival(
     run_time_options::RunTimeOptions,
     period::Int,
     scenario::Int,
-    subscenario::Int,
+    subscenario::Int;
+    clearing_subproblem_to_read::RunTime_ClearingSubproblem.T = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
-    
+
     # Calculate next period (for the last period, we use the same period)
     next_period = min(period + 1, number_of_periods(inputs))
-    
+
     # Get volume at end of current period (beginning of next period)
-    volume_at_end_of_period = hydro_volume_from_previous_period(inputs, run_time_options, next_period, scenario)
-    
+    volume_at_end_of_period = hydro_volume_from_previous_period(
+        inputs,
+        run_time_options,
+        next_period,
+        scenario;
+        output_path = output_path(inputs, run_time_options),
+        clearing_subproblem_to_read = clearing_subproblem_to_read,
+    )
+
     # Update time series to next period to get the correct inflow
     update_time_series_from_db!(inputs, next_period)
-    
+
     # Get inflow series for the next period with this scenario/subscenario
     inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
-    
+
     # Restore time series to current period
     update_time_series_from_db!(inputs, period)
-    
+
     # Calculate energy arrival from inflows for the next period
     vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_end_of_period)
-    
+
     # Prepare output by asset owner
     treated_energy_arrival = treat_energy_arrival_by_pairs_of_agents(
         inputs,
         run_time_options,
         vr_energy_arrival,
     )
-    
+
     # Quiver file dimensions are always 1:N, so we need to set the period to 1
     if is_single_period(inputs)
         period = 1
     end
-    
-    output = outputs.outputs["virtual_reservoir_inflow_energy_arrival"*run_time_file_suffixes(inputs, run_time_options)]
+
+    output = outputs.outputs["virtual_reservoir_next_period_inflow_energy_arrival"*run_time_file_suffixes(
+        inputs,
+        run_time_options,
+    )]
 
     # Write with subscenario dimension if we have ex-post inflow files
     if read_ex_post_inflow_file(inputs)
@@ -562,6 +505,6 @@ function write_virtual_reservoir_next_period_inflow_energy_arrival(
             scenario,
         )
     end
-    
+
     return nothing
 end

@@ -251,14 +251,17 @@ function read_serialized_clearing_variable(
     symbol_to_read::Symbol;
     period::Int,
     scenario::Int,
+    temp_path = "",
 )
-    temp_path =
-        if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING ||
-           run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
-            path_case(inputs)
-        else
-            joinpath(path_case(inputs), "temp")
-        end
+    if isempty(temp_path)
+        temp_path =
+            if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING ||
+               run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+                path_case(inputs)
+            else
+                joinpath(path_case(inputs), "temp")
+            end
+    end
     serialized_file_name =
         joinpath(temp_path, "$(clearing_model_subproblem)_period_$(period)_scenario_$(scenario).json")
 

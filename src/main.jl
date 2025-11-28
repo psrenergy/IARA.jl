@@ -568,7 +568,8 @@ function simulate_all_scenarios_of_single_period_market_clearing(
                 # TODO: verificar como ele ta usando o volume da rodada anterior
                 for scenario in 1:number_of_scenarios(inputs)
                     if read_ex_ante_inflow_file(inputs)
-                        run_time_options = RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
+                        run_time_options =
+                            RunTimeOptions(; clearing_model_subproblem = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL)
                         # Update the time series in the external files to the current period and scenario
                         update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario)
                         write_virtual_reservoir_next_period_inflow_energy_arrival(

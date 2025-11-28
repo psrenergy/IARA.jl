@@ -14,10 +14,10 @@ using CSV
 
 # Case dimensions
 # ---------------
-number_of_periods = 50
+number_of_periods = 70
 number_of_seasons = 4
 number_of_scenarios = 20
-number_of_subscenarios = 5
+number_of_subscenarios = 3
 number_of_subperiods = 24
 season_number_of_repeats = 5.0
 subperiod_duration_in_hours = 8760.0 / number_of_seasons / season_number_of_repeats / number_of_subperiods
@@ -252,6 +252,7 @@ try
             bus_id = String(row.bus_id),
             max_demand = row.max_capacity_pu,
             curtailment_cost_flexible_demand = row.cost,
+            demand_unit_type = contains(row.label, "FLEX") ? IARA.DemandUnit_DemandType.ELASTIC : IARA.DemandUnit_DemandType.INELASTIC,
             parameters = DataFrame(;
                 date_time = [DateTime(0)],
                 existing = [Int(IARA.DemandUnit_Existence.EXISTS)],

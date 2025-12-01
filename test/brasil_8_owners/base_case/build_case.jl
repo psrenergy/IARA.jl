@@ -57,7 +57,7 @@ db = IARA.create_study!(PATH;
     inflow_model = IARA.Configurations_InflowModel.READ_PARP_COEFFICIENTS,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_ENERGY_ACCOUNT_SHARES,
-    parp_max_lags
+    parp_max_lags,
 );
 
 try
@@ -246,18 +246,19 @@ try
     # demands
     df_demands = CSV.read(joinpath(PATH, "demands.csv"), DataFrame)
     for row in eachrow(df_demands)
-        biddinggroup = contains(row.label, "FLEX") ? (;biddinggroup_id = String(row.biddinggroup_id)) : (;)
+        biddinggroup = contains(row.label, "FLEX") ? (; biddinggroup_id = String(row.biddinggroup_id)) : (;)
         IARA.add_demand_unit!(db;
             label = String(row.label),
             bus_id = String(row.bus_id),
             max_demand = row.max_capacity_pu,
             curtailment_cost_flexible_demand = row.cost,
-            demand_unit_type = contains(row.label, "FLEX") ? IARA.DemandUnit_DemandType.ELASTIC : IARA.DemandUnit_DemandType.INELASTIC,
+            demand_unit_type = contains(row.label, "FLEX") ? IARA.DemandUnit_DemandType.ELASTIC :
+                               IARA.DemandUnit_DemandType.INELASTIC,
             parameters = DataFrame(;
                 date_time = [DateTime(0)],
                 existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
             ),
-            biddinggroup...
+            biddinggroup...,
         )
     end
 
@@ -400,7 +401,6 @@ try
         parp_coefficients = "parp_coefficients",
         inflow_period_average = "inflow_period_average",
         inflow_period_std_dev = "inflow_period_std_dev")
-
 
 finally
     IARA.close_study!(db)

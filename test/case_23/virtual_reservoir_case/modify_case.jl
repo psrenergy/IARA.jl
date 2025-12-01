@@ -36,8 +36,8 @@ IARA.add_hydro_unit!(db;
         date_time = DateTime(0),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
-        max_generation = 40.0,
-        max_turbining = 1200.0,
+        max_generation = 65.0,
+        max_turbining = 1900.0,
         min_volume = 0.0,
         max_volume = 15.0,
         om_cost = 0.0,
@@ -53,8 +53,8 @@ IARA.add_hydro_unit!(db;
         date_time = DateTime(0),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
-        max_generation = 40.0,
-        max_turbining = 1200.0,
+        max_generation = 65.0,
+        max_turbining = 1900.0,
         min_volume = 0.0,
         max_volume = 15.0,
         om_cost = 0.0,
@@ -70,8 +70,8 @@ IARA.add_hydro_unit!(db;
         date_time = DateTime(0),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
-        max_generation = 40.0,
-        max_turbining = 1200.0,
+        max_generation = 65.0,
+        max_turbining = 1900.0,
         min_volume = 0.0,
         max_volume = 15.0,
         om_cost = 0.0,
@@ -92,6 +92,54 @@ IARA.add_virtual_reservoir!(
     inflow_allocation = [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
     initial_energy_account_share = [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
     hydrounit_id = ["Hidro 1", "Hidro 2", "Hidro 3"],
+)
+
+IARA.update_thermal_unit_time_series_parameter!(
+    db,
+    "Termica 1",
+    "om_cost",
+    90.0;
+    date_time = DateTime(0),
+)
+
+IARA.update_thermal_unit_time_series_parameter!(
+    db,
+    "Termica 2",
+    "om_cost",
+    100.0;
+    date_time = DateTime(0),
+)
+
+IARA.update_thermal_unit_time_series_parameter!(
+    db,
+    "Termica 3",
+    "om_cost",
+    110.0;
+    date_time = DateTime(0),
+)
+
+IARA.update_thermal_unit_time_series_parameter!(
+    db,
+    "Peaker 1",
+    "om_cost",
+    180.0;
+    date_time = DateTime(0),
+)
+
+IARA.update_thermal_unit_time_series_parameter!(
+    db,
+    "Peaker 2",
+    "om_cost",
+    200.0;
+    date_time = DateTime(0),
+)
+
+IARA.update_thermal_unit_time_series_parameter!(
+    db,
+    "Peaker 3",
+    "om_cost",
+    220.0;
+    date_time = DateTime(0),
 )
 
 # Link and write time series files
@@ -121,8 +169,8 @@ IARA.link_time_series_to_file(
 )
 
 max_demand = 400.0
-demand_ex_ante = [400.0, 460.0, 520.0, 580.0]
-demand_ex_post = [380.0, 480.0, 540.0, 560.0]
+demand_ex_ante = [280.0, 580.0, 630.0, 350.0]
+demand_ex_post = [295.0, 565.0, 615.0, 335.0]
 
 demand_factor_ex_ante = zeros(number_of_buses, number_of_subperiods, number_of_scenarios, number_of_periods)
 demand_factor_ex_post =

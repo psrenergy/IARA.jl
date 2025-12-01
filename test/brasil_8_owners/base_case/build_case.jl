@@ -243,10 +243,10 @@ try
         risk_factor = [0.0],
         ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-
     # demands
     df_demands = CSV.read(joinpath(PATH, "demands.csv"), DataFrame)
     for row in eachrow(df_demands)
+        biddinggroup = contains(row.label, "FLEX") ? (;biddinggroup_id = String(row.biddinggroup_id)) : (;)
         IARA.add_demand_unit!(db;
             label = String(row.label),
             bus_id = String(row.bus_id),
@@ -257,6 +257,7 @@ try
                 date_time = [DateTime(0)],
                 existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
             ),
+            biddinggroup...
         )
     end
 

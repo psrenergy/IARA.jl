@@ -10,7 +10,7 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-number_of_hydro_units = 3
+number_of_hydro_units = 6
 number_of_virtual_reservoirs = 1
 number_of_vr_segments = 1
 number_of_scenarios = 1
@@ -29,51 +29,102 @@ IARA.update_configuration!(
 
 IARA.add_hydro_unit!(db;
     label = "Hidro 1",
-    initial_volume = 8.0,
+    initial_volume = 0.0,
     bus_id = "Sistema",
     biddinggroup_id = "Peaker 1",
     parameters = DataFrame(;
         date_time = DateTime(0),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
-        max_generation = 65.0,
+        max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 15.0,
+        max_volume = 10.0,
         om_cost = 0.0,
     ),
 )
 
 IARA.add_hydro_unit!(db;
     label = "Hidro 2",
-    initial_volume = 8.0,
+    initial_volume = 0.0,
     bus_id = "Sistema",
     biddinggroup_id = "Peaker 2",
     parameters = DataFrame(;
         date_time = DateTime(0),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
-        max_generation = 65.0,
+        max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 15.0,
+        max_volume = 10.0,
         om_cost = 0.0,
     ),
 )
 
 IARA.add_hydro_unit!(db;
     label = "Hidro 3",
-    initial_volume = 8.0,
+    initial_volume = 0.0,
     bus_id = "Sistema",
     biddinggroup_id = "Peaker 3",
     parameters = DataFrame(;
         date_time = DateTime(0),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
-        max_generation = 65.0,
+        max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 15.0,
+        max_volume = 10.0,
+        om_cost = 0.0,
+    ),
+)
+
+IARA.add_hydro_unit!(db;
+    label = "Hidro 4",
+    initial_volume = 8.0,
+    bus_id = "Sistema",
+    biddinggroup_id = "Termico 1",
+    parameters = DataFrame(;
+        date_time = DateTime(0),
+        existing = Int(IARA.HydroUnit_Existence.EXISTS),
+        production_factor = 0.036,
+        max_generation = 35.0,
+        max_turbining = 1900.0,
+        min_volume = 0.0,
+        max_volume = 10.0,
+        om_cost = 0.0,
+    ),
+)
+
+IARA.add_hydro_unit!(db;
+    label = "Hidro 5",
+    initial_volume = 8.0,
+    bus_id = "Sistema",
+    biddinggroup_id = "Termico 2",
+    parameters = DataFrame(;
+        date_time = DateTime(0),
+        existing = Int(IARA.HydroUnit_Existence.EXISTS),
+        production_factor = 0.036,
+        max_generation = 35.0,
+        max_turbining = 1900.0,
+        min_volume = 0.0,
+        max_volume = 10.0,
+        om_cost = 0.0,
+    ),
+)
+
+IARA.add_hydro_unit!(db;
+    label = "Hidro 6",
+    initial_volume = 8.0,
+    bus_id = "Sistema",
+    biddinggroup_id = "Termico 3",
+    parameters = DataFrame(;
+        date_time = DateTime(0),
+        existing = Int(IARA.HydroUnit_Existence.EXISTS),
+        production_factor = 0.036,
+        max_generation = 35.0,
+        max_turbining = 1900.0,
+        min_volume = 0.0,
+        max_volume = 10.0,
         om_cost = 0.0,
     ),
 )
@@ -91,55 +142,7 @@ IARA.add_virtual_reservoir!(
     ],
     inflow_allocation = [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
     initial_energy_account_share = [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-    hydrounit_id = ["Hidro 1", "Hidro 2", "Hidro 3"],
-)
-
-IARA.update_thermal_unit_time_series_parameter!(
-    db,
-    "Termica 1",
-    "om_cost",
-    90.0;
-    date_time = DateTime(0),
-)
-
-IARA.update_thermal_unit_time_series_parameter!(
-    db,
-    "Termica 2",
-    "om_cost",
-    100.0;
-    date_time = DateTime(0),
-)
-
-IARA.update_thermal_unit_time_series_parameter!(
-    db,
-    "Termica 3",
-    "om_cost",
-    110.0;
-    date_time = DateTime(0),
-)
-
-IARA.update_thermal_unit_time_series_parameter!(
-    db,
-    "Peaker 1",
-    "om_cost",
-    180.0;
-    date_time = DateTime(0),
-)
-
-IARA.update_thermal_unit_time_series_parameter!(
-    db,
-    "Peaker 2",
-    "om_cost",
-    200.0;
-    date_time = DateTime(0),
-)
-
-IARA.update_thermal_unit_time_series_parameter!(
-    db,
-    "Peaker 3",
-    "om_cost",
-    220.0;
-    date_time = DateTime(0),
+    hydrounit_id = ["Hidro 1", "Hidro 2", "Hidro 3", "Hidro 4", "Hidro 5", "Hidro 6"],
 )
 
 # Link and write time series files
@@ -150,12 +153,13 @@ IARA.link_time_series_to_file(
     fcf_cuts = "cuts.json",
 )
 
-inflow_ex_ante = zeros(number_of_hydro_units, number_of_subperiods, number_of_scenarios, number_of_periods) .+ 700.0
+inflow_ex_ante = zeros(number_of_hydro_units, number_of_subperiods, number_of_scenarios, number_of_periods)
+inflow_ex_ante[1:3, :, :, :] .= 700.0
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow_ex_ante"),
     inflow_ex_ante;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["Hidro 1", "Hidro 2", "Hidro 3"],
+    labels = ["Hidro 1", "Hidro 2", "Hidro 3", "Hidro 4", "Hidro 5", "Hidro 6"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2025-01-01T00:00:00",

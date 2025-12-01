@@ -22,7 +22,6 @@ subperiod_duration_in_hours = 1.0
 number_of_buses = 1
 number_of_bidding_groups = 6
 number_of_thermal_units = 6
-number_of_renewable_units = 0
 number_of_bg_segments = 1
 number_of_asset_owners = 6
 
@@ -54,8 +53,8 @@ db = IARA.create_study!(PATH;
     market_clearing_tiebreaker_weight_for_om_costs = 0.0,
     bid_processing = IARA.Configurations_BidProcessing.READ_BIDS_FROM_FILE,
     bid_price_limit_low_reference = 10.0,
-    bid_price_limit_markup_non_justified_independent = 0.25,
-    bid_price_limit_markup_justified_independent = 3.0,
+    bid_price_limit_markup_non_justified_independent = 0.5,
+    bid_price_limit_markup_justified_independent = 1.5,
     bid_price_validation = IARA.Configurations_BidPriceValidation.VALIDATE_WITH_DEFAULT_LIMIT,
 )
 

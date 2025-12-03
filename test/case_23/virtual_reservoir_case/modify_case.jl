@@ -10,7 +10,7 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-number_of_hydro_units = 6
+number_of_hydro_units = 8
 number_of_virtual_reservoirs = 1
 number_of_vr_segments = 1
 number_of_scenarios = 1
@@ -39,7 +39,7 @@ IARA.add_hydro_unit!(db;
         max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 10.0,
+        max_volume = 10.5,
         om_cost = 0.0,
     ),
 )
@@ -56,7 +56,7 @@ IARA.add_hydro_unit!(db;
         max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 10.0,
+        max_volume = 10.5,
         om_cost = 0.0,
     ),
 )
@@ -73,13 +73,30 @@ IARA.add_hydro_unit!(db;
         max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 10.0,
+        max_volume = 10.5,
         om_cost = 0.0,
     ),
 )
 
 IARA.add_hydro_unit!(db;
     label = "Hidro 4",
+    initial_volume = 0.0,
+    bus_id = "Sistema",
+    biddinggroup_id = "Peaker 4",
+    parameters = DataFrame(;
+        date_time = DateTime(0),
+        existing = Int(IARA.HydroUnit_Existence.EXISTS),
+        production_factor = 0.036,
+        max_generation = 35.0,
+        max_turbining = 1900.0,
+        min_volume = 0.0,
+        max_volume = 10.5,
+        om_cost = 0.0,
+    ),
+)
+
+IARA.add_hydro_unit!(db;
+    label = "Hidro 5",
     initial_volume = 8.0,
     bus_id = "Sistema",
     biddinggroup_id = "Termico 1",
@@ -90,13 +107,13 @@ IARA.add_hydro_unit!(db;
         max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 10.0,
+        max_volume = 10.5,
         om_cost = 0.0,
     ),
 )
 
 IARA.add_hydro_unit!(db;
-    label = "Hidro 5",
+    label = "Hidro 6",
     initial_volume = 8.0,
     bus_id = "Sistema",
     biddinggroup_id = "Termico 2",
@@ -107,13 +124,13 @@ IARA.add_hydro_unit!(db;
         max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 10.0,
+        max_volume = 10.5,
         om_cost = 0.0,
     ),
 )
 
 IARA.add_hydro_unit!(db;
-    label = "Hidro 6",
+    label = "Hidro 7",
     initial_volume = 8.0,
     bus_id = "Sistema",
     biddinggroup_id = "Termico 3",
@@ -124,7 +141,24 @@ IARA.add_hydro_unit!(db;
         max_generation = 35.0,
         max_turbining = 1900.0,
         min_volume = 0.0,
-        max_volume = 10.0,
+        max_volume = 10.5,
+        om_cost = 0.0,
+    ),
+)
+
+IARA.add_hydro_unit!(db;
+    label = "Hidro 8",
+    initial_volume = 8.0,
+    bus_id = "Sistema",
+    biddinggroup_id = "Termico 4",
+    parameters = DataFrame(;
+        date_time = DateTime(0),
+        existing = Int(IARA.HydroUnit_Existence.EXISTS),
+        production_factor = 0.036,
+        max_generation = 35.0,
+        max_turbining = 1900.0,
+        min_volume = 0.0,
+        max_volume = 10.5,
         om_cost = 0.0,
     ),
 )
@@ -136,13 +170,15 @@ IARA.add_virtual_reservoir!(
         "Agente Termico 1",
         "Agente Termico 2",
         "Agente Termico 3",
+        "Agente Termico 4",
         "Agente Peaker 1",
         "Agente Peaker 2",
         "Agente Peaker 3",
+        "Agente Peaker 4",
     ],
-    inflow_allocation = [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-    initial_energy_account_share = [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-    hydrounit_id = ["Hidro 1", "Hidro 2", "Hidro 3", "Hidro 4", "Hidro 5", "Hidro 6"],
+    inflow_allocation = [0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+    initial_energy_account_share = [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+    hydrounit_id = ["Hidro 1", "Hidro 2", "Hidro 3", "Hidro 4", "Hidro 5", "Hidro 6", "Hidro 7", "Hidro 8"],
 )
 
 # Link and write time series files
@@ -154,12 +190,12 @@ IARA.link_time_series_to_file(
 )
 
 inflow_ex_ante = zeros(number_of_hydro_units, number_of_subperiods, number_of_scenarios, number_of_periods)
-inflow_ex_ante[1:3, :, :, :] .= 700.0
+inflow_ex_ante[1:4, :, :, :] .= 700.0
 IARA.write_timeseries_file(
     joinpath(PATH, "inflow_ex_ante"),
     inflow_ex_ante;
     dimensions = ["period", "scenario", "subperiod"],
-    labels = ["Hidro 1", "Hidro 2", "Hidro 3", "Hidro 4", "Hidro 5", "Hidro 6"],
+    labels = ["Hidro 1", "Hidro 2", "Hidro 3", "Hidro 4", "Hidro 5", "Hidro 6", "Hidro 7", "Hidro 8"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2025-01-01T00:00:00",
@@ -173,8 +209,8 @@ IARA.link_time_series_to_file(
 )
 
 max_demand = 400.0
-demand_ex_ante = [280.0, 580.0, 630.0, 350.0]
-demand_ex_post = [295.0, 565.0, 615.0, 335.0]
+demand_ex_ante = [370.0, 770.0, 840.0, 470.0]
+demand_ex_post = [390.0, 750.0, 820.0, 450.0]
 
 demand_factor_ex_ante = zeros(number_of_buses, number_of_subperiods, number_of_scenarios, number_of_periods)
 demand_factor_ex_post =
@@ -236,9 +272,11 @@ map = Dict(
         "Agente Termico 1",
         "Agente Termico 2",
         "Agente Termico 3",
+        "Agente Termico 4",
         "Agente Peaker 1",
         "Agente Peaker 2",
         "Agente Peaker 3",
+        "Agente Peaker 4",
     ],
 )
 
@@ -251,9 +289,11 @@ IARA.write_virtual_reservoir_bids_time_series_file(
         "Agente Termico 1",
         "Agente Termico 2",
         "Agente Termico 3",
+        "Agente Termico 4",
         "Agente Peaker 1",
         "Agente Peaker 2",
         "Agente Peaker 3",
+        "Agente Peaker 4",
     ],
     virtual_reservoirs_to_asset_owners_map = map,
     time_dimension = "period",
@@ -283,9 +323,11 @@ IARA.write_virtual_reservoir_bids_time_series_file(
         "Agente Termico 1",
         "Agente Termico 2",
         "Agente Termico 3",
+        "Agente Termico 4",
         "Agente Peaker 1",
         "Agente Peaker 2",
         "Agente Peaker 3",
+        "Agente Peaker 4",
     ],
     virtual_reservoirs_to_asset_owners_map = map,
     time_dimension = "period",

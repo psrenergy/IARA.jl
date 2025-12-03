@@ -20,10 +20,10 @@ number_of_subperiods = 1
 subperiod_duration_in_hours = 1.0
 
 number_of_buses = 1
-number_of_bidding_groups = 6
-number_of_thermal_units = 6
+number_of_bidding_groups = 8
+number_of_thermal_units = 8
 number_of_bg_segments = 1
-number_of_asset_owners = 6
+number_of_asset_owners = 8
 
 # Conversion constants
 # --------------------
@@ -67,9 +67,11 @@ IARA.add_bus!(db; label = "Sistema", zone_id = "Zona")
 IARA.add_asset_owner!(db; label = "Agente Termico 1", purchase_discount_rate = [0.1])
 IARA.add_asset_owner!(db; label = "Agente Termico 2", purchase_discount_rate = [0.1])
 IARA.add_asset_owner!(db; label = "Agente Termico 3", purchase_discount_rate = [0.1])
+IARA.add_asset_owner!(db; label = "Agente Termico 4", purchase_discount_rate = [0.1])
 IARA.add_asset_owner!(db; label = "Agente Peaker 1", purchase_discount_rate = [0.1])
 IARA.add_asset_owner!(db; label = "Agente Peaker 2", purchase_discount_rate = [0.1])
 IARA.add_asset_owner!(db; label = "Agente Peaker 3", purchase_discount_rate = [0.1])
+IARA.add_asset_owner!(db; label = "Agente Peaker 4", purchase_discount_rate = [0.1])
 
 # BG
 IARA.add_bidding_group!(
@@ -98,6 +100,14 @@ IARA.add_bidding_group!(
 )
 IARA.add_bidding_group!(
     db;
+    label = "Termico 4",
+    assetowner_id = "Agente Termico 4",
+    risk_factor = [0.0],
+    segment_fraction = [1.0],
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
+)
+IARA.add_bidding_group!(
+    db;
     label = "Peaker 1",
     assetowner_id = "Agente Peaker 1",
     risk_factor = [0.0],
@@ -116,6 +126,14 @@ IARA.add_bidding_group!(
     db;
     label = "Peaker 3",
     assetowner_id = "Agente Peaker 3",
+    risk_factor = [0.0],
+    segment_fraction = [1.0],
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
+)
+IARA.add_bidding_group!(
+    db;
+    label = "Peaker 4",
+    assetowner_id = "Agente Peaker 4",
     risk_factor = [0.0],
     segment_fraction = [1.0],
     ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
@@ -152,7 +170,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "bidding_group_energy_bid"),
     bg_quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Peaker 1", "Peaker 2", "Peaker 3"],
+    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Termico 4", "Peaker 1", "Peaker 2", "Peaker 3", "Peaker 4"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [
@@ -169,7 +187,7 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "bidding_group_price_bid"),
     bg_price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Peaker 1", "Peaker 2", "Peaker 3"],
+    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Termico 4", "Peaker 1", "Peaker 2", "Peaker 3", "Peaker 4"],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [
@@ -191,9 +209,11 @@ for period in 1:number_of_periods
             "Termico 1" => "foo bar baz",
             "Termico 2" => "foo bar baz",
             "Termico 3" => "foo bar baz",
+            "Termico 4" => "foo bar baz",
             "Peaker 1" => "foo bar baz",
             "Peaker 2" => "foo bar baz",
             "Peaker 3" => "foo bar baz",
+            "Peaker 4" => "foo bar baz",
         ),
     )
     push!(justifications, period_justification)
@@ -248,6 +268,18 @@ IARA.add_thermal_unit!(
 )
 IARA.add_thermal_unit!(
     db;
+    label = "Termica 4",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [1],
+        max_generation = [95.0],
+        om_cost = [100.0],
+    ),
+    biddinggroup_id = "Termico 4",
+    bus_id = "Sistema",
+)
+IARA.add_thermal_unit!(
+    db;
     label = "Peaker 1",
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -282,6 +314,18 @@ IARA.add_thermal_unit!(
     biddinggroup_id = "Peaker 3",
     bus_id = "Sistema",
 )
+IARA.add_thermal_unit!(
+    db;
+    label = "Peaker 4",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [1],
+        max_generation = [60.0],
+        om_cost = [200.0],
+    ),
+    biddinggroup_id = "Peaker 4",
+    bus_id = "Sistema",
+)
 
 # Demand unit
 max_demand = 400.0
@@ -299,7 +343,7 @@ IARA.add_demand_unit!(
 # Time series data
 # ----------------
 # Demand
-demand_ex_post = [200.0, 250.0, 300.0, 350.0]
+demand_ex_post = [260.0, 330.0, 400.0, 470.0]
 
 demand_factor_ex_post =
     zeros(number_of_buses, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)

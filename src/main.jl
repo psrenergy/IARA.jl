@@ -703,17 +703,15 @@ function run_clearing_simulation(
                 # This must be done AFTER serializing the volumes because it needs to read them
                 # Only write if we're not in the last period and this is ex_post_physical
                 if use_virtual_reservoirs(inputs) && period < number_of_periods(inputs)
-                    if read_ex_post_inflow_file(inputs)
-                        if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
-                            write_virtual_reservoir_next_period_inflow_energy_arrival(
-                                outputs,
-                                inputs,
-                                run_time_options,
-                                period,
-                                scenario,
-                                subscenario,
-                            )
-                        end
+                    if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+                        write_virtual_reservoir_next_period_inflow_energy_arrival(
+                            outputs,
+                            inputs,
+                            run_time_options,
+                            period,
+                            scenario,
+                            subscenario,
+                        )
                     end
                 end
             end

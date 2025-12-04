@@ -874,14 +874,24 @@ function hydro_volume_from_previous_period(
             hydro_volume_reader = inputs.time_series.hydro_volume
             previous_volume = hydro_volume_reader.data
         else
-            volume = read_serialized_clearing_variable(
-                inputs,
-                RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
-                :hydro_volume;
-                period = period - 1,
-                scenario = scenario,
-                temp_path = output_path,
-            )
+            volume = if is_single_period(inputs)
+                read_serialized_clearing_variable(
+                    inputs,
+                    RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+                    :hydro_volume;
+                    period = period - 1,
+                    scenario = scenario,
+                    temp_path = output_path,
+                )
+            else
+                read_serialized_clearing_variable(
+                    inputs,
+                    RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
+                    :hydro_volume;
+                    period = period - 1,
+                    scenario = scenario,
+                )
+            end
             # The volume at the end of the period is the first subperiod of the next period
             for h in axes(volume, 2)
                 if volume[end, h] < hydro_unit_min_volume(inputs, h) - DEFAULT_TOLERANCE ||

@@ -347,34 +347,19 @@ function initialize_virtual_reservoir_inflow_energy_arrival_output(
         index_getter = virtual_reservoir_asset_owner_indices,
     )
 
-    # If we have ex-post inflow files, we need to include subscenarios in the output
-    if read_ex_post_inflow_file(inputs) &&
-       run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
-            output_name = "virtual_reservoir_next_period_inflow_energy_arrival",
-            dimensions = ["period", "scenario"],
-            unit = "GWh",
-            labels,
-        )
-    end
+    suppress_subscenario_dimension = !read_ex_post_inflow_file(inputs)
 
-    if read_ex_ante_inflow_file(inputs) &&
-       run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
-        initialize!(
-            QuiverOutput,
-            outputs;
-            inputs,
-            run_time_options,
-            output_name = "virtual_reservoir_next_period_inflow_energy_arrival",
-            dimensions = ["period", "scenario"],
-            unit = "GWh",
-            labels,
-        )
-    end
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        run_time_options,
+        output_name = "virtual_reservoir_next_period_inflow_energy_arrival",
+        dimensions = ["period", "scenario"],
+        unit = "GWh",
+        labels,
+        suppress_subscenario_dimension,
+    )
 
     return nothing
 end

@@ -296,6 +296,7 @@ function initialize!(
     force_all_subscenarios::Bool = false,
     suppress_construction_type_suffix::Bool = false,
     suppress_period_suffix::Bool = false,
+    suppress_subscenario_dimension::Bool = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -304,7 +305,7 @@ function initialize!(
     output_type = Quiver.csv
 
     dimensions = kwargs[:dimensions]
-    if is_ex_post_problem(run_time_options) || force_all_subscenarios
+    if (is_ex_post_problem(run_time_options) || force_all_subscenarios) && !suppress_subscenario_dimension
         @assert dimensions[1] == "period"
         @assert dimensions[2] == "scenario"
         dimensions = cat(dimensions[1:2], "subscenario", dimensions[3:end]; dims = 1)

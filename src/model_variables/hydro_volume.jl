@@ -33,7 +33,8 @@ function hydro_volume!(
         upper_bound = hydro_unit_max_volume(inputs, h),
     )
 
-    if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options)
+    if is_mincost(inputs, run_time_options) || clearing_has_volume_variables(inputs, run_time_options) ||
+       single_period_heuristic_bid_has_volume_variables(inputs)
         @variable(
             model.jump_model,
             hydro_volume_state[h in hydro_units_with_reservoir],
@@ -44,7 +45,8 @@ function hydro_volume!(
         )
     end
 
-    if clearing_has_volume_variables(inputs, run_time_options)
+    if clearing_has_volume_variables(inputs, run_time_options) ||
+       single_period_heuristic_bid_has_volume_variables(inputs)
         placeholder_previous_volume = 0.0
         @variable(
             model.jump_model,

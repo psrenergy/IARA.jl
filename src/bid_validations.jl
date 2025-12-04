@@ -51,6 +51,8 @@ function validate_bids_for_period_scenario(
     period::Int,
     scenario::Int,
 )
+    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+
     # Read bid justifications
     if bids_justifications_exist(inputs)
         all_bid_justifications =
@@ -66,17 +68,15 @@ function validate_bids_for_period_scenario(
     bid_price_limit_not_justified_profile,
     bid_price_limit_justified_profile = read_serialized_bid_price_limits(inputs; period)
     # Read bids and initialize outputs
-    bid_justification_status = zeros(Int, length(inputs.collections.bidding_group))
+    bid_justification_status = zeros(Int, length(bidding_groups))
     if has_any_simple_bids(inputs)
-        independent_bid_limit_violation_status = zeros(Int, length(inputs.collections.bidding_group))
+        independent_bid_limit_violation_status = zeros(Int, length(bidding_groups))
         independent_bids_price = time_series_price_bid(inputs, period, scenario)
     end
     if has_any_profile_bids(inputs)
-        profile_bid_limit_violation_status = zeros(Int, length(inputs.collections.bidding_group))
+        profile_bid_limit_violation_status = zeros(Int, length(bidding_groups))
         profile_bids_price = time_series_price_bid_profile(inputs, period, scenario)
     end
-
-    bidding_groups = index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
 
     # Validate bids
     for (idx, bg) in enumerate(bidding_groups)

@@ -503,6 +503,16 @@ function simulate_all_scenarios_of_single_period_market_clearing(
         create_period_season_map!(inputs, run_time_options, ex_post_commercial_model)
     end
 
+    if is_any_construction_type_hybrid(inputs, run_time_options) &&
+       market_clearing_tiebreaker_weight_for_fcf(inputs) > 0 &&
+       use_scaled_fcf_in_clearing(inputs)
+        cuts_file = fcf_cuts_file(inputs)
+        scaled_cuts_file = "scaled_$(cuts_file)"
+        cuts_path = joinpath(path_case(inputs), cuts_file)
+        scaled_cuts_path = joinpath(path_case(inputs), scaled_cuts_file)
+        scale_cuts(cuts_path, scaled_cuts_path, market_clearing_tiebreaker_weight_for_fcf(inputs))
+    end
+
     try
         period = inputs.args.period
         @info("Running clearing for period: $period")
@@ -688,6 +698,22 @@ function run_clearing_simulation(
                     period,
                     scenario,
                 )
+
+                # Write virtual reservoir inflow energy arrival for the NEXT period
+                # This must be done AFTER serializing the volumes because it needs to read them
+                # Only write if we're not in the last period and this is ex_post_physical
+                if use_virtual_reservoirs(inputs) && period < number_of_periods(inputs)
+                    if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
+                        write_virtual_reservoir_next_period_inflow_energy_arrival(
+                            outputs,
+                            inputs,
+                            run_time_options,
+                            period,
+                            scenario,
+                            subscenario,
+                        )
+                    end
+                end
             end
         end
     end
@@ -722,7 +748,7 @@ function single_period_heuristic_bid(
             run_time_options,
         )
     end
-    if should_build_reference_curve(inputs)
+    if use_virtual_reservoirs(inputs)
         run_time_options =
             RunTimeOptions(;
                 is_reference_curve = true,
@@ -740,7 +766,7 @@ function single_period_heuristic_bid(
         update_time_series_from_db!(inputs, period)
 
         # Reference curve
-        if should_build_reference_curve(inputs)
+        if use_virtual_reservoirs(inputs)
             build_reference_curve(inputs, reference_curve_outputs, period)
         end
 
@@ -767,9 +793,10 @@ function single_period_heuristic_bid(
                 outputs,
             )
         end
+
     finally
         finalize_outputs!(outputs)
-        if should_build_reference_curve(inputs)
+        if use_virtual_reservoirs(inputs)
             finalize_outputs!(reference_curve_outputs)
         end
     end

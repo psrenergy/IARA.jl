@@ -108,6 +108,7 @@ function save_iara_case_to_next_round() {
     mv $CASE_PATH/results/*.json $CASE_PATH/
     rm -rf $CASE_PATH/results
 
+
     echo "Zipping case..."
     cd $CASE_PATH
     zip -r ../$CASE_PATH.zip ./* -x "heuristic_bids/*" -x "results/*" 
@@ -118,6 +119,31 @@ function save_iara_case_to_next_round() {
 
     echo "Completed."
 }
+
+function save_heuristic_bids_to_current_round() {
+    
+    echo "Checking for virtual reservoir heuristic bids..."
+    if [ -f "$CASE_PATH/heuristic_bids/virtual_reservoir_energy_bid_period_$IARA_GAME_ROUND.csv" ]; then
+        echo "Moving heuristic bids to main case folder root..."
+        mv "$CASE_PATH/heuristic_bids/virtual_reservoir_energy_bid_period_$IARA_GAME_ROUND.csv" "$CASE_PATH/virtual_reservoir_no_markup_energy_bid_period_$IARA_GAME_ROUND.csv"
+        mv "$CASE_PATH/heuristic_bids/virtual_reservoir_energy_bid_period_$IARA_GAME_ROUND.toml" "$CASE_PATH/virtual_reservoir_no_markup_energy_bid_period_$IARA_GAME_ROUND.toml"
+        mv "$CASE_PATH/heuristic_bids/virtual_reservoir_no_markup_price_bid_period_$IARA_GAME_ROUND.csv" "$CASE_PATH/virtual_reservoir_no_markup_price_bid_period_$IARA_GAME_ROUND.csv"
+        mv "$CASE_PATH/heuristic_bids/virtual_reservoir_no_markup_price_bid_period_$IARA_GAME_ROUND.toml" "$CASE_PATH/virtual_reservoir_no_markup_price_bid_period_$IARA_GAME_ROUND.toml"
+
+        echo "Zipping modified case..."
+        cd $CASE_PATH
+        zip -r ../$CASE_PATH.zip ./* -x "heuristic_bids/*" -x "results/*" 
+        cd -    
+
+        echo "Uploading zip to S3..."
+        aws s3 cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip  
+    else
+        echo "No virtual reservoir heuristic bids found, skipping zip and upload."
+    fi
+
+    echo "Completed."
+}
+
 
 function save_iara_log() {
     echo "Saving IARA log from $1..."
@@ -225,8 +251,8 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/heuristic_bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/heuristic_bids.zip 
-
-    echo "Completed."
+    
+    save_heuristic_bids_to_current_round
     exit 0
 fi
 
@@ -255,6 +281,31 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     echo "Uploading results to S3..."
     aws s3 cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
     aws s3 cp $IARA_VOLUME/${IARA_CASE}_bids_round_${IARA_GAME_ROUND}/bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip
+
+    echo "Saving energy account Ex-post results..."
+    if [ -f "./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/final_energy_account_ex_post.csv
+        echo "Energy account Ex-post results saved."
+    else
+        echo "Energy account Ex-post results file not found, skipping upload."
+    fi
+
+    echo "Saving hydro assets volume after round..."
+    if [ -f "./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/hydro_assets_volume.csv
+        echo "Hydro assets volume after round saved."
+    else
+        echo "Hydro assets volume file not found, skipping upload."
+    fi
+
+    echo "Saving inflow energy arrival after round..."
+    if [ -f "./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
+        echo "Inflow energy arrival after round saved."
+    else
+        echo "Inflow energy arrival file not found, skipping upload."
+    fi
+
     echo "Removing temp dir $IARA_VOLUME/$IARA_CASE..."
     rm -rf $IARA_VOLUME/${IARA_CASE}_bids_round_${IARA_GAME_ROUND}
     echo "$IARA_VOLUME/$IARA_CASE successfully removed"

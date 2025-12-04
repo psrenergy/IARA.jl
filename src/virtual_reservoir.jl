@@ -442,7 +442,6 @@ function write_virtual_reservoir_next_period_inflow_energy_arrival(
     period::Int,
     scenario::Int,
     subscenario::Int;
-    clearing_subproblem_to_read::RunTime_ClearingSubproblem.T = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
 )
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
@@ -456,7 +455,6 @@ function write_virtual_reservoir_next_period_inflow_energy_arrival(
         next_period,
         scenario;
         output_path = output_path(inputs, run_time_options),
-        clearing_subproblem_to_read = clearing_subproblem_to_read,
     )
 
     # Update time series to next period to get the correct inflow

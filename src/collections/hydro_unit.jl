@@ -859,7 +859,6 @@ function hydro_volume_from_previous_period(
     period::Int,
     scenario::Int;
     output_path = "",
-    clearing_subproblem_to_read::RunTime_ClearingSubproblem.T = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
 )
     hydro_units = index_of_elements(inputs, HydroUnit)
     existing_hydro_units = index_of_elements(inputs, HydroUnit; filters = [is_existing])
@@ -877,7 +876,7 @@ function hydro_volume_from_previous_period(
         else
             volume = read_serialized_clearing_variable(
                 inputs,
-                clearing_subproblem_to_read,
+                RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
                 :hydro_volume;
                 period = period - 1,
                 scenario = scenario,

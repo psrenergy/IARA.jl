@@ -170,7 +170,16 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "bidding_group_energy_bid"),
     bg_quantity_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Termico 4", "Peaker 1", "Peaker 2", "Peaker 3", "Peaker 4"],
+    labels_bidding_groups = [
+        "Termico 1",
+        "Termico 2",
+        "Termico 3",
+        "Termico 4",
+        "Peaker 1",
+        "Peaker 2",
+        "Peaker 3",
+        "Peaker 4",
+    ],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [
@@ -187,7 +196,16 @@ IARA.write_bids_time_series_file(
     joinpath(PATH, "bidding_group_price_bid"),
     bg_price_bid;
     dimensions = ["period", "scenario", "subperiod", "bid_segment"],
-    labels_bidding_groups = ["Termico 1", "Termico 2", "Termico 3", "Termico 4", "Peaker 1", "Peaker 2", "Peaker 3", "Peaker 4"],
+    labels_bidding_groups = [
+        "Termico 1",
+        "Termico 2",
+        "Termico 3",
+        "Termico 4",
+        "Peaker 1",
+        "Peaker 2",
+        "Peaker 3",
+        "Peaker 4",
+    ],
     labels_buses = ["Sistema"],
     time_dimension = "period",
     dimension_size = [

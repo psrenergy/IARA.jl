@@ -137,9 +137,6 @@ function hydro_volume!(
     add_symbol_to_query_from_subproblem_result!(outputs, :hydro_volume)
     if run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_POST_PHYSICAL
         add_symbol_to_serialize!(outputs, :hydro_volume)
-    elseif run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING &&
-           run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
-        add_symbol_to_serialize!(outputs, :hydro_volume)
     end
 
     initialize!(

@@ -715,18 +715,6 @@ function run_clearing_simulation(
                             )
                         end
                     end
-                    if read_ex_ante_inflow_file(inputs) && subscenario == 1 &&
-                       run_time_options.clearing_model_subproblem == RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
-                        write_virtual_reservoir_next_period_inflow_energy_arrival(
-                            outputs,
-                            inputs,
-                            run_time_options,
-                            period,
-                            scenario,
-                            subscenario;
-                            clearing_subproblem_to_read = RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL,
-                        )
-                    end
                 end
             end
         end

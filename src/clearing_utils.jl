@@ -58,6 +58,13 @@ function build_clearing_outputs(
         clearing_model_subproblem = RunTime_ClearingSubproblem.EX_POST_PHYSICAL,
     )
     ex_post_physical_outputs = initialize_outputs(inputs, run_time_options)
+    if use_virtual_reservoirs(inputs)
+        initialize_virtual_reservoir_inflow_energy_arrival_output(
+            ex_post_physical_outputs,
+            inputs,
+            run_time_options,
+        )
+    end
 
     run_time_options = RunTimeOptions(;
         nash_equilibrium_iteration,
@@ -237,11 +244,16 @@ function read_serialized_clearing_variable(
     symbol_to_read::Symbol;
     period::Int,
     scenario::Int,
+    temp_path = "",
 )
-    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
-        path_case(inputs)
-    else
-        joinpath(path_case(inputs), "temp")
+    if isempty(temp_path)
+        temp_path =
+            if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING ||
+               run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+                path_case(inputs)
+            else
+                joinpath(path_case(inputs), "temp")
+            end
     end
     serialized_file_name =
         joinpath(temp_path, "$(clearing_model_subproblem)_period_$(period)_scenario_$(scenario).json")
@@ -462,6 +474,16 @@ function clearing_has_volume_variables(inputs::Inputs, run_time_options::RunTime
     return construction_type(inputs, run_time_options) != Configurations_ConstructionType.BID_BASED
 end
 
+function single_period_heuristic_bid_has_volume_variables(inputs::Inputs)
+    if run_mode(inputs) != RunMode.SINGLE_PERIOD_HEURISTIC_BID
+        return false
+    end
+    if number_of_elements(inputs, HydroUnit) == 0
+        return false
+    end
+    return true
+end
+
 """
     clearing_has_parp_variables(inputs::Inputs, run_time_options::RunTimeOptions)
 
@@ -509,14 +531,21 @@ end
 
 function serialize_virtual_reservoir_energy_account(
     inputs::Inputs,
+    run_time_options::RunTimeOptions,
     energy_account::Vector{Vector{Float64}},
     period::Int,
     scenario::Int,
 )
-    temp_path = joinpath(path_case(inputs), "temp")
-    if !isdir(temp_path)
-        mkdir(temp_path)
+    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
+        output_path(inputs, run_time_options)
+    else
+        temp_path = joinpath(path_case(inputs), "temp")
+        if !isdir(temp_path)
+            mkdir(temp_path)
+        end
+        temp_path
     end
+
     serialized_file_name =
         joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
 
@@ -527,11 +556,13 @@ function serialize_virtual_reservoir_energy_account(
 end
 
 function read_serialized_virtual_reservoir_energy_account(inputs::Inputs, period::Int, scenario::Int)
-    temp_path = if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING
-        path_case(inputs)
-    else
-        joinpath(path_case(inputs), "temp")
-    end
+    temp_path =
+        if run_mode(inputs) == RunMode.SINGLE_PERIOD_MARKET_CLEARING ||
+           run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
+            path_case(inputs)
+        else
+            joinpath(path_case(inputs), "temp")
+        end
     serialized_file_name =
         joinpath(temp_path, "virtual_reservoir_energy_account_period_$(period)_scenario_$(scenario).json")
 

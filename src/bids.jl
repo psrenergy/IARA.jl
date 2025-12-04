@@ -810,6 +810,17 @@ function initialize_virtual_reservoir_bids_outputs(
         labels,
     )
 
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        run_time_options,
+        output_name = "virtual_reservoir_no_markup_price_bid",
+        dimensions = ["period", "scenario", "bid_segment"],
+        unit = "\$/MWh",
+        labels,
+    )
+
     return nothing
 end
 
@@ -868,6 +879,12 @@ function virtual_reservoir_markup_bids_for_period_scenario(
         maximum_number_of_vr_bidding_segments(inputs),
     )
 
+    no_markup_price_bids = zeros(
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
+    )
+
     for vr in index_of_elements(inputs, VirtualReservoir)
         vr_total_account = sum(accounts[vr])
         vr_quantity_bid =
@@ -893,21 +910,17 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             ao_price_bid = Float64[]
 
             account_upper_bounds =
-                if bid_processing(inputs) ==
-                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
-                    asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
-                elseif bid_processing(inputs) ==
-                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
+                if bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     [1.0]
+                else
+                    asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
                 end
             markups =
-                if bid_processing(inputs) ==
-                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
-                    asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
-                elseif bid_processing(inputs) ==
-                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
+                if bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     # Markups are calculated via Nash equilibrium later. This function is only used to divide the reference curve between the asset owners.
                     [0.0]
+                else
+                    asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
                 end
 
             #---------------
@@ -951,6 +964,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                     )
                     quantity_bids[vr, ao, seg] = bid
                     price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment] * (1 + markups[markup_index])
+                    no_markup_price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment]
 
                     sum_of_bids_for_current_markup += bid
                     sum_of_ao_selling_bids += bid
@@ -1059,6 +1073,16 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             run_time_options,
             "virtual_reservoir_price_bid",
             price_bids,
+            period,
+            scenario,
+        )
+
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_no_markup_price_bid",
+            no_markup_price_bids,
             period,
             scenario,
         )
@@ -1314,16 +1338,12 @@ function write_individual_virtual_reservoir_bids_files(
 
     filename = "$(asset_owner_label(inputs, asset_owner_index))_virtual_reservoir_bids_period_$(inputs.args.period).csv"
 
-    df_length =
-        length(virtual_reservoirs) * number_of_scenarios(inputs) *
-        maximum_number_of_vr_bidding_segments(inputs)
-
-    period_column = ones(Int, df_length) * inputs.args.period
-    scenario_column = zeros(Int, df_length)
-    bid_segment_column = zeros(Int, df_length)
-    virtual_reservoir_column = Vector{String}(undef, df_length)
-    price_column = zeros(df_length)
-    quantity_column = zeros(df_length)
+    period_column = Int[]
+    scenario_column = Int[]
+    bid_segment_column = Int[]
+    virtual_reservoir_column = String[]
+    price_column = Float64[]
+    quantity_column = Float64[]
 
     line_index = 0
     for scenario in 1:number_of_scenarios(inputs)
@@ -1341,16 +1361,32 @@ function write_individual_virtual_reservoir_bids_files(
             scenario,
         )
 
-        for segment in 1:maximum_number_of_vr_bidding_segments(inputs)
-            for vr in virtual_reservoirs
-                line_index += 1
-                scenario_column[line_index] = scenario
-                bid_segment_column[line_index] = segment
-                virtual_reservoir_column[line_index] = virtual_reservoir_label(inputs, vr)
-                price_column[line_index] =
-                    inputs.time_series.virtual_reservoir_price_bid[vr, asset_owner_index, segment]
-                quantity_column[line_index] =
-                    inputs.time_series.virtual_reservoir_quantity_bid[vr, asset_owner_index, segment]
+        for vr in virtual_reservoirs
+            new_segment_index = 0
+            column_start_index = length(period_column) + 1
+            column_end_index = length(period_column)
+            for segment in 1:maximum_number_of_vr_bidding_segments(inputs)
+                quantity = inputs.time_series.virtual_reservoir_quantity_bid[vr, asset_owner_index, segment]
+                quantity = round(quantity; digits = 6)
+                price = inputs.time_series.virtual_reservoir_price_bid[vr, asset_owner_index, segment]
+                if segment == 1
+                    index_at_vectors = nothing
+                else
+                    index_at_vectors = findfirst(isequal(price), price_column[column_start_index:column_end_index])
+                end
+                if isnothing(index_at_vectors)
+                    new_segment_index += 1
+                    push!(period_column, inputs.args.period)
+                    push!(scenario_column, scenario)
+                    push!(bid_segment_column, new_segment_index)
+                    push!(virtual_reservoir_column, virtual_reservoir_label(inputs, vr))
+                    push!(price_column, price)
+                    push!(quantity_column, quantity)
+                    column_end_index += 1
+                else
+                    quantity_column[column_start_index+index_at_vectors-1] =
+                        round(quantity + quantity_column[column_start_index+index_at_vectors-1]; digits = 6)
+                end
             end
         end
     end

@@ -40,9 +40,9 @@ on:
 
 jobs:
   build-publish-windows:
-    if: github.event.inputs.windows == 'true' && github.event.inputs.docker_only == 'false'
+    if: github.event.inputs.windows == 'true'
     name: Build and publish windows
-    runs-on: [self-hosted, windows]
+    runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -55,15 +55,12 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
-          $developmentStage = "${{ github.event.inputs.development_stage }}"
-          $versionSuffix = "${{ github.event.inputs.version_suffix }}"
-          $overwrite = "${{ github.event.inputs.overwrite }}"
-          .\compile\ecs.bat --development_stage "$developmentStage" --version_suffix $versionSuffix --overwrite $overwrite --os windows
+          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os windows
 
   build-publish-linux:
-    if: github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false'
+    if: github.event.inputs.linux == 'true'
     name: Build and publish linux
-    runs-on: [self-hosted, windows]
+    runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,16 +73,13 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
-          $developmentStage = "${{ github.event.inputs.development_stage }}"
-          $versionSuffix = "${{ github.event.inputs.version_suffix }}"
-          $overwrite = "${{ github.event.inputs.overwrite }}"
-          .\compile\ecs.bat --development_stage "$developmentStage" --version_suffix $versionSuffix --overwrite $overwrite --os linux
+          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os linux
 
   post-publish:
+    if: github.event.inputs.development_stage == 'Stable release'  
     name: Create release
-    runs-on: [self-hosted, linux]
+    runs-on: self-hosted
     needs: [build-publish-windows, build-publish-linux]
-    if: github.event.inputs.development_stage == 'Stable release'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -100,9 +94,8 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.project_toml.outputs.value }}
-          generateReleaseNotes: true   
+          generateReleaseNotes: true
 
-  
   retrieve-deployment-data:
     name: Retrieve deployment data
     runs-on: [self-hosted, windows]

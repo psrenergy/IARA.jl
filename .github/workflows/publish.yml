@@ -40,7 +40,7 @@ on:
 
 jobs:
   build-publish-windows:
-    if: github.event.inputs.windows == 'true'
+    if: github.event.inputs.windows == 'true' && github.event.inputs.docker_only == 'false'
     name: Build and publish windows
     runs-on: [self-hosted, linux]
     steps:
@@ -58,7 +58,7 @@ jobs:
           exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os windows
 
   build-publish-linux:
-    if: github.event.inputs.linux == 'true'
+    if: github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false'
     name: Build and publish linux
     runs-on: [self-hosted, linux]
     steps:

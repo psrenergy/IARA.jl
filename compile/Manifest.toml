@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.7"
+julia_version = "1.11.2"
 manifest_format = "2.0"
 project_hash = "d44c9540163a951b42c1143f58703f5ac44dffc7"
 
@@ -288,7 +288,6 @@ version = "10.42.0+1"
 [[deps.PSRContinuousDeployment]]
 deps = ["AWS", "Dates", "EnumX", "Git", "HTTP", "InteractiveUtils", "JSON", "LoggingPolyglot", "PackageCompiler", "Pkg", "Random", "SlackAPI", "TOML", "UUIDs", "p7zip_jll"]
 git-tree-sha1 = "e5eedea771c43397a305b684b2c97cb43234b0d5"
-repo-rev = "master"
 repo-url = "https://github.com/psrenergy/PSRContinuousDeployment.jl"
 uuid = "f0087d4c-ff99-426e-93c9-09c1a88911f9"
 version = "0.14.0"

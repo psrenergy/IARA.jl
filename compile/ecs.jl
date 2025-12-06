@@ -27,11 +27,11 @@ function main(args::Vector{String})
         default = ""
         "--overwrite"
         nargs = '?'
-        constant = false        
+        constant = false
         default = false
         eval_arg = true
         "--os"
-        arg_type = String        
+        arg_type = String
     end
     #! format: on
     parsed_args = parse_args(args, s)

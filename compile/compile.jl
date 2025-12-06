@@ -15,7 +15,7 @@ function main(args::Vector{String})
         default = "Stable release"
         "--version_suffix"
         nargs = '?'
-        constant = ""        
+        constant = ""
         default = ""
     end
     #! format: on

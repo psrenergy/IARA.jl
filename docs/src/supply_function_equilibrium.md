@@ -77,65 +77,92 @@ STEP 3: Market Clearing
 
 #### Notation
 
-- ``N``: Total number of agents (VR-AssetOwner pairs + BG-Bus pairs)
+**Sets:**
+- ``\mathcal{A}``: Set of agents (VR-AssetOwner pairs + BG-Bus pairs)
+- ``K_i``: Set of segments for agent ``i``
+- ``B(t)``: Set of subperiods in period ``t``
+
+**Indices:**
+- ``i \in \mathcal{A}``: Agent index
+- ``k \in K_i``: Segment index for agent ``i``
+- ``\tau \in B(t)``: Subperiod index
+
+**Parameters:**
+- ``C^{max}``: Maximum cost multiplier
+- ``C^\delta``: Demand deficit cost (``\$/MWh``)
+- ``Q_{i,\tau}``: Quantity for agent ``i`` at subperiod ``\tau``
+- ``P_{i,\tau}``: Price for agent ``i`` at subperiod ``\tau``
+
+**Variables:**
 - ``q_i(k)``: Cumulative quantity for agent ``i`` at segment ``k``
 - ``p_i(k)``: Price for agent ``i`` at segment ``k``
 - ``b_i(k)``: Slope ``\frac{dp}{dq}`` for agent ``i`` at segment ``k``
 - ``q_i^0(k), p_i^0(k), b_i^0(k)``: Original reference curve data
+- ``q_i^*(k), p_i^*(k), b_i^*(k)``: Equilibrium curve data
+- ``p^*(k)``: Market price at segment ``k`` (common to all agents)
 
 #### Data Preprocessing
 
 1. **Bidding Groups**: Aggregate bids across subperiods before equilibrium
    ```math
-   \text{aggregated\_quantity} = \sum_{\text{subperiod}} \text{quantity}[\text{subperiod}]
+   Q_{i,agg} = \sum_{\tau \in B(t)} Q_{i,\tau}
    ```
    ```math
-   \text{aggregated\_price} = \frac{\sum_{\text{subperiod}} \text{price} \times \text{quantity}}{\text{aggregated\_quantity}}
+   P_{i,agg} = \frac{\sum_{\tau \in B(t)} P_{i,\tau} \cdot Q_{i,\tau}}{Q_{i,agg}}
    ```
 
 2. **All Agents**: Convert segment quantities to cumulative points
 
 3. **All Agents**: Reverse to descending price order and add high-price point at deficit cost
 
-4. **All Agents**: Calculate slopes: ``b(k) = \frac{p(k+1) - p(k)}{q(k+1) - q(k)}``
+4. **All Agents**: Calculate slopes: ``b_i(k) = \frac{p_i(k+1) - p_i(k)}{q_i(k+1) - q_i(k)}`` for all ``i \in \mathcal{A}``
 
 #### Iteration Algorithm
 
-```math
-\text{Initialize (segment } k=1 \text{):} \\
-q_i^*(1) = q_i^0(1) \\
-p_i^*(1) = \text{max\_cost\_multiplier} \times \text{demand\_deficit\_cost} \\
-b_i^*(1) = \text{update\_slope}(b_i^0(1), b_i^0(1))
-```
+**Initialization** (segment ``k=1``):
 
 ```math
-\text{For segments } k = 1, 2, \ldots \text{ until all agents reach minimum quantity:}
+q_i^*(1) = q_i^0(1) \quad \forall i \in \mathcal{A}
+```
+```math
+p^*(1) = C^{max} \cdot C^\delta
+```
+```math
+p_i^*(1) = p^*(1) \quad \forall i \in \mathcal{A}
+```
+```math
+b_i^*(1) = b_i^0(1) \quad \forall i \in \mathcal{A}
 ```
 
-1. Get available quantities: ``\text{available\_}q_i = \max(q_i^*(k) - q_i^0(\text{next\_segment}), 0)``
+**Iteration** for segments ``k = 1, 2, \ldots`` until all agents reach minimum quantity:
 
-2. Calculate price decrement: ``\Delta p = \min\{\text{available\_}q_i \times b_i^*(k) \mid \text{available\_}q_i > 0\}``
+1. Get available quantities: ``\bar{q}_i(k) = \max(q_i^*(k) - q_i^0(k^+), 0)`` where ``k^+`` is the next segment index for agent ``i``
 
-3. Update quantities and price:
+2. Calculate price decrement: ``\Delta p = \min\{\bar{q}_i(k) \cdot b_i^*(k) \mid \bar{q}_i(k) > 0, i \in \mathcal{A}\}``
+
+3. Update quantities and market price:
    ```math
-   q_i^*(k+1) = q_i^*(k) - \frac{\Delta p}{b_i^*(k)}
+   q_i^*(k+1) = q_i^*(k) - \frac{\Delta p}{b_i^*(k)} \quad \forall i \in \mathcal{A}
    ```
    ```math
-   p^*(k+1) = p^*(k) - \Delta p \quad \text{(same for all agents)}
+   p^*(k+1) = p^*(k) - \Delta p
+   ```
+   ```math
+   p_i^*(k+1) = p^*(k+1) \quad \forall i \in \mathcal{A}
    ```
 
 4. Update slopes using equilibrium formula
 
 ### Slope Update Formula
 
-For segment ``k`` with ``N`` agents:
+For segment ``k`` with all agents in ``\mathcal{A}``:
 
 ```math
-B_k = \sum_{i=1}^{N} \frac{1}{b_i(k)}
+B_k = \sum_{i \in \mathcal{A}} \frac{1}{b_i^0(k)}
 ```
 
 ```math
-b_i^*(k) = \frac{b_i^0(k)}{2} + \frac{1}{B_k} + \sqrt{\left(\frac{b_i^0(k)}{2}\right)^2 + \left(\frac{1}{B_k}\right)^2}
+b_i^*(k) = \frac{b_i^0(k)}{2} + \frac{1}{B_k} + \sqrt{\left(\frac{b_i^0(k)}{2}\right)^2 + \left(\frac{1}{B_k}\right)^2} \quad \forall i \in \mathcal{A}
 ```
 
 **Economic Interpretation:**
@@ -145,7 +172,7 @@ Each agent's optimal slope ``b_i^*(k)`` balances:
 2. Market responsiveness: ``\frac{1}{B_k}`` (aggregate inverse slope)
 3. Quadratic adjustment ensuring stability
 
-In competitive markets (large ``N``, high ``B_k``), slopes approach marginal costs. In concentrated markets, markups are substantial.
+In competitive markets (large ``|\mathcal{A}|``, high ``B_k``), slopes approach marginal costs. In concentrated markets, markups are substantial.
 
 ## Virtual Reservoirs vs Bidding Groups
 

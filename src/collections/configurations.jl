@@ -101,10 +101,10 @@ Configurations for the problem.
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
-    reference_curve_nash_extra_bid_quantity::Float64 = 0.0
-    reference_curve_nash_tolerance::Float64 = 0.0
-    reference_curve_nash_max_iterations::Int = 0
-    reference_curve_nash_max_cost_multiplier::Float64 = 0.0
+    supply_function_equilibrium_extra_bid_quantity::Float64 = 0.0
+    supply_function_equilibrium_tolerance::Float64 = 0.0
+    supply_function_equilibrium_max_iterations::Int = 0
+    supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -325,14 +325,14 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
-    configurations.reference_curve_nash_extra_bid_quantity =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_extra_bid_quantity")[1]
-    configurations.reference_curve_nash_tolerance =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_tolerance")[1]
-    configurations.reference_curve_nash_max_iterations =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_max_iterations")[1]
-    configurations.reference_curve_nash_max_cost_multiplier =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_max_cost_multiplier")[1]
+    configurations.supply_function_equilibrium_extra_bid_quantity =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_extra_bid_quantity")[1]
+    configurations.supply_function_equilibrium_tolerance =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_tolerance")[1]
+    configurations.supply_function_equilibrium_max_iterations =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
+    configurations.supply_function_equilibrium_max_cost_multiplier =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
@@ -1322,11 +1322,11 @@ function should_build_reference_curve(inputs::AbstractInputs)
 end
 
 """
-    should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+    should_run_supply_function_equilibrium(inputs::AbstractInputs)
 
 Return whether the Nash equilibrium from hydro reference curve should be run.
 """
-function should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+function should_run_supply_function_equilibrium(inputs::AbstractInputs)
     return bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
 end
 
@@ -1621,36 +1621,36 @@ reference_curve_final_segment_price_markup(inputs::AbstractInputs) =
     inputs.collections.configurations.reference_curve_final_segment_price_markup
 
 """
-    reference_curve_nash_extra_bid_quantity(inputs::AbstractInputs)
+    supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs)
 
-Return the extra bid quantity for the Nash equilibrium from hydro reference curve.
+Return the extra bid quantity for the Supply Function Equilibrium.
 """
-reference_curve_nash_extra_bid_quantity(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_extra_bid_quantity
-
-"""
-    reference_curve_nash_tolerance(inputs)
-
-Return the tolerance for the bid slopes in the Nash equilibrium from hydro reference curve.
-"""
-reference_curve_nash_tolerance(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_tolerance
+supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_extra_bid_quantity
 
 """
-    reference_curve_nash_max_iterations(inputs)
+    supply_function_equilibrium_tolerance(inputs)
 
-Return the maximum number of iterations for the Nash equilibrium from hydro reference curve.
+Return the tolerance for the bid slopes in the Supply Function Equilibrium.
 """
-reference_curve_nash_max_iterations(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_max_iterations
+supply_function_equilibrium_tolerance(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_tolerance
 
 """
-    reference_curve_nash_max_cost_multiplier(inputs)
+    supply_function_equilibrium_max_iterations(inputs)
 
-Return the maximum cost multiplier for the Nash equilibrium from hydro reference curve.
+Return the maximum number of iterations for the Supply Function Equilibrium.
 """
-reference_curve_nash_max_cost_multiplier(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_max_cost_multiplier
+supply_function_equilibrium_max_iterations(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_max_iterations
+
+"""
+    supply_function_equilibrium_max_cost_multiplier(inputs)
+
+Return the maximum cost multiplier for the Supply Function Equilibrium.
+"""
+supply_function_equilibrium_max_cost_multiplier(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_max_cost_multiplier
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

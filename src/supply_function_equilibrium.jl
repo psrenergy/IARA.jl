@@ -7,7 +7,7 @@ struct AgentMapping
     original_agent_id::Int           # Asset owner ID or Bidding group ID
 end
 
-function nash_bids_from_hydro_reference_curve(
+function supply_function_equilibrium(
     inputs::AbstractInputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
@@ -37,22 +37,22 @@ function nash_bids_from_hydro_reference_curve(
             Float64,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            reference_curve_nash_max_iterations(inputs),
-            maximum_number_of_segments_in_nash_equilibrium(inputs),
+            supply_function_equilibrium_max_iterations(inputs),
+            maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         vr_price_output = zeros(
             Float64,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            reference_curve_nash_max_iterations(inputs),
-            maximum_number_of_segments_in_nash_equilibrium(inputs),
+            supply_function_equilibrium_max_iterations(inputs),
+            maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         vr_slope_output = fill(
             Inf,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            reference_curve_nash_max_iterations(inputs),
-            maximum_number_of_segments_in_nash_equilibrium(inputs),
+            supply_function_equilibrium_max_iterations(inputs),
+            maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
     end
 
@@ -81,22 +81,22 @@ function nash_bids_from_hydro_reference_curve(
             Float64,
             number_of_bidding_groups,
             number_of_buses,
-            reference_curve_nash_max_iterations(inputs),
-            maximum_number_of_segments_in_nash_equilibrium(inputs),
+            supply_function_equilibrium_max_iterations(inputs),
+            maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         bg_price_output = zeros(
             Float64,
             number_of_bidding_groups,
             number_of_buses,
-            reference_curve_nash_max_iterations(inputs),
-            maximum_number_of_segments_in_nash_equilibrium(inputs),
+            supply_function_equilibrium_max_iterations(inputs),
+            maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         bg_slope_output = fill(
             Inf,
             number_of_bidding_groups,
             number_of_buses,
-            reference_curve_nash_max_iterations(inputs),
-            maximum_number_of_segments_in_nash_equilibrium(inputs),
+            supply_function_equilibrium_max_iterations(inputs),
+            maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
     end
 
@@ -161,8 +161,8 @@ function nash_bids_from_hydro_reference_curve(
     total_number_of_agents = length(global_q)
 
     # Run unified Nash iteration on ALL bids simultaneously
-    for iter in 1:reference_curve_nash_max_iterations(inputs)
-        global_q, global_p, global_b = run_reference_curve_nash_iteration(
+    for iter in 1:supply_function_equilibrium_max_iterations(inputs)
+        global_q, global_p, global_b = run_supply_function_equilibrium_iteration(
             inputs,
             total_number_of_agents;
             current_quantity = global_q,
@@ -195,7 +195,7 @@ function nash_bids_from_hydro_reference_curve(
     end
 
     if has_virtual_reservoirs
-        write_reference_curve_nash_vr_outputs(
+        write_supply_function_equilibrium_vr_outputs(
             inputs,
             outputs,
             run_time_options,
@@ -208,7 +208,7 @@ function nash_bids_from_hydro_reference_curve(
     end
 
     if has_bidding_groups
-        write_reference_curve_nash_bg_outputs(
+        write_supply_function_equilibrium_bg_outputs(
             inputs,
             outputs,
             run_time_options,
@@ -348,7 +348,7 @@ function reverse_bid_order_and_add_point(
     quantity::Vector{Float64},
     price::Vector{Float64},
 )
-    new_quantity = vcat((quantity[end] + reference_curve_nash_extra_bid_quantity(inputs)), reverse(quantity))
+    new_quantity = vcat((quantity[end] + supply_function_equilibrium_extra_bid_quantity(inputs)), reverse(quantity))
     new_price = vcat(demand_deficit_cost(inputs), reverse(price))
 
     return new_quantity, new_price
@@ -364,14 +364,14 @@ function validate_nash_input_data(
     asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
 
     for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
-        @assert all(slope[i] .> reference_curve_nash_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a segment with slope below the tolerance: $(slope[i])"
-        @assert all(price[i] .<= reference_curve_nash_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a price point above the demand deficit cost: $(price[i])"
+        @assert all(slope[i] .> supply_function_equilibrium_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a segment with slope below the tolerance: $(slope[i])"
+        @assert all(price[i] .<= supply_function_equilibrium_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a price point above the demand deficit cost: $(price[i])"
     end
 
     return nothing
 end
 
-function run_reference_curve_nash_iteration(
+function run_supply_function_equilibrium_iteration(
     inputs::AbstractInputs,
     number_of_asset_owners::Int;
     current_quantity::Vector{Vector{Float64}},
@@ -389,7 +389,7 @@ function run_reference_curve_nash_iteration(
     segment = 1
     for i in 1:number_of_asset_owners
         new_quantity[i] = [current_quantity[i][segment]]
-        new_price[i] = [reference_curve_nash_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)]
+        new_price[i] = [supply_function_equilibrium_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)]
         new_slope[i] = [update_slope(inputs, current_slope, original_slope, segment)[i]]
     end
 
@@ -479,7 +479,7 @@ function update_slope(
     agent_indexes = findall(isfinite, original_slope_in_segment)
 
     if length(agent_indexes) < 3
-        new_slope[agent_indexes] .= reference_curve_nash_tolerance(inputs)
+        new_slope[agent_indexes] .= supply_function_equilibrium_tolerance(inputs)
     end
 
     return new_slope
@@ -632,7 +632,7 @@ function test_inversion(
     return nothing
 end
 
-function maximum_number_of_segments_in_nash_equilibrium(inputs::AbstractInputs)
+function maximum_number_of_segments_in_supply_function_equilibrium(inputs::AbstractInputs)
     total_agents = 0
 
     # Add all VR asset owner pairs
@@ -660,7 +660,7 @@ function number_of_segments_for_vr_in_nash_equilibrium(
     return reference_curve_number_of_segments(inputs) * number_of_asset_owners_in_vr
 end
 
-function initialize_reference_curve_nash_outputs(
+function initialize_supply_function_equilibrium_outputs(
     inputs::AbstractInputs,
     run_time_options::RunTimeOptions,
 )
@@ -679,8 +679,8 @@ function initialize_reference_curve_nash_outputs(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "virtual_reservoir_nash_quantity",
-            dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
+            output_name = "virtual_reservoir_sfe_quantity",
+            dimensions = ["period", "scenario", "sfe_iteration", "sfe_curve_segment"],
             unit = "MWh",
             labels = vr_labels,
             run_time_options,
@@ -689,8 +689,8 @@ function initialize_reference_curve_nash_outputs(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "virtual_reservoir_nash_price",
-            dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
+            output_name = "virtual_reservoir_sfe_price",
+            dimensions = ["period", "scenario", "sfe_iteration", "sfe_curve_segment"],
             unit = "\$/MWh",
             labels = vr_labels,
             run_time_options,
@@ -699,8 +699,8 @@ function initialize_reference_curve_nash_outputs(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "virtual_reservoir_nash_slope",
-            dimensions = ["period", "scenario", "nash_iteration", "nash_curve_segment"],
+            output_name = "virtual_reservoir_sfe_slope",
+            dimensions = ["period", "scenario", "sfe_iteration", "sfe_curve_segment"],
             unit = "\$/MWh2",
             labels = vr_labels,
             run_time_options,
@@ -721,8 +721,8 @@ function initialize_reference_curve_nash_outputs(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "bidding_group_nash_quantity",
-            dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+            output_name = "bidding_group_sfe_quantity",
+            dimensions = ["period", "scenario", "subperiod", "sfe_iteration", "sfe_curve_segment"],
             unit = "MWh",
             labels = bg_labels,
             run_time_options,
@@ -731,8 +731,8 @@ function initialize_reference_curve_nash_outputs(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "bidding_group_nash_price",
-            dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+            output_name = "bidding_group_sfe_price",
+            dimensions = ["period", "scenario", "subperiod", "sfe_iteration", "sfe_curve_segment"],
             unit = "\$/MWh",
             labels = bg_labels,
             run_time_options,
@@ -741,8 +741,8 @@ function initialize_reference_curve_nash_outputs(
             QuiverOutput,
             outputs;
             inputs,
-            output_name = "bidding_group_nash_slope",
-            dimensions = ["period", "scenario", "subperiod", "nash_iteration", "nash_curve_segment"],
+            output_name = "bidding_group_sfe_slope",
+            dimensions = ["period", "scenario", "subperiod", "sfe_iteration", "sfe_curve_segment"],
             unit = "\$/MWh2",
             labels = bg_labels,
             run_time_options,
@@ -752,7 +752,7 @@ function initialize_reference_curve_nash_outputs(
     return outputs
 end
 
-function write_reference_curve_nash_vr_outputs(
+function write_supply_function_equilibrium_vr_outputs(
     inputs::AbstractInputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
@@ -766,7 +766,7 @@ function write_reference_curve_nash_vr_outputs(
         outputs,
         inputs,
         run_time_options,
-        "virtual_reservoir_nash_quantity",
+        "virtual_reservoir_sfe_quantity",
         quantity,
         period,
         scenario,
@@ -776,7 +776,7 @@ function write_reference_curve_nash_vr_outputs(
         outputs,
         inputs,
         run_time_options,
-        "virtual_reservoir_nash_price",
+        "virtual_reservoir_sfe_price",
         price,
         period,
         scenario,
@@ -786,7 +786,7 @@ function write_reference_curve_nash_vr_outputs(
         outputs,
         inputs,
         run_time_options,
-        "virtual_reservoir_nash_slope",
+        "virtual_reservoir_sfe_slope",
         slope,
         period,
         scenario,
@@ -795,7 +795,7 @@ function write_reference_curve_nash_vr_outputs(
     return nothing
 end
 
-function write_reference_curve_nash_bg_outputs(
+function write_supply_function_equilibrium_bg_outputs(
     inputs::AbstractInputs,
     outputs::Outputs,
     run_time_options::RunTimeOptions,
@@ -812,7 +812,7 @@ function write_reference_curve_nash_bg_outputs(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_nash_quantity",
+        "bidding_group_sfe_quantity",
         reshaped_quantity,
         period,
         scenario,
@@ -822,7 +822,7 @@ function write_reference_curve_nash_bg_outputs(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_nash_price",
+        "bidding_group_sfe_price",
         reshaped_price,
         period,
         scenario,
@@ -832,7 +832,7 @@ function write_reference_curve_nash_bg_outputs(
         outputs,
         inputs,
         run_time_options,
-        "bidding_group_nash_slope",
+        "bidding_group_sfe_slope",
         reshaped_slope,
         period,
         scenario,

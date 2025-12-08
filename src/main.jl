@@ -272,9 +272,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         )
     end
 
-    if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
+    if should_run_supply_function_equilibrium(inputs)
         run_time_options = RunTimeOptions()
-        reference_curve_nash_outputs = initialize_reference_curve_nash_outputs(
+        supply_function_equilibrium_outputs = initialize_supply_function_equilibrium_outputs(
             inputs,
             run_time_options,
         )
@@ -351,13 +351,13 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
             end
 
             # Nash equilibrium from reference curve
-            if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
+            if should_run_supply_function_equilibrium(inputs)
                 run_time_options = RunTimeOptions()
                 @info("Running supply function equilibrium for period: $period")
                 for scenario in 1:number_of_scenarios(inputs)
-                    nash_bids_from_hydro_reference_curve(
+                    supply_function_equilibrium(
                         inputs,
-                        reference_curve_nash_outputs,
+                        supply_function_equilibrium_outputs,
                         run_time_options,
                         period,
                         scenario,
@@ -449,8 +449,8 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
         if should_build_reference_curve(inputs) && generate_heuristic_bids_for_clearing(inputs)
             finalize_outputs!(reference_curve_outputs)
         end
-        if should_run_nash_equilibrium_from_hydro_reference_curve(inputs)
-            finalize_outputs!(reference_curve_nash_outputs)
+        if should_run_supply_function_equilibrium(inputs)
+            finalize_outputs!(supply_function_equilibrium_outputs)
         end
     end
 

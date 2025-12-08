@@ -24,10 +24,10 @@ IARA.update_configuration!(db;
 )
 ```
 
-### Reference Curve Parameters
+### SFE Parameters
 
-- **`reference_curve_number_of_segments`** (Int, typical: 10)
-  Number of segments in equilibrium curves. Higher values provide more detailed representation.
+- **`supply_function_equilibrium_extra_bid_quantity`** (Float64, default: 1.0)
+  Determines the quantity value for the artificial bid added during SFE preprocessing.
 
 - **`supply_function_equilibrium_max_iterations`** (Int, default: 20)
   Maximum iterations for equilibrium computation within each period/scenario.
@@ -38,14 +38,12 @@ IARA.update_configuration!(db;
 - **`supply_function_equilibrium_max_cost_multiplier`** (Float64, default: 2.0)
   Maximum price cap as multiplier of deficit cost.
 
-- **`demand_deficit_cost`** (Float64, typical: 1000-5000 \$/MWh)
-  Penalty cost for unserved demand, used as reference price ceiling.
-
 **Example:**
 ```julia
 IARA.update_configuration!(db;
     bid_processing = IARA.Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM,
     reference_curve_number_of_segments = 10,
+    supply_function_equilibrium_extra_bid_quantity = 1.0,
     supply_function_equilibrium_max_iterations = 20,
     supply_function_equilibrium_tolerance = 0.000001,
     supply_function_equilibrium_max_cost_multiplier = 2.0,

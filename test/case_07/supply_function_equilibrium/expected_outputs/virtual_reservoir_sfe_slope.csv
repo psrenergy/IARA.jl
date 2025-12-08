@@ -1,4 +1,4 @@
-period,scenario,nash_iteration,nash_curve_segment,reservoir_1 - asset_owner_1,reservoir_1 - asset_owner_2,reservoir_1 - asset_owner_3,reservoir_1 - asset_owner_4
+period,scenario,sfe_iteration,sfe_curve_segment,reservoir_1 - asset_owner_1,reservoir_1 - asset_owner_2,reservoir_1 - asset_owner_3,reservoir_1 - asset_owner_4
 1,1,1,1,6.675987,6.675987,6.675987,6.675987
 1,1,1,2,2.2e-5,2.2e-5,2.9e-5,2.9e-5
 1,1,1,3,2.7e-5,2.7e-5,0.001864,0.001864

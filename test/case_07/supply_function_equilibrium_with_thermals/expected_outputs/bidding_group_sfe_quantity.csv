@@ -1,4 +1,4 @@
-period,scenario,subperiod,nash_iteration,nash_curve_segment,thermal_bg_1 - bus_1,thermal_bg_2 - bus_1,thermal_bg_3 - bus_1,thermal_bg_4 - bus_1,thermal_bg_5 - bus_1,thermal_bg_6 - bus_1,thermal_bg_7 - bus_1,thermal_bg_8 - bus_1
+period,scenario,subperiod,sfe_iteration,sfe_curve_segment,thermal_bg_1 - bus_1,thermal_bg_2 - bus_1,thermal_bg_3 - bus_1,thermal_bg_4 - bus_1,thermal_bg_5 - bus_1,thermal_bg_6 - bus_1,thermal_bg_7 - bus_1,thermal_bg_8 - bus_1
 1,1,1,1,1,25.25,25.25,25.25,50.25,50.25,50.25,25.25,25.25
 1,1,1,1,2,25.247758,25.247758,25.247758,50.24753,50.24753,50.24753,25.247279,25.247279
 1,1,1,1,3,25.244688,25.244688,25.244688,50.244147,50.244147,50.244147,25.24355,25.24355

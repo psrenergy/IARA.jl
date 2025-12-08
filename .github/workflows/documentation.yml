@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Debug
+        run: /bin/df -h
       - uses: julia-actions/setup-julia@latest
         with:
           # Julia version to build documentation

@@ -14,5 +14,6 @@
 !parp_coefficients.*
 !inflow_period_average.*
 !inflow_period_std_dev.*
+!demand_price.*
 !./period_season_map.*
 outputs/period_season_map.*

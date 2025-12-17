@@ -6,7 +6,7 @@ Supply Function Equilibrium (SFE) is a methodology for computing strategic biddi
 
 ### Theoretical Foundation
 
-SFE theory (Klemperer & Meyer, 1989) models competition where firms submit complete supply schedules rather than single price-quantity pairs. Each market participant recognizes that their bid curve influences market prices, and strategic agents adjust curves to maximize payoff. At equilibrium, no agent can improve by unilaterally changing their supply function.
+SFE theory (Klemperer & Meyer, 1989) models competition where firms submit complete supply curves (a set of sequential price-quantity pairs) rather than single price-quantity pairs. Each market participant recognizes that their bid curve influences market prices, and strategic agents adjust curves to maximize their profits. At equilibrium, no agent can improve its result by unilaterally changing its supply function.
 
 ### Input Data Sources
 
@@ -158,7 +158,7 @@ b_i^*(1) = b_i^0(1) \quad \forall i \in \mathcal{A}
 For segment ``k`` with all agents in ``\mathcal{A}``:
 
 ```math
-B_k = \sum_{i \in \mathcal{A}} \frac{1}{b_i^0(k)}
+B_k = \sum_{i \in \mathcal{A}} \frac{1}{b_i^*(k)}
 ```
 
 ```math

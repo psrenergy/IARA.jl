@@ -222,7 +222,7 @@ Schema versioning in [database/migrations/](database/migrations/) (30 versions) 
 
 - **Multi-Settlement**: Ex-ante (forecast) vs ex-post (actual) market clearing
 - **Game Theory**: Nash equilibrium iteration for strategic bidding ([src/nash_equilibrium.jl](src/nash_equilibrium.jl))
-- **Hydro Reference Curves**: Supply curve generation for virtual reservoirs ([src/reference_curve_nash.jl](src/reference_curve_nash.jl))
+- **Supply Function Equilibrium**: Strategic bidding equilibrium for electricity markets ([src/supply_function_equilibrium.jl](src/supply_function_equilibrium.jl))
 - **Stochastic Inflow**: PAR(p) model for scenario generation ([src/inflow.jl](src/inflow.jl))
 - **Virtual Reservoirs**: Aggregate hydro modeling for market simulation
 - **Flexible Demand**: Elastic and time-shiftable load profiles

@@ -274,10 +274,10 @@ function get_outputs_dimension_size(
             push!(dimension_size, maximum_number_of_profiles(inputs))
         elseif dimension == "reference_curve_segment"
             push!(dimension_size, reference_curve_number_of_segments(inputs))
-        elseif dimension == "nash_curve_segment"
-            push!(dimension_size, maximum_number_of_segments_in_nash_equilibrium(inputs))
-        elseif dimension == "nash_iteration"
-            push!(dimension_size, reference_curve_nash_max_iterations(inputs))
+        elseif dimension == "sfe_curve_segment"
+            push!(dimension_size, maximum_number_of_segments_in_supply_function_equilibrium(inputs))
+        elseif dimension == "sfe_iteration"
+            push!(dimension_size, supply_function_equilibrium_max_iterations(inputs))
         else
             error("Dimension $dimension not recognized")
         end
@@ -613,7 +613,7 @@ function write_nash_equilibrium_vr_output!(
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options) # why run_time_options?
     asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
 
-    # 4D array with dimensions: virtual_reservoir, asset_owner, nash_iteration, nash_curve_segment
+    # 4D array with dimensions: virtual_reservoir, asset_owner, sfe_iteration, sfe_curve_segment
     @assert size(data, 1) == length(virtual_reservoirs)
     @assert size(data, 2) == length(asset_owners)
     number_of_iterations = size(data, 3)
@@ -639,8 +639,8 @@ function write_nash_equilibrium_vr_output!(
             round_output(treated_output[seg, iter, :] * multiply_by);
             period,
             scenario,
-            nash_iteration = iter,
-            nash_curve_segment = seg,
+            sfe_iteration = iter,
+            sfe_curve_segment = seg,
         )
     end
 
@@ -666,7 +666,7 @@ function write_nash_equilibrium_bg_output!(
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs]) # why run_time_options?
     buses = index_of_elements(inputs, Bus; run_time_options)
 
-    # 5D array with dimensions: bidding_group, bus, subperiod, nash_iteration, nash_curve_segment
+    # 5D array with dimensions: bidding_group, bus, subperiod, sfe_iteration, sfe_curve_segment
     @assert size(data, 1) == length(bidding_groups)
     @assert size(data, 2) == length(buses)
     @assert size(data, 3) == number_of_subperiods(inputs)
@@ -698,8 +698,8 @@ function write_nash_equilibrium_bg_output!(
             period,
             scenario,
             subperiod,
-            nash_iteration = iter,
-            nash_curve_segment = seg,
+            sfe_iteration = iter,
+            sfe_curve_segment = seg,
         )
     end
 

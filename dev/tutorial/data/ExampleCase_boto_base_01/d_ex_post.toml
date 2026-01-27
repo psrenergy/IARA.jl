@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subscenario", "subperiod"]
+dimension_size = [6, 1, 4, 3]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "period"
+frequency = "month"
+unit = "p.u."
+labels = ["Demand 1", "Demand 2", "Demand 3"]

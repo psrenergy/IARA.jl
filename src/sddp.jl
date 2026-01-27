@@ -201,14 +201,10 @@ function read_cuts_to_model!(
     end
 
     # If we got here, we need to read all nodes for cyclic policy graphs
-    number_of_years_in_simulation = ceil(number_of_periods(inputs) / number_of_nodes(inputs))
-    for year in 1:number_of_years_in_simulation
-        policy_node_to_simulation_node = (year - 1) * number_of_nodes(inputs)
-        @nospecialize(function node_name_parser(::Type{Int}, name::String)
-            return parse(Int, name) + policy_node_to_simulation_node
-        end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser)
+    function simple_node_name_parser(::Type{Int}, name::String)
+        return parse(Int, name)
     end
+    SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser = simple_node_name_parser)
 
     return model
 end

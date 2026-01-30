@@ -14,10 +14,10 @@ using CSV
 
 # Case dimensions
 # ---------------
-number_of_periods = 50
+number_of_periods = 70
 number_of_seasons = 4
 number_of_scenarios = 20
-number_of_subscenarios = 5
+number_of_subscenarios = 3
 number_of_subperiods = 24
 season_number_of_repeats = 5.0
 subperiod_duration_in_hours = 8760.0 / number_of_seasons / season_number_of_repeats / number_of_subperiods
@@ -27,6 +27,7 @@ demand_deficit_cost = 8327.76
 train_mincost_iteration_limit = 125
 train_mincost_time_limit_sec = 10000 # ~ 2.5h
 initial_date_time = "2024-01-01"
+parp_max_lags = 1
 
 db = IARA.create_study!(PATH;
     number_of_periods,
@@ -53,9 +54,10 @@ db = IARA.create_study!(PATH;
     train_mincost_iteration_limit,
     train_mincost_time_limit_sec,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-    inflow_model = IARA.Configurations_InflowModel.READ_INFLOW_FROM_FILE,
+    inflow_model = IARA.Configurations_InflowModel.READ_PARP_COEFFICIENTS,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     virtual_reservoir_residual_revenue_split_type = IARA.Configurations_VirtualReservoirResidualRevenueSplitType.BY_ENERGY_ACCOUNT_SHARES,
+    parp_max_lags,
 );
 
 try
@@ -241,19 +243,22 @@ try
         risk_factor = [0.0],
         ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID,
     )
-
     # demands
     df_demands = CSV.read(joinpath(PATH, "demands.csv"), DataFrame)
     for row in eachrow(df_demands)
+        biddinggroup = contains(row.label, "FLEX") ? (; biddinggroup_id = String(row.biddinggroup_id)) : (;)
         IARA.add_demand_unit!(db;
             label = String(row.label),
             bus_id = String(row.bus_id),
             max_demand = row.max_capacity_pu,
             curtailment_cost_flexible_demand = row.cost,
+            demand_unit_type = contains(row.label, "FLEX") ? IARA.DemandUnit_DemandType.ELASTIC :
+                               IARA.DemandUnit_DemandType.INELASTIC,
             parameters = DataFrame(;
                 date_time = [DateTime(0)],
                 existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
             ),
+            biddinggroup...,
         )
     end
 
@@ -387,6 +392,15 @@ try
         "HydroUnit";
         initial_volume_by_scenario = "initial_volume_by_scenario",
     )
+
+    IARA.link_time_series_to_file(
+        db,
+        "GaugingStation";
+        inflow_initial_state_by_scenario = "inflow_initial_state_by_scenario",
+        inflow_noise_ex_ante = "inflow_noise_ex_ante",
+        parp_coefficients = "parp_coefficients",
+        inflow_period_average = "inflow_period_average",
+        inflow_period_std_dev = "inflow_period_std_dev")
 
 finally
     IARA.close_study!(db)

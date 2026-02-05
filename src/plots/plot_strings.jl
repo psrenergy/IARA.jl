@@ -196,6 +196,10 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Total Cost",
             "pt" => "Custo Total",
         ),
+        "final_energy_account" => Dict(
+            "en" => "Virtual Reservoir Final Energy Account",
+            "pt" => "Conta de Energia Final do Reservatório Virtual",
+        ),
     )
 
     for (key, value) in complete_dict

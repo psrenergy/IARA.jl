@@ -34,32 +34,32 @@ function build_ui_operator_plots(
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
         plot_operator_output(
             inputs,
-            revenue_files[1],
             plot_path,
             get_name(inputs, "ex_ante_revenue");
+            bg_file_path = revenue_files[1],
+            vr_file_path = vr_revenue_files[1],
             round_data = true,
             ex_ante_plot = true,
-            vr_file_path = vr_revenue_files[1],
         )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
         plot_operator_output(
             inputs,
-            revenue_files[2],
             plot_path,
             get_name(inputs, "ex_post_revenue");
-            round_data = true,
+            bg_file_path = revenue_files[2],
             vr_file_path = vr_revenue_files[2],
+            round_data = true,
         )
     else
         @assert length(revenue_files) == 1
         plot_path = joinpath(plots_path, "total_revenue")
         plot_operator_output(
             inputs,
-            revenue_files[1],
             plot_path,
             get_name(inputs, "total_revenue");
-            round_data = true,
+            bg_file_path = revenue_files[1],
             vr_file_path = vr_revenue_files[1],
+            round_data = true,
         )
     end
 
@@ -75,18 +75,18 @@ function build_ui_operator_plots(
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
         plot_operator_output(
             inputs,
-            generation_files[1],
             plot_path,
             get_name(inputs, "ex_ante_generation");
-            ex_ante_plot = true,
+            bg_file_path = generation_files[1],
             vr_file_path = vr_generation_files[1],
+            ex_ante_plot = true,
         )
         plot_path = joinpath(plots_path, "total_generation_ex_post")
         plot_operator_output(
             inputs,
-            generation_files[2],
             plot_path,
             get_name(inputs, "ex_post_generation");
+            bg_file_path = generation_files[2],
             vr_file_path = vr_generation_files[2],
         )
     else
@@ -94,10 +94,24 @@ function build_ui_operator_plots(
         plot_path = joinpath(plots_path, "total_generation")
         plot_operator_output(
             inputs,
-            generation_files[1],
             plot_path,
             get_name(inputs, "total_generation");
+            bg_file_path = generation_files[1],
             vr_file_path = vr_generation_files[1],
+        )
+    end
+
+    # VR final energy account
+    energy_account_file = get_virtual_reservoir_final_energy_account_file(inputs)
+    if plot_virtual_reservoir_results
+        plot_path = joinpath(plots_path, "vr_final_energy_account")
+        plot_operator_output(
+            inputs,
+            plot_path,
+            get_name(inputs, "final_energy_account");
+            vr_file_path = energy_account_file,
+            ex_ante_plot = true,
+            subscenario_index = 1,
         )
     end
 
@@ -951,30 +965,53 @@ end
 
 function plot_operator_output(
     inputs::AbstractInputs,
-    bg_file_path::String,
     plot_path::String,
     title::String;
+    bg_file_path::String = "",
+    vr_file_path::String = "",
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
-    vr_file_path::String = "",
+    subscenario_index::Union{Int, Nothing} = nothing,
 )
-    bg_data, bg_metadata, num_subperiods, num_subscenarios = format_data_to_plot(
-        inputs,
-        bg_file_path;
-    )
-    if round_data
-        bg_data = round.(bg_data; digits = 1)
+    if isempty(bg_file_path) && isempty(vr_file_path)
+        error("At least one of bg_file_path or vr_file_path must be provided")
+    end
+
+    if !isempty(bg_file_path)
+        bg_data, bg_metadata, bg_num_subperiods, bg_num_subscenarios = format_data_to_plot(
+            inputs,
+            bg_file_path;
+            subscenario_index,
+        )
+        if round_data
+            bg_data = round.(bg_data; digits = 1)
+        end
     end
 
     # Read and format VR data
     if !isempty(vr_file_path)
-        vr_data, vr_metadata, _, _ = format_data_to_plot(
+        vr_data, vr_metadata, vr_num_subperiods, vr_num_subscenarios = format_data_to_plot(
             inputs,
             vr_file_path;
+            subscenario_index,
         )
         if round_data
             vr_data = round.(vr_data; digits = 1)
         end
+    end
+
+    if !isempty(bg_file_path)
+        num_subperiods = bg_num_subperiods
+        num_subscenarios = bg_num_subscenarios
+    else
+        num_subperiods = vr_num_subperiods
+        num_subscenarios = vr_num_subscenarios
+    end
+
+    unit = if !isempty(bg_file_path)
+        bg_metadata.unit
+    else
+        vr_metadata.unit
     end
 
     asset_owner_indexes = index_of_elements(inputs, AssetOwner)
@@ -982,10 +1019,12 @@ function plot_operator_output(
     for subperiod in 1:num_subperiods
         configs = Vector{Config}()
         for asset_owner_index in reverse(asset_owner_indexes)
-            ao_label_for_bg = asset_owner_label(inputs, asset_owner_index)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
             if !isempty(vr_file_path)
-                ao_label_for_vr = ao_label_for_bg * " - Reservatório Virtual"
-                ao_label_for_bg *= " - Grupo Ofertante"
+                ao_label_for_vr = ao_label
+                if !isempty(bg_file_path)
+                    ao_label_for_vr *= " - Reservatório Virtual"
+                end
                 push!(
                     configs,
                     Config(;
@@ -1001,20 +1040,26 @@ function plot_operator_output(
                     ),
                 )
             end
-            push!(
-                configs,
-                Config(;
-                    # x = 1:num_subscenarios,
-                    x = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(
-                        asset_owner_indexes,
-                    )+1),
-                    y = vcat(bg_data[asset_owner_index, subperiod, :], 0.0),
-                    name = ao_label_for_bg,
-                    marker = Dict("color" => _get_plot_color(asset_owner_index)),
-                    type = "bar",
-                    hovertemplate = "(%{y})",
-                ),
-            )
+            if !isempty(bg_file_path)
+                ao_label_for_bg = ao_label
+                if !isempty(vr_file_path)
+                    ao_label_for_bg *= " - Grupo Ofertante"
+                end
+                push!(
+                    configs,
+                    Config(;
+                        # x = 1:num_subscenarios,
+                        x = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(
+                            asset_owner_indexes,
+                        )+1),
+                        y = vcat(bg_data[asset_owner_index, subperiod, :], 0.0),
+                        name = ao_label_for_bg,
+                        marker = Dict("color" => _get_plot_color(asset_owner_index)),
+                        type = "bar",
+                        hovertemplate = "(%{y})",
+                    ),
+                )
+            end
         end
 
         if ex_ante_plot
@@ -1057,7 +1102,7 @@ function plot_operator_output(
             ),
             yaxis = Dict(
                 "title" => Dict(
-                    "text" => "$(bg_metadata.unit)",
+                    "text" => "$unit",
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickfont" => Dict("size" => axis_tick_font_size()),

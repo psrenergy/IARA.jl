@@ -46,7 +46,7 @@ function main(args::Vector{String})
 
     os = parsed_args["os"]
     memory_in_gb = if os == "linux"
-        32
+        30
     else
         16
     end

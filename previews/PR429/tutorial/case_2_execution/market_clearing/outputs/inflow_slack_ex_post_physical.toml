@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["period", "scenario", "subscenario", "subperiod"]
+dimension_size = [2, 12, 1, 1]
+initial_date = "2024-01-01 00:00:00"
+time_dimension = "period"
+frequency = "monthly"
+unit = "m3/s"
+labels = ["Hydro1"]

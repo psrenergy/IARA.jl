@@ -139,12 +139,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "profit_$ao_label.html")
             plot_agent_output(
                 inputs,
-                profit_file_path,
                 plot_path,
                 asset_owner_index,
                 title;
-                round_data = true,
+                bg_file_path = profit_file_path,
                 vr_file_path = vr_profit_file_path,
+                round_data = true,
             )
         end
     end
@@ -164,13 +164,13 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
             plot_agent_output(
                 inputs,
-                revenue_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = revenue_files[1],
+                vr_file_path = vr_revenue_files[1],
                 round_data = true,
                 ex_ante_plot = true,
-                vr_file_path = vr_revenue_files[1],
             )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
@@ -179,12 +179,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "revenue_ex_post_$ao_label.html")
             plot_agent_output(
                 inputs,
-                revenue_files[2],
                 plot_path,
                 asset_owner_index,
                 title;
-                round_data = true,
+                bg_file_path = revenue_files[2],
                 vr_file_path = vr_revenue_files[2],
+                round_data = true,
             )
         end
     else
@@ -195,12 +195,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "revenue_$ao_label.html")
             plot_agent_output(
                 inputs,
-                revenue_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
-                round_data = true,
+                bg_file_path = revenue_files[1],
                 vr_file_path = vr_revenue_files[1],
+                round_data = true,
             )
         end
     end
@@ -220,12 +220,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "generation_ex_ante_$ao_label.html")
             plot_agent_output(
                 inputs,
-                generation_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
-                ex_ante_plot = true,
+                bg_file_path = generation_files[1],
                 vr_file_path = vr_generation_files[1],
+                ex_ante_plot = true,
             )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
@@ -234,10 +234,10 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "generation_ex_post_$ao_label.html")
             plot_agent_output(
                 inputs,
-                generation_files[2],
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = generation_files[2],
                 vr_file_path = vr_generation_files[2],
             )
         end
@@ -249,10 +249,10 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "generation_$ao_label.html")
             plot_agent_output(
                 inputs,
-                generation_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = generation_files[1],
                 vr_file_path = vr_generation_files[1],
             )
         end
@@ -267,12 +267,31 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "cost_$ao_label.html")
             plot_agent_output(
                 inputs,
-                cost_file_path,
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = cost_file_path,
                 round_data = true,
                 fixed_component = bidding_group_fixed_cost(inputs),
+            )
+        end
+    end
+
+    # VR final energy account
+    energy_account_file = get_virtual_reservoir_final_energy_account_file(inputs)
+    if plot_virtual_reservoir_results
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - $(get_name(inputs, "final_energy_account"))"
+            plot_path = joinpath(plots_path, "vr_final_energy_account_$ao_label.html")
+            plot_agent_output(
+                inputs,
+                plot_path,
+                asset_owner_index,
+                title;
+                vr_file_path = energy_account_file,
+                ex_ante_plot = true,
+                subscenario_index = 1,
             )
         end
     end
@@ -819,36 +838,59 @@ end
 
 function plot_agent_output(
     inputs::AbstractInputs,
-    bg_file_path::String,
     plot_path::String,
     asset_owner_index::Int,
     title::String;
+    bg_file_path::String = "",
+    vr_file_path::String = "",
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
     fixed_component::Vector{Float64} = Float64[],
-    vr_file_path::String = "",
+    subscenario_index::Union{Int, Nothing} = nothing,
 )
+    if isempty(bg_file_path) && isempty(vr_file_path)
+        error("At least one of bg_file_path or vr_file_path must be provided")
+    end
+
     # Read and format BG data
-    bg_data, bg_metadata, num_subperiods, num_subscenarios = format_data_to_plot(
-        inputs,
-        bg_file_path;
-        asset_owner_index,
-    )
-    if round_data
-        bg_data = round.(bg_data; digits = 1)
+    if !isempty(bg_file_path)
+        bg_data, bg_metadata, bg_num_subperiods, bg_num_subscenarios = format_data_to_plot(
+            inputs,
+            bg_file_path;
+            asset_owner_index,
+            subscenario_index,
+        )
+        if round_data
+            bg_data = round.(bg_data; digits = 1)
+        end
     end
 
     # Read and format VR data
     if !isempty(vr_file_path)
         @assert isempty(fixed_component) "Fixed component plotting not supported for virtual reservoir data"
-        vr_data, vr_metadata, _, _ = format_data_to_plot(
+        vr_data, vr_metadata, vr_num_subperiods, vr_num_subscenarios = format_data_to_plot(
             inputs,
             vr_file_path;
             asset_owner_index,
+            subscenario_index,
         )
         if round_data
             vr_data = round.(vr_data; digits = 1)
         end
+    end
+
+    if !isempty(bg_file_path)
+        num_subperiods = bg_num_subperiods
+        num_subscenarios = bg_num_subscenarios
+    else
+        num_subperiods = vr_num_subperiods
+        num_subscenarios = vr_num_subscenarios
+    end
+
+    unit = if !isempty(bg_file_path)
+        bg_metadata.unit
+    else
+        vr_metadata.unit
     end
 
     # Read and format fixed component data
@@ -885,8 +927,11 @@ function plot_agent_output(
             )
         end
         if !isempty(vr_file_path)
-            variable_component_name = title * " - Grupo Ofertante"
-            vr_component_name = title * " - Reservatório Virtual"
+            vr_component_name = title
+            if !isempty(bg_file_path)
+                variable_component_name = title * " - Grupo Ofertante"
+                vr_component_name *= " - Reservatório Virtual"
+            end
             if num_subperiods > 1
                 vr_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
@@ -901,19 +946,21 @@ function plot_agent_output(
                 ),
             )
         end
-        if num_subperiods > 1
-            variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+        if !isempty(bg_file_path)
+            if num_subperiods > 1
+                variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subscenarios,
+                    y = bg_data[subperiod, :],
+                    name = variable_component_name,
+                    marker = Dict("color" => _get_plot_color(subperiod)),
+                    type = "bar",
+                ),
+            )
         end
-        push!(
-            configs,
-            Config(;
-                x = 1:num_subscenarios,
-                y = bg_data[subperiod, :],
-                name = variable_component_name,
-                marker = Dict("color" => _get_plot_color(subperiod)),
-                type = "bar",
-            ),
-        )
     end
 
     if ex_ante_plot
@@ -944,7 +991,7 @@ function plot_agent_output(
         ),
         yaxis = Dict(
             "title" => Dict(
-                "text" => "$(bg_metadata.unit)",
+                "text" => "$unit",
                 "font" => Dict("size" => axis_title_font_size()),
             ),
             "tickfont" => Dict("size" => axis_tick_font_size()),

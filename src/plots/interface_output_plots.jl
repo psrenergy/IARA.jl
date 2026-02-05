@@ -544,10 +544,34 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                 end
             end
 
-            sort_order = sortperm(reshaped_price)
-            reshaped_quantity = reshaped_quantity[sort_order]
-            reshaped_quantity = cumsum(reshaped_quantity)
-            reshaped_price = reshaped_price[sort_order]
+            # Separate sell (positive) and purchase (negative) bids
+            sell_indices = findall(q -> q >= 0, reshaped_quantity)
+            purchase_indices = findall(q -> q < 0, reshaped_quantity)
+            has_purchase_bids = !isempty(purchase_indices)
+
+            # Process sell bids
+            sell_quantity = reshaped_quantity[sell_indices]
+            sell_price = reshaped_price[sell_indices]
+
+            sort_order = sortperm(sell_price)
+            sell_quantity = sell_quantity[sort_order]
+            sell_quantity = cumsum(sell_quantity)
+            sell_price = sell_price[sort_order]
+
+            # Process purchase bids (if any)
+            purchase_quantity = Float64[]
+            purchase_price = Float64[]
+            if has_purchase_bids
+                purchase_quantity = reshaped_quantity[purchase_indices]
+                purchase_price = reshaped_price[purchase_indices]
+
+                purchase_sort_order = sortperm(purchase_price)
+                purchase_quantity = purchase_quantity[purchase_sort_order]
+                purchase_quantity = cumsum(purchase_quantity)
+                purchase_price = purchase_price[purchase_sort_order]
+            end
+
+            # Process no_markup data
             if plot_no_markup_price
                 no_markup_sort_order = sortperm(reshaped_no_markup_price)
                 reshaped_no_markup_quantity = reshaped_no_markup_quantity[no_markup_sort_order]
@@ -555,16 +579,30 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                 reshaped_no_markup_price = reshaped_no_markup_price[no_markup_sort_order]
             end
 
-            quantity_data_to_plot = Float64[0.0]
-            price_data_to_plot = Float64[0.0]
-
-            for (quantity, price) in zip(reshaped_quantity, reshaped_price)
+            # Build sell bid plot data
+            sell_quantity_data_to_plot = Float64[0.0]
+            sell_price_data_to_plot = Float64[0.0]
+            for (quantity, price) in zip(sell_quantity, sell_price)
                 # old point
-                push!(quantity_data_to_plot, quantity_data_to_plot[end])
-                push!(price_data_to_plot, price)
+                push!(sell_quantity_data_to_plot, sell_quantity_data_to_plot[end])
+                push!(sell_price_data_to_plot, price)
                 # new point
-                push!(quantity_data_to_plot, quantity)
-                push!(price_data_to_plot, price)
+                push!(sell_quantity_data_to_plot, quantity)
+                push!(sell_price_data_to_plot, price)
+            end
+
+            # Build purchase bid plot data (if any)
+            purchase_quantity_data_to_plot = Float64[0.0]
+            purchase_price_data_to_plot = Float64[0.0]
+            if has_purchase_bids
+                for (quantity, price) in zip(purchase_quantity, purchase_price)
+                    # old point
+                    push!(purchase_quantity_data_to_plot, purchase_quantity_data_to_plot[end])
+                    push!(purchase_price_data_to_plot, price)
+                    # new point (invert quantity to make it positive for display)
+                    push!(purchase_quantity_data_to_plot, -quantity)
+                    push!(purchase_price_data_to_plot, price)
+                end
             end
 
             if plot_no_markup_price
@@ -589,12 +627,12 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
             end
             color_idx = 0
             color_idx += 1
-            name = get_name(inputs, "bids")
+            name = has_purchase_bids ? get_name(inputs, "sell_bids") : get_name(inputs, "bids")
             push!(
                 configs,
                 Config(;
-                    x = quantity_data_to_plot,
-                    y = price_data_to_plot,
+                    x = sell_quantity_data_to_plot,
+                    y = sell_price_data_to_plot,
                     name = name,
                     line = Dict("color" => _get_plot_color(color_idx)),
                     type = "line",
@@ -608,6 +646,20 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                     Config(;
                         x = no_markup_quantity_data_to_plot,
                         y = no_markup_price_data_to_plot,
+                        name = name,
+                        line = Dict("color" => _get_plot_color(color_idx)),
+                        type = "line",
+                    ),
+                )
+            end
+            if has_purchase_bids
+                color_idx += 1
+                name = get_name(inputs, "purchase_bids")
+                push!(
+                    configs,
+                    Config(;
+                        x = purchase_quantity_data_to_plot,
+                        y = purchase_price_data_to_plot,
                         name = name,
                         line = Dict("color" => _get_plot_color(color_idx)),
                         type = "line",
@@ -637,7 +689,12 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
             ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
             ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
             demand_time_index = (inputs.args.period - 1) * num_subperiods + subperiod
-            y_axis_limits = [minimum(minimum.(price_data_to_plot)), maximum(maximum.(price_data_to_plot))] .* 1.1
+            # Calculate y-axis limits including sell, purchase, and no_markup prices
+            all_prices = vcat(sell_price_data_to_plot, purchase_price_data_to_plot)
+            if plot_no_markup_price
+                all_prices = vcat(all_prices, no_markup_price_data_to_plot)
+            end
+            y_axis_limits = [minimum(minimum.(all_prices)), maximum(maximum.(all_prices))] .* 1.1
             y_axis_range = range(y_axis_limits[1], y_axis_limits[2]; length = 100)
             # Ex-post min demand
             color_idx += 1
@@ -689,6 +746,27 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                     hovertemplate = "%{x} MWh",
                 ),
             )
+            # First subscenario demand
+            if plot_virtual_reservoir_data
+                subscenario_idx = 1
+                color_idx += 1
+                push!(
+                    configs,
+                    Config(;
+                        x = range(
+                            ex_post_demand[subscenario_idx, demand_time_index],
+                            ex_post_demand[subscenario_idx, demand_time_index];
+                            length = 100,
+                        ),
+                        y = y_axis_range,
+                        name = get_name(inputs, "first_scenario_$demand_name"),
+                        line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                        type = "line",
+                        mode = "lines",
+                        hovertemplate = "%{x} MWh",
+                    ),
+                )
+            end
 
             main_configuration = Config(;
                 title = Dict(

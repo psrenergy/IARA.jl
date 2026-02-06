@@ -926,40 +926,89 @@ function plot_agent_output(
                 ),
             )
         end
+
+        # Calculate VR values once for this subperiod (used by both BG and VR)
+        vr_y_positive = Float64[]
+        if !isempty(vr_file_path)
+            vr_y_values = vr_data[1, :] ./ num_subperiods
+            vr_y_positive = max.(vr_y_values, 0.0)
+        end
+
+        if !isempty(bg_file_path)
+            if !isempty(vr_file_path)
+                variable_component_name = title * " - Grupo Ofertante"
+            end
+            if num_subperiods > 1
+                variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
+
+            # Stack BG on top of positive VR
+            bg_y_values = bg_data[subperiod, :]
+            bg_base = isempty(vr_file_path) ? zeros(Float64, num_subscenarios) : vr_y_positive
+
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subscenarios,
+                    y = bg_y_values,
+                    base = bg_base,
+                    name = variable_component_name,
+                    marker = Dict("color" => _get_plot_color(subperiod)),
+                    type = "bar",
+                    customdata = bg_y_values,
+                    hovertemplate = "(%{customdata})",
+                ),
+            )
+        end
         if !isempty(vr_file_path)
             vr_component_name = title
             if !isempty(bg_file_path)
-                variable_component_name = title * " - Grupo Ofertante"
                 vr_component_name *= " - Reservatório Virtual"
             end
             if num_subperiods > 1
                 vr_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
             end
-            push!(
-                configs,
-                Config(;
-                    x = 1:num_subscenarios,
-                    y = vr_data[1, :] ./ num_subperiods, # VR data has no subperiod dimension
-                    name = vr_component_name,
-                    marker = Dict("color" => _get_plot_color(subperiod; dark_shade = true)),
-                    type = "bar",
-                ),
-            )
-        end
-        if !isempty(bg_file_path)
-            if num_subperiods > 1
-                variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+
+            # vr_y_positive already calculated above; now calculate negative
+            vr_y_values = vr_data[1, :] ./ num_subperiods
+            vr_y_negative = min.(vr_y_values, 0.0)
+
+            has_positive_vr = any(vr_y_positive .> 0)
+            has_negative_vr = any(vr_y_negative .< 0)
+
+            # Add positive VR bars
+            if has_positive_vr
+                push!(
+                    configs,
+                    Config(;
+                        x = 1:num_subscenarios,
+                        y = vr_y_positive,
+                        name = vr_component_name,
+                        marker = Dict("color" => _get_plot_color(subperiod; dark_shade = true)),
+                        type = "bar",
+                        legendgroup = "vr_$subperiod",
+                        hovertemplate = "(%{y})",
+                    ),
+                )
             end
-            push!(
-                configs,
-                Config(;
-                    x = 1:num_subscenarios,
-                    y = bg_data[subperiod, :],
-                    name = variable_component_name,
-                    marker = Dict("color" => _get_plot_color(subperiod)),
-                    type = "bar",
-                ),
-            )
+
+            # Add negative VR bars (always start from zero, going down)
+            if has_negative_vr
+                push!(
+                    configs,
+                    Config(;
+                        x = 1:num_subscenarios,
+                        y = vr_y_negative,
+                        base = zeros(Float64, num_subscenarios),
+                        name = vr_component_name,
+                        marker = Dict("color" => _get_plot_color(subperiod; dark_shade = true)),
+                        type = "bar",
+                        legendgroup = "vr_$subperiod",
+                        showlegend = !has_positive_vr,
+                        hovertemplate = "(%{y})",
+                    ),
+                )
+            end
         end
     end
 
@@ -974,7 +1023,7 @@ function plot_agent_output(
         x_axis_ticktext = string.(1:num_subscenarios)
     end
     main_configuration = Config(;
-        barmode = "stack",
+        barmode = "overlay",
         title = Dict(
             "text" => title,
             "font" => Dict("size" => title_font_size()),
@@ -1064,48 +1113,111 @@ function plot_operator_output(
     asset_owner_indexes = index_of_elements(inputs, AssetOwner)
 
     for subperiod in 1:num_subperiods
-        configs = Vector{Config}()
-        for asset_owner_index in reverse(asset_owner_indexes)
-            ao_label = asset_owner_label(inputs, asset_owner_index)
+        # First pass: collect all positive VR cumulative sums per x position for stacking BG on top
+        positive_vr_cumsum = Dict{Int, Vector{Float64}}()
+
+        for asset_owner_index in asset_owner_indexes
+            x_positions = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes,)+1)
+
             if !isempty(vr_file_path)
-                ao_label_for_vr = ao_label
-                if !isempty(bg_file_path)
-                    ao_label_for_vr *= " - Reservatório Virtual"
+                vr_y_values = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0)
+                # For diverging stacked bars: separate positive and negative
+                vr_y_positive = max.(vr_y_values, 0.0)
+
+                # Track positive VR for stacking BG on top
+                for (idx, x_pos) in enumerate(x_positions)
+                    if !haskey(positive_vr_cumsum, x_pos)
+                        positive_vr_cumsum[x_pos] = zeros(Float64, length(x_positions))
+                    end
+                    positive_vr_cumsum[x_pos][idx] = vr_y_positive[idx]
                 end
-                push!(
-                    configs,
-                    Config(;
-                        # x = 1:num_subscenarios,
-                        x = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(
-                            asset_owner_indexes,
-                        )+1),
-                        y = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0), # VR data has no subperiod dimension
-                        name = ao_label_for_vr,
-                        marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
-                        type = "bar",
-                        hovertemplate = "(%{y})",
-                    ),
-                )
             end
+        end
+
+        # Second pass: build configs in correct order (BG first, then VR)
+        configs = Vector{Config}()
+        for asset_owner_index in asset_owner_indexes
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            x_positions = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes,)+1)
+
             if !isempty(bg_file_path)
                 ao_label_for_bg = ao_label
                 if !isempty(vr_file_path)
                     ao_label_for_bg *= " - Grupo Ofertante"
                 end
+                bg_y_values = vcat(bg_data[asset_owner_index, subperiod, :], 0.0)
+
+                # Stack BG on top of positive VR
+                bg_base = zeros(Float64, length(bg_y_values))
+                if !isempty(vr_file_path)
+                    for (idx, x_pos) in enumerate(x_positions)
+                        if haskey(positive_vr_cumsum, x_pos)
+                            bg_base[idx] = positive_vr_cumsum[x_pos][idx]
+                        end
+                    end
+                end
+
                 push!(
                     configs,
                     Config(;
-                        # x = 1:num_subscenarios,
-                        x = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(
-                            asset_owner_indexes,
-                        )+1),
-                        y = vcat(bg_data[asset_owner_index, subperiod, :], 0.0),
+                        x = x_positions,
+                        y = bg_y_values,
+                        base = bg_base,
                         name = ao_label_for_bg,
                         marker = Dict("color" => _get_plot_color(asset_owner_index)),
                         type = "bar",
-                        hovertemplate = "(%{y})",
+                        customdata = bg_y_values,
+                        hovertemplate = "(%{customdata})",
                     ),
                 )
+            end
+
+            if !isempty(vr_file_path)
+                ao_label_for_vr = ao_label
+                if !isempty(bg_file_path)
+                    ao_label_for_vr *= " - Reservatório Virtual"
+                end
+                vr_y_values = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0)
+                # For diverging stacked bars: separate positive and negative
+                vr_y_positive = max.(vr_y_values, 0.0)
+                vr_y_negative = min.(vr_y_values, 0.0)
+
+                has_positive_vr = any(vr_y_positive .> 0)
+                has_negative_vr = any(vr_y_negative .< 0)
+
+                # Add positive VR bars
+                if has_positive_vr
+                    push!(
+                        configs,
+                        Config(;
+                            x = x_positions,
+                            y = vr_y_positive,
+                            name = ao_label_for_vr,
+                            marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
+                            type = "bar",
+                            hovertemplate = "(%{y})",
+                            legendgroup = "vr_$asset_owner_index",
+                        ),
+                    )
+                end
+
+                # Add negative VR bars (always start from zero, going down)
+                if has_negative_vr
+                    push!(
+                        configs,
+                        Config(;
+                            x = x_positions,
+                            y = vr_y_negative,
+                            base = zeros(Float64, length(vr_y_negative)),
+                            name = ao_label_for_vr,
+                            marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
+                            type = "bar",
+                            hovertemplate = "(%{y})",
+                            legendgroup = "vr_$asset_owner_index",
+                            showlegend = !has_positive_vr,
+                        ),
+                    )
+                end
             end
         end
 
@@ -1132,7 +1244,7 @@ function plot_operator_output(
             plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
         end
         main_configuration = Config(;
-            barmode = "stack",
+            barmode = "overlay",
             title = Dict(
                 "text" => plot_title,
                 "font" => Dict("size" => title_font_size()),

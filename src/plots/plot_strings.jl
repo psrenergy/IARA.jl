@@ -64,6 +64,18 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Average Net Demand",
             "pt" => "Demanda Líquida Média",
         ),
+        "first_scenario_demand" => Dict(
+            "en" => "First Scenario Demand",
+            "pt" => "Demanda do Primeiro Cenário",
+        ),
+        "first_scenario_total_demand" => Dict(
+            "en" => "First Scenario Total Demand",
+            "pt" => "Demanda Total do Primeiro Cenário",
+        ),
+        "first_scenario_net_demand" => Dict(
+            "en" => "First Scenario Net Demand",
+            "pt" => "Demanda Líquida do Primeiro Cenário",
+        ),
         "renewable_generation" => Dict(
             "en" => "Renewable Generation",
             "pt" => "Geração Renovável",
@@ -152,6 +164,14 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Bids",
             "pt" => "Ofertas",
         ),
+        "sell_bids" => Dict(
+            "en" => "Sell Bids",
+            "pt" => "Ofertas de Venda",
+        ),
+        "purchase_bids" => Dict(
+            "en" => "Purchase Bids",
+            "pt" => "Ofertas de Compra",
+        ),
         "operating_cost" => Dict(
             "en" => "Operating Cost",
             "pt" => "Custo Variável Unitário",
@@ -175,6 +195,10 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
         "total_cost" => Dict(
             "en" => "Total Cost",
             "pt" => "Custo Total",
+        ),
+        "final_energy_account" => Dict(
+            "en" => "Virtual Reservoir Final Energy Account",
+            "pt" => "Conta de Energia Final do Reservatório Virtual",
         ),
     )
 

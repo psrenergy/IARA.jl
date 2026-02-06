@@ -34,32 +34,32 @@ function build_ui_operator_plots(
         plot_path = joinpath(plots_path, "total_revenue_ex_ante")
         plot_operator_output(
             inputs,
-            revenue_files[1],
             plot_path,
             get_name(inputs, "ex_ante_revenue");
+            bg_file_path = revenue_files[1],
+            vr_file_path = vr_revenue_files[1],
             round_data = true,
             ex_ante_plot = true,
-            vr_file_path = vr_revenue_files[1],
         )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
         plot_operator_output(
             inputs,
-            revenue_files[2],
             plot_path,
             get_name(inputs, "ex_post_revenue");
-            round_data = true,
+            bg_file_path = revenue_files[2],
             vr_file_path = vr_revenue_files[2],
+            round_data = true,
         )
     else
         @assert length(revenue_files) == 1
         plot_path = joinpath(plots_path, "total_revenue")
         plot_operator_output(
             inputs,
-            revenue_files[1],
             plot_path,
             get_name(inputs, "total_revenue");
-            round_data = true,
+            bg_file_path = revenue_files[1],
             vr_file_path = vr_revenue_files[1],
+            round_data = true,
         )
     end
 
@@ -75,18 +75,18 @@ function build_ui_operator_plots(
         plot_path = joinpath(plots_path, "total_generation_ex_ante")
         plot_operator_output(
             inputs,
-            generation_files[1],
             plot_path,
             get_name(inputs, "ex_ante_generation");
-            ex_ante_plot = true,
+            bg_file_path = generation_files[1],
             vr_file_path = vr_generation_files[1],
+            ex_ante_plot = true,
         )
         plot_path = joinpath(plots_path, "total_generation_ex_post")
         plot_operator_output(
             inputs,
-            generation_files[2],
             plot_path,
             get_name(inputs, "ex_post_generation");
+            bg_file_path = generation_files[2],
             vr_file_path = vr_generation_files[2],
         )
     else
@@ -94,10 +94,24 @@ function build_ui_operator_plots(
         plot_path = joinpath(plots_path, "total_generation")
         plot_operator_output(
             inputs,
-            generation_files[1],
             plot_path,
             get_name(inputs, "total_generation");
+            bg_file_path = generation_files[1],
             vr_file_path = vr_generation_files[1],
+        )
+    end
+
+    # VR final energy account
+    energy_account_file = get_virtual_reservoir_final_energy_account_file(inputs)
+    if plot_virtual_reservoir_results
+        plot_path = joinpath(plots_path, "vr_final_energy_account")
+        plot_operator_output(
+            inputs,
+            plot_path,
+            get_name(inputs, "final_energy_account");
+            vr_file_path = energy_account_file,
+            ex_ante_plot = true,
+            subscenario_index = 1,
         )
     end
 
@@ -125,12 +139,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "profit_$ao_label.html")
             plot_agent_output(
                 inputs,
-                profit_file_path,
                 plot_path,
                 asset_owner_index,
                 title;
-                round_data = true,
+                bg_file_path = profit_file_path,
                 vr_file_path = vr_profit_file_path,
+                round_data = true,
             )
         end
     end
@@ -150,13 +164,13 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
             plot_agent_output(
                 inputs,
-                revenue_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = revenue_files[1],
+                vr_file_path = vr_revenue_files[1],
                 round_data = true,
                 ex_ante_plot = true,
-                vr_file_path = vr_revenue_files[1],
             )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
@@ -165,12 +179,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "revenue_ex_post_$ao_label.html")
             plot_agent_output(
                 inputs,
-                revenue_files[2],
                 plot_path,
                 asset_owner_index,
                 title;
-                round_data = true,
+                bg_file_path = revenue_files[2],
                 vr_file_path = vr_revenue_files[2],
+                round_data = true,
             )
         end
     else
@@ -181,12 +195,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "revenue_$ao_label.html")
             plot_agent_output(
                 inputs,
-                revenue_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
-                round_data = true,
+                bg_file_path = revenue_files[1],
                 vr_file_path = vr_revenue_files[1],
+                round_data = true,
             )
         end
     end
@@ -206,12 +220,12 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "generation_ex_ante_$ao_label.html")
             plot_agent_output(
                 inputs,
-                generation_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
-                ex_ante_plot = true,
+                bg_file_path = generation_files[1],
                 vr_file_path = vr_generation_files[1],
+                ex_ante_plot = true,
             )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
@@ -220,10 +234,10 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "generation_ex_post_$ao_label.html")
             plot_agent_output(
                 inputs,
-                generation_files[2],
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = generation_files[2],
                 vr_file_path = vr_generation_files[2],
             )
         end
@@ -235,10 +249,10 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "generation_$ao_label.html")
             plot_agent_output(
                 inputs,
-                generation_files[1],
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = generation_files[1],
                 vr_file_path = vr_generation_files[1],
             )
         end
@@ -253,12 +267,31 @@ function build_ui_agents_plots(
             plot_path = joinpath(plots_path, "cost_$ao_label.html")
             plot_agent_output(
                 inputs,
-                cost_file_path,
                 plot_path,
                 asset_owner_index,
                 title;
+                bg_file_path = cost_file_path,
                 round_data = true,
                 fixed_component = bidding_group_fixed_cost(inputs),
+            )
+        end
+    end
+
+    # VR final energy account
+    energy_account_file = get_virtual_reservoir_final_energy_account_file(inputs)
+    if plot_virtual_reservoir_results
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - $(get_name(inputs, "final_energy_account"))"
+            plot_path = joinpath(plots_path, "vr_final_energy_account_$ao_label.html")
+            plot_agent_output(
+                inputs,
+                plot_path,
+                asset_owner_index,
+                title;
+                vr_file_path = energy_account_file,
+                ex_ante_plot = true,
+                subscenario_index = 1,
             )
         end
     end
@@ -544,10 +577,34 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                 end
             end
 
-            sort_order = sortperm(reshaped_price)
-            reshaped_quantity = reshaped_quantity[sort_order]
-            reshaped_quantity = cumsum(reshaped_quantity)
-            reshaped_price = reshaped_price[sort_order]
+            # Separate sell (positive) and purchase (negative) bids
+            sell_indices = findall(q -> q >= 0, reshaped_quantity)
+            purchase_indices = findall(q -> q < 0, reshaped_quantity)
+            has_purchase_bids = !isempty(purchase_indices)
+
+            # Process sell bids
+            sell_quantity = reshaped_quantity[sell_indices]
+            sell_price = reshaped_price[sell_indices]
+
+            sort_order = sortperm(sell_price)
+            sell_quantity = sell_quantity[sort_order]
+            sell_quantity = cumsum(sell_quantity)
+            sell_price = sell_price[sort_order]
+
+            # Process purchase bids (if any)
+            purchase_quantity = Float64[]
+            purchase_price = Float64[]
+            if has_purchase_bids
+                purchase_quantity = reshaped_quantity[purchase_indices]
+                purchase_price = reshaped_price[purchase_indices]
+
+                purchase_sort_order = sortperm(purchase_price)
+                purchase_quantity = purchase_quantity[purchase_sort_order]
+                purchase_quantity = cumsum(purchase_quantity)
+                purchase_price = purchase_price[purchase_sort_order]
+            end
+
+            # Process no_markup data
             if plot_no_markup_price
                 no_markup_sort_order = sortperm(reshaped_no_markup_price)
                 reshaped_no_markup_quantity = reshaped_no_markup_quantity[no_markup_sort_order]
@@ -555,16 +612,30 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                 reshaped_no_markup_price = reshaped_no_markup_price[no_markup_sort_order]
             end
 
-            quantity_data_to_plot = Float64[0.0]
-            price_data_to_plot = Float64[0.0]
-
-            for (quantity, price) in zip(reshaped_quantity, reshaped_price)
+            # Build sell bid plot data
+            sell_quantity_data_to_plot = Float64[0.0]
+            sell_price_data_to_plot = Float64[0.0]
+            for (quantity, price) in zip(sell_quantity, sell_price)
                 # old point
-                push!(quantity_data_to_plot, quantity_data_to_plot[end])
-                push!(price_data_to_plot, price)
+                push!(sell_quantity_data_to_plot, sell_quantity_data_to_plot[end])
+                push!(sell_price_data_to_plot, price)
                 # new point
-                push!(quantity_data_to_plot, quantity)
-                push!(price_data_to_plot, price)
+                push!(sell_quantity_data_to_plot, quantity)
+                push!(sell_price_data_to_plot, price)
+            end
+
+            # Build purchase bid plot data (if any)
+            purchase_quantity_data_to_plot = Float64[0.0]
+            purchase_price_data_to_plot = Float64[0.0]
+            if has_purchase_bids
+                for (quantity, price) in zip(purchase_quantity, purchase_price)
+                    # old point
+                    push!(purchase_quantity_data_to_plot, purchase_quantity_data_to_plot[end])
+                    push!(purchase_price_data_to_plot, price)
+                    # new point (invert quantity to make it positive for display)
+                    push!(purchase_quantity_data_to_plot, -quantity)
+                    push!(purchase_price_data_to_plot, price)
+                end
             end
 
             if plot_no_markup_price
@@ -589,12 +660,12 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
             end
             color_idx = 0
             color_idx += 1
-            name = get_name(inputs, "bids")
+            name = has_purchase_bids ? get_name(inputs, "sell_bids") : get_name(inputs, "bids")
             push!(
                 configs,
                 Config(;
-                    x = quantity_data_to_plot,
-                    y = price_data_to_plot,
+                    x = sell_quantity_data_to_plot,
+                    y = sell_price_data_to_plot,
                     name = name,
                     line = Dict("color" => _get_plot_color(color_idx)),
                     type = "line",
@@ -608,6 +679,20 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                     Config(;
                         x = no_markup_quantity_data_to_plot,
                         y = no_markup_price_data_to_plot,
+                        name = name,
+                        line = Dict("color" => _get_plot_color(color_idx)),
+                        type = "line",
+                    ),
+                )
+            end
+            if has_purchase_bids
+                color_idx += 1
+                name = get_name(inputs, "purchase_bids")
+                push!(
+                    configs,
+                    Config(;
+                        x = purchase_quantity_data_to_plot,
+                        y = purchase_price_data_to_plot,
                         name = name,
                         line = Dict("color" => _get_plot_color(color_idx)),
                         type = "line",
@@ -637,7 +722,12 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
             ex_post_min_demand = dropdims(minimum(ex_post_demand; dims = 1); dims = 1)
             ex_post_max_demand = dropdims(maximum(ex_post_demand; dims = 1); dims = 1)
             demand_time_index = (inputs.args.period - 1) * num_subperiods + subperiod
-            y_axis_limits = [minimum(minimum.(price_data_to_plot)), maximum(maximum.(price_data_to_plot))] .* 1.1
+            # Calculate y-axis limits including sell, purchase, and no_markup prices
+            all_prices = vcat(sell_price_data_to_plot, purchase_price_data_to_plot)
+            if plot_no_markup_price
+                all_prices = vcat(all_prices, no_markup_price_data_to_plot)
+            end
+            y_axis_limits = [minimum(minimum.(all_prices)), maximum(maximum.(all_prices))] .* 1.1
             y_axis_range = range(y_axis_limits[1], y_axis_limits[2]; length = 100)
             # Ex-post min demand
             color_idx += 1
@@ -689,6 +779,27 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                     hovertemplate = "%{x} MWh",
                 ),
             )
+            # First subscenario demand
+            if plot_virtual_reservoir_data
+                subscenario_idx = 1
+                color_idx += 1
+                push!(
+                    configs,
+                    Config(;
+                        x = range(
+                            ex_post_demand[subscenario_idx, demand_time_index],
+                            ex_post_demand[subscenario_idx, demand_time_index];
+                            length = 100,
+                        ),
+                        y = y_axis_range,
+                        name = get_name(inputs, "first_scenario_$demand_name"),
+                        line = Dict("color" => _get_plot_color(color_idx), "dash" => "dash"),
+                        type = "line",
+                        mode = "lines",
+                        hovertemplate = "%{x} MWh",
+                    ),
+                )
+            end
 
             main_configuration = Config(;
                 title = Dict(
@@ -727,36 +838,59 @@ end
 
 function plot_agent_output(
     inputs::AbstractInputs,
-    bg_file_path::String,
     plot_path::String,
     asset_owner_index::Int,
     title::String;
+    bg_file_path::String = "",
+    vr_file_path::String = "",
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
     fixed_component::Vector{Float64} = Float64[],
-    vr_file_path::String = "",
+    subscenario_index::Union{Int, Nothing} = nothing,
 )
+    if isempty(bg_file_path) && isempty(vr_file_path)
+        error("At least one of bg_file_path or vr_file_path must be provided")
+    end
+
     # Read and format BG data
-    bg_data, bg_metadata, num_subperiods, num_subscenarios = format_data_to_plot(
-        inputs,
-        bg_file_path;
-        asset_owner_index,
-    )
-    if round_data
-        bg_data = round.(bg_data; digits = 1)
+    if !isempty(bg_file_path)
+        bg_data, bg_metadata, bg_num_subperiods, bg_num_subscenarios = format_data_to_plot(
+            inputs,
+            bg_file_path;
+            asset_owner_index,
+            subscenario_index,
+        )
+        if round_data
+            bg_data = round.(bg_data; digits = 1)
+        end
     end
 
     # Read and format VR data
     if !isempty(vr_file_path)
         @assert isempty(fixed_component) "Fixed component plotting not supported for virtual reservoir data"
-        vr_data, vr_metadata, _, _ = format_data_to_plot(
+        vr_data, vr_metadata, vr_num_subperiods, vr_num_subscenarios = format_data_to_plot(
             inputs,
             vr_file_path;
             asset_owner_index,
+            subscenario_index,
         )
         if round_data
             vr_data = round.(vr_data; digits = 1)
         end
+    end
+
+    if !isempty(bg_file_path)
+        num_subperiods = bg_num_subperiods
+        num_subscenarios = bg_num_subscenarios
+    else
+        num_subperiods = vr_num_subperiods
+        num_subscenarios = vr_num_subscenarios
+    end
+
+    unit = if !isempty(bg_file_path)
+        bg_metadata.unit
+    else
+        vr_metadata.unit
     end
 
     # Read and format fixed component data
@@ -792,36 +926,90 @@ function plot_agent_output(
                 ),
             )
         end
+
+        # Calculate VR values once for this subperiod (used by both BG and VR)
+        vr_y_positive = Float64[]
         if !isempty(vr_file_path)
-            variable_component_name = title * " - Grupo Ofertante"
-            vr_component_name = title * " - Reservatório Virtual"
-            if num_subperiods > 1
-                vr_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            vr_y_values = vr_data[1, :] ./ num_subperiods
+            vr_y_positive = max.(vr_y_values, 0.0)
+        end
+
+        if !isempty(bg_file_path)
+            if !isempty(vr_file_path)
+                variable_component_name = title * " - Grupo Ofertante"
             end
+            if num_subperiods > 1
+                variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
+
+            # Stack BG on top of positive VR
+            bg_y_values = bg_data[subperiod, :]
+            bg_base = isempty(vr_file_path) ? zeros(Float64, num_subscenarios) : vr_y_positive
+
             push!(
                 configs,
                 Config(;
                     x = 1:num_subscenarios,
-                    y = vr_data[1, :] ./ num_subperiods, # VR data has no subperiod dimension
-                    name = vr_component_name,
-                    marker = Dict("color" => _get_plot_color(subperiod; dark_shade = true)),
+                    y = bg_y_values,
+                    base = bg_base,
+                    name = variable_component_name,
+                    marker = Dict("color" => _get_plot_color(subperiod)),
                     type = "bar",
+                    customdata = bg_y_values,
+                    hovertemplate = "(%{customdata})",
                 ),
             )
         end
-        if num_subperiods > 1
-            variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+        if !isempty(vr_file_path)
+            vr_component_name = title
+            if !isempty(bg_file_path)
+                vr_component_name *= " - Reservatório Virtual"
+            end
+            if num_subperiods > 1
+                vr_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
+            end
+
+            # vr_y_positive already calculated above; now calculate negative
+            vr_y_values = vr_data[1, :] ./ num_subperiods
+            vr_y_negative = min.(vr_y_values, 0.0)
+
+            has_positive_vr = any(vr_y_positive .> 0)
+            has_negative_vr = any(vr_y_negative .< 0)
+
+            # Add positive VR bars
+            if has_positive_vr
+                push!(
+                    configs,
+                    Config(;
+                        x = 1:num_subscenarios,
+                        y = vr_y_positive,
+                        name = vr_component_name,
+                        marker = Dict("color" => _get_plot_color(subperiod; dark_shade = true)),
+                        type = "bar",
+                        legendgroup = "vr_$subperiod",
+                        hovertemplate = "(%{y})",
+                    ),
+                )
+            end
+
+            # Add negative VR bars (always start from zero, going down)
+            if has_negative_vr
+                push!(
+                    configs,
+                    Config(;
+                        x = 1:num_subscenarios,
+                        y = vr_y_negative,
+                        base = zeros(Float64, num_subscenarios),
+                        name = vr_component_name,
+                        marker = Dict("color" => _get_plot_color(subperiod; dark_shade = true)),
+                        type = "bar",
+                        legendgroup = "vr_$subperiod",
+                        showlegend = !has_positive_vr,
+                        hovertemplate = "(%{y})",
+                    ),
+                )
+            end
         end
-        push!(
-            configs,
-            Config(;
-                x = 1:num_subscenarios,
-                y = bg_data[subperiod, :],
-                name = variable_component_name,
-                marker = Dict("color" => _get_plot_color(subperiod)),
-                type = "bar",
-            ),
-        )
     end
 
     if ex_ante_plot
@@ -835,7 +1023,7 @@ function plot_agent_output(
         x_axis_ticktext = string.(1:num_subscenarios)
     end
     main_configuration = Config(;
-        barmode = "stack",
+        barmode = "overlay",
         title = Dict(
             "text" => title,
             "font" => Dict("size" => title_font_size()),
@@ -852,7 +1040,7 @@ function plot_agent_output(
         ),
         yaxis = Dict(
             "title" => Dict(
-                "text" => "$(bg_metadata.unit)",
+                "text" => "$unit",
                 "font" => Dict("size" => axis_title_font_size()),
             ),
             "tickfont" => Dict("size" => axis_tick_font_size()),
@@ -873,70 +1061,164 @@ end
 
 function plot_operator_output(
     inputs::AbstractInputs,
-    bg_file_path::String,
     plot_path::String,
     title::String;
+    bg_file_path::String = "",
+    vr_file_path::String = "",
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
-    vr_file_path::String = "",
+    subscenario_index::Union{Int, Nothing} = nothing,
 )
-    bg_data, bg_metadata, num_subperiods, num_subscenarios = format_data_to_plot(
-        inputs,
-        bg_file_path;
-    )
-    if round_data
-        bg_data = round.(bg_data; digits = 1)
+    if isempty(bg_file_path) && isempty(vr_file_path)
+        error("At least one of bg_file_path or vr_file_path must be provided")
+    end
+
+    if !isempty(bg_file_path)
+        bg_data, bg_metadata, bg_num_subperiods, bg_num_subscenarios = format_data_to_plot(
+            inputs,
+            bg_file_path;
+            subscenario_index,
+        )
+        if round_data
+            bg_data = round.(bg_data; digits = 1)
+        end
     end
 
     # Read and format VR data
     if !isempty(vr_file_path)
-        vr_data, vr_metadata, _, _ = format_data_to_plot(
+        vr_data, vr_metadata, vr_num_subperiods, vr_num_subscenarios = format_data_to_plot(
             inputs,
             vr_file_path;
+            subscenario_index,
         )
         if round_data
             vr_data = round.(vr_data; digits = 1)
         end
     end
 
+    if !isempty(bg_file_path)
+        num_subperiods = bg_num_subperiods
+        num_subscenarios = bg_num_subscenarios
+    else
+        num_subperiods = vr_num_subperiods
+        num_subscenarios = vr_num_subscenarios
+    end
+
+    unit = if !isempty(bg_file_path)
+        bg_metadata.unit
+    else
+        vr_metadata.unit
+    end
+
     asset_owner_indexes = index_of_elements(inputs, AssetOwner)
 
     for subperiod in 1:num_subperiods
-        configs = Vector{Config}()
-        for asset_owner_index in reverse(asset_owner_indexes)
-            ao_label_for_bg = asset_owner_label(inputs, asset_owner_index)
+        # First pass: collect all positive VR cumulative sums per x position for stacking BG on top
+        positive_vr_cumsum = Dict{Int, Vector{Float64}}()
+
+        for asset_owner_index in asset_owner_indexes
+            x_positions = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes,)+1)
+
             if !isempty(vr_file_path)
-                ao_label_for_vr = ao_label_for_bg * " - Reservatório Virtual"
-                ao_label_for_bg *= " - Grupo Ofertante"
+                vr_y_values = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0)
+                # For diverging stacked bars: separate positive and negative
+                vr_y_positive = max.(vr_y_values, 0.0)
+
+                # Track positive VR for stacking BG on top
+                for (idx, x_pos) in enumerate(x_positions)
+                    if !haskey(positive_vr_cumsum, x_pos)
+                        positive_vr_cumsum[x_pos] = zeros(Float64, length(x_positions))
+                    end
+                    positive_vr_cumsum[x_pos][idx] = vr_y_positive[idx]
+                end
+            end
+        end
+
+        # Second pass: build configs in correct order (BG first, then VR)
+        configs = Vector{Config}()
+        for asset_owner_index in asset_owner_indexes
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            x_positions = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes,)+1)
+
+            if !isempty(bg_file_path)
+                ao_label_for_bg = ao_label
+                if !isempty(vr_file_path)
+                    ao_label_for_bg *= " - Grupo Ofertante"
+                end
+                bg_y_values = vcat(bg_data[asset_owner_index, subperiod, :], 0.0)
+
+                # Stack BG on top of positive VR
+                bg_base = zeros(Float64, length(bg_y_values))
+                if !isempty(vr_file_path)
+                    for (idx, x_pos) in enumerate(x_positions)
+                        if haskey(positive_vr_cumsum, x_pos)
+                            bg_base[idx] = positive_vr_cumsum[x_pos][idx]
+                        end
+                    end
+                end
+
                 push!(
                     configs,
                     Config(;
-                        # x = 1:num_subscenarios,
-                        x = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(
-                            asset_owner_indexes,
-                        )+1),
-                        y = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0), # VR data has no subperiod dimension
-                        name = ao_label_for_vr,
-                        marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
+                        x = x_positions,
+                        y = bg_y_values,
+                        base = bg_base,
+                        name = ao_label_for_bg,
+                        marker = Dict("color" => _get_plot_color(asset_owner_index)),
                         type = "bar",
-                        hovertemplate = "(%{y})",
+                        customdata = bg_y_values,
+                        hovertemplate = "(%{customdata})",
                     ),
                 )
             end
-            push!(
-                configs,
-                Config(;
-                    # x = 1:num_subscenarios,
-                    x = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(
-                        asset_owner_indexes,
-                    )+1),
-                    y = vcat(bg_data[asset_owner_index, subperiod, :], 0.0),
-                    name = ao_label_for_bg,
-                    marker = Dict("color" => _get_plot_color(asset_owner_index)),
-                    type = "bar",
-                    hovertemplate = "(%{y})",
-                ),
-            )
+
+            if !isempty(vr_file_path)
+                ao_label_for_vr = ao_label
+                if !isempty(bg_file_path)
+                    ao_label_for_vr *= " - Reservatório Virtual"
+                end
+                vr_y_values = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0)
+                # For diverging stacked bars: separate positive and negative
+                vr_y_positive = max.(vr_y_values, 0.0)
+                vr_y_negative = min.(vr_y_values, 0.0)
+
+                has_positive_vr = any(vr_y_positive .> 0)
+                has_negative_vr = any(vr_y_negative .< 0)
+
+                # Add positive VR bars
+                if has_positive_vr
+                    push!(
+                        configs,
+                        Config(;
+                            x = x_positions,
+                            y = vr_y_positive,
+                            name = ao_label_for_vr,
+                            marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
+                            type = "bar",
+                            hovertemplate = "(%{y})",
+                            legendgroup = "vr_$asset_owner_index",
+                        ),
+                    )
+                end
+
+                # Add negative VR bars (always start from zero, going down)
+                if has_negative_vr
+                    push!(
+                        configs,
+                        Config(;
+                            x = x_positions,
+                            y = vr_y_negative,
+                            base = zeros(Float64, length(vr_y_negative)),
+                            name = ao_label_for_vr,
+                            marker = Dict("color" => _get_plot_color(asset_owner_index; dark_shade = true)),
+                            type = "bar",
+                            hovertemplate = "(%{y})",
+                            legendgroup = "vr_$asset_owner_index",
+                            showlegend = !has_positive_vr,
+                        ),
+                    )
+                end
+            end
         end
 
         if ex_ante_plot
@@ -962,7 +1244,7 @@ function plot_operator_output(
             plot_title *= " - $(get_name(inputs, "subperiod")) $subperiod"
         end
         main_configuration = Config(;
-            barmode = "stack",
+            barmode = "overlay",
             title = Dict(
                 "text" => plot_title,
                 "font" => Dict("size" => title_font_size()),
@@ -979,7 +1261,7 @@ function plot_operator_output(
             ),
             yaxis = Dict(
                 "title" => Dict(
-                    "text" => "$(bg_metadata.unit)",
+                    "text" => "$unit",
                     "font" => Dict("size" => axis_title_font_size()),
                 ),
                 "tickfont" => Dict("size" => axis_tick_font_size()),

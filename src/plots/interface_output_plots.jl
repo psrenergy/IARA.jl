@@ -1117,7 +1117,8 @@ function plot_operator_output(
         positive_vr_cumsum = Dict{Int, Vector{Float64}}()
 
         for asset_owner_index in asset_owner_indexes
-            x_positions = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes,)+1)
+            x_positions =
+                asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes)+1)
 
             if !isempty(vr_file_path)
                 vr_y_values = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0)
@@ -1138,7 +1139,8 @@ function plot_operator_output(
         configs = Vector{Config}()
         for asset_owner_index in asset_owner_indexes
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            x_positions = asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes,)+1)
+            x_positions =
+                asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes)+1)
 
             if !isempty(bg_file_path)
                 ao_label_for_bg = ao_label

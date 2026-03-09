@@ -936,7 +936,7 @@ function plot_agent_output(
 
         if !isempty(bg_file_path)
             if !isempty(vr_file_path)
-                variable_component_name = title * " - Grupo Ofertante"
+                variable_component_name = title * get_name(inputs, "bidding_group_suffix")
             end
             if num_subperiods > 1
                 variable_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
@@ -963,7 +963,7 @@ function plot_agent_output(
         if !isempty(vr_file_path)
             vr_component_name = title
             if !isempty(bg_file_path)
-                vr_component_name *= " - Reservatório Virtual"
+                vr_component_name *= get_name(inputs, "virtual_reservoir_suffix")
             end
             if num_subperiods > 1
                 vr_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
@@ -1145,7 +1145,7 @@ function plot_operator_output(
             if !isempty(bg_file_path)
                 ao_label_for_bg = ao_label
                 if !isempty(vr_file_path)
-                    ao_label_for_bg *= " - Grupo Ofertante"
+                    ao_label_for_bg *= get_name(inputs, "bidding_group_suffix")
                 end
                 bg_y_values = vcat(bg_data[asset_owner_index, subperiod, :], 0.0)
 
@@ -1177,7 +1177,7 @@ function plot_operator_output(
             if !isempty(vr_file_path)
                 ao_label_for_vr = ao_label
                 if !isempty(bg_file_path)
-                    ao_label_for_vr *= " - Reservatório Virtual"
+                    ao_label_for_vr *= get_name(inputs, "virtual_reservoir_suffix")
                 end
                 vr_y_values = vcat(vr_data[asset_owner_index, 1, :] ./ num_subperiods, 0.0)
                 # For diverging stacked bars: separate positive and negative

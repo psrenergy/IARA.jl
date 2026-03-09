@@ -200,6 +200,14 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Virtual Reservoir Final Energy Account",
             "pt" => "Conta de Energia Final do Reservatório Virtual",
         ),
+        "bidding_group_suffix" => Dict(
+            "en" => " - Bidding Group",
+            "pt" => " - Grupo Ofertante",
+        ),
+        "virtual_reservoir_suffix" => Dict(
+            "en" => " - Virtual Reservoir",
+            "pt" => " - Reservatório Virtual",
+        ),
     )
 
     for (key, value) in complete_dict

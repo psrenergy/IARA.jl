@@ -930,6 +930,8 @@ function plot_agent_output(
         # Calculate VR values once for this subperiod (used by both BG and VR)
         vr_y_positive = Float64[]
         if !isempty(vr_file_path)
+            # VR data has no subperiod dimension, so it is stored at subperiod index 1.
+            # Divide by num_subperiods to distribute the total evenly across subperiod bars.
             vr_y_values = vr_data[1, :] ./ num_subperiods
             vr_y_positive = max.(vr_y_values, 0.0)
         end
@@ -970,6 +972,8 @@ function plot_agent_output(
             end
 
             # vr_y_positive already calculated above; now calculate negative
+            # VR data has no subperiod dimension, so it is stored at subperiod index 1.
+            # Divide by num_subperiods to distribute the total evenly across subperiod bars.
             vr_y_values = vr_data[1, :] ./ num_subperiods
             vr_y_negative = min.(vr_y_values, 0.0)
 

@@ -299,8 +299,8 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     fi
 
     echo "Saving inflow energy arrival after round..."
-    if [ -f "./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv" ]; then
-        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
+    if [ -f "./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
         echo "Inflow energy arrival after round saved."
     else
         echo "Inflow energy arrival file not found, skipping upload."

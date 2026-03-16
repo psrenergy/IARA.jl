@@ -55,7 +55,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
-          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os windows
+          exec julia +1.12.5 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os windows
 
   build-publish-linux:
     if: github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false'
@@ -73,7 +73,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
-          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os linux
+          exec julia +1.12.5 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os linux
 
   post-publish:
     if: github.event.inputs.development_stage == 'Stable release'  

@@ -27,16 +27,18 @@ function get_list_of_expected_outputs(expected_outputs_folder::String, skipped_o
         "_ex_post",
     ]
     skipped_outputs = [output * suffix for output in skipped_outputs, suffix in output_suffixes]
-    for (root, dirs, files) in walkdir(expected_outputs_folder)
-        for file in files
-            filename = joinpath(root, file)
-            if endswith(filename, ".csv")
-                file_without_extension = join(split(filename, ".")[1:end-1], ".")
-                output_name = basename(file_without_extension)
-                if output_name in skipped_outputs
-                    continue
+    if isdir(expected_outputs_folder)
+        for (root, dirs, files) in walkdir(expected_outputs_folder)
+            for file in files
+                filename = joinpath(root, file)
+                if endswith(filename, ".csv")
+                    file_without_extension = join(split(filename, ".")[1:end-1], ".")
+                    output_name = basename(file_without_extension)
+                    if output_name in skipped_outputs
+                        continue
+                    end
+                    list_of_outputs[output_name] = file_without_extension
                 end
-                list_of_outputs[output_name] = file_without_extension
             end
         end
     end

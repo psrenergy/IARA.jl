@@ -70,9 +70,23 @@ function build_model(
     return model
 end
 
+"""
+    build_risk_measure(inputs::AbstractInputs)
+
+Build the SDDP risk measure from configuration parameters.
+Returns `(1-λ) * Expectation() + λ * CVaR(α)`.
+The model is risk neutral when λ=0 and risk averse otherwise.
+"""
+function build_risk_measure(inputs::AbstractInputs)
+    lambda = cvar_lambda(inputs)
+    alpha = cvar_alpha(inputs)
+    return (1 - lambda) * SDDP.Expectation() + lambda * SDDP.CVaR(alpha)
+end
+
 function train_model!(model::ProblemModel, inputs::Inputs, run_time_options::RunTimeOptions)
     SDDP.train(
         model.policy_graph;
+        risk_measure = build_risk_measure(inputs),
         stopping_rules = [
             SDDP.SimulationStoppingRule(),
         ],

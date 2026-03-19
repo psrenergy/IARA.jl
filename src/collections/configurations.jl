@@ -853,7 +853,7 @@ cvar_alpha(inputs::AbstractInputs) = inputs.collections.configurations.cvar_alph
     cvar_lambda(inputs::AbstractInputs)
 
 Return the weight on Expectation in the convex combination with CVaR.
-When 1.0, the formulation is risk-neutral.
+When 0.0, the formulation is risk-neutral.
 """
 cvar_lambda(inputs::AbstractInputs) = inputs.collections.configurations.cvar_lambda
 

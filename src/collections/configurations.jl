@@ -106,6 +106,10 @@ Configurations for the problem.
     supply_function_equilibrium_max_iterations::Int = 0
     supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
 
+    # CVaR risk measure
+    cvar_alpha::Float64 = 0.0
+    cvar_lambda::Float64 = 0.0
+
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
     market_clearing_tiebreaker_weight_for_om_costs::Float64 = 0.0
@@ -333,6 +337,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
     configurations.supply_function_equilibrium_max_cost_multiplier =
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
+    configurations.cvar_alpha = PSRI.get_parms(inputs.db, "Configuration", "cvar_alpha")[1]
+    configurations.cvar_lambda = PSRI.get_parms(inputs.db, "Configuration", "cvar_lambda")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
@@ -529,6 +535,14 @@ function validate(configurations::Configurations)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
         end
+    end
+    if configurations.cvar_alpha <= 0.0 || configurations.cvar_alpha > 1.0
+        @error("cvar_alpha must be in (0.0, 1.0].")
+        num_errors += 1
+    end
+    if configurations.cvar_lambda < 0.0 || configurations.cvar_lambda > 1.0
+        @error("cvar_lambda must be in [0.0, 1.0].")
+        num_errors += 1
     end
     return num_errors
 end
@@ -827,6 +841,21 @@ function train_mincost_iteration_limit(inputs::AbstractInputs)
         return inputs.collections.configurations.train_mincost_iteration_limit
     end
 end
+
+"""
+    cvar_alpha(inputs::AbstractInputs)
+
+Return the CVaR confidence level α.
+"""
+cvar_alpha(inputs::AbstractInputs) = inputs.collections.configurations.cvar_alpha
+
+"""
+    cvar_lambda(inputs::AbstractInputs)
+
+Return the weight on Expectation in the convex combination with CVaR.
+When 0.0, the formulation is risk-neutral.
+"""
+cvar_lambda(inputs::AbstractInputs) = inputs.collections.configurations.cvar_lambda
 
 """
     initial_date_time(inputs::AbstractInputs)

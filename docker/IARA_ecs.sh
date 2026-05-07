@@ -299,11 +299,27 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     fi
 
     echo "Saving inflow energy arrival after round..."
-    if [ -f "./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv" ]; then
-        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_ante_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
+    if [ -f "./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
         echo "Inflow energy arrival after round saved."
     else
         echo "Inflow energy arrival file not found, skipping upload."
+    fi
+
+    echo "Saving bg profits after round..."
+    if [ -f "./$CASE_PATH/results/post_processing/bidding_group_profit_total_period_${IARA_GAME_ROUND}.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/post_processing/bidding_group_profit_total_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/bidding_group_profits.csv
+        echo "Bidding group profits after round saved."
+    else
+        echo "Bidding group profits file not found, skipping upload."
+    fi
+
+    echo "Saving vr revenue after round..."
+    if [ -f "./$CASE_PATH/results/post_processing/virtual_reservoir_total_revenue.csv" ]; then
+        aws s3 cp ./$CASE_PATH/results/post_processing/virtual_reservoir_total_revenue.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_revenue.csv
+        echo "Virtual reservoir revenue after round saved."
+    else
+        echo "Virtual reservoir revenue file not found, skipping upload."
     fi
 
     echo "Removing temp dir $IARA_VOLUME/$IARA_CASE..."

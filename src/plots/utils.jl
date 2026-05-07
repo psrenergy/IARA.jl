@@ -318,6 +318,18 @@ function get_generation_files(inputs::AbstractInputs)
     return filenames
 end
 
+function get_virtual_reservoir_final_energy_account_file(inputs::AbstractInputs)
+    base_name = "virtual_reservoir_final_energy_account"
+    # Virtual reservoir final energy account always uses ex-post physical data
+    subproblem_suffix = "_ex_post_physical"
+    period_suffix = "_period_$(inputs.args.period)"
+    extension = ".csv"
+
+    filename = base_name * subproblem_suffix * period_suffix * extension
+
+    return joinpath(output_path(inputs), filename)
+end
+
 function get_demands_to_plot(
     inputs::AbstractInputs,
 )
@@ -590,6 +602,7 @@ function format_data_to_plot(
     file_path::String;
     asset_owner_index::Union{Int, Nothing} = nothing,
     aggregate_header_by_asset_owner::Bool = true,
+    subscenario_index::Union{Int, Nothing} = nothing,
 )
     data, metadata = read_timeseries_file(file_path)
 
@@ -653,6 +666,12 @@ function format_data_to_plot(
             asset_owner_index,
             is_virtual_reservoir_file,
         )
+    end
+
+    if !isnothing(subscenario_index)
+        @assert has_subscenarios "Subscenario index specified but file does not have subscenarios"
+        reshaped_data = reshaped_data[:, :, [subscenario_index]]
+        num_subscenarios = 1
     end
 
     return reshaped_data, metadata, num_subperiods, num_subscenarios

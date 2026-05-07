@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["season","sample","subperiod"]
+dimension_size = [160, 20, 24]
+initial_date = "2024-01-01 00:00:00"
+time_dimension = "season"
+frequency = "month"
+unit = "$/MWh"
+labels = ["Demand_SE_1_ACL_FLEX", "Demand_S_1_ACL_FLEX", "Demand_NE_1_ACL_FLEX", "Demand_N_1_ACL_FLEX", "Demand_SE_2_ACL_FLEX", "Demand_S_2_ACL_FLEX", "Demand_NE_2_ACL_FLEX", "Demand_N_2_ACL_FLEX", "Demand_SE_3_ACL_FLEX", "Demand_S_3_ACL_FLEX", "Demand_NE_3_ACL_FLEX", "Demand_N_3_ACL_FLEX" ]

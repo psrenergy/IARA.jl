@@ -70,9 +70,29 @@ function build_model(
     return model
 end
 
+"""
+    build_risk_measure(inputs::AbstractInputs)
+
+Build the SDDP risk measure from configuration parameters.
+Returns `(1-λ) * Expectation() + λ * CVaR(α)`.
+The model is risk neutral when λ=0 and risk averse otherwise.
+"""
+function build_risk_measure(inputs::AbstractInputs)
+    risk_measure = if is_mincost(inputs)
+        lambda = cvar_lambda(inputs)
+        alpha = cvar_alpha(inputs)
+        (1 - lambda) * SDDP.Expectation() + lambda * SDDP.CVaR(alpha)
+    else
+        SDDP.Expectation()
+    end
+
+    return risk_measure
+end
+
 function train_model!(model::ProblemModel, inputs::Inputs, run_time_options::RunTimeOptions)
     SDDP.train(
         model.policy_graph;
+        risk_measure = build_risk_measure(inputs),
         stopping_rules = [
             SDDP.SimulationStoppingRule(),
         ],
@@ -201,14 +221,10 @@ function read_cuts_to_model!(
     end
 
     # If we got here, we need to read all nodes for cyclic policy graphs
-    number_of_years_in_simulation = ceil(number_of_periods(inputs) / number_of_nodes(inputs))
-    for year in 1:number_of_years_in_simulation
-        policy_node_to_simulation_node = (year - 1) * number_of_nodes(inputs)
-        @nospecialize(function node_name_parser(::Type{Int}, name::String)
-            return parse(Int, name) + policy_node_to_simulation_node
-        end)
-        SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser)
+    function simple_node_name_parser(::Type{Int}, name::String)
+        return parse(Int, name)
     end
+    SDDP.read_cuts_from_file(model.policy_graph, fcf_cuts_filepath; node_name_parser = simple_node_name_parser)
 
     return model
 end

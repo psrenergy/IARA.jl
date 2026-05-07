@@ -218,7 +218,8 @@ function train_min_cost_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action)
+    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
+       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
@@ -475,7 +476,8 @@ function hybrid_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action)
+    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
+       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
@@ -629,7 +631,8 @@ function cost_based_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action)
+    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
+       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
@@ -748,7 +751,8 @@ function bid_based_market_clearing_model_action(args...)
     if any_valid_elements(inputs, run_time_options, DCLine, action)
         dc_flow!(args...)
     end
-    if any_valid_elements(inputs, run_time_options, Interconnection, action)
+    if any_valid_elements(inputs, run_time_options, Interconnection, action) &&
+       network_representation(inputs, run_time_options) == Configurations_NetworkRepresentation.ZONAL
         interconnection_flow!(args...)
     end
     if any_valid_elements(inputs, run_time_options, Branch, action)
@@ -811,6 +815,9 @@ function reference_curve_model_action(args...)
     # Constraints
     if any_valid_elements(inputs, run_time_options, HydroUnit, action)
         hydro_balance!(args...)
+        if !read_inflow_from_file(inputs) && parp_max_lags(inputs) > 0
+            parp!(args...)
+        end
         virtual_reservoir_total_generation_correspondence!(args...)
         virtual_reservoir_generation_reference!(args...)
         virtual_reservoir_non_decreasing_reference_quantity!(args...)

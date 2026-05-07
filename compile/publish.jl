@@ -5,7 +5,7 @@ Pkg.instantiate()
 using ArgParse
 using PSRContinuousDeployment
 
-const PSRHUB_VERSION = "0.7.0-beta.4"
+const PSRHUB_VERSION = "1.0.0-alpha.10"
 const SLACK_CHANNEL = "C0893DVKPDK"
 
 const PERSONAL_ACCESS_TOKEN = ENV["PERSONAL_ACCESS_TOKEN"]
@@ -21,7 +21,7 @@ function main(args::Vector{String})
         default = "Stable release"
         "--version_suffix"
         nargs = '?'
-        constant = ""        
+        constant = ""
         default = ""
         "--overwrite"
         nargs = '?'
@@ -33,6 +33,7 @@ function main(args::Vector{String})
     parsed_args = parse_args(args, s)
 
     package_path = dirname(@__DIR__)
+    assets_path = joinpath(package_path, "compile", "assets")
     # examples_path = joinpath(package_path, "examples")
     documentation_path = joinpath(package_path, "docs", "build")
 
@@ -51,9 +52,11 @@ function main(args::Vector{String})
     if Sys.iswindows()
         bundle_psrhub(;
             configuration = configuration,
+            sign = stable_release,
             psrhub_version = PSRHUB_VERSION,
             # examples_path = examples_path,
             documentation_path = documentation_path,
+            icon_path = joinpath(assets_path, "app_icon.ico"),
         )
     end
 

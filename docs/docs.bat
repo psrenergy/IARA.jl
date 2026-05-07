@@ -2,4 +2,4 @@
 
 SET DOCSPATH=%~dp0
 
-CALL "%JULIA_1112%" --project=%DOCSPATH% %DOCSPATH%\make.jl %*
+julia +1.11.2 --project=%DOCSPATH% %DOCSPATH%\make.jl %*

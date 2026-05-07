@@ -53,6 +53,8 @@ function list_case_configurations(inputs::IARA.AbstractInputs)
         "period_type" => IARA.period_type_string(IARA.time_series_step(inputs)),
         "price_bid_file" => IARA.bidding_group_price_bid_file(inputs),
         "quantity_bid_file" => IARA.bidding_group_quantity_bid_file(inputs),
+        "vr_price_bid_file" => IARA.virtual_reservoir_price_bid_file(inputs),
+        "vr_quantity_bid_file" => IARA.virtual_reservoir_quantity_bid_file(inputs),
         "demand_deficit_cost" => IARA.demand_deficit_cost(inputs),
     )
 end
@@ -61,9 +63,12 @@ function list_asset_owners_and_their_bidding_groups(inputs::IARA.AbstractInputs)
     asset_onwer_list = []
     for (asset_onwer_index, asset_onwer_label) in enumerate(IARA.asset_owner_label(inputs))
         bidding_group_indexes = IARA.bidding_group_asset_owner_index(inputs) .== asset_onwer_index
+        is_supply_security_agent =
+            IARA.asset_owner_price_type(inputs, asset_onwer_index) == IARA.AssetOwner_PriceType.SUPPLY_SECURITY_AGENT
         asset_owner_dict = Dict(
             "label" => asset_onwer_label,
             "bidding_groups" => IARA.bidding_group_label(inputs)[bidding_group_indexes],
+            "is_supply_security_agent" => is_supply_security_agent,
         )
         push!(asset_onwer_list, asset_owner_dict)
     end
@@ -91,6 +96,8 @@ function list_bidding_groups_and_their_assets(inputs::IARA.AbstractInputs)
         end
         bidding_group_dict = Dict(
             "label" => bidding_group_label,
+            "has_generation_besides_virtual_reservoirs" =>
+                IARA.has_generation_besides_virtual_reservoirs(inputs.collections.bidding_group, bidding_group_index),
             "assets" => assets_of_bidding_group,
         )
         push!(bidding_groups_list, bidding_group_dict)
@@ -100,24 +107,52 @@ end
 
 function list_virtual_reservoirs(inputs::IARA.AbstractInputs)
     virtual_reservoirs_list = []
+
+    # TODO: validate that inflow don't vary across scenarios for now
+
+    # Calculate inflow energy arrival for period 1, scenario 1
+    # This is the energy that will arrive in period 1 from inflows
+    run_time_options = IARA.RunTimeOptions()
+
+    # Update time series to period 1
+    IARA.update_time_series_from_db!(inputs, 1)
+
+    # Get initial volumes
+    volume_at_beginning_of_period_1 =
+        [IARA.hydro_unit_initial_volume(inputs, h) for h in IARA.index_of_elements(inputs, IARA.HydroUnit)]
+
+    # Get inflow series for period 1, scenario 1, subscenario 1
+    IARA.update_time_series_views_from_external_files!(inputs, run_time_options; period = 1, scenario = 1)
+    inflow_series = IARA.time_series_inflow(inputs, run_time_options; subscenario = 1)
+
+    # Calculate energy arrival from inflows
+    vr_energy_arrival = IARA.energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period_1)
+
     for (virtual_reservoir_index, virtual_reservoir_label) in enumerate(IARA.virtual_reservoir_label(inputs))
-        list_of_hydros = String[]
-        list_of_asset_owners = String[]
-        for (hydro_unit_index, hydro_unit_label) in enumerate(IARA.hydro_unit_label(inputs))
-            if hydro_unit_index in IARA.virtual_reservoir_hydro_unit_indices(inputs)[virtual_reservoir_index]
-                push!(list_of_hydros, hydro_unit_label)
-            end
-        end
-        for (asset_owner_index, asset_owner_label) in enumerate(IARA.asset_owner_label(inputs))
-            if asset_owner_index in IARA.virtual_reservoir_asset_owner_indices(inputs)[virtual_reservoir_index]
-                push!(list_of_asset_owners, asset_owner_label)
-            end
-        end
+        list_of_hydros =
+            IARA.hydro_unit_label(inputs)[IARA.virtual_reservoir_hydro_unit_indices(inputs, virtual_reservoir_index)]
+        list_of_asset_owners =
+            IARA.asset_owner_label(inputs)[IARA.virtual_reservoir_asset_owner_indices(inputs, virtual_reservoir_index)]
+
+        # Calculate energy arrival for each asset owner based on their inflow allocation
+        inflow_energy_arrival_period_1 = [
+            vr_energy_arrival[virtual_reservoir_index] *
+            IARA.virtual_reservoir_asset_owners_inflow_allocation(inputs, virtual_reservoir_index, ao) *
+            IARA.MW_to_GW()  # Convert to GWh to match output format
+            for ao in IARA.virtual_reservoir_asset_owner_indices(inputs, virtual_reservoir_index)
+        ]
+
         virtual_reservoir_dict = Dict(
             "label" => virtual_reservoir_label,
             "hydro_units" => list_of_hydros,
             "asset_owners" => list_of_asset_owners,
+            "inflow_allocation" =>
+                IARA.virtual_reservoir_asset_owners_inflow_allocation(inputs, virtual_reservoir_index),
+            "initial_energy_account" =>
+                IARA.virtual_reservoir_initial_energy_account(inputs, virtual_reservoir_index),
+            "inflow_energy_arrival_period_1" => inflow_energy_arrival_period_1,
         )
+
         push!(virtual_reservoirs_list, virtual_reservoir_dict)
     end
     return virtual_reservoirs_list
@@ -131,6 +166,7 @@ function list_assets(inputs::IARA.AbstractInputs)
             "type" => "hydro",
             "min_generation" => IARA.hydro_unit_min_generation(inputs)[hydro_unit_index],
             "max_generation" => IARA.hydro_unit_max_generation(inputs)[hydro_unit_index],
+            "initial_volume" => IARA.hydro_unit_initial_volume(inputs)[hydro_unit_index],
             "om_cost" => IARA.hydro_unit_om_cost(inputs)[hydro_unit_index],
         )
         push!(assets_list, asset_dict)

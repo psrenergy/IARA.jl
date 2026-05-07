@@ -27,11 +27,11 @@ function main(args::Vector{String})
         default = ""
         "--overwrite"
         nargs = '?'
-        constant = false        
+        constant = false
         default = false
         eval_arg = true
         "--os"
-        arg_type = String        
+        arg_type = String
     end
     #! format: on
     parsed_args = parse_args(args, s)
@@ -46,7 +46,7 @@ function main(args::Vector{String})
 
     os = parsed_args["os"]
     memory_in_gb = if os == "linux"
-        32
+        30
     else
         16
     end

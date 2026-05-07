@@ -174,13 +174,20 @@ function hydro_inflow!(
             )
         end
 
-        if some_inflow_initial_state_varies_by_scenario(inputs) && simulation_period == 1
-            if parp_max_lags(inputs) > 0
-                # Initial state
+        # Initial state
+        if parp_max_lags(inputs) > 0 && simulation_period == 1
+            # If some initial state varies by scenario, the normalized initial inflow needs to be updated
+            # If the policy graph is cyclic, the period_idx depends on the scenario, so the inflow also needs to be updated
+            if some_inflow_initial_state_varies_by_scenario(inputs) || cyclic_policy_graph(inputs)
                 normalized_initial_state = zeros(num_hydro_units, parp_max_lags(inputs))
                 for h in existing_hydro_units, tau in 1:parp_max_lags(inputs)
-                    period_idx =
+                    period_idx = if cyclic_policy_graph(inputs)
+                        # In cyclic graphs, we consider all lags are from the same season as the first period
+                        consult_period_season_map(inputs; period = 1, scenario = simulation_trajectory, index = 1)
+                    else
+                        # Non-cyclic graphs, use the default calculation
                         mod1(period_index_in_year(inputs, tau) - parp_max_lags(inputs), periods_per_year(inputs))
+                    end
                     normalized_initial_state[h, tau] = normalized_initial_inflow(inputs, period_idx, h, tau)
                 end
                 normalized_inflow = get_model_object(model, :normalized_inflow)

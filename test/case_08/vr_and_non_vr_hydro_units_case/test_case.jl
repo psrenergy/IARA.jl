@@ -34,11 +34,14 @@ else
     Main.compare_outputs(
         PATH;
         skipped_outputs = [
-            "hydro_generation",
-            "hydro_turbining",
-            "hydro_om_costs",
             "hydro_initial_volume",
             "hydro_final_volume",
+        ],
+        test_only_subperiod_sum = [
+            "hydro_om_costs",
+            "hydro_turbining",
+            "hydro_generation",
+            "hydro_spillage",
         ],
     )
 end

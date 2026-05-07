@@ -164,18 +164,13 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
             @warn("Hydro unit $(hydro_unit_label) is not associated with any virtual reservoir.")
         end
     end
-    virtual_reservoir_initial_energy_account_share =
-        inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
-    if virtual_reservoir_initial_energy_account_share ==
-       Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_ENERGY_ACCOUNT_SHARES
-        for i in 1:length(virtual_reservoir)
-            virtual_reservoir_label = virtual_reservoir.label[i]
-            if any(is_null, virtual_reservoir.asset_owners_initial_energy_account_share[i])
-                @error(
-                    "Initial energy account share for virtual reservoir $(virtual_reservoir_label) must be defined for all asset owners."
-                )
-                num_errors += 1
-            end
+    for i in 1:length(virtual_reservoir)
+        virtual_reservoir_label = virtual_reservoir.label[i]
+        if any(is_null, virtual_reservoir.asset_owners_initial_energy_account_share[i])
+            @error(
+                "Initial energy account share for virtual reservoir $(virtual_reservoir_label) must be defined for all asset owners."
+            )
+            num_errors += 1
         end
     end
     supply_security_agent =
@@ -227,6 +222,7 @@ IARA.add_virtual_reservoir!(db;
     label = "reservoir_1",
     assetowner_id = ["asset_owner_1", "asset_owner_2"],
     inflow_allocation = [0.4, 0.6],
+    initial_energy_account_share = [0.3, 0.7],
     hydrounit_id = ["hydro_1", "hydro_2"],
 )
 ```
@@ -254,14 +250,9 @@ function virtual_reservoir_asset_owners_inflow_allocation(inputs::AbstractInputs
 end
 
 function virtual_reservoir_asset_owners_initial_energy_account_share(inputs::AbstractInputs, vr::Int, ao::Int)
-    if virtual_reservoir_initial_energy_account_share(inputs) ==
-       Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
-        return virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao)
-    else
-        @assert ao in virtual_reservoir_asset_owner_indices(inputs, vr)
-        ao_index_among_asset_owners = findfirst(inputs.collections.virtual_reservoir.asset_owner_indices[vr] .== ao)
-        return inputs.collections.virtual_reservoir.asset_owners_initial_energy_account_share[vr][ao_index_among_asset_owners]
-    end
+    @assert ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+    ao_index_among_asset_owners = findfirst(inputs.collections.virtual_reservoir.asset_owner_indices[vr] .== ao)
+    return inputs.collections.virtual_reservoir.asset_owners_initial_energy_account_share[vr][ao_index_among_asset_owners]
 end
 
 function virtual_reservoir_water_to_energy_factors(inputs::AbstractInputs, vr::Int, h::Int)

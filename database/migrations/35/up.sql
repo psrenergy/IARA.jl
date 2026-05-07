@@ -1,0 +1,16 @@
+PRAGMA user_version = 35;
+
+ALTER TABLE Configuration ADD COLUMN supply_function_equilibrium_extra_bid_quantity REAL DEFAULT 1.0;
+ALTER TABLE Configuration ADD COLUMN supply_function_equilibrium_tolerance REAL DEFAULT 0.000001;
+ALTER TABLE Configuration ADD COLUMN supply_function_equilibrium_max_iterations INTEGER DEFAULT 20;
+ALTER TABLE Configuration ADD COLUMN supply_function_equilibrium_max_cost_multiplier REAL DEFAULT 2.0;
+
+UPDATE Configuration SET supply_function_equilibrium_extra_bid_quantity = reference_curve_nash_extra_bid_quantity;
+UPDATE Configuration SET supply_function_equilibrium_tolerance = reference_curve_nash_tolerance;
+UPDATE Configuration SET supply_function_equilibrium_max_iterations = reference_curve_nash_max_iterations;
+UPDATE Configuration SET supply_function_equilibrium_max_cost_multiplier = reference_curve_nash_max_cost_multiplier;
+
+ALTER TABLE Configuration DROP COLUMN reference_curve_nash_extra_bid_quantity;
+ALTER TABLE Configuration DROP COLUMN reference_curve_nash_tolerance;
+ALTER TABLE Configuration DROP COLUMN reference_curve_nash_max_iterations;
+ALTER TABLE Configuration DROP COLUMN reference_curve_nash_max_cost_multiplier;

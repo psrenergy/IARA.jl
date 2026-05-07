@@ -49,6 +49,8 @@ reduced_test_list = Dict(
 #     "case_01/base_case_simulation/test_case.jl",
 #     "case_01/battery_case/test_case.jl",
 #     "case_01/big_simulation_case/test_case.jl",
+#     "case_01/cvar_convex_combination_case/test_case.jl",
+#     "case_01/cvar_pure_case/test_case.jl",
 #     "case_01/cyclic_graph_case/test_case.jl",
 #     "case_01/elastic_demand_case/test_case.jl",
 #     "case_01/gnd_modifications_case/test_case.jl",
@@ -61,7 +63,7 @@ reduced_test_list = Dict(
 #     "case_01/hydro_minimum_outflow_case/test_case.jl",
 #     "case_01/price_takers_case/test_case.jl",
 #     "case_01/renewable_curtailment_case/test_case.jl",
-# "case_01/renewable_om_cost_case/test_case.jl",
+#     "case_01/renewable_om_cost_case/test_case.jl",
 #     "case_01/repeating_nodes_case/test_case.jl",
 #     "case_01/thermal_commitment_case/test_case.jl",
 #     "case_01/thermal_ramp_case/test_case.jl",
@@ -87,7 +89,7 @@ reduced_test_list = Dict(
 #     "case_05/fit_parp_in_clearing/test_case.jl",
 #     "case_05/hydro_stops_existing/test_case.jl",
 #     "case_05/incremental_inflow_case/test_case.jl",
-# "case_05/initial_states_by_scenario/test_case.jl",
+#     "case_05/initial_states_by_scenario/test_case.jl",
 #     "case_05/read_parp_coefficients/test_case.jl",
 #     "case_05/read_parp_coefficients_in_clearing/test_case.jl",
 # ],
@@ -104,9 +106,9 @@ reduced_test_list = Dict(
 #     "case_07/ex_post_settlement_case/test_case.jl",
 #     "case_07/min_cost_case/test_case.jl",
 #     "case_07/multiple_markdowns_case/test_case.jl",
-#     "case_07/reference_curve_nash/test_case.jl",
-#     "case_07/reference_curve_nash_only_thermals/test_case.jl",
-#     "case_07/reference_curve_nash_with_thermals/test_case.jl",
+#     "case_07/supply_function_equilibrium/test_case.jl",
+#     "case_07/supply_function_equilibrium_only_thermals/test_case.jl",
+#     "case_07/supply_function_equilibrium_with_thermals/test_case.jl",
 #     "case_07/skip_case/test_case.jl",
 #     "case_07/skip_purchase_bids_case/test_case.jl",
 #     "case_07/thermal_unit_with_exclusive_asset_owner_case/test_case.jl",
@@ -129,7 +131,7 @@ reduced_test_list = Dict(
 #     "case_09/seasonal_case/test_case.jl",
 #     "case_09/seasonal_mapping_case/test_case.jl",
 #     "case_09/seasonal_clearing_case/test_case.jl",
-#     "case_09/seasonal_mapping_clearing_case/test_case.jl",  
+#     "case_09/seasonal_mapping_clearing_case/test_case.jl",
 # ],
 # "case_10" => [
 #     "case_10/guess_bid/test_case.jl",
@@ -169,12 +171,13 @@ reduced_test_list = Dict(
 # "case_18" => [
 #     "case_18/base_case/test_case.jl",
 #     "case_18/heuristic_elastic_demand/test_case.jl",
-# ],  
+# ],
 # "case_19" => [
 #     "case_19/base_case/test_case.jl",
 #     "case_19/negative_bids_case/test_case.jl",
 #     "case_19/inflow_allocation_not_in_pu_case/test_case.jl",
 #     "case_19/residual_revenue_split_by_account_share_case/test_case.jl",
+#     "case_19/positive_min_volume_case/test_case.jl",
 # ],
 # "case_20" => [
 #     "case_20/base_case/test_case.jl",
@@ -189,6 +192,11 @@ reduced_test_list = Dict(
 # ],
 # "case_22" => [
 #     "case_22/base_case/test_case.jl",
+# ],
+# "case_23" => [
+#     "case_23/base_case/test_case.jl",
+#     "case_23/virtual_reservoir_case/test_case.jl",
+#     "case_23/multiple_subscenarios_case/test_case.jl",
 # ],
 )
 

@@ -53,7 +53,7 @@ function post_process_outputs(
     end
 
     if any_elements(inputs, HydroUnit; filters = [has_min_outflow])
-        physical_variables_suffix = if run_mode(inputs) == RunMode.TRAIN_MIN_COST
+        physical_variables_suffix = if is_mincost(inputs)
             ""
         elseif is_skipped(inputs, "ex_post_physical")
             "_ex_post_commercial"

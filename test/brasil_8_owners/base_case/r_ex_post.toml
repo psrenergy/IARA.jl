@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["season", "sample", "subscenario", "subperiod"]
+dimension_size = [4, 20, 5, 24]
+initial_date = "2024-01-01 00:00:00"
+time_dimension = "season"
+frequency = "month"
+unit = "p.u."
+labels = ["PCT_Southeast","PCT_Southeast_2","PCT_South","PCT_Northeast","PCT_North","PCH_Southeast","PCH_South","PCH_Northeast","PCH_North","SOL_Southeast","SOL_Southeast_2","SOL_South","SOL_Northeast","SOL_North","GD_Southeast","GD_Southeast_2","GD_South","GD_South_2","GD_Northeast","GD_Northeast_2","GD_North","GD_North_2","EOL_Southeast","EOL_South","EOL_South_2","EOL_Northeast","EOL_Northeast_2","EOL_North","EOL_4_South","EOL_4_South_2","EOL_3_Northeast","EOL_2_Northeast","EOL_6_Northeast","EOL_4_Northeast","EOL_4_Northeast_2","SOL_2_South","SOL_4_Southeast","SOL_4_South","SOL_6_Northeast","SOL_3_Northeast","SOL_2_Southeast","SOL_2_Northeast","PCH_3_Southeast","PCH_4_South","PCH_3_Northeast","PCH_2_North","PCH_2_Southeast","PCH_4_Southeast","PCH_3_South","PCH_4_Northeast"]

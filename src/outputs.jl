@@ -274,10 +274,10 @@ function get_outputs_dimension_size(
             push!(dimension_size, maximum_number_of_profiles(inputs))
         elseif dimension == "reference_curve_segment"
             push!(dimension_size, reference_curve_number_of_segments(inputs))
-        elseif dimension == "nash_curve_segment"
-            push!(dimension_size, maximum_number_of_segments_in_nash_equilibrium(inputs))
-        elseif dimension == "nash_iteration"
-            push!(dimension_size, reference_curve_nash_max_iterations(inputs))
+        elseif dimension == "sfe_curve_segment"
+            push!(dimension_size, maximum_number_of_segments_in_supply_function_equilibrium(inputs))
+        elseif dimension == "sfe_iteration"
+            push!(dimension_size, supply_function_equilibrium_max_iterations(inputs))
         else
             error("Dimension $dimension not recognized")
         end
@@ -295,6 +295,8 @@ function initialize!(
     consider_one_segment = false,
     force_all_subscenarios::Bool = false,
     suppress_construction_type_suffix::Bool = false,
+    suppress_period_suffix::Bool = false,
+    suppress_subscenario_dimension::Bool = false,
     kwargs...,
 )
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
@@ -303,7 +305,7 @@ function initialize!(
     output_type = Quiver.csv
 
     dimensions = kwargs[:dimensions]
-    if is_ex_post_problem(run_time_options) || force_all_subscenarios
+    if (is_ex_post_problem(run_time_options) || force_all_subscenarios) && !suppress_subscenario_dimension
         @assert dimensions[1] == "period"
         @assert dimensions[2] == "scenario"
         dimensions = cat(dimensions[1:2], "subscenario", dimensions[3:end]; dims = 1)
@@ -311,7 +313,8 @@ function initialize!(
     unit = kwargs[:unit]
     labels = kwargs[:labels]
 
-    output_name *= run_time_file_suffixes(inputs, run_time_options; suppress_construction_type_suffix)
+    output_name *=
+        run_time_file_suffixes(inputs, run_time_options; suppress_construction_type_suffix, suppress_period_suffix)
 
     file = joinpath(dir_path, output_name)
     dimension_size = get_outputs_dimension_size(inputs, run_time_options, output_name, dimensions)
@@ -503,7 +506,7 @@ function write_output_without_subperiod!(
 
     # Validate that the indices of the outputs match the jump_container
     if indices_of_elements_in_output === nothing
-        @assert length(vector_of_results) == num_time_series
+        @assert length(vector_of_results) == num_time_series "$(length(vector_of_results)), $num_time_series"
     else
         @assert length(indices_of_elements_in_output) == length(vector_of_results)
     end
@@ -610,7 +613,7 @@ function write_nash_equilibrium_vr_output!(
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir; run_time_options) # why run_time_options?
     asset_owners = index_of_elements(inputs, AssetOwner; run_time_options)
 
-    # 4D array with dimensions: virtual_reservoir, asset_owner, nash_iteration, nash_curve_segment
+    # 4D array with dimensions: virtual_reservoir, asset_owner, sfe_iteration, sfe_curve_segment
     @assert size(data, 1) == length(virtual_reservoirs)
     @assert size(data, 2) == length(asset_owners)
     number_of_iterations = size(data, 3)
@@ -636,8 +639,8 @@ function write_nash_equilibrium_vr_output!(
             round_output(treated_output[seg, iter, :] * multiply_by);
             period,
             scenario,
-            nash_iteration = iter,
-            nash_curve_segment = seg,
+            sfe_iteration = iter,
+            sfe_curve_segment = seg,
         )
     end
 
@@ -663,7 +666,7 @@ function write_nash_equilibrium_bg_output!(
         index_of_elements(inputs, BiddingGroup; run_time_options, filters = [has_generation_besides_virtual_reservoirs]) # why run_time_options?
     buses = index_of_elements(inputs, Bus; run_time_options)
 
-    # 5D array with dimensions: bidding_group, bus, subperiod, nash_iteration, nash_curve_segment
+    # 5D array with dimensions: bidding_group, bus, subperiod, sfe_iteration, sfe_curve_segment
     @assert size(data, 1) == length(bidding_groups)
     @assert size(data, 2) == length(buses)
     @assert size(data, 3) == number_of_subperiods(inputs)
@@ -695,8 +698,8 @@ function write_nash_equilibrium_bg_output!(
             period,
             scenario,
             subperiod,
-            nash_iteration = iter,
-            nash_curve_segment = seg,
+            sfe_iteration = iter,
+            sfe_curve_segment = seg,
         )
     end
 
@@ -980,6 +983,7 @@ function run_time_file_suffixes(
     inputs::Inputs,
     run_time_options::RunTimeOptions;
     suppress_construction_type_suffix::Bool = false,
+    suppress_period_suffix::Bool = false,
 )
     suffix = ""
     if !is_null(run_time_options.asset_owner_index)
@@ -990,7 +994,7 @@ function run_time_file_suffixes(
             suffix *= "_$(lowercase(string(run_time_options.clearing_model_subproblem)))"
         end
     end
-    if is_single_period(inputs)
+    if is_single_period(inputs) && !suppress_period_suffix
         suffix *= "_period_$(inputs.args.period)"
     end
 

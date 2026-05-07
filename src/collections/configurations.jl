@@ -91,8 +91,6 @@ Configurations for the problem.
     spot_price_cap::Float64 = 0.0
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
-    virtual_reservoir_initial_energy_account_share::Configurations_VirtualReservoirInitialEnergyAccount.T =
-        Configurations_VirtualReservoirInitialEnergyAccount.CALCULATED_USING_INFLOW_SHARES
     virtual_reservoir_residual_revenue_split_type::Configurations_VirtualReservoirResidualRevenueSplitType.T =
         Configurations_VirtualReservoirResidualRevenueSplitType.BY_INFLOW_SHARES
     bid_price_limit_markup_non_justified_profile::Float64 = 0.0
@@ -103,12 +101,14 @@ Configurations for the problem.
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
-    purchase_bids_for_virtual_reservoir_heuristic_bid::Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T =
-        Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
-    reference_curve_nash_extra_bid_quantity::Float64 = 0.0
-    reference_curve_nash_tolerance::Float64 = 0.0
-    reference_curve_nash_max_iterations::Int = 0
-    reference_curve_nash_max_cost_multiplier::Float64 = 0.0
+    supply_function_equilibrium_extra_bid_quantity::Float64 = 0.0
+    supply_function_equilibrium_tolerance::Float64 = 0.0
+    supply_function_equilibrium_max_iterations::Int = 0
+    supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
+
+    # CVaR risk measure
+    cvar_alpha::Float64 = 0.0
+    cvar_lambda::Float64 = 0.0
 
     # Penalty costs
     demand_deficit_cost::Float64 = 0.0
@@ -308,11 +308,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
             Configurations_VirtualReservoirCorrespondenceType.T,
         )
-    configurations.virtual_reservoir_initial_energy_account_share =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_initial_energy_account_share")[1],
-            Configurations_VirtualReservoirInitialEnergyAccount.T,
-        )
     configurations.virtual_reservoir_residual_revenue_split_type =
         convert_to_enum(
             PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_residual_revenue_split_type")[1],
@@ -334,19 +329,16 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
-    configurations.purchase_bids_for_virtual_reservoir_heuristic_bid =
-        convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "purchase_bids_for_virtual_reservoir_heuristic_bid")[1],
-            Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.T,
-        )
-    configurations.reference_curve_nash_extra_bid_quantity =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_extra_bid_quantity")[1]
-    configurations.reference_curve_nash_tolerance =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_tolerance")[1]
-    configurations.reference_curve_nash_max_iterations =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_max_iterations")[1]
-    configurations.reference_curve_nash_max_cost_multiplier =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_nash_max_cost_multiplier")[1]
+    configurations.supply_function_equilibrium_extra_bid_quantity =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_extra_bid_quantity")[1]
+    configurations.supply_function_equilibrium_tolerance =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_tolerance")[1]
+    configurations.supply_function_equilibrium_max_iterations =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
+    configurations.supply_function_equilibrium_max_cost_multiplier =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
+    configurations.cvar_alpha = PSRI.get_parms(inputs.db, "Configuration", "cvar_alpha")[1]
+    configurations.cvar_lambda = PSRI.get_parms(inputs.db, "Configuration", "cvar_lambda")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
@@ -544,6 +536,14 @@ function validate(configurations::Configurations)
             num_errors += 1
         end
     end
+    if configurations.cvar_alpha <= 0.0 || configurations.cvar_alpha > 1.0
+        @error("cvar_alpha must be in (0.0, 1.0].")
+        num_errors += 1
+    end
+    if configurations.cvar_lambda < 0.0 || configurations.cvar_lambda > 1.0
+        @error("cvar_lambda must be in [0.0, 1.0].")
+        num_errors += 1
+    end
     return num_errors
 end
 
@@ -669,8 +669,7 @@ function advanced_validations(inputs::AbstractInputs, configurations::Configurat
             @warn(
                 """
             Cycle duration in hours is $(configurations.cycle_duration_in_hours). This parameter is used to determine the node discount rate from the cycle discount rate. 
-            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration.
-            """
+            Actual cycle duration is calculated considering the subproblem duration, number of nodes, and expected number of repeats per node. Its value is $calculated_cycle_duration."""
             )
         end
     end
@@ -719,6 +718,13 @@ end
 Return the path to the case.
 """
 path_case(inputs::AbstractInputs) = inputs.collections.configurations.path_case
+
+"""
+    debug_path(inputs::AbstractInputs)
+
+Return the debug path for the case.
+"""
+debug_path(inputs::AbstractInputs) = joinpath(path_case(inputs), "debug")
 
 """
     language(inputs::AbstractInputs)
@@ -835,6 +841,21 @@ function train_mincost_iteration_limit(inputs::AbstractInputs)
         return inputs.collections.configurations.train_mincost_iteration_limit
     end
 end
+
+"""
+    cvar_alpha(inputs::AbstractInputs)
+
+Return the CVaR confidence level α.
+"""
+cvar_alpha(inputs::AbstractInputs) = inputs.collections.configurations.cvar_alpha
+
+"""
+    cvar_lambda(inputs::AbstractInputs)
+
+Return the weight on Expectation in the convex combination with CVaR.
+When 0.0, the formulation is risk-neutral.
+"""
+cvar_lambda(inputs::AbstractInputs) = inputs.collections.configurations.cvar_lambda
 
 """
     initial_date_time(inputs::AbstractInputs)
@@ -1330,11 +1351,11 @@ function should_build_reference_curve(inputs::AbstractInputs)
 end
 
 """
-    should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+    should_run_supply_function_equilibrium(inputs::AbstractInputs)
 
 Return whether the Nash equilibrium from hydro reference curve should be run.
 """
-function should_run_nash_equilibrium_from_hydro_reference_curve(inputs::AbstractInputs)
+function should_run_supply_function_equilibrium(inputs::AbstractInputs)
     return bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
 end
 
@@ -1555,9 +1576,6 @@ Return the type of physical-virtual correspondence for the virtual reservoirs.
 virtual_reservoir_correspondence_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_correspondence_type
 
-virtual_reservoir_initial_energy_account_share(inputs) =
-    inputs.collections.configurations.virtual_reservoir_initial_energy_account_share
-
 virtual_reservoir_residual_revenue_split_type(inputs) =
     inputs.collections.configurations.virtual_reservoir_residual_revenue_split_type
 
@@ -1615,10 +1633,6 @@ Return the high reference price for bid price limits.
 """
 bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_price_limit_high_reference
 
-consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs::AbstractInputs) =
-    inputs.collections.configurations.purchase_bids_for_virtual_reservoir_heuristic_bid ==
-    Configurations_ConsiderPurchaseBidsForVirtualReservoirHeuristicBid.CONSIDER
-
 """
     reference_curve_number_of_segments(inputs::AbstractInputs)
 
@@ -1636,36 +1650,36 @@ reference_curve_final_segment_price_markup(inputs::AbstractInputs) =
     inputs.collections.configurations.reference_curve_final_segment_price_markup
 
 """
-    reference_curve_nash_extra_bid_quantity(inputs::AbstractInputs)
+    supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs)
 
-Return the extra bid quantity for the Nash equilibrium from hydro reference curve.
+Return the extra bid quantity for the Supply Function Equilibrium.
 """
-reference_curve_nash_extra_bid_quantity(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_extra_bid_quantity
-
-"""
-    reference_curve_nash_tolerance(inputs)
-
-Return the tolerance for the bid slopes in the Nash equilibrium from hydro reference curve.
-"""
-reference_curve_nash_tolerance(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_tolerance
+supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_extra_bid_quantity
 
 """
-    reference_curve_nash_max_iterations(inputs)
+    supply_function_equilibrium_tolerance(inputs)
 
-Return the maximum number of iterations for the Nash equilibrium from hydro reference curve.
+Return the tolerance for the bid slopes in the Supply Function Equilibrium.
 """
-reference_curve_nash_max_iterations(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_max_iterations
+supply_function_equilibrium_tolerance(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_tolerance
 
 """
-    reference_curve_nash_max_cost_multiplier(inputs)
+    supply_function_equilibrium_max_iterations(inputs)
 
-Return the maximum cost multiplier for the Nash equilibrium from hydro reference curve.
+Return the maximum number of iterations for the Supply Function Equilibrium.
 """
-reference_curve_nash_max_cost_multiplier(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_nash_max_cost_multiplier
+supply_function_equilibrium_max_iterations(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_max_iterations
+
+"""
+    supply_function_equilibrium_max_cost_multiplier(inputs)
+
+Return the maximum cost multiplier for the Supply Function Equilibrium.
+"""
+supply_function_equilibrium_max_cost_multiplier(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_max_cost_multiplier
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)
@@ -1722,13 +1736,13 @@ function network_representation(inputs::AbstractInputs, run_time_options)
 end
 
 function network_representation(inputs::AbstractInputs, suffix::String)
-    clearing_model_subproblem = if suffix == "_ex_ante_commercial"
+    clearing_model_subproblem = if occursin("_ex_ante_commercial", suffix)
         RunTime_ClearingSubproblem.EX_ANTE_COMMERCIAL
-    elseif suffix == "_ex_ante_physical"
+    elseif occursin("_ex_ante_physical", suffix)
         RunTime_ClearingSubproblem.EX_ANTE_PHYSICAL
-    elseif suffix == "_ex_post_commercial"
+    elseif occursin("_ex_post_commercial", suffix)
         RunTime_ClearingSubproblem.EX_POST_COMMERCIAL
-    elseif suffix == "_ex_post_physical"
+    elseif occursin("_ex_post_physical", suffix)
         RunTime_ClearingSubproblem.EX_POST_PHYSICAL
     end
     run_time_options = RunTimeOptions(; clearing_model_subproblem = clearing_model_subproblem)

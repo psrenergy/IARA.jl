@@ -43,6 +43,7 @@ const PSRI = PSRClassesInterface
 const PSRDatabaseSQLite = PSRI.PSRDatabaseSQLite
 const DatabaseSQLite = PSRI.PSRDatabaseSQLite.DatabaseSQLite
 const POI = ParametricOptInterface
+const DEFAULT_TOLERANCE = 1e-6
 
 function initialize(args)
     # Initialize dlls and other possible defaults
@@ -126,7 +127,7 @@ include("bid_validations.jl")
 include("debugging_utils.jl")
 include("clearing_utils.jl")
 include("hydro_supply_reference_curve_utils.jl")
-include("reference_curve_nash.jl")
+include("supply_function_equilibrium.jl")
 include("virtual_reservoir.jl")
 include("main.jl")
 

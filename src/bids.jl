@@ -177,8 +177,9 @@ function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::Abs
         for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
             number_of_bid_segments_per_asset_owner_and_virtual_reservoir[ao, vr] =
                 asset_owner_number_of_risk_factors[ao] + number_of_reference_curve_segments +
-                asset_owner_number_of_markdowns[ao] + 1
+                asset_owner_number_of_markdowns[ao] + 3
             # TODO: calculate exactly the maximum number of segments necessary after markdown inclusion. -1 didn't work and +1 is conservative
+            # Update: +1 is not sufficient, +3 may do the job for now
         end
     end
     number_per_virtual_reservoir = [
@@ -809,6 +810,17 @@ function initialize_virtual_reservoir_bids_outputs(
         labels,
     )
 
+    initialize!(
+        QuiverOutput,
+        outputs;
+        inputs,
+        run_time_options,
+        output_name = "virtual_reservoir_no_markup_price_bid",
+        dimensions = ["period", "scenario", "bid_segment"],
+        unit = "\$/MWh",
+        labels,
+    )
+
     return nothing
 end
 
@@ -830,7 +842,28 @@ function virtual_reservoir_markup_bids_for_period_scenario(
     scenario::Int;
     outputs::Union{Outputs, Nothing} = nothing,
 )
-    accounts = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    # Initial account
+    initial_accounts = virtual_reservoir_energy_account_from_previous_period(inputs, period, scenario)
+    # Energy arrival from inflows
+    inflow_series = time_series_inflow(inputs, run_time_options)
+    volume_at_beginning_of_period =
+        hydro_volume_from_previous_period(inputs, run_time_options, period, scenario)
+    vr_energy_arrival = energy_from_inflows(inputs, inflow_series, volume_at_beginning_of_period)
+    # Current accounts
+    accounts = Vector{Vector{Float64}}(
+        undef,
+        number_of_elements(inputs, VirtualReservoir),
+    )
+    for vr in virtual_reservoirs
+        accounts[vr] =
+            initial_accounts[vr] +
+            vr_energy_arrival[vr] .* [
+                virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao) for
+                ao in virtual_reservoir_asset_owner_indices(inputs, vr)
+            ]
+    end
+
     quantity_bid_reference_curve, price_bid_reference_curve =
         read_serialized_reference_curve(inputs, period, scenario)
 
@@ -846,12 +879,18 @@ function virtual_reservoir_markup_bids_for_period_scenario(
         maximum_number_of_vr_bidding_segments(inputs),
     )
 
+    no_markup_price_bids = zeros(
+        number_of_elements(inputs, VirtualReservoir),
+        number_of_elements(inputs, AssetOwner),
+        maximum_number_of_vr_bidding_segments(inputs),
+    )
+
     for vr in index_of_elements(inputs, VirtualReservoir)
         vr_total_account = sum(accounts[vr])
         vr_quantity_bid =
             [quantity_bid_reference_curve[seg][vr] for seg in eachindex(quantity_bid_reference_curve)]
         vr_price_bid = [price_bid_reference_curve[seg][vr] for seg in eachindex(price_bid_reference_curve)]
-        if vr_total_account - sum(vr_quantity_bid) > 1e-6
+        if vr_total_account - sum(vr_quantity_bid) > DEFAULT_TOLERANCE
             push!(vr_quantity_bid, vr_total_account - sum(vr_quantity_bid))
             push!(vr_price_bid, vr_price_bid[end] * (1.0 + reference_curve_final_segment_price_markup(inputs)))
         end
@@ -871,21 +910,17 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             ao_price_bid = Float64[]
 
             account_upper_bounds =
-                if bid_processing(inputs) ==
-                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
-                    asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
-                elseif bid_processing(inputs) ==
-                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
+                if bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     [1.0]
+                else
+                    asset_owner_virtual_reservoir_energy_account_upper_bound(inputs, ao)
                 end
             markups =
-                if bid_processing(inputs) ==
-                   Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
-                    asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
-                elseif bid_processing(inputs) ==
-                       Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
+                if bid_processing(inputs) == Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM
                     # Markups are calculated via Nash equilibrium later. This function is only used to divide the reference curve between the asset owners.
                     [0.0]
+                else
+                    asset_owner_risk_factor_for_virtual_reservoir_bids(inputs, ao)
                 end
 
             #---------------
@@ -897,11 +932,11 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             sum_of_ao_selling_bids = 0.0
             # Assuming that this asset owner is the only one selling, the segment of the reference curve only changes when
             # the sum of bids for the current asset owner is greater than the sum of quantity bids until this segment.
-            while current_account > 1e-6
+            while current_account > DEFAULT_TOLERANCE
                 # In this iteration we define the quantity bid for the current markup, which is based on the account share of the
                 # asset owner in the total account of the virtual reservoir. The calculation assumes that the total account of the
                 # virtual reservoir is static, does not change according to the asset owner bids
-                current_account_share = current_account / vr_total_account
+                current_account_share = round(current_account / vr_total_account; digits = 3)
                 markup_index =
                     findfirst(i -> account_upper_bounds[i] >= current_account_share, 1:length(account_upper_bounds))
                 account_share_lower_bound_for_markup = markup_index == 1 ? 0.0 : account_upper_bounds[markup_index-1]
@@ -929,6 +964,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                     )
                     quantity_bids[vr, ao, seg] = bid
                     price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment] * (1 + markups[markup_index])
+                    no_markup_price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment]
 
                     sum_of_bids_for_current_markup += bid
                     sum_of_ao_selling_bids += bid
@@ -938,7 +974,7 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                         current_reference_segment += 1
                         if current_reference_segment > length(ao_reference_quantity_bid)
                             # We have reached the end of the reference curve, so we stop defining bids for this asset owner
-                            if current_account > 1e-6
+                            if current_account > DEFAULT_TOLERANCE
                                 @warn "Reached the end of the reference curve for virtual reservoir $(vr) and asset owner $(ao) still has $(current_account) MWh to sell. This is likely due to numerical error."
                                 current_account = 0 # break the external while loop
                             end
@@ -948,45 +984,65 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 end
             end
 
-            if seg == 0
-                continue
-            end
-
             #--------------
             # Energy to buy
             #--------------
-            if consider_purchase_bids_for_virtual_reservoir_heuristic_bid(inputs) &&
+            if !iszero(asset_owner_purchase_discount_rate(inputs, ao)) &&
                bid_processing(inputs) == Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS
-                lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])
-                sell_segments = collect(1:seg)
-                buy_segments = Int[]
-                for markdown_index in 1:length(asset_owner_purchase_discount_rate(inputs, ao))
-                    seg += 1
+                if seg != 0
+                    lowest_sell_price = minimum(price_bids[vr, ao, 1:seg])
+                    sell_segments = collect(1:seg)
+                    buy_segments = Int[]
+                    for markdown_index in 1:length(asset_owner_purchase_discount_rate(inputs, ao))
+                        seg += 1
 
-                    price_bids[vr, ao, seg] =
-                        lowest_sell_price * (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
-                    reference_sell_price =
-                        lowest_sell_price * (1 + asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                        price_bids[vr, ao, seg] =
+                            lowest_sell_price * (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                        reference_sell_price =
+                            lowest_sell_price * (1 + asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
 
-                    absolute_bid =
-                        -sum(
-                            quantity_bids[vr, ao, s] for
-                            s in sell_segments if price_bids[vr, ao, s] < reference_sell_price;
-                            init = 0.0,
-                        )
-                    # Note that the bid is negative, because it is a bid to buy energy.
-                    incremental_bid = absolute_bid - sum(quantity_bids[vr, ao, buy_segments]; init = 0.0)
+                        absolute_bid =
+                            -sum(
+                                quantity_bids[vr, ao, s] for
+                                s in sell_segments if price_bids[vr, ao, s] < reference_sell_price;
+                                init = 0.0,
+                            )
+                        # Note that the bid is negative, because it is a bid to buy energy.
+                        incremental_bid = absolute_bid - sum(quantity_bids[vr, ao, buy_segments]; init = 0.0)
 
-                    if accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]) - incremental_bid > vr_total_account
-                        # The asset owner cannot own more energy than there is available in the virtual reservoir.
-                        quantity_bids[vr, ao, seg] =
-                            vr_total_account - (accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]))
-                        break
-                    else
-                        quantity_bids[vr, ao, seg] = incremental_bid
+                        if accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]) - incremental_bid >
+                           vr_total_account
+                            # The asset owner cannot own more energy than there is available in the virtual reservoir.
+                            quantity_bids[vr, ao, seg] =
+                                vr_total_account - (accounts[vr][i] - sum(quantity_bids[vr, ao, buy_segments]))
+                            break
+                        else
+                            quantity_bids[vr, ao, seg] = incremental_bid
+                        end
+
+                        push!(buy_segments, seg)
                     end
+                end
 
-                    push!(buy_segments, seg)
+                if seg == 0 || isempty(buy_segments) ||
+                   sum(-quantity_bids[vr, ao, seg] for seg in buy_segments) <
+                   asset_owner_minimum_virtual_reservoir_purchase_bid_quantity_in_mwh(inputs, ao)
+                    current_seg = 1
+                    if seg != 0
+                        quantity_bids[vr, ao, buy_segments] .= 0.0
+                        price_bids[vr, ao, buy_segments] .= 0.0
+                        current_seg += sell_segments[end]
+                    end
+                    number_of_purchase_segments = length(asset_owner_purchase_discount_rate(inputs, ao))
+                    for markdown_index in 1:number_of_purchase_segments
+                        quantity_bids[vr, ao, current_seg] =
+                            -asset_owner_minimum_virtual_reservoir_purchase_bid_quantity_in_mwh(inputs, ao) /
+                            number_of_purchase_segments
+                        price_bids[vr, ao, current_seg] =
+                            vr_price_bid[1] * (1 + markups[1]) *
+                            (1 - asset_owner_purchase_discount_rate(inputs, ao)[markdown_index])
+                        current_seg += 1
+                    end
                 end
             end
         end
@@ -1017,6 +1073,16 @@ function virtual_reservoir_markup_bids_for_period_scenario(
             run_time_options,
             "virtual_reservoir_price_bid",
             price_bids,
+            period,
+            scenario,
+        )
+
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_no_markup_price_bid",
+            no_markup_price_bids,
             period,
             scenario,
         )
@@ -1057,12 +1123,10 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
         segments = 1:dimension_dict[:bid_segment]
     end
 
-    tol = 1e-6
-
     if is_virtual_reservoir
         for vr in 1:number_elements
             for segment in reverse(segments)
-                if any(.!isapprox.(bids_view.data[vr, :, segment], 0.0; atol = tol))
+                if any(.!isapprox.(bids_view.data[vr, :, segment], 0.0; atol = DEFAULT_TOLERANCE))
                     valid_segments_per_timeseries[vr] = segment
                     break
                 end
@@ -1071,7 +1135,7 @@ function calculate_maximum_valid_segments_or_profiles_per_timeseries(
     else
         for bg in 1:number_elements
             for segment in reverse(segments)
-                if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = tol))
+                if any(.!isapprox.(bids_view.data[bg, :, segment, :], 0.0; atol = DEFAULT_TOLERANCE))
                     valid_segments_per_timeseries[bg] = segment
                     break
                 end
@@ -1274,16 +1338,12 @@ function write_individual_virtual_reservoir_bids_files(
 
     filename = "$(asset_owner_label(inputs, asset_owner_index))_virtual_reservoir_bids_period_$(inputs.args.period).csv"
 
-    df_length =
-        length(virtual_reservoirs) * number_of_scenarios(inputs) *
-        maximum_number_of_vr_bidding_segments(inputs)
-
-    period_column = ones(Int, df_length) * inputs.args.period
-    scenario_column = zeros(Int, df_length)
-    bid_segment_column = zeros(Int, df_length)
-    virtual_reservoir_column = Vector{String}(undef, df_length)
-    price_column = zeros(df_length)
-    quantity_column = zeros(df_length)
+    period_column = Int[]
+    scenario_column = Int[]
+    bid_segment_column = Int[]
+    virtual_reservoir_column = String[]
+    price_column = Float64[]
+    quantity_column = Float64[]
 
     line_index = 0
     for scenario in 1:number_of_scenarios(inputs)
@@ -1301,16 +1361,32 @@ function write_individual_virtual_reservoir_bids_files(
             scenario,
         )
 
-        for segment in 1:maximum_number_of_vr_bidding_segments(inputs)
-            for vr in virtual_reservoirs
-                line_index += 1
-                scenario_column[line_index] = scenario
-                bid_segment_column[line_index] = segment
-                virtual_reservoir_column[line_index] = virtual_reservoir_label(inputs, vr)
-                price_column[line_index] =
-                    inputs.time_series.virtual_reservoir_price_bid[vr, asset_owner_index, segment]
-                quantity_column[line_index] =
-                    inputs.time_series.virtual_reservoir_quantity_bid[vr, asset_owner_index, segment]
+        for vr in virtual_reservoirs
+            new_segment_index = 0
+            column_start_index = length(period_column) + 1
+            column_end_index = length(period_column)
+            for segment in 1:maximum_number_of_vr_bidding_segments(inputs)
+                quantity = inputs.time_series.virtual_reservoir_quantity_bid[vr, asset_owner_index, segment]
+                quantity = round(quantity; digits = 6)
+                price = inputs.time_series.virtual_reservoir_price_bid[vr, asset_owner_index, segment]
+                if segment == 1
+                    index_at_vectors = nothing
+                else
+                    index_at_vectors = findfirst(isequal(price), price_column[column_start_index:column_end_index])
+                end
+                if isnothing(index_at_vectors)
+                    new_segment_index += 1
+                    push!(period_column, inputs.args.period)
+                    push!(scenario_column, scenario)
+                    push!(bid_segment_column, new_segment_index)
+                    push!(virtual_reservoir_column, virtual_reservoir_label(inputs, vr))
+                    push!(price_column, price)
+                    push!(quantity_column, quantity)
+                    column_end_index += 1
+                else
+                    quantity_column[column_start_index+index_at_vectors-1] =
+                        round(quantity + quantity_column[column_start_index+index_at_vectors-1]; digits = 6)
+                end
             end
         end
     end

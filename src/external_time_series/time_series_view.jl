@@ -128,7 +128,7 @@ function initialize_time_series_view_from_external_file(
         if number_of_samples != number_of_scenarios(inputs) && number_of_samples != 1
             @warn(
                 "Time series file $(file_path) has $(dimension_sizes[sample_dimension_index]) samples" *
-                ", but the problem has $(number_of_scenarios(inputs)) scenarios. " *
+                ", but the problem has $(number_of_scenarios(inputs)) scenario(s). " *
                 "This might lead to different samples being weighted differently.",
             )
         end
@@ -298,11 +298,10 @@ function read_period_scenario_subperiod!(
     period::Int,
     scenario::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     # Loop in subperiods
     for subperiod in 1:ts.reader.metadata.dimension_size[3]
@@ -319,11 +318,10 @@ function read_period_scenario_hour!(
     period::Int,
     scenario::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     # Loop in hours
     for hour in 1:ts.reader.metadata.dimension_size[3]
@@ -344,11 +342,10 @@ function read_period_scenario_subscenario_subperiod!(
     period::Int,
     scenario::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     # Loop in subperiods
     for subperiod in 1:ts.reader.metadata.dimension_size[4],
@@ -367,11 +364,10 @@ function read_period_scenario_subscenario!(
     period::Int,
     scenario::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     # Loop in subperiods
     for subscenario in 1:ts.reader.metadata.dimension_size[3]
@@ -388,11 +384,10 @@ function read_period_scenario_profile!(
     period::Int,
     scenario::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     for profile in 1:ts.reader.metadata.dimension_size[3]
         Quiver.goto!(ts.reader; period = file_period, scenario, profile)
@@ -407,11 +402,10 @@ function read_period_subperiod!(
     ts::TimeSeriesView{T, N},
     period::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     # Loop in subperiods
     for subperiod in 1:ts.reader.metadata.dimension_size[2]
@@ -427,11 +421,10 @@ function read_period_profile!(
     ts::TimeSeriesView{T, N},
     period::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     for profile in 1:ts.reader.metadata.dimension_size[2]
         Quiver.goto!(ts.reader; period = file_period, profile)
@@ -446,11 +439,10 @@ function read_period_profile_complementary_group!(
     ts::TimeSeriesView{T, N},
     period::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     for complementary_group in 1:ts.reader.metadata.dimension_size[3],
         profile in 1:ts.reader.metadata.dimension_size[2]
@@ -468,11 +460,10 @@ function read_period_scenario!(
     period::Int,
     scenario::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     Quiver.goto!(ts.reader; period = file_period, scenario)
     ts.exact_dimensions_data = ts.reader.data
@@ -556,11 +547,10 @@ function read_period!(
     ts::TimeSeriesView{T, N},
     period::Int,
 ) where {T, N}
-    date_time_to_read = date_time_from_period(inputs, period)
-    file_period = period_from_date_time(
+    file_period = get_file_period_from_problem_period(
         inputs,
-        date_time_to_read;
-        initial_date_time = ts.reader.metadata.initial_date,
+        period,
+        ts.reader.metadata.initial_date,
     )
     Quiver.goto!(ts.reader; period = file_period)
     ts.exact_dimensions_data = ts.reader.data

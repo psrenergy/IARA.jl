@@ -2,4 +2,4 @@
 
 FORMATTERPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-$JULIA_1112 --project=$FORMATTERPATH $FORMATTERPATH/format.jl
+julia +1.11.2 --project=$FORMATTERPATH $FORMATTERPATH/format.jl

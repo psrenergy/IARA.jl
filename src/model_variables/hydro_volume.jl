@@ -109,12 +109,7 @@ function hydro_volume!(
         hydro_volume_from_previous_period(inputs, run_time_options, simulation_period, simulation_trajectory)
 
     for h in hydro_units_with_reservoir
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
-            hydro_previous_period_volume[h],
-            previous_volume[h],
-        )
+        set_parameter_value(hydro_previous_period_volume[h], previous_volume[h])
     end
     return nothing
 end

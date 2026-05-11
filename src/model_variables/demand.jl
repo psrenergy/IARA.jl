@@ -85,9 +85,7 @@ function demand!(
     demand_ts = time_series_demand(inputs, run_time_options; subscenario)
 
     for blk in subperiods(inputs), d in demands
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             demand[blk, d],
             demand_mw_to_gwh(
                 inputs,

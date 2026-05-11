@@ -118,17 +118,10 @@ function bidding_group_profile_energy_bid!(
     bidding_group_quantity_bid_profile = get_model_object(model, :bidding_group_quantity_bid_profile)
 
     for bg in bidding_groups, prf in 1:number_of_valid_profiles(inputs, bg)
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
-            bidding_group_price_bid_profile[bg, prf],
-            price_bid_profile_series[bg, prf],
-        )
+        set_parameter_value(bidding_group_price_bid_profile[bg, prf], price_bid_profile_series[bg, prf])
     end
     for blk in blks, bg in bidding_groups, prf in 1:number_of_valid_profiles(inputs, bg), bus in buses
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             bidding_group_quantity_bid_profile[blk, bg, prf, bus],
             quantity_bid_profile_series[bg, bus, prf, blk],
         )

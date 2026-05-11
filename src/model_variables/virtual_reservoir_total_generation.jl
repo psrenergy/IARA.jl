@@ -93,12 +93,7 @@ function virtual_reservoir_total_generation!(
     available_energy = [min(total_stored_energy[vr], maximum_turbinable_energy[vr]) for vr in virtual_reservoirs]
 
     for vr in virtual_reservoirs
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
-            virtual_reservoir_available_energy[vr],
-            available_energy[vr],
-        )
+        set_parameter_value(virtual_reservoir_available_energy[vr], available_energy[vr])
     end
 
     return nothing

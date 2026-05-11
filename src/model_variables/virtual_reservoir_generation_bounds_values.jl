@@ -72,28 +72,14 @@ function virtual_reservoir_generation_bounds_values!(
         seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
 
         if virtual_reservoir_quantity_bid_series[vr, ao, seg] >= 0.0
-            MOI.set(
-                model.jump_model,
-                POI.ParameterValue(),
+            set_parameter_value(
                 virtual_reservoir_generation_upper_bound_value[vr, ao, seg],
                 virtual_reservoir_quantity_bid_series[vr, ao, seg],
             )
-            MOI.set(
-                model.jump_model,
-                POI.ParameterValue(),
-                virtual_reservoir_generation_lower_bound_value[vr, ao, seg],
-                0.0,
-            )
+            set_parameter_value(virtual_reservoir_generation_lower_bound_value[vr, ao, seg], 0.0)
         else
-            MOI.set(
-                model.jump_model,
-                POI.ParameterValue(),
-                virtual_reservoir_generation_upper_bound_value[vr, ao, seg],
-                0.0,
-            )
-            MOI.set(
-                model.jump_model,
-                POI.ParameterValue(),
+            set_parameter_value(virtual_reservoir_generation_upper_bound_value[vr, ao, seg], 0.0)
+            set_parameter_value(
                 virtual_reservoir_generation_lower_bound_value[vr, ao, seg],
                 virtual_reservoir_quantity_bid_series[vr, ao, seg],
             )

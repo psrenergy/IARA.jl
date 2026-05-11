@@ -68,9 +68,7 @@ function virtual_reservoir_energy_account!(
     virtual_reservoir_energy_account = get_model_object(model, :virtual_reservoir_energy_account)
     for vr in virtual_reservoirs
         for (i, ao) in enumerate(virtual_reservoir_asset_owner_indices(inputs, vr))
-            MOI.set(
-                model.jump_model,
-                POI.ParameterValue(),
+            set_parameter_value(
                 virtual_reservoir_energy_account[vr, ao],
                 virtual_reservoir_energy_account_at_beginning_of_period[vr][i] +
                 vr_energy_arrival[vr] * virtual_reservoir_asset_owners_inflow_allocation(inputs, vr, ao),

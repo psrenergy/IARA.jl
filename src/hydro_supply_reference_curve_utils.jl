@@ -36,12 +36,7 @@ function update_virtual_reservoir_reference_multiplier!(
         virtual_reservoir_reference_multiplier =
             get_model_object(subproblem_model, :virtual_reservoir_reference_multiplier)
 
-        MOI.set(
-            subproblem_model,
-            POI.ParameterValue(),
-            virtual_reservoir_reference_multiplier,
-            reference_multiplier,
-        )
+        set_parameter_value(virtual_reservoir_reference_multiplier, reference_multiplier)
     end
     return nothing
 end

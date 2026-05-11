@@ -105,15 +105,11 @@ function convex_hull_coefficients!(
     for subperiod in subperiods(inputs), bus in buses_represented_for_strategic_bidding(inputs),
         v in 1:convex_hull_length[bus, subperiod]
 
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             convex_hull_point_quantity[subperiod, bus, v],
             asset_owner_revenue_convex_hull_point(inputs, bus, subperiod, v).x,
         )
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             convex_hull_point_revenue[subperiod, bus, v],
             asset_owner_revenue_convex_hull_point(inputs, bus, subperiod, v).y,
         )

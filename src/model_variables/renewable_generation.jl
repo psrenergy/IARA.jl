@@ -105,12 +105,7 @@ function renewable_generation!(
     renewable_generation_series = time_series_renewable_generation(inputs, run_time_options; subscenario)
 
     for b in subperiods(inputs), r in existing_renewables
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
-            renewable_generation_scenario[b, r],
-            renewable_generation_series[r, b],
-        )
+        set_parameter_value(renewable_generation_scenario[b, r], renewable_generation_series[r, b])
     end
 
     return nothing

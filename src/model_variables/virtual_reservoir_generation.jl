@@ -105,15 +105,11 @@ function virtual_reservoir_generation!(
     for vr in virtual_reservoirs, ao in virtual_reservoir_asset_owner_indices(inputs, vr),
         seg in 1:number_of_vr_valid_bidding_segments(inputs, vr)
 
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             virtual_reservoir_quantity_bid[vr, ao, seg],
             virtual_reservoir_quantity_bid_series[vr, ao, seg],
         )
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             virtual_reservoir_price_bid[vr, ao, seg],
             virtual_reservoir_price_bid_series[vr, ao, seg],
         )

@@ -95,12 +95,7 @@ function elastic_demand!(
     elastic_demand_price_series = time_series_elastic_demand_price(inputs)
 
     for b in subperiods(inputs), (i, d) in enumerate(existing_elastic_demand)
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
-            elastic_demand_price[b, d],
-            elastic_demand_price_series[i, b],
-        )
+        set_parameter_value(elastic_demand_price[b, d], elastic_demand_price_series[i, b])
     end
 
     return nothing

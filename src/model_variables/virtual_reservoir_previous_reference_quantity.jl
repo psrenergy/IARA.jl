@@ -75,9 +75,7 @@ function virtual_reservoir_previous_reference_quantity!(
     end
 
     for vr in virtual_reservoirs
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             virtual_reservoir_previous_reference_quantity[vr],
             sum_of_previous_reference_curve_quantities[vr],
         )

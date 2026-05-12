@@ -150,9 +150,7 @@ function hydro_inflow!(
         inflow_series = time_series_inflow(inputs, run_time_options; subscenario)
 
         for b in subperiods(inputs), h in existing_hydro_units
-            MOI.set(
-                model.jump_model,
-                POI.ParameterValue(),
+            set_parameter_value(
                 inflow[b, h],
                 inflow_series[hydro_unit_gauging_station_index(inputs, h), b] * m3_per_second_to_hm3_per_hour() *
                 subperiod_duration_in_hours(inputs, b),
@@ -166,9 +164,7 @@ function hydro_inflow!(
         inflow_noise_series = time_series_inflow_noise(inputs, run_time_options; subscenario)
 
         for h in existing_hydro_units
-            MOI.set(
-                model.jump_model,
-                POI.ParameterValue(),
+            set_parameter_value(
                 inflow_noise[h],
                 inflow_noise_series[hydro_unit_gauging_station_index(inputs, h)],
             )

@@ -122,18 +122,8 @@ function bidding_group_generation!(
     adjust_quantity_bid_for_ex_post!(inputs, run_time_options, quantity_bid_series, subscenario)
 
     for blk in blks, bg in bidding_groups, bds in 1:number_of_bg_valid_bidding_segments(inputs, bg), bus in buses
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
-            bidding_group_quantity_bid[blk, bg, bds, bus],
-            quantity_bid_series[bg, bus, bds, blk],
-        )
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
-            bidding_group_price_bid[blk, bg, bds, bus],
-            price_bid_series[bg, bus, bds, blk],
-        )
+        set_parameter_value(bidding_group_quantity_bid[blk, bg, bds, bus], quantity_bid_series[bg, bus, bds, blk])
+        set_parameter_value(bidding_group_price_bid[blk, bg, bds, bus], price_bid_series[bg, bus, bds, blk])
     end
     return nothing
 end

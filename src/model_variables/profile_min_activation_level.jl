@@ -79,9 +79,7 @@ function profile_min_activation_level!(
     profile_min_activation_level = get_model_object(model, :profile_min_activation_level)
 
     for bg in bidding_groups, profile in 1:number_of_valid_profiles(inputs, bg)
-        MOI.set(
-            model.jump_model,
-            POI.ParameterValue(),
+        set_parameter_value(
             profile_min_activation_level[bg, profile],
             minimum_activation_level_profile_series[bg, profile],
         )

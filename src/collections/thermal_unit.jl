@@ -301,16 +301,15 @@ function validate(thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_ramp_up[i]) && thermal_unit.max_ramp_up[i] < 0
+        if !is_null(thermal_unit.max_ramp_up[i]) && thermal_unit.max_ramp_up[i] <= 0
             @error(
-                "Thermal Unit $(thermal_unit.label[i]) Max Ramp Up must be non-negative. Current value is $(thermal_unit.max_ramp_up[i])."
+                "Thermal Unit $(thermal_unit.label[i]) Max Ramp Up must be strictly positive. Current value is $(thermal_unit.max_ramp_up[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_ramp_down[i]) &&
-           thermal_unit.max_ramp_down[i] < 0
+        if !is_null(thermal_unit.max_ramp_down[i]) && thermal_unit.max_ramp_down[i] <= 0
             @error(
-                "Thermal Unit $(thermal_unit.label[i]) Max Ramp Down must be non-negative. Current value is $(thermal_unit.max_ramp_down[i])."
+                "Thermal Unit $(thermal_unit.label[i]) Max Ramp Down must be strictly positive. Current value is $(thermal_unit.max_ramp_down[i])."
             )
             num_errors += 1
         end
@@ -571,6 +570,22 @@ Check if the Thermal Unit at index 'idx' has ramp constraints.
 """
 has_ramp_constraints(thermal_unit::ThermalUnit, idx::Int) =
     !is_null(thermal_unit.max_ramp_up[idx]) || !is_null(thermal_unit.max_ramp_down[idx])
+
+"""
+    has_max_ramp_up(thermal_unit::ThermalUnit, idx::Int)
+
+Check if the Thermal Unit at index 'idx' has a max ramp up limit.
+"""
+has_max_ramp_up(thermal_unit::ThermalUnit, idx::Int) =
+    !is_null(thermal_unit.max_ramp_up[idx])
+
+"""
+    has_max_ramp_down(thermal_unit::ThermalUnit, idx::Int)
+
+Check if the Thermal Unit at index 'idx' has a max ramp down limit.
+"""
+has_max_ramp_down(thermal_unit::ThermalUnit, idx::Int) =
+    !is_null(thermal_unit.max_ramp_down[idx])
 
 """
     has_commitment_initial_condition(thermal_unit::ThermalUnit, idx::Int)

@@ -21,8 +21,10 @@ function thermal_ramp!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
-    ramp_indexes =
-        index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_ramp_constraints])
+    ramp_up_indexes =
+        index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_max_ramp_up])
+    ramp_down_indexes =
+        index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_max_ramp_down])
 
     # Model Variables
     thermal_generation = get_model_object(model, :thermal_generation)
@@ -32,7 +34,7 @@ function thermal_ramp!(
         model.jump_model,
         thermal_ramp_up[
             b in 2:number_of_subperiods(inputs),
-            t in ramp_indexes,
+            t in ramp_up_indexes,
         ],
         thermal_generation[b, t]
         -
@@ -46,7 +48,7 @@ function thermal_ramp!(
         model.jump_model,
         thermal_ramp_down[
             b in 2:number_of_subperiods(inputs),
-            t in ramp_indexes,
+            t in ramp_down_indexes,
         ],
         thermal_generation[b-1, t]
         -
@@ -57,13 +59,15 @@ function thermal_ramp!(
 
     # Initial conditions
     if model.node == 1
-        initial_condition_indexes =
-            [t for t in ramp_indexes if !is_null(thermal_unit_generation_initial_condition(inputs, t))]
+        ramp_up_initial_indexes =
+            [t for t in ramp_up_indexes if !is_null(thermal_unit_generation_initial_condition(inputs, t))]
+        ramp_down_initial_indexes =
+            [t for t in ramp_down_indexes if !is_null(thermal_unit_generation_initial_condition(inputs, t))]
 
         @constraint(
             model.jump_model,
             thermal_ramp_up_initial[
-                t in initial_condition_indexes
+                t in ramp_up_initial_indexes
             ],
             thermal_generation[1, t] / subperiod_duration_in_hours(inputs, 1)
             -
@@ -75,7 +79,7 @@ function thermal_ramp!(
         @constraint(
             model.jump_model,
             thermal_ramp_down_initial[
-                t in initial_condition_indexes
+                t in ramp_down_initial_indexes
             ],
             thermal_unit_generation_initial_condition(inputs, t)
             -
@@ -91,7 +95,7 @@ function thermal_ramp!(
         @constraint(
             model.jump_model,
             thermal_ramp_up_last_subperiod[
-                t in ramp_indexes
+                t in ramp_up_indexes
             ],
             thermal_generation[1, t] / subperiod_duration_in_hours(inputs, 1)
             -
@@ -105,7 +109,7 @@ function thermal_ramp!(
         @constraint(
             model.jump_model,
             thermal_ramp_down_last_subperiod[
-                t in ramp_indexes
+                t in ramp_down_indexes
             ],
             thermal_generation[end, t] / subperiod_duration_in_hours(inputs, number_of_subperiods(inputs))
             -

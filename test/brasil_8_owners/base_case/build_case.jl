@@ -265,14 +265,22 @@ try
     # Thermals
     df_thermals = CSV.read(joinpath(PATH, "thermals.csv"), DataFrame)
     for row in eachrow(df_thermals)
+        # thermals.csv uses 0 as a placeholder for an unset ramp limit. IARA rejects a 0 ramp,
+        # so only pass a limit when it is positive; an unset one stays NULL (kwarg omitted).
+        ramp_kwargs = Dict{Symbol, Any}()
+        if row.ramp_up > 0
+            ramp_kwargs[:max_ramp_up] = row.ramp_up
+        end
+        if row.ramp_down > 0
+            ramp_kwargs[:max_ramp_down] = row.ramp_down
+        end
         IARA.add_thermal_unit!(db;
             label = String(row.label),
             bus_id = String(row.bus_id),
             biddinggroup_id = String(row.biddinggroup_id),
             has_commitment = 0,
             generation_initial_condition = 0.0,
-            max_ramp_up = row.ramp_up,
-            max_ramp_down = row.ramp_down,
+            ramp_kwargs...,
             parameters = DataFrame(;
                 date_time = [DateTime(0)],
                 existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],

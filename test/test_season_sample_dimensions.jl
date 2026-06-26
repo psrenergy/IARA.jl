@@ -53,6 +53,27 @@ function test_aggregate_with_quiver_apply_expression()
     return nothing
 end
 
+function test_add_season_sample_dimensions_quiv()
+    # Build a .quiv copy of the CSV source (plus its period_season_map) in a temp dir.
+    dir = mktempdir()
+    Quiver.convert(
+        joinpath(EXPECTED_DIR, "hydro_generation"),
+        Quiver.csv,
+        Quiver.binary;
+        destination_directory = dir,
+        filename = "hydro_generation",
+    )
+    for ext in (".csv", ".toml")
+        cp(joinpath(EXPECTED_DIR, "period_season_map" * ext), joinpath(dir, "period_season_map" * ext))
+    end
+
+    base = IARA.add_season_sample_dimensions(joinpath(dir, "hydro_generation"))
+    @test isfile(base * ".quiv")
+    _, metadata = IARA.read_timeseries_file(base * ".quiv")
+    @test metadata.dimensions == [:period, :scenario, :season, :sample, :subperiod]
+    return nothing
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if startswith("$name", "test_")

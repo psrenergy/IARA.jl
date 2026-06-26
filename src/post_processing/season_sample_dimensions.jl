@@ -13,6 +13,9 @@
 
 Read a cyclic-run output and its `period_season_map`, and write a Quiver file with `season` and
 `sample` added as dimensions right after `scenario`. Returns the path of the written file.
+
+The format (`.csv` or `.quiv`) is detected automatically and preserved. To switch formats, convert
+the input with `Quiver.convert` beforehand.
 """
 function add_season_sample_dimensions(
     output_file::String;
@@ -20,7 +23,19 @@ function add_season_sample_dimensions(
     destination_file::String = first(splitext(output_file)) * "_with_season",
 )
     output_base = first(splitext(output_file))
-    output = CSV.read(output_base * ".csv", DataFrame)
+    if isfile(output_base * ".quiv")
+        implementation = Quiver.binary
+        output = Quiver.file_to_df(output_base, Quiver.binary)
+        @warn(
+            "The binary format pre-allocates the full dense grid (the product of every dimension " *
+            "size), which is inefficient for the sparse season/sample dimensions added.",
+        )
+    elseif isfile(output_base * ".csv")
+        implementation = Quiver.csv
+        output = CSV.read(output_base * ".csv", DataFrame)
+    else
+        error("Could not find a \"$output_base.csv\" or \"$output_base.quiv\" file to read.")
+    end
     metadata = Quiver.from_toml(output_base * ".toml")
 
     @assert metadata.dimensions[1] == :period
@@ -50,9 +65,8 @@ function add_season_sample_dimensions(
     select!(result, vcat(dimension_columns, label_columns))
     sort!(result, dimension_columns)
 
-    # The Quiver CSV reader errors ("No more data to read") instead of returning NaN past the last
-    # physical row, so a hole at the maximum dimension combination breaks reads. Append a NaN row
-    # there when it is missing (at most one extra row), keeping the sorted order intact.
+    # Quiver cannot read a hole at the maximum dimension combination. Materialize the corner 
+    # with a NaN row when it is missing, keeping the sorted order intact. 
     if any(i -> result[end, dimension_columns[i]] != dimension_size[i], eachindex(dimension_size))
         sentinel = Dict{Symbol, Any}(dimension_columns[i] => dimension_size[i] for i in eachindex(dimension_size))
         for column in label_columns
@@ -61,7 +75,7 @@ function add_season_sample_dimensions(
         push!(result, sentinel)
     end
 
-    writer = Quiver.Writer{Quiver.csv}(
+    writer = Quiver.Writer{implementation}(
         destination_file;
         dimensions = dimensions,
         labels = metadata.labels,

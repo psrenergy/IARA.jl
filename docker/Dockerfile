@@ -15,13 +15,14 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 COPY IARA_ecs.sh .
 
-ARG IARA_URL
+ARG MODEL_URL
+ARG IARA_URL=${MODEL_URL}
 ARG COMMIT_HASH
 ARG VERSION
 
 LABEL commit_hash="${COMMIT_HASH}" \
       iara_version="${VERSION}"
-RUN curl -o iara.zip $IARA_URL \ 
+RUN curl -o iara.zip $IARA_URL \
     && unzip -qo iara.zip -d iara_model \ 
     && rm iara.zip \ 
     && mkdir /root/.julia \ 

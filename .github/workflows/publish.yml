@@ -110,7 +110,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: psrenergy/publish-docker-image@v1
+      - uses: psrenergy/publish-docker-image@v1.0.1
         with:
           registry: ghcr
           image_name: iara

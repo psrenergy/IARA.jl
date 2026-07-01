@@ -1,13 +1,21 @@
 import Pkg
 Pkg.activate(@__DIR__)
-Pkg.instantiate()
+
+for s in 1:10
+    try
+        Pkg.instantiate()
+        break
+    catch e
+        s == 10 ? rethrow(e) : sleep(s)
+    end
+end
 
 using ArgParse
 using CD
 
 function main(args::Vector{String})
-    s = ArgParseSettings()
     #! format: off
+    s = ArgParseSettings()
     @add_arg_table! s begin
         "--development_stage"
         nargs = '?'
@@ -22,8 +30,6 @@ function main(args::Vector{String})
     parsed_args = parse_args(args, s)
 
     package_path = dirname(@__DIR__)
-    assets_path = joinpath(@__DIR__, "assets")
-    database_path = joinpath(package_path, "database")
 
     configuration = build_configuration(;
         package_path = package_path,
@@ -31,27 +37,15 @@ function main(args::Vector{String})
         version_suffix = parsed_args["version_suffix"],
     )
 
-    if Sys.iswindows()
-        build_docs(configuration)
-    end
-
-    CD.compile(
-        configuration;
-        executables = [
-            "IARA" => "julia_main",
-        ],
-        additional_files_path = [
-            database_path,
-        ],
-        windows_additional_files_path = [
-            joinpath(assets_path, "IARA.bat"),
-        ],
-        linux_additional_files_path = [
-            joinpath(assets_path, "IARA.sh"),
-        ],
+    # `deploy_to_ghcr` logs in to ghcr.io, builds `docker/Dockerfile` and pushes it. It resolves
+    # VERSION and COMMIT_HASH from the configuration/git tree on its own, and injects the AWS linux
+    # zip URL as the IARA_URL build arg (replacing the old retrieve_deploy_data step).
+    return CD.deploy_to_ghcr(;
+        configuration = configuration,
+        dockerfile = joinpath(package_path, "docker", "Dockerfile"),
+        build_context = joinpath(package_path, "docker"),
+        inject_url_build_arg = "IARA_URL",
     )
-
-    return 0
 end
 
 main(ARGS)

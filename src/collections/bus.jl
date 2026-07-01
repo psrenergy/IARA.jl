@@ -66,9 +66,7 @@ Required arguments:
 Optional arguments:
 
   - `latitude::Float64`: Latitude of the bus
-
   - `longitude::Float64`: Longitude of the bus
-
   - `zone_id::Int64`: Zone of the bus
 
 Example:

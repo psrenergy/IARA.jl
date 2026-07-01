@@ -94,13 +94,11 @@ Add a DC Line to the database.
 Required arguments:
 
   - `label::String`: Label of the DC line
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `bus_from::Int64`: Bus from of the DC line
-
   - `bus_to::Int64`: Bus to of the DC line
 
 ---

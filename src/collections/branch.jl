@@ -100,17 +100,14 @@ Add a Branch to the database.
 Required arguments:
 
   - `label::String`: Label of the branch
-
   - `line_model::Int64`: Line model of the branch
     + `0` [AC] <default>
     + `1` [DC]
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `bus_from::Int64`: Bus from of the branch
-
   - `bus_to::Int64`: Bus to of the branch
 
 ---

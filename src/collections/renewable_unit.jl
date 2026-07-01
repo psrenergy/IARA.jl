@@ -117,15 +117,12 @@ Add a Renewable Unit to the database.
 Required arguments:
 
   - `label::String`: Label of the renewable unit
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `technology_type::Int64`: Technology type of the renewable unit
-
   - `biddinggroup_id::Int64`: Bidding group of the renewable unit
-
   - `bus_id::Int64`: Bus of the renewable unit
 
 ---

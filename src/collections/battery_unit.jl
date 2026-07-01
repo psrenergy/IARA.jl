@@ -112,15 +112,12 @@ Add a Battery Unit to the database.
 Required arguments:
 
   - `label::String`: Label of the battery unit
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `initial_storage::Float64`: Initial storage of the battery unit
-
   - `biddinggroup_id::Int64`: Bidding group of the battery unit
-
   - `bus_id::Int64`: Bus of the battery unit
 
 ---

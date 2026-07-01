@@ -299,79 +299,54 @@ The possible files for each collection are:
 Collection: `Configuration`
 
   - `hour_subperiod_map::String`: Mapping of hours to subperiods
-
   - `fcf_cuts::String`: FCF cuts for the model, it's a file read from SDDP.jl in JSON format
-
   - `period_season_map::String`: Mapping of periods to seasons
 
 Collection: `RenewableUnit`
 
   - `generation_ex_ante::String`: Realized generation for the model in ex-ante, also used in the min cost module `[p.u.]`
-
   - `generation_ex_post::String`: Realized generation for the model in ex-post `[p.u.]`
 
 Collection: `HydroUnit`
 
   - `inflow_ex_ante::String`: Inflow data for the model in ex-ante `[m³/s]`
-
   - `inflow_ex_post::String`: Inflow data for the model in ex-post `[m³/s]`
-
   - `initial_volume_by_scenario::String`
 
 Collection: `GaugingStation`
 
   - `inflow_initial_state_by_scenario::String`
-
   - `parp_coefficients::String`
-
   - `inflow_period_average::String`
-
   - `inflow_period_std_dev::String`
-
   - `inflow_noise_ex_ante::String`
-
   - `inflow_noise_ex_post::String`
 
 Collection: `BiddingGroup`
 
   - `quantity_bid::String`: Quantity of bids for independent segement bids `[GWh]`
-
   - `price_bid::String`: Price of bids for independent segement bids `[\$/MWh]`
-
   - `quantity_bid_profile::String`: Quantity of bids for profile bids `[GWh]`
-
   - `price_bid_profile::String`: Price of bids for profile bids `[\$/MWh]`
-
   - `parent_profile::String`: Parent profile of this bid profile
-
   - `complementary_grouping_profile::String`: Complementary grouping for the asset owner's profile bids
-
   - `minimum_activation_level_profile::String`: Minimum activation level of profile
-
   - `bid_price_limit_justified_independent::String`
-
   - `bid_price_limit_non_justified_independent::String`
-
   - `bid_price_limit_justified_profile::String`
-
   - `bid_price_limit_non_justified_profile::String`
-
   - `bid_justifications::String`
 
 Collection: `VirtualReservoir`
 
   - `quantity_bid::String`: Quantity of bids for virtual reservoirs `[MWh]`
-
   - `price_bid::String`: Price of bids for virtual reservoirs `[\$/MWh]`
 
 Collection: `DemandUnit`
 
   - `elastic_demand_price::String`: Elastic demand price data `[\$/MWh]`
-
   - `demand_window::String`: Window available for shifting the elastic demand `[h]`
-
   - `demand_ex_ante::String`: Demand data for the model in ex-ante, also used in the min cost module `[p.u.]`
-
   - `demand_ex_post::String`: Demand data for the model in ex-post `[p.u.]`
 
 For more information about these files, please refer to the [Input Files](https://psrenergy.github.io/IARA.jl/dev/input_files.html) documentation.

@@ -217,15 +217,12 @@ Add a VirtualReservoir to the database.
 Required arguments:
 
   - `label::String`: Label of the virtual reservoir
-
   - `inflow_allocation::Vector{Float64}`: Inflow allocation of the virtual reservoir
 
 Optional arguments:
 
   - `initial_energy_account_share::Vector{Float64}`
-
   - `assetowner_id::Vector{Int64}`: Asset owner of the virtual reservoir
-
   - `hydrounit_id::Vector{Int64}`: Hydro unit of the virtual reservoir
 
 Example:

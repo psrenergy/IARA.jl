@@ -113,28 +113,20 @@ Add a Demand to the database.
 Required arguments:
 
   - `label::String`: Label of the demand unit
-
   - `demand_unit_type::Int64`: Demand type of the demand unit
     + `0` [Inelastic] <default>
     + `1` [Elastic]
     + `2` [Flexible]
-
   - `max_demand::Float64`: Max demand of the demand unit `[MW]`
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `max_shift_up_flexible_demand::Float64`: Max shift up of the demand unit
-
   - `max_shift_down_flexible_demand::Float64`: Max shift down of the demand unit
-
   - `curtailment_cost_flexible_demand::Float64`: Curtailment cost of the demand unit (if flexible demand) `[\$/MWh]`
-
   - `max_curtailment_flexible_demand::Float64`: Max curtailment of the demand unit (if flexible demand)
-
   - `biddinggroup_id::Int64`
-
   - `bus_id::Int64`: Bus of the demand unit
 
 ---

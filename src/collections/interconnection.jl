@@ -94,13 +94,11 @@ Add a Interconnection to the database.
 Required arguments:
 
   - `label::String`: Label of the interconnection
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `zone_from::Int64`: Zone from of the interconnection
-
   - `zone_to::Int64`: Zone to of the interconnection
 
 ---

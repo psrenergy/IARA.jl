@@ -74,17 +74,12 @@ Add an asset owner to the database.
 Required arguments:
 
   - `label::String`: Label of the asset owner
-
   - `price_type::Int64`: Price type of the asset owner
     + `0` [Price Taker]
     + `1` [Price Maker] <default>
-
   - `minimum_virtual_reservoir_purchase_bid_quantity_in_mw::Float64`
-
   - `virtual_reservoir_energy_account_upper_bound::Vector{Float64}`
-
   - `risk_factor_for_virtual_reservoir_bids::Vector{Float64}`
-
   - `purchase_discount_rate::Vector{Float64}`
 
 Example:

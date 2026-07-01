@@ -205,41 +205,28 @@ Add a Hydro Unit to the database.
 Required arguments:
 
   - `label::String`: Label of the hydro unit
-
   - `initial_volume_variation_type::Int64`
-
   - `spillage_cost::Float64`
-
   - `minimum_outflow_violation_benchmark::Float64`
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `initial_volume::Float64`: Initial volume of the hydro unit
-
   - `initial_volume_type::Int64`: Initial volume type of the hydro unit
     + `0` [Per Unit]
     + `2` [Volume] <default>
-
   - `has_commitment::Int64`: Has commitment of the hydro unit
     + `0` [No Commitment] <default>
     + `1` [Has Commitment]
-
   - `intra_period_operation::Int64`: Operation type of the hydro unit
     + `0` [Reservoir] <default>
     + `1` [Run of River]
-
   - `minimum_outflow_violation_cost::Float64`
-
   - `hydrounit_spill_to::Int64`: Spill to of the hydro unit
-
   - `hydrounit_turbine_to::Int64`: Turbine to of the hydro unit
-
   - `gaugingstation_id::Int64`: Gauging station of the hydro unit
-
   - `biddinggroup_id::Int64`: Bidding group of the hydro unit
-
   - `bus_id::Int64`: Bus of the hydro unit
 
 ---

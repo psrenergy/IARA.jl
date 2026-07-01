@@ -129,9 +129,7 @@ Add a Gauging Station to the database.
 Required arguments:
 
   - `label::String`: Label of the gauging station
-
   - `inflow_initial_state_variation_type::Int64`
-
   - `historical_inflow::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:

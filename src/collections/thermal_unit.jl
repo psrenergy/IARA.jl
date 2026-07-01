@@ -151,43 +151,29 @@ Add a Thermal Unit to the database.
 Required arguments:
 
   - `label::String`: Label of the thermal unit
-
   - `has_commitment::Int64`: Has commitment of the thermal unit
     + `0` [No Commitment] <default>
     + `1` [Has Commitment]
-
   - `shutdown_cost::Float64`: Shutdown cost of the thermal unit `[\$/event]` <default `0.0`>
   - `commitment_initial_condition::Int64`: Commitment initial condition of the thermal unit
     + `0` [Off]
     + `1` [On]
     + `2` [Undefined] <default>
-
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
   - `max_ramp_up::Float64`: Max ramp up of the thermal unit `[MW/h]`
-
   - `max_ramp_down::Float64`: Max ramp down of the thermal unit `[MW/h]`
-
   - `min_uptime::Float64`: Min uptime of the thermal unit `[h]`
-
   - `max_uptime::Float64`: Max uptime of the thermal unit `[h]`
-
   - `min_downtime::Float64`: Min downtime of the thermal unit `[h]`
-
   - `max_startups::Int64`: Max startups of the thermal unit
-
   - `max_shutdowns::Int64`: Max shutdowns of the thermal unit
-
   - `generation_initial_condition::Float64`: Generation initial condition for ramping of the thermal unit `[MW]`
-
   - `uptime_initial_condition::Float64`: Uptime initial condition of the thermal unit `[h]`
-
   - `downtime_initial_condition::Float64`: Downtime initial condition of the thermal unit `[h]`
-
   - `biddinggroup_id::Int64`: Bidding group of the thermal unit
-
   - `bus_id::Int64`: Bus of the thermal unit
 
 ---

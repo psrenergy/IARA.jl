@@ -103,7 +103,7 @@ Optional arguments:
 
   - `zone_to::Int64`: Zone to of the interconnection
 
-* * *
+---
 
 **Time Series Attributes**
 

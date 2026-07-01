@@ -128,7 +128,7 @@ Optional arguments:
 
   - `bus_id::Int64`: Bus of the renewable unit
 
-* * *
+---
 
 **Time Series Attributes**
 

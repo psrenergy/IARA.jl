@@ -190,7 +190,7 @@ Optional arguments:
 
   - `bus_id::Int64`: Bus of the thermal unit
 
-* * *
+---
 
 **Time Series Attributes**
 

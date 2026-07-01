@@ -137,7 +137,7 @@ Optional arguments:
 
   - `bus_id::Int64`: Bus of the demand unit
 
-* * *
+---
 
 **Time Series Attributes**
 

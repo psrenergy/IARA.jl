@@ -103,7 +103,7 @@ Optional arguments:
 
   - `bus_to::Int64`: Bus to of the DC line
 
-* * *
+---
 
 **Time Series Attributes**
 

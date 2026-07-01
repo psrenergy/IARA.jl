@@ -123,7 +123,7 @@ Optional arguments:
 
   - `bus_id::Int64`: Bus of the battery unit
 
-* * *
+---
 
 **Time Series Attributes**
 

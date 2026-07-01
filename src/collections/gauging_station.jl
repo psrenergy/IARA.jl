@@ -138,7 +138,7 @@ Optional arguments:
 
   - `gaugingstation_downstream::Int64`: Gauging station downstream of the gauging station
 
-* * *
+---
 
 **Time Series Attributes**
 

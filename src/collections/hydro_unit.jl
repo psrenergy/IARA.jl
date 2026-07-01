@@ -242,7 +242,7 @@ Optional arguments:
 
   - `bus_id::Int64`: Bus of the hydro unit
 
-* * *
+---
 
 **Time Series Attributes**
 

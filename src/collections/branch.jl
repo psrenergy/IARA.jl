@@ -113,7 +113,7 @@ Optional arguments:
 
   - `bus_to::Int64`: Bus to of the branch
 
-* * *
+---
 
 **Time Series Attributes**
 

@@ -28,6 +28,11 @@ function main(args::Vector{String})
         constant = false
         default = false
         eval_arg = true
+        "--docker_only"
+        nargs = '?'
+        constant = false
+        default = false
+        eval_arg = true
     end
     #! format: on
     parsed_args = parse_args(args, s)
@@ -42,6 +47,23 @@ function main(args::Vector{String})
         development_stage = parsed_args["development_stage"],
         version_suffix = parsed_args["version_suffix"],
     )
+
+    # Only (re)build and push the container image from the already-published
+    # artifact, skipping the compile/publish steps.
+    if parsed_args["docker_only"]
+        CD.initialize_aws()
+        CD.deploy_to_ghcr(;
+            configuration = configuration,
+            dockerfile = joinpath(package_path, "docker", "Dockerfile"),
+            build_context = joinpath(package_path, "docker"),
+            image_name = "iara",
+            tags = ["latest"],
+            inject_url_build_arg = "IARA_URL",
+            github_actor = "psrenergy",
+            github_token = PERSONAL_ACCESS_TOKEN,
+        )
+        return 0
+    end
 
     stable_release = is_stable_release(configuration)
 
@@ -76,19 +98,6 @@ function main(args::Vector{String})
         path = binary_path,
         overwrite = parsed_args["overwrite"],
     )
-
-    if Sys.islinux()
-        CD.deploy_to_ghcr(;
-            configuration = configuration,
-            dockerfile = joinpath(package_path, "docker", "Dockerfile"),
-            build_context = joinpath(package_path, "docker"),
-            image_name = "iara",
-            tags = ["latest"],
-            build_args = Dict("IARA_URL" => url),
-            github_actor = "psrenergy",
-            github_token = PERSONAL_ACCESS_TOKEN,
-        )
-    end
 
     notify_slack_channel(;
         configuration = configuration,

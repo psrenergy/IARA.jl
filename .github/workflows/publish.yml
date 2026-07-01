@@ -115,5 +115,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          exec julia +1.11.7 --project=./compile ./compile/deploy_platform_image.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}"
-          
+          exec julia +1.11.7 --project=./compile ./compile/deploy_to_ghcr.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}"

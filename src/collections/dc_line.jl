@@ -91,7 +91,30 @@ end
 
 Add a DC Line to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "DCLine"))
+Required arguments:
+
+  - `label::String`: Label of the DC line
+
+  - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
+
+Optional arguments:
+
+  - `bus_from::Int64`: Bus from of the DC line
+
+  - `bus_to::Int64`: Bus to of the DC line
+
+* * *
+
+**Time Series Attributes**
+
+Group `parameters`:
+
+  - `date_time::Vector{DateTime}`: date and time of the time series
+  - `existing::Vector{Int64}`: Existing of the DC line
+    + `0` [Does Not Exist]
+    + `1` [Exists]
+  - `capacity_to::Vector{Float64}`: Capacity to of the DC line `[MW]`
+  - `capacity_from::Vector{Float64}`: Capacity from of the DC line `[MW]`
 
 Example:
 ```julia

@@ -97,7 +97,34 @@ end
 
 Add a Branch to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Branch"))
+Required arguments:
+
+  - `label::String`: Label of the branch
+
+  - `line_model::Int64`: Line model of the branch
+    + `0` [AC] <default>
+    + `1` [DC]
+
+  - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
+
+Optional arguments:
+
+  - `bus_from::Int64`: Bus from of the branch
+
+  - `bus_to::Int64`: Bus to of the branch
+
+* * *
+
+**Time Series Attributes**
+
+Group `parameters`:
+
+  - `date_time::Vector{DateTime}`: date and time of the time series
+  - `existing::Vector{Int64}`: Existing of the branch
+    + `0` [Does Not Exist]
+    + `1` [Exists]
+  - `capacity::Vector{Float64}`: Capacity of the branch `[MW]`
+  - `reactance::Vector{Float64}`: Reactance of the branch `[p.u.]`
 
 !!! note "Note"
     - `reactance` is ignored if the `line_model` is set to `DC`.

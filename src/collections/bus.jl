@@ -59,7 +59,17 @@ end
 
 Add a bus to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Bus"))
+Required arguments:
+
+  - `label::String`: Label of the bus
+
+Optional arguments:
+
+  - `latitude::Float64`: Latitude of the bus
+
+  - `longitude::Float64`: Longitude of the bus
+
+  - `zone_id::Int64`: Zone of the bus
 
 Example:
 ```julia

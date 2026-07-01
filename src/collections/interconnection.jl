@@ -91,7 +91,30 @@ end
 
 Add a Interconnection to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Interconnection"))
+Required arguments:
+
+  - `label::String`: Label of the interconnection
+
+  - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
+
+Optional arguments:
+
+  - `zone_from::Int64`: Zone from of the interconnection
+
+  - `zone_to::Int64`: Zone to of the interconnection
+
+* * *
+
+**Time Series Attributes**
+
+Group `parameters`:
+
+  - `date_time::Vector{DateTime}`: date and time of the time series
+  - `existing::Vector{Int64}`: Existing of the interconnection
+    + `0` [Does Not Exist]
+    + `1` [Exists]
+  - `capacity_to::Vector{Float64}`: Capacity to of the interconnection `[MW]`
+  - `capacity_from::Vector{Float64}`: Capacity from of the interconnection `[MW]`
 
 Example:
 ```julia

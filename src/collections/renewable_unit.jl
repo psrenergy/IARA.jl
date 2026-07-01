@@ -114,7 +114,28 @@ end
 
 Add a Renewable Unit to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "RenewableUnit"))
+Required arguments:
+
+- `label::String`: Label of the renewable unit
+- `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
+
+Optional arguments:
+
+- `technology_type::Int64`: Technology type of the renewable unit
+- `biddinggroup_id::Int64`: Bidding group of the renewable unit
+- `bus_id::Int64`: Bus of the renewable unit
+
+Time Series Attributes
+
+Group parameters:
+
+- `date_time::Vector{DateTime}`: date and time of the time series
+- `existing::Vector{Int64}`: Existing of the renewable unit
+  - 0 [Does Not Exist]
+  - 1 [Exists]
+- `max_generation::Vector{Float64}`: Max generation of the renewable unit [MW]
+- `om_cost::Vector{Float64}`: O&M cost of the renewable unit [$/MWh]
+- `curtailment_cost::Vector{Float64}`: Curtailment cost of the renewable unit [$/MWh]
 
 Example:
 ```julia

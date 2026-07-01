@@ -202,7 +202,49 @@ end
     
 Add a Hydro Unit to the database.
     
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "HydroUnit"))
+Required arguments:
+
+- `label::String`: Label of the hydro unit
+- `initial_volume_variation_type::Int64`
+- `spillage_cost::Float64`
+- `minimum_outflow_violation_benchmark::Float64`
+- `parameters::DataFrames.DataFrame`: A dataframe containing time series attributes (described below).
+
+Optional arguments:
+
+- `initial_volume::Float64`: Initial volume of the hydro unit
+- `initial_volume_type::Int64`: Initial volume type of the hydro unit
+  - 0 [Per Unit]
+  - 2 [Volume] <default>
+- `has_commitment::Int64`: Has commitment of the hydro unit
+  - 0 [No Commitment] <default>
+  - 1 [Has Commitment]
+- `intra_period_operation::Int64`: Operation type of the hydro unit
+  - 0 [Reservoir] <default>
+  - 1 [Run of River]
+- `minimum_outflow_violation_cost::Float64`
+- `hydrounit_spill_to::Int64`: Spill to of the hydro unit
+- `hydrounit_turbine_to::Int64`: Turbine to of the hydro unit
+- `gaugingstation_id::Int64`: Gauging station of the hydro unit
+- `biddinggroup_id::Int64`: Bidding group of the hydro unit
+- `bus_id::Int64`: Bus of the hydro unit
+
+Time Series Attributes
+
+Group parameters:
+
+- `date_time::Vector{DateTime}`: date and time of the time series
+- `existing::Vector{Int64}`: Existing of the hydro unit
+  - 0 [Does Not Exist]
+  - 1 [Exists]
+- `production_factor::Vector{Float64}`: Production factor of the hydro unit [MW/m³/s]
+- `min_generation::Vector{Float64}`: Min generation of the hydro unit [MW]
+- `max_generation::Vector{Float64}`: Max generation of the hydro unit [MW]
+- `max_turbining::Vector{Float64}`: Max turbining of the hydro unit [m³/s]
+- `min_volume::Vector{Float64}`: Min volume of the hydro unit [hm³]
+- `max_volume::Vector{Float64}`: Max volume of the hydro unit [hm³]
+- `min_outflow::Vector{Float64}`: Min outflow of the hydro unit [m³/s]
+- `om_cost::Vector{Float64}`: O&M cost of the hydro unit [$/MWh]
 
 !!! note "Note"
     - `bidding_group_id` is required if the run mode is not set to `TRAIN_MIN_COST`.

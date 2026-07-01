@@ -50,7 +50,9 @@ end
 
 Add a zone to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Zone"))
+Required arguments:
+
+- `label::String`: Label of the zone
 
 Example:
 ```julia

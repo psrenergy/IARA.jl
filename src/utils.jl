@@ -296,7 +296,6 @@ Each collection in the database can be linked to different time series files.
 
 The possible files for each collection are:
 
-$(PSRDatabaseSQLite.time_series_files_docstrings(model_directory()))
 
 For more information about these files, please refer to the [Input Files](https://psrenergy.github.io/IARA.jl/dev/input_files.html) documentation.
 

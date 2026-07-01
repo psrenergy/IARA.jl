@@ -54,7 +54,6 @@ end
 
 `create_study!` creates a new study and returns a `PSRClassesInterface.PSRDatabaseSQLite.DatabaseSQLite` object.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Configuration"))
 """
 function create_study!(case_path::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)

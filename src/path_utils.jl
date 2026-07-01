@@ -13,17 +13,3 @@ function migrations_directory()
     return path
 end
 
-"""
-    model_directory()
-
-Return the path to the model directory.
-"""
-function model_directory()
-    path = if is_compiled()
-        joinpath(Sys.BINDIR, "database")
-    else
-        joinpath(dirname(@__DIR__), "database")
-    end
-    @assert isdir(path)
-    return path
-end

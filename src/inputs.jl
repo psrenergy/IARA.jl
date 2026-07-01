@@ -54,7 +54,102 @@ end
 
 `create_study!` creates a new study and returns a `PSRClassesInterface.PSRDatabaseSQLite.DatabaseSQLite` object.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "Configuration"))
+Required arguments:
+
+  - `label::String`: Label of the configuration <default `"Configuration"`>
+  - `number_of_subscenarios::Int64`: Number of subscenarios in the configuration <default `1`>
+  - `initial_date_time::String`: Initial date time of the configuration `[yyyy-MM-dd HH:mm]` <default `"2024-01-01"`>
+  - `time_series_step::Int64`: Time series step of the configuration <default `0`>
+  - `cycle_discount_rate::Float64`: Cycle discount rate of the configuration
+  - `cycle_duration_in_hours::Float64`: Cycle duration in hours of the configuration <default `8760.0`>
+  - `ex_post_physical_hydro_representation::Int64`: Ex post physical hydro representation of the configuration <default `0`>
+  - `clearing_integer_variables::Int64`: Clearing integer variables of the configuration <default `0`>
+  - `settlement_type::Int64`: Settlement type of the configuration <default `0`>
+  - `make_whole_payments::Int64`: Make whole payments of the configuration <default `0`>
+  - `number_of_periods::Int64`: Number of periods in the configuration <default `1`>
+  - `number_of_scenarios::Int64`: Number of scenarios in the configuration <default `1`>
+  - `number_of_subperiods::Int64`: Number of subperiods in the configuration <default `1`>
+  - `demand_deficit_cost::Float64`: Demand deficit cost of the configuration <default `1.0e6`>
+  - `policy_graph_type::Int64`: Policy graph type of the configuration
+    + `0` [Cyclic With Null Root] <default>
+    + `1` [Linear]
+    + `2` [Cyclic With Season Root]
+  - `market_clearing_tiebreaker_weight_for_om_costs::Float64`: Market clearing tiebreaker weight of the configuration <default `0.001`>
+  - `bid_price_limit_markup_non_justified_profile::Float64`
+  - `bid_price_limit_markup_justified_profile::Float64`
+  - `bid_price_limit_markup_non_justified_independent::Float64`
+  - `bid_price_limit_markup_justified_independent::Float64`
+  - `bid_price_limit_high_reference::Float64`
+  - `reference_curve_number_of_segments::Int64`
+  - `reference_curve_final_segment_price_markup::Float64`
+  - `max_iteration_nash_equilibrium::Int64`
+  - `bid_price_validation::Int64`
+  - `bid_processing::Int64`
+  - `max_rev_equilibrium_bus_aggregation_type::Int64`
+  - `max_rev_equilibrium_bid_initialization::Int64`
+  - `inflow_model::Int64`
+  - `inflow_scenarios_files::Int64`: Inflow scenarios files of the configuration
+    + `0` [PAR(p)]
+    + `1` [Only Ex Ante]
+    + `2` [Only Ex Post] <default>
+    + `3` [Ex Ante And Ex Post]
+  - `demand_scenarios_files::Int64`: Demand scenarios files of the configuration
+    + `0` [PAR(p)]
+    + `1` [Only Ex Ante]
+    + `2` [Only Ex Post] <default>
+    + `3` [Ex Ante And Ex Post]
+  - `renewable_scenarios_files::Int64`: Renewable scenarios files of the configuration
+    + `0` [PAR(p)]
+    + `1` [Only Ex Ante]
+    + `2` [Only Ex Post] <default>
+    + `3` [Ex Ante And Ex Post]
+  - `market_clearing_tiebreaker_weight_for_fcf::Float64`
+  - `virtual_reservoir_residual_revenue_split_type::Int64`
+  - `cvar_alpha::Float64`
+  - `cvar_lambda::Float64`
+
+Optional arguments:
+
+  - `number_of_nodes::Int64`: Number of nodes in the configuration
+  - `train_mincost_iteration_limit::Int64`
+  - `hydro_balance_subperiod_resolution::Int64`: Hydro balance subperiod resolution of the configuration <default `0`>
+  - `thermal_unit_intra_period_operation::Int64`: Loop subperiods for thermal constraints of the configuration
+  - `aggregate_buses_for_strategic_bidding::Int64`: Aggregate buses for strategic bidding of the configuration
+  - `parp_max_lags::Int64`: PARP max lags of the configuration <default `6`>
+  - `construction_type_ex_ante_physical::Int64`: Construction type ex ante physical of the configuration <default `-1`>
+  - `construction_type_ex_ante_commercial::Int64`: Construction type ex ante commercial of the configuration <default `-1`>
+  - `construction_type_ex_post_physical::Int64`: Construction type ex post physical of the configuration <default `-1`>
+  - `construction_type_ex_post_commercial::Int64`: Construction type ex post commercial of the configuration <default `-1`>
+  - `integer_variable_representation_ex_ante_physical::Int64`: Integer variable representation ex ante physical of the configuration <default `0`>
+  - `integer_variable_representation_ex_ante_commercial::Int64`: Integer variable representation ex ante commercial of the configuration <default `0`>
+  - `integer_variable_representation_ex_post_physical::Int64`: Integer variable representation ex post physical of the configuration <default `0`>
+  - `integer_variable_representation_ex_post_commercial::Int64`: Integer variable representation ex post commercial of the configuration <default `0`>
+  - `spot_price_floor::Float64`: Spot price floor of the configuration
+  - `spot_price_cap::Float64`: Spot price cap of the configuration
+  - `virtual_reservoir_correspondence_type::Int64`: Virtual reservoir correspondence type of the configuration <default `1`>
+  - `integer_variable_representation_mincost::Int64`: Integer variable representation min cost of the configuration <default `0`>
+  - `network_representation_mincost::Int64`: Network representation min cost of the configuration <default `0`>
+  - `network_representation_ex_ante_physical::Int64`: Network representation ex ante physical of the configuration
+    + `0` [Nodal] <default>
+    + `1` [Zonal]
+  - `network_representation_ex_ante_commercial::Int64`: Network representation ex ante commercial of the configuration
+    + `0` [Nodal] <default>
+    + `1` [Zonal]
+  - `network_representation_ex_post_physical::Int64`: Network representation ex post physical of the configuration
+    + `0` [Nodal] <default>
+    + `1` [Zonal]
+  - `network_representation_ex_post_commercial::Int64`: Network representation ex post commercial of the configuration
+    + `0` [Nodal] <default>
+    + `1` [Zonal]
+  - `language::String`
+  - `train_mincost_time_limit_sec::Int64`
+  - `bid_price_limit_low_reference::Float64`
+  - `supply_function_equilibrium_extra_bid_quantity::Float64`
+  - `supply_function_equilibrium_tolerance::Float64`
+  - `supply_function_equilibrium_max_iterations::Int64`
+  - `supply_function_equilibrium_max_cost_multiplier::Float64`
+  - `subperiod_duration_in_hours::Vector{Float64}`: Subperiod duration in hours of the configuration
+  - `expected_number_of_repeats_per_node::Vector{Float64}`:
 """
 function create_study!(case_path::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)

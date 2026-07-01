@@ -84,6 +84,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: psrenergy/setup-git-token@v1
         with:

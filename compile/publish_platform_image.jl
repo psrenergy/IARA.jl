@@ -1,14 +1,6 @@
 import Pkg
 Pkg.activate(@__DIR__)
-
-for s in 1:10
-    try
-        Pkg.instantiate()
-        break
-    catch e
-        s == 10 ? rethrow(e) : sleep(s)
-    end
-end
+Pkg.instantiate()
 
 using ArgParse
 using CD

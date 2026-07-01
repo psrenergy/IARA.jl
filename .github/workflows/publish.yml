@@ -85,8 +85,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: psrenergy/setup-git-token@v1
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
       - name: Publish platform image to ghcr.io
         env:
+          JULIA_PKG_USE_CLI_GIT: "true"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}

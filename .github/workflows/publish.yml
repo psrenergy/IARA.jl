@@ -102,7 +102,6 @@ jobs:
     needs: [build-publish-windows, build-publish-linux]
     if: always() && (needs.build-publish-linux.result == 'success' || github.event.inputs.docker_only == 'true')
     permissions:
-      id-token: write
       contents: read
       packages: write
     steps:
@@ -110,12 +109,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: psrenergy/publish-docker-image@v1.0.1
+      - uses: psrenergy/setup-git-token@v1
         with:
-          registry: ghcr
-          image_name: iara
-          development_stage: ${{ github.event.inputs.development_stage }}
-          version_suffix: ${{ github.event.inputs.version_suffix }}
-          personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
-          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Build and publish container to ghcr.io
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          exec julia +1.11.7 --project=./compile ./compile/docker.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}"

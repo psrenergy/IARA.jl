@@ -15,8 +15,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 COPY IARA_ecs.sh .
 
-ARG MODEL_URL
-ARG IARA_URL=${MODEL_URL}
+ARG IARA_URL
 ARG COMMIT_HASH
 ARG VERSION
 

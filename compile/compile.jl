@@ -3,7 +3,7 @@ Pkg.activate(@__DIR__)
 Pkg.instantiate()
 
 using ArgParse
-using PSRContinuousDeployment
+using CD
 
 function main(args::Vector{String})
     s = ArgParseSettings()
@@ -35,7 +35,7 @@ function main(args::Vector{String})
         build_docs(configuration)
     end
 
-    PSRContinuousDeployment.compile(
+    CD.compile(
         configuration;
         executables = [
             "IARA" => "julia_main",

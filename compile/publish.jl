@@ -3,7 +3,7 @@ Pkg.activate(@__DIR__)
 Pkg.instantiate()
 
 using ArgParse
-using PSRContinuousDeployment
+using CD
 
 const PSRHUB_VERSION = "1.0.0-alpha.10"
 const SLACK_CHANNEL = "C0893DVKPDK"

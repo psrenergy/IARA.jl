@@ -1,6 +1,7 @@
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
-PSRContinuousDeployment = "f0087d4c-ff99-426e-93c9-09c1a88911f9"
+CD = "f0087d4c-ff99-426e-93c9-09c1a88911f9"
 
-[sources.PSRContinuousDeployment]
-url = "https://github.com/psrenergy/PSRContinuousDeployment.jl"
+[sources.CD]
+url = "https://github.com/psrenergy/CD.jl"
+rev = "pr/add-publish-docker-image"

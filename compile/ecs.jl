@@ -11,7 +11,7 @@ for s in 1:10
 end
 
 using ArgParse
-using PSRContinuousDeployment
+using CD
 
 function main(args::Vector{String})
     #! format: off

@@ -32,15 +32,10 @@ on:
         required: true
         type: boolean
         default: false
-      docker_only:
-        description: 'Skip builds and only publish Docker image'
-        required: true
-        type: boolean
-        default: false
 
 jobs:
   build-publish-windows:
-    if: github.event.inputs.windows == 'true' && github.event.inputs.docker_only == 'false'
+    if: github.event.inputs.windows == 'true'
     name: Build and publish windows
     runs-on: [self-hosted, linux]
     steps:
@@ -58,7 +53,7 @@ jobs:
           exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os windows
 
   build-publish-linux:
-    if: github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false'
+    if: github.event.inputs.linux == 'true'
     name: Build and publish linux
     runs-on: [self-hosted, linux]
     steps:
@@ -95,29 +90,3 @@ jobs:
         with:
           tag: v${{ steps.project_toml.outputs.value }}
           generateReleaseNotes: true
-
-  docker-publish:
-    name: Build and publish container to ghcr.io
-    runs-on: [self-hosted, linux]
-    needs: [build-publish-windows, build-publish-linux]
-    if: always() && (needs.build-publish-linux.result == 'success' || github.event.inputs.docker_only == 'true')
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: psrenergy/setup-git-token@v1
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-      - name: Build and publish container to ghcr.io
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          exec julia +1.11.7 --project=./compile ./compile/docker.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}"

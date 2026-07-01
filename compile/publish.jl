@@ -77,6 +77,19 @@ function main(args::Vector{String})
         overwrite = parsed_args["overwrite"],
     )
 
+    if Sys.islinux()
+        CD.deploy_to_ghcr(;
+            configuration = configuration,
+            dockerfile = joinpath(package_path, "docker", "Dockerfile"),
+            build_context = joinpath(package_path, "docker"),
+            image_name = "iara",
+            tags = ["latest"],
+            build_args = Dict("IARA_URL" => url),
+            github_actor = "psrenergy",
+            github_token = PERSONAL_ACCESS_TOKEN,
+        )
+    end
+
     notify_slack_channel(;
         configuration = configuration,
         slack_token = SLACK_TOKEN,

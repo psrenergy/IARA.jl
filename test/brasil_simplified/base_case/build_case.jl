@@ -438,8 +438,6 @@ for (bus_idx, bus_number_of_thermal_units) in enumerate(number_of_thermal_units)
                 om_cost = [thermal_unit_om_cost[bus_idx][t]],
             ),
             has_commitment = 0,
-            max_ramp_up = 0.0,
-            max_ramp_down = 0.0,
             min_uptime = 0.0,
             max_uptime = 0.0,
             min_downtime = 0.0,

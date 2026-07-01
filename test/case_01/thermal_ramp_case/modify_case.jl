@@ -26,4 +26,34 @@ IARA.add_thermal_unit!(db;
     bus_id = "bus_1",
 )
 
+IARA.add_thermal_unit!(db;
+    label = "ter_3",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
+        min_generation = [0.0],
+        max_generation = [0.5],
+        om_cost = [2.5],
+    ),
+    has_commitment = 0,
+    max_ramp_up = 0.2 / 60,
+    generation_initial_condition = 0.0,
+    bus_id = "bus_1",
+)
+
+IARA.add_thermal_unit!(db;
+    label = "ter_4",
+    parameters = DataFrame(;
+        date_time = [DateTime(0)],
+        existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
+        min_generation = [0.0],
+        max_generation = [0.5],
+        om_cost = [3.0],
+    ),
+    has_commitment = 0,
+    max_ramp_down = 0.2 / 60,
+    generation_initial_condition = 0.0,
+    bus_id = "bus_1",
+)
+
 IARA.close_study!(db)

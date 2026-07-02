@@ -1,7 +1,5 @@
 import Pkg
 Pkg.activate(@__DIR__)
-Pkg.instantiate()
-
 
 for s in 1:10
     try

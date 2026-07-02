@@ -113,6 +113,9 @@ function add_season_sample_dimensions_to_dir(
             continue
         end
         full_base = joinpath(dir, base)
+        if !isfile(full_base * ".csv") && !isfile(full_base * ".quiv")
+            continue
+        end
         add_season_sample_dimensions(
             full_base;
             period_season_map_file = period_season_map_file,

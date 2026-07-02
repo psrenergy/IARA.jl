@@ -49,4 +49,4 @@ function main(args::Vector{String})
     )
 end
 
-main(ARGS)
+exit(main(ARGS))

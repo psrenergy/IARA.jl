@@ -96,24 +96,26 @@ jobs:
           tag: v${{ steps.project_toml.outputs.value }}
           generateReleaseNotes: true
 
-  docker-publish:
-    name: Build and publish container to ghcr.io
-    runs-on: [self-hosted, linux]
-    needs: [build-publish-windows, build-publish-linux]
+  publish-to-ghcr:
+    name: Publish to GitHub Container Registry
+    runs-on: [self-hosted, windows]
+    needs: [build-publish-linux]
     if: always() && (needs.build-publish-linux.result == 'success' || github.event.inputs.docker_only == 'true')
-    permissions:
-      contents: read
-      packages: write
+    outputs:
+      version_tag: ${{ steps.deploy_data.outputs.version_tag }}
+      aws_url: ${{ steps.deploy_data.outputs.aws_url }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Deploy platform image
+      - name: Retrieve deployment data
+        id: deploy_data
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          exec julia +1.11.7 --project=./compile ./compile/deploy_to_ghcr.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}"
+          $developmentStage = "${{ github.event.inputs.development_stage }}"
+          $versionSuffix = "${{ github.event.inputs.version_suffix }}"
+          .\compile\deploy_to_ghcr.bat --development_stage "$developmentStage" --version_suffix "$versionSuffix" 2>&1
+          echo "Image published to ghcr.io/psrenergy/iara:latest"

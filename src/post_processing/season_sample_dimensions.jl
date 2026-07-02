@@ -94,3 +94,30 @@ function add_season_sample_dimensions(
 
     return destination_file
 end
+
+"""
+    add_season_sample_dimensions_to_dir(dir; period_season_map_file, destination_dir)
+
+Process all Quiver output files in `dir` by calling `add_season_sample_dimensions` on each
+TOML file found (excluding `period_season_map`).
+"""
+function add_season_sample_dimensions_to_dir(
+    dir::String;
+    period_season_map_file::String = joinpath(dir, "period_season_map"),
+    destination_dir::String = dir * "_with_season_sample",
+)
+    mkpath(destination_dir)
+    for file in readdir(dir; join = false)
+        base, ext = splitext(file)
+        if ext != ".toml" || base == "period_season_map"
+            continue
+        end
+        full_base = joinpath(dir, base)
+        add_season_sample_dimensions(
+            full_base;
+            period_season_map_file = period_season_map_file,
+            destination_file = joinpath(destination_dir, base * "_with_season"),
+        )
+    end
+    return nothing
+end

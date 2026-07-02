@@ -28,21 +28,15 @@ end
 
 IARA.train_min_cost(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
 
+IARA.add_season_sample_dimensions(
+    joinpath(PATH, "outputs", "hydro_generation");
+    destination_file = joinpath(PATH, "outputs", "hydro_generation_with_season"),
+)
+
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else
     Main.compare_outputs(PATH)
 end
-
-# Post-process a cyclic-run output by adding `season` and `sample` as dimensions, writing to
-# `season_sample_output/`.
-season_output_dir = joinpath(PATH, "season_sample_output")
-mkpath(season_output_dir)
-base = IARA.add_season_sample_dimensions(
-    joinpath(PATH, "outputs", "hydro_generation");
-    destination_file = joinpath(season_output_dir, "hydro_generation_with_season"),
-)
-_, metadata = IARA.read_timeseries_file(base * ".csv")
-@test metadata.dimensions == [:period, :scenario, :season, :sample, :subperiod]
 
 end

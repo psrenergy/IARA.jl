@@ -948,29 +948,32 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                 sum_of_bids_for_current_markup = 0.0
                 while sum_of_bids_for_current_markup < maximum_bid_considering_markup &&
                     !isapprox(
-                        sum_of_bids_for_current_markup, maximum_bid_considering_markup)
+                        sum_of_bids_for_current_markup, maximum_bid_considering_markup; atol = DEFAULT_TOLERANCE)
                     maximum_bid_considering_reference =
                         sum(ao_reference_quantity_bid[1:current_reference_segment]) - sum_of_ao_selling_bids
-                    if maximum_bid_considering_reference == 0
-                        # This is possibly redundant with the end of this while loop
-                        current_reference_segment += 1
-                        continue
+
+                    # Only define a bid when the current reference segment still has room to sell
+                    if maximum_bid_considering_reference > DEFAULT_TOLERANCE
+                        seg += 1
+                        bid = min(
+                            maximum_bid_considering_markup - sum_of_bids_for_current_markup,
+                            maximum_bid_considering_reference,
+                        )
+                        quantity_bids[vr, ao, seg] = bid
+                        price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment] * (1 + markups[markup_index])
+                        no_markup_price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment]
+
+                        sum_of_bids_for_current_markup += bid
+                        sum_of_ao_selling_bids += bid
+                        current_account -= bid
                     end
 
-                    seg += 1
-                    bid = min(
-                        maximum_bid_considering_markup - sum_of_bids_for_current_markup,
-                        maximum_bid_considering_reference,
+                    # Advance to the next reference segment once the current one is fully consumed
+                    if isapprox(
+                        sum_of_ao_selling_bids,
+                        sum(ao_reference_quantity_bid[1:current_reference_segment]);
+                        atol = DEFAULT_TOLERANCE,
                     )
-                    quantity_bids[vr, ao, seg] = bid
-                    price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment] * (1 + markups[markup_index])
-                    no_markup_price_bids[vr, ao, seg] = vr_price_bid[current_reference_segment]
-
-                    sum_of_bids_for_current_markup += bid
-                    sum_of_ao_selling_bids += bid
-                    current_account -= bid
-
-                    if sum_of_ao_selling_bids >= sum(ao_reference_quantity_bid[1:current_reference_segment])
                         current_reference_segment += 1
                         if current_reference_segment > length(ao_reference_quantity_bid)
                             # We have reached the end of the reference curve, so we stop defining bids for this asset owner

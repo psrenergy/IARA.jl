@@ -51,12 +51,20 @@ function main(args::Vector{String})
         16
     end
 
-    return start_ecs_task_and_watch(;
+    start_ecs_task_and_watch(;
         configuration = configuration,
         os = os,
         memory_in_gb = memory_in_gb,
         overwrite = parsed_args["overwrite"],
     )
+
+    CD.deploy_to_ghcr(;
+        configuration = configuration,
+        dockerfile = joinpath(package_path, "docker", "Dockerfile"),
+        build_context = joinpath(package_path, "docker"),
+        inject_url_build_arg = "IARA_URL",
+    )
+    return 0
 end
 
 exit(main(ARGS))

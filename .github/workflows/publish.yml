@@ -58,7 +58,7 @@ jobs:
           exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os windows
 
   build-publish-linux:
-    if: github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false'
+    if: (github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false') || github.event.inputs.docker_only == 'true'
     name: Build and publish linux
     runs-on: [self-hosted, linux]
     steps:
@@ -73,7 +73,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
-          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os linux
+          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os linux --docker_only "${{ github.event.inputs.docker_only }}"
 
   post-publish:
     if: github.event.inputs.development_stage == 'Stable release'  
@@ -95,28 +95,3 @@ jobs:
         with:
           tag: v${{ steps.project_toml.outputs.value }}
           generateReleaseNotes: true
-
-  publish-to-ghcr:
-    name: Publish to GitHub Container Registry
-    runs-on: [self-hosted, windows]
-    needs: [build-publish-linux]
-    if: always() && (needs.build-publish-linux.result == 'success' || github.event.inputs.docker_only == 'true')
-    timeout-minutes: 60
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Build and publish Docker image to ghcr.io
-        id: deploy_data
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          julia +1.11.7 --project=./compile ./compile/deploy_to_ghcr.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}"

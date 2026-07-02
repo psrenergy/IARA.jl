@@ -32,6 +32,11 @@ function main(args::Vector{String})
         eval_arg = true
         "--os"
         arg_type = String
+        "--docker_only"
+        nargs = '?'
+        constant = false
+        default = false
+        eval_arg = true
     end
     #! format: on
     parsed_args = parse_args(args, s)
@@ -45,18 +50,21 @@ function main(args::Vector{String})
     )
 
     os = parsed_args["os"]
-    memory_in_gb = if os == "linux"
-        30
-    else
-        16
-    end
 
-    start_ecs_task_and_watch(;
-        configuration = configuration,
-        os = os,
-        memory_in_gb = memory_in_gb,
-        overwrite = parsed_args["overwrite"],
-    )
+    if !parsed_args["docker_only"]
+        memory_in_gb = if os == "linux"
+            30
+        else
+            16
+        end
+
+        start_ecs_task_and_watch(;
+            configuration = configuration,
+            os = os,
+            memory_in_gb = memory_in_gb,
+            overwrite = parsed_args["overwrite"],
+        )
+    end
 
     CD.deploy_to_ghcr(;
         configuration = configuration,

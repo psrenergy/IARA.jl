@@ -43,15 +43,23 @@ jobs:
     if: github.event.inputs.windows == 'true' && github.event.inputs.docker_only == 'false'
     name: Build and publish windows
     runs-on: [self-hosted, linux]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Configure AWS credentials (assume role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::747020361772:role/IARA.jl-actions-role
+          role-session-name: iara-publish-windows
+          aws-region: us-east-1
+
       - name: Start AWS ECS instance
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
@@ -61,15 +69,23 @@ jobs:
     if: github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false'
     name: Build and publish linux
     runs-on: [self-hosted, linux]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Configure AWS credentials (assume role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::747020361772:role/IARA.jl-actions-role
+          role-session-name: iara-publish-linux
+          aws-region: us-east-1
+
       - name: Start AWS ECS instance
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
@@ -101,6 +117,9 @@ jobs:
     runs-on: [self-hosted, windows]
     needs: [build-publish-windows, build-publish-linux]
     if: always() && (needs.build-publish-linux.result == 'success' || github.event.inputs.docker_only == 'true')
+    permissions:
+      id-token: write
+      contents: read
     outputs:
       version_tag: ${{ steps.deploy_data.outputs.version_tag }}
       aws_url: ${{ steps.deploy_data.outputs.aws_url }}
@@ -109,11 +128,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure AWS credentials (assume role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::747020361772:role/IARA.jl-actions-role
+          role-session-name: iara-retrieve-deploy-data
+          aws-region: us-east-1
+
       - name: Retrieve deployment data
         id: deploy_data
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           $developmentStage = "${{ github.event.inputs.development_stage }}"
           $versionSuffix = "${{ github.event.inputs.version_suffix }}"

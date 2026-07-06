@@ -28,6 +28,11 @@ end
 
 IARA.train_min_cost(PATH; plot_outputs = false, delete_output_folder_before_execution = true)
 
+IARA.add_season_sample_dimensions(
+    joinpath(PATH, "outputs", "hydro_generation");
+    destination_file = joinpath(PATH, "outputs", "hydro_generation_with_season"),
+)
+
 if Main.UPDATE_RESULTS
     Main.update_outputs!(PATH)
 else

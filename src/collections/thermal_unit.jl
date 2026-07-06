@@ -148,7 +148,48 @@ end
 
 Add a Thermal Unit to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "ThermalUnit"))
+Required arguments:
+
+  - `label::String`: Label of the thermal unit
+  - `has_commitment::Int64`: Has commitment of the thermal unit
+    + `0` [No Commitment] <default>
+    + `1` [Has Commitment]
+  - `shutdown_cost::Float64`: Shutdown cost of the thermal unit `[\$/event]` <default `0.0`>
+  - `commitment_initial_condition::Int64`: Commitment initial condition of the thermal unit
+    + `0` [Off]
+    + `1` [On]
+    + `2` [Undefined] <default>
+  - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
+
+Optional arguments:
+
+  - `max_ramp_up::Float64`: Max ramp up of the thermal unit `[MW/h]`
+  - `max_ramp_down::Float64`: Max ramp down of the thermal unit `[MW/h]`
+  - `min_uptime::Float64`: Min uptime of the thermal unit `[h]`
+  - `max_uptime::Float64`: Max uptime of the thermal unit `[h]`
+  - `min_downtime::Float64`: Min downtime of the thermal unit `[h]`
+  - `max_startups::Int64`: Max startups of the thermal unit
+  - `max_shutdowns::Int64`: Max shutdowns of the thermal unit
+  - `generation_initial_condition::Float64`: Generation initial condition for ramping of the thermal unit `[MW]`
+  - `uptime_initial_condition::Float64`: Uptime initial condition of the thermal unit `[h]`
+  - `downtime_initial_condition::Float64`: Downtime initial condition of the thermal unit `[h]`
+  - `biddinggroup_id::Int64`: Bidding group of the thermal unit
+  - `bus_id::Int64`: Bus of the thermal unit
+
+---
+
+**Time Series Attributes**
+
+Group `parameters`:
+
+  - `date_time::Vector{DateTime}`: date and time of the time series
+  - `existing::Vector{Int64}`: Existing of the thermal unit
+    + `0` [Does Not Exist]
+    + `1` [Exists]
+  - `startup_cost::Vector{Float64}`: Startup cost of the thermal unit `[\$/event]`
+  - `min_generation::Vector{Float64}`: Min generation of the thermal unit `[MW]`
+  - `max_generation::Vector{Float64}`: Max generation of the thermal unit `[MW]`
+  - `om_cost::Vector{Float64}`: O&M cost of the thermal unit `[\$/MWh]`
 
 !!! note "Note"
     - `biddinggroup_id` is required if `IARA.RunMode` is not set to `TRAIN_MIN_COST`.

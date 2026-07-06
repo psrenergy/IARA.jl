@@ -147,7 +147,17 @@ end
 
 Add a BiddingGroup to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "BiddingGroup"))
+Required arguments:
+
+  - `label::String`: Label of the bidding group
+  - `ex_post_adjust_mode::Int64`
+  - `fixed_cost::Float64`
+
+Optional arguments:
+
+  - `assetowner_id::Int64`: Asset owner of the bidding group
+  - `risk_factor::Vector{Float64}`: Risk factor markup of the bidding group
+  - `segment_fraction::Vector{Float64}`: Segment fraction of the bidding group
 
 Example:
 ```julia

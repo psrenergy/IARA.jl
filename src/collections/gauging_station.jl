@@ -126,7 +126,24 @@ end
 
 Add a Gauging Station to the database.
 
-$(PSRDatabaseSQLite.collection_docstring(model_directory(), "GaugingStation"))
+Required arguments:
+
+  - `label::String`: Label of the gauging station
+  - `inflow_initial_state_variation_type::Int64`
+  - `historical_inflow::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
+
+Optional arguments:
+
+  - `gaugingstation_downstream::Int64`: Gauging station downstream of the gauging station
+
+---
+
+**Time Series Attributes**
+
+Group `historical_inflow`:
+
+  - `date_time::Vector{DateTime}`: date and time of the time series
+  - `historical_inflow::Vector{Float64}`:
 
 !!! note "Note"
     - `historical_inflow` is required if `Configuration.inflow_scenarios_files` _is set to_ `FIT_PARP_MODEL_FROM_DATA`

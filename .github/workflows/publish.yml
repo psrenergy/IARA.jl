@@ -25,16 +25,16 @@ on:
         description: "Version suffix (ignored if stable)"
         type: string
         required: false
-      psrcloud:
-        description: "PSRCloud"
-        required: true
-        type: boolean
-        default: true
       overwrite:
         description: "Overwrite"
         required: true
         type: boolean
         default: false
+      docker_only:
+        description: 'Skip builds and only publish Docker image'
+        required: true
+        type: boolean
+        default: false        
 
 env:
   SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}

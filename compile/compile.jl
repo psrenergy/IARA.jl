@@ -11,8 +11,8 @@ function main(args::Vector{String})
     @add_arg_table! s begin
         "--development_stage"
         nargs = '?'
-        constant = "Stable release"
-        default = "Stable release"
+        constant = "Stable"
+        default = "Stable"
         "--version_suffix"
         nargs = '?'
         constant = ""

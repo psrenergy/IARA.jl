@@ -79,11 +79,11 @@ jobs:
 
       - name: Start AWS ECS instance
         if: inputs[matrix.os] == true
-        run: julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}" --overwrite "${{ inputs.overwrite }}" --os ${{ matrix.os }}
+        run: julia +1.11.2 --project=./compile ./compile/ecs.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}" --overwrite "${{ inputs.overwrite }}" --os ${{ matrix.os }}
 
       - name: Publish PSRCloud
         if: matrix.os == 'linux' && inputs.psrcloud == true
-        run: julia +1.11.7 --project=./compile ./compile/psrcloud.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}"
+        run: julia +1.11.2 --project=./compile ./compile/psrcloud.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}"
 
   post-publish:
     if: inputs.development_stage == 'Stable'

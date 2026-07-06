@@ -1,97 +1,114 @@
-name: publish
+name: Publish
 on:
   workflow_dispatch:
     inputs:
       windows:
-        description: 'Build windows'
+        description: "Build windows"
         required: true
         type: boolean
         default: true
       linux:
-        description: 'Build linux'
+        description: "Build linux"
         required: true
         type: boolean
         default: true
       development_stage:
-          type: choice
-          description: 'Development stage'
-          required: true
-          options:
-          - Pre alpha
+        type: choice
+        description: "Development stage"
+        required: true
+        options:
           - Alpha
           - Beta
-          - Release candidate
-          - Stable release
+          - RC
+          - Stable
       version_suffix:
-        description: 'Version suffix (ignored if stable release)'
-        default: ''
+        description: "Version suffix (ignored if stable)"
         type: string
         required: false
+      psrcloud:
+        description: "PSRCloud"
+        required: true
+        type: boolean
+        default: true
       overwrite:
-        description: 'Overwrite'
+        description: "Overwrite"
         required: true
         type: boolean
         default: false
-      docker_only:
-        description: 'Skip builds and only publish Docker image'
-        required: true
-        type: boolean
-        default: false
+
+env:
+  SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
 
 jobs:
-  build-publish-windows:
-    if: github.event.inputs.windows == 'true' && github.event.inputs.docker_only == 'false'
-    name: Build and publish windows
+  pre-publish:
+    name: Tag check
     runs-on: [self-hosted, linux]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: psrenergy/assert-tag@v1
+
+  build-publish-hub:
+    name: Build and publish Hub
+    uses: psrenergy/hub/.github/workflows/Publish-Model.yml@master
+    with:
+      model: ${{ github.event.repository.name }}
+      model_sha: ${{ github.sha }}
+    secrets: inherit
+
+  build-publish-os:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows, linux]
+    name: Build and publish ${{ matrix.os }}
+    needs: [pre-publish]
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v6
+        if: inputs[matrix.os] == true
         with:
           fetch-depth: 0
 
-      - name: Start AWS ECS instance
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-        run: |
-          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os windows
+      - uses: astral-sh/setup-uv@v7
 
-  build-publish-linux:
-    if: (github.event.inputs.linux == 'true' && github.event.inputs.docker_only == 'false') || github.event.inputs.docker_only == 'true'
-    name: Build and publish linux
-    runs-on: [self-hosted, linux]
-    steps:
-      - uses: actions/checkout@v4
+      - uses: psrenergy/setup-git-token@v1
         with:
-          fetch-depth: 0
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Start AWS ECS instance
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-        run: |
-          exec julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ github.event.inputs.development_stage }}" --version_suffix "${{ github.event.inputs.version_suffix }}" --overwrite "${{ github.event.inputs.overwrite }}" --os linux --docker_only "${{ github.event.inputs.docker_only }}"
+        if: inputs[matrix.os] == true
+        run: julia +1.11.7 --project=./compile ./compile/ecs.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}" --overwrite "${{ inputs.overwrite }}" --os ${{ matrix.os }}
+
+      - name: Publish PSRCloud
+        if: matrix.os == 'linux' && inputs.psrcloud == true
+        run: julia +1.11.7 --project=./compile ./compile/psrcloud.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}"
 
   post-publish:
-    if: github.event.inputs.development_stage == 'Stable release'  
+    if: inputs.development_stage == 'Stable'
     name: Create release
     runs-on: self-hosted
-    needs: [build-publish-windows, build-publish-linux]
+    needs:
+      - build-publish-hub
+      - build-publish-os
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - uses: psrenergy/create-tag-and-release@v1
 
-      - uses: SebRollen/toml-action@v1.2.0
-        id: project_toml
+  notify-failure:
+    name: Notify Slack on failure
+    if: failure()
+    needs:
+      - pre-publish
+      - build-publish-hub
+      - build-publish-os
+      - post-publish
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: psrenergy/notify-on-failure@v1
         with:
-          file: 'Project.toml'
-          field: 'version'
-
-      - uses: ncipollo/release-action@v1
-        with:
-          tag: v${{ steps.project_toml.outputs.value }}
-          generateReleaseNotes: true
+          token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          channel: C0B43HDAPKQ

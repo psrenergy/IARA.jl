@@ -111,4 +111,4 @@ jobs:
       - uses: psrenergy/notify-on-failure@v1
         with:
           token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-          channel: C0B43HDAPKQ
+          channel: C05FS4ZJYLU

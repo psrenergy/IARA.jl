@@ -49,11 +49,11 @@ function main(args::Vector{String})
         version_suffix = parsed_args["version_suffix"],
     )
 
-	memory_in_gb = if os == "linux"
-            30
-        else
-            16
-        end
+    memory_in_gb = if os == "linux"
+        30
+    else
+        16
+    end
 
     return start_ecs_task_and_watch(;
         configuration = configuration,

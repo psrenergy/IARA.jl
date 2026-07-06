@@ -5,7 +5,6 @@ Pkg.instantiate()
 using ArgParse
 using CD
 
-const PSRHUB_VERSION = "1.0.0-alpha.10"
 const SLACK_CHANNEL = "C0893DVKPDK"
 
 const PERSONAL_ACCESS_TOKEN = ENV["PERSONAL_ACCESS_TOKEN"]
@@ -17,8 +16,8 @@ function main(args::Vector{String})
     @add_arg_table! s begin
         "--development_stage"
         nargs = '?'
-        constant = "Stable release"
-        default = "Stable release"
+        constant = "Stable"
+        default = "Stable"
         "--version_suffix"
         nargs = '?'
         constant = ""
@@ -53,10 +52,8 @@ function main(args::Vector{String})
         bundle_psrhub(;
             configuration = configuration,
             sign = stable_release,
-            psrhub_version = PSRHUB_VERSION,
             # examples_path = examples_path,
             documentation_path = documentation_path,
-            icon_path = joinpath(assets_path, "app_icon.ico"),
         )
     end
 

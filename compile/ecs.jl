@@ -19,8 +19,8 @@ function main(args::Vector{String})
     @add_arg_table! s begin
         "--development_stage"
         nargs = '?'
-        constant = "Stable release"
-        default = "Stable release"
+        constant = "Stable"
+        default = "Stable"
         "--version_suffix"
         nargs = '?'
         constant = ""
@@ -49,30 +49,18 @@ function main(args::Vector{String})
         version_suffix = parsed_args["version_suffix"],
     )
 
-    os = parsed_args["os"]
-
-    if !parsed_args["docker_only"]
-        memory_in_gb = if os == "linux"
+	memory_in_gb = if os == "linux"
             30
         else
             16
         end
 
-        start_ecs_task_and_watch(;
-            configuration = configuration,
-            os = os,
-            memory_in_gb = memory_in_gb,
-            overwrite = parsed_args["overwrite"],
-        )
-    end
-
-    CD.deploy_to_ghcr(;
+    return start_ecs_task_and_watch(;
         configuration = configuration,
-        dockerfile = joinpath(package_path, "docker", "Dockerfile"),
-        build_context = joinpath(package_path, "docker"),
-        inject_url_build_arg = "IARA_URL",
+        os = parsed_args["os"],
+        memory_in_gb = memory,
+        overwrite = parsed_args["overwrite"],
     )
-    return 0
 end
 
 exit(main(ARGS))

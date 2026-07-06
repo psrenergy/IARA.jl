@@ -35,11 +35,11 @@ version = "0.1.10"
 
 [[deps.CD]]
 deps = ["AWS", "Dates", "Downloads", "EnumX", "Git", "HTTP", "InteractiveUtils", "JSON", "JuliaC", "PackageCompiler", "Pkg", "Random", "SHA", "SlackAPI", "TOML", "UUIDs", "p7zip_jll"]
-git-tree-sha1 = "f0ecb0bbd85ef06e98a4a9577cde592337b0c2cd"
+git-tree-sha1 = "7f3c759617304d53c31c6f677044f43f63314590"
 repo-rev = "pr/add-publish-docker-image"
 repo-url = "https://github.com/psrenergy/CD.jl"
 uuid = "f0087d4c-ff99-426e-93c9-09c1a88911f9"
-version = "0.18.0"
+version = "0.18.1"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]

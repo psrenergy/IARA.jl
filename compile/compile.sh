@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
 
-BASEPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BASE_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-julia +1.11.2 --project=$BASEPATH $BASEPATH/compile.jl "$@"
+julia +1.11.7 --project=$BASE_PATH $BASE_PATH/compile.jl "$@"

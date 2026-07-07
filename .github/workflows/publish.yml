@@ -25,6 +25,11 @@ on:
         description: "Version suffix (ignored if stable)"
         type: string
         required: false
+      psrcloud:
+        description: "PSRCloud"
+        required: true
+        type: boolean
+        default: true
       overwrite:
         description: "Overwrite"
         required: true
@@ -37,6 +42,7 @@ on:
         default: false
 
 env:
+  HUB_TOKEN: ${{ secrets.HUB_TOKEN }}
   SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
 
 jobs:
@@ -44,26 +50,10 @@ jobs:
     name: Tag check
     runs-on: [self-hosted, linux]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: psrenergy/assert-tag@v1
-
-  build-publish-hub:
-    name: Build and publish Hub
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'psrenergy',
-              repo: 'hub',
-              workflow_id: 'Publish-Model.yml',
-              ref: 'master',
-              inputs: { model: context.repo.repo, model_sha: context.sha },
-            })
 
   build-publish-os:
     strategy:
@@ -74,7 +64,7 @@ jobs:
     needs: [pre-publish]
     runs-on: [self-hosted, linux]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: inputs[matrix.os] == true
         with:
           fetch-depth: 0
@@ -97,11 +87,9 @@ jobs:
     if: inputs.development_stage == 'Stable'
     name: Create release
     runs-on: self-hosted
-    needs:
-      - build-publish-hub
-      - build-publish-os
+    needs: [build-publish-os]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: psrenergy/create-tag-and-release@v1
@@ -111,7 +99,6 @@ jobs:
     if: failure()
     needs:
       - pre-publish
-      - build-publish-hub
       - build-publish-os
       - post-publish
     runs-on: [self-hosted, linux]

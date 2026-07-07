@@ -40,6 +40,7 @@ function main(args::Vector{String})
     end
     #! format: on
     parsed_args = parse_args(args, s)
+    os = parsed_args["os"]
 
     package_path = dirname(@__DIR__)
 
@@ -49,6 +50,10 @@ function main(args::Vector{String})
         version_suffix = parsed_args["version_suffix"],
     )
 
+    if os == "windows"
+        CD.trigger_hub_async_workflow(configuration)
+    end
+
     memory_in_gb = if os == "linux"
         30
     else
@@ -57,8 +62,8 @@ function main(args::Vector{String})
 
     return start_ecs_task_and_watch(;
         configuration = configuration,
-        os = parsed_args["os"],
-        memory_in_gb = memory,
+        os = os,
+        memory_in_gb = memory_in_gb,
         overwrite = parsed_args["overwrite"],
     )
 end

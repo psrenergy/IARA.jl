@@ -51,11 +51,19 @@ jobs:
 
   build-publish-hub:
     name: Build and publish Hub
-    uses: psrenergy/hub/.github/workflows/Publish-Model.yml@master
-    with:
-      model: ${{ github.event.repository.name }}
-      model_sha: ${{ github.sha }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'psrenergy',
+              repo: 'hub',
+              workflow_id: 'Publish-Model.yml',
+              ref: 'master',
+              inputs: { model: context.repo.repo, model_sha: context.sha },
+            })
 
   build-publish-os:
     strategy:

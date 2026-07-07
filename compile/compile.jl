@@ -3,7 +3,7 @@ Pkg.activate(@__DIR__)
 Pkg.instantiate()
 
 using ArgParse
-using PSRContinuousDeployment
+using CD
 
 function main(args::Vector{String})
     s = ArgParseSettings()
@@ -11,8 +11,8 @@ function main(args::Vector{String})
     @add_arg_table! s begin
         "--development_stage"
         nargs = '?'
-        constant = "Stable release"
-        default = "Stable release"
+        constant = "Stable"
+        default = "Stable"
         "--version_suffix"
         nargs = '?'
         constant = ""
@@ -35,7 +35,7 @@ function main(args::Vector{String})
         build_docs(configuration)
     end
 
-    PSRContinuousDeployment.compile(
+    CD.compile(
         configuration;
         executables = [
             "IARA" => "julia_main",

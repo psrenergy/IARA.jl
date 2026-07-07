@@ -11,7 +11,7 @@ for s in 1:10
 end
 
 using ArgParse
-using PSRContinuousDeployment
+using CD
 
 function main(args::Vector{String})
     #! format: off
@@ -19,8 +19,8 @@ function main(args::Vector{String})
     @add_arg_table! s begin
         "--development_stage"
         nargs = '?'
-        constant = "Stable release"
-        default = "Stable release"
+        constant = "Stable"
+        default = "Stable"
         "--version_suffix"
         nargs = '?'
         constant = ""
@@ -32,9 +32,15 @@ function main(args::Vector{String})
         eval_arg = true
         "--os"
         arg_type = String
+        "--docker_only"
+        nargs = '?'
+        constant = false
+        default = false
+        eval_arg = true
     end
     #! format: on
     parsed_args = parse_args(args, s)
+    os = parsed_args["os"]
 
     package_path = dirname(@__DIR__)
 
@@ -44,7 +50,10 @@ function main(args::Vector{String})
         version_suffix = parsed_args["version_suffix"],
     )
 
-    os = parsed_args["os"]
+    if os == "windows"
+        CD.trigger_hub_async_workflow(configuration)
+    end
+
     memory_in_gb = if os == "linux"
         30
     else

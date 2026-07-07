@@ -35,7 +35,7 @@ version = "0.1.10"
 
 [[deps.CD]]
 deps = ["AWS", "Dates", "Downloads", "EnumX", "Git", "HTTP", "InteractiveUtils", "JSON", "PackageCompiler", "Pkg", "Random", "SHA", "SlackAPI", "TOML", "UUIDs", "p7zip_jll"]
-git-tree-sha1 = "62b706e5644af47e7b71aa2ea4443d051e13b40b"
+git-tree-sha1 = "9f83272341024af218398fe1065221c3919c834b"
 repo-rev = "master"
 repo-url = "https://github.com/psrenergy/CD.jl"
 uuid = "f0087d4c-ff99-426e-93c9-09c1a88911f9"

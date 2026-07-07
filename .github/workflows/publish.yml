@@ -25,11 +25,6 @@ on:
         description: "Version suffix (ignored if stable)"
         type: string
         required: false
-      psrcloud:
-        description: "PSRCloud"
-        required: true
-        type: boolean
-        default: true
       overwrite:
         description: "Overwrite"
         required: true

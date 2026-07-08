@@ -99,16 +99,16 @@ jobs:
           fetch-depth: 0
       - uses: psrenergy/create-tag-and-release@v1
 
-  # notify-failure:
-  #   name: Notify Slack on failure
-  #   if: failure()
-  #   needs:
-  #     - pre-publish
-  #     - build-publish-os
-  #     - post-publish
-  #   runs-on: [self-hosted, linux]
-  #   steps:
-  #     - uses: psrenergy/notify-on-failure@v1
-  #       with:
-  #         token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-  #         channel: C05FS4ZJYLU
+  notify-failure:
+    name: Notify Slack on failure
+    if: failure()
+    needs:
+      - pre-publish
+      - build-publish-os
+      - post-publish
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: psrenergy/notify-on-failure@v1
+        with:
+          token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          channel: C05FS4ZJYLU

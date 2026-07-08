@@ -58,6 +58,9 @@ jobs:
     name: Build and publish ${{ matrix.os }}
     needs: [pre-publish]
     runs-on: [self-hosted, linux]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v7
         if: inputs[matrix.os] == true
@@ -69,6 +72,14 @@ jobs:
       - uses: psrenergy/setup-git-token@v1
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Configure AWS credentials (assume role)
+        if: inputs[matrix.os] == true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::747020361772:role/IARA.jl-actions-role
+          role-session-name: iara-publish-${{ matrix.os }}
+          aws-region: us-east-1
 
       - name: Start AWS ECS instance
         if: inputs[matrix.os] == true

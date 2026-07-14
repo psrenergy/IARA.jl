@@ -19,7 +19,7 @@ Dimensions cached in virtual reservoir bid time series files are static:
 - 3 - Bid segment
 """
 @kwdef mutable struct VirtualReservoirBidsView{T} <: ViewFromExternalFile
-    reader::Union{Quiver.Reader{Quiver.binary}, Nothing} = nothing
+    reader::Union{Quiver.Binary.File, Nothing} = nothing
     data::Array{T, 3} = Array{T, 3}(undef, 0, 0, 0)
 end
 function Base.getindex(time_series::VirtualReservoirBidsView{T}, inds...) where {T}
@@ -50,7 +50,7 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
 
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
-    file_path = if isfile(file_path * ".quiv")
+    file_path = if isfile(file_path * ".qvr")
         file_path
     else
         file_name = basename(file_path)
@@ -70,30 +70,29 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     end
 
     # Initialize time series
-    ts.reader = Quiver.Reader{Quiver.binary}(
-        file_path;
-        carrousel = true,
-        labels_to_read,
-    )
+    ts.reader = Quiver.Binary.open_file(file_path; mode = 'r')
+    ts_metadata = Quiver.Binary.get_metadata(ts.reader)
 
     # Validate if unit came as expected
-    if !isempty(expected_unit) && (ts.reader.metadata.unit != expected_unit)
+    reader_unit = Quiver.Binary.get_unit(ts_metadata)
+    if !isempty(expected_unit) && (reader_unit != expected_unit)
         @error(
-            "Unit of time series file $(file_path) is $(ts.reader.metadata.unit). This is different from the expected unit $expected_unit.",
+            "Unit of time series file $(file_path) is $(reader_unit). This is different from the expected unit $expected_unit.",
         )
         num_errors += 1
     end
 
     # Validate if initial date is before the initial date of the problem
-    if ts.reader.metadata.initial_date > initial_date_time(inputs)
+    reader_initial_date = Quiver.string_to_date_time(Quiver.Binary.get_initial_datetime(ts_metadata))
+    if reader_initial_date > initial_date_time(inputs)
         @error(
-            "Initial date of time series file $(file_path) is $(metadata.initial_date). This is after the initial date of the problem: $(initial_date_time(inputs))",
+            "Initial date of time series file $(file_path) is $(reader_initial_date). This is after the initial date of the problem: $(initial_date_time(inputs))",
         )
         num_errors += 1
     end
 
-    dimensions = ts.reader.metadata.dimensions
-    dimension_size = ts.reader.metadata.dimension_size
+    dimensions = metadata_dimension_names(ts_metadata)
+    dimension_size = metadata_dimension_sizes(ts_metadata)
     vr_bidding_segments = dimension_size[3]
     update_maximum_number_of_vr_bidding_segments!(inputs, vr_bidding_segments)
 
@@ -145,15 +144,16 @@ function read_virtual_reservoir_bids_view_from_external_file!(
     scenario::Int,
 ) where {T}
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    ts_metadata = Quiver.Binary.get_metadata(ts.reader)
 
     for bs in 1:maximum_number_of_vr_bidding_segments(inputs)
-        Quiver.goto!(ts.reader; period, scenario, bid_segment = bs)
+        row = carrousel_read(ts.reader, ts_metadata; period, scenario, bid_segment = bs)
         pair_index = 0
         # vr and ao are in a bad performance order, but it is convenient for maping pairs the correct way.
         for vr in virtual_reservoirs
             for ao in virtual_reservoir_asset_owner_indices(inputs, vr)
                 pair_index += 1
-                ts.data[vr, ao, bs] = ts.reader.data[pair_index]
+                ts.data[vr, ao, bs] = row[pair_index]
             end
         end
         @assert pair_index == sum(length.(virtual_reservoir_asset_owner_indices(inputs)))
@@ -173,7 +173,7 @@ function write_virtual_reservoir_bids_time_series_file(
     dimension_size::Vector{Int},
     initial_date::Union{String, DateTime} = "",
     unit::String = "",
-    frequency::String = "month",
+    frequency::String = "monthly",
 ) where {T}
 
     # It expects to receive 5d arrays with the following dimensions:
@@ -247,10 +247,9 @@ function write_virtual_reservoir_bids_time_series_file(
     end
     @assert length(treated_labels) == number_of_pairs
 
-    Quiver.array_to_file(
+    array_to_binary_file(
         file_path,
-        treated_array,
-        Quiver.csv; # TODO currently only writes in csv
+        treated_array;
         dimensions,
         labels = treated_labels,
         time_dimension,

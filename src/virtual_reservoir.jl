@@ -475,17 +475,17 @@ function write_virtual_reservoir_next_period_inflow_energy_arrival(
 
     # Write with subscenario dimension if we have ex-post inflow files
     if read_ex_post_inflow_file(inputs)
-        Quiver.write!(
-            output.writer,
-            round_output(treated_energy_arrival * MW_to_GW());
+        Quiver.Binary.write!(
+            output.writer;
+            data = round_output(treated_energy_arrival * MW_to_GW()),
             period,
             scenario,
             subscenario,
         )
     else
-        Quiver.write!(
-            output.writer,
-            round_output(treated_energy_arrival * MW_to_GW());
+        Quiver.Binary.write!(
+            output.writer;
+            data = round_output(treated_energy_arrival * MW_to_GW()),
             period,
             scenario,
         )

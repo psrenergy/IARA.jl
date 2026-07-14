@@ -388,28 +388,40 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
         end
 
         # Validate file metadata
-        @assert bg_quantity_metadata.number_of_time_series == bg_price_metadata.number_of_time_series "Mismatch between quantity and price bid file columns"
-        @assert bg_quantity_metadata.dimension_size == bg_price_metadata.dimension_size "Mismatch between quantity and price bid file dimensions"
-        @assert bg_quantity_metadata.labels == bg_price_metadata.labels "Mismatch between quantity and price bid file labels"
+        bg_quantity_num_series = length(Quiver.Binary.get_labels(bg_quantity_metadata))
+        bg_price_num_series = length(Quiver.Binary.get_labels(bg_price_metadata))
+        bg_quantity_dim_sizes = metadata_dimension_sizes(bg_quantity_metadata)
+        bg_price_dim_sizes = metadata_dimension_sizes(bg_price_metadata)
+        bg_quantity_labels = Quiver.Binary.get_labels(bg_quantity_metadata)
+        bg_price_labels = Quiver.Binary.get_labels(bg_price_metadata)
+        @assert bg_quantity_num_series == bg_price_num_series "Mismatch between quantity and price bid file columns"
+        @assert bg_quantity_dim_sizes == bg_price_dim_sizes "Mismatch between quantity and price bid file dimensions"
+        @assert bg_quantity_labels == bg_price_labels "Mismatch between quantity and price bid file labels"
         if plot_no_markup_price
+            bg_no_markup_price_num_series = length(Quiver.Binary.get_labels(bg_no_markup_price_metadata))
+            bg_no_markup_price_dim_sizes = metadata_dimension_sizes(bg_no_markup_price_metadata)
+            bg_no_markup_price_labels = Quiver.Binary.get_labels(bg_no_markup_price_metadata)
+            bg_no_markup_quantity_num_series = length(Quiver.Binary.get_labels(bg_no_markup_quantity_metadata))
+            bg_no_markup_quantity_dim_sizes = metadata_dimension_sizes(bg_no_markup_quantity_metadata)
+            bg_no_markup_quantity_labels = Quiver.Binary.get_labels(bg_no_markup_quantity_metadata)
             # Compare the price files
-            @assert bg_no_markup_price_metadata.number_of_time_series == bg_price_metadata.number_of_time_series "Mismatch between reference price and price bid file columns"
+            @assert bg_no_markup_price_num_series == bg_price_num_series "Mismatch between reference price and price bid file columns"
             # The number of periods in the reference price file is always 1
             # The number of bid segments does not need to match
-            @assert bg_no_markup_price_metadata.dimension_size[2:(end-1)] == bg_price_metadata.dimension_size[2:(end-1)] "Mismatch between reference price and price bid file dimensions"
-            @assert sort(bg_no_markup_price_metadata.labels) == sort(bg_price_metadata.labels) "Mismatch between reference price and price bid file labels"
+            @assert bg_no_markup_price_dim_sizes[2:(end-1)] == bg_price_dim_sizes[2:(end-1)] "Mismatch between reference price and price bid file dimensions"
+            @assert sort(bg_no_markup_price_labels) == sort(bg_price_labels) "Mismatch between reference price and price bid file labels"
             # Compare both "no_markup" files
-            @assert bg_no_markup_price_metadata.number_of_time_series ==
-                    bg_no_markup_quantity_metadata.number_of_time_series "Mismatch between reference price and reference quantity bid file columns"
-            @assert bg_no_markup_price_metadata.dimension_size == bg_no_markup_quantity_metadata.dimension_size "Mismatch between reference price and reference quantity bid file dimensions"
-            @assert bg_no_markup_price_metadata.labels == bg_no_markup_quantity_metadata.labels "Mismatch between reference price and reference quantity bid file labels"
+            @assert bg_no_markup_price_num_series ==
+                    bg_no_markup_quantity_num_series "Mismatch between reference price and reference quantity bid file columns"
+            @assert bg_no_markup_price_dim_sizes == bg_no_markup_quantity_dim_sizes "Mismatch between reference price and reference quantity bid file dimensions"
+            @assert bg_no_markup_price_labels == bg_no_markup_quantity_labels "Mismatch between reference price and reference quantity bid file labels"
         end
 
-        num_labels = bg_quantity_metadata.number_of_time_series
-        num_periods, num_scenarios, num_subperiods, num_bid_segments = bg_quantity_metadata.dimension_size
+        num_labels = bg_quantity_num_series
+        num_periods, num_scenarios, num_subperiods, num_bid_segments = bg_quantity_dim_sizes
 
         if plot_no_markup_price
-            num_bid_segments_no_markup = bg_no_markup_price_metadata.dimension_size[end]
+            num_bid_segments_no_markup = bg_no_markup_price_dim_sizes[end]
         end
 
         # Remove the period dimension
@@ -430,8 +442,8 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
         # Process virtual reservoir data if available
         num_vr_labels = 0
         if plot_virtual_reservoir_data
-            num_vr_labels = vr_quantity_metadata.number_of_time_series
-            vr_num_periods, vr_num_scenarios, vr_num_bid_segments = vr_quantity_metadata.dimension_size
+            num_vr_labels = length(Quiver.Binary.get_labels(vr_quantity_metadata))
+            vr_num_periods, vr_num_scenarios, vr_num_bid_segments = metadata_dimension_sizes(vr_quantity_metadata)
 
             # VR data doesn't have subperiod dimension, so we add it artificially
             # Remove period dimension and add subperiod dimension
@@ -468,7 +480,7 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
 
             if plot_no_markup_price
                 vr_no_markup_num_periods, vr_no_markup_num_scenarios, vr_no_markup_num_bid_segments =
-                    vr_no_markup_quantity_metadata.dimension_size
+                    metadata_dimension_sizes(vr_no_markup_quantity_metadata)
 
                 if vr_no_markup_num_periods > 1
                     vr_no_markup_quantity_data = vr_no_markup_quantity_data[:, :, :, inputs.args.period]
@@ -888,9 +900,9 @@ function plot_agent_output(
     end
 
     unit = if !isempty(bg_file_path)
-        bg_metadata.unit
+        Quiver.Binary.get_unit(bg_metadata)
     else
-        vr_metadata.unit
+        Quiver.Binary.get_unit(vr_metadata)
     end
 
     # Read and format fixed component data
@@ -1109,9 +1121,9 @@ function plot_operator_output(
     end
 
     unit = if !isempty(bg_file_path)
-        bg_metadata.unit
+        Quiver.Binary.get_unit(bg_metadata)
     else
-        vr_metadata.unit
+        Quiver.Binary.get_unit(vr_metadata)
     end
 
     asset_owner_indexes = index_of_elements(inputs, AssetOwner)
@@ -1321,8 +1333,9 @@ function plot_general_output(
 
     color_idx = 0
     configs = Vector{Config}()
+    metadata_labels = Quiver.Binary.get_labels(metadata)
     for agent in 1:number_of_agents, subperiod in 1:num_subperiods
-        label = metadata.labels[agent]
+        label = metadata_labels[agent]
         if num_subperiods > 1
             label *= " - $(get_name(inputs, "subperiod")) $subperiod"
         end
@@ -1367,7 +1380,7 @@ function plot_general_output(
         ),
         yaxis = Dict(
             "title" => Dict(
-                "text" => "$(metadata.unit)",
+                "text" => "$(Quiver.Binary.get_unit(metadata))",
                 "font" => Dict("size" => axis_title_font_size()),
             ),
             "tickfont" => Dict("size" => axis_tick_font_size()),

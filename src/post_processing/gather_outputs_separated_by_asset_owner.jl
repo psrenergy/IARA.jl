@@ -31,13 +31,12 @@ function gather_outputs_separated_by_asset_owners(inputs::Inputs; run_time_optio
 
     for (output_group, files) in files_of_output_group
         gathered_file = joinpath(outputs_dir, output_group)
-        impl = _get_implementation_of_a_list_of_files(files)
         separated_files = [joinpath(outputs_dir, file) for file in files]
         # Filter the separaed files by the header
         toml_of_separated_files = filter(x -> occursin(r"\.toml", x), separated_files)
         # Remove extension from toml in separated files
         separated_files_without_extension = [replace(file, ".toml" => "") for file in toml_of_separated_files]
-        Quiver.merge(gathered_file, separated_files_without_extension, impl; digits = 6)
+        quiver_binary_merge(gathered_file, separated_files_without_extension)
     end
 
     # remove the separated files
@@ -48,15 +47,4 @@ function gather_outputs_separated_by_asset_owners(inputs::Inputs; run_time_optio
     end
 
     return nothing
-end
-
-function _get_implementation_of_a_list_of_files(files::Vector{String})
-    # This assumes that all files have the same extension
-    for file in files
-        if occursin(r"\.csv", file)
-            return Quiver.csv
-        elseif occursin(r"\.quiv", file)
-            return Quiver.binary
-        end
-    end
 end

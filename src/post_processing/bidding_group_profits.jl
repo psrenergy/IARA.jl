@@ -40,31 +40,18 @@ function calculate_profits_settlement(
     bidding_group_fixed_costs_file = get_filename(bidding_group_fixed_costs_files[1])
     bidding_group_variable_costs_file = get_filename(bidding_group_variable_costs_files[1])
 
-    tempdir = joinpath(output_path(inputs, run_time_options), "temp")
-    file_total_costs = joinpath(
-        tempdir,
-        "bidding_group_total_costs_$(settlement_string)" * run_time_file_suffixes(inputs, run_time_options),
-    )
-    Quiver.apply_expression(
-        file_total_costs,
-        [bidding_group_fixed_costs_file, bidding_group_variable_costs_file],
-        +,
-        Quiver.csv;
-        digits = 6,
-    )
-
     file_profit = joinpath(
         post_processing_dir,
         "bidding_group_profit_$(settlement_string)" * run_time_file_suffixes(inputs, run_time_options),
     )
 
-    Quiver.apply_expression(
-        file_profit,
-        [file_revenue, file_total_costs],
-        -,
-        Quiver.csv;
-        digits = 6,
-    )
+    reader_fixed = Quiver.Binary.open_file(bidding_group_fixed_costs_file; mode = 'r')
+    reader_variable = Quiver.Binary.open_file(bidding_group_variable_costs_file; mode = 'r')
+    reader_revenue = Quiver.Binary.open_file(file_revenue; mode = 'r')
+    Quiver.save(reader_revenue - (reader_fixed + reader_variable), file_profit)
+    Quiver.Binary.close!(reader_fixed)
+    Quiver.Binary.close!(reader_variable)
+    Quiver.Binary.close!(reader_revenue)
 
     return nothing
 end

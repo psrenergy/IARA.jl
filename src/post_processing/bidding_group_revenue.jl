@@ -55,12 +55,12 @@ function _extract_bus_idx(gen_label, bus_collection)
 end
 
 """
-    get_spot_prices(reader, bus_collection, generation_labels, network_representation)
+    get_spot_prices(spot_price_data, bus_collection, generation_labels, network_representation)
 
 Get spot prices for all bidding groups based on the network representation.
 
 # Arguments
-- `reader`: The reader containing spot price data
+- `spot_price_data`: Spot price data for the current period/scenario/subperiod, indexed by bus or zone
 - `bus_collection`: The bus collection with zone indices and labels
 - `generation_labels`: Array of generation labels in format "bg_X - bus_Y"
 - `network_representation`: The network representation type (ZONAL or NODAL)
@@ -68,9 +68,9 @@ Get spot prices for all bidding groups based on the network representation.
 # Returns
 - Vector of spot prices corresponding to each generation label
 """
-function get_spot_prices(reader, bus_collection, generation_labels, network_representation)
+function get_spot_prices(spot_price_data, bus_collection, generation_labels, network_representation)
     # Pre-allocate array for spot prices
-    spot_prices = similar(reader.data, length(generation_labels))
+    spot_prices = similar(spot_price_data, length(generation_labels))
 
     # Process each bidding group
     for (i, gen_label) in enumerate(generation_labels)
@@ -85,7 +85,7 @@ function get_spot_prices(reader, bus_collection, generation_labels, network_repr
         end
 
         # Store the spot price
-        spot_prices[i] = reader.data[location_idx]
+        spot_prices[i] = spot_price_data[location_idx]
     end
 
     return spot_prices
@@ -98,16 +98,16 @@ _check_cap(price::Real, cap::Real) = !is_null(cap) ? min(price, cap) : price
 function _write_revenue_without_subscenarios(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    writer_without_subscenarios::Quiver.Writer,
-    generation_ex_ante_reader::Quiver.Reader,
-    spot_ex_ante_reader::Quiver.Reader,
+    writer_without_subscenarios::Quiver.Binary.File,
+    generation_ex_ante_reader::Quiver.Binary.File,
+    spot_ex_ante_reader::Quiver.Binary.File,
     is_profile::Bool,
 )
+    generation_md = Quiver.Binary.get_metadata(generation_ex_ante_reader)
     num_periods, num_scenarios, num_subperiods, num_bid_segments =
-        generation_ex_ante_reader.metadata.dimension_size
+        metadata_dimension_sizes(generation_md)
 
-    generation_labels = generation_ex_ante_reader.metadata.labels
-    spot_price_labels = spot_ex_ante_reader.metadata.labels
+    generation_labels = Quiver.Binary.get_labels(generation_md)
     num_bidding_groups_times_buses = length(generation_labels)
 
     dim_name = is_profile ? :profile : :bid_segment
@@ -117,33 +117,40 @@ function _write_revenue_without_subscenarios(
             for subperiod in 1:num_subperiods
                 sum_generation = zeros(num_bidding_groups_times_buses)
                 for bid_segment in 1:num_bid_segments
-                    Quiver.goto!(
+                    generation_data = Quiver.Binary.read(
                         generation_ex_ante_reader;
+                        allow_nulls = true,
                         period,
                         scenario,
                         subperiod = subperiod,
                         Symbol(dim_name) => bid_segment,
                     )
-                    sum_generation .+= generation_ex_ante_reader.data
+                    sum_generation .+= generation_data
                 end
 
-                # Position the reader for the current period/scenario/subperiod
-                Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
+                # Read spot prices for the current period/scenario/subperiod
+                spot_data = Quiver.Binary.read(
+                    spot_ex_ante_reader;
+                    allow_nulls = true,
+                    period,
+                    scenario,
+                    subperiod = subperiod,
+                )
 
                 # Get network representation type once
                 net_rep = network_representation_ex_ante_commercial(inputs)
 
                 # Get spot prices for all bidding groups based on network representation
                 spot_price_data = get_spot_prices(
-                    spot_ex_ante_reader,
+                    spot_data,
                     inputs.collections.bus,
                     generation_labels,
                     net_rep,
                 )
 
-                Quiver.write!(
-                    writer_without_subscenarios,
-                    sum_generation .* apply_lmc_bounds(spot_price_data, inputs) / MW_to_GW(); # GWh to MWh
+                Quiver.Binary.write!(
+                    writer_without_subscenarios;
+                    data = sum_generation .* apply_lmc_bounds(spot_price_data, inputs) / MW_to_GW(), # GWh to MWh
                     period,
                     scenario,
                     subperiod = subperiod,
@@ -151,28 +158,28 @@ function _write_revenue_without_subscenarios(
             end
         end
     end
-    Quiver.close!(writer_without_subscenarios)
+    Quiver.Binary.close!(writer_without_subscenarios)
     # Close readers because they reached the end of the file.
-    Quiver.close!(generation_ex_ante_reader)
-    Quiver.close!(spot_ex_ante_reader)
+    Quiver.Binary.close!(generation_ex_ante_reader)
+    Quiver.Binary.close!(spot_ex_ante_reader)
     return nothing
 end
 
 function _write_revenue_with_subscenarios(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
-    writer_with_subscenarios::Quiver.Writer,
-    generation_ex_ante_reader::Union{Quiver.Reader, Nothing},
-    generation_ex_post_reader::Quiver.Reader,
-    spot_ex_ante_reader::Union{Quiver.Reader, Nothing},
-    spot_ex_post_reader::Quiver.Reader,
+    writer_with_subscenarios::Quiver.Binary.File,
+    generation_ex_ante_reader::Union{Quiver.Binary.File, Nothing},
+    generation_ex_post_reader::Quiver.Binary.File,
+    spot_ex_ante_reader::Union{Quiver.Binary.File, Nothing},
+    spot_ex_post_reader::Quiver.Binary.File,
     is_profile::Bool,
 )
+    generation_md = Quiver.Binary.get_metadata(generation_ex_post_reader)
     num_periods, num_scenarios, num_subscenarios, num_subperiods, num_bid_segments =
-        generation_ex_post_reader.metadata.dimension_size
+        metadata_dimension_sizes(generation_md)
 
-    generation_labels = generation_ex_post_reader.metadata.labels
-    spot_price_labels = spot_ex_post_reader.metadata.labels
+    generation_labels = Quiver.Binary.get_labels(generation_md)
     num_bidding_groups_times_buses = length(generation_labels)
 
     dim_name = is_profile ? :profile : :bid_segment
@@ -183,8 +190,9 @@ function _write_revenue_with_subscenarios(
                 for subperiod in 1:num_subperiods
                     sum_generation = zeros(num_bidding_groups_times_buses)
                     for bid_segment in 1:num_bid_segments
-                        Quiver.goto!(
+                        generation_ex_post_data = Quiver.Binary.read(
                             generation_ex_post_reader;
+                            allow_nulls = true,
                             period,
                             scenario,
                             subscenario = subscenario,
@@ -193,8 +201,9 @@ function _write_revenue_with_subscenarios(
                         )
                         if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT
                             # Just read the ex-ante generation once per subscenario
-                            Quiver.goto!(
+                            generation_ex_ante_data = Quiver.Binary.read(
                                 generation_ex_ante_reader;
+                                allow_nulls = true,
                                 period,
                                 scenario,
                                 subperiod = subperiod,
@@ -202,40 +211,45 @@ function _write_revenue_with_subscenarios(
                             )
                             # In the double settlement, the ex-post generation is the difference between the ex-post and ex-ante generation
                             # The total revenue is the sum of the ex-ante and ex-post revenue
-                            sum_generation .+= generation_ex_post_reader.data .- generation_ex_ante_reader.data
+                            sum_generation .+= generation_ex_post_data .- generation_ex_ante_data
                         else
-                            sum_generation .+= generation_ex_post_reader.data
+                            sum_generation .+= generation_ex_post_data
                         end
                     end
 
                     # Select the appropriate reader based on settlement type
                     if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
-                        Quiver.goto!(spot_ex_ante_reader; period, scenario, subperiod = subperiod)
-                        current_reader = spot_ex_ante_reader
+                        spot_data = Quiver.Binary.read(
+                            spot_ex_ante_reader;
+                            allow_nulls = true,
+                            period,
+                            scenario,
+                            subperiod = subperiod,
+                        )
                         net_rep = network_representation_ex_ante_commercial(inputs)
                     else
-                        Quiver.goto!(
+                        spot_data = Quiver.Binary.read(
                             spot_ex_post_reader;
+                            allow_nulls = true,
                             period,
                             scenario,
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
-                        current_reader = spot_ex_post_reader
                         net_rep = network_representation_ex_post_commercial(inputs)
                     end
 
                     # Get spot prices for all bidding groups based on network representation
                     spot_price_data = get_spot_prices(
-                        current_reader,
+                        spot_data,
                         inputs.collections.bus,
                         generation_labels,
                         net_rep,
                     )
 
-                    Quiver.write!(
-                        writer_with_subscenarios,
-                        sum_generation .* apply_lmc_bounds(spot_price_data, inputs) / MW_to_GW(); # GWh to MWh
+                    Quiver.Binary.write!(
+                        writer_with_subscenarios;
+                        data = sum_generation .* apply_lmc_bounds(spot_price_data, inputs) / MW_to_GW(), # GWh to MWh
                         period,
                         scenario,
                         subscenario,
@@ -245,14 +259,14 @@ function _write_revenue_with_subscenarios(
             end
         end
     end
-    Quiver.close!(writer_with_subscenarios)
+    Quiver.Binary.close!(writer_with_subscenarios)
     # Close readers because they reached the end of the file.
     if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
-        Quiver.close!(generation_ex_ante_reader)
-        Quiver.close!(spot_ex_ante_reader)
+        Quiver.Binary.close!(generation_ex_ante_reader)
+        Quiver.Binary.close!(spot_ex_ante_reader)
     end
-    Quiver.close!(generation_ex_post_reader)
-    Quiver.close!(spot_ex_post_reader)
+    Quiver.Binary.close!(generation_ex_post_reader)
+    Quiver.Binary.close!(spot_ex_post_reader)
     return nothing
 end
 
@@ -304,15 +318,13 @@ function post_processing_bidding_group_revenue(
                 open_time_series_output(
                     inputs,
                     model_outputs_time_serie,
-                    geneneration_ex_ante_file;
-                    convert_to_binary = true,
+                    geneneration_ex_ante_file,
                 )
             spot_price_ex_ante_reader =
                 open_time_series_output(
                     inputs,
                     model_outputs_time_serie,
-                    spot_price_ex_ante_file;
-                    convert_to_binary = true,
+                    spot_price_ex_ante_file,
                 )
         else
             geneneration_ex_ante_reader = nothing
@@ -352,7 +364,7 @@ function post_processing_bidding_group_revenue(
             output_name = time_series_path_with_subscenarios,
             dimensions = ["period", "scenario", "subscenario", "subperiod"],
             unit = "\$",
-            labels = geneneration_ex_post_reader.metadata.labels,
+            labels = Quiver.Binary.get_labels(Quiver.Binary.get_metadata(geneneration_ex_post_reader)),
             run_time_options,
             dir_path = post_processing_dir,
         )
@@ -385,7 +397,7 @@ function post_processing_bidding_group_revenue(
                 output_name = time_series_path_without_subscenarios,
                 dimensions = ["period", "scenario", "subperiod"],
                 unit = "\$",
-                labels = geneneration_ex_ante_reader.metadata.labels,
+                labels = Quiver.Binary.get_labels(Quiver.Binary.get_metadata(geneneration_ex_ante_reader)),
                 run_time_options,
                 dir_path = post_processing_dir,
             )
@@ -470,24 +482,33 @@ function get_load_marginal_files(path::String; from_ex_post::Bool)
 end
 
 function _total_revenue(
-    total_revenue_writer::Quiver.Writer,
-    ex_ante_reader::Quiver.Reader,
-    ex_post_reader::Quiver.Reader,
+    total_revenue_writer::Quiver.Binary.File,
+    ex_ante_reader::Quiver.Binary.File,
+    ex_post_reader::Quiver.Binary.File,
 )
-    num_periods, num_scenarios, num_subscenarios, num_subperiods = ex_post_reader.metadata.dimension_size
+    num_periods, num_scenarios, num_subscenarios, num_subperiods =
+        metadata_dimension_sizes(Quiver.Binary.get_metadata(ex_post_reader))
 
     for period in 1:num_periods
         for scenario in 1:num_scenarios
             for subscenario in 1:num_subscenarios
                 for subperiod in 1:num_subperiods
-                    Quiver.goto!(ex_ante_reader; period, scenario, subperiod = subperiod)
-                    Quiver.goto!(ex_post_reader; period, scenario, subscenario = subscenario, subperiod = subperiod)
+                    ex_ante_data =
+                        Quiver.Binary.read(ex_ante_reader; allow_nulls = true, period, scenario, subperiod = subperiod)
+                    ex_post_data = Quiver.Binary.read(
+                        ex_post_reader;
+                        allow_nulls = true,
+                        period,
+                        scenario,
+                        subscenario = subscenario,
+                        subperiod = subperiod,
+                    )
 
-                    total_revenue = ex_ante_reader.data .+ ex_post_reader.data
+                    total_revenue = ex_ante_data .+ ex_post_data
 
-                    Quiver.write!(
-                        total_revenue_writer,
-                        total_revenue;
+                    Quiver.Binary.write!(
+                        total_revenue_writer;
+                        data = total_revenue,
                         period,
                         scenario,
                         subscenario = subscenario,
@@ -497,9 +518,9 @@ function _total_revenue(
             end
         end
     end
-    Quiver.close!(total_revenue_writer)
-    Quiver.close!(ex_ante_reader)
-    Quiver.close!(ex_post_reader)
+    Quiver.Binary.close!(total_revenue_writer)
+    Quiver.Binary.close!(ex_ante_reader)
+    Quiver.Binary.close!(ex_post_reader)
     return
 end
 
@@ -522,7 +543,6 @@ function _join_independent_and_profile_bid(
         filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
     )
 
-    impl = Quiver.csv
     # If there are no independent or profile bids, generate a zero file.
     # Check for the existence of ex ante files, which are present if the settlement type is ex ante or dual.
     if settlement_type(inputs) in
@@ -549,7 +569,6 @@ function _join_independent_and_profile_bid(
                 run_time_options,
                 "bidding_group_revenue_independent_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
                 bidding_group_bus_labels,
-                impl,
                 "\$";
                 has_subscenarios = has_subscenarios,
             )
@@ -564,7 +583,6 @@ function _join_independent_and_profile_bid(
                 run_time_options,
                 "bidding_group_revenue_profile_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
                 bidding_group_bus_labels,
-                impl,
                 "\$";
                 has_subscenarios = has_subscenarios,
             )
@@ -575,13 +593,11 @@ function _join_independent_and_profile_bid(
             "bidding_group_revenue_ex_ante" * run_time_file_suffixes(inputs, run_time_options),
         )
 
-        Quiver.apply_expression(
-            file_revenue_ex_ante,
-            [filepath_independent, filepath_profile],
-            +,
-            Quiver.csv;
-            digits = 6,
-        )
+        reader_independent = Quiver.Binary.open_file(filepath_independent; mode = 'r')
+        reader_profile = Quiver.Binary.open_file(filepath_profile; mode = 'r')
+        Quiver.save(reader_independent + reader_profile, file_revenue_ex_ante)
+        Quiver.Binary.close!(reader_independent)
+        Quiver.Binary.close!(reader_profile)
     end
     # Check for the existence of ex_post files, which are present if the settlement type is ex post or dual.
     if settlement_type(inputs) in
@@ -604,7 +620,6 @@ function _join_independent_and_profile_bid(
                 run_time_options,
                 "bidding_group_revenue_independent_ex_post" * run_time_file_suffixes(inputs, run_time_options),
                 bidding_group_bus_labels,
-                impl,
                 "\$";
                 has_subscenarios = true,
             )
@@ -619,7 +634,6 @@ function _join_independent_and_profile_bid(
                 run_time_options,
                 "bidding_group_revenue_profile_ex_post" * run_time_file_suffixes(inputs, run_time_options),
                 bidding_group_bus_labels,
-                impl,
                 "\$";
                 has_subscenarios = true,
             )
@@ -630,13 +644,11 @@ function _join_independent_and_profile_bid(
             "bidding_group_revenue_ex_post" * run_time_file_suffixes(inputs, run_time_options),
         )
 
-        Quiver.apply_expression(
-            file_revenue_ex_post,
-            [filepath_independent, filepath_profile],
-            +,
-            impl;
-            digits = 6,
-        )
+        reader_independent = Quiver.Binary.open_file(filepath_independent; mode = 'r')
+        reader_profile = Quiver.Binary.open_file(filepath_profile; mode = 'r')
+        Quiver.save(reader_independent + reader_profile, file_revenue_ex_post)
+        Quiver.Binary.close!(reader_independent)
+        Quiver.Binary.close!(reader_profile)
     end
 
     return nothing
@@ -668,8 +680,7 @@ function post_processing_bidding_group_total_revenue(
     revenue_ex_ante_reader = open_time_series_output(
         inputs,
         model_outputs_time_serie,
-        joinpath(post_processing_dir, "bidding_group_revenue_ex_ante" * period_suffix);
-        convert_to_binary = true,
+        joinpath(post_processing_dir, "bidding_group_revenue_ex_ante" * period_suffix),
     )
 
     revenue_ex_post_reader =
@@ -686,7 +697,7 @@ function post_processing_bidding_group_total_revenue(
         output_name = "bidding_group_total_revenue",
         dimensions = ["period", "scenario", "subscenario", "subperiod"],
         unit = "\$",
-        labels = revenue_ex_ante_reader.metadata.labels,
+        labels = Quiver.Binary.get_labels(Quiver.Binary.get_metadata(revenue_ex_ante_reader)),
         run_time_options,
         dir_path = post_processing_dir,
     )

@@ -276,15 +276,30 @@ Reads a time series from a file and returns a DataFrame.
 function time_series_dataframe(path::String)
     # get file extension
     file, ext = splitext(path)
-    quiver_file_implementation = if ext == ".csv"
-        Quiver.csv
-    elseif ext == ".quiv"
-        Quiver.binary
-    else
-        error("File extension $ext not supported.")
+    if ext != ".qvr"
+        error(
+            "File extension $ext not supported — CSV inputs must be converted to binary first via convert_time_series_file_to_binary.",
+        )
     end
 
-    return Quiver.file_to_df(file, quiver_file_implementation)
+    array_data, metadata = binary_file_to_array(file)
+    dimension_names = metadata_dimension_names(metadata)
+    dimension_sizes = metadata_dimension_sizes(metadata)
+    labels = Quiver.Binary.get_labels(metadata)
+
+    df = DataFrame()
+    for name in dimension_names
+        insertcols!(df, name => Int[])
+    end
+    for label in labels
+        insertcols!(df, Symbol(label) => Float64[])
+    end
+    dims = first_position!(copy(dimension_sizes))
+    for _ in 1:prod(dimension_sizes)
+        next_dim!(dims, dimension_sizes)
+        push!(df, [reverse(dims)...; array_data[:, reverse(dims)...]...])
+    end
+    return df
 end
 
 """

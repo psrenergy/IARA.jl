@@ -181,21 +181,13 @@ end
 function open_time_series_output(
     inputs::Inputs,
     model_outputs::OutputReaders,
-    file::String;
-    convert_to_binary::Bool = false,
+    file::String,
 )
-    if !isfile(file * ".csv")
-        error("File $file.csv does not exist")
+    if !isfile(file * ".qvr")
+        error("File $file.qvr does not exist")
         return nothing
     end
-    reader = if convert_to_binary
-        convert_time_series_file_to_binary(file)
-        # converting sends the converted file to a temp path
-        file_path = joinpath(dirname(file), "temp", basename(file))
-        Quiver.Reader{Quiver.binary}(file_path)
-    else
-        Quiver.Reader{Quiver.csv}(file)
-    end
+    reader = Quiver.Binary.open_file(file; mode = 'r')
     output_timeseries = QuiverInput(reader)
     model_outputs.outputs[file] = output_timeseries
     return reader
@@ -221,7 +213,7 @@ Read a timeseries file in the outputs directory.
 function read_timeseries_file_in_outputs(filename, inputs)
     output_dir = output_path(inputs)
     filepath_csv = joinpath(output_dir, filename * ".csv")
-    filepath_quiv = joinpath(output_dir, filename * ".quiv")
+    filepath_quiv = joinpath(output_dir, filename * ".qvr")
     filepath = isfile(filepath_quiv) ? filepath_quiv : filepath_csv
     return read_timeseries_file(filepath)
 end
@@ -231,7 +223,6 @@ function create_zero_file(
     run_time_options::RunTimeOptions,
     filename::String,
     labels::Vector{String},
-    impl::Type{<:Quiver.Implementation},
     unit::String;
     has_subscenarios::Bool = false,
     has_subperiods::Bool = true,
@@ -271,7 +262,6 @@ function create_zero_file(
         dimension_size = dimension_size,
         initial_date = initial_date_time(inputs),
         unit = unit,
-        implementation = impl,
         frequency = period_type_string(inputs.collections.configurations.time_series_step),
     )
     return path
@@ -286,35 +276,95 @@ function create_temporary_file_with_subscenario_dimension(
     tempdir = joinpath(output_path(inputs, run_time_options), "temp")
     treated_filename = joinpath(tempdir, basename(filename))
 
-    reader = Quiver.Reader{Quiver.csv}(filename)
-    @assert reader.metadata.dimensions == [:period, :scenario]
+    reader = Quiver.Binary.open_file(filename; mode = 'r')
+    reader_metadata = Quiver.Binary.get_metadata(reader)
+    @assert metadata_dimension_names(reader_metadata) == [:period, :scenario]
 
     number_of_subscenarios = inputs.collections.configurations.number_of_subscenarios
-    dimension_size = [reader.metadata.dimension_size..., number_of_subscenarios]
+    dimension_size = [metadata_dimension_sizes(reader_metadata)..., number_of_subscenarios]
 
-    writer = Quiver.Writer{Quiver.csv}(
-        treated_filename;
+    md = Quiver.Binary.Metadata(;
+        initial_datetime = Quiver.Binary.get_initial_datetime(reader_metadata),
+        unit = Quiver.Binary.get_unit(reader_metadata),
+        labels = Quiver.Binary.get_labels(reader_metadata),
         dimensions = ["period", "scenario", "subscenario"],
-        labels = reader.metadata.labels,
-        time_dimension = String(reader.metadata.time_dimension),
-        dimension_size = dimension_size,
-        frequency = reader.metadata.frequency,
-        initial_date = reader.metadata.initial_date,
-        unit = reader.metadata.unit,
+        dimension_sizes = Int64.(dimension_size),
     )
+    writer = Quiver.Binary.open_file(treated_filename; mode = 'w', metadata = md)
 
     for period in 1:dimension_size[1]
         for scenario in 1:dimension_size[2]
-            Quiver.goto!(reader; period, scenario)
-            data = reader.data
+            data = Quiver.Binary.read(reader; allow_nulls = true, period, scenario)
             for subscenario in 1:number_of_subscenarios
-                Quiver.write!(writer, data; period, scenario, subscenario = subscenario)
+                Quiver.Binary.write!(writer; data = data, period, scenario, subscenario = subscenario)
             end
         end
     end
 
-    Quiver.close!(reader)
-    Quiver.close!(writer)
+    Quiver.Binary.close!(reader)
+    Quiver.Binary.close!(writer)
 
     return treated_filename
+end
+
+"""
+    quiver_binary_merge(output_path::String, input_paths::Vector{String})
+
+Concatenate the labels of N binary files sharing the same dimensions into one output file.
+"""
+function quiver_binary_merge(output_path::String, input_paths::Vector{String})
+    readers = [Quiver.Binary.open_file(p; mode = 'r') for p in input_paths]
+    metadatas = [Quiver.Binary.get_metadata(r) for r in readers]
+
+    dimension_names = metadata_dimension_names(first(metadatas))
+    dimension_sizes = metadata_dimension_sizes(first(metadatas))
+    for md in metadatas[2:end]
+        if metadata_dimension_names(md) != dimension_names || metadata_dimension_sizes(md) != dimension_sizes
+            for r in readers
+                Quiver.Binary.close!(r)
+            end
+            error("quiver_binary_merge: all input files must share the same dimensions and sizes")
+        end
+    end
+
+    merged_labels = vcat([Quiver.Binary.get_labels(md) for md in metadatas]...)
+    if length(unique(merged_labels)) != length(merged_labels)
+        for r in readers
+            Quiver.Binary.close!(r)
+        end
+        error("quiver_binary_merge: duplicate label across input files")
+    end
+
+    out_md = Quiver.Binary.Metadata(;
+        initial_datetime = Quiver.Binary.get_initial_datetime(first(metadatas)),
+        unit = Quiver.Binary.get_unit(first(metadatas)),
+        labels = merged_labels,
+        dimensions = String.(dimension_names),
+        dimension_sizes = Int64.(dimension_sizes),
+    )
+    writer = Quiver.Binary.open_file(output_path; mode = 'w', metadata = out_md)
+
+    dims = first_position!(copy(dimension_sizes))
+    for _ in 1:prod(dimension_sizes)
+        next_dim!(dims, dimension_sizes)
+        read_kwargs = NamedTuple(dimension_names[i] => dims[i] for i in eachindex(dimension_names))
+        merged_data = vcat([Quiver.Binary.read(r; allow_nulls = true, read_kwargs...) for r in readers]...)
+        Quiver.Binary.write!(writer; data = merged_data, read_kwargs...)
+    end
+
+    for r in readers
+        Quiver.Binary.close!(r)
+    end
+    Quiver.Binary.close!(writer)
+    return output_path
+end
+
+"""
+    sum_over_agents(file_or_expr, new_label::String)
+
+Sum across all agent/label columns and rename the result to `new_label`.
+"""
+function sum_over_agents(file_or_expr, new_label::String)
+    summed = Quiver.aggregate_agents(file_or_expr, Quiver.C.QUIVER_EXPRESSION_AGGREGATE_AGENTS_OPERATION_SUM)
+    return Quiver.rename_agents(summed, Dict("sum" => new_label))
 end

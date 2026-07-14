@@ -20,7 +20,7 @@ Dimensions cached in bid time series files are static:
 - 4 - Subperiod
 """
 @kwdef mutable struct BidsView{T} <: ViewFromExternalFile
-    reader::Union{Quiver.Reader{Quiver.binary}, Nothing} = nothing
+    reader::Union{Quiver.Binary.File, Nothing} = nothing
     data::Array{T, 4} = Array{T, 4}(undef, 0, 0, 0, 0)
 end
 function Base.getindex(time_series::BidsView{T}, inds...) where {T}
@@ -55,7 +55,7 @@ function initialize_bids_view_from_external_file!(
 
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
-    file_path = if isfile(file_path * ".quiv")
+    file_path = if isfile(file_path * ".qvr")
         file_path
     else
         file_name = basename(file_path)
@@ -71,29 +71,28 @@ function initialize_bids_view_from_external_file!(
     end
 
     # Initialize time series
-    ts.reader = Quiver.Reader{Quiver.binary}(
-        file_path;
-        carrousel = true,
-        labels_to_read,
-    )
+    ts.reader = Quiver.Binary.open_file(file_path; mode = 'r')
+    ts_metadata = Quiver.Binary.get_metadata(ts.reader)
 
     # Validate if unit came as expected
-    if !isempty(expected_unit) && (ts.reader.metadata.unit != expected_unit)
+    reader_unit = Quiver.Binary.get_unit(ts_metadata)
+    if !isempty(expected_unit) && (reader_unit != expected_unit)
         @error(
-            "Unit of time series file $(file_path) is $(ts.reader.metadata.unit). This is different from the expected unit $expected_unit.",
+            "Unit of time series file $(file_path) is $(reader_unit). This is different from the expected unit $expected_unit.",
         )
         num_errors += 1
     end
 
     # Validate if initial date is before the initial date of the problem
-    if ts.reader.metadata.initial_date > initial_date_time(inputs)
+    reader_initial_date = Quiver.string_to_date_time(Quiver.Binary.get_initial_datetime(ts_metadata))
+    if reader_initial_date > initial_date_time(inputs)
         @error(
-            "Initial date of time series file $(file_path) is $(metadata.initial_date). This is after the initial date of the problem: $(initial_date_time(inputs))",
+            "Initial date of time series file $(file_path) is $(reader_initial_date). This is after the initial date of the problem: $(initial_date_time(inputs))",
         )
         num_errors += 1
     end
 
-    dimensions = ts.reader.metadata.dimensions
+    dimensions = metadata_dimension_names(ts_metadata)
     # Validate if the dimensions are as expected
     if !isempty(possible_expected_dimensions)
         # Iterate through all possible dimensions and check if the time series
@@ -163,21 +162,22 @@ function read_bids_view_from_external_file!(
 
     blks = subperiods(inputs)
     num_buses = length(buses)
+    ts_metadata = Quiver.Binary.get_metadata(ts.reader)
 
     for blk in blks
         # TODO: Generic form?
         if has_profile_bids
             for prf in 1:maximum_number_of_profiles(inputs)
-                Quiver.goto!(ts.reader; period, scenario, subperiod = blk, profile = prf)
+                row = carrousel_read(ts.reader, ts_metadata; period, scenario, subperiod = blk, profile = prf)
                 for (i, bg) in enumerate(bidding_groups), bus in buses
-                    ts.data[bg, bus, prf, blk] = ts.reader.data[(i-1)*(num_buses)+bus]
+                    ts.data[bg, bus, prf, blk] = row[(i-1)*(num_buses)+bus]
                 end
             end
         else
             for bds in 1:maximum_number_of_bg_bidding_segments(inputs)
-                Quiver.goto!(ts.reader; period, scenario, subperiod = blk, bid_segment = bds)
+                row = carrousel_read(ts.reader, ts_metadata; period, scenario, subperiod = blk, bid_segment = bds)
                 for (i, bg) in enumerate(bidding_groups), bus in buses
-                    ts.data[bg, bus, bds, blk] = ts.reader.data[(i-1)*(num_buses)+bus]
+                    ts.data[bg, bus, bds, blk] = row[(i-1)*(num_buses)+bus]
                 end
             end
         end
@@ -196,7 +196,7 @@ function write_bids_time_series_file(
     dimension_size::Vector{Int},
     initial_date::Union{String, DateTime} = "",
     unit::String = "",
-    frequency::String = "month",
+    frequency::String = "monthly",
 ) where {T}
 
     # It expects to receive 6d arrays with the following dimensions:
@@ -233,10 +233,9 @@ function write_bids_time_series_file(
         end
     end
 
-    Quiver.array_to_file(
+    array_to_binary_file(
         file_path,
-        treated_array,
-        Quiver.csv; # TODO currently only writes in csv
+        treated_array;
         dimensions,
         labels = treated_labels,
         time_dimension,

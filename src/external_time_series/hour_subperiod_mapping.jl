@@ -16,7 +16,7 @@ store the mapping between hours and subperiods in the external time series data.
 It only stores the mapping for one period at a time
 """
 @kwdef mutable struct HourSubperiodMapping <: ViewFromExternalFile
-    reader::Union{Quiver.Reader{Quiver.binary}, Nothing} = nothing
+    reader::Union{Quiver.Binary.File, Nothing} = nothing
     # Hours
     hour_subperiod_map::Vector{Int} = []
     # Subperiods
@@ -32,23 +32,24 @@ function initialize_hour_subperiod_mapping(inputs)
 
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
-    file_path = if isfile(file_path * ".quiv")
+    file_path = if isfile(file_path * ".qvr")
         file_path
     else
         file_name = basename(file_path)
         file_dir = dirname(file_path)
         joinpath(file_dir, "temp", file_name)
     end
-    reader = Quiver.Reader{Quiver.binary}(file_path)
+    reader = Quiver.Binary.open_file(file_path; mode = 'r')
+    reader_metadata = Quiver.Binary.get_metadata(reader)
 
-    if reader.metadata.dimensions != [:period, :hour]
+    if metadata_dimension_names(reader_metadata) != [:period, :hour]
         @error(
-            "Hour-subperiod map file must have dimensions [period, hour]. Unexpected dimensions $(reader.metadata.dimensions).",
+            "Hour-subperiod map file must have dimensions [period, hour]. Unexpected dimensions $(metadata_dimension_names(reader_metadata)).",
         )
         num_errors += 1
     end
 
-    number_of_agents = length(reader.labels_to_read)
+    number_of_agents = length(Quiver.Binary.get_labels(reader_metadata))
     if number_of_agents != 1
         @error("Hour-subperiod map file must have only one agent. Unexpected number of agents $number_of_agents.")
         num_errors += 1
@@ -67,12 +68,12 @@ function update_hour_subperiod_mapping!(
     period::Int,
 )
     reader = inputs.time_series.hour_subperiod_mapping.reader
+    reader_metadata = Quiver.Binary.get_metadata(reader)
     # Hour subperiod map
-    max_number_of_hours = Quiver.max_index(reader, "hour")
+    max_number_of_hours = metadata_max_index(reader_metadata, "hour")
     hour_subperiod_map = Int[]
     for hour in 1:max_number_of_hours
-        Quiver.goto!(reader; period = period, hour = hour)
-        subperiod = reader.data[1]
+        subperiod = Quiver.Binary.read(reader; allow_nulls = true, period = period, hour = hour)[1]
         if isnan(subperiod)
             break
         end

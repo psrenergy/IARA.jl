@@ -340,7 +340,7 @@ function get_demands_to_plot(
     if read_ex_ante_demand_file(inputs)
         demand_file = joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs) * ".csv")
         data, metadata = read_timeseries_file(demand_file)
-        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+        num_periods, num_scenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)
 
         ex_ante_demand = zeros(num_periods * num_subperiods)
@@ -360,7 +360,7 @@ function get_demands_to_plot(
     if read_ex_post_demand_file(inputs)
         demand_file = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs) * ".csv")
         data, metadata = read_timeseries_file(demand_file)
-        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)
 
         ex_post_demand = zeros(num_subscenarios, num_periods * num_subperiods)
@@ -407,7 +407,7 @@ function get_renewable_generation_to_plot(
     if read_ex_ante_renewable_file(inputs)
         generation_file = joinpath(path_case(inputs), renewable_unit_generation_ex_ante_file(inputs) * ".csv")
         data, metadata = read_timeseries_file(generation_file)
-        num_periods, num_scenarios, num_subperiods = metadata.dimension_size
+        num_periods, num_scenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)
 
         ex_ante_generation = zeros(num_periods * num_subperiods)
@@ -427,7 +427,7 @@ function get_renewable_generation_to_plot(
     if read_ex_post_renewable_file(inputs)
         generation_file = joinpath(path_case(inputs), renewable_unit_generation_ex_post_file(inputs) * ".csv")
         data, metadata = read_timeseries_file(generation_file)
-        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+        num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)
 
         ex_post_generation = zeros(num_subscenarios, num_periods * num_subperiods)
@@ -533,38 +533,48 @@ function get_inflow_energy_to_plot(
     return ex_ante_inflow_energy, ex_post_inflow_energy
 end
 
+"""
+    convert_generation_data_from_GWh_to_MW!(data, current_unit, current_dims, current_sizes, inputs)
+
+Convert `data` from GWh to MW in place. `current_unit`/`current_dims`/`current_sizes` describe
+`data`'s current unit and dimensions (which may already differ from the source file's original
+metadata, e.g. after the `bid_segment` dimension has been summed away). Returns the new unit,
+`"MW"`, since a `Quiver.Binary.Metadata` cannot be mutated in place.
+"""
 function convert_generation_data_from_GWh_to_MW!(
     data::Array{T, N},
-    metadata::Quiver.Metadata,
+    current_unit::String,
+    current_dims::Vector{Symbol},
+    current_sizes::Vector{Int},
     inputs::AbstractInputs,
 ) where {T, N}
-    if metadata.unit == "MW"
+    if current_unit == "MW"
         @error("Data is already in MW")
     end
-    @assert metadata.unit == "GWh" "Unit conversion only implemented for GWh"
+    @assert current_unit == "GWh" "Unit conversion only implemented for GWh"
 
     if N == 5
-        @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod]
-        num_subperiods = metadata.dimension_size[4]
+        @assert current_dims == [:period, :scenario, :subscenario, :subperiod]
+        num_subperiods = current_sizes[4]
         for subperiod in 1:num_subperiods
             data[:, subperiod, :, :, :] .*= 1000 / subperiod_duration_in_hours(inputs, subperiod)
         end
     elseif N == 4
-        if metadata.dimensions == [:period, :scenario, :subscenario]
+        if current_dims == [:period, :scenario, :subscenario]
             # Virtual reservoir data without subperiods - convert using period duration
             # Assuming the energy is for the entire period, convert using total period duration
             total_period_hours = sum(subperiod_duration_in_hours(inputs, sp) for sp in 1:number_of_subperiods(inputs))
             data .*= 1000 / total_period_hours
-        elseif metadata.dimensions == [:period, :scenario, :subperiod]
-            num_subperiods = metadata.dimension_size[3]
+        elseif current_dims == [:period, :scenario, :subperiod]
+            num_subperiods = current_sizes[3]
             for subperiod in 1:num_subperiods
                 data[:, subperiod, :, :] .*= 1000 / subperiod_duration_in_hours(inputs, subperiod)
             end
         else
-            @error("Unit conversion not implemented for dimensions $(metadata.dimensions)")
+            @error("Unit conversion not implemented for dimensions $(current_dims)")
         end
     elseif N == 3
-        @assert metadata.dimensions == [:period, :scenario] "Unit conversion not implemented for dimensions $(metadata.dimensions)"
+        @assert current_dims == [:period, :scenario] "Unit conversion not implemented for dimensions $(current_dims)"
         # Virtual reservoir data without subperiods or subscenarios - convert using period duration
         total_period_hours = sum(subperiod_duration_in_hours(inputs, sp) for sp in 1:number_of_subperiods(inputs))
         data .*= 1000 / total_period_hours
@@ -572,9 +582,7 @@ function convert_generation_data_from_GWh_to_MW!(
         @error("Unit conversion not implemented for data with $(N) dimensions")
     end
 
-    metadata.unit = "MW"
-
-    return data
+    return "MW"
 end
 
 function title_font_size()
@@ -605,49 +613,53 @@ function format_data_to_plot(
     subscenario_index::Union{Int, Nothing} = nothing,
 )
     data, metadata = read_timeseries_file(file_path)
+    current_unit = Quiver.Binary.get_unit(metadata)
+    current_dims = metadata_dimension_names(metadata)
+    current_sizes = metadata_dimension_sizes(metadata)
+    number_of_time_series = length(Quiver.Binary.get_labels(metadata))
 
-    if :bid_segment in metadata.dimensions
-        segment_index = findfirst(isequal(:bid_segment), metadata.dimensions)
-        # The data array has dimensions in reverse order, and the first dimension is metadata.number_of_time_series, which is not in metadata.dimensions
-        segment_index_in_data = length(metadata.dimensions) + 2 - segment_index
+    if :bid_segment in current_dims
+        segment_index = findfirst(isequal(:bid_segment), current_dims)
+        # The data array has dimensions in reverse order, and the first dimension is number_of_time_series, which is not in current_dims
+        segment_index_in_data = length(current_dims) + 2 - segment_index
         data = dropdims(sum(data; dims = segment_index_in_data); dims = segment_index_in_data)
-        metadata.dimension_size = metadata.dimension_size[1:end.!=segment_index]
-        metadata.dimensions = metadata.dimensions[1:end.!=segment_index]
+        current_sizes = current_sizes[1:end.!=segment_index]
+        current_dims = current_dims[1:end.!=segment_index]
     end
 
     if occursin("generation", basename(file_path))
-        convert_generation_data_from_GWh_to_MW!(data, metadata, inputs)
+        current_unit = convert_generation_data_from_GWh_to_MW!(data, current_unit, current_dims, current_sizes, inputs)
     end
 
     is_virtual_reservoir_file = occursin("virtual_reservoir", basename(file_path))
 
-    has_subscenarios = :subscenario in metadata.dimensions
-    has_subperiods = :subperiod in metadata.dimensions
+    has_subscenarios = :subscenario in current_dims
+    has_subperiods = :subperiod in current_dims
 
     if has_subscenarios
         if has_subperiods
-            @assert metadata.dimensions == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata.dimension_size
+            @assert current_dims == [:period, :scenario, :subscenario, :subperiod] "Invalid dimensions $(current_dims) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subscenarios, num_subperiods = current_sizes
             reshaped_data = data[:, :, :, 1, 1]
         else
-            @assert metadata.dimensions == [:period, :scenario, :subscenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios, num_subscenarios = metadata.dimension_size
+            @assert current_dims == [:period, :scenario, :subscenario] "Invalid dimensions $(current_dims) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subscenarios = current_sizes
             num_subperiods = 1
-            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            reshaped_data = Array{Float64, 3}(undef, number_of_time_series, num_subperiods, num_subscenarios)
             reshaped_data[:, 1, :] = data[:, :, 1, 1]
         end
     else
         num_subscenarios = 1
         if has_subperiods
-            @assert metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios, num_subperiods = metadata.dimension_size
-            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            @assert current_dims == [:period, :scenario, :subperiod] "Invalid dimensions $(current_dims) for time series file $(file_path)"
+            num_periods, num_scenarios, num_subperiods = current_sizes
+            reshaped_data = Array{Float64, 3}(undef, number_of_time_series, num_subperiods, num_subscenarios)
             reshaped_data[:, :, 1] = data[:, :, 1, 1]
         else
-            @assert metadata.dimensions == [:period, :scenario] "Invalid dimensions $(metadata.dimensions) for time series file $(file_path)"
-            num_periods, num_scenarios = metadata.dimension_size
+            @assert current_dims == [:period, :scenario] "Invalid dimensions $(current_dims) for time series file $(file_path)"
+            num_periods, num_scenarios = current_sizes
             num_subperiods = 1
-            reshaped_data = Array{Float64, 3}(undef, metadata.number_of_time_series, num_subperiods, num_subscenarios)
+            reshaped_data = Array{Float64, 3}(undef, number_of_time_series, num_subperiods, num_subscenarios)
             reshaped_data[:, 1, 1] = data[:, 1, 1]
         end
     end
@@ -674,17 +686,26 @@ function format_data_to_plot(
         num_subscenarios = 1
     end
 
-    return reshaped_data, metadata, num_subperiods, num_subscenarios
+    final_metadata = Quiver.Binary.Metadata(;
+        initial_datetime = Quiver.Binary.get_initial_datetime(metadata),
+        unit = current_unit,
+        labels = Quiver.Binary.get_labels(metadata),
+        dimensions = String.(current_dims),
+        dimension_sizes = Int64.(current_sizes),
+    )
+
+    return reshaped_data, final_metadata, num_subperiods, num_subscenarios
 end
 
 function aggregate_data_header(
     inputs::AbstractInputs,
     data::Array{T, 3},
-    metadata::Quiver.Metadata;
+    metadata::Quiver.Binary.Metadata;
     asset_owner_index::Union{Int, Nothing} = nothing,
     is_virtual_reservoir_file::Bool,
 ) where {T <: Real}
     num_subperiods, num_subscenarios = size(data, 2), size(data, 3)
+    metadata_labels = Quiver.Binary.get_labels(metadata)
 
     if isnothing(asset_owner_index)
         asset_owner_indexes = index_of_elements(inputs, AssetOwner)
@@ -695,7 +716,7 @@ function aggregate_data_header(
             else
                 bg_bus_labels_for_asset_owner(inputs, asset_owner_index)
             end
-            indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
+            indexes_to_read = [findfirst(isequal(label), metadata_labels) for label in labels_to_read]
             reshaped_data[i, :, :] = dropdims(sum(data[indexes_to_read, :, :]; dims = 1); dims = 1)
         end
     else
@@ -705,7 +726,7 @@ function aggregate_data_header(
         else
             bg_bus_labels_for_asset_owner(inputs, asset_owner_index)
         end
-        indexes_to_read = [findfirst(isequal(label), metadata.labels) for label in labels_to_read]
+        indexes_to_read = [findfirst(isequal(label), metadata_labels) for label in labels_to_read]
         reshaped_data = dropdims(sum(data[indexes_to_read, :, :]; dims = 1); dims = 1)
     end
 

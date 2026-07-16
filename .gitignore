@@ -46,6 +46,7 @@ revise/Manifest.toml
 *.hdr
 *.iara
 *.qvr
+*.quiv
 *.html
 *.json
 *.sol
@@ -60,6 +61,7 @@ compile/compilation_case_*
 # Expected outputs should not be ignored
 !**/expected_outputs/*.toml
 !**/expected_outputs/*.csv
+!**/expected_outputs/*.qvr
 test/**/plots
 
 # Test case outputs

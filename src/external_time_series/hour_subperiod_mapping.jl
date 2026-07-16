@@ -32,13 +32,7 @@ function initialize_hour_subperiod_mapping(inputs)
 
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
-    file_path = if isfile(file_path * ".qvr")
-        file_path
-    else
-        file_name = basename(file_path)
-        file_dir = dirname(file_path)
-        joinpath(file_dir, "temp", file_name)
-    end
+    file_path = resolve_binary_file_path(file_path)
     reader = Quiver.Binary.open_file(file_path; mode = 'r')
     reader_metadata = Quiver.Binary.get_metadata(reader)
 

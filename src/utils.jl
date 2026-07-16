@@ -213,7 +213,7 @@ function find_load_marginal_cost_file(dir_path::String)
 
     for suffix in possible_suffixes
         file_path = joinpath(dir_path, base_name * suffix)
-        if isfile(file_path * ".csv")
+        if isfile(file_path * ".qvr")
             return file_path
         end
     end

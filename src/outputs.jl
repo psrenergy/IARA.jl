@@ -261,6 +261,9 @@ function get_outputs_dimension_size(
                 hydro_blks = hydro_subperiods(inputs)
                 num_hydro_subperiods = length(hydro_blks) - 1
                 push!(dimension_size, num_hydro_subperiods)
+            elseif output_name in ["battery_storage", "battery_om_costs"]
+                # battery_om_costs just rides battery_storage's N+1 boundary-state shape, not an independent need for it.
+                push!(dimension_size, number_of_subperiods(inputs) + 1)
             else
                 push!(dimension_size, number_of_subperiods(inputs))
             end
@@ -322,9 +325,8 @@ function initialize!(
         dimension_size[idx] = 1
     end
 
-    initial_datetime_str = initial_date isa DateTime ? Quiver.date_time_to_string(initial_date) : initial_date
     md = Quiver.Binary.Metadata(;
-        initial_datetime = initial_datetime_str,
+        initial_datetime = quiver_initial_datetime_string(initial_date),
         unit = unit,
         labels = labels,
         dimensions = dimensions,
@@ -1005,16 +1007,27 @@ function round_output(v::Vector{T}) where {T}
     return round.(v, digits = 6)
 end
 
-function finalize!(output::QuiverOutput)
-    path = Quiver.Binary.get_file_path(output.writer)
-    Quiver.Binary.close!(output.writer)
-    export_binary_to_csv(path)
+"""
+    finalize_writer!(writer::Quiver.Binary.File)
+
+Close `writer` and export its precision-faithful CSV sibling, exactly once. Safe to call on a
+writer that was already closed by an earlier call (e.g. a post-processing routine that closes
+its writer early to unblock a subsequent read of the same file) — a no-op in that case, since
+the CSV export already happened at that earlier close.
+"""
+function finalize_writer!(writer::Quiver.Binary.File)
+    if writer.ptr == C_NULL
+        return nothing
+    end
+    path = Quiver.Binary.get_file_path(writer)
+    Quiver.Binary.close!(writer)
+    Quiver.Binary.bin_to_csv(path; aggregate_time_dimensions = false)
     return nothing
 end
 
 function finalize_outputs!(outputs::Outputs)
     for output in values(outputs.outputs)
-        finalize!(output)
+        finalize_writer!(output.writer)
     end
     return nothing
 end

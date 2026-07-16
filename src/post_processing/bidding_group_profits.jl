@@ -49,6 +49,7 @@ function calculate_profits_settlement(
     reader_variable = Quiver.Binary.open_file(bidding_group_variable_costs_file; mode = 'r')
     reader_revenue = Quiver.Binary.open_file(file_revenue; mode = 'r')
     Quiver.save(reader_revenue - (reader_fixed + reader_variable), file_profit)
+    Quiver.Binary.bin_to_csv(file_profit; aggregate_time_dimensions = false)
     Quiver.Binary.close!(reader_fixed)
     Quiver.Binary.close!(reader_variable)
     Quiver.Binary.close!(reader_revenue)

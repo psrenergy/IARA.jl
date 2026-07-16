@@ -2,16 +2,22 @@ function get_bidding_group_bid_file_paths(inputs::AbstractInputs)
     bid_files = String[]
     if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup)
         if read_bids_from_file(inputs)
-            push!(bid_files, joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs) * ".csv"))
-            push!(bid_files, joinpath(path_case(inputs), bidding_group_price_bid_file(inputs) * ".csv"))
+            quantity_bid_base = joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs))
+            convert_time_series_file_to_binary(quantity_bid_base)
+            quantity_bid_path = resolve_binary_file_path(quantity_bid_base)
+            price_bid_base = joinpath(path_case(inputs), bidding_group_price_bid_file(inputs))
+            convert_time_series_file_to_binary(price_bid_base)
+            price_bid_path = resolve_binary_file_path(price_bid_base)
+            push!(bid_files, quantity_bid_path * ".qvr")
+            push!(bid_files, price_bid_path * ".qvr")
         elseif generate_heuristic_bids_for_clearing(inputs)
             push!(
                 bid_files,
-                joinpath(output_path(inputs), "bidding_group_energy_bid_period_$(inputs.args.period).csv"),
+                joinpath(output_path(inputs), "bidding_group_energy_bid_period_$(inputs.args.period).qvr"),
             )
             push!(
                 bid_files,
-                joinpath(output_path(inputs), "bidding_group_price_bid_period_$(inputs.args.period).csv"),
+                joinpath(output_path(inputs), "bidding_group_price_bid_period_$(inputs.args.period).qvr"),
             )
         end
         @assert all(isfile.(bid_files)) "Offer files not found: $(bid_files)"
@@ -21,9 +27,9 @@ function get_bidding_group_bid_file_paths(inputs::AbstractInputs)
             output_path(inputs)
         end
         no_markup_price_path =
-            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_bid_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_price_bid_period_$(inputs.args.period).qvr")
         no_markup_quantity_path =
-            joinpath(no_markup_price_folder, "bidding_group_no_markup_energy_bid_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "bidding_group_no_markup_energy_bid_period_$(inputs.args.period).qvr")
         if isfile(no_markup_price_path) && isfile(no_markup_quantity_path)
             push!(bid_files, no_markup_price_path)
             push!(bid_files, no_markup_quantity_path)
@@ -41,16 +47,22 @@ function get_virtual_reservoir_bid_file_paths(inputs::AbstractInputs)
     bid_files = String[]
     if is_market_clearing(inputs) && any_elements(inputs, VirtualReservoir)
         if read_bids_from_file(inputs)
-            push!(bid_files, joinpath(path_case(inputs), virtual_reservoir_quantity_bid_file(inputs) * ".csv"))
-            push!(bid_files, joinpath(path_case(inputs), virtual_reservoir_price_bid_file(inputs) * ".csv"))
+            quantity_bid_base = joinpath(path_case(inputs), virtual_reservoir_quantity_bid_file(inputs))
+            convert_time_series_file_to_binary(quantity_bid_base)
+            quantity_bid_path = resolve_binary_file_path(quantity_bid_base)
+            price_bid_base = joinpath(path_case(inputs), virtual_reservoir_price_bid_file(inputs))
+            convert_time_series_file_to_binary(price_bid_base)
+            price_bid_path = resolve_binary_file_path(price_bid_base)
+            push!(bid_files, quantity_bid_path * ".qvr")
+            push!(bid_files, price_bid_path * ".qvr")
         elseif generate_heuristic_bids_for_clearing(inputs)
             push!(
                 bid_files,
-                joinpath(output_path(inputs), "virtual_reservoir_energy_bid_period_$(inputs.args.period).csv"),
+                joinpath(output_path(inputs), "virtual_reservoir_energy_bid_period_$(inputs.args.period).qvr"),
             )
             push!(
                 bid_files,
-                joinpath(output_path(inputs), "virtual_reservoir_price_bid_period_$(inputs.args.period).csv"),
+                joinpath(output_path(inputs), "virtual_reservoir_price_bid_period_$(inputs.args.period).qvr"),
             )
         end
         @assert all(isfile.(bid_files)) "Offer files not found: $(bid_files)"
@@ -60,9 +72,9 @@ function get_virtual_reservoir_bid_file_paths(inputs::AbstractInputs)
             output_path(inputs)
         end
         no_markup_price_path =
-            joinpath(no_markup_price_folder, "virtual_reservoir_no_markup_price_bid_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "virtual_reservoir_no_markup_price_bid_period_$(inputs.args.period).qvr")
         no_markup_quantity_path =
-            joinpath(no_markup_price_folder, "virtual_reservoir_no_markup_energy_bid_period_$(inputs.args.period).csv")
+            joinpath(no_markup_price_folder, "virtual_reservoir_no_markup_energy_bid_period_$(inputs.args.period).qvr")
         if isfile(no_markup_price_path) && isfile(no_markup_quantity_path)
             push!(bid_files, no_markup_price_path)
             push!(bid_files, no_markup_quantity_path)
@@ -95,7 +107,7 @@ function get_revenue_files(inputs::AbstractInputs)
         [""]
     end
     filenames .*= "_period_$(inputs.args.period)"
-    filenames .*= ".csv"
+    filenames .*= ".qvr"
 
     return joinpath.(post_processing_path(inputs), filenames)
 end
@@ -111,7 +123,7 @@ function get_virtual_reservoir_revenue_files(inputs::AbstractInputs)
         [""]
     end
     filenames .*= "_period_$(inputs.args.period)"
-    filenames .*= ".csv"
+    filenames .*= ".qvr"
 
     return joinpath.(post_processing_path(inputs), filenames)
 end
@@ -127,7 +139,7 @@ function get_profit_file(inputs::AbstractInputs)
         ""
     end
     filename *= "_period_$(inputs.args.period)"
-    filename *= ".csv"
+    filename *= ".qvr"
 
     return joinpath(post_processing_path(inputs), filename)
 end
@@ -146,7 +158,7 @@ function get_virtual_reservoir_profit_file(inputs::AbstractInputs)
     if occursin("_ex_", filename)
         filename *= "_period_$(inputs.args.period)"
     end
-    filename *= ".csv"
+    filename *= ".qvr"
 
     return joinpath(post_processing_path(inputs), filename)
 end
@@ -154,7 +166,7 @@ end
 function get_virtual_reservoir_generation_files(inputs::AbstractInputs)
     base_name = "virtual_reservoir_generation"
     period_suffix = "_period_$(inputs.args.period)"
-    extension = ".csv"
+    extension = ".qvr"
 
     filenames = String[]
 
@@ -199,7 +211,7 @@ end
 function get_variable_cost_file(inputs::AbstractInputs)
     base_name = "bidding_group_variable_costs"
     period_suffix = "_period_$(inputs.args.period)"
-    extension = ".csv"
+    extension = ".qvr"
 
     subproblem_suffixes = ["_ex_post_physical", "_ex_post_commercial", "_ex_ante_physical", "_ex_ante_commercial"]
     filename = ""
@@ -222,7 +234,7 @@ end
 function get_load_marginal_cost_files(inputs::AbstractInputs)
     base_name = "load_marginal_cost"
     period_suffix = "_period_$(inputs.args.period)"
-    extension = ".csv"
+    extension = ".qvr"
 
     filenames = String[]
 
@@ -267,7 +279,7 @@ end
 function get_generation_files(inputs::AbstractInputs)
     base_name = "bidding_group_generation"
     period_suffix = "_period_$(inputs.args.period)"
-    extension = ".csv"
+    extension = ".qvr"
 
     filenames = String[]
 
@@ -323,7 +335,7 @@ function get_virtual_reservoir_final_energy_account_file(inputs::AbstractInputs)
     # Virtual reservoir final energy account always uses ex-post physical data
     subproblem_suffix = "_ex_post_physical"
     period_suffix = "_period_$(inputs.args.period)"
-    extension = ".csv"
+    extension = ".qvr"
 
     filename = base_name * subproblem_suffix * period_suffix * extension
 
@@ -338,7 +350,9 @@ function get_demands_to_plot(
 
     ex_ante_demand = ones(number_of_periods(inputs) * number_of_subperiods(inputs))
     if read_ex_ante_demand_file(inputs)
-        demand_file = joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs) * ".csv")
+        demand_file_base = joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs))
+        convert_time_series_file_to_binary(demand_file_base)
+        demand_file = resolve_binary_file_path(demand_file_base) * ".qvr"
         data, metadata = read_timeseries_file(demand_file)
         num_periods, num_scenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)
@@ -358,7 +372,9 @@ function get_demands_to_plot(
     ex_post_demand = zeros(num_subscenarios_placeholder, number_of_periods(inputs) * number_of_subperiods(inputs))
     ex_post_demand[num_subscenarios_placeholder, :] = copy(ex_ante_demand)
     if read_ex_post_demand_file(inputs)
-        demand_file = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs) * ".csv")
+        demand_file_base = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs))
+        convert_time_series_file_to_binary(demand_file_base)
+        demand_file = resolve_binary_file_path(demand_file_base) * ".qvr"
         data, metadata = read_timeseries_file(demand_file)
         num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)
@@ -405,7 +421,9 @@ function get_renewable_generation_to_plot(
 
     ex_ante_generation = ones(number_of_periods(inputs) * number_of_subperiods(inputs))
     if read_ex_ante_renewable_file(inputs)
-        generation_file = joinpath(path_case(inputs), renewable_unit_generation_ex_ante_file(inputs) * ".csv")
+        generation_file_base = joinpath(path_case(inputs), renewable_unit_generation_ex_ante_file(inputs))
+        convert_time_series_file_to_binary(generation_file_base)
+        generation_file = resolve_binary_file_path(generation_file_base) * ".qvr"
         data, metadata = read_timeseries_file(generation_file)
         num_periods, num_scenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)
@@ -425,7 +443,9 @@ function get_renewable_generation_to_plot(
     ex_post_generation = zeros(num_subscenarios_placeholder, number_of_periods(inputs) * number_of_subperiods(inputs))
     ex_post_generation[num_subscenarios_placeholder, :] = copy(ex_ante_generation)
     if read_ex_post_renewable_file(inputs)
-        generation_file = joinpath(path_case(inputs), renewable_unit_generation_ex_post_file(inputs) * ".csv")
+        generation_file_base = joinpath(path_case(inputs), renewable_unit_generation_ex_post_file(inputs))
+        convert_time_series_file_to_binary(generation_file_base)
+        generation_file = resolve_binary_file_path(generation_file_base) * ".qvr"
         data, metadata = read_timeseries_file(generation_file)
         num_periods, num_scenarios, num_subscenarios, num_subperiods = metadata_dimension_sizes(metadata)
         data = merge_period_subperiod(data)

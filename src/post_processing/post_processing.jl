@@ -283,12 +283,18 @@ function create_temporary_file_with_subscenario_dimension(
     number_of_subscenarios = inputs.collections.configurations.number_of_subscenarios
     dimension_size = [metadata_dimension_sizes(reader_metadata)..., number_of_subscenarios]
 
+    reader_time_dimensions = Quiver.Binary.get_dimensions(reader_metadata)
+    time_dimensions = [d.name for d in reader_time_dimensions if d.is_time_dimension]
+    frequencies = [d.frequency for d in reader_time_dimensions if d.is_time_dimension]
+
     md = Quiver.Binary.Metadata(;
         initial_datetime = Quiver.Binary.get_initial_datetime(reader_metadata),
         unit = Quiver.Binary.get_unit(reader_metadata),
         labels = Quiver.Binary.get_labels(reader_metadata),
         dimensions = ["period", "scenario", "subscenario"],
         dimension_sizes = Int64.(dimension_size),
+        time_dimensions = time_dimensions,
+        frequencies = frequencies,
     )
     writer = Quiver.Binary.open_file(treated_filename; mode = 'w', metadata = md)
 
@@ -335,12 +341,18 @@ function quiver_binary_merge(output_path::String, input_paths::Vector{String})
         error("quiver_binary_merge: duplicate label across input files")
     end
 
+    first_dimensions = Quiver.Binary.get_dimensions(first(metadatas))
+    time_dimensions = String[d.name for d in first_dimensions if d.is_time_dimension]
+    frequencies = String[d.frequency for d in first_dimensions if d.is_time_dimension]
+
     out_md = Quiver.Binary.Metadata(;
         initial_datetime = Quiver.Binary.get_initial_datetime(first(metadatas)),
         unit = Quiver.Binary.get_unit(first(metadatas)),
         labels = merged_labels,
         dimensions = String.(dimension_names),
         dimension_sizes = Int64.(dimension_sizes),
+        time_dimensions = time_dimensions,
+        frequencies = frequencies,
     )
     writer = Quiver.Binary.open_file(output_path; mode = 'w', metadata = out_md)
 

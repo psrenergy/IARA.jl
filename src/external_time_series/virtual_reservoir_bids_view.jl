@@ -50,13 +50,7 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
 
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
-    file_path = if isfile(file_path * ".qvr")
-        file_path
-    else
-        file_name = basename(file_path)
-        file_dir = dirname(file_path)
-        joinpath(file_dir, "temp", file_name)
-    end
+    file_path = resolve_binary_file_path(file_path)
 
     labels_to_read = String[]
     for vr in index_of_elements(inputs, VirtualReservoir)

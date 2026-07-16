@@ -168,7 +168,7 @@ function _write_costs_bg_file(
         end
     end
 
-    Quiver.Binary.close!(bidding_group_variable_costs_writer)
+    finalize_writer!(bidding_group_variable_costs_writer)
 
     return
 end
@@ -229,7 +229,7 @@ function get_costs_files_from_tech(inputs::Inputs, run_time_options::RunTimeOpti
     post_processing_dir = post_processing_path(inputs, run_time_options)
     tempdir = joinpath(output_path(inputs, run_time_options), "temp")
     costs_file = filter(
-        x -> endswith(x, suffix * ".csv") && occursin(technology, x) && occursin("total_costs", x),
+        x -> endswith(x, suffix * ".qvr") && occursin(technology, x) && occursin("total_costs", x),
         readdir(tempdir),
     )
     if isempty(costs_file)
@@ -255,8 +255,7 @@ function _merge_costs_files(
                     !occursin("opportunity_cost", x) && !occursin("minimum_outflow_marginal_cost", x)
                     &&
                     (
-                        endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".qvr") ||
-                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") ||
+                        endswith(x, clearing_procedure * ".qvr") ||
                         endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".qvr")
                     ), readdir(outputs_dir))
         if isempty(costs_files)
@@ -270,7 +269,7 @@ function _merge_costs_files(
         output_file = joinpath(tempdir, get_filename(filename))
         files = [joinpath(outputs_dir, get_filename(file)) for file in costs_files]
         readers = [Quiver.Binary.open_file(f; mode = 'r') for f in files]
-        result = reduce(+, readers)
+        result = reduce(+, Quiver.Expression.(readers))
         Quiver.save(result, output_file)
         for r in readers
             Quiver.Binary.close!(r)
@@ -373,7 +372,7 @@ function _write_fixed_costs_bg_file(
         end
     end
 
-    Quiver.Binary.close!(bidding_group_fixed_costs_writer)
+    finalize_writer!(bidding_group_fixed_costs_writer)
 
     return nothing
 end

@@ -9,51 +9,6 @@
 #############################################################################
 
 """
-    _format_csv_float(v::Float64)
-
-Format a `Float64` as plain fixed-point decimal text, never scientific notation.
-"""
-function _format_csv_float(v::Float64)
-    isnan(v) && return "NaN"
-    s = @sprintf("%.6f", v)
-    s = rstrip(s, '0')
-    endswith(s, ".") && (s *= "0")
-    return s
-end
-
-"""
-    export_binary_to_csv(path::String)
-
-Convert a closed Quiver binary file (`path.qvr` + `path.toml`) into a precision-faithful
-`path.csv`, applying `round_output` and formatting every value as plain decimal text.
-"""
-function export_binary_to_csv(path::String)
-    reader = Quiver.Binary.open_file(path; mode = 'r')
-    md = Quiver.Binary.get_metadata(reader)
-    dimension_names = metadata_dimension_names(md)
-    dimension_sizes = metadata_dimension_sizes(md)
-    labels = Quiver.Binary.get_labels(md)
-
-    csv_path = path * ".csv"
-    open(csv_path, "w") do io
-        println(io, join(vcat(String.(dimension_names), labels), ","))
-
-        dims = first_position!(copy(dimension_sizes))
-        for _ in 1:prod(dimension_sizes)
-            next_dim!(dims, dimension_sizes)
-            read_kwargs = NamedTuple(dimension_names[i] => dims[i] for i in eachindex(dimension_names))
-            data = Quiver.Binary.read(reader; allow_nulls = true, read_kwargs...)
-            rounded = round_output(data)
-            row_values = [_format_csv_float(v) for v in rounded]
-            println(io, join(vcat(string.(dims), row_values), ","))
-        end
-    end
-
-    Quiver.Binary.close!(reader)
-    return csv_path
-end
-
-"""
     write_timeseries_file(
         file_path::String,
         data::Array{T, N};
@@ -138,8 +93,6 @@ function convert_time_series_file_to_binary(file_path::String)
         if isfile(csv_file)
             @error("Both CSV and binary files found for $file_path. Please remove one of them.")
             num_errors += 1
-        else
-            nothing
         end
     else
         if isfile(csv_file)
@@ -158,6 +111,22 @@ function convert_time_series_file_to_binary(file_path::String)
     end
 
     return num_errors
+end
+
+"""
+    resolve_binary_file_path(file_path::String)
+
+Given `file_path` (no extension) whose Quiver binary version is already guaranteed to exist
+somewhere — either directly at `file_path` or converted into `dirname(file_path)/temp/` by an
+earlier `convert_time_series_file_to_binary` call — return the base path (still no extension)
+of wherever the `.qvr` actually lives.
+"""
+function resolve_binary_file_path(file_path::String)
+    if isfile(file_path * ".qvr")
+        return file_path
+    else
+        return joinpath(dirname(file_path), "temp", basename(file_path))
+    end
 end
 
 function quiver_file_exists(file_path::String)
@@ -372,6 +341,21 @@ function carrousel_read(file::Quiver.Binary.File, md::Quiver.Binary.Metadata; di
 end
 
 """
+    quiver_initial_datetime_string(initial_date::Union{String, DateTime})
+
+Convert `initial_date` to the full "yyyy-mm-ddTHH:MM:SS" string `Quiver.Binary.Metadata` requires.
+"""
+function quiver_initial_datetime_string(initial_date::Union{String, DateTime})
+    if initial_date isa DateTime
+        return Quiver.date_time_to_string(initial_date)
+    elseif isempty(initial_date)
+        return initial_date
+    else
+        return Quiver.date_time_to_string(DateTime(initial_date, "yyyy-mm-ddTHH:MM:SS"))
+    end
+end
+
+"""
     array_to_binary_file(filename::String, data::Array{T, N};
         dimensions::Vector{String}, labels::Vector{String}, dimension_size::Vector{Int},
         time_dimension::String = "", initial_date::Union{String, DateTime} = "", unit::String = "",
@@ -397,9 +381,8 @@ function array_to_binary_file(
     if !isempty(time_dimension) && !(time_dimension in dimensions)
         error("array_to_binary_file: time_dimension \"$time_dimension\" not found in dimensions $dimensions")
     end
-    initial_datetime_str = initial_date isa DateTime ? Quiver.date_time_to_string(initial_date) : initial_date
     md = Quiver.Binary.Metadata(;
-        initial_datetime = initial_datetime_str,
+        initial_datetime = quiver_initial_datetime_string(initial_date),
         unit = unit,
         labels = labels,
         dimensions = dimensions,

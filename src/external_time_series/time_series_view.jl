@@ -50,13 +50,7 @@ function initialize_time_series_view_from_external_file(
 
     # Read file in the expected folder if it exists.
     # Otherwise, read from the temp folder.
-    file_path = if isfile(file_path * ".qvr")
-        file_path
-    else
-        file_name = basename(file_path)
-        file_dir = dirname(file_path)
-        joinpath(file_dir, "temp", file_name)
-    end
+    file_path = resolve_binary_file_path(file_path)
 
     # Initialize time series
     ts.reader = Quiver.Binary.open_file(file_path; mode = 'r')

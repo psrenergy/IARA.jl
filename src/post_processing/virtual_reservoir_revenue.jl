@@ -137,7 +137,7 @@ function accepted_bid_revenue(
         end
     end
 
-    Quiver.Binary.close!(writer)
+    finalize_writer!(writer)
     Quiver.Binary.close!(vr_generation_reader)
     Quiver.Binary.close!(vr_marginal_cost_reader)
     if is_two_settlement_ex_post
@@ -469,7 +469,7 @@ function shareholder_residual_revenue(
         end
     end
 
-    Quiver.Binary.close!(writer)
+    finalize_writer!(writer)
     Quiver.Binary.close!(load_marginal_cost_reader)
     Quiver.Binary.close!(hydro_generation_reader)
     Quiver.Binary.close!(turbinable_spillage_reader)
@@ -717,7 +717,7 @@ function spilled_responsibility_revenue(
         end
     end
 
-    Quiver.Binary.close!(writer)
+    finalize_writer!(writer)
     Quiver.Binary.close!(spilled_energy_reader)
     Quiver.Binary.close!(load_marginal_cost_reader)
     Quiver.Binary.close!(vr_energy_account_reader)
@@ -943,8 +943,8 @@ function hydro_constraints_violation_revenue(
         end
     end
 
-    Quiver.Binary.close!(violation_revenue_writer)
-    Quiver.Binary.close!(violation_adjusted_revenue_writer)
+    finalize_writer!(violation_revenue_writer)
+    finalize_writer!(violation_adjusted_revenue_writer)
     Quiver.Binary.close!(violation_marginal_cost_reader)
     Quiver.Binary.close!(minimum_outflow_violation_reader)
     if is_two_settlement_ex_post
@@ -1054,6 +1054,7 @@ function post_processing_virtual_reservoirs(
     ]
     revenue_readers = [Quiver.Binary.open_file(f; mode = 'r') for f in revenue_files]
     Quiver.save(reduce(+, revenue_readers), total_revenue_file)
+    Quiver.Binary.bin_to_csv(total_revenue_file; aggregate_time_dimensions = false)
     for r in revenue_readers
         Quiver.Binary.close!(r)
     end
@@ -1107,6 +1108,7 @@ function post_processing_virtual_reservoirs_double_settlement(
     reader_ex_ante = Quiver.Binary.open_file(treated_ex_ante_revenue_file; mode = 'r')
     reader_ex_post = Quiver.Binary.open_file(ex_post_revenue_file; mode = 'r')
     Quiver.save(reader_ex_ante + reader_ex_post, revenue_file)
+    Quiver.Binary.bin_to_csv(revenue_file; aggregate_time_dimensions = false)
     Quiver.Binary.close!(reader_ex_ante)
     Quiver.Binary.close!(reader_ex_post)
 

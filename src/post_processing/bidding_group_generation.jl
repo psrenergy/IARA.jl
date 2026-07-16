@@ -211,7 +211,7 @@ function _write_generation_bg_file(
         end
     end
 
-    Quiver.Binary.close!(bidding_group_generation_writer)
+    finalize_writer!(bidding_group_generation_writer)
 
     return
 end

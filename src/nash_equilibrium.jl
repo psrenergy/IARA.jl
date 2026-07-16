@@ -14,7 +14,6 @@ function train_nash_equilibrium_model(inputs::Inputs)
         )
     else
         @info("Initializing Nash Equilibrium: READ BIDS FROM FILE")
-        exts = [".csv", ".toml"]
         files = []
         if has_any_bid_simple_input_files(inputs)
             push!(files, bidding_group_quantity_bid_file(inputs))
@@ -24,13 +23,13 @@ function train_nash_equilibrium_model(inputs::Inputs)
         if any_asset_owner_is_price_taker(inputs, run_time_options)
             push!(files, "load_marginal_cost")
         end
-        for ext in exts
-            for file in files
-                cp(
-                    joinpath(path_case(inputs), file * "$ext"),
-                    joinpath(initialization_dir, file * "$ext"),
-                )
-            end
+        for file in files
+            source_base = joinpath(path_case(inputs), file)
+            convert_time_series_file_to_binary(source_base)
+            source_base = resolve_binary_file_path(source_base)
+            cp(source_base * ".qvr", joinpath(initialization_dir, file * ".qvr"))
+            cp(source_base * ".toml", joinpath(initialization_dir, file * ".toml"))
+            Quiver.Binary.bin_to_csv(joinpath(initialization_dir, file); aggregate_time_dimensions = false)
         end
     end
     if max_rev_equilibrium_bid_initialization(inputs) ==
@@ -115,7 +114,7 @@ function copy_bidding_group_bids_to_output_folder(
     run_time_options::RunTimeOptions,
 )
     # Copy the bidding group bids file to the output folder
-    exts = [".csv", ".toml"]
+    exts = [".qvr", ".toml"]
     files = []
     push!(files, "bidding_group_energy_bid")
     push!(files, "bidding_group_price_bid")
@@ -126,6 +125,9 @@ function copy_bidding_group_bids_to_output_folder(
                 joinpath(output_path(inputs), file * "$ext"),
             )
         end
+    end
+    for file in files
+        Quiver.Binary.bin_to_csv(joinpath(output_path(inputs), file); aggregate_time_dimensions = false)
     end
     return nothing
 end

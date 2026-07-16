@@ -147,10 +147,11 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
     Quiver.Binary.close!(reader)
 
     dir_path = post_processing_path(inputs, run_time_options)
+    generation_file = joinpath(dir_path, "generation$file_suffix")
 
     if is_market_clearing(inputs)
         quiver_binary_merge(
-            joinpath(dir_path, "generation$file_suffix"),
+            generation_file,
             [
                 joinpath(temp_path, "hydro_generation_mean$file_suffix"),
                 joinpath(temp_path, "thermal_generation_mean$file_suffix"),
@@ -161,7 +162,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
         )
     else
         quiver_binary_merge(
-            joinpath(dir_path, "generation$file_suffix"),
+            generation_file,
             [
                 joinpath(temp_path, "hydro_generation_sum$file_suffix"),
                 joinpath(temp_path, "thermal_generation_sum$file_suffix"),
@@ -171,8 +172,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
             ],
         )
     end
-
-    export_binary_to_csv(joinpath(dir_path, "generation$file_suffix"))
+    Quiver.Binary.bin_to_csv(generation_file; aggregate_time_dimensions = false)
 
     return nothing
 end

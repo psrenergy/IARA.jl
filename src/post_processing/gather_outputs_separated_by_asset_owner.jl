@@ -37,7 +37,7 @@ function gather_outputs_separated_by_asset_owners(inputs::Inputs; run_time_optio
         # Remove extension from toml in separated files
         separated_files_without_extension = [replace(file, ".toml" => "") for file in toml_of_separated_files]
         quiver_binary_merge(gathered_file, separated_files_without_extension)
-        Quiver.Binary.bin_to_csv(gathered_file; aggregate_time_dimensions = false)
+        finalize_output!(gathered_file)
     end
 
     # remove the separated files

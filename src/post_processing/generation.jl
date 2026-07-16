@@ -172,7 +172,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
             ],
         )
     end
-    Quiver.Binary.bin_to_csv(generation_file; aggregate_time_dimensions = false)
+    finalize_output!(generation_file)
 
     return nothing
 end

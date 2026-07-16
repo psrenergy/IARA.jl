@@ -122,7 +122,7 @@ function post_processing_minimum_outflow_violation(
         end
     end
 
-    finalize_writer!(writer)
+    finalize_output!(writer)
     Quiver.Binary.close!(hydro_turbining_reader)
     Quiver.Binary.close!(hydro_spillage_reader)
 

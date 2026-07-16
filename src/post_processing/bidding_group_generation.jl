@@ -211,7 +211,7 @@ function _write_generation_bg_file(
         end
     end
 
-    finalize_writer!(bidding_group_generation_writer)
+    finalize_output!(bidding_group_generation_writer)
 
     return
 end

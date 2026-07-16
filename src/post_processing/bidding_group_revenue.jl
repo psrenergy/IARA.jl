@@ -158,7 +158,7 @@ function _write_revenue_without_subscenarios(
             end
         end
     end
-    finalize_writer!(writer_without_subscenarios)
+    finalize_output!(writer_without_subscenarios)
     # Close readers because they reached the end of the file.
     Quiver.Binary.close!(generation_ex_ante_reader)
     Quiver.Binary.close!(spot_ex_ante_reader)
@@ -259,7 +259,7 @@ function _write_revenue_with_subscenarios(
             end
         end
     end
-    finalize_writer!(writer_with_subscenarios)
+    finalize_output!(writer_with_subscenarios)
     # Close readers because they reached the end of the file.
     if settlement_type(inputs) != IARA.Configurations_FinancialSettlementType.EX_POST
         Quiver.Binary.close!(generation_ex_ante_reader)
@@ -518,7 +518,7 @@ function _total_revenue(
             end
         end
     end
-    finalize_writer!(total_revenue_writer)
+    finalize_output!(total_revenue_writer)
     Quiver.Binary.close!(ex_ante_reader)
     Quiver.Binary.close!(ex_post_reader)
     return
@@ -596,7 +596,7 @@ function _join_independent_and_profile_bid(
         reader_independent = Quiver.Binary.open_file(filepath_independent; mode = 'r')
         reader_profile = Quiver.Binary.open_file(filepath_profile; mode = 'r')
         Quiver.save(reader_independent + reader_profile, file_revenue_ex_ante)
-        Quiver.Binary.bin_to_csv(file_revenue_ex_ante; aggregate_time_dimensions = false)
+        finalize_output!(file_revenue_ex_ante)
         Quiver.Binary.close!(reader_independent)
         Quiver.Binary.close!(reader_profile)
     end
@@ -648,7 +648,7 @@ function _join_independent_and_profile_bid(
         reader_independent = Quiver.Binary.open_file(filepath_independent; mode = 'r')
         reader_profile = Quiver.Binary.open_file(filepath_profile; mode = 'r')
         Quiver.save(reader_independent + reader_profile, file_revenue_ex_post)
-        Quiver.Binary.bin_to_csv(file_revenue_ex_post; aggregate_time_dimensions = false)
+        finalize_output!(file_revenue_ex_post)
         Quiver.Binary.close!(reader_independent)
         Quiver.Binary.close!(reader_profile)
     end

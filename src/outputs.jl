@@ -1008,14 +1008,14 @@ function round_output(v::Vector{T}) where {T}
 end
 
 """
-    finalize_writer!(writer::Quiver.Binary.File)
+    finalize_output!(writer::Quiver.Binary.File)
 
-Close `writer` and export its precision-faithful CSV sibling, exactly once. Safe to call on a
-writer that was already closed by an earlier call (e.g. a post-processing routine that closes
+Close `writer` and export its CSV version, exactly once. Safe to call on a writer
+that was already closed by an earlier call (e.g. a post-processing routine that closes
 its writer early to unblock a subsequent read of the same file) — a no-op in that case, since
 the CSV export already happened at that earlier close.
 """
-function finalize_writer!(writer::Quiver.Binary.File)
+function finalize_output!(writer::Quiver.Binary.File)
     if writer.ptr == C_NULL
         return nothing
     end
@@ -1025,9 +1025,19 @@ function finalize_writer!(writer::Quiver.Binary.File)
     return nothing
 end
 
+"""
+    finalize_output!(path::String)
+
+Export the CSV version of an already-closed binary file at `path`.
+"""
+function finalize_output!(path::String)
+    Quiver.Binary.bin_to_csv(path; aggregate_time_dimensions = false)
+    return nothing
+end
+
 function finalize_outputs!(outputs::Outputs)
     for output in values(outputs.outputs)
-        finalize_writer!(output.writer)
+        finalize_output!(output.writer)
     end
     return nothing
 end

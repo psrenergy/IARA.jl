@@ -168,7 +168,7 @@ function _write_costs_bg_file(
         end
     end
 
-    finalize_writer!(bidding_group_variable_costs_writer)
+    finalize_output!(bidding_group_variable_costs_writer)
 
     return
 end
@@ -372,7 +372,7 @@ function _write_fixed_costs_bg_file(
         end
     end
 
-    finalize_writer!(bidding_group_fixed_costs_writer)
+    finalize_output!(bidding_group_fixed_costs_writer)
 
     return nothing
 end

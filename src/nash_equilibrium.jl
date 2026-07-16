@@ -29,7 +29,7 @@ function train_nash_equilibrium_model(inputs::Inputs)
             source_base = resolve_binary_file_path(source_base)
             cp(source_base * ".qvr", joinpath(initialization_dir, file * ".qvr"))
             cp(source_base * ".toml", joinpath(initialization_dir, file * ".toml"))
-            Quiver.Binary.bin_to_csv(joinpath(initialization_dir, file); aggregate_time_dimensions = false)
+            finalize_output!(joinpath(initialization_dir, file))
         end
     end
     if max_rev_equilibrium_bid_initialization(inputs) ==
@@ -127,7 +127,7 @@ function copy_bidding_group_bids_to_output_folder(
         end
     end
     for file in files
-        Quiver.Binary.bin_to_csv(joinpath(output_path(inputs), file); aggregate_time_dimensions = false)
+        finalize_output!(joinpath(output_path(inputs), file))
     end
     return nothing
 end

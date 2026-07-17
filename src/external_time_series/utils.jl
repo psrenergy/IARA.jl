@@ -89,12 +89,7 @@ function convert_time_series_file_to_binary(file_path::String)
     binary_file = file_path * ".qvr"
     num_errors = 0
 
-    if isfile(binary_file)
-        if isfile(csv_file)
-            @error("Both CSV and binary files found for $file_path. Please remove one of them.")
-            num_errors += 1
-        end
-    else
+    if !isfile(binary_file)
         if isfile(csv_file)
             temp_path = joinpath(dirname(file_path), "temp")
             if !isdir(temp_path)

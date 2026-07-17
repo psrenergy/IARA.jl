@@ -1,8 +1,8 @@
-version = 1
-dimensions = ["period", "scenario"]
-dimension_size = [10, 1]
-initial_date = "2025-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "-"
-labels = ["Azul", "Vermelho", "Verde"]
+dimension_sizes = [ 10, 1 ]
+dimensions = [ 'period', 'scenario' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2025-01-01T00:00:00'
+labels = [ 'Azul', 'Vermelho', 'Verde' ]
+time_dimensions = [ 'period' ]
+unit = '-'
+version = '1'

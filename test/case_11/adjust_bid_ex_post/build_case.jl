@@ -279,9 +279,9 @@ IARA.update_configuration!(db;
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST,
 )
 
-# Create and link CSV files
+# Create and link files
 # -------------------------
-mv(joinpath(PATH, "renewable_generation.csv"), joinpath(PATH, "renewable_generation_ex_ante.csv"); force = true)
+mv(joinpath(PATH, "renewable_generation.qvr"), joinpath(PATH, "renewable_generation_ex_ante.qvr"); force = true)
 mv(joinpath(PATH, "renewable_generation.toml"), joinpath(PATH, "renewable_generation_ex_ante.toml"); force = true)
 
 renewable_generation_ex_post =

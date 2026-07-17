@@ -1,8 +1,8 @@
-version = 1
-dimensions = ["period", "scenario", "subperiod"]
-dimension_size = [3, 2, 4]
-initial_date = "2020-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "$"
-labels = ["hydro_1", "hydro_2"]
+dimension_sizes = [ 3, 2, 4 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2020-01-01T00:00:00'
+labels = [ 'hydro_1', 'hydro_2' ]
+time_dimensions = [ 'period' ]
+unit = '$'
+version = '1'

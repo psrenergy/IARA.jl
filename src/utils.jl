@@ -276,10 +276,11 @@ Reads a time series from a file and returns a DataFrame.
 function time_series_dataframe(path::String)
     # get file extension
     file, ext = splitext(path)
-    if ext != ".qvr"
-        error(
-            "File extension $ext not supported — CSV inputs must be converted to binary first via convert_time_series_file_to_binary.",
-        )
+    if ext == ".csv"
+        convert_time_series_file_to_binary(file)
+        file = resolve_binary_file_path(file)
+    elseif ext != ".qvr"
+        error("File extension $ext not supported. Expected .csv or .qvr.")
     end
 
     array_data, metadata = binary_file_to_array(file)

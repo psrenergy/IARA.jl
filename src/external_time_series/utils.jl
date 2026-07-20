@@ -64,8 +64,8 @@ end
 """
     read_timeseries_file(file_path::String)
 
-Read a time series file. Only `.qvr` (binary) is supported — CSV inputs must be converted
-first via `convert_time_series_file_to_binary`.
+Read a time series file. `.csv` inputs are converted to binary first via
+`convert_time_series_file_to_binary`.
 """
 function read_timeseries_file(file_path::String)
     file_path_split = split(file_path, ".")
@@ -74,13 +74,15 @@ function read_timeseries_file(file_path::String)
     end
 
     filepath = join(file_path_split[1:end-1], ".")
+    ext = file_path_split[end]
 
-    if file_path_split[end] == "qvr"
+    if ext == "qvr"
         return binary_file_to_array(filepath)
+    elseif ext == "csv"
+        convert_time_series_file_to_binary(filepath)
+        return binary_file_to_array(resolve_binary_file_path(filepath))
     else
-        error(
-            "Unexpected file extension: \"$(file_path_split[end])\". Expected .qvr — CSV inputs must be converted first via convert_time_series_file_to_binary.",
-        )
+        error("Unexpected file extension: \"$ext\". Expected .csv or .qvr.")
     end
 end
 

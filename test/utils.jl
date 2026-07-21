@@ -89,10 +89,14 @@ end
 Compare the dimensions, dimension sizes, labels and unit of two parsed Quiver `.toml` files.
 """
 function metadata_matches(md1::Dict{String, Any}, md2::Dict{String, Any})
-    return md1["dimensions"] == md2["dimensions"] &&
-           md1["dimension_sizes"] == md2["dimension_sizes"] &&
-           md1["labels"] == md2["labels"] &&
-           md1["unit"] == md2["unit"]
+    ok = true
+    for field in ("dimensions", "dimension_sizes", "labels", "unit")
+        if md1[field] != md2[field]
+            @error("Field \"$field\" is $(md1[field]), expected $(md2[field])")
+            ok = false
+        end
+    end
+    return ok
 end
 
 """

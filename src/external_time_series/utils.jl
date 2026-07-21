@@ -166,6 +166,17 @@ end
 
 function get_maximum_value_of_time_series(file_path::String)
     max_value = -Inf
+    num_errors = 0
+
+    # convert time series if needed
+    num_errors = convert_time_series_file_to_binary(file_path)
+
+    # When the file does not exist we must exit this function early
+    if num_errors > 0
+        error("Could not read time series file $file_path.")
+    end
+    file_path = resolve_binary_file_path(file_path)
+
     reader = Quiver.Binary.open_file(file_path; mode = 'r')
     md = Quiver.Binary.get_metadata(reader)
     dimension_names = metadata_dimension_names(md)

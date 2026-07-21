@@ -213,8 +213,8 @@ Read a timeseries file in the outputs directory.
 function read_timeseries_file_in_outputs(filename, inputs)
     output_dir = output_path(inputs)
     filepath_csv = joinpath(output_dir, filename * ".csv")
-    filepath_quiv = joinpath(output_dir, filename * ".qvr")
-    filepath = isfile(filepath_quiv) ? filepath_quiv : filepath_csv
+    filepath_qvr = joinpath(output_dir, filename * ".qvr")
+    filepath = isfile(filepath_qvr) ? filepath_qvr : filepath_csv
     return read_timeseries_file(filepath)
 end
 
@@ -314,40 +314,74 @@ function create_temporary_file_with_subscenario_dimension(
 end
 
 """
-    quiver_binary_merge(output_path::String, input_paths::Vector{String})
+    merge_binary_files(output_path::String, input_paths::Vector{String})
 
 Concatenate the labels of N binary files sharing the same dimensions into one output file.
 """
-function quiver_binary_merge(output_path::String, input_paths::Vector{String})
+function merge_binary_files(output_path::String, input_paths::Vector{String})
     readers = [Quiver.Binary.open_file(p; mode = 'r') for p in input_paths]
     metadatas = [Quiver.Binary.get_metadata(r) for r in readers]
 
-    dimension_names = metadata_dimension_names(first(metadatas))
-    dimension_sizes = metadata_dimension_sizes(first(metadatas))
-    for md in metadatas[2:end]
-        if metadata_dimension_names(md) != dimension_names || metadata_dimension_sizes(md) != dimension_sizes
-            for r in readers
-                Quiver.Binary.close!(r)
-            end
-            error("quiver_binary_merge: all input files must share the same dimensions and sizes")
+    first_dimensions = Quiver.Binary.get_dimensions(first(metadatas))
+    dimension_names = [Symbol(d.name) for d in first_dimensions]
+    dimension_sizes = [Int(d.size) for d in first_dimensions]
+    unit = Quiver.Binary.get_unit(first(metadatas))
+    initial_datetime = Quiver.Binary.get_initial_datetime(first(metadatas))
+    time_dimensions = String[d.name for d in first_dimensions if d.is_time_dimension]
+    frequencies = String[d.frequency for d in first_dimensions if d.is_time_dimension]
+
+    errors = String[]
+    for (path, md) in zip(input_paths[2:end], metadatas[2:end])
+        md_dimensions = Quiver.Binary.get_dimensions(md)
+        md_dimension_names = [Symbol(d.name) for d in md_dimensions]
+        md_dimension_sizes = [Int(d.size) for d in md_dimensions]
+        md_time_dimensions = String[d.name for d in md_dimensions if d.is_time_dimension]
+        md_frequencies = String[d.frequency for d in md_dimensions if d.is_time_dimension]
+
+        if md_dimension_names != dimension_names || md_dimension_sizes != dimension_sizes
+            push!(
+                errors,
+                "\"$(input_paths[1])\" has dimensions $dimension_names (sizes $dimension_sizes), but " *
+                "\"$path\" has $md_dimension_names (sizes $md_dimension_sizes).",
+            )
+        end
+        md_unit = Quiver.Binary.get_unit(md)
+        if md_unit != unit
+            push!(errors, "\"$(input_paths[1])\" has unit \"$unit\", but \"$path\" has \"$md_unit\".")
+        end
+        md_initial_datetime = Quiver.Binary.get_initial_datetime(md)
+        if md_initial_datetime != initial_datetime
+            push!(
+                errors,
+                "\"$(input_paths[1])\" has initial datetime \"$initial_datetime\", but " *
+                "\"$path\" has \"$md_initial_datetime\".",
+            )
+        end
+        if md_time_dimensions != time_dimensions || md_frequencies != frequencies
+            push!(
+                errors,
+                "\"$(input_paths[1])\" has time dimension(s) $time_dimensions with frequency(ies) $frequencies, " *
+                "but \"$path\" has $md_time_dimensions with $md_frequencies.",
+            )
         end
     end
 
     merged_labels = vcat([Quiver.Binary.get_labels(md) for md in metadatas]...)
-    if length(unique(merged_labels)) != length(merged_labels)
+    duplicated_labels = [label for label in unique(merged_labels) if count(==(label), merged_labels) > 1]
+    if !isempty(duplicated_labels)
+        push!(errors, "label(s) $duplicated_labels appear in more than one of $input_paths.")
+    end
+
+    if !isempty(errors)
         for r in readers
             Quiver.Binary.close!(r)
         end
-        error("quiver_binary_merge: duplicate label across input files")
+        error("Cannot merge binary files ($(length(errors)) error(s)):\n" * join(("  - " * e for e in errors), "\n"))
     end
 
-    first_dimensions = Quiver.Binary.get_dimensions(first(metadatas))
-    time_dimensions = String[d.name for d in first_dimensions if d.is_time_dimension]
-    frequencies = String[d.frequency for d in first_dimensions if d.is_time_dimension]
-
     out_md = Quiver.Binary.Metadata(;
-        initial_datetime = Quiver.Binary.get_initial_datetime(first(metadatas)),
-        unit = Quiver.Binary.get_unit(first(metadatas)),
+        initial_datetime = initial_datetime,
+        unit = unit,
         labels = merged_labels,
         dimensions = String.(dimension_names),
         dimension_sizes = Int64.(dimension_sizes),

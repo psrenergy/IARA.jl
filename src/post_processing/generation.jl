@@ -150,7 +150,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
     generation_file = joinpath(dir_path, "generation$file_suffix")
 
     if is_market_clearing(inputs)
-        quiver_binary_merge(
+        merge_binary_files(
             generation_file,
             [
                 joinpath(temp_path, "hydro_generation_mean$file_suffix"),
@@ -161,7 +161,7 @@ function post_processing_generation(inputs::Inputs, run_time_options::RunTimeOpt
             ],
         )
     else
-        quiver_binary_merge(
+        merge_binary_files(
             generation_file,
             [
                 joinpath(temp_path, "hydro_generation_sum$file_suffix"),

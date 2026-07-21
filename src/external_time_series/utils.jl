@@ -166,7 +166,6 @@ end
 
 function get_maximum_value_of_time_series(file_path::String)
     max_value = -Inf
-    num_errors = 0
 
     # convert time series if needed
     num_errors = convert_time_series_file_to_binary(file_path)
@@ -401,10 +400,10 @@ function array_to_binary_file(
     digits::Union{Int, Nothing} = nothing,
 ) where {T, N}
     if !isempty(frequency) && isempty(time_dimension)
-        error("array_to_binary_file: `frequency` was given but `time_dimension` was not")
+        error("frequency was given but time_dimension was not")
     end
     if !isempty(time_dimension) && !(time_dimension in dimensions)
-        error("array_to_binary_file: time_dimension \"$time_dimension\" not found in dimensions $dimensions")
+        error("time_dimension \"$time_dimension\" not found in dimensions $dimensions")
     end
     md = Quiver.Binary.Metadata(;
         initial_datetime = quiver_initial_datetime_string(initial_date),

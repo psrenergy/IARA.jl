@@ -338,6 +338,23 @@ function carrousel_read(file::Quiver.Binary.File, md::Quiver.Binary.Metadata; di
 end
 
 """
+    label_indices_for(md::Quiver.Binary.Metadata, labels_to_read::Vector{String})
+
+Return the index of each `labels_to_read` entry within `md`'s label set, for filtering/reordering
+a full-row `Quiver.Binary.read`/`carrousel_read` result down to just the requested labels. Errors
+if any requested label is not found in the file.
+"""
+function label_indices_for(md::Quiver.Binary.Metadata, labels_to_read::Vector{String})
+    file_labels = Quiver.Binary.get_labels(md)
+    indices = indexin(labels_to_read, file_labels)
+    missing_mask = isnothing.(indices)
+    if any(missing_mask)
+        error("Label(s) $(labels_to_read[missing_mask]) not found in metadata labels $(file_labels)")
+    end
+    return Int.(indices)
+end
+
+"""
     quiver_initial_datetime_string(initial_date::Union{String, DateTime})
 
 Convert `initial_date` to the full "yyyy-mm-ddTHH:MM:SS" string `Quiver.Binary.Metadata` requires.

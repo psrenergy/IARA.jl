@@ -20,6 +20,7 @@ Collection representing the time series data read from external files in chunks.
     # Data that will be used in the model and could be aggregated at some point
     data::Array{T, N} = Array{T, N}(undef, zeros(Int, N)...)
     dimensions::Vector{Symbol} = Symbol[]
+    label_indices::Vector{Int} = Int[]
 end
 
 function Base.getindex(time_series::TimeSeriesView{T, N}, inds...) where {T, N}
@@ -55,6 +56,7 @@ function initialize_time_series_view_from_external_file(
     # Initialize time series
     ts.reader = Quiver.Binary.open_file(file_path; mode = 'r')
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
+    ts.label_indices = label_indices_for(ts_metadata, labels_to_read)
 
     # Validate if unit came as expected
     reader_unit = Quiver.Binary.get_unit(ts_metadata)
@@ -130,7 +132,7 @@ function initialize_time_series_view_from_external_file(
 
     ts.exact_dimensions_data = zeros(
         T,
-        length(Quiver.Binary.get_labels(ts_metadata)),
+        length(labels_to_read),
         dimension_sizes...,
     )
 
@@ -300,7 +302,7 @@ function read_period_scenario_subperiod!(
     # Loop in subperiods
     for subperiod in 1:metadata_dimension_sizes(ts_metadata)[3]
         ts.exact_dimensions_data[:, subperiod] =
-            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, subperiod)
+            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, subperiod)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -320,7 +322,8 @@ function read_period_scenario_hour!(
     )
     # Loop in hours
     for hour in 1:metadata_dimension_sizes(ts_metadata)[3]
-        ts.exact_dimensions_data[:, hour] = carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, hour)
+        ts.exact_dimensions_data[:, hour] =
+            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, hour)[ts.label_indices]
     end
     if !has_hour_subperiod_map(inputs)
         error("File $(reader.filename) has hourly data but an hour-subperiod map was not defined.")
@@ -353,7 +356,7 @@ function read_period_scenario_subscenario_subperiod!(
         subscenario in 1:dimension_sizes[3]
 
         ts.exact_dimensions_data[:, subperiod, subscenario] =
-            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, subscenario, subperiod)
+            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, subscenario, subperiod)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -374,7 +377,7 @@ function read_period_scenario_subscenario!(
     # Loop in subperiods
     for subscenario in 1:metadata_dimension_sizes(ts_metadata)[3]
         ts.exact_dimensions_data[:, subscenario] =
-            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, subscenario)
+            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, subscenario)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -394,7 +397,7 @@ function read_period_scenario_profile!(
     )
     for profile in 1:metadata_dimension_sizes(ts_metadata)[3]
         ts.exact_dimensions_data[:, profile] =
-            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, profile)
+            carrousel_read(ts.reader, ts_metadata; period = file_period, scenario, profile)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -414,7 +417,7 @@ function read_period_subperiod!(
     # Loop in subperiods
     for subperiod in 1:metadata_dimension_sizes(ts_metadata)[2]
         ts.exact_dimensions_data[:, subperiod] =
-            carrousel_read(ts.reader, ts_metadata; period = file_period, subperiod)
+            carrousel_read(ts.reader, ts_metadata; period = file_period, subperiod)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -433,7 +436,7 @@ function read_period_profile!(
     )
     for profile in 1:metadata_dimension_sizes(ts_metadata)[2]
         ts.exact_dimensions_data[:, profile] =
-            carrousel_read(ts.reader, ts_metadata; period = file_period, profile)
+            carrousel_read(ts.reader, ts_metadata; period = file_period, profile)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -455,7 +458,7 @@ function read_period_profile_complementary_group!(
         profile in 1:dimension_sizes[2]
 
         ts.exact_dimensions_data[:, complementary_group, profile] =
-            carrousel_read(ts.reader, ts_metadata; period = file_period, profile, complementary_group)
+            carrousel_read(ts.reader, ts_metadata; period = file_period, profile, complementary_group)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -473,7 +476,7 @@ function read_period_scenario!(
         period,
         Quiver.string_to_date_time(Quiver.Binary.get_initial_datetime(ts_metadata)),
     )
-    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; period = file_period, scenario)
+    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; period = file_period, scenario)[ts.label_indices]
     ts.data = ts.exact_dimensions_data
     return nothing
 end
@@ -486,7 +489,7 @@ function read_inflow_period_lag!(
     dimension_sizes = metadata_dimension_sizes(ts_metadata)
     for lag in 1:dimension_sizes[2], inflow_period in 1:dimension_sizes[1]
         ts.exact_dimensions_data[:, lag, inflow_period] =
-            carrousel_read(ts.reader, ts_metadata; inflow_period, lag)
+            carrousel_read(ts.reader, ts_metadata; inflow_period, lag)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -498,7 +501,8 @@ function read_inflow_period!(
 ) where {T, N}
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
     for inflow_period in 1:metadata_dimension_sizes(ts_metadata)[1]
-        ts.exact_dimensions_data[:, inflow_period] = carrousel_read(ts.reader, ts_metadata; inflow_period)
+        ts.exact_dimensions_data[:, inflow_period] =
+            carrousel_read(ts.reader, ts_metadata; inflow_period)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -517,7 +521,7 @@ function read_season_sample_subscenario_subperiod!(
         subscenario in 1:dimension_sizes[3]
 
         ts.exact_dimensions_data[:, subperiod, subscenario] =
-            carrousel_read(ts.reader, ts_metadata; season, sample, subscenario, subperiod)
+            carrousel_read(ts.reader, ts_metadata; season, sample, subscenario, subperiod)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -532,7 +536,8 @@ function read_season_sample_subperiod!(
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
     # Loop in subperiods
     for subperiod in 1:metadata_dimension_sizes(ts_metadata)[3]
-        ts.exact_dimensions_data[:, subperiod] = carrousel_read(ts.reader, ts_metadata; season, sample, subperiod)
+        ts.exact_dimensions_data[:, subperiod] =
+            carrousel_read(ts.reader, ts_metadata; season, sample, subperiod)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -547,7 +552,8 @@ function read_season_sample_subscenario!(
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
     # Loop in subperiods
     for subscenario in 1:metadata_dimension_sizes(ts_metadata)[3]
-        ts.exact_dimensions_data[:, subscenario] = carrousel_read(ts.reader, ts_metadata; season, sample, subscenario)
+        ts.exact_dimensions_data[:, subscenario] =
+            carrousel_read(ts.reader, ts_metadata; season, sample, subscenario)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -564,7 +570,7 @@ function read_period!(
         period,
         Quiver.string_to_date_time(Quiver.Binary.get_initial_datetime(ts_metadata)),
     )
-    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; period = file_period)
+    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; period = file_period)[ts.label_indices]
     ts.data = ts.exact_dimensions_data
     return nothing
 end
@@ -576,7 +582,7 @@ function read_scenario_lag!(
 ) where {T, N}
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
     for lag in 1:metadata_dimension_sizes(ts_metadata)[2]
-        ts.exact_dimensions_data[:, lag] = carrousel_read(ts.reader, ts_metadata; scenario, lag)
+        ts.exact_dimensions_data[:, lag] = carrousel_read(ts.reader, ts_metadata; scenario, lag)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -589,7 +595,7 @@ function read_sample_lag!(
 ) where {T, N}
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
     for lag in 1:metadata_dimension_sizes(ts_metadata)[2]
-        ts.exact_dimensions_data[:, lag] = carrousel_read(ts.reader, ts_metadata; sample, lag)
+        ts.exact_dimensions_data[:, lag] = carrousel_read(ts.reader, ts_metadata; sample, lag)[ts.label_indices]
     end
     ts.data = ts.exact_dimensions_data
     return nothing
@@ -601,7 +607,7 @@ function read_scenario!(
     scenario::Int,
 ) where {T, N}
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
-    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; scenario)
+    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; scenario)[ts.label_indices]
     ts.data = ts.exact_dimensions_data
     return nothing
 end
@@ -613,7 +619,7 @@ function read_season_sample!(
     sample::Int,
 ) where {T, N}
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
-    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; season, sample)
+    ts.exact_dimensions_data = carrousel_read(ts.reader, ts_metadata; season, sample)[ts.label_indices]
     ts.data = ts.exact_dimensions_data
     return nothing
 end

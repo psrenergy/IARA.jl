@@ -21,6 +21,7 @@ Dimensions cached in virtual reservoir bid time series files are static:
 @kwdef mutable struct VirtualReservoirBidsView{T} <: ViewFromExternalFile
     reader::Union{Quiver.Binary.File, Nothing} = nothing
     data::Array{T, 3} = Array{T, 3}(undef, 0, 0, 0)
+    label_indices::Vector{Int} = Int[]
 end
 function Base.getindex(time_series::VirtualReservoirBidsView{T}, inds...) where {T}
     return getindex(time_series.data, inds...)
@@ -66,6 +67,7 @@ function initialize_virtual_reservoir_bids_view_from_external_file!(
     # Initialize time series
     ts.reader = Quiver.Binary.open_file(file_path; mode = 'r')
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
+    ts.label_indices = label_indices_for(ts_metadata, labels_to_read)
 
     # Validate if unit came as expected
     reader_unit = Quiver.Binary.get_unit(ts_metadata)
@@ -141,7 +143,7 @@ function read_virtual_reservoir_bids_view_from_external_file!(
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
 
     for bs in 1:maximum_number_of_vr_bidding_segments(inputs)
-        row = carrousel_read(ts.reader, ts_metadata; period, scenario, bid_segment = bs)
+        row = carrousel_read(ts.reader, ts_metadata; period, scenario, bid_segment = bs)[ts.label_indices]
         pair_index = 0
         # vr and ao are in a bad performance order, but it is convenient for maping pairs the correct way.
         for vr in virtual_reservoirs

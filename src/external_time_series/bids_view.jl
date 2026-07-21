@@ -22,6 +22,7 @@ Dimensions cached in bid time series files are static:
 @kwdef mutable struct BidsView{T} <: ViewFromExternalFile
     reader::Union{Quiver.Binary.File, Nothing} = nothing
     data::Array{T, 4} = Array{T, 4}(undef, 0, 0, 0, 0)
+    label_indices::Vector{Int} = Int[]
 end
 function Base.getindex(time_series::BidsView{T}, inds...) where {T}
     return getindex(time_series.data, inds...)
@@ -67,6 +68,7 @@ function initialize_bids_view_from_external_file!(
     # Initialize time series
     ts.reader = Quiver.Binary.open_file(file_path; mode = 'r')
     ts_metadata = Quiver.Binary.get_metadata(ts.reader)
+    ts.label_indices = label_indices_for(ts_metadata, labels_to_read)
 
     # Validate if unit came as expected
     reader_unit = Quiver.Binary.get_unit(ts_metadata)
@@ -162,14 +164,16 @@ function read_bids_view_from_external_file!(
         # TODO: Generic form?
         if has_profile_bids
             for prf in 1:maximum_number_of_profiles(inputs)
-                row = carrousel_read(ts.reader, ts_metadata; period, scenario, subperiod = blk, profile = prf)
+                row =
+                    carrousel_read(ts.reader, ts_metadata; period, scenario, subperiod = blk, profile = prf)[ts.label_indices]
                 for (i, bg) in enumerate(bidding_groups), bus in buses
                     ts.data[bg, bus, prf, blk] = row[(i-1)*(num_buses)+bus]
                 end
             end
         else
             for bds in 1:maximum_number_of_bg_bidding_segments(inputs)
-                row = carrousel_read(ts.reader, ts_metadata; period, scenario, subperiod = blk, bid_segment = bds)
+                row =
+                    carrousel_read(ts.reader, ts_metadata; period, scenario, subperiod = blk, bid_segment = bds)[ts.label_indices]
                 for (i, bg) in enumerate(bidding_groups), bus in buses
                     ts.data[bg, bus, bds, blk] = row[(i-1)*(num_buses)+bus]
                 end

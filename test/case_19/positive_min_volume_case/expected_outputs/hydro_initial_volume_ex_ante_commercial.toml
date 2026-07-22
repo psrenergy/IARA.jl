@@ -1,0 +1,8 @@
+dimension_sizes = [ 5, 2, 2 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'hydro_1', 'hydro_2', 'hydro_3', 'hydro_4' ]
+time_dimensions = [ 'period' ]
+unit = 'hm3'
+version = '1'

@@ -1,0 +1,8 @@
+dimension_sizes = [ 5, 2 ]
+dimensions = [ 'period', 'scenario' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'VR 1 - AO 1', 'VR 1 - AO 2', 'VR 2 - AO 1', 'VR 2 - AO 2' ]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

@@ -1,4 +1,4 @@
-dimension_sizes = [ 3, 4, 2 ]
+dimension_sizes = [ 3, 4, 3 ]
 dimensions = [ 'period', 'scenario', 'subperiod' ]
 frequencies = [ 'monthly' ]
 initial_datetime = '2020-01-01T00:00:00'

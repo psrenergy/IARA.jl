@@ -59,7 +59,9 @@ function compare_outputs(
         "hydro_opportunity_cost",
         "generation",
         "bidding_group_revenue",
+        "bidding_group_revenue_indepedent",
         "bidding_group_total_revenue",
+        "bidding_group_profit",
     ]
     skipped_outputs = union(skipped_outputs, default_skipped_outputs)
 

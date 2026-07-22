@@ -1,0 +1,13 @@
+dimension_sizes = [ 3, 2 ]
+dimensions = [ 'period', 'scenario' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2020-01-01T00:00:00'
+labels = [
+    'reservoir_1 - asset_owner_1',
+    'reservoir_1 - asset_owner_2',
+    'reservoir_1 - asset_owner_3',
+    'reservoir_1 - asset_owner_4'
+]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

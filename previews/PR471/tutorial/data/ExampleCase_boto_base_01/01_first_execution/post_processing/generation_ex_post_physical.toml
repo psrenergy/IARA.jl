@@ -1,0 +1,8 @@
+dimension_sizes = [ 6, 3, 3 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'hydro', 'thermal', 'renewable', 'battery_unit', 'deficit' ]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

@@ -300,7 +300,7 @@ function create_temporary_file_with_subscenario_dimension(
 
     for period in 1:dimension_size[1]
         for scenario in 1:dimension_size[2]
-            data = Quiver.Binary.read(reader; allow_nulls = true, period, scenario)
+            data = Quiver.Binary.read(reader; period, scenario)
             for subscenario in 1:number_of_subscenarios
                 Quiver.Binary.write!(writer; data = data, period, scenario, subscenario = subscenario)
             end
@@ -384,16 +384,17 @@ function merge_binary_files(output_path::String, input_paths::Vector{String})
         unit = unit,
         labels = merged_labels,
         dimensions = String.(dimension_names),
-        dimension_sizes = Int64.(dimension_sizes),
+        dimension_sizes = dimension_sizes,
         time_dimensions = time_dimensions,
         frequencies = frequencies,
     )
     writer = Quiver.Binary.open_file(output_path; mode = 'w', metadata = out_md)
 
     dims = first_position!(copy(dimension_sizes))
+    names_tuple = Tuple(dimension_names)
     for _ in 1:prod(dimension_sizes)
         next_dim!(dims, dimension_sizes)
-        read_kwargs = NamedTuple(dimension_names[i] => dims[i] for i in eachindex(dimension_names))
+        read_kwargs = NamedTuple{names_tuple}(Tuple(dims))
         merged_data = vcat([Quiver.Binary.read(r; allow_nulls = true, read_kwargs...) for r in readers]...)
         Quiver.Binary.write!(writer; data = merged_data, read_kwargs...)
     end

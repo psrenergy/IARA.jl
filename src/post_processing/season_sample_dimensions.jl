@@ -51,11 +51,9 @@ function add_season_sample_dimensions(
         error("Could not find a \"$output_base.qvr\" file to read.")
     end
     array_data, metadata = binary_file_to_array(output_base)
-    # TODO: Keep this warn this way? We always write binary now.
-    @warn(
-        "The binary format pre-allocates the full dense grid (the product of every dimension " *
-        "size), which is inefficient for the sparse season/sample dimensions added.",
-    )
+    
+    # TODO: Binary format pre-allocates the full dense grid (product of every dimension size),
+    # which is inneficient for this. Worth checking in detail how it works on Quiver now.
 
     dimension_names = metadata_dimension_names(metadata)
     dimension_sizes = metadata_dimension_sizes(metadata)
@@ -79,17 +77,18 @@ function add_season_sample_dimensions(
         unit = Quiver.Binary.get_unit(metadata),
         labels = labels,
         dimensions = dimensions,
-        dimension_sizes = Int64.(dimension_size),
+        dimension_sizes = dimension_size,
     )
     writer = Quiver.Binary.open_file(destination_file; mode = 'w', metadata = new_metadata)
 
     dims = first_position!(copy(dimension_sizes))
+    names_tuple = Tuple(dimension_symbols)
     for _ in 1:prod(dimension_sizes)
         next_dim!(dims, dimension_sizes)
         season, sample = season_sample_by_period_scenario[(dims[1], dims[2])]
         new_dim_values = vcat(dims[1:2], [season, sample], dims[3:end])
         data_values = array_data[:, reverse(dims)...]
-        write_kwargs = NamedTuple{Tuple(dimension_symbols)}(Tuple(new_dim_values))
+        write_kwargs = NamedTuple{names_tuple}(Tuple(new_dim_values))
         Quiver.Binary.write!(writer; data = data_values, write_kwargs...)
     end
     finalize_output!(writer)

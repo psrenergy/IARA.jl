@@ -330,7 +330,7 @@ function initialize!(
         unit = unit,
         labels = labels,
         dimensions = dimensions,
-        dimension_sizes = Int64.(dimension_size),
+        dimension_sizes = dimension_size,
         time_dimensions = [time_dimension],
         frequencies = [frequency],
     )

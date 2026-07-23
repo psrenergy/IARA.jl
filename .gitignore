@@ -46,7 +46,6 @@ revise/Manifest.toml
 *.hdr
 *.iara
 *.qvr
-*.quiv
 *.html
 *.json
 *.sol

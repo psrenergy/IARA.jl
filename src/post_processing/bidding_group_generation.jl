@@ -136,7 +136,6 @@ function _write_generation_bg_file(
                             collection = _get_generation_unit(Quiver.Binary.get_file_path(generation_reader))
                             generation_data = Quiver.Binary.read(
                                 generation_reader;
-                                allow_nulls = true,
                                 period,
                                 scenario,
                                 subscenario = subscenario,
@@ -177,7 +176,6 @@ function _write_generation_bg_file(
                         generation_data =
                             Quiver.Binary.read(
                                 generation_reader;
-                                allow_nulls = true,
                                 period,
                                 scenario,
                                 subperiod = subperiod,

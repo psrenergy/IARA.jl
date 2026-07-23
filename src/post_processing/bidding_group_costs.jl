@@ -88,7 +88,6 @@ function _write_costs_bg_file(
                             collection = _get_generation_unit(Quiver.Binary.get_file_path(costs_reader))
                             costs_data = Quiver.Binary.read(
                                 costs_reader;
-                                allow_nulls = true,
                                 period,
                                 scenario,
                                 subscenario = subscenario,
@@ -132,7 +131,6 @@ function _write_costs_bg_file(
                         collection = _get_generation_unit(Quiver.Binary.get_file_path(costs_reader))
                         costs_data = Quiver.Binary.read(
                             costs_reader;
-                            allow_nulls = true,
                             period,
                             scenario,
                             subperiod = subperiod,

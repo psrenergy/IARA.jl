@@ -298,7 +298,8 @@ function time_series_dataframe(path::String)
     dims = first_position!(copy(dimension_sizes))
     for _ in 1:prod(dimension_sizes)
         next_dim!(dims, dimension_sizes)
-        push!(df, [reverse(dims)...; array_data[:, reverse(dims)...]...])
+        reversed_dims = reverse(dims)
+        push!(df, [reversed_dims...; array_data[:, reversed_dims...]...])
     end
     return df
 end

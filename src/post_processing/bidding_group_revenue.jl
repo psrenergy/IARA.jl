@@ -119,7 +119,6 @@ function _write_revenue_without_subscenarios(
                 for bid_segment in 1:num_bid_segments
                     generation_data = Quiver.Binary.read(
                         generation_ex_ante_reader;
-                        allow_nulls = true,
                         period,
                         scenario,
                         subperiod = subperiod,
@@ -131,7 +130,6 @@ function _write_revenue_without_subscenarios(
                 # Read spot prices for the current period/scenario/subperiod
                 spot_data = Quiver.Binary.read(
                     spot_ex_ante_reader;
-                    allow_nulls = true,
                     period,
                     scenario,
                     subperiod = subperiod,
@@ -192,7 +190,6 @@ function _write_revenue_with_subscenarios(
                     for bid_segment in 1:num_bid_segments
                         generation_ex_post_data = Quiver.Binary.read(
                             generation_ex_post_reader;
-                            allow_nulls = true,
                             period,
                             scenario,
                             subscenario = subscenario,
@@ -203,7 +200,6 @@ function _write_revenue_with_subscenarios(
                             # Just read the ex-ante generation once per subscenario
                             generation_ex_ante_data = Quiver.Binary.read(
                                 generation_ex_ante_reader;
-                                allow_nulls = true,
                                 period,
                                 scenario,
                                 subperiod = subperiod,
@@ -221,7 +217,6 @@ function _write_revenue_with_subscenarios(
                     if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
                         spot_data = Quiver.Binary.read(
                             spot_ex_ante_reader;
-                            allow_nulls = true,
                             period,
                             scenario,
                             subperiod = subperiod,
@@ -230,7 +225,6 @@ function _write_revenue_with_subscenarios(
                     else
                         spot_data = Quiver.Binary.read(
                             spot_ex_post_reader;
-                            allow_nulls = true,
                             period,
                             scenario,
                             subscenario = subscenario,
@@ -494,10 +488,9 @@ function _total_revenue(
             for subscenario in 1:num_subscenarios
                 for subperiod in 1:num_subperiods
                     ex_ante_data =
-                        Quiver.Binary.read(ex_ante_reader; allow_nulls = true, period, scenario, subperiod = subperiod)
+                        Quiver.Binary.read(ex_ante_reader; period, scenario, subperiod = subperiod)
                     ex_post_data = Quiver.Binary.read(
                         ex_post_reader;
-                        allow_nulls = true,
                         period,
                         scenario,
                         subscenario = subscenario,

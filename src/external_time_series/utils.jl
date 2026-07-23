@@ -182,9 +182,10 @@ function get_maximum_value_of_time_series(file_path::String)
     dimension_sizes = metadata_dimension_sizes(md)
 
     dims = first_position!(copy(dimension_sizes))
+    names_tuple = Tuple(dimension_names)
     for _ in 1:prod(dimension_sizes)
         next_dim!(dims, dimension_sizes)
-        read_kwargs = NamedTuple(dimension_names[i] => dims[i] for i in eachindex(dimension_names))
+        read_kwargs = NamedTuple{names_tuple}(Tuple(dims))
         data = Quiver.Binary.read(reader; allow_nulls = true, read_kwargs...)
         for value in data
             if !isnan(value)
@@ -410,18 +411,19 @@ function array_to_binary_file(
         unit = unit,
         labels = labels,
         dimensions = dimensions,
-        dimension_sizes = Int64.(dimension_size),
+        dimension_sizes = dimension_size,
         time_dimensions = isempty(time_dimension) ? String[] : [time_dimension],
         frequencies = isempty(frequency) ? String[] : [frequency],
     )
     writer = Quiver.Binary.open_file(filename; mode = 'w', metadata = md)
 
     dims = first_position!(copy(dimension_size))
+    names_tuple = Tuple(Symbol.(dimensions))
     for _ in 1:prod(dimension_size)
         next_dim!(dims, dimension_size)
         row = data[:, reverse(dims)...]
         row = digits === nothing ? row : round.(row; digits = digits)
-        read_kwargs = NamedTuple(Symbol(dimensions[i]) => dims[i] for i in eachindex(dimensions))
+        read_kwargs = NamedTuple{names_tuple}(Tuple(dims))
         Quiver.Binary.write!(writer; data = row, read_kwargs...)
     end
     Quiver.Binary.close!(writer)
@@ -442,9 +444,10 @@ function binary_file_to_array(filename::String)
 
     data = zeros(Float64, length(labels), reverse(dimension_size)...)
     dims = first_position!(copy(dimension_size))
+    names_tuple = Tuple(dimension_names)
     for _ in 1:prod(dimension_size)
         next_dim!(dims, dimension_size)
-        read_kwargs = NamedTuple(dimension_names[i] => dims[i] for i in eachindex(dimension_names))
+        read_kwargs = NamedTuple{names_tuple}(Tuple(dims))
         data[:, reverse(dims)...] = Quiver.Binary.read(reader; allow_nulls = true, read_kwargs...)
     end
     Quiver.Binary.close!(reader)

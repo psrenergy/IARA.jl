@@ -14,10 +14,10 @@ Metadata for a Quiver file is stored in a **TOML** file with the following struc
 |-------------------|----------------|
 | `version`        | The Quiver file format version. |
 | `dimensions`     | Names of the dimensions used in the dataset. |
-| `dimension_size` | Maximum number of elements in each dimension. |
-| `initial_date`   | The start date of the time series. |
-| `time_dimension` | The dimension representing time. |
-| `frequency`      | The time interval between data points (e.g., month, day, hour). |
+| `dimension_sizes` | Maximum number of elements in each dimension. |
+| `initial_datetime`   | The start date of the time series, as an ISO 8601 string (`yyyy-mm-ddTHH:MM:SS`). |
+| `time_dimensions` | The dimension(s) representing time (a file may have more than one). |
+| `frequencies`      | The time interval between data points for each entry in `time_dimensions` (e.g., month, day, hour). |
 | `unit`          | The unit of measurement (e.g., MW, $, etc.). |
 | `labels`        | Names of the time series agents. |
 ---
@@ -25,21 +25,18 @@ Metadata for a Quiver file is stored in a **TOML** file with the following struc
 Here's an example of a metadata file:
 
 ```toml
-version = 1
+version = "1"
 dimensions = ["period", "scenario", "subscenario", "subperiod"]
-dimension_size = [6, 3, 4, 3]
-initial_date = "2024-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
+dimension_sizes = [6, 3, 4, 3]
+initial_datetime = "2024-01-01T00:00:00"
+time_dimensions = ["period"]
+frequencies = ["monthly"]
 unit = "$/MWh"
 labels = ["Eastern", "Western"]
 ```
 
 ### **Data Storage Format**
-The actual **time series data** is stored in either:
-
-- **CSV format** (human-readable)
-- **Binary format** (efficient for large datasets)
+The actual **time series data** is stored in **binary format** (`.qvr` file, efficient for large datasets and the authoritative artifact). A **CSV** copy (`.csv`) is produced alongside every output file for human readability, generated from the binary data rather than written directly.
 
 #### **CSV Format Example**
 ```csv

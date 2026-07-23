@@ -23,7 +23,7 @@ end
 
 function Base.close(ts::ViewFromExternalFile)
     if !isempty(ts)
-        Quiver.close!(ts.reader)
+        Quiver.Binary.close!(ts.reader)
     end
     return nothing
 end

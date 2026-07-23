@@ -58,7 +58,7 @@ function _write_costs_bg_file(
             "bidding_group_variable_costs_$(clearing_procedure)",
         )
 
-    total_costs_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
+    total_costs_readers = Dict{String, Quiver.Binary.File}()
     for generation_technology in generation_technologies
         costs_file = get_costs_files_from_tech(inputs, run_time_options, suffix, generation_technology)
         if isnothing(costs_file)
@@ -85,15 +85,15 @@ function _write_costs_bg_file(
                         bidding_group_costs = zeros(num_bidding_groups * num_buses)
                         for generation_technology in keys(total_costs_readers)
                             costs_reader = total_costs_readers[generation_technology]
-                            collection = _get_generation_unit(costs_reader.filename)
-                            Quiver.goto!(
+                            collection = _get_generation_unit(Quiver.Binary.get_file_path(costs_reader))
+                            costs_data = Quiver.Binary.read(
                                 costs_reader;
                                 period,
                                 scenario,
                                 subscenario = subscenario,
                                 subperiod = subperiod,
                             )
-                            labels = costs_reader.metadata.labels
+                            labels = Quiver.Binary.get_labels(Quiver.Binary.get_metadata(costs_reader))
                             num_units = length(labels)
 
                             for unit in 1:num_units
@@ -110,12 +110,12 @@ function _write_costs_bg_file(
                                 end
                                 bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
                                 bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, labels_by_pairs)
-                                bidding_group_costs[bidding_group_bus_index] += costs_reader.data[unit]
+                                bidding_group_costs[bidding_group_bus_index] += costs_data[unit]
                             end
                         end
-                        Quiver.write!(
-                            bidding_group_variable_costs_writer,
-                            bidding_group_costs;
+                        Quiver.Binary.write!(
+                            bidding_group_variable_costs_writer;
+                            data = bidding_group_costs,
                             period,
                             scenario,
                             subscenario,
@@ -128,9 +128,14 @@ function _write_costs_bg_file(
                     bidding_group_costs = zeros(num_bidding_groups * num_buses)
                     for generation_technology in keys(total_costs_readers)
                         costs_reader = total_costs_readers[generation_technology]
-                        collection = _get_generation_unit(costs_reader.filename)
-                        Quiver.goto!(costs_reader; period, scenario, subperiod = subperiod)
-                        labels = costs_reader.metadata.labels
+                        collection = _get_generation_unit(Quiver.Binary.get_file_path(costs_reader))
+                        costs_data = Quiver.Binary.read(
+                            costs_reader;
+                            period,
+                            scenario,
+                            subperiod = subperiod,
+                        )
+                        labels = Quiver.Binary.get_labels(Quiver.Binary.get_metadata(costs_reader))
                         num_units = length(labels)
 
                         for unit in 1:num_units
@@ -146,12 +151,12 @@ function _write_costs_bg_file(
                             end
                             bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
                             bidding_group_bus_index = findfirst(x -> x == bidding_group_bus_label, labels_by_pairs)
-                            bidding_group_costs[bidding_group_bus_index] += costs_reader.data[unit]
+                            bidding_group_costs[bidding_group_bus_index] += costs_data[unit]
                         end
                     end
-                    Quiver.write!(
-                        bidding_group_variable_costs_writer,
-                        bidding_group_costs;
+                    Quiver.Binary.write!(
+                        bidding_group_variable_costs_writer;
+                        data = bidding_group_costs,
                         period,
                         scenario,
                         subperiod = subperiod,
@@ -161,7 +166,7 @@ function _write_costs_bg_file(
         end
     end
 
-    Quiver.close!(bidding_group_variable_costs_writer)
+    finalize_output!(bidding_group_variable_costs_writer)
 
     return
 end
@@ -222,7 +227,7 @@ function get_costs_files_from_tech(inputs::Inputs, run_time_options::RunTimeOpti
     post_processing_dir = post_processing_path(inputs, run_time_options)
     tempdir = joinpath(output_path(inputs, run_time_options), "temp")
     costs_file = filter(
-        x -> endswith(x, suffix * ".csv") && occursin(technology, x) && occursin("total_costs", x),
+        x -> endswith(x, suffix * ".qvr") && occursin(technology, x) && occursin("total_costs", x),
         readdir(tempdir),
     )
     if isempty(costs_file)
@@ -248,11 +253,9 @@ function _merge_costs_files(
                     !occursin("opportunity_cost", x) && !occursin("minimum_outflow_marginal_cost", x)
                     &&
                     (
-                        endswith(x, clearing_procedure * ".csv") || endswith(x, clearing_procedure * ".quiv") ||
-                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".csv") ||
-                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".quiv")
+                        endswith(x, clearing_procedure * ".qvr") ||
+                        endswith(x, clearing_procedure * "_period_$(inputs.args.period)" * ".qvr")
                     ), readdir(outputs_dir))
-        impl = _get_implementation_of_a_list_of_files(costs_files)
         if isempty(costs_files)
             continue
         end
@@ -263,13 +266,12 @@ function _merge_costs_files(
         end
         output_file = joinpath(tempdir, get_filename(filename))
         files = [joinpath(outputs_dir, get_filename(file)) for file in costs_files]
-        Quiver.apply_expression(
-            output_file,
-            files,
-            +,
-            impl;
-            digits = 6,
-        )
+        readers = [Quiver.Binary.open_file(f; mode = 'r') for f in files]
+        result = reduce(+, Quiver.Expression.(readers))
+        Quiver.save(result, output_file)
+        for r in readers
+            Quiver.Binary.close!(r)
+        end
     end
     return nothing
 end
@@ -341,9 +343,9 @@ function _write_fixed_costs_bg_file(
                         fixed_cost_by_pairs_at_subperiod =
                             fixed_cost_by_pairs .*
                             (subperiod_duration_in_hours(inputs, subperiod) / sum(subperiod_duration_in_hours(inputs)))
-                        Quiver.write!(
-                            bidding_group_fixed_costs_writer,
-                            fixed_cost_by_pairs_at_subperiod;
+                        Quiver.Binary.write!(
+                            bidding_group_fixed_costs_writer;
+                            data = fixed_cost_by_pairs_at_subperiod,
                             period,
                             scenario,
                             subscenario,
@@ -356,9 +358,9 @@ function _write_fixed_costs_bg_file(
                     fixed_cost_by_pairs_at_subperiod =
                         fixed_cost_by_pairs .*
                         (subperiod_duration_in_hours(inputs, subperiod) / sum(subperiod_duration_in_hours(inputs)))
-                    Quiver.write!(
-                        bidding_group_fixed_costs_writer,
-                        fixed_cost_by_pairs_at_subperiod;
+                    Quiver.Binary.write!(
+                        bidding_group_fixed_costs_writer;
+                        data = fixed_cost_by_pairs_at_subperiod,
                         period,
                         scenario,
                         subperiod = subperiod,
@@ -368,7 +370,7 @@ function _write_fixed_costs_bg_file(
         end
     end
 
-    Quiver.close!(bidding_group_fixed_costs_writer)
+    finalize_output!(bidding_group_fixed_costs_writer)
 
     return nothing
 end

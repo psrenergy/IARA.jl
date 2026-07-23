@@ -231,11 +231,11 @@ function get_simulation_results_from_period_scenario_subscenario(
 end
 
 mutable struct QuiverOutput <: AbstractOutput
-    writer::Quiver.Writer
+    writer::Quiver.Binary.File
 end
 
 mutable struct QuiverInput <: AbstractOutput
-    reader::Quiver.Reader
+    reader::Quiver.Binary.File
 end
 
 function get_outputs_dimension_size(
@@ -261,6 +261,9 @@ function get_outputs_dimension_size(
                 hydro_blks = hydro_subperiods(inputs)
                 num_hydro_subperiods = length(hydro_blks) - 1
                 push!(dimension_size, num_hydro_subperiods)
+            elseif output_name in ["battery_storage", "battery_om_costs"]
+                # battery_om_costs just rides battery_storage's N+1 boundary-state shape, not an independent need for it.
+                push!(dimension_size, number_of_subperiods(inputs) + 1)
             else
                 push!(dimension_size, number_of_subperiods(inputs))
             end
@@ -302,7 +305,6 @@ function initialize!(
     frequency = period_type_string(inputs.collections.configurations.time_series_step)
     initial_date = inputs.collections.configurations.initial_date_time
     time_dimension = "period"
-    output_type = Quiver.csv
 
     dimensions = kwargs[:dimensions]
     if (is_ex_post_problem(run_time_options) || force_all_subscenarios) && !suppress_subscenario_dimension
@@ -323,16 +325,16 @@ function initialize!(
         dimension_size[idx] = 1
     end
 
-    writer = Quiver.Writer{output_type}(
-        file;
-        dimensions,
-        labels,
-        time_dimension,
-        dimension_size,
-        frequency,
-        initial_date,
-        unit,
+    md = Quiver.Binary.Metadata(;
+        initial_datetime = quiver_initial_datetime_string(initial_date),
+        unit = unit,
+        labels = labels,
+        dimensions = dimensions,
+        dimension_sizes = dimension_size,
+        time_dimensions = [time_dimension],
+        frequencies = [frequency],
     )
+    writer = Quiver.Binary.open_file(file; mode = 'w', metadata = md)
 
     output = QuiverOutput(writer)
 
@@ -382,7 +384,7 @@ function write_output_per_subperiod!(
     output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
 
     # Create a vector of zeros based on the number of time series
-    num_time_series = output.writer.metadata.number_of_time_series
+    num_time_series = length(Quiver.Binary.get_labels(Quiver.Binary.get_metadata(output.writer)))
     data = zeros(num_time_series)
 
     # Validate that the indices of the outputs match the jump_conatiner
@@ -410,18 +412,18 @@ function write_output_per_subperiod!(
             end
         end
         if is_ex_post_problem(run_time_options)
-            Quiver.write!(
-                output.writer,
-                round_output(data);
+            Quiver.Binary.write!(
+                output.writer;
+                data = round_output(data),
                 period,
                 scenario,
                 subscenario,
                 subperiod = blk,
             )
         else
-            Quiver.write!(
-                output.writer,
-                round_output(data);
+            Quiver.Binary.write!(
+                output.writer;
+                data = round_output(data),
                 period, scenario, subperiod = blk,
             )
         end
@@ -449,7 +451,7 @@ function write_output_without_scenario!(
     output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
 
     # Create a vector of zeros based on the number of time series
-    num_time_series = output.writer.metadata.number_of_time_series
+    num_time_series = length(Quiver.Binary.get_labels(Quiver.Binary.get_metadata(output.writer)))
     data = zeros(num_time_series)
 
     # Validate that the indices of the outputs match the jump_container
@@ -471,9 +473,9 @@ function write_output_without_scenario!(
             data[idx_in_output] = vector_to_write[idx]
         end
     end
-    Quiver.write!(
-        output.writer,
-        round_output(data);
+    Quiver.Binary.write!(
+        output.writer;
+        data = round_output(data),
         period,
     )
     return nothing
@@ -501,7 +503,7 @@ function write_output_without_subperiod!(
     output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
 
     # Create a vector of zeros based on the number of time series
-    num_time_series = output.writer.metadata.number_of_time_series
+    num_time_series = length(Quiver.Binary.get_labels(Quiver.Binary.get_metadata(output.writer)))
     data = zeros(num_time_series)
 
     # Validate that the indices of the outputs match the jump_container
@@ -524,17 +526,17 @@ function write_output_without_subperiod!(
         end
     end
     if is_ex_post_problem(run_time_options)
-        Quiver.write!(
-            output.writer,
-            round_output(data);
+        Quiver.Binary.write!(
+            output.writer;
+            data = round_output(data),
             period,
             scenario,
             subscenario,
         )
     else
-        Quiver.write!(
-            output.writer,
-            round_output(data);
+        Quiver.Binary.write!(
+            output.writer;
+            data = round_output(data),
             period, scenario,
         )
     end
@@ -563,7 +565,7 @@ function write_reference_curve_output!(
     output = outputs.outputs[output_name*run_time_file_suffixes(inputs, run_time_options)]
 
     # Create a vector of zeros based on the number of time series
-    num_time_series = output.writer.metadata.number_of_time_series
+    num_time_series = length(Quiver.Binary.get_labels(Quiver.Binary.get_metadata(output.writer)))
     data = zeros(num_time_series)
 
     # Validate that the indices of the outputs match the jump_container
@@ -585,9 +587,9 @@ function write_reference_curve_output!(
             data[idx_in_output] = vector_to_write[idx]
         end
     end
-    Quiver.write!(
-        output.writer,
-        round_output(data);
+    Quiver.Binary.write!(
+        output.writer;
+        data = round_output(data),
         period,
         reference_curve_segment,
         scenario,
@@ -634,9 +636,9 @@ function write_nash_equilibrium_vr_output!(
             end
         end
 
-        Quiver.write!(
-            output.writer,
-            round_output(treated_output[seg, iter, :] * multiply_by);
+        Quiver.Binary.write!(
+            output.writer;
+            data = round_output(treated_output[seg, iter, :] * multiply_by),
             period,
             scenario,
             sfe_iteration = iter,
@@ -692,9 +694,9 @@ function write_nash_equilibrium_bg_output!(
             end
         end
 
-        Quiver.write!(
-            output.writer,
-            round_output(treated_output[seg, iter, subperiod, :] * multiply_by);
+        Quiver.Binary.write!(
+            output.writer;
+            data = round_output(treated_output[seg, iter, subperiod, :] * multiply_by),
             period,
             scenario,
             subperiod,
@@ -859,9 +861,9 @@ function write_bid_output(
                     treated_output[blk, prf, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
                 if is_ex_post_problem(run_time_options) || run_time_options.force_all_subscenarios
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, prf, :] * multiply_by);
+                    Quiver.Binary.write!(
+                        output.writer;
+                        data = round_output(treated_output[blk, prf, :] * multiply_by),
                         period,
                         scenario,
                         subscenario,
@@ -869,9 +871,9 @@ function write_bid_output(
                         profile = prf,
                     )
                 else
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, prf, :] * multiply_by);
+                    Quiver.Binary.write!(
+                        output.writer;
+                        data = round_output(treated_output[blk, prf, :] * multiply_by),
                         period,
                         scenario,
                         subperiod = blk,
@@ -895,9 +897,9 @@ function write_bid_output(
                     treated_output[blk, bds, (i_bg-1)*(num_buses)+bus] = data_bg
                 end
                 if is_ex_post_problem(run_time_options) || run_time_options.force_all_subscenarios
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, bds, :] * multiply_by);
+                    Quiver.Binary.write!(
+                        output.writer;
+                        data = round_output(treated_output[blk, bds, :] * multiply_by),
                         period,
                         scenario,
                         subscenario,
@@ -905,9 +907,9 @@ function write_bid_output(
                         bid_segment = bds,
                     )
                 else
-                    Quiver.write!(
-                        output.writer,
-                        round_output(treated_output[blk, bds, :] * multiply_by);
+                    Quiver.Binary.write!(
+                        output.writer;
+                        data = round_output(treated_output[blk, bds, :] * multiply_by),
                         period,
                         scenario,
                         subperiod = blk,
@@ -959,18 +961,18 @@ function write_virtual_reservoir_bid_output(
             end
         end
         if is_ex_post_problem(run_time_options)
-            Quiver.write!(
-                output.writer,
-                round_output(treated_output[seg, :] * multiply_by);
+            Quiver.Binary.write!(
+                output.writer;
+                data = round_output(treated_output[seg, :] * multiply_by),
                 period,
                 scenario,
                 subscenario,
                 bid_segment = seg,
             )
         else
-            Quiver.write!(
-                output.writer,
-                round_output(treated_output[seg, :] * multiply_by);
+            Quiver.Binary.write!(
+                output.writer;
+                data = round_output(treated_output[seg, :] * multiply_by),
                 period,
                 scenario,
                 bid_segment = seg,
@@ -1005,20 +1007,44 @@ function round_output(v::Vector{T}) where {T}
     return round.(v, digits = 6)
 end
 
-function finalize!(output::QuiverOutput)
-    return Quiver.close!(output.writer)
+"""
+    finalize_output!(writer::Quiver.Binary.File)
+
+Close `writer` and export its CSV version, exactly once. Safe to call on a writer
+that was already closed by an earlier call (e.g. a post-processing routine that closes
+its writer early to unblock a subsequent read of the same file) — a no-op in that case, since
+the CSV export already happened at that earlier close.
+"""
+function finalize_output!(writer::Quiver.Binary.File)
+    if writer.ptr == C_NULL
+        return nothing
+    end
+    path = Quiver.Binary.get_file_path(writer)
+    Quiver.Binary.close!(writer)
+    Quiver.Binary.bin_to_csv(path; aggregate_time_dimensions = false)
+    return nothing
+end
+
+"""
+    finalize_output!(path::String)
+
+Export the CSV version of an already-closed binary file at `path`.
+"""
+function finalize_output!(path::String)
+    Quiver.Binary.bin_to_csv(path; aggregate_time_dimensions = false)
+    return nothing
 end
 
 function finalize_outputs!(outputs::Outputs)
     for output in values(outputs.outputs)
-        finalize!(output)
+        finalize_output!(output.writer)
     end
     return nothing
 end
 
 function finalize_outputs!(outputs::OutputReaders)
     for output in values(outputs.outputs)
-        Quiver.close!(output.reader)
+        Quiver.Binary.close!(output.reader)
     end
     return nothing
 end

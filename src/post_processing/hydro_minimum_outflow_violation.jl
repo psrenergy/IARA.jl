@@ -51,30 +51,36 @@ function post_processing_minimum_outflow_violation(
             for subscenario in subscenarios(inputs, run_time_options)
                 for subperiod in subperiods(inputs)
                     if consider_subscenario
-                        Quiver.goto!(
+                        hydro_turbining_per_subperiod[:, subperiod] = Quiver.Binary.read(
                             hydro_turbining_reader;
                             period,
                             scenario,
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
-                        hydro_turbining_per_subperiod[:, subperiod] = hydro_turbining_reader.data
 
-                        Quiver.goto!(
+                        hydro_spillage_per_subperiod[:, subperiod] = Quiver.Binary.read(
                             hydro_spillage_reader;
                             period,
                             scenario,
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
-                        hydro_spillage_per_subperiod[:, subperiod] = hydro_spillage_reader.data
                     else
                         if subscenario == 1
-                            Quiver.goto!(hydro_turbining_reader; period, scenario, subperiod = subperiod)
-                            hydro_turbining_per_subperiod[:, subperiod] = hydro_turbining_reader.data
+                            hydro_turbining_per_subperiod[:, subperiod] = Quiver.Binary.read(
+                                hydro_turbining_reader;
+                                period,
+                                scenario,
+                                subperiod = subperiod,
+                            )
 
-                            Quiver.goto!(hydro_spillage_reader; period, scenario, subperiod = subperiod)
-                            hydro_spillage_per_subperiod[:, subperiod] = hydro_spillage_reader.data
+                            hydro_spillage_per_subperiod[:, subperiod] = Quiver.Binary.read(
+                                hydro_spillage_reader;
+                                period,
+                                scenario,
+                                subperiod = subperiod,
+                            )
                         end
                     end
 
@@ -90,18 +96,18 @@ function post_processing_minimum_outflow_violation(
                     end
 
                     if consider_subscenario
-                        Quiver.write!(
-                            writer,
-                            round_output(hydro_units_minimum_outflow_violation);
+                        Quiver.Binary.write!(
+                            writer;
+                            data = round_output(hydro_units_minimum_outflow_violation),
                             period,
                             scenario,
                             subscenario = subscenario,
                             subperiod = subperiod,
                         )
                     else
-                        Quiver.write!(
-                            writer,
-                            round_output(hydro_units_minimum_outflow_violation);
+                        Quiver.Binary.write!(
+                            writer;
+                            data = round_output(hydro_units_minimum_outflow_violation),
                             period,
                             scenario,
                             subperiod = subperiod,
@@ -112,9 +118,9 @@ function post_processing_minimum_outflow_violation(
         end
     end
 
-    Quiver.close!(writer)
-    Quiver.close!(hydro_turbining_reader)
-    Quiver.close!(hydro_spillage_reader)
+    finalize_output!(writer)
+    Quiver.Binary.close!(hydro_turbining_reader)
+    Quiver.Binary.close!(hydro_spillage_reader)
 
     return nothing
 end

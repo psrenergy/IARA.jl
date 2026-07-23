@@ -10,9 +10,9 @@
 
 # Remove bid files if they exist
 files_to_remove = [
-    "price_bid.csv",
+    "price_bid.qvr",
     "price_bid.toml",
-    "quantity_bid.csv",
+    "quantity_bid.qvr",
     "quantity_bid.toml",
 ]
 

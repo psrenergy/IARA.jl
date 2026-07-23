@@ -151,6 +151,7 @@ function create_period_season_map!(
         initial_date = initial_date_time(inputs),
         unit = " ",
     )
+    finalize_output!(joinpath(output_path(inputs, run_time_options), "period_season_map"))
 
     inputs.collections.configurations.period_season_map = period_season_map
 

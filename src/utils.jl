@@ -213,7 +213,7 @@ function find_load_marginal_cost_file(dir_path::String)
 
     for suffix in possible_suffixes
         file_path = joinpath(dir_path, base_name * suffix)
-        if isfile(file_path * ".csv")
+        if isfile(file_path * ".qvr")
             return file_path
         end
     end
@@ -276,15 +276,32 @@ Reads a time series from a file and returns a DataFrame.
 function time_series_dataframe(path::String)
     # get file extension
     file, ext = splitext(path)
-    quiver_file_implementation = if ext == ".csv"
-        Quiver.csv
-    elseif ext == ".quiv"
-        Quiver.binary
-    else
-        error("File extension $ext not supported.")
+    if ext == ".csv"
+        convert_time_series_file_to_binary(file)
+        file = resolve_binary_file_path(file)
+    elseif ext != ".qvr"
+        error("File extension $ext not supported. Expected .csv or .qvr.")
     end
 
-    return Quiver.file_to_df(file, quiver_file_implementation)
+    array_data, metadata = binary_file_to_array(file)
+    dimension_names = metadata_dimension_names(metadata)
+    dimension_sizes = metadata_dimension_sizes(metadata)
+    labels = Quiver.Binary.get_labels(metadata)
+
+    df = DataFrame()
+    for name in dimension_names
+        insertcols!(df, name => Int[])
+    end
+    for label in labels
+        insertcols!(df, Symbol(label) => Float64[])
+    end
+    dims = first_position!(copy(dimension_sizes))
+    for _ in 1:prod(dimension_sizes)
+        next_dim!(dims, dimension_sizes)
+        reversed_dims = reverse(dims)
+        push!(df, [reversed_dims...; array_data[:, reversed_dims...]...])
+    end
+    return df
 end
 
 """

@@ -111,7 +111,7 @@ function _write_generation_bg_file(
             "bidding_group_generation_$(clearing_procedure)",
         )
 
-    generation_readers = Dict{String, Quiver.Reader{Quiver.csv}}()
+    generation_readers = Dict{String, Quiver.Binary.File}()
     for generation_technology in generation_technologies
         generation_file = get_generation_files(inputs, run_time_options, clearing_procedure, generation_technology)
         if isnothing(generation_file)
@@ -133,15 +133,15 @@ function _write_generation_bg_file(
                         bidding_group_generation = zeros(num_bidding_groups * num_buses)
                         for generation_technology in keys(generation_readers)
                             generation_reader = generation_readers[generation_technology]
-                            collection = _get_generation_unit(generation_reader.filename)
-                            Quiver.goto!(
+                            collection = _get_generation_unit(Quiver.Binary.get_file_path(generation_reader))
+                            generation_data = Quiver.Binary.read(
                                 generation_reader;
                                 period,
                                 scenario,
                                 subscenario = subscenario,
                                 subperiod = subperiod,
                             )
-                            labels = generation_reader.metadata.labels
+                            labels = Quiver.Binary.get_labels(Quiver.Binary.get_metadata(generation_reader))
                             num_units = length(labels)
 
                             for unit in 1:num_units
@@ -153,12 +153,12 @@ function _write_generation_bg_file(
                                 bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
                                 bidding_group_bus_index =
                                     findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
-                                bidding_group_generation[bidding_group_bus_index] += generation_reader.data[unit]
+                                bidding_group_generation[bidding_group_bus_index] += generation_data[unit]
                             end
                         end
-                        Quiver.write!(
-                            bidding_group_generation_writer,
-                            bidding_group_generation;
+                        Quiver.Binary.write!(
+                            bidding_group_generation_writer;
+                            data = bidding_group_generation,
                             period,
                             scenario,
                             subscenario,
@@ -172,9 +172,15 @@ function _write_generation_bg_file(
                     bidding_group_generation = zeros(num_bidding_groups * num_buses)
                     for generation_technology in keys(generation_readers)
                         generation_reader = generation_readers[generation_technology]
-                        collection = _get_generation_unit(generation_reader.filename)
-                        Quiver.goto!(generation_reader; period, scenario, subperiod = subperiod)
-                        labels = generation_reader.metadata.labels
+                        collection = _get_generation_unit(Quiver.Binary.get_file_path(generation_reader))
+                        generation_data =
+                            Quiver.Binary.read(
+                                generation_reader;
+                                period,
+                                scenario,
+                                subperiod = subperiod,
+                            )
+                        labels = Quiver.Binary.get_labels(Quiver.Binary.get_metadata(generation_reader))
                         num_units = length(labels)
 
                         for unit in 1:num_units
@@ -187,12 +193,12 @@ function _write_generation_bg_file(
                             bidding_group_bus_index =
                                 findfirst(x -> x == bidding_group_bus_label, bidding_group_bus_labels)
                             bidding_group_generation[bidding_group_bus_index] +=
-                                generation_reader.data[unit]
+                                generation_data[unit]
                         end
                     end
-                    Quiver.write!(
-                        bidding_group_generation_writer,
-                        bidding_group_generation;
+                    Quiver.Binary.write!(
+                        bidding_group_generation_writer;
+                        data = bidding_group_generation,
                         period,
                         scenario,
                         subperiod = subperiod,
@@ -203,7 +209,7 @@ function _write_generation_bg_file(
         end
     end
 
-    Quiver.close!(bidding_group_generation_writer)
+    finalize_output!(bidding_group_generation_writer)
 
     return
 end

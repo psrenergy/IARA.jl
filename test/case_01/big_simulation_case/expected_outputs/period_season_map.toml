@@ -1,8 +1,8 @@
-version = 1
-dimensions = ["period", "scenario"]
-dimension_size = [9, 4]
-initial_date = "2020-01-01 00:00:00"
-time_dimension = "period"
-frequency = "month"
-unit = " "
-labels = ["season", "sample", "next_subscenario"]
+dimension_sizes = [ 9, 4 ]
+dimensions = [ 'period', 'scenario' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2020-01-01T00:00:00'
+labels = [ 'season', 'sample', 'next_subscenario' ]
+time_dimensions = [ 'period' ]
+unit = ' '
+version = '1'

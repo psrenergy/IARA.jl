@@ -9,13 +9,37 @@
 #############################################################################
 
 """
+    read_season_sample_map(period_season_map_file::String, num_periods::Int, num_scenarios::Int)
+
+Read `period_season_map_file` and return a `Dict` mapping each `(period, scenario)` pair, 
+to its `(season, sample)` pair. Errors if the file does not cover that range.
+"""
+function read_season_sample_map(period_season_map_file::String, num_periods::Int, num_scenarios::Int)
+    period_season_map_array, period_season_map_metadata =
+        binary_file_to_array(first(splitext(period_season_map_file)))
+    period_season_map_labels = Quiver.Binary.get_labels(period_season_map_metadata)
+    season_label_idx = findfirst(==("season"), period_season_map_labels)
+    sample_label_idx = findfirst(==("sample"), period_season_map_labels)
+    map_num_periods, map_num_scenarios = metadata_dimension_sizes(period_season_map_metadata)
+    if map_num_periods < num_periods || map_num_scenarios < num_scenarios
+        error("The period_season_map in \"$period_season_map_file\" does not cover all (period, scenario) pairs.")
+    end
+    season_sample_by_period_scenario = Dict{Tuple{Int, Int}, Tuple{Int, Int}}()
+    for scenario in 1:num_scenarios, period in 1:num_periods
+        season_sample_by_period_scenario[(period, scenario)] = (
+            Int(period_season_map_array[season_label_idx, scenario, period]),
+            Int(period_season_map_array[sample_label_idx, scenario, period]),
+        )
+    end
+    return season_sample_by_period_scenario
+end
+
+"""
     add_season_sample_dimensions(output_file; period_season_map_file, destination_file)
 
-Read a cyclic-run output and its `period_season_map`, and write a Quiver file with `season` and
-`sample` added as dimensions right after `scenario`. Returns the path of the written file.
-
-The format (`.csv` or `.quiv`) is detected automatically and preserved. To switch formats, convert
-the input with `Quiver.convert` beforehand.
+Read a cyclic-run output's `.qvr` binary and its `period_season_map`, and write a Quiver binary
+file with `season` and `sample` added as dimensions right after `scenario`. Also writes a matching
+`.csv`, with unused `(season, sample)` combinations removed. Returns the path of the written file.
 """
 function add_season_sample_dimensions(
     output_file::String;
@@ -23,74 +47,60 @@ function add_season_sample_dimensions(
     destination_file::String = first(splitext(output_file)) * "_with_season",
 )
     output_base = first(splitext(output_file))
-    if isfile(output_base * ".quiv")
-        implementation = Quiver.binary
-        output = Quiver.file_to_df(output_base, Quiver.binary)
-        @warn(
-            "The binary format pre-allocates the full dense grid (the product of every dimension " *
-            "size), which is inefficient for the sparse season/sample dimensions added.",
-        )
-    elseif isfile(output_base * ".csv")
-        implementation = Quiver.csv
-        output = CSV.read(output_base * ".csv", DataFrame)
-    else
-        error("Could not find a \"$output_base.csv\" or \"$output_base.quiv\" file to read.")
+    if !isfile(output_base * ".qvr")
+        error("Could not find a \"$output_base.qvr\" file to read.")
     end
-    metadata = Quiver.from_toml(output_base * ".toml")
+    array_data, metadata = binary_file_to_array(output_base)
 
-    @assert metadata.dimensions[1] == :period
-    @assert metadata.dimensions[2] == :scenario
+    # TODO: Binary format pre-allocates the full dense grid (product of every dimension size),
+    # which is inneficient for this. Worth checking in detail how it works on Quiver now.
 
-    map_df = select(
-        CSV.read(first(splitext(period_season_map_file)) * ".csv", DataFrame),
-        [:period, :scenario, :season, :sample],
-    )
-    transform!(map_df, :season => ByRow(Int) => :season, :sample => ByRow(Int) => :sample)
+    dimension_names = metadata_dimension_names(metadata)
+    dimension_sizes = metadata_dimension_sizes(metadata)
+    labels = String.(Quiver.Binary.get_labels(metadata))
 
-    result = leftjoin(output, map_df; on = [:period, :scenario])
-    if any(ismissing, result.season)
-        error("The period_season_map does not cover all (period, scenario) pairs in \"$output_file\".")
-    end
+    @assert dimension_names[1] == :period
+    @assert dimension_names[2] == :scenario
 
-    original_dims = string.(metadata.dimensions)
+    season_sample_by_period_scenario =
+        read_season_sample_map(period_season_map_file, dimension_sizes[1], dimension_sizes[2])
+
+    original_dims = string.(dimension_names)
     dimensions = vcat(original_dims[1:2], ["season", "sample"], original_dims[3:end])
-    dimension_size = vcat(
-        metadata.dimension_size[1:2],
-        [maximum(result.season), maximum(result.sample)],
-        metadata.dimension_size[3:end],
-    )
+    dimension_symbols = Symbol.(dimensions)
+    max_season = maximum(first(v) for v in values(season_sample_by_period_scenario))
+    max_sample = maximum(last(v) for v in values(season_sample_by_period_scenario))
+    dimension_size = vcat(dimension_sizes[1:2], [max_season, max_sample], dimension_sizes[3:end])
 
-    dimension_columns = Symbol.(dimensions)
-    label_columns = Symbol.(metadata.labels)
-    select!(result, vcat(dimension_columns, label_columns))
-    sort!(result, dimension_columns)
-
-    # Quiver cannot read a hole at the maximum dimension combination. Materialize the corner 
-    # with a NaN row when it is missing, keeping the sorted order intact. 
-    if any(i -> result[end, dimension_columns[i]] != dimension_size[i], eachindex(dimension_size))
-        sentinel = Dict{Symbol, Any}(dimension_columns[i] => dimension_size[i] for i in eachindex(dimension_size))
-        for column in label_columns
-            sentinel[column] = NaN
-        end
-        push!(result, sentinel)
-    end
-
-    writer = Quiver.Writer{implementation}(
-        destination_file;
+    new_metadata = Quiver.Binary.Metadata(;
+        initial_datetime = Quiver.Binary.get_initial_datetime(metadata),
+        unit = Quiver.Binary.get_unit(metadata),
+        labels = labels,
         dimensions = dimensions,
-        labels = metadata.labels,
-        time_dimension = string(metadata.time_dimension),
-        dimension_size = dimension_size,
-        initial_date = metadata.initial_date,
-        unit = metadata.unit,
-        frequency = metadata.frequency,
+        dimension_sizes = dimension_size,
     )
-    for row in eachrow(result)
-        dimension_values = [row[column] for column in dimension_columns]
-        data_values = Float64[row[column] for column in label_columns]
-        Quiver.write!(writer, data_values, dimension_values...)
+    writer = Quiver.Binary.open_file(destination_file; mode = 'w', metadata = new_metadata)
+
+    dims = first_position!(copy(dimension_sizes))
+    names_tuple = Tuple(dimension_symbols)
+    for _ in 1:prod(dimension_sizes)
+        next_dim!(dims, dimension_sizes)
+        season, sample = season_sample_by_period_scenario[(dims[1], dims[2])]
+        new_dim_values = vcat(dims[1:2], [season, sample], dims[3:end])
+        data_values = array_data[:, reverse(dims)...]
+        write_kwargs = NamedTuple{names_tuple}(Tuple(new_dim_values))
+        Quiver.Binary.write!(writer; data = data_values, write_kwargs...)
     end
-    Quiver.close!(writer)
+    finalize_output!(writer)
+
+    # The binary format pre-allocates the full dense grid, so every (season, sample) combination
+    # gets a row even though only one is ever real per (period, scenario). Those unwritten cells
+    # are read back as "null" in every label column; drop them here.
+    csv_path = destination_file * ".csv"
+    result_df = CSV.read(csv_path, DataFrame; missingstring = "null")
+    label_columns = Symbol.(labels)
+    filter!(row -> !all(ismissing, row[label_columns]), result_df)
+    CSV.write(csv_path, result_df; missingstring = "null")
 
     return destination_file
 end
@@ -113,7 +123,7 @@ function add_season_sample_dimensions_to_dir(
             continue
         end
         full_base = joinpath(dir, base)
-        if !isfile(full_base * ".csv") && !isfile(full_base * ".quiv")
+        if !isfile(full_base * ".qvr")
             continue
         end
         add_season_sample_dimensions(

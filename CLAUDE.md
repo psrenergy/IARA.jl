@@ -167,7 +167,7 @@ plot_outputs() → PlotlyLight visualizations
 - **DataFrames**, **CSV** - Data manipulation
 - **ParametricOptInterface** - Parametric optimization
 - **PeriodicAutoregressive** (=0.1.0) - PAR(p) model for inflow scenarios
-- **Quiver** (0.1.13) - Efficient time series output writing
+- **Quiver** (0.9.13) - Efficient time series output writing
 - **PlotlyLight** - Interactive visualizations
 
 **Note:** Several dependencies are pinned to specific versions for stability.
@@ -240,7 +240,7 @@ Schema versioning in [database/migrations/](database/migrations/) (30 versions) 
 
 ## Development Notes
 
-- Julia 1.9+ required
+- Julia 1.11+ required
 - CI runs on Windows/Ubuntu with Julia 1.11
 - Code formatting enforced via JuliaFormatter
 - All contributions require passing tests

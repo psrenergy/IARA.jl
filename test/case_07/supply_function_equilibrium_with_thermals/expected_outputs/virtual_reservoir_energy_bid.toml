@@ -1,8 +1,13 @@
-version = 1
-dimensions = ["period", "scenario", "bid_segment"]
-dimension_size = [3, 2, 16]
-initial_date = "2020-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "MWh"
-labels = ["reservoir_1 - asset_owner_1", "reservoir_1 - asset_owner_2", "reservoir_1 - asset_owner_3", "reservoir_1 - asset_owner_4"]
+dimension_sizes = [ 3, 2, 16 ]
+dimensions = [ 'period', 'scenario', 'bid_segment' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2020-01-01T00:00:00'
+labels = [
+    'reservoir_1 - asset_owner_1',
+    'reservoir_1 - asset_owner_2',
+    'reservoir_1 - asset_owner_3',
+    'reservoir_1 - asset_owner_4'
+]
+time_dimensions = [ 'period' ]
+unit = 'MWh'
+version = '1'

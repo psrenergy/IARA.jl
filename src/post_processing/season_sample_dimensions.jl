@@ -51,7 +51,7 @@ function add_season_sample_dimensions(
         error("Could not find a \"$output_base.qvr\" file to read.")
     end
     array_data, metadata = binary_file_to_array(output_base)
-    
+
     # TODO: Binary format pre-allocates the full dense grid (product of every dimension size),
     # which is inneficient for this. Worth checking in detail how it works on Quiver now.
 

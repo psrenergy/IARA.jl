@@ -10,33 +10,36 @@
 
 function _filter_time_series(
     data::Array{<:AbstractFloat, N},
-    metadata::Quiver.Metadata,
+    metadata::Quiver.Binary.Metadata,
     agents::Vector{String};
     kwargs...,
 ) where {N}
     queried_dimensions = keys(kwargs)
+    metadata_labels = Quiver.Binary.get_labels(metadata)
+    metadata_dims = metadata_dimension_names(metadata)
+    metadata_sizes = metadata_dimension_sizes(metadata)
 
     queried_indices = []
 
     labels_indices = Vector{Int}()
     for agent_names in agents
-        if agent_names in metadata.labels
-            push!(labels_indices, findfirst(x -> x == agent_names, metadata.labels))
+        if agent_names in metadata_labels
+            push!(labels_indices, findfirst(x -> x == agent_names, metadata_labels))
         else
             error("Agent $agent_names not found in this file's labels")
         end
     end
     push!(queried_indices, labels_indices)
 
-    for i in length(metadata.dimensions):-1:1
-        if metadata.dimensions[i] in queried_dimensions
-            if typeof(kwargs[metadata.dimensions[i]]) == UnitRange{Int}
-                push!(queried_indices, [i for i in kwargs[metadata.dimensions[i]]])
+    for i in length(metadata_dims):-1:1
+        if metadata_dims[i] in queried_dimensions
+            if typeof(kwargs[metadata_dims[i]]) == UnitRange{Int}
+                push!(queried_indices, [i for i in kwargs[metadata_dims[i]]])
             else
-                push!(queried_indices, [kwargs[metadata.dimensions[i]]])
+                push!(queried_indices, [kwargs[metadata_dims[i]]])
             end
         else
-            push!(queried_indices, [i for i in 1:metadata.dimension_size[i]])
+            push!(queried_indices, [i for i in 1:metadata_sizes[i]])
         end
     end
 
@@ -121,38 +124,48 @@ function custom_plot(
     queried_dimensions = keys(kwargs)
 
     data, metadata = read_timeseries_file(filepath)
+    metadata_dims = metadata_dimension_names(metadata)
 
     for dimension in queried_dimensions
-        if !(dimension in metadata.dimensions)
+        if !(dimension in metadata_dims)
             error("Queried dimension $dimension is not in this file's dimensions")
         end
     end
 
     if isempty(agents)
-        agents = String.(metadata.labels)
+        agents = String.(Quiver.Binary.get_labels(metadata))
     end
 
     data_to_plot = _filter_time_series(data, metadata, agents; kwargs...)
 
-    time_series_step = if metadata.frequency == "monthly" || metadata.frequency == "month"
+    dimensions = Quiver.Binary.get_dimensions(metadata)
+    time_dimension_info = findfirst(d -> d.is_time_dimension, dimensions)
+    metadata_frequency = if !isnothing(time_dimension_info)
+        dimensions[time_dimension_info].frequency
+    end
+    time_series_step = if metadata_frequency == "monthly" || metadata_frequency == "month"
         Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     end
 
     queried_period = get(kwargs, :period, nothing)
 
     initial_date = if !isnothing(queried_period)
-        _get_adjusted_date_time(DateTime(metadata.initial_date), time_series_step, queried_period)
+        _get_adjusted_date_time(
+            Quiver.string_to_date_time(Quiver.Binary.get_initial_datetime(metadata)),
+            time_series_step,
+            queried_period,
+        )
     else
-        DateTime(metadata.initial_date)
+        Quiver.string_to_date_time(Quiver.Binary.get_initial_datetime(metadata))
     end
 
     return plot_data(
         plot_type,
         data_to_plot,
         agents,
-        String.(metadata.dimensions);
+        String.(metadata_dims);
         title = title,
-        unit = metadata.unit,
+        unit = Quiver.Binary.get_unit(metadata),
         file_path = plot_path,
         initial_date = initial_date,
         time_series_step = time_series_step,

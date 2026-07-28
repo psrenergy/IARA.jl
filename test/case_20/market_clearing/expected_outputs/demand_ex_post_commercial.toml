@@ -1,8 +1,8 @@
-version = 1
-dimensions = ["period", "scenario", "subscenario", "subperiod"]
-dimension_size = [10, 1, 4, 1]
-initial_date = "2025-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "GWh"
-labels = ["Demanda"]
+dimension_sizes = [ 10, 1, 4, 1 ]
+dimensions = [ 'period', 'scenario', 'subscenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2025-01-01T00:00:00'
+labels = [ 'Demanda' ]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

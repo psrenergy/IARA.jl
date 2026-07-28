@@ -83,7 +83,7 @@ function initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
             labels_to_read = labels_to_read,
         )
         # subscenario dimension should always be after period and scenario
-        @assert ts.ex_post.reader.metadata.dimensions[3] == :subscenario
+        @assert metadata_dimension_names(Quiver.Binary.get_metadata(ts.ex_post.reader))[3] == :subscenario
     end
 
     return num_errors

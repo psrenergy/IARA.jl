@@ -404,9 +404,9 @@ function build_plot_output(
 
     file_path = get_quiver_file_path(file_path_without_extension)
     output_data, metadata = read_timeseries_file(file_path)
-    output_labels = metadata.labels
-    unit = metadata.unit
-    output_dimensions = String.(metadata.dimensions)
+    output_labels = Quiver.Binary.get_labels(metadata)
+    unit = Quiver.Binary.get_unit(metadata)
+    output_dimensions = String.(metadata_dimension_names(metadata))
 
     for plot_type in plot_config.plot_types
         plot_data(

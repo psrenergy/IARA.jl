@@ -1,8 +1,15 @@
-version = 1
-dimensions = ["period", "scenario", "subscenario", "subperiod", "bid_segment"]
-dimension_size = [1, 1, 4, 1, 5]
-initial_date = "2025-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "MWh"
-labels = ["Portfolio - Sistema", "Termico - Sistema", "Renovavel - Sistema", "Portfolio 2 - Sistema", "Termico 2 - Sistema", "Renovavel 2 - Sistema"]
+dimension_sizes = [ 1, 1, 4, 1, 5 ]
+dimensions = [ 'period', 'scenario', 'subscenario', 'subperiod', 'bid_segment' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2025-01-01T00:00:00'
+labels = [
+    'Portfolio - Sistema',
+    'Termico - Sistema',
+    'Renovavel - Sistema',
+    'Portfolio 2 - Sistema',
+    'Termico 2 - Sistema',
+    'Renovavel 2 - Sistema'
+]
+time_dimensions = [ 'period' ]
+unit = 'MWh'
+version = '1'

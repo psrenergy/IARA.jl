@@ -24,8 +24,8 @@ IARA.update_configuration!(db;
 )
 
 # Move existing demand file to _ex_ante suffix
-if isfile(joinpath(PATH, "demand.csv"))
-    mv(joinpath(PATH, "demand.csv"), joinpath(PATH, "demand_ex_ante.csv"); force = true)
+if isfile(joinpath(PATH, "demand.qvr"))
+    mv(joinpath(PATH, "demand.qvr"), joinpath(PATH, "demand_ex_ante.qvr"); force = true)
     mv(joinpath(PATH, "demand.toml"), joinpath(PATH, "demand_ex_ante.toml"); force = true)
 end
 

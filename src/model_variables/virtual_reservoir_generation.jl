@@ -183,17 +183,17 @@ function virtual_reservoir_generation!(
     output = outputs.outputs["virtual_reservoir_generation"*run_time_file_suffixes(inputs, run_time_options)]
     if is_ex_post_problem(run_time_options)
         for bid_segment in 1:maximum_number_of_vr_bidding_segments(inputs)
-            Quiver.write!(
-                output.writer,
-                round_output(treated_virtual_reservoir_generation[:, bid_segment] * MW_to_GW());
+            Quiver.Binary.write!(
+                output.writer;
+                data = round_output(treated_virtual_reservoir_generation[:, bid_segment] * MW_to_GW()),
                 period, scenario, subscenario, bid_segment,
             )
         end
     else
         for bid_segment in 1:maximum_number_of_vr_bidding_segments(inputs)
-            Quiver.write!(
-                output.writer,
-                round_output(treated_virtual_reservoir_generation[:, bid_segment] * MW_to_GW());
+            Quiver.Binary.write!(
+                output.writer;
+                data = round_output(treated_virtual_reservoir_generation[:, bid_segment] * MW_to_GW()),
                 period, scenario, bid_segment,
             )
         end

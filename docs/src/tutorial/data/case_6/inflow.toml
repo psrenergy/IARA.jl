@@ -1,8 +1,8 @@
-version = 1
-dimensions = ["period", "scenario", "subperiod"]
-dimension_size = [2, 1, 1]
-initial_date = "2000-01-01 00:00:00"
-time_dimension = "period"
-frequency = "month"
-unit = "m3/s"
-labels = ["gauging_station"]
+dimension_sizes = [ 2, 1, 1 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2000-01-01T00:00:00'
+labels = [ 'gauging_station' ]
+time_dimensions = [ 'period' ]
+unit = 'm3/s'
+version = '1'

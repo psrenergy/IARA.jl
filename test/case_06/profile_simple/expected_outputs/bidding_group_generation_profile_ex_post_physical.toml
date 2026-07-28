@@ -1,8 +1,8 @@
-version = 1
-dimensions = ["period", "scenario", "subscenario", "subperiod", "profile"]
-dimension_size = [3, 4, 1, 2, 2]
-initial_date = "2020-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "GWh"
-labels = ["bg_1 - bus_1", "bg_1 - bus_2", "bg_2 - bus_1", "bg_2 - bus_2"]
+dimension_sizes = [ 3, 4, 1, 2, 2 ]
+dimensions = [ 'period', 'scenario', 'subscenario', 'subperiod', 'profile' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2020-01-01T00:00:00'
+labels = [ 'bg_1 - bus_1', 'bg_1 - bus_2', 'bg_2 - bus_1', 'bg_2 - bus_2' ]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

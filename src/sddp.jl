@@ -90,6 +90,12 @@ function build_risk_measure(inputs::AbstractInputs)
 end
 
 function train_model!(model::ProblemModel, inputs::Inputs, run_time_options::RunTimeOptions)
+    # Seed the global RNG so SDDP training is reproducible. Both the forward-pass
+    # scenario sampling and the SimulationStoppingRule's Monte Carlo convergence
+    # checks draw from the global RNG; without a fixed seed each run samples
+    # different trajectories, stops at a different iteration, and produces
+    # different cuts (and therefore different simulation outputs).
+    Random.seed!(1234)
     SDDP.train(
         model.policy_graph;
         risk_measure = build_risk_measure(inputs),

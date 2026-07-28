@@ -8,7 +8,9 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-using Quiver
+using CSV
+using DataFrames
+using TOML
 
 const TEST_ATOL = 1e-6
 const TEST_RTOL = 1e-2
@@ -57,7 +59,9 @@ function compare_outputs(
         "hydro_opportunity_cost",
         "generation",
         "bidding_group_revenue",
+        "bidding_group_revenue_indepedent",
         "bidding_group_total_revenue",
+        "bidding_group_profit",
     ]
     skipped_outputs = union(skipped_outputs, default_skipped_outputs)
 
@@ -81,6 +85,57 @@ function compare_outputs(
     return nothing
 end
 
+"""
+    metadata_matches(md1::Dict{String, Any}, md2::Dict{String, Any})
+
+Compare the dimensions, dimension sizes, labels and unit of two parsed Quiver `.toml` files.
+"""
+function metadata_matches(md1::Dict{String, Any}, md2::Dict{String, Any})
+    ok = true
+    for field in ("dimensions", "dimension_sizes", "labels", "unit")
+        if md1[field] != md2[field]
+            @error("Field \"$field\" is $(md1[field]), expected $(md2[field])")
+            ok = false
+        end
+    end
+    return ok
+end
+
+"""
+    compare_dataframes(output_df, expected_df, dimension_names, label_names; atol, rtol)
+
+Compare every row of two CSV-derived `DataFrame`s positionally — both files are written by
+iterating dimensions in the same fixed order, so row `i` in one corresponds to row `i` in the
+other. Dimension columns must match exactly; label columns are compared with `isapprox`,
+treating `missing` specially: a `missing` in one file must also be `missing` in the other at
+the same row (checked exactly, since `missing == missing` is `missing`, not `true`), and
+non-missing positions are compared numerically at `atol`/`rtol`.
+"""
+function compare_dataframes(
+    output_df::DataFrame,
+    expected_df::DataFrame,
+    dimension_names::Vector{Symbol},
+    label_names::Vector{Symbol};
+    atol,
+    rtol,
+)
+    nrow(output_df) != nrow(expected_df) && return false
+    for row_index in 1:nrow(output_df)
+        for dimension in dimension_names
+            output_df[row_index, dimension] != expected_df[row_index, dimension] && return false
+        end
+        for label in label_names
+            output_value = output_df[row_index, label]
+            expected_value = expected_df[row_index, label]
+            ismissing(output_value) != ismissing(expected_value) && return false
+            if !ismissing(output_value) && !isapprox(Float64(output_value), Float64(expected_value); atol, rtol)
+                return false
+            end
+        end
+    end
+    return true
+end
+
 function compare_files(
     output_name::String,
     output_file::String,
@@ -88,63 +143,68 @@ function compare_files(
     test_only_subperiod_sum::Vector{String} = String[],
     test_only_first_subperiod::Vector{String} = String[],
 )
-    output_reader = Quiver.Reader{Quiver.csv}(output_file)
-    expected_output_reader = Quiver.Reader{Quiver.csv}(expected_output_file)
+    output_md = TOML.parsefile(output_file * ".toml")
+    expected_md = TOML.parsefile(expected_output_file * ".toml")
 
-    try
-        @test output_reader.metadata == expected_output_reader.metadata
-    catch
-        Quiver.close!(output_reader)
-        Quiver.close!(expected_output_reader)
-        @test false
+    metadata_ok = metadata_matches(output_md, expected_md)
+    @test metadata_ok
+    if !metadata_ok
         return
     end
 
-    try
-        dimension_names = output_reader.metadata.dimensions
-        dimension_size = output_reader.metadata.dimension_size
+    dimension_names = Symbol.(expected_md["dimensions"])
+    dimension_size = Int.(expected_md["dimension_sizes"])
+    label_names = Symbol.(expected_md["labels"])
 
-        # Compare the outputs
-        if any(startswith.(output_name, test_only_subperiod_sum))
-            if dimension_names == [:period, :scenario, :subperiod]
-                for period in 1:dimension_size[1], scenario in 1:dimension_size[2]
-                    sum_in_subperiods_calculated_output = 0.0
-                    sum_in_subperiods_expected_output = 0.0
-                    for subperiod in 1:dimension_size[3]
-                        output_data = Quiver.goto!(output_reader; period, scenario, subperiod)
-                        expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, subperiod)
-                        sum_in_subperiods_calculated_output += sum(output_data)
-                        sum_in_subperiods_expected_output += sum(expected_output_data)
-                    end
-                    @test sum_in_subperiods_calculated_output ≈ sum_in_subperiods_expected_output atol = TEST_ATOL rtol =
-                        1e-4
-                end
-            else
-                @warn("Comparison not implementend. Could not compare the output $output_name")
+    output_df = CSV.read(output_file * ".csv", DataFrame; missingstring = "null")
+    expected_df = CSV.read(expected_output_file * ".csv", DataFrame; missingstring = "null")
+
+    if any(startswith.(output_name, test_only_subperiod_sum))
+        if dimension_names == [:period, :scenario, :subperiod]
+            for period in 1:dimension_size[1], scenario in 1:dimension_size[2]
+                output_rows = filter(row -> row.period == period && row.scenario == scenario, output_df)
+                expected_rows = filter(row -> row.period == period && row.scenario == scenario, expected_df)
+                sum_in_subperiods_calculated_output = sum(coalesce.(Matrix(output_rows[:, label_names]), NaN))
+                sum_in_subperiods_expected_output = sum(coalesce.(Matrix(expected_rows[:, label_names]), NaN))
+                @test sum_in_subperiods_calculated_output ≈ sum_in_subperiods_expected_output atol = TEST_ATOL rtol =
+                    1e-4
             end
-        elseif output_name in test_only_first_subperiod
-            if dimension_names == [:period, :scenario, :subperiod]
-                for period in 1:dimension_size[1], scenario in 1:dimension_size[2], subperiod in 1:1
-                    output_data = Quiver.goto!(output_reader; period, scenario, subperiod)
-                    expected_output_data = Quiver.goto!(expected_output_reader; period, scenario, subperiod)
-                    @test output_data ≈ expected_output_data atol = TEST_ATOL rtol = TEST_RTOL
-                end
-            else
-                @warn("Comparison not implementend. Could not compare the output $output_name")
-            end
-        else # compare every entry
-            @test Quiver.compare_files(
-                output_file,
-                expected_output_file,
-                Quiver.csv;
-                atol = TEST_ATOL,
-                rtol = TEST_RTOL,
-            )
+        else
+            @warn("Comparison not implemented. Could not compare the output $output_name")
         end
-    finally
-        Quiver.close!(output_reader)
-        Quiver.close!(expected_output_reader)
+    elseif output_name in test_only_first_subperiod
+        if dimension_names == [:period, :scenario, :subperiod]
+            for period in 1:dimension_size[1], scenario in 1:dimension_size[2]
+                output_row =
+                    filter(row -> row.period == period && row.scenario == scenario && row.subperiod == 1, output_df)
+                expected_row = filter(
+                    row -> row.period == period && row.scenario == scenario && row.subperiod == 1,
+                    expected_df,
+                )
+                output_data = collect(output_row[1, label_names])
+                expected_data = collect(expected_row[1, label_names])
+                nan_mask = ismissing.(expected_data)
+                @test ismissing.(output_data) == nan_mask
+                valid = .!nan_mask
+                if any(valid)
+                    @test Float64.(output_data[valid]) ≈ Float64.(expected_data[valid]) atol = TEST_ATOL rtol =
+                        TEST_RTOL
+                end
+            end
+        else
+            @warn("Comparison not implemented. Could not compare the output $output_name")
+        end
+    else # compare every entry
+        @test compare_dataframes(
+            output_df,
+            expected_df,
+            dimension_names,
+            label_names;
+            atol = TEST_ATOL,
+            rtol = TEST_RTOL,
+        )
     end
+    return nothing
 end
 
 function update_outputs!(case_path::String)

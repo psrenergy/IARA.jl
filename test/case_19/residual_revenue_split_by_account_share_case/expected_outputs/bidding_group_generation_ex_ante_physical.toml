@@ -1,8 +1,8 @@
-version = 1
-dimensions = ["period", "scenario", "subperiod", "bid_segment"]
-dimension_size = [5, 2, 2, 1]
-initial_date = "2024-01-01 00:00:00"
-time_dimension = "period"
-frequency = "monthly"
-unit = "GWh"
-labels = ["BG 2 - bus_1"]
+dimension_sizes = [ 5, 2, 2, 1 ]
+dimensions = [ 'period', 'scenario', 'subperiod', 'bid_segment' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'BG 2 - bus_1' ]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

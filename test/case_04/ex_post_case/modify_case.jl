@@ -21,7 +21,7 @@ IARA.update_configuration!(db;
 # Create and link CSV files
 # -------------------------
 # Demand
-mv(joinpath(PATH, "demand.csv"), joinpath(PATH, "demand_ex_ante.csv"); force = true)
+mv(joinpath(PATH, "demand.qvr"), joinpath(PATH, "demand_ex_ante.qvr"); force = true)
 mv(joinpath(PATH, "demand.toml"), joinpath(PATH, "demand_ex_ante.toml"); force = true)
 
 demand_ex_post = zeros(1, number_of_subperiods, number_of_subscenarios, number_of_scenarios, number_of_periods)

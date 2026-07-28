@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase24MultipleSubscenariosCase
+module TestCase24ElasticDemandCase
 
 using Test
 using IARA

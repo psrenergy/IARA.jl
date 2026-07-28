@@ -1284,7 +1284,8 @@ end
 function need_demand_price_input_data(inputs::AbstractInputs)
     return is_mincost(inputs) ||
            (is_market_clearing(inputs) && generate_heuristic_bids_for_clearing(inputs)) ||
-           (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs))
+           (is_market_clearing(inputs) && is_any_construction_type_cost_based(inputs)) ||
+           run_mode(inputs) == RunMode.SINGLE_PERIOD_HEURISTIC_BID
 end
 
 function is_any_construction_type_hybrid(inputs::AbstractInputs, run_time_options::RunTimeOptions)

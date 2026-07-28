@@ -174,9 +174,6 @@ function update_bidding_group!(
     label::String;
     kwargs...,
 )
-    if isempty(kwargs)
-        return db
-    end
     id = id_for_label(db, "BiddingGroup", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
     Quiver.update_element!(db, "BiddingGroup", id; sql_typed_kwargs...)
@@ -226,9 +223,6 @@ function update_bidding_group_vectors!(
     label::String;
     kwargs...,
 )
-    if isempty(kwargs)
-        return db
-    end
     id = id_for_label(db, "BiddingGroup", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
 

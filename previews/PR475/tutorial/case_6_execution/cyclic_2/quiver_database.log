@@ -1,0 +1,9 @@
+[2026-07-28 18:47:22.093] [quiver_database_23] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
+[2026-07-28 18:47:22.093] [quiver_database_23] [debug] Database opened successfully, foreign keys enabled
+[2026-07-28 18:47:22.093] [quiver_database_23] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
+[2026-07-28 18:47:22.093] [quiver_database_23] [debug] Database is up to date at version 36
+[2026-07-28 18:47:22.096] [quiver_database_23] [debug] Reading time series files for collection: Configuration
+[2026-07-28 18:47:22.096] [quiver_database_23] [debug] Reading time series files for collection: HydroUnit
+[2026-07-28 18:47:22.097] [quiver_database_23] [debug] Reading time series files for collection: DemandUnit
+[2026-07-28 18:47:23.571] [quiver_database_23] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
+[2026-07-28 18:47:23.571] [quiver_database_23] [info] Database closed

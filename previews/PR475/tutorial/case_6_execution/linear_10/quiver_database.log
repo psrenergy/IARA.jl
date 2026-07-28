@@ -1,0 +1,9 @@
+[2026-07-28 18:47:20.949] [quiver_database_21] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
+[2026-07-28 18:47:20.949] [quiver_database_21] [debug] Database opened successfully, foreign keys enabled
+[2026-07-28 18:47:20.949] [quiver_database_21] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
+[2026-07-28 18:47:20.949] [quiver_database_21] [debug] Database is up to date at version 36
+[2026-07-28 18:47:20.952] [quiver_database_21] [debug] Reading time series files for collection: Configuration
+[2026-07-28 18:47:20.953] [quiver_database_21] [debug] Reading time series files for collection: HydroUnit
+[2026-07-28 18:47:20.953] [quiver_database_21] [debug] Reading time series files for collection: DemandUnit
+[2026-07-28 18:47:22.011] [quiver_database_21] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
+[2026-07-28 18:47:22.011] [quiver_database_21] [info] Database closed

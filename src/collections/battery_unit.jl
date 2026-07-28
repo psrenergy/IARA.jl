@@ -29,11 +29,24 @@ Collection representing the battery unit in the system.
     bus_index::Vector{Int} = []
     # index of the bidding_group to which the battery_unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
+
+    # caches
+    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
+
+function battery_unit_time_series_sentinels()
+    return Dict{String, Any}(
+        "existing" => null_value(Int),
+        "min_storage" => null_value(Float64),
+        "max_storage" => null_value(Float64),
+        "max_capacity" => null_value(Float64),
+        "om_cost" => null_value(Float64),
+    )
+end
 
 """
     initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
@@ -41,15 +54,22 @@ end
 Initialize the Battery Unit collection from the database.
 """
 function initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
-    num_battery_units = PSRI.max_elements(inputs.db, "BatteryUnit")
+    num_battery_units = length(Quiver.read_element_ids(inputs.db, "BatteryUnit"))
     if num_battery_units == 0
         return nothing
     end
 
-    battery_unit.label = PSRI.get_parms(inputs.db, "BatteryUnit", "label")
-    battery_unit.initial_storage = PSRI.get_parms(inputs.db, "BatteryUnit", "initial_storage")
-    battery_unit.bus_index = PSRI.get_map(inputs.db, "BatteryUnit", "Bus", "id")
-    battery_unit.bidding_group_index = PSRI.get_map(inputs.db, "BatteryUnit", "BiddingGroup", "id")
+    battery_unit.label = read_scalar_strings(inputs.db, "BatteryUnit", "label")
+    battery_unit.initial_storage = read_scalar_floats(inputs.db, "BatteryUnit", "initial_storage")
+    battery_unit.bus_index = scalar_relation_map(inputs.db, "BatteryUnit", "Bus", "id")
+    battery_unit.bidding_group_index = scalar_relation_map(inputs.db, "BatteryUnit", "BiddingGroup", "id")
+
+    ids = Quiver.read_element_ids(inputs.db, "BatteryUnit")
+    sentinels = battery_unit_time_series_sentinels()
+    battery_unit.time_series_cache = [
+        TimeSeriesRowCache(inputs.db, "BatteryUnit", "parameters", id, sentinels)
+        for id in ids
+    ]
 
     update_time_series_from_db!(battery_unit, inputs.db, initial_date_time(inputs))
 
@@ -57,55 +77,43 @@ function initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(battery_unit::BatteryUnit, db::Quiver.Database, period_date_time::DateTime)
 
 Update the Battery Unit time series from the database.
 """
-function update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLite, period_date_time::DateTime)
-    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
-    battery_unit.existing =
-        @memoized_lru "battery-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "BatteryUnit",
-                "existing";
-                date_time = period_date_time,
-            ),
+function update_time_series_from_db!(
+    battery_unit::BatteryUnit,
+    db::Quiver.Database,
+    period_date_time::DateTime,
+)
+    num_battery_units = length(battery_unit)
+    battery_unit.existing = BatteryUnit_Existence.T[
+        convert_to_enum(
+            time_series_row(battery_unit.time_series_cache[b], "existing", period_date_time),
             BatteryUnit_Existence.T,
         )
-    battery_unit.min_storage =
-        @memoized_lru "battery-min_storage-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "BatteryUnit",
-            "min_storage";
-            date_time = period_date_time,
+        for b in 1:num_battery_units
+    ]
+    for (field, attribute) in (
+        (:min_storage, "min_storage"),
+        (:max_storage, "max_storage"),
+        (:max_capacity, "max_capacity"),
+        (:om_cost, "om_cost"),
+    )
+        setfield!(
+            battery_unit,
+            field,
+            Float64[
+                time_series_row(battery_unit.time_series_cache[b], attribute, period_date_time)
+                for b in 1:num_battery_units
+            ],
         )
-    battery_unit.max_storage =
-        @memoized_lru "battery-max_storage-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "BatteryUnit",
-            "max_storage";
-            date_time = period_date_time,
-        )
-    battery_unit.max_capacity =
-        @memoized_lru "battery-max_capacity-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "BatteryUnit",
-            "max_capacity";
-            date_time = period_date_time,
-        )
-    battery_unit.om_cost =
-        @memoized_lru "battery-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "BatteryUnit",
-            "om_cost";
-            date_time = period_date_time,
-        )
+    end
     return nothing
 end
 
 """
-    add_battery_unit!(db::DatabaseSQLite; kwargs...)
+    add_battery_unit!(db::Quiver.Database; kwargs...)
 
 Add a Battery Unit to the database.
 
@@ -155,14 +163,20 @@ IARA.add_battery_unit!(db;
 )
 ```
 """
-function add_battery_unit!(db::DatabaseSQLite; kwargs...)
+function add_battery_unit!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "BatteryUnit"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "BatteryUnit"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "BatteryUnit", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_battery_unit!(db::DatabaseSQLite, label::String; kwargs...)
+    update_battery_unit!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Battery Unit named 'label' in the database.
 
@@ -176,43 +190,31 @@ IARA.update_battery_unit!(
 ```
 """
 function update_battery_unit!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "BatteryUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "BatteryUnit",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "BatteryUnit", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_battery_unit_relation!(db::DatabaseSQLite, battery_unit_label::String; collection::String, relation_type::String, related_label::String)
+    update_battery_unit_relation!(db::Quiver.Database, battery_unit_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Battery Unit named 'label' in the database.
 """
 function update_battery_unit_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     battery_unit_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "BatteryUnit",
-        collection,
-        battery_unit_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "BatteryUnit", battery_unit_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "BatteryUnit", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 

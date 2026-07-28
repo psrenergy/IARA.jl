@@ -12,7 +12,7 @@ db = IARA.load_study(PATH; read_only = false)
 
 # Delete hydro asset owners, bidding groups, and virtual reservoirs from base case
 IARA.delete_virtual_reservoir!(db, "reservoir_1")
-IARA.PSRI.delete_element!(db, "BiddingGroup", "empty_bidding_group")
+IARA.delete_element!(db, "BiddingGroup", "empty_bidding_group")
 IARA.delete_asset_owner!(db, "asset_owner_1")
 IARA.delete_asset_owner!(db, "asset_owner_2")
 

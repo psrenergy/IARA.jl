@@ -27,11 +27,22 @@ Collection representing the Branches in the system.
     bus_to::Vector{Int} = []
     # index of the bus from in collection Bus
     bus_from::Vector{Int} = []
+
+    # caches
+    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
+
+function branch_time_series_sentinels()
+    return Dict{String, Any}(
+        "existing" => null_value(Int),
+        "capacity" => null_value(Float64),
+        "reactance" => null_value(Float64),
+    )
+end
 
 """
     initialize!(branch::Branch, inputs::AbstractInputs)
@@ -39,19 +50,26 @@ end
 Initialize the Branch collection from the database.
 """
 function initialize!(branch::Branch, inputs::AbstractInputs)
-    num_branches = PSRI.max_elements(inputs.db, "Branch")
+    num_branches = length(Quiver.read_element_ids(inputs.db, "Branch"))
     if num_branches == 0
         return nothing
     end
 
-    branch.label = PSRI.get_parms(inputs.db, "Branch", "label")
+    branch.label = read_scalar_strings(inputs.db, "Branch", "label")
     branch.line_model =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "Branch", "line_model"),
+            read_scalar_integers(inputs.db, "Branch", "line_model"),
             Branch_LineModel.T,
         )
-    branch.bus_to = PSRI.get_map(inputs.db, "Branch", "Bus", "to")
-    branch.bus_from = PSRI.get_map(inputs.db, "Branch", "Bus", "from")
+    branch.bus_to = scalar_relation_map(inputs.db, "Branch", "Bus", "to")
+    branch.bus_from = scalar_relation_map(inputs.db, "Branch", "Bus", "from")
+
+    ids = Quiver.read_element_ids(inputs.db, "Branch")
+    sentinels = branch_time_series_sentinels()
+    branch.time_series_cache = [
+        TimeSeriesRowCache(inputs.db, "Branch", "parameters", id, sentinels)
+        for id in ids
+    ]
 
     update_time_series_from_db!(branch, inputs.db, initial_date_time(inputs))
 
@@ -59,41 +77,37 @@ function initialize!(branch::Branch, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(branch::Branch, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(branch::Branch, db::Quiver.Database, period_date_time::DateTime)
 
 Update the Branch collection time series from the database.
 """
-function update_time_series_from_db!(branch::Branch, db::DatabaseSQLite, period_date_time::DateTime)
-    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
-    branch.existing =
-        @memoized_lru "branch-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "Branch",
-                "existing";
-                date_time = period_date_time,
-            ),
+function update_time_series_from_db!(branch::Branch, db::Quiver.Database, period_date_time::DateTime)
+    num_branches = length(branch)
+    branch.existing = Branch_Existence.T[
+        convert_to_enum(
+            time_series_row(branch.time_series_cache[b], "existing", period_date_time),
             Branch_Existence.T,
         )
-    branch.capacity =
-        @memoized_lru "branch-capacity-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "Branch",
-            "capacity";
-            date_time = period_date_time,
+        for b in 1:num_branches
+    ]
+    for (field, attribute) in (
+        (:capacity, "capacity"),
+        (:reactance, "reactance"),
+    )
+        setfield!(
+            branch,
+            field,
+            Float64[
+                time_series_row(branch.time_series_cache[b], attribute, period_date_time)
+                for b in 1:num_branches
+            ],
         )
-    branch.reactance =
-        @memoized_lru "branch-reactance-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "Branch",
-            "reactance";
-            date_time = period_date_time,
-        )
+    end
     return nothing
 end
 
 """
-    add_branch!(db::DatabaseSQLite; kwargs...)
+    add_branch!(db::Quiver.Database; kwargs...)
 
 Add a Branch to the database.
 
@@ -141,55 +155,49 @@ IARA.add_branch!(db;
 )
 ```
 """
-function add_branch!(db::DatabaseSQLite; kwargs...)
+function add_branch!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "Branch"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "Branch"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "Branch", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_branch!(db::DatabaseSQLite, label::String; kwargs...)
+    update_branch!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Branch named 'label' in the database.
 """
 function update_branch!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "Branch", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "Branch",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "Branch", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_branch_relation!(db::DatabaseSQLite, branch_label::String; collection::String, relation_type::String, related_label::String)
+    update_branch_relation!(db::Quiver.Database, branch_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Branch named 'label' in the database.
 """
 function update_branch_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     branch_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "Branch",
-        collection,
-        branch_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "Branch", branch_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "Branch", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 

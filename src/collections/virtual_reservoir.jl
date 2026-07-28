@@ -34,23 +34,31 @@ end
 Initialize the VirtualReservoir collection from the database.
 """
 function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs)
-    num_virtual_reservoirs = PSRI.max_elements(inputs.db, "VirtualReservoir")
+    num_virtual_reservoirs = length(Quiver.read_element_ids(inputs.db, "VirtualReservoir"))
     if num_virtual_reservoirs == 0
         return nothing
     end
 
-    virtual_reservoir.label = PSRI.get_parms(inputs.db, "VirtualReservoir", "label")
-    virtual_reservoir.hydro_unit_indices = PSRI.get_vector_map(inputs.db, "VirtualReservoir", "HydroUnit", "id")
-    virtual_reservoir.asset_owner_indices = PSRI.get_vector_map(inputs.db, "VirtualReservoir", "AssetOwner", "id")
-    virtual_reservoir.asset_owners_inflow_allocation =
-        PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "inflow_allocation")
-    virtual_reservoir.asset_owners_initial_energy_account_share =
-        PSRDatabaseSQLite.read_vector_parameters(inputs.db, "VirtualReservoir", "initial_energy_account_share")
+    virtual_reservoir.label = read_scalar_strings(inputs.db, "VirtualReservoir", "label")
+    # hydrounit_id/assetowner_id/initial_energy_account_share are all nullable
+    # in the schema
+    virtual_reservoir.hydro_unit_indices = vector_relation_map_preserving_nulls(
+        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_hydro_unit", "HydroUnit", "id",
+    )
+    virtual_reservoir.asset_owner_indices = vector_relation_map_preserving_nulls(
+        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_asset_owner_and_parameters", "AssetOwner", "id",
+    )
+    virtual_reservoir.asset_owners_inflow_allocation = read_vector_floats_preserving_nulls(
+        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_asset_owner_and_parameters", "inflow_allocation",
+    )
+    virtual_reservoir.asset_owners_initial_energy_account_share = read_vector_floats_preserving_nulls(
+        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_asset_owner_and_parameters",
+        "initial_energy_account_share",
+    )
     # Load time series files
-    virtual_reservoir.quantity_bid_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "quantity_bid")
-    virtual_reservoir.price_bid_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "VirtualReservoir", "price_bid")
+    time_series_files = Quiver.read_time_series_files(inputs.db, "VirtualReservoir")
+    virtual_reservoir.quantity_bid_file = something(time_series_files["quantity_bid"], "")
+    virtual_reservoir.price_bid_file = something(time_series_files["price_bid"], "")
     # Initialize caches
     virtual_reservoir.initial_energy_account =
         [zeros(Float64, length(index_of_elements(inputs, AssetOwner))) for vr in 1:num_virtual_reservoirs]
@@ -197,20 +205,20 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
 end
 
 """
-    update_time_series_from_db!(virtual_reservoir::VirtualReservoir, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(virtual_reservoir::VirtualReservoir, db::Quiver.Database, period_date_time::DateTime)
 
 Update the VirtualReservoir time series from the database.
 """
 function update_time_series_from_db!(
     virtual_reservoir::VirtualReservoir,
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     period_date_time::DateTime,
 )
     return nothing
 end
 
 """
-    add_virtual_reservoir!(db::DatabaseSQLite; kwargs...)
+    add_virtual_reservoir!(db::Quiver.Database; kwargs...)
 
 Add a VirtualReservoir to the database.
 
@@ -236,14 +244,51 @@ IARA.add_virtual_reservoir!(db;
 )
 ```
 """
-function add_virtual_reservoir!(db::DatabaseSQLite; kwargs...)
+function add_virtual_reservoir!(db::Quiver.Database; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "VirtualReservoir"; sql_typed_kwargs...)
+    Quiver.create_element!(db, "VirtualReservoir"; sql_typed_kwargs...)
     return nothing
 end
 
-function delete_virtual_reservoir!(db::DatabaseSQLite, label::String)
-    PSRI.delete_element!(db, "VirtualReservoir", label)
+# assetowner_id is a nullable FK in this vector group table, and Quiver's
+# NaN-as-NULL write trick only applies to REAL columns, not INTEGER — so unlike
+# BiddingGroup, this can't go through Quiver.update_element! (whole-row
+# replace) without risking a FOREIGN KEY constraint failure. Writes go straight
+# to SQL instead, one row at a time.
+"""
+    update_virtual_reservoir!(db::Quiver.Database, label::String; kwargs...)
+
+Update a VirtualReservoir's vector parameters (`inflow_allocation`,
+`initial_energy_account_share`, `assetowner_id`). Only the attributes passed in
+`kwargs` are updated; any omitted attribute is left unchanged.
+"""
+function update_virtual_reservoir!(db::Quiver.Database, label::String; kwargs...)
+    id = id_for_label(db, "VirtualReservoir", label)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+
+    vector_table = "VirtualReservoir_vector_asset_owner_and_parameters"
+    vector_attributes = (:inflow_allocation, :initial_energy_account_share, :assetowner_id)
+    row_count = vector_group_row_count(db, vector_table, id)
+
+    for attribute in vector_attributes
+        if haskey(sql_typed_kwargs, attribute)
+            values = sql_typed_kwargs[attribute]
+            @assert length(values) == row_count "Expected $row_count values for '$attribute', got $(length(values))"
+            for (vector_index, value) in enumerate(values)
+                Quiver.query_integer(
+                    db,
+                    "UPDATE $vector_table SET $attribute = ? WHERE id = ? AND vector_index = ?",
+                    Any[value, id, vector_index],
+                )
+            end
+        end
+    end
+
+    return db
+end
+
+function delete_virtual_reservoir!(db::Quiver.Database, label::String)
+    delete_element!(db, "VirtualReservoir", label)
     return nothing
 end
 

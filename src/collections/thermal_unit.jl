@@ -41,11 +41,24 @@ Thermal units are high-level data structures that represent thermal electricity 
     bus_index::Vector{Int} = []
     # index of the bidding group to which the thermal unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
+
+    # caches
+    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
+
+function thermal_unit_time_series_sentinels()
+    return Dict{String, Any}(
+        "existing" => null_value(Int),
+        "min_generation" => null_value(Float64),
+        "max_generation" => null_value(Float64),
+        "om_cost" => null_value(Float64),
+        "startup_cost" => null_value(Float64),
+    )
+end
 
 """
     initialize!(thermal_unit::ThermalUnit, inputs)
@@ -53,38 +66,45 @@ end
 Initialize the Thermal Unit collection from the database.
 """
 function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
-    num_thermal_units = PSRI.max_elements(inputs.db, "ThermalUnit")
+    num_thermal_units = length(Quiver.read_element_ids(inputs.db, "ThermalUnit"))
     if num_thermal_units == 0
         return nothing
     end
 
-    thermal_unit.label = PSRI.get_parms(inputs.db, "ThermalUnit", "label")
+    thermal_unit.label = read_scalar_strings(inputs.db, "ThermalUnit", "label")
     thermal_unit.has_commitment =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "ThermalUnit", "has_commitment"),
+            read_scalar_integers(inputs.db, "ThermalUnit", "has_commitment"),
             ThermalUnit_HasCommitment.T,
         )
-    thermal_unit.max_ramp_up = PSRI.get_parms(inputs.db, "ThermalUnit", "max_ramp_up")
-    thermal_unit.max_ramp_down = PSRI.get_parms(inputs.db, "ThermalUnit", "max_ramp_down")
-    thermal_unit.min_uptime = PSRI.get_parms(inputs.db, "ThermalUnit", "min_uptime")
-    thermal_unit.max_uptime = PSRI.get_parms(inputs.db, "ThermalUnit", "max_uptime")
-    thermal_unit.min_downtime = PSRI.get_parms(inputs.db, "ThermalUnit", "min_downtime")
-    thermal_unit.max_startups = PSRI.get_parms(inputs.db, "ThermalUnit", "max_startups")
-    thermal_unit.max_shutdowns = PSRI.get_parms(inputs.db, "ThermalUnit", "max_shutdowns")
-    thermal_unit.shutdown_cost = PSRI.get_parms(inputs.db, "ThermalUnit", "shutdown_cost")
+    thermal_unit.max_ramp_up = read_scalar_floats(inputs.db, "ThermalUnit", "max_ramp_up")
+    thermal_unit.max_ramp_down = read_scalar_floats(inputs.db, "ThermalUnit", "max_ramp_down")
+    thermal_unit.min_uptime = read_scalar_floats(inputs.db, "ThermalUnit", "min_uptime")
+    thermal_unit.max_uptime = read_scalar_floats(inputs.db, "ThermalUnit", "max_uptime")
+    thermal_unit.min_downtime = read_scalar_floats(inputs.db, "ThermalUnit", "min_downtime")
+    thermal_unit.max_startups = read_scalar_integers(inputs.db, "ThermalUnit", "max_startups")
+    thermal_unit.max_shutdowns = read_scalar_integers(inputs.db, "ThermalUnit", "max_shutdowns")
+    thermal_unit.shutdown_cost = read_scalar_floats(inputs.db, "ThermalUnit", "shutdown_cost")
     thermal_unit.commitment_initial_condition =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "ThermalUnit", "commitment_initial_condition"),
+            read_scalar_integers(inputs.db, "ThermalUnit", "commitment_initial_condition"),
             ThermalUnit_CommitmentInitialCondition.T,
         )
     thermal_unit.generation_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "generation_initial_condition")
+        read_scalar_floats(inputs.db, "ThermalUnit", "generation_initial_condition")
     thermal_unit.uptime_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "uptime_initial_condition")
+        read_scalar_floats(inputs.db, "ThermalUnit", "uptime_initial_condition")
     thermal_unit.downtime_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "downtime_initial_condition")
-    thermal_unit.bus_index = PSRI.get_map(inputs.db, "ThermalUnit", "Bus", "id")
-    thermal_unit.bidding_group_index = PSRI.get_map(inputs.db, "ThermalUnit", "BiddingGroup", "id")
+        read_scalar_floats(inputs.db, "ThermalUnit", "downtime_initial_condition")
+    thermal_unit.bus_index = scalar_relation_map(inputs.db, "ThermalUnit", "Bus", "id")
+    thermal_unit.bidding_group_index = scalar_relation_map(inputs.db, "ThermalUnit", "BiddingGroup", "id")
+
+    ids = Quiver.read_element_ids(inputs.db, "ThermalUnit")
+    sentinels = thermal_unit_time_series_sentinels()
+    thermal_unit.time_series_cache = [
+        TimeSeriesRowCache(inputs.db, "ThermalUnit", "parameters", id, sentinels)
+        for id in ids
+    ]
 
     update_time_series_from_db!(thermal_unit, inputs.db, initial_date_time(inputs))
 
@@ -92,59 +112,43 @@ function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(thermal_unit::ThermalUnit, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(thermal_unit::ThermalUnit, db::Quiver.Database, period_date_time::DateTime)
 
 Update the time series of the Thermal Unit collection from the database.
 """
 function update_time_series_from_db!(
     thermal_unit::ThermalUnit,
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     period_date_time::DateTime,
 )
-    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
-    thermal_unit.existing =
-        @memoized_lru "thermal_unit-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "ThermalUnit",
-                "existing";
-                date_time = period_date_time,
-            ),
+    num_thermal_units = length(thermal_unit)
+    thermal_unit.existing = ThermalUnit_Existence.T[
+        convert_to_enum(
+            time_series_row(thermal_unit.time_series_cache[i], "existing", period_date_time),
             ThermalUnit_Existence.T,
         )
-    thermal_unit.min_generation =
-        @memoized_lru "thermal_unit-min_generation-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "min_generation";
-            date_time = period_date_time,
+        for i in 1:num_thermal_units
+    ]
+    for (field, attribute) in (
+        (:min_generation, "min_generation"),
+        (:max_generation, "max_generation"),
+        (:om_cost, "om_cost"),
+        (:startup_cost, "startup_cost"),
+    )
+        setfield!(
+            thermal_unit,
+            field,
+            Float64[
+                time_series_row(thermal_unit.time_series_cache[i], attribute, period_date_time)
+                for i in 1:num_thermal_units
+            ],
         )
-    thermal_unit.max_generation =
-        @memoized_lru "thermal_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "max_generation";
-            date_time = period_date_time,
-        )
-    thermal_unit.om_cost =
-        @memoized_lru "thermal_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "om_cost";
-            date_time = period_date_time,
-        )
-    thermal_unit.startup_cost =
-        @memoized_lru "thermal_unit-startup_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "startup_cost";
-            date_time = period_date_time,
-        )
+    end
     return nothing
 end
 
 """
-    add_thermal_unit!(db::DatabaseSQLite; kwargs...)
+    add_thermal_unit!(db::Quiver.Database; kwargs...)
 
 Add a Thermal Unit to the database.
 
@@ -211,64 +215,58 @@ IARA.add_thermal_unit!(
 )
 ```
 """
-function add_thermal_unit!(db::DatabaseSQLite; kwargs...)
+function add_thermal_unit!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "ThermalUnit"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "ThermalUnit"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "ThermalUnit", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_thermal_unit!(db::DatabaseSQLite, label::String; kwargs...)
+    update_thermal_unit!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Thermal Unit named 'label' in the database.
 """
 function update_thermal_unit!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "ThermalUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "ThermalUnit",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "ThermalUnit", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_thermal_unit_relation!(db::DatabaseSQLite, thermal_unit_label::String; collection::String, relation_type::String, related_label::String)
+    update_thermal_unit_relation!(db::Quiver.Database, thermal_unit_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Thermal Unit named 'label' in the database.
 """
 function update_thermal_unit_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     thermal_unit_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "ThermalUnit",
-        collection,
-        thermal_unit_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "ThermalUnit", thermal_unit_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "ThermalUnit", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 
 """
     update_thermal_unit_time_series_parameter!(
-        db::DatabaseSQLite, 
-        label::String, 
-        attribute::String, 
-        value; 
+        db::Quiver.Database,
+        label::String,
+        attribute::String,
+        value;
         dimensions...
     )
 
@@ -276,7 +274,7 @@ Update a Thermal Unit time series parameter in the database for a given dimensio
 
 Arguments:
 
-  - `db::PSRClassesInterface.DatabaseSQLite`: Database
+  - `db::Quiver.Database`: Database
   - `label::String`: Thermal Unit label
   - `attribute::String`: Attribute name
   - `value`: Value to be updated
@@ -294,21 +292,13 @@ IARA.update_thermal_unit_time_series_parameter!(
 ```
 """
 function update_thermal_unit_time_series_parameter!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String,
     attribute::String,
     value;
     dimensions...,
 )
-    PSRI.PSRDatabaseSQLite.update_time_series_row!(
-        db,
-        "ThermalUnit",
-        attribute,
-        label,
-        value;
-        dimensions...,
-    )
-    return db
+    return update_time_series_parameter!(db, "ThermalUnit", "parameters", label, attribute, value; dimensions...)
 end
 
 """

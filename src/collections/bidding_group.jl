@@ -55,18 +55,26 @@ end
 Initialize the BiddingGroup collection from the database.
 """
 function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
-    num_bidding_groups = PSRI.max_elements(inputs.db, "BiddingGroup")
+    num_bidding_groups = length(Quiver.read_element_ids(inputs.db, "BiddingGroup"))
     if num_bidding_groups == 0
         return nothing
     end
 
-    bidding_group.label = PSRI.get_parms(inputs.db, "BiddingGroup", "label")
-    bidding_group.asset_owner_index = PSRI.get_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
-    bidding_group.fixed_cost = PSRI.get_parms(inputs.db, "BiddingGroup", "fixed_cost")
+    bidding_group.label = read_scalar_strings(inputs.db, "BiddingGroup", "label")
+    bidding_group.asset_owner_index = scalar_relation_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
+    bidding_group.fixed_cost = read_scalar_floats(inputs.db, "BiddingGroup", "fixed_cost")
 
-    # Load vectors
-    bidding_group.risk_factor = PSRI.get_vectors(inputs.db, "BiddingGroup", "risk_factor")
-    bidding_group.segment_fraction = PSRI.get_vectors(inputs.db, "BiddingGroup", "segment_fraction")
+    # risk_factor/segment_fraction are nullable columns in
+    # BiddingGroup_vector_markup, so they need the null-preserving reader
+    bidding_group.risk_factor =
+        read_vector_floats_preserving_nulls(inputs.db, "BiddingGroup", "BiddingGroup_vector_markup", "risk_factor")
+    bidding_group.segment_fraction =
+        read_vector_floats_preserving_nulls(
+            inputs.db,
+            "BiddingGroup",
+            "BiddingGroup_vector_markup",
+            "segment_fraction",
+        )
 
     for i in 1:num_bidding_groups
         if isempty(bidding_group.segment_fraction[i])
@@ -79,51 +87,30 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 
     bidding_group.ex_post_adjust_mode =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "BiddingGroup", "ex_post_adjust_mode"),
+            read_scalar_integers(inputs.db, "BiddingGroup", "ex_post_adjust_mode"),
             BiddingGroup_ExPostAdjustMode.T,
         )
 
     # Load time series files
-    bidding_group.quantity_bid_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_bid")
-    bidding_group.price_bid_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_bid")
-    bidding_group.quantity_bid_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "quantity_bid_profile")
-    bidding_group.price_bid_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "price_bid_profile")
-    bidding_group.parent_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "parent_profile")
+    time_series_files = Quiver.read_time_series_files(inputs.db, "BiddingGroup")
+    bidding_group.quantity_bid_file = something(time_series_files["quantity_bid"], "")
+    bidding_group.price_bid_file = something(time_series_files["price_bid"], "")
+    bidding_group.quantity_bid_profile_file = something(time_series_files["quantity_bid_profile"], "")
+    bidding_group.price_bid_profile_file = something(time_series_files["price_bid_profile"], "")
+    bidding_group.parent_profile_file = something(time_series_files["parent_profile"], "")
     bidding_group.complementary_grouping_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "complementary_grouping_profile")
+        something(time_series_files["complementary_grouping_profile"], "")
     bidding_group.minimum_activation_level_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "minimum_activation_level_profile")
+        something(time_series_files["minimum_activation_level_profile"], "")
     bidding_group.bid_price_limit_justified_independent_file =
-        PSRDatabaseSQLite.read_time_series_file(
-            inputs.db,
-            "BiddingGroup",
-            "bid_price_limit_justified_independent",
-        )
+        something(time_series_files["bid_price_limit_justified_independent"], "")
     bidding_group.bid_price_limit_non_justified_independent_file =
-        PSRDatabaseSQLite.read_time_series_file(
-            inputs.db,
-            "BiddingGroup",
-            "bid_price_limit_non_justified_independent",
-        )
+        something(time_series_files["bid_price_limit_non_justified_independent"], "")
     bidding_group.bid_price_limit_justified_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(
-            inputs.db,
-            "BiddingGroup",
-            "bid_price_limit_justified_profile",
-        )
+        something(time_series_files["bid_price_limit_justified_profile"], "")
     bidding_group.bid_price_limit_non_justified_profile_file =
-        PSRDatabaseSQLite.read_time_series_file(
-            inputs.db,
-            "BiddingGroup",
-            "bid_price_limit_non_justified_profile",
-        )
-    bidding_group.bid_justifications_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "BiddingGroup", "bid_justifications")
+        something(time_series_files["bid_price_limit_non_justified_profile"], "")
+    bidding_group.bid_justifications_file = something(time_series_files["bid_justifications"], "")
 
     # Caches
     bidding_group._has_generation_besides_virtual_reservoirs = zeros(Bool, num_bidding_groups)
@@ -134,16 +121,16 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(bidding_group::BiddingGroup, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(bidding_group::BiddingGroup, db::Quiver.Database, period_date_time::DateTime)
 
 Update the BiddingGroup time series from the database.
 """
-function update_time_series_from_db!(bidding_group::BiddingGroup, db::DatabaseSQLite, period_date_time::DateTime)
+function update_time_series_from_db!(bidding_group::BiddingGroup, db::Quiver.Database, period_date_time::DateTime)
     return nothing
 end
 
 """
-    add_bidding_group!(db::DatabaseSQLite; kwargs...)
+    add_bidding_group!(db::Quiver.Database; kwargs...)
 
 Add a BiddingGroup to the database.
 
@@ -171,37 +158,33 @@ IARA.add_bidding_group!(
 )
 ```
 """
-function add_bidding_group!(db::DatabaseSQLite; kwargs...)
+function add_bidding_group!(db::Quiver.Database; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "BiddingGroup"; sql_typed_kwargs...)
+    Quiver.create_element!(db, "BiddingGroup"; sql_typed_kwargs...)
     return nothing
 end
 
 """
-    update_bidding_group!(db::DatabaseSQLite, label::String; kwargs...)
+    update_bidding_group!(db::Quiver.Database, label::String; kwargs...)
 
 Update the BiddingGroup named 'label' in the database.
 """
 function update_bidding_group!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
-    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "BiddingGroup",
-            string(attribute),
-            label,
-            value,
-        )
+    if isempty(kwargs)
+        return db
     end
+    id = id_for_label(db, "BiddingGroup", label)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+    Quiver.update_element!(db, "BiddingGroup", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_bidding_group_relation!(db::DatabaseSQLite, bidding_group_label::String; collection::String, relation_type::String, related_label::String)
+    update_bidding_group_relation!(db::Quiver.Database, bidding_group_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the BiddingGroup named 'label' in the database.
 
@@ -217,43 +200,49 @@ IARA.update_bidding_group_relation!(
 ```
 """
 function update_bidding_group_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     bidding_group_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "BiddingGroup",
-        collection,
-        bidding_group_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "BiddingGroup", bidding_group_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "BiddingGroup", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 
+# risk_factor and segment_fraction share one underlying table; a group-table update
+# replaces the whole table using only the columns passed in. Whenever either is present
+# in kwargs, read back whichever of the pair is missing so both are always written
+# together
 """
-    update_bidding_group_vectors!(db::DatabaseSQLite, label::String; kwargs...)
+    update_bidding_group_vectors!(db::Quiver.Database, label::String; kwargs...)
 
 Update the vectors of the Bidding Group named 'label' in the database.
 """
 function update_bidding_group_vectors!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
-    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRDatabaseSQLite.update_vector_parameters!(
-            db,
-            "BiddingGroup",
-            string(attribute),
-            label,
-            value,
-        )
+    if isempty(kwargs)
+        return db
     end
+    id = id_for_label(db, "BiddingGroup", label)
+    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
+
+    markup_attributes = (:risk_factor, :segment_fraction)
+    if any(haskey(sql_typed_kwargs, attribute) for attribute in markup_attributes)
+        for attribute in markup_attributes
+            if !haskey(sql_typed_kwargs, attribute)
+                sql_typed_kwargs[attribute] =
+                    read_vector_floats_preserving_nulls_by_id(db, "BiddingGroup_vector_markup", string(attribute), id)
+            end
+        end
+    end
+
+    Quiver.update_element!(db, "BiddingGroup", id; sql_typed_kwargs...)
     return db
 end
 

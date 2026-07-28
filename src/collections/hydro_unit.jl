@@ -52,11 +52,26 @@ Hydro units are high-level data structures that represent hydro electricity gene
     # caches
     is_associated_with_some_virtual_reservoir::Vector{Bool} = []
     virtual_reservoir_index::Vector{Int} = []
+    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
+
+function hydro_unit_time_series_sentinels()
+    return Dict{String, Any}(
+        "existing" => null_value(Int),
+        "production_factor" => null_value(Float64),
+        "min_generation" => null_value(Float64),
+        "max_generation" => null_value(Float64),
+        "max_turbining" => null_value(Float64),
+        "min_volume" => null_value(Float64),
+        "max_volume" => null_value(Float64),
+        "min_outflow" => null_value(Float64),
+        "om_cost" => null_value(Float64),
+    )
+end
 
 """
     initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
@@ -64,53 +79,60 @@ end
 Initialize the Hydro Unit collection from the database.
 """
 function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
-    num_hydro_units = PSRI.max_elements(inputs.db, "HydroUnit")
+    num_hydro_units = length(Quiver.read_element_ids(inputs.db, "HydroUnit"))
     if num_hydro_units == 0
         return nothing
     end
 
-    hydro_unit.label = PSRI.get_parms(inputs.db, "HydroUnit", "label")
-    hydro_unit.initial_volume = PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume")
+    hydro_unit.label = read_scalar_strings(inputs.db, "HydroUnit", "label")
+    hydro_unit.initial_volume = read_scalar_floats(inputs.db, "HydroUnit", "initial_volume")
     hydro_unit.initial_volume_type =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_type"),
+            read_scalar_integers(inputs.db, "HydroUnit", "initial_volume_type"),
             HydroUnit_InitialVolumeDataType.T,
         )
     hydro_unit.initial_volume_variation_type =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "HydroUnit", "initial_volume_variation_type"),
+            read_scalar_integers(inputs.db, "HydroUnit", "initial_volume_variation_type"),
             HydroUnit_InitialVolumeVariationType.T,
         )
     hydro_unit.intra_period_operation =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "HydroUnit", "intra_period_operation"),
+            read_scalar_integers(inputs.db, "HydroUnit", "intra_period_operation"),
             HydroUnit_IntraPeriodOperation.T,
         )
     hydro_unit.has_commitment =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "HydroUnit", "has_commitment"),
+            read_scalar_integers(inputs.db, "HydroUnit", "has_commitment"),
             HydroUnit_HasCommitment.T,
         )
-    hydro_unit.minimum_outflow_violation_cost = PSRI.get_parms(inputs.db, "HydroUnit", "minimum_outflow_violation_cost")
+    hydro_unit.minimum_outflow_violation_cost =
+        read_scalar_floats(inputs.db, "HydroUnit", "minimum_outflow_violation_cost")
     hydro_unit.minimum_outflow_violation_benchmark =
-        PSRI.get_parms(inputs.db, "HydroUnit", "minimum_outflow_violation_benchmark")
-    hydro_unit.spillage_cost = PSRI.get_parms(inputs.db, "HydroUnit", "spillage_cost")
-    hydro_unit.bus_index = PSRI.get_map(inputs.db, "HydroUnit", "Bus", "id")
-    hydro_unit.bidding_group_index = PSRI.get_map(inputs.db, "HydroUnit", "BiddingGroup", "id")
-    hydro_unit.gauging_station_index = PSRI.get_map(inputs.db, "HydroUnit", "GaugingStation", "id")
-    hydro_unit.turbine_to = PSRI.get_map(inputs.db, "HydroUnit", "HydroUnit", "turbine_to")
-    hydro_unit.spill_to = PSRI.get_map(inputs.db, "HydroUnit", "HydroUnit", "spill_to")
+        read_scalar_floats(inputs.db, "HydroUnit", "minimum_outflow_violation_benchmark")
+    hydro_unit.spillage_cost = read_scalar_floats(inputs.db, "HydroUnit", "spillage_cost")
+
+    hydro_unit.bus_index = scalar_relation_map(inputs.db, "HydroUnit", "Bus", "id")
+    hydro_unit.bidding_group_index = scalar_relation_map(inputs.db, "HydroUnit", "BiddingGroup", "id")
+    hydro_unit.gauging_station_index = scalar_relation_map(inputs.db, "HydroUnit", "GaugingStation", "id")
+    hydro_unit.turbine_to = scalar_relation_map(inputs.db, "HydroUnit", "HydroUnit", "turbine_to")
+    hydro_unit.spill_to = scalar_relation_map(inputs.db, "HydroUnit", "HydroUnit", "spill_to")
 
     # Load time series files
-    hydro_unit.inflow_ex_ante_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow_ex_ante")
-    hydro_unit.inflow_ex_post_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "inflow_ex_post")
-    hydro_unit.initial_volume_by_scenario_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "HydroUnit", "initial_volume_by_scenario")
+    time_series_files = Quiver.read_time_series_files(inputs.db, "HydroUnit")
+    hydro_unit.inflow_ex_ante_file = something(time_series_files["inflow_ex_ante"], "")
+    hydro_unit.inflow_ex_post_file = something(time_series_files["inflow_ex_post"], "")
+    hydro_unit.initial_volume_by_scenario_file = something(time_series_files["initial_volume_by_scenario"], "")
 
     hydro_unit.is_associated_with_some_virtual_reservoir = zeros(Bool, num_hydro_units)
     hydro_unit.virtual_reservoir_index = fill(null_value(Int), num_hydro_units)
+
+    ids = Quiver.read_element_ids(inputs.db, "HydroUnit")
+    sentinels = hydro_unit_time_series_sentinels()
+    hydro_unit.time_series_cache = [
+        TimeSeriesRowCache(inputs.db, "HydroUnit", "parameters", id, sentinels)
+        for id in ids
+    ]
 
     update_time_series_from_db!(hydro_unit, inputs.db, initial_date_time(inputs))
 
@@ -124,76 +146,36 @@ Update the Hydro Unit time series from the database.
 """
 function update_time_series_from_db!(
     hydro_unit::HydroUnit,
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     period_date_time::DateTime,
 )
-    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
-    hydro_unit.existing =
-        @memoized_lru "hydro_unit-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "HydroUnit",
-                "existing";
-                date_time = period_date_time,
-            ),
+    num_hydro_units = length(hydro_unit)
+    hydro_unit.existing = HydroUnit_Existence.T[
+        convert_to_enum(
+            time_series_row(hydro_unit.time_series_cache[h], "existing", period_date_time),
             HydroUnit_Existence.T,
         )
-    hydro_unit.production_factor =
-        @memoized_lru "hydro_unit-production_factor-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "production_factor";
-            date_time = period_date_time,
+        for h in 1:num_hydro_units
+    ]
+    for (field, attribute) in (
+        (:production_factor, "production_factor"),
+        (:min_generation, "min_generation"),
+        (:max_generation, "max_generation"),
+        (:max_turbining, "max_turbining"),
+        (:min_volume, "min_volume"),
+        (:max_volume, "max_volume"),
+        (:min_outflow, "min_outflow"),
+        (:om_cost, "om_cost"),
+    )
+        setfield!(
+            hydro_unit,
+            field,
+            Float64[
+                time_series_row(hydro_unit.time_series_cache[h], attribute, period_date_time)
+                for h in 1:num_hydro_units
+            ],
         )
-    hydro_unit.min_generation =
-        @memoized_lru "hydro_unit-min_generation-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "min_generation";
-            date_time = period_date_time,
-        )
-    hydro_unit.max_generation =
-        @memoized_lru "hydro_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "max_generation";
-            date_time = period_date_time,
-        )
-    hydro_unit.max_turbining =
-        @memoized_lru "hydro_unit-max_turbining-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "max_turbining";
-            date_time = period_date_time,
-        )
-    hydro_unit.min_volume =
-        @memoized_lru "hydro_unit-min_volume-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "min_volume";
-            date_time = period_date_time,
-        )
-    hydro_unit.max_volume =
-        @memoized_lru "hydro_unit-max_volume-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "max_volume";
-            date_time = period_date_time,
-        )
-    hydro_unit.min_outflow =
-        @memoized_lru "hydro_unit-min_outflow-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "min_outflow";
-            date_time = period_date_time,
-        )
-    hydro_unit.om_cost =
-        @memoized_lru "hydro_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "HydroUnit",
-            "om_cost";
-            date_time = period_date_time,
-        )
+    end
     return nothing
 end
 
@@ -275,7 +257,7 @@ IARA.add_hydro_unit!(db;
 )
 ```
 """ # TODO: correct the units of the parameters
-function add_hydro_unit!(db::DatabaseSQLite; kwargs...)
+function add_hydro_unit!(db::Quiver.Database; kwargs...)
     if !haskey(kwargs, :gaugingstation_id)
         gauging_station_label = kwargs[:label]
         add_gauging_station!(db; label = gauging_station_label)
@@ -283,8 +265,14 @@ function add_hydro_unit!(db::DatabaseSQLite; kwargs...)
         kwargs[:gaugingstation_id] = gauging_station_label
     end
 
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "HydroUnit"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "HydroUnit"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "HydroUnit", "parameters", id; ts_kwargs...)
     return nothing
 end
 
@@ -303,20 +291,13 @@ IARA.update_hydro_unit!(
 ```
 """
 function update_hydro_unit!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "HydroUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "HydroUnit",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "HydroUnit", id; sql_typed_kwargs...)
     return db
 end
 
@@ -326,20 +307,13 @@ end
 Update the vectors of the Hydro Unit named 'label' in the database.
 """
 function update_hydro_unit_vectors!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "HydroUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRDatabaseSQLite.update_vector_parameters!(
-            db,
-            "HydroUnit",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "HydroUnit", id; sql_typed_kwargs...)
     return db
 end
 
@@ -356,7 +330,7 @@ Update the Hydro Unit named 'label' in the database.
 
 Arguments:
 
-  - `db::PSRClassesInterface.DatabaseSQLite`: Database
+  - `db::Quiver.Database`: Database
   - `hydro_unit_label::String`: Hydro Unit label
   - `collection::String`: Collection name that the Hydro Unit is related to
   - `relation_type::String`: Relation type
@@ -372,29 +346,24 @@ IARA.update_hydro_unit_relation!(db, "hyd_1";
 ```
 """
 function update_hydro_unit_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     hydro_unit_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "HydroUnit",
-        collection,
-        hydro_unit_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "HydroUnit", hydro_unit_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "HydroUnit", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 
 """
     update_hydro_unit_time_series_parameter!(
-        db::DatabaseSQLite, 
-        label::String, 
-        attribute::String, 
-        value; 
+        db::Quiver.Database,
+        label::String,
+        attribute::String,
+        value;
         dimensions...
     )
 
@@ -402,7 +371,7 @@ Update a Hydro Unit time series parameter in the database for a given dimension 
 
 Arguments:
 
-  - `db::PSRClassesInterface.DatabaseSQLite`: Database
+  - `db::Quiver.Database`: Database
   - `label::String`: Hydro Unit label
   - `attribute::String`: Attribute name
   - `value`: Value to be updated
@@ -420,17 +389,18 @@ IARA.update_hydro_unit_time_series_parameter!(
 ```
 """
 function update_hydro_unit_time_series_parameter!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String,
     attribute::String,
     value;
     dimensions...,
 )
-    PSRI.PSRDatabaseSQLite.update_time_series_row!(
+    update_time_series_parameter!(
         db,
         "HydroUnit",
-        attribute,
+        "parameters",
         label,
+        attribute,
         value;
         dimensions...,
     )
@@ -448,18 +418,12 @@ IARA.set_hydro_turbine_to!(db, "hydro_1", "hydro_2")
 ```
 """
 function set_hydro_turbine_to!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     hydro_unit_from::String,
     hydro_unit_to::String,
 )
-    PSRI.set_related!(
-        db,
-        "HydroUnit",
-        "HydroUnit",
-        hydro_unit_from,
-        hydro_unit_to,
-        "turbine_to",
-    )
+    id = id_for_label(db, "HydroUnit", hydro_unit_from)
+    Quiver.update_element!(db, "HydroUnit", id; hydrounit_turbine_to = hydro_unit_to)
     return nothing
 end
 
@@ -474,18 +438,12 @@ IARA.set_hydro_spill_to!(db, "hydro_1", "hydro_2")
 ```
 """
 function set_hydro_spill_to!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     hydro_unit_from::String,
     hydro_unit_to::String,
 )
-    PSRI.set_related!(
-        db,
-        "HydroUnit",
-        "HydroUnit",
-        hydro_unit_from,
-        hydro_unit_to,
-        "spill_to",
-    )
+    id = id_for_label(db, "HydroUnit", hydro_unit_from)
+    Quiver.update_element!(db, "HydroUnit", id; hydrounit_spill_to = hydro_unit_to)
     return nothing
 end
 

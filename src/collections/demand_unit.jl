@@ -39,11 +39,16 @@ DemandUnit collection definition.
     _number_of_flexible_demand_windows::Vector{Int} = Vector{Int}(undef, 0)
     _subperiods_in_flexible_demand_window::Vector{Vector{Vector{Int}}} =
         Vector{Vector{Vector{Int}}}(undef, 0)
+    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
+
+function demand_unit_time_series_sentinels()
+    return Dict{String, Any}("existing" => null_value(Int))
+end
 
 """
     initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
@@ -51,34 +56,41 @@ end
 Initialize the Demand collection from the database.
 """
 function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
-    num_demands = PSRI.max_elements(inputs.db, "DemandUnit")
+    num_demands = length(Quiver.read_element_ids(inputs.db, "DemandUnit"))
     if num_demands == 0
         return nothing
     end
 
-    demand_unit.label = PSRI.get_parms(inputs.db, "DemandUnit", "label")
+    demand_unit.label = read_scalar_strings(inputs.db, "DemandUnit", "label")
     demand_unit.demand_unit_type =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "DemandUnit", "demand_unit_type"),
+            read_scalar_integers(inputs.db, "DemandUnit", "demand_unit_type"),
             DemandUnit_DemandType.T,
         )
-    demand_unit.max_shift_up_flexible_demand = PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_up_flexible_demand")
+    demand_unit.max_shift_up_flexible_demand =
+        read_scalar_floats(inputs.db, "DemandUnit", "max_shift_up_flexible_demand")
     demand_unit.max_shift_down_flexible_demand =
-        PSRI.get_parms(inputs.db, "DemandUnit", "max_shift_down_flexible_demand")
+        read_scalar_floats(inputs.db, "DemandUnit", "max_shift_down_flexible_demand")
     demand_unit.curtailment_cost_flexible_demand =
-        PSRI.get_parms(inputs.db, "DemandUnit", "curtailment_cost_flexible_demand")
+        read_scalar_floats(inputs.db, "DemandUnit", "curtailment_cost_flexible_demand")
     demand_unit.max_curtailment_flexible_demand =
-        PSRI.get_parms(inputs.db, "DemandUnit", "max_curtailment_flexible_demand")
-    demand_unit.bus_index = PSRI.get_map(inputs.db, "DemandUnit", "Bus", "id")
-    demand_unit.bidding_group_index = PSRI.get_map(inputs.db, "DemandUnit", "BiddingGroup", "id")
-    demand_unit.max_demand = PSRI.get_parms(inputs.db, "DemandUnit", "max_demand")
+        read_scalar_floats(inputs.db, "DemandUnit", "max_curtailment_flexible_demand")
+    demand_unit.bus_index = scalar_relation_map(inputs.db, "DemandUnit", "Bus", "id")
+    demand_unit.bidding_group_index = scalar_relation_map(inputs.db, "DemandUnit", "BiddingGroup", "id")
+    demand_unit.max_demand = read_scalar_floats(inputs.db, "DemandUnit", "max_demand")
 
-    demand_unit.demand_ex_ante_file = PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand_ex_ante")
-    demand_unit.demand_ex_post_file = PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand_ex_post")
-    demand_unit.elastic_demand_price_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "elastic_demand_price")
-    demand_unit.window_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "DemandUnit", "demand_window")
+    time_series_files = Quiver.read_time_series_files(inputs.db, "DemandUnit")
+    demand_unit.demand_ex_ante_file = something(time_series_files["demand_ex_ante"], "")
+    demand_unit.demand_ex_post_file = something(time_series_files["demand_ex_post"], "")
+    demand_unit.elastic_demand_price_file = something(time_series_files["elastic_demand_price"], "")
+    demand_unit.window_file = something(time_series_files["demand_window"], "")
+
+    ids = Quiver.read_element_ids(inputs.db, "DemandUnit")
+    sentinels = demand_unit_time_series_sentinels()
+    demand_unit.time_series_cache = [
+        TimeSeriesRowCache(inputs.db, "DemandUnit", "parameters", id, sentinels)
+        for id in ids
+    ]
 
     update_time_series_from_db!(demand_unit, inputs.db, initial_date_time(inputs))
 
@@ -86,27 +98,24 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(demand_unit::DemandUnit, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(demand_unit::DemandUnit, db::Quiver.Database, period_date_time::DateTime)
 
 Update the Demand collection time series from the database.
 """
-function update_time_series_from_db!(demand_unit::DemandUnit, db::DatabaseSQLite, period_date_time::DateTime)
-    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
-    demand_unit.existing =
-        @memoized_lru "demand_unit-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "DemandUnit",
-                "existing";
-                date_time = period_date_time,
-            ),
+function update_time_series_from_db!(demand_unit::DemandUnit, db::Quiver.Database, period_date_time::DateTime)
+    num_demands = length(demand_unit)
+    demand_unit.existing = DemandUnit_Existence.T[
+        convert_to_enum(
+            time_series_row(demand_unit.time_series_cache[d], "existing", period_date_time),
             DemandUnit_Existence.T,
         )
+        for d in 1:num_demands
+    ]
     return nothing
 end
 
 """
-    add_demand_unit!(db::DatabaseSQLite; kwargs...)
+    add_demand_unit!(db::Quiver.Database; kwargs...)
 
 Add a Demand to the database.
 
@@ -152,56 +161,56 @@ IARA.add_demand_unit!(db;
 )
 ``` 
 """
-function add_demand_unit!(db::DatabaseSQLite; kwargs...)
+function add_demand_unit!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "DemandUnit"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "DemandUnit"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "DemandUnit", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_demand!(db::DatabaseSQLite, label::String; kwargs...)
+    update_demand!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Demand named 'label' in the database.
 """
-function update_demand_unit!(db::DatabaseSQLite, label::String; kwargs...)
+function update_demand_unit!(db::Quiver.Database, label::String; kwargs...)
+    id = id_for_label(db, "DemandUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(db, "DemandUnit", string(attribute), label, value)
-    end
+    Quiver.update_element!(db, "DemandUnit", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_demand_unit_relation!(db::DatabaseSQLite, demand_label::String; collection::String, relation_type::String, related_label::String)
+    update_demand_unit_relation!(db::Quiver.Database, demand_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Demand named 'label' in the database.
 
 Example:
 ```julia
 IARA.update_demand_unit_relation!(
-    db, 
-    "dem_1"; 
-    collection = "Bus", 
-    relation_type = "id", 
+    db,
+    "dem_1";
+    collection = "Bus",
+    relation_type = "id",
     related_label = "bus_3"
 )
 ```
 """
 function update_demand_unit_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     demand_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "DemandUnit",
-        collection,
-        demand_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "DemandUnit", demand_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "DemandUnit", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 

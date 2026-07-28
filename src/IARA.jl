@@ -23,7 +23,6 @@ using ParametricOptInterface
 using PeriodicAutoregressive
 using PlotlyLight
 using PSRBridge
-using PSRClassesInterface
 using Quiver
 using Serialization
 using SDDP
@@ -39,9 +38,7 @@ using Statistics
 using Printf
 
 const Log = LoggingPolyglot
-const PSRI = PSRClassesInterface
-const PSRDatabaseSQLite = PSRI.PSRDatabaseSQLite
-const DatabaseSQLite = PSRI.PSRDatabaseSQLite.DatabaseSQLite
+const DatabaseSQLite = Quiver.Database
 const POI = ParametricOptInterface
 const DEFAULT_TOLERANCE = 1e-6
 
@@ -67,6 +64,8 @@ include("path_utils.jl")
 include("enumx.jl")
 include("run_time_options.jl")
 include("revenue_convex_hull.jl")
+
+include("database_utils.jl")
 
 include("collections/abstract_collection.jl")
 include("collections/asset_owner.jl")

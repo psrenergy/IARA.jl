@@ -26,11 +26,22 @@ Collection representing the Interconnections in the system.
     zone_to::Vector{Int} = []
     # index of the Zone from in collection Zone
     zone_from::Vector{Int} = []
+
+    # caches
+    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
+
+function interconnection_time_series_sentinels()
+    return Dict{String, Any}(
+        "existing" => null_value(Int),
+        "capacity_to" => null_value(Float64),
+        "capacity_from" => null_value(Float64),
+    )
+end
 
 """
     initialize!(interconnection::Interconnection, inputs::AbstractInputs)
@@ -38,14 +49,21 @@ end
 Initialize the Interconnection collection from the database.
 """
 function initialize!(interconnection::Interconnection, inputs::AbstractInputs)
-    num_interconnections = PSRI.max_elements(inputs.db, "Interconnection")
+    num_interconnections = length(Quiver.read_element_ids(inputs.db, "Interconnection"))
     if num_interconnections == 0
         return nothing
     end
 
-    interconnection.label = PSRI.get_parms(inputs.db, "Interconnection", "label")
-    interconnection.zone_to = PSRI.get_map(inputs.db, "Interconnection", "Zone", "to")
-    interconnection.zone_from = PSRI.get_map(inputs.db, "Interconnection", "Zone", "from")
+    interconnection.label = read_scalar_strings(inputs.db, "Interconnection", "label")
+    interconnection.zone_to = scalar_relation_map(inputs.db, "Interconnection", "Zone", "to")
+    interconnection.zone_from = scalar_relation_map(inputs.db, "Interconnection", "Zone", "from")
+
+    ids = Quiver.read_element_ids(inputs.db, "Interconnection")
+    sentinels = interconnection_time_series_sentinels()
+    interconnection.time_series_cache = [
+        TimeSeriesRowCache(inputs.db, "Interconnection", "parameters", id, sentinels)
+        for id in ids
+    ]
 
     update_time_series_from_db!(interconnection, inputs.db, initial_date_time(inputs))
 
@@ -53,41 +71,37 @@ function initialize!(interconnection::Interconnection, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(dc_link::Interconnection, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(dc_link::Interconnection, db::Quiver.Database, period_date_time::DateTime)
 
 Update the Interconnection collection time series from the database.
 """
-function update_time_series_from_db!(interconnection::Interconnection, db::DatabaseSQLite, period_date_time::DateTime)
-    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
-    interconnection.existing =
-        @memoized_lru "interconnection-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "Interconnection",
-                "existing";
-                date_time = period_date_time,
-            ),
+function update_time_series_from_db!(interconnection::Interconnection, db::Quiver.Database, period_date_time::DateTime)
+    num_interconnections = length(interconnection)
+    interconnection.existing = Interconnection_Existence.T[
+        convert_to_enum(
+            time_series_row(interconnection.time_series_cache[i], "existing", period_date_time),
             Interconnection_Existence.T,
         )
-    interconnection.capacity_to =
-        @memoized_lru "interconnection-capacity_to-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "Interconnection",
-            "capacity_to";
-            date_time = period_date_time,
+        for i in 1:num_interconnections
+    ]
+    for (field, attribute) in (
+        (:capacity_to, "capacity_to"),
+        (:capacity_from, "capacity_from"),
+    )
+        setfield!(
+            interconnection,
+            field,
+            Float64[
+                time_series_row(interconnection.time_series_cache[i], attribute, period_date_time)
+                for i in 1:num_interconnections
+            ],
         )
-    interconnection.capacity_from =
-        @memoized_lru "interconnection-capacity_from-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "Interconnection",
-            "capacity_from";
-            date_time = period_date_time,
-        )
+    end
     return nothing
 end
 
 """
-    add_interconnection!(db::DatabaseSQLite; kwargs...)
+    add_interconnection!(db::Quiver.Database; kwargs...)
 
 Add a Interconnection to the database.
 
@@ -129,75 +143,70 @@ IARA.add_interconnection!(db;
 )
 ```
 """
-function add_interconnection!(db::DatabaseSQLite; kwargs...)
+function add_interconnection!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "Interconnection"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "Interconnection"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "Interconnection", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_interconnection!(db::DatabaseSQLite, label::String; kwargs...)
+    update_interconnection!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Interconnection named 'label' in the database.
 """
 function update_interconnection!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "Interconnection", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "Interconnection",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "Interconnection", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_interconnection_relation!(db::DatabaseSQLite, interconnection_label::String; collection::String, relation_type::String, related_label::String)
+    update_interconnection_relation!(db::Quiver.Database, interconnection_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Interconnection named 'label' in the database.
 """
 function update_interconnection_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     interconnection_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "Interconnection",
-        collection,
-        interconnection_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "Interconnection", interconnection_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "Interconnection", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 
 """
-    update_interconnection_time_series_parameter!(db::DatabaseSQLite, label::String, attribute::String, value; dimensions...)
+    update_interconnection_time_series_parameter!(db::Quiver.Database, label::String, attribute::String, value; dimensions...)
 
 Update a Interconnection time series parameter in the database.
 """
 function update_interconnection_time_series_parameter!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String,
     attribute::String,
     value;
     dimensions...,
 )
-    PSRI.PSRDatabaseSQLite.update_time_series_row!(
+    update_time_series_parameter!(
         db,
         "Interconnection",
-        attribute,
+        "parameters",
         label,
+        attribute,
         value;
         dimensions...,
     )

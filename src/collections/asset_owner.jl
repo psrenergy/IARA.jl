@@ -42,32 +42,32 @@ end
 Initialize the AssetOwner collection from the database.
 """
 function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
-    num_asset_owners = PSRI.max_elements(inputs.db, "AssetOwner")
+    num_asset_owners = length(Quiver.read_element_ids(inputs.db, "AssetOwner"))
     if num_asset_owners == 0
         return nothing
     end
 
-    asset_owner.label = PSRI.get_parms(inputs.db, "AssetOwner", "label")
+    asset_owner.label = read_scalar_strings(inputs.db, "AssetOwner", "label")
     asset_owner.price_type =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "AssetOwner", "price_type"),
+            read_scalar_integers(inputs.db, "AssetOwner", "price_type"),
             AssetOwner_PriceType.T,
         )
     asset_owner.minimum_virtual_reservoir_purchase_bid_quantity_in_mw =
-        PSRI.get_parms(inputs.db, "AssetOwner", "minimum_virtual_reservoir_purchase_bid_quantity_in_mw")
+        read_scalar_floats(inputs.db, "AssetOwner", "minimum_virtual_reservoir_purchase_bid_quantity_in_mw")
 
     # Load vectors
-    asset_owner.purchase_discount_rate = PSRI.get_vectors(inputs.db, "AssetOwner", "purchase_discount_rate")
+    asset_owner.purchase_discount_rate = read_vector_floats(inputs.db, "AssetOwner", "purchase_discount_rate")
     asset_owner.virtual_reservoir_energy_account_upper_bound =
-        PSRI.get_vectors(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
+        read_vector_floats(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
     asset_owner.risk_factor_for_virtual_reservoir_bids =
-        PSRI.get_vectors(inputs.db, "AssetOwner", "risk_factor_for_virtual_reservoir_bids")
+        read_vector_floats(inputs.db, "AssetOwner", "risk_factor_for_virtual_reservoir_bids")
 
     return nothing
 end
 
 """
-    add_asset_owner!(db::DatabaseSQLite; kwargs...)
+    add_asset_owner!(db::Quiver.Database; kwargs...)
 
 Add an asset owner to the database.
 
@@ -92,19 +92,19 @@ IARA.add_asset_owner!(
 )
 ```
 """
-function add_asset_owner!(db::DatabaseSQLite; kwargs...)
+function add_asset_owner!(db::Quiver.Database; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "AssetOwner"; sql_typed_kwargs...)
+    Quiver.create_element!(db, "AssetOwner"; sql_typed_kwargs...)
     return nothing
 end
 
-function delete_asset_owner!(db::DatabaseSQLite, label::String)
-    PSRI.delete_element!(db, "AssetOwner", label)
+function delete_asset_owner!(db::Quiver.Database, label::String)
+    delete_element!(db, "AssetOwner", label)
     return nothing
 end
 
 """
-    update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
+    update_asset_owner!(db::Quiver.Database, label::String; kwargs...)
 
 Update the AssetOwner named 'label' in the database.
 
@@ -117,39 +117,48 @@ IARA.update_asset_owner!(
 )
 ```
 """
-function update_asset_owner!(db::DatabaseSQLite, label::String; kwargs...)
+function update_asset_owner!(db::Quiver.Database, label::String; kwargs...)
+    id = id_for_label(db, "AssetOwner", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "AssetOwner",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "AssetOwner", id; sql_typed_kwargs...)
     return db
 end
 
+# virtual_reservoir_energy_account_upper_bound and risk_factor_for_virtual_reservoir_bids
+# share one underlying table with both columns NOT NULL; a group-table update replaces
+# the whole table using only the columns passed in. Whenever either is present in
+# kwargs, read back whichever of the pair is missing so both are always written together.
+"""
+    update_asset_owner_vectors!(db::Quiver.Database, label::String; kwargs...)
+
+Update the vectors of the AssetOwner named `label` in the database.
+"""
 function update_asset_owner_vectors!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "AssetOwner", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRDatabaseSQLite.update_vector_parameters!(
-            db,
-            "AssetOwner",
-            string(attribute),
-            label,
-            value,
-        )
+
+    account_markup_attributes = (
+        :virtual_reservoir_energy_account_upper_bound,
+        :risk_factor_for_virtual_reservoir_bids,
+    )
+    if any(haskey(sql_typed_kwargs, attribute) for attribute in account_markup_attributes)
+        for attribute in account_markup_attributes
+            if !haskey(sql_typed_kwargs, attribute)
+                sql_typed_kwargs[attribute] =
+                    Quiver.read_vector_floats_by_id(db, "AssetOwner", string(attribute), id)
+            end
+        end
     end
+
+    Quiver.update_element!(db, "AssetOwner", id; sql_typed_kwargs...)
     return db
 end
 
-function update_time_series_from_db!(asset_owner::AssetOwner, db::DatabaseSQLite, period_date_time::DateTime)
+function update_time_series_from_db!(asset_owner::AssetOwner, db::Quiver.Database, period_date_time::DateTime)
     return nothing
 end
 

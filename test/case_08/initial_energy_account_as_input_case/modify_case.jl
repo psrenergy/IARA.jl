@@ -1,11 +1,9 @@
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.PSRDatabaseSQLite.update_vector_parameters!(
+IARA.update_virtual_reservoir!(
     db,
-    "VirtualReservoir",
-    "initial_energy_account_share",
-    "virtual_reservoir_1",
-    [0.3, 0.7],
+    "virtual_reservoir_1";
+    initial_energy_account_share = [0.3, 0.7],
 )
 
 virtual_reservoir_quantity_bid = zeros(

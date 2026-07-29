@@ -41,6 +41,7 @@ function main(args::Vector{String})
     #! format: on
     parsed_args = parse_args(args, s)
     os = parsed_args["os"]
+    docker_only = parsed_args["docker_only"]
 
     package_path = dirname(@__DIR__)
 
@@ -54,18 +55,32 @@ function main(args::Vector{String})
         CD.trigger_hub_async_workflow(configuration)
     end
 
-    memory_in_gb = if os == "linux"
-        30
-    else
-        16
+    exit_code = 0
+    if !docker_only
+        memory_in_gb = if os == "linux"
+            30
+        else
+            16
+        end
+
+        exit_code = start_ecs_task_and_watch(;
+            configuration = configuration,
+            os = os,
+            memory_in_gb = memory_in_gb,
+            overwrite = parsed_args["overwrite"],
+        )
     end
 
-    return start_ecs_task_and_watch(;
-        configuration = configuration,
-        os = os,
-        memory_in_gb = memory_in_gb,
-        overwrite = parsed_args["overwrite"],
-    )
+    if os == "linux" && exit_code == 0
+        CD.deploy_to_ghcr(;
+            configuration = configuration,
+            dockerfile = joinpath(package_path, "docker", "Dockerfile"),
+            build_context = joinpath(package_path, "docker"),
+            url_build_arg = "IARA_URL",
+        )
+    end
+
+    return exit_code
 end
 
 exit(main(ARGS))

@@ -94,6 +94,11 @@ function list_bidding_groups_and_their_assets(inputs::IARA.AbstractInputs)
                 push!(assets_of_bidding_group, renewable_unit_label)
             end
         end
+        for (demand_unit_index, demand_unit_label) in enumerate(IARA.demand_unit_label(inputs))
+            if IARA.demand_unit_bidding_group_index(inputs)[demand_unit_index] == bidding_group_index
+                push!(assets_of_bidding_group, demand_unit_label)
+            end
+        end
         bidding_group_dict = Dict(
             "label" => bidding_group_label,
             "has_generation_besides_virtual_reservoirs" =>
@@ -187,6 +192,17 @@ function list_assets(inputs::IARA.AbstractInputs)
             "type" => "renewable",
             "max_generation" => IARA.renewable_unit_max_generation(inputs)[renewable_unit_index],
             "om_cost" => IARA.renewable_unit_om_cost(inputs)[renewable_unit_index],
+        )
+        push!(assets_list, asset_dict)
+    end
+    for (demand_unit_index, demand_unit_label) in enumerate(IARA.demand_unit_label(inputs))
+        if IARA.is_null(IARA.demand_unit_bidding_group_index(inputs)[demand_unit_index])
+            continue
+        end
+        asset_dict = Dict(
+            "label" => demand_unit_label,
+            "type" => "demand",
+            "max_demand" => IARA.demand_unit_max_demand(inputs, demand_unit_index),
         )
         push!(assets_list, asset_dict)
     end

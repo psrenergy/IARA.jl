@@ -26,22 +26,11 @@ Collection representing the Interconnections in the system.
     zone_to::Vector{Int} = []
     # index of the Zone from in collection Zone
     zone_from::Vector{Int} = []
-
-    # caches
-    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
-
-function interconnection_time_series_sentinels()
-    return Dict{String, Any}(
-        "existing" => null_value(Int),
-        "capacity_to" => null_value(Float64),
-        "capacity_from" => null_value(Float64),
-    )
-end
 
 """
     initialize!(interconnection::Interconnection, inputs::AbstractInputs)
@@ -58,13 +47,6 @@ function initialize!(interconnection::Interconnection, inputs::AbstractInputs)
     interconnection.zone_to = scalar_relation_map(inputs.db, "Interconnection", "Zone", "to")
     interconnection.zone_from = scalar_relation_map(inputs.db, "Interconnection", "Zone", "from")
 
-    ids = Quiver.read_element_ids(inputs.db, "Interconnection")
-    sentinels = interconnection_time_series_sentinels()
-    interconnection.time_series_cache = [
-        TimeSeriesRowCache(inputs.db, "Interconnection", "parameters", id, sentinels)
-        for id in ids
-    ]
-
     update_time_series_from_db!(interconnection, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -76,27 +58,20 @@ end
 Update the Interconnection collection time series from the database.
 """
 function update_time_series_from_db!(interconnection::Interconnection, db::Quiver.Database, period_date_time::DateTime)
-    num_interconnections = length(interconnection)
-    interconnection.existing = Interconnection_Existence.T[
-        convert_to_enum(
-            time_series_row(interconnection.time_series_cache[i], "existing", period_date_time),
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
+    interconnection.existing =
+        @memoized_lru "interconnection-existing-$date" convert_to_enum.(
+            Quiver.read_time_series_row(db, "Interconnection", "parameters", "existing"; date_time = period_date_time),
             Interconnection_Existence.T,
         )
-        for i in 1:num_interconnections
-    ]
-    for (field, attribute) in (
-        (:capacity_to, "capacity_to"),
-        (:capacity_from, "capacity_from"),
-    )
-        setfield!(
-            interconnection,
-            field,
-            Float64[
-                time_series_row(interconnection.time_series_cache[i], attribute, period_date_time)
-                for i in 1:num_interconnections
-            ],
+    interconnection.capacity_to =
+        @memoized_lru "interconnection-capacity_to-$date" Quiver.read_time_series_row(
+            db, "Interconnection", "parameters", "capacity_to"; date_time = period_date_time,
         )
-    end
+    interconnection.capacity_from =
+        @memoized_lru "interconnection-capacity_from-$date" Quiver.read_time_series_row(
+            db, "Interconnection", "parameters", "capacity_from"; date_time = period_date_time,
+        )
     return nothing
 end
 

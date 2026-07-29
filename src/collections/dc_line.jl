@@ -26,22 +26,11 @@ Collection representing the DC lines in the system.
     bus_to::Vector{Int} = []
     # index of the bus from in collection Bus
     bus_from::Vector{Int} = []
-
-    # caches
-    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
-
-function dc_line_time_series_sentinels()
-    return Dict{String, Any}(
-        "existing" => null_value(Int),
-        "capacity_to" => null_value(Float64),
-        "capacity_from" => null_value(Float64),
-    )
-end
 
 """
     initialize!(dc_line::DCLine, inputs::AbstractInputs)
@@ -58,13 +47,6 @@ function initialize!(dc_line::DCLine, inputs::AbstractInputs)
     dc_line.bus_to = scalar_relation_map(inputs.db, "DCLine", "Bus", "to")
     dc_line.bus_from = scalar_relation_map(inputs.db, "DCLine", "Bus", "from")
 
-    ids = Quiver.read_element_ids(inputs.db, "DCLine")
-    sentinels = dc_line_time_series_sentinels()
-    dc_line.time_series_cache = [
-        TimeSeriesRowCache(inputs.db, "DCLine", "parameters", id, sentinels)
-        for id in ids
-    ]
-
     update_time_series_from_db!(dc_line, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -76,27 +58,20 @@ end
 Update the DC Line collection time series from the database.
 """
 function update_time_series_from_db!(dc_line::DCLine, db::Quiver.Database, period_date_time::DateTime)
-    num_dc_lines = length(dc_line)
-    dc_line.existing = DCLine_Existence.T[
-        convert_to_enum(
-            time_series_row(dc_line.time_series_cache[d], "existing", period_date_time),
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
+    dc_line.existing =
+        @memoized_lru "dc_line-existing-$date" convert_to_enum.(
+            Quiver.read_time_series_row(db, "DCLine", "parameters", "existing"; date_time = period_date_time),
             DCLine_Existence.T,
         )
-        for d in 1:num_dc_lines
-    ]
-    for (field, attribute) in (
-        (:capacity_to, "capacity_to"),
-        (:capacity_from, "capacity_from"),
-    )
-        setfield!(
-            dc_line,
-            field,
-            Float64[
-                time_series_row(dc_line.time_series_cache[d], attribute, period_date_time)
-                for d in 1:num_dc_lines
-            ],
+    dc_line.capacity_to =
+        @memoized_lru "dc_line-capacity_to-$date" Quiver.read_time_series_row(
+            db, "DCLine", "parameters", "capacity_to"; date_time = period_date_time,
         )
-    end
+    dc_line.capacity_from =
+        @memoized_lru "dc_line-capacity_from-$date" Quiver.read_time_series_row(
+            db, "DCLine", "parameters", "capacity_from"; date_time = period_date_time,
+        )
     return nothing
 end
 

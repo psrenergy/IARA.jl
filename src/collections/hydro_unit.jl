@@ -52,26 +52,11 @@ Hydro units are high-level data structures that represent hydro electricity gene
     # caches
     is_associated_with_some_virtual_reservoir::Vector{Bool} = []
     virtual_reservoir_index::Vector{Int} = []
-    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
-
-function hydro_unit_time_series_sentinels()
-    return Dict{String, Any}(
-        "existing" => null_value(Int),
-        "production_factor" => null_value(Float64),
-        "min_generation" => null_value(Float64),
-        "max_generation" => null_value(Float64),
-        "max_turbining" => null_value(Float64),
-        "min_volume" => null_value(Float64),
-        "max_volume" => null_value(Float64),
-        "min_outflow" => null_value(Float64),
-        "om_cost" => null_value(Float64),
-    )
-end
 
 """
     initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
@@ -127,13 +112,6 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
     hydro_unit.is_associated_with_some_virtual_reservoir = zeros(Bool, num_hydro_units)
     hydro_unit.virtual_reservoir_index = fill(null_value(Int), num_hydro_units)
 
-    ids = Quiver.read_element_ids(inputs.db, "HydroUnit")
-    sentinels = hydro_unit_time_series_sentinels()
-    hydro_unit.time_series_cache = [
-        TimeSeriesRowCache(inputs.db, "HydroUnit", "parameters", id, sentinels)
-        for id in ids
-    ]
-
     update_time_series_from_db!(hydro_unit, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -149,33 +127,44 @@ function update_time_series_from_db!(
     db::Quiver.Database,
     period_date_time::DateTime,
 )
-    num_hydro_units = length(hydro_unit)
-    hydro_unit.existing = HydroUnit_Existence.T[
-        convert_to_enum(
-            time_series_row(hydro_unit.time_series_cache[h], "existing", period_date_time),
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
+    hydro_unit.existing =
+        @memoized_lru "hydro_unit-existing-$date" convert_to_enum.(
+            Quiver.read_time_series_row(db, "HydroUnit", "parameters", "existing"; date_time = period_date_time),
             HydroUnit_Existence.T,
         )
-        for h in 1:num_hydro_units
-    ]
-    for (field, attribute) in (
-        (:production_factor, "production_factor"),
-        (:min_generation, "min_generation"),
-        (:max_generation, "max_generation"),
-        (:max_turbining, "max_turbining"),
-        (:min_volume, "min_volume"),
-        (:max_volume, "max_volume"),
-        (:min_outflow, "min_outflow"),
-        (:om_cost, "om_cost"),
-    )
-        setfield!(
-            hydro_unit,
-            field,
-            Float64[
-                time_series_row(hydro_unit.time_series_cache[h], attribute, period_date_time)
-                for h in 1:num_hydro_units
-            ],
+    hydro_unit.production_factor =
+        @memoized_lru "hydro_unit-production_factor-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "production_factor"; date_time = period_date_time,
         )
-    end
+    hydro_unit.min_generation =
+        @memoized_lru "hydro_unit-min_generation-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "min_generation"; date_time = period_date_time,
+        )
+    hydro_unit.max_generation =
+        @memoized_lru "hydro_unit-max_generation-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "max_generation"; date_time = period_date_time,
+        )
+    hydro_unit.max_turbining =
+        @memoized_lru "hydro_unit-max_turbining-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "max_turbining"; date_time = period_date_time,
+        )
+    hydro_unit.min_volume =
+        @memoized_lru "hydro_unit-min_volume-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "min_volume"; date_time = period_date_time,
+        )
+    hydro_unit.max_volume =
+        @memoized_lru "hydro_unit-max_volume-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "max_volume"; date_time = period_date_time,
+        )
+    hydro_unit.min_outflow =
+        @memoized_lru "hydro_unit-min_outflow-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "min_outflow"; date_time = period_date_time,
+        )
+    hydro_unit.om_cost =
+        @memoized_lru "hydro_unit-om_cost-$date" Quiver.read_time_series_row(
+            db, "HydroUnit", "parameters", "om_cost"; date_time = period_date_time,
+        )
     return nothing
 end
 

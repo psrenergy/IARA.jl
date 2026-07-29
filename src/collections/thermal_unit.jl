@@ -41,24 +41,11 @@ Thermal units are high-level data structures that represent thermal electricity 
     bus_index::Vector{Int} = []
     # index of the bidding group to which the thermal unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
-
-    # caches
-    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
-
-function thermal_unit_time_series_sentinels()
-    return Dict{String, Any}(
-        "existing" => null_value(Int),
-        "min_generation" => null_value(Float64),
-        "max_generation" => null_value(Float64),
-        "om_cost" => null_value(Float64),
-        "startup_cost" => null_value(Float64),
-    )
-end
 
 """
     initialize!(thermal_unit::ThermalUnit, inputs)
@@ -99,13 +86,6 @@ function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
     thermal_unit.bus_index = scalar_relation_map(inputs.db, "ThermalUnit", "Bus", "id")
     thermal_unit.bidding_group_index = scalar_relation_map(inputs.db, "ThermalUnit", "BiddingGroup", "id")
 
-    ids = Quiver.read_element_ids(inputs.db, "ThermalUnit")
-    sentinels = thermal_unit_time_series_sentinels()
-    thermal_unit.time_series_cache = [
-        TimeSeriesRowCache(inputs.db, "ThermalUnit", "parameters", id, sentinels)
-        for id in ids
-    ]
-
     update_time_series_from_db!(thermal_unit, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -121,29 +101,28 @@ function update_time_series_from_db!(
     db::Quiver.Database,
     period_date_time::DateTime,
 )
-    num_thermal_units = length(thermal_unit)
-    thermal_unit.existing = ThermalUnit_Existence.T[
-        convert_to_enum(
-            time_series_row(thermal_unit.time_series_cache[i], "existing", period_date_time),
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
+    thermal_unit.existing =
+        @memoized_lru "thermal_unit-existing-$date" convert_to_enum.(
+            Quiver.read_time_series_row(db, "ThermalUnit", "parameters", "existing"; date_time = period_date_time),
             ThermalUnit_Existence.T,
         )
-        for i in 1:num_thermal_units
-    ]
-    for (field, attribute) in (
-        (:min_generation, "min_generation"),
-        (:max_generation, "max_generation"),
-        (:om_cost, "om_cost"),
-        (:startup_cost, "startup_cost"),
-    )
-        setfield!(
-            thermal_unit,
-            field,
-            Float64[
-                time_series_row(thermal_unit.time_series_cache[i], attribute, period_date_time)
-                for i in 1:num_thermal_units
-            ],
+    thermal_unit.min_generation =
+        @memoized_lru "thermal_unit-min_generation-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "min_generation"; date_time = period_date_time,
         )
-    end
+    thermal_unit.max_generation =
+        @memoized_lru "thermal_unit-max_generation-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "max_generation"; date_time = period_date_time,
+        )
+    thermal_unit.om_cost =
+        @memoized_lru "thermal_unit-om_cost-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "om_cost"; date_time = period_date_time,
+        )
+    thermal_unit.startup_cost =
+        @memoized_lru "thermal_unit-startup_cost-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "startup_cost"; date_time = period_date_time,
+        )
     return nothing
 end
 

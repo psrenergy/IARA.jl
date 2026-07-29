@@ -29,24 +29,11 @@ Collection representing the battery unit in the system.
     bus_index::Vector{Int} = []
     # index of the bidding_group to which the battery_unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
-
-    # caches
-    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
-
-function battery_unit_time_series_sentinels()
-    return Dict{String, Any}(
-        "existing" => null_value(Int),
-        "min_storage" => null_value(Float64),
-        "max_storage" => null_value(Float64),
-        "max_capacity" => null_value(Float64),
-        "om_cost" => null_value(Float64),
-    )
-end
 
 """
     initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
@@ -64,13 +51,6 @@ function initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
     battery_unit.bus_index = scalar_relation_map(inputs.db, "BatteryUnit", "Bus", "id")
     battery_unit.bidding_group_index = scalar_relation_map(inputs.db, "BatteryUnit", "BiddingGroup", "id")
 
-    ids = Quiver.read_element_ids(inputs.db, "BatteryUnit")
-    sentinels = battery_unit_time_series_sentinels()
-    battery_unit.time_series_cache = [
-        TimeSeriesRowCache(inputs.db, "BatteryUnit", "parameters", id, sentinels)
-        for id in ids
-    ]
-
     update_time_series_from_db!(battery_unit, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -86,29 +66,28 @@ function update_time_series_from_db!(
     db::Quiver.Database,
     period_date_time::DateTime,
 )
-    num_battery_units = length(battery_unit)
-    battery_unit.existing = BatteryUnit_Existence.T[
-        convert_to_enum(
-            time_series_row(battery_unit.time_series_cache[b], "existing", period_date_time),
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
+    battery_unit.existing =
+        @memoized_lru "battery_unit-existing-$date" convert_to_enum.(
+            Quiver.read_time_series_row(db, "BatteryUnit", "parameters", "existing"; date_time = period_date_time),
             BatteryUnit_Existence.T,
         )
-        for b in 1:num_battery_units
-    ]
-    for (field, attribute) in (
-        (:min_storage, "min_storage"),
-        (:max_storage, "max_storage"),
-        (:max_capacity, "max_capacity"),
-        (:om_cost, "om_cost"),
-    )
-        setfield!(
-            battery_unit,
-            field,
-            Float64[
-                time_series_row(battery_unit.time_series_cache[b], attribute, period_date_time)
-                for b in 1:num_battery_units
-            ],
+    battery_unit.min_storage =
+        @memoized_lru "battery_unit-min_storage-$date" Quiver.read_time_series_row(
+            db, "BatteryUnit", "parameters", "min_storage"; date_time = period_date_time,
         )
-    end
+    battery_unit.max_storage =
+        @memoized_lru "battery_unit-max_storage-$date" Quiver.read_time_series_row(
+            db, "BatteryUnit", "parameters", "max_storage"; date_time = period_date_time,
+        )
+    battery_unit.max_capacity =
+        @memoized_lru "battery_unit-max_capacity-$date" Quiver.read_time_series_row(
+            db, "BatteryUnit", "parameters", "max_capacity"; date_time = period_date_time,
+        )
+    battery_unit.om_cost =
+        @memoized_lru "battery_unit-om_cost-$date" Quiver.read_time_series_row(
+            db, "BatteryUnit", "parameters", "om_cost"; date_time = period_date_time,
+        )
     return nothing
 end
 

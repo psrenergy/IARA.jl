@@ -18,31 +18,6 @@ fields are plain `Vector{T}` using IARA's own sentinel values (see `null_value`)
 fill_nulls(values::AbstractVector, sentinel) = something.(values, sentinel)
 
 """
-    forward_fill_nulls(values::AbstractVector, sentinel)
-
-Replace each `nothing` entry with the most recent non-`nothing` entry before
-it (forward fill), or `sentinel` if no non-`nothing` entry has appeared yet.
-`values` must already be ordered along the dimension being filled forward
-(e.g. by date), since a `nothing` cell means "unchanged from the previous
-row" rather than "no value."
-"""
-function forward_fill_nulls(values::AbstractVector, sentinel)
-    T = typeof(sentinel)
-    filled = Vector{T}(undef, length(values))
-    last_seen = sentinel
-    for i in eachindex(values)
-        v = values[i]
-        if v === nothing
-            filled[i] = last_seen
-        else
-            filled[i] = v
-            last_seen = v
-        end
-    end
-    return filled
-end
-
-"""
     fill_no_relation(values::AbstractVector{Int64}, sentinel)
 
 Replace every `-1` entry with `sentinel`. `-1` is `scalar_relation_map`'s
@@ -223,61 +198,6 @@ Compute the FK column name for a relation: `lowercase(collection_to) * "_" *
 relation_type`.
 """
 fk_column_name(collection_to::String, relation_type::String) = lowercase(collection_to) * "_" * relation_type
-
-"""
-    TimeSeriesRowCache
-
-Per-element cache over a time-series group's rows, so repeated lookups avoid
-re-running a SQL query each time. Built once via `read_time_series_group`, then
-looked up by date via `time_series_row`. Every value column has its nulls
-forward-filled from the previous row at construction time (falling back to
-IARA's sentinel before the first real value), so callers never see a raw
-`nothing`.
-"""
-struct TimeSeriesRowCache
-    dates::Vector{DateTime}
-    values::Dict{String, Vector}
-end
-
-"""
-    TimeSeriesRowCache(db::Quiver.Database, collection::String, group::String, id::Int64, sentinels::Dict{String, <:Any})
-
-Build a cache for one element's time-series group. `sentinels` maps each
-non-dimension column name to the sentinel value used before that column's
-first real (non-`nothing`) value (e.g. `null_value(Float64)` for a `Float64`
-column, `null_value(Int)` for an `Int`-backed enum column).
-"""
-function TimeSeriesRowCache(
-    db::Quiver.Database,
-    collection::String,
-    group::String,
-    id::Int64,
-    sentinels::Dict{String, <:Any},
-)
-    columns = Quiver.read_time_series_group(db, collection, group, id)
-    metadata = Quiver.get_time_series_metadata(db, collection, group)
-    dim_col = metadata.dimension_column
-    dates = DateTime.(columns[dim_col])
-    values = Dict{String, Vector}()
-    for (col_name, sentinel) in sentinels
-        values[col_name] = forward_fill_nulls(columns[col_name], sentinel)
-    end
-    return TimeSeriesRowCache(dates, values)
-end
-
-"""
-    time_series_row(cache::TimeSeriesRowCache, attribute::String, date_time::DateTime)
-
-Return the most recent value of `attribute` at or before `date_time`. Throws if
-`date_time` is earlier than every date in the cache.
-"""
-function time_series_row(cache::TimeSeriesRowCache, attribute::String, date_time::DateTime)
-    idx = searchsortedlast(cache.dates, date_time)
-    if idx == 0
-        error("No time series row at or before $date_time (earliest available date is $(first(cache.dates))).")
-    end
-    return cache.values[attribute][idx]
-end
 
 # Quiver.upsert_time_series_row! does INSERT OR REPLACE: any column not passed
 # in the call is reset to NULL rather than left alone. Read the row's current

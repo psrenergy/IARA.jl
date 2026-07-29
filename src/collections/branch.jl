@@ -27,22 +27,11 @@ Collection representing the Branches in the system.
     bus_to::Vector{Int} = []
     # index of the bus from in collection Bus
     bus_from::Vector{Int} = []
-
-    # caches
-    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
-
-function branch_time_series_sentinels()
-    return Dict{String, Any}(
-        "existing" => null_value(Int),
-        "capacity" => null_value(Float64),
-        "reactance" => null_value(Float64),
-    )
-end
 
 """
     initialize!(branch::Branch, inputs::AbstractInputs)
@@ -64,13 +53,6 @@ function initialize!(branch::Branch, inputs::AbstractInputs)
     branch.bus_to = scalar_relation_map(inputs.db, "Branch", "Bus", "to")
     branch.bus_from = scalar_relation_map(inputs.db, "Branch", "Bus", "from")
 
-    ids = Quiver.read_element_ids(inputs.db, "Branch")
-    sentinels = branch_time_series_sentinels()
-    branch.time_series_cache = [
-        TimeSeriesRowCache(inputs.db, "Branch", "parameters", id, sentinels)
-        for id in ids
-    ]
-
     update_time_series_from_db!(branch, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -82,27 +64,20 @@ end
 Update the Branch collection time series from the database.
 """
 function update_time_series_from_db!(branch::Branch, db::Quiver.Database, period_date_time::DateTime)
-    num_branches = length(branch)
-    branch.existing = Branch_Existence.T[
-        convert_to_enum(
-            time_series_row(branch.time_series_cache[b], "existing", period_date_time),
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
+    branch.existing =
+        @memoized_lru "branch-existing-$date" convert_to_enum.(
+            Quiver.read_time_series_row(db, "Branch", "parameters", "existing"; date_time = period_date_time),
             Branch_Existence.T,
         )
-        for b in 1:num_branches
-    ]
-    for (field, attribute) in (
-        (:capacity, "capacity"),
-        (:reactance, "reactance"),
-    )
-        setfield!(
-            branch,
-            field,
-            Float64[
-                time_series_row(branch.time_series_cache[b], attribute, period_date_time)
-                for b in 1:num_branches
-            ],
+    branch.capacity =
+        @memoized_lru "branch-capacity-$date" Quiver.read_time_series_row(
+            db, "Branch", "parameters", "capacity"; date_time = period_date_time,
         )
-    end
+    branch.reactance =
+        @memoized_lru "branch-reactance-$date" Quiver.read_time_series_row(
+            db, "Branch", "parameters", "reactance"; date_time = period_date_time,
+        )
     return nothing
 end
 

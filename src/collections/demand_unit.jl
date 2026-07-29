@@ -39,16 +39,11 @@ DemandUnit collection definition.
     _number_of_flexible_demand_windows::Vector{Int} = Vector{Int}(undef, 0)
     _subperiods_in_flexible_demand_window::Vector{Vector{Vector{Int}}} =
         Vector{Vector{Vector{Int}}}(undef, 0)
-    time_series_cache::Vector{TimeSeriesRowCache} = []
 end
 
 # ---------------------------------------------------------------------
 # Collection manipulation
 # ---------------------------------------------------------------------
-
-function demand_unit_time_series_sentinels()
-    return Dict{String, Any}("existing" => null_value(Int))
-end
 
 """
     initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
@@ -85,13 +80,6 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
     demand_unit.elastic_demand_price_file = something(time_series_files["elastic_demand_price"], "")
     demand_unit.window_file = something(time_series_files["demand_window"], "")
 
-    ids = Quiver.read_element_ids(inputs.db, "DemandUnit")
-    sentinels = demand_unit_time_series_sentinels()
-    demand_unit.time_series_cache = [
-        TimeSeriesRowCache(inputs.db, "DemandUnit", "parameters", id, sentinels)
-        for id in ids
-    ]
-
     update_time_series_from_db!(demand_unit, inputs.db, initial_date_time(inputs))
 
     return nothing
@@ -103,14 +91,12 @@ end
 Update the Demand collection time series from the database.
 """
 function update_time_series_from_db!(demand_unit::DemandUnit, db::Quiver.Database, period_date_time::DateTime)
-    num_demands = length(demand_unit)
-    demand_unit.existing = DemandUnit_Existence.T[
-        convert_to_enum(
-            time_series_row(demand_unit.time_series_cache[d], "existing", period_date_time),
+    date = Dates.format(period_date_time, "yyyymmddHHMMSS")
+    demand_unit.existing =
+        @memoized_lru "demand_unit-existing-$date" convert_to_enum.(
+            Quiver.read_time_series_row(db, "DemandUnit", "parameters", "existing"; date_time = period_date_time),
             DemandUnit_Existence.T,
         )
-        for d in 1:num_demands
-    ]
     return nothing
 end
 

@@ -1,10 +1,10 @@
-[2026-07-29 15:55:18.330] [quiver_database_1] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized/study.iara
-[2026-07-29 15:55:18.330] [quiver_database_1] [debug] Database opened successfully, foreign keys enabled
-[2026-07-29 15:55:18.330] [quiver_database_1] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized/study.iara
-[2026-07-29 15:55:18.330] [quiver_database_1] [debug] Database is up to date at version 36
-[2026-07-29 15:55:18.356] [quiver_database_1] [debug] Reading time series files for collection: Configuration
-[2026-07-29 15:55:18.356] [quiver_database_1] [debug] Reading time series files for collection: RenewableUnit
-[2026-07-29 15:55:18.699] [quiver_database_1] [debug] Reading time series files for collection: DemandUnit
-[2026-07-29 15:55:18.815] [quiver_database_1] [debug] Reading time series files for collection: BiddingGroup
-[2026-07-29 15:55:35.678] [quiver_database_1] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized/study.iara
-[2026-07-29 15:55:35.678] [quiver_database_1] [info] Database closed
+[2026-07-30 13:18:43.382] [quiver_database_1] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized/study.iara
+[2026-07-30 13:18:43.383] [quiver_database_1] [debug] Database opened successfully, foreign keys enabled
+[2026-07-30 13:18:43.383] [quiver_database_1] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized/study.iara
+[2026-07-30 13:18:43.383] [quiver_database_1] [debug] Database is up to date at version 36
+[2026-07-30 13:18:43.419] [quiver_database_1] [debug] Reading time series files for collection: Configuration
+[2026-07-30 13:18:43.420] [quiver_database_1] [debug] Reading time series files for collection: RenewableUnit
+[2026-07-30 13:18:43.922] [quiver_database_1] [debug] Reading time series files for collection: DemandUnit
+[2026-07-30 13:18:44.091] [quiver_database_1] [debug] Reading time series files for collection: BiddingGroup
+[2026-07-30 13:19:09.420] [quiver_database_1] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/centralized/study.iara
+[2026-07-30 13:19:09.421] [quiver_database_1] [info] Database closed

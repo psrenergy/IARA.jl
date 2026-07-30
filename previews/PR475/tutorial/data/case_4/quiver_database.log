@@ -1,11 +1,11 @@
-[2026-07-30 13:19:28.776] [quiver_database_11] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
-[2026-07-30 13:19:28.776] [quiver_database_11] [debug] Database opened successfully, foreign keys enabled
-[2026-07-30 13:19:28.776] [quiver_database_11] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
-[2026-07-30 13:19:28.777] [quiver_database_11] [debug] Database is up to date at version 36
-[2026-07-30 13:19:29.047] [quiver_database_11] [debug] Reading time series files for collection: BiddingGroup
-[2026-07-30 13:19:29.047] [quiver_database_11] [debug] Updating time series files for collection: BiddingGroup
-[2026-07-30 13:19:29.047] [quiver_database_11] [debug] Transaction started
-[2026-07-30 13:19:29.049] [quiver_database_11] [debug] Transaction committed
-[2026-07-30 13:19:29.049] [quiver_database_11] [info] Updated time series files for collection: BiddingGroup
-[2026-07-30 13:19:29.051] [quiver_database_11] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
-[2026-07-30 13:19:29.051] [quiver_database_11] [info] Database closed
+[2026-07-30 17:58:29.874] [quiver_database_11] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
+[2026-07-30 17:58:29.874] [quiver_database_11] [debug] Database opened successfully, foreign keys enabled
+[2026-07-30 17:58:29.874] [quiver_database_11] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
+[2026-07-30 17:58:29.875] [quiver_database_11] [debug] Database is up to date at version 36
+[2026-07-30 17:58:30.097] [quiver_database_11] [debug] Reading time series files for collection: BiddingGroup
+[2026-07-30 17:58:30.098] [quiver_database_11] [debug] Updating time series files for collection: BiddingGroup
+[2026-07-30 17:58:30.098] [quiver_database_11] [debug] Transaction started
+[2026-07-30 17:58:30.100] [quiver_database_11] [debug] Transaction committed
+[2026-07-30 17:58:30.100] [quiver_database_11] [info] Updated time series files for collection: BiddingGroup
+[2026-07-30 17:58:30.102] [quiver_database_11] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
+[2026-07-30 17:58:30.102] [quiver_database_11] [info] Database closed

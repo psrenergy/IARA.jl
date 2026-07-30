@@ -24,85 +24,85 @@ db = IARA.create_study!(PATH_CASE;
     bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:32.818] [quiver_database_14] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_5/study.iara
-[2026-07-30 13:19:32.818] [quiver_database_14] [info] Applying 36 pending migration(s) from version 0 to 36
-[2026-07-30 13:19:32.818] [quiver_database_14] [info] Applying migration 1
-[2026-07-30 13:19:32.822] [quiver_database_14] [info] Migration 1 applied successfully
-[2026-07-30 13:19:32.822] [quiver_database_14] [info] Applying migration 2
-[2026-07-30 13:19:32.893] [quiver_database_14] [info] Migration 2 applied successfully
-[2026-07-30 13:19:32.893] [quiver_database_14] [info] Applying migration 3
-[2026-07-30 13:19:32.932] [quiver_database_14] [info] Migration 3 applied successfully
-[2026-07-30 13:19:32.932] [quiver_database_14] [info] Applying migration 4
-[2026-07-30 13:19:32.948] [quiver_database_14] [info] Migration 4 applied successfully
-[2026-07-30 13:19:32.948] [quiver_database_14] [info] Applying migration 5
-[2026-07-30 13:19:32.949] [quiver_database_14] [info] Migration 5 applied successfully
-[2026-07-30 13:19:32.949] [quiver_database_14] [info] Applying migration 6
-[2026-07-30 13:19:32.951] [quiver_database_14] [info] Migration 6 applied successfully
-[2026-07-30 13:19:32.951] [quiver_database_14] [info] Applying migration 7
-[2026-07-30 13:19:32.955] [quiver_database_14] [info] Migration 7 applied successfully
-[2026-07-30 13:19:32.955] [quiver_database_14] [info] Applying migration 8
-[2026-07-30 13:19:32.957] [quiver_database_14] [info] Migration 8 applied successfully
-[2026-07-30 13:19:32.957] [quiver_database_14] [info] Applying migration 9
-[2026-07-30 13:19:32.960] [quiver_database_14] [info] Migration 9 applied successfully
-[2026-07-30 13:19:32.960] [quiver_database_14] [info] Applying migration 10
-[2026-07-30 13:19:32.961] [quiver_database_14] [info] Migration 10 applied successfully
-[2026-07-30 13:19:32.961] [quiver_database_14] [info] Applying migration 11
-[2026-07-30 13:19:32.962] [quiver_database_14] [info] Migration 11 applied successfully
-[2026-07-30 13:19:32.962] [quiver_database_14] [info] Applying migration 12
-[2026-07-30 13:19:32.967] [quiver_database_14] [info] Migration 12 applied successfully
-[2026-07-30 13:19:32.967] [quiver_database_14] [info] Applying migration 13
-[2026-07-30 13:19:32.968] [quiver_database_14] [info] Migration 13 applied successfully
-[2026-07-30 13:19:32.968] [quiver_database_14] [info] Applying migration 14
-[2026-07-30 13:19:32.970] [quiver_database_14] [info] Migration 14 applied successfully
-[2026-07-30 13:19:32.970] [quiver_database_14] [info] Applying migration 15
-[2026-07-30 13:19:32.973] [quiver_database_14] [info] Migration 15 applied successfully
-[2026-07-30 13:19:32.973] [quiver_database_14] [info] Applying migration 16
-[2026-07-30 13:19:32.974] [quiver_database_14] [info] Migration 16 applied successfully
-[2026-07-30 13:19:32.974] [quiver_database_14] [info] Applying migration 17
-[2026-07-30 13:19:32.975] [quiver_database_14] [info] Migration 17 applied successfully
-[2026-07-30 13:19:32.975] [quiver_database_14] [info] Applying migration 18
-[2026-07-30 13:19:32.985] [quiver_database_14] [info] Migration 18 applied successfully
-[2026-07-30 13:19:32.985] [quiver_database_14] [info] Applying migration 19
-[2026-07-30 13:19:32.990] [quiver_database_14] [info] Migration 19 applied successfully
-[2026-07-30 13:19:32.990] [quiver_database_14] [info] Applying migration 20
-[2026-07-30 13:19:32.997] [quiver_database_14] [info] Migration 20 applied successfully
-[2026-07-30 13:19:32.997] [quiver_database_14] [info] Applying migration 21
-[2026-07-30 13:19:33.001] [quiver_database_14] [info] Migration 21 applied successfully
-[2026-07-30 13:19:33.001] [quiver_database_14] [info] Applying migration 22
-[2026-07-30 13:19:33.003] [quiver_database_14] [info] Migration 22 applied successfully
-[2026-07-30 13:19:33.003] [quiver_database_14] [info] Applying migration 23
-[2026-07-30 13:19:33.004] [quiver_database_14] [info] Migration 23 applied successfully
-[2026-07-30 13:19:33.004] [quiver_database_14] [info] Applying migration 24
-[2026-07-30 13:19:33.020] [quiver_database_14] [info] Migration 24 applied successfully
-[2026-07-30 13:19:33.020] [quiver_database_14] [info] Applying migration 25
-[2026-07-30 13:19:33.024] [quiver_database_14] [info] Migration 25 applied successfully
-[2026-07-30 13:19:33.024] [quiver_database_14] [info] Applying migration 26
-[2026-07-30 13:19:33.026] [quiver_database_14] [info] Migration 26 applied successfully
-[2026-07-30 13:19:33.026] [quiver_database_14] [info] Applying migration 27
-[2026-07-30 13:19:33.028] [quiver_database_14] [info] Migration 27 applied successfully
-[2026-07-30 13:19:33.028] [quiver_database_14] [info] Applying migration 28
-[2026-07-30 13:19:33.029] [quiver_database_14] [info] Migration 28 applied successfully
-[2026-07-30 13:19:33.029] [quiver_database_14] [info] Applying migration 29
-[2026-07-30 13:19:33.032] [quiver_database_14] [info] Migration 29 applied successfully
-[2026-07-30 13:19:33.032] [quiver_database_14] [info] Applying migration 30
-[2026-07-30 13:19:33.042] [quiver_database_14] [info] Migration 30 applied successfully
-[2026-07-30 13:19:33.042] [quiver_database_14] [info] Applying migration 31
-[2026-07-30 13:19:33.057] [quiver_database_14] [info] Migration 31 applied successfully
-[2026-07-30 13:19:33.057] [quiver_database_14] [info] Applying migration 32
-[2026-07-30 13:19:33.066] [quiver_database_14] [info] Migration 32 applied successfully
-[2026-07-30 13:19:33.066] [quiver_database_14] [info] Applying migration 33
-[2026-07-30 13:19:33.073] [quiver_database_14] [info] Migration 33 applied successfully
-[2026-07-30 13:19:33.073] [quiver_database_14] [info] Applying migration 34
-[2026-07-30 13:19:33.075] [quiver_database_14] [info] Migration 34 applied successfully
-[2026-07-30 13:19:33.075] [quiver_database_14] [info] Applying migration 35
-[2026-07-30 13:19:33.083] [quiver_database_14] [info] Migration 35 applied successfully
-[2026-07-30 13:19:33.083] [quiver_database_14] [info] Applying migration 36
-[2026-07-30 13:19:33.085] [quiver_database_14] [info] Migration 36 applied successfully
-[2026-07-30 13:19:33.086] [quiver_database_14] [info] All migrations applied successfully. Database now at version 36
-[2026-07-30 13:19:33.117] [quiver_database_14] [info] Created element 1 in Configuration</code></pre><h2 id="Zone-and-Bus"><a class="docs-heading-anchor" href="#Zone-and-Bus">Zone and Bus</a><a id="Zone-and-Bus-1"></a><a class="docs-heading-anchor-permalink" href="#Zone-and-Bus" title="Permalink"></a></h2><p>Let&#39;s add a zone and a bus to our case. This case will have a single zone and a single bus for simplicity.</p><pre><code class="language-julia hljs">IARA.add_zone!(db; label = &quot;zone_1&quot;)
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:34.267] [quiver_database_14] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_5/study.iara
+[2026-07-30 17:58:34.268] [quiver_database_14] [info] Applying 36 pending migration(s) from version 0 to 36
+[2026-07-30 17:58:34.268] [quiver_database_14] [info] Applying migration 1
+[2026-07-30 17:58:34.271] [quiver_database_14] [info] Migration 1 applied successfully
+[2026-07-30 17:58:34.271] [quiver_database_14] [info] Applying migration 2
+[2026-07-30 17:58:34.348] [quiver_database_14] [info] Migration 2 applied successfully
+[2026-07-30 17:58:34.348] [quiver_database_14] [info] Applying migration 3
+[2026-07-30 17:58:34.399] [quiver_database_14] [info] Migration 3 applied successfully
+[2026-07-30 17:58:34.399] [quiver_database_14] [info] Applying migration 4
+[2026-07-30 17:58:34.414] [quiver_database_14] [info] Migration 4 applied successfully
+[2026-07-30 17:58:34.414] [quiver_database_14] [info] Applying migration 5
+[2026-07-30 17:58:34.416] [quiver_database_14] [info] Migration 5 applied successfully
+[2026-07-30 17:58:34.416] [quiver_database_14] [info] Applying migration 6
+[2026-07-30 17:58:34.418] [quiver_database_14] [info] Migration 6 applied successfully
+[2026-07-30 17:58:34.418] [quiver_database_14] [info] Applying migration 7
+[2026-07-30 17:58:34.422] [quiver_database_14] [info] Migration 7 applied successfully
+[2026-07-30 17:58:34.422] [quiver_database_14] [info] Applying migration 8
+[2026-07-30 17:58:34.424] [quiver_database_14] [info] Migration 8 applied successfully
+[2026-07-30 17:58:34.424] [quiver_database_14] [info] Applying migration 9
+[2026-07-30 17:58:34.427] [quiver_database_14] [info] Migration 9 applied successfully
+[2026-07-30 17:58:34.427] [quiver_database_14] [info] Applying migration 10
+[2026-07-30 17:58:34.428] [quiver_database_14] [info] Migration 10 applied successfully
+[2026-07-30 17:58:34.428] [quiver_database_14] [info] Applying migration 11
+[2026-07-30 17:58:34.430] [quiver_database_14] [info] Migration 11 applied successfully
+[2026-07-30 17:58:34.430] [quiver_database_14] [info] Applying migration 12
+[2026-07-30 17:58:34.435] [quiver_database_14] [info] Migration 12 applied successfully
+[2026-07-30 17:58:34.435] [quiver_database_14] [info] Applying migration 13
+[2026-07-30 17:58:34.436] [quiver_database_14] [info] Migration 13 applied successfully
+[2026-07-30 17:58:34.436] [quiver_database_14] [info] Applying migration 14
+[2026-07-30 17:58:34.438] [quiver_database_14] [info] Migration 14 applied successfully
+[2026-07-30 17:58:34.438] [quiver_database_14] [info] Applying migration 15
+[2026-07-30 17:58:34.441] [quiver_database_14] [info] Migration 15 applied successfully
+[2026-07-30 17:58:34.441] [quiver_database_14] [info] Applying migration 16
+[2026-07-30 17:58:34.442] [quiver_database_14] [info] Migration 16 applied successfully
+[2026-07-30 17:58:34.442] [quiver_database_14] [info] Applying migration 17
+[2026-07-30 17:58:34.443] [quiver_database_14] [info] Migration 17 applied successfully
+[2026-07-30 17:58:34.443] [quiver_database_14] [info] Applying migration 18
+[2026-07-30 17:58:34.454] [quiver_database_14] [info] Migration 18 applied successfully
+[2026-07-30 17:58:34.454] [quiver_database_14] [info] Applying migration 19
+[2026-07-30 17:58:34.459] [quiver_database_14] [info] Migration 19 applied successfully
+[2026-07-30 17:58:34.459] [quiver_database_14] [info] Applying migration 20
+[2026-07-30 17:58:34.466] [quiver_database_14] [info] Migration 20 applied successfully
+[2026-07-30 17:58:34.466] [quiver_database_14] [info] Applying migration 21
+[2026-07-30 17:58:34.470] [quiver_database_14] [info] Migration 21 applied successfully
+[2026-07-30 17:58:34.470] [quiver_database_14] [info] Applying migration 22
+[2026-07-30 17:58:34.473] [quiver_database_14] [info] Migration 22 applied successfully
+[2026-07-30 17:58:34.473] [quiver_database_14] [info] Applying migration 23
+[2026-07-30 17:58:34.473] [quiver_database_14] [info] Migration 23 applied successfully
+[2026-07-30 17:58:34.473] [quiver_database_14] [info] Applying migration 24
+[2026-07-30 17:58:34.489] [quiver_database_14] [info] Migration 24 applied successfully
+[2026-07-30 17:58:34.489] [quiver_database_14] [info] Applying migration 25
+[2026-07-30 17:58:34.494] [quiver_database_14] [info] Migration 25 applied successfully
+[2026-07-30 17:58:34.494] [quiver_database_14] [info] Applying migration 26
+[2026-07-30 17:58:34.495] [quiver_database_14] [info] Migration 26 applied successfully
+[2026-07-30 17:58:34.495] [quiver_database_14] [info] Applying migration 27
+[2026-07-30 17:58:34.497] [quiver_database_14] [info] Migration 27 applied successfully
+[2026-07-30 17:58:34.497] [quiver_database_14] [info] Applying migration 28
+[2026-07-30 17:58:34.499] [quiver_database_14] [info] Migration 28 applied successfully
+[2026-07-30 17:58:34.499] [quiver_database_14] [info] Applying migration 29
+[2026-07-30 17:58:34.501] [quiver_database_14] [info] Migration 29 applied successfully
+[2026-07-30 17:58:34.501] [quiver_database_14] [info] Applying migration 30
+[2026-07-30 17:58:34.512] [quiver_database_14] [info] Migration 30 applied successfully
+[2026-07-30 17:58:34.512] [quiver_database_14] [info] Applying migration 31
+[2026-07-30 17:58:34.527] [quiver_database_14] [info] Migration 31 applied successfully
+[2026-07-30 17:58:34.527] [quiver_database_14] [info] Applying migration 32
+[2026-07-30 17:58:34.536] [quiver_database_14] [info] Migration 32 applied successfully
+[2026-07-30 17:58:34.536] [quiver_database_14] [info] Applying migration 33
+[2026-07-30 17:58:34.543] [quiver_database_14] [info] Migration 33 applied successfully
+[2026-07-30 17:58:34.543] [quiver_database_14] [info] Applying migration 34
+[2026-07-30 17:58:34.544] [quiver_database_14] [info] Migration 34 applied successfully
+[2026-07-30 17:58:34.544] [quiver_database_14] [info] Applying migration 35
+[2026-07-30 17:58:34.553] [quiver_database_14] [info] Migration 35 applied successfully
+[2026-07-30 17:58:34.553] [quiver_database_14] [info] Applying migration 36
+[2026-07-30 17:58:34.555] [quiver_database_14] [info] Migration 36 applied successfully
+[2026-07-30 17:58:34.556] [quiver_database_14] [info] All migrations applied successfully. Database now at version 36
+[2026-07-30 17:58:34.589] [quiver_database_14] [info] Created element 1 in Configuration</code></pre><h2 id="Zone-and-Bus"><a class="docs-heading-anchor" href="#Zone-and-Bus">Zone and Bus</a><a id="Zone-and-Bus-1"></a><a class="docs-heading-anchor-permalink" href="#Zone-and-Bus" title="Permalink"></a></h2><p>Let&#39;s add a zone and a bus to our case. This case will have a single zone and a single bus for simplicity.</p><pre><code class="language-julia hljs">IARA.add_zone!(db; label = &quot;zone_1&quot;)
 
-IARA.add_bus!(db; label = &quot;bus_1&quot;, zone_id = &quot;zone_1&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.120] [quiver_database_14] [info] Created element 1 in Zone
-[2026-07-30 13:19:33.121] [quiver_database_14] [info] Created element 1 in Bus</code></pre><h2 id="Hydro-Unit"><a class="docs-heading-anchor" href="#Hydro-Unit">Hydro Unit</a><a id="Hydro-Unit-1"></a><a class="docs-heading-anchor-permalink" href="#Hydro-Unit" title="Permalink"></a></h2><p>Now we can add our hydro units that will be linked to the virtual reservoir.</p><pre><code class="language-julia hljs">IARA.add_hydro_unit!(db;
+IARA.add_bus!(db; label = &quot;bus_1&quot;, zone_id = &quot;zone_1&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:34.592] [quiver_database_14] [info] Created element 1 in Zone
+[2026-07-30 17:58:34.595] [quiver_database_14] [info] Created element 1 in Bus</code></pre><h2 id="Hydro-Unit"><a class="docs-heading-anchor" href="#Hydro-Unit">Hydro Unit</a><a id="Hydro-Unit-1"></a><a class="docs-heading-anchor-permalink" href="#Hydro-Unit" title="Permalink"></a></h2><p>Now we can add our hydro units that will be linked to the virtual reservoir.</p><pre><code class="language-julia hljs">IARA.add_hydro_unit!(db;
     label = &quot;hydro_1&quot;,
     initial_volume = 100.0,
     bus_id = &quot;bus_1&quot;,
@@ -136,23 +136,23 @@ IARA.add_hydro_unit!(db;
         min_outflow = 0.0,
         om_cost = 100.0,
     ),
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.210] [quiver_database_14] [info] Created element 1 in GaugingStation
-[2026-07-30 13:19:33.278] [quiver_database_14] [info] Created element 1 in HydroUnit
-[2026-07-30 13:19:33.278] [quiver_database_14] [info] Updated time series HydroUnit.parameters for id 1 with 1 rows
-[2026-07-30 13:19:33.324] [quiver_database_14] [info] Created element 2 in GaugingStation
-[2026-07-30 13:19:33.324] [quiver_database_14] [info] Created element 2 in HydroUnit
-[2026-07-30 13:19:33.325] [quiver_database_14] [info] Updated time series HydroUnit.parameters for id 2 with 1 rows</code></pre><h3 id="Setting-Hydro-Unit-relations"><a class="docs-heading-anchor" href="#Setting-Hydro-Unit-relations">Setting Hydro Unit relations</a><a id="Setting-Hydro-Unit-relations-1"></a><a class="docs-heading-anchor-permalink" href="#Setting-Hydro-Unit-relations" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.set_hydro_turbine_to!(db, &quot;hydro_1&quot;, &quot;hydro_2&quot;)
-IARA.set_hydro_spill_to!(db, &quot;hydro_1&quot;, &quot;hydro_2&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.343] [quiver_database_14] [info] Updated element 1 in HydroUnit
-[2026-07-30 13:19:33.359] [quiver_database_14] [info] Updated element 1 in HydroUnit</code></pre><h2 id="Asset-Owner"><a class="docs-heading-anchor" href="#Asset-Owner">Asset Owner</a><a id="Asset-Owner-1"></a><a class="docs-heading-anchor-permalink" href="#Asset-Owner" title="Permalink"></a></h2><p>Let&#39;s add two asset owners to our case. Both of them will be price makers.</p><pre><code class="language-julia hljs">IARA.add_asset_owner!(db; label = &quot;asset_owner_1&quot;)
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:34.686] [quiver_database_14] [info] Created element 1 in GaugingStation
+[2026-07-30 17:58:34.763] [quiver_database_14] [info] Created element 1 in HydroUnit
+[2026-07-30 17:58:34.764] [quiver_database_14] [info] Updated time series HydroUnit.parameters for id 1 with 1 rows
+[2026-07-30 17:58:34.813] [quiver_database_14] [info] Created element 2 in GaugingStation
+[2026-07-30 17:58:34.814] [quiver_database_14] [info] Created element 2 in HydroUnit
+[2026-07-30 17:58:34.816] [quiver_database_14] [info] Updated time series HydroUnit.parameters for id 2 with 1 rows</code></pre><h3 id="Setting-Hydro-Unit-relations"><a class="docs-heading-anchor" href="#Setting-Hydro-Unit-relations">Setting Hydro Unit relations</a><a id="Setting-Hydro-Unit-relations-1"></a><a class="docs-heading-anchor-permalink" href="#Setting-Hydro-Unit-relations" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.set_hydro_turbine_to!(db, &quot;hydro_1&quot;, &quot;hydro_2&quot;)
+IARA.set_hydro_spill_to!(db, &quot;hydro_1&quot;, &quot;hydro_2&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:34.840] [quiver_database_14] [info] Updated element 1 in HydroUnit
+[2026-07-30 17:58:34.862] [quiver_database_14] [info] Updated element 1 in HydroUnit</code></pre><h2 id="Asset-Owner"><a class="docs-heading-anchor" href="#Asset-Owner">Asset Owner</a><a id="Asset-Owner-1"></a><a class="docs-heading-anchor-permalink" href="#Asset-Owner" title="Permalink"></a></h2><p>Let&#39;s add two asset owners to our case. Both of them will be price makers.</p><pre><code class="language-julia hljs">IARA.add_asset_owner!(db; label = &quot;asset_owner_1&quot;)
 
-IARA.add_asset_owner!(db; label = &quot;asset_owner_2&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.361] [quiver_database_14] [info] Created element 1 in AssetOwner
-[2026-07-30 13:19:33.362] [quiver_database_14] [info] Created element 2 in AssetOwner</code></pre><h2 id="Virtual-Reservoir"><a class="docs-heading-anchor" href="#Virtual-Reservoir">Virtual Reservoir</a><a id="Virtual-Reservoir-1"></a><a class="docs-heading-anchor-permalink" href="#Virtual-Reservoir" title="Permalink"></a></h2><p>Now we can add the virtual reservoir to our case. Notice that we are setting the inflow allocation, the initial energy account share, and linking the asset owners and hydro units.</p><pre><code class="language-julia hljs">IARA.add_virtual_reservoir!(db;
+IARA.add_asset_owner!(db; label = &quot;asset_owner_2&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:34.864] [quiver_database_14] [info] Created element 1 in AssetOwner
+[2026-07-30 17:58:34.866] [quiver_database_14] [info] Created element 2 in AssetOwner</code></pre><h2 id="Virtual-Reservoir"><a class="docs-heading-anchor" href="#Virtual-Reservoir">Virtual Reservoir</a><a id="Virtual-Reservoir-1"></a><a class="docs-heading-anchor-permalink" href="#Virtual-Reservoir" title="Permalink"></a></h2><p>Now we can add the virtual reservoir to our case. Notice that we are setting the inflow allocation, the initial energy account share, and linking the asset owners and hydro units.</p><pre><code class="language-julia hljs">IARA.add_virtual_reservoir!(db;
     label = &quot;reservoir_1&quot;,
     assetowner_id = [&quot;asset_owner_1&quot;, &quot;asset_owner_2&quot;],
     inflow_allocation = [0.4, 0.6],
     initial_energy_account_share = [0.4, 0.6],
     hydrounit_id = [&quot;hydro_1&quot;, &quot;hydro_2&quot;],
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.425] [quiver_database_14] [info] Created element 1 in VirtualReservoir</code></pre><h2 id="Bidding-Group"><a class="docs-heading-anchor" href="#Bidding-Group">Bidding Group</a><a id="Bidding-Group-1"></a><a class="docs-heading-anchor-permalink" href="#Bidding-Group" title="Permalink"></a></h2><p>Let&#39;s add a bidding group to our case. Both hydro units will be linked to this bidding group.</p><pre><code class="language-julia hljs">IARA.add_bidding_group!(db;
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:34.933] [quiver_database_14] [info] Created element 1 in VirtualReservoir</code></pre><h2 id="Bidding-Group"><a class="docs-heading-anchor" href="#Bidding-Group">Bidding Group</a><a id="Bidding-Group-1"></a><a class="docs-heading-anchor-permalink" href="#Bidding-Group" title="Permalink"></a></h2><p>Let&#39;s add a bidding group to our case. Both hydro units will be linked to this bidding group.</p><pre><code class="language-julia hljs">IARA.add_bidding_group!(db;
     label = &quot;bidding_group_1&quot;,
     assetowner_id = &quot;asset_owner_1&quot;,
     segment_fraction = [1.0],
@@ -171,7 +171,7 @@ IARA.update_hydro_unit_relation!(db,
     collection = &quot;BiddingGroup&quot;,
     relation_type = &quot;id&quot;,
     related_label = &quot;bidding_group_1&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Quiver.Database(Ptr{Quiver.C.quiver_database} @0x00000000534252b0)</code></pre><h2 id="Demand"><a class="docs-heading-anchor" href="#Demand">Demand</a><a id="Demand-1"></a><a class="docs-heading-anchor-permalink" href="#Demand" title="Permalink"></a></h2><p>This case will have a single demand, which we can add with the function <a href="../api_reference.html#IARA.add_demand_unit!-Tuple{Quiver.Database}"><code>IARA.add_demand_unit!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_demand_unit!(db;
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Quiver.Database(Ptr{Quiver.C.quiver_database} @0x00000000107014e0)</code></pre><h2 id="Demand"><a class="docs-heading-anchor" href="#Demand">Demand</a><a id="Demand-1"></a><a class="docs-heading-anchor-permalink" href="#Demand" title="Permalink"></a></h2><p>This case will have a single demand, which we can add with the function <a href="../api_reference.html#IARA.add_demand_unit!-Tuple{Quiver.Database}"><code>IARA.add_demand_unit!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_demand_unit!(db;
     label = &quot;dem_1&quot;,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -179,20 +179,20 @@ IARA.update_hydro_unit_relation!(db,
     ),
     bus_id = &quot;bus_1&quot;,
     max_demand = 5.0,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.496] [quiver_database_14] [info] Created element 1 in DemandUnit
-[2026-07-30 13:19:33.497] [quiver_database_14] [info] Updated time series DemandUnit.parameters for id 1 with 1 rows</code></pre><h2 id="Time-Series"><a class="docs-heading-anchor" href="#Time-Series">Time Series</a><a id="Time-Series-1"></a><a class="docs-heading-anchor-permalink" href="#Time-Series" title="Permalink"></a></h2><p>For this case, we have added time series files for the</p><ul><li>Demand</li><li>Inflow</li><li>Virtual Reservoir Energy Offer</li><li>Virtual Reservoir Price Offer</li></ul><p>They are available in the folder <a href="https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_5"><code>data/case_5</code></a></p><p>Let&#39;s take a look into each of these files before linking them.</p><pre><code class="language-julia hljs">IARA.time_series_dataframe(
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:35.007] [quiver_database_14] [info] Created element 1 in DemandUnit
+[2026-07-30 17:58:35.008] [quiver_database_14] [info] Updated time series DemandUnit.parameters for id 1 with 1 rows</code></pre><h2 id="Time-Series"><a class="docs-heading-anchor" href="#Time-Series">Time Series</a><a id="Time-Series-1"></a><a class="docs-heading-anchor-permalink" href="#Time-Series" title="Permalink"></a></h2><p>For this case, we have added time series files for the</p><ul><li>Demand</li><li>Inflow</li><li>Virtual Reservoir Energy Offer</li><li>Virtual Reservoir Price Offer</li></ul><p>They are available in the folder <a href="https://github.com/psrenergy/IARA.jl/tree/main/docs/src/tutorial/data/case_5"><code>data/case_5</code></a></p><p>Let&#39;s take a look into each of these files before linking them.</p><pre><code class="language-julia hljs">IARA.time_series_dataframe(
     joinpath(PATH_CASE, &quot;demand.csv&quot;),
 )</code></pre><div><div style = "float: left;"><span>12×4 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">period</th><th style = "text-align: left;">scenario</th><th style = "text-align: left;">subperiod</th><th style = "text-align: left;">dem_1</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1.4</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">3</td><td style = "text-align: right;">3</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1.8</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">4</td><td style = "text-align: right;">4</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2.2</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">5</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">2.6</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">6</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">3.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">7</td><td style = "text-align: right;">3</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">3.4</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">8</td><td style = "text-align: right;">4</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">3.8</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">9</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">4.2</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">10</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">4.6</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">11</td><td style = "text-align: right;">3</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">5.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">12</td><td style = "text-align: right;">4</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">5.4</td></tr></tbody></table></div><pre><code class="language-julia hljs">IARA.link_time_series_to_file(
     db,
     &quot;DemandUnit&quot;;
     demand_ex_ante = &quot;demand&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.503] [quiver_database_14] [info] Updated time series files for collection: DemandUnit</code></pre><p>To simplify our case, we are setting the inflow to zero, so we are only working with the initial volume of the first Hydro Unit.</p><pre><code class="language-julia hljs">IARA.time_series_dataframe(
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:35.013] [quiver_database_14] [info] Updated time series files for collection: DemandUnit</code></pre><p>To simplify our case, we are setting the inflow to zero, so we are only working with the initial volume of the first Hydro Unit.</p><pre><code class="language-julia hljs">IARA.time_series_dataframe(
     joinpath(PATH_CASE, &quot;inflow.csv&quot;),
 )</code></pre><div><div style = "float: left;"><span>12×5 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">period</th><th style = "text-align: left;">scenario</th><th style = "text-align: left;">subperiod</th><th style = "text-align: left;">hydro_1</th><th style = "text-align: left;">hydro_2</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">3</td><td style = "text-align: right;">3</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">4</td><td style = "text-align: right;">4</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">5</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">6</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">7</td><td style = "text-align: right;">3</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">8</td><td style = "text-align: right;">4</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">9</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">10</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">11</td><td style = "text-align: right;">3</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">12</td><td style = "text-align: right;">4</td><td style = "text-align: right;">1</td><td style = "text-align: right;">3</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.0</td></tr></tbody></table></div><pre><code class="language-julia hljs">IARA.link_time_series_to_file(
     db,
     &quot;HydroUnit&quot;;
     inflow_ex_ante = &quot;inflow&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.507] [quiver_database_14] [info] Updated time series files for collection: HydroUnit</code></pre><pre><code class="language-julia hljs">IARA.time_series_dataframe(
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:35.018] [quiver_database_14] [info] Updated time series files for collection: HydroUnit</code></pre><pre><code class="language-julia hljs">IARA.time_series_dataframe(
     joinpath(PATH_CASE, &quot;virtual_reservoir_energy_bid.csv&quot;),
 )
 
@@ -203,4 +203,4 @@ IARA.time_series_dataframe(
     &quot;VirtualReservoir&quot;;
     quantity_bid = &quot;virtual_reservoir_energy_bid&quot;,
     price_bid = &quot;virtual_reservoir_price_bid&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.525] [quiver_database_14] [info] Updated time series files for collection: VirtualReservoir</code></pre><h2 id="Closing-the-study"><a class="docs-heading-anchor" href="#Closing-the-study">Closing the study</a><a id="Closing-the-study-1"></a><a class="docs-heading-anchor-permalink" href="#Closing-the-study" title="Permalink"></a></h2><pre><code class="language-julia hljs">IARA.close_study!(db)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 13:19:33.526] [quiver_database_14] [info] Database closed</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="case_04_build_multi_min_activation.html">« Minimum activation bids example</a><a class="docs-footer-nextpage" href="../intro_policy_graph.html">Introduction »</a><div class="flexbox-break"></div></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 30 July 2026 13:20">Thursday 30 July 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:35.037] [quiver_database_14] [info] Updated time series files for collection: VirtualReservoir</code></pre><h2 id="Closing-the-study"><a class="docs-heading-anchor" href="#Closing-the-study">Closing the study</a><a id="Closing-the-study-1"></a><a class="docs-heading-anchor-permalink" href="#Closing-the-study" title="Permalink"></a></h2><pre><code class="language-julia hljs">IARA.close_study!(db)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-07-30 17:58:35.038] [quiver_database_14] [info] Database closed</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="case_04_build_multi_min_activation.html">« Minimum activation bids example</a><a class="docs-footer-nextpage" href="../intro_policy_graph.html">Introduction »</a><div class="flexbox-break"></div></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 30 July 2026 17:59">Thursday 30 July 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

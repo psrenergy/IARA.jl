@@ -642,9 +642,9 @@ version = "2.11.3"
 
 [[deps.Quiver]]
 deps = ["Artifacts", "CEnum", "Dates", "Libdl"]
-git-tree-sha1 = "3086635f33643133793bc5b9c51c7dece6ee39f7"
+git-tree-sha1 = "68b9427dc17f6495a5dc043a344139aae6290cd5"
 uuid = "cdbb3f72-2527-4dbd-9d0e-93533a5519ac"
-version = "0.9.13"
+version = "0.9.16"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "StyledStrings", "Unicode"]

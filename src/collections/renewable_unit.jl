@@ -23,13 +23,13 @@ Renewable units are high-level data structures that represent non-dispatchable e
     max_generation::Vector{Float64} = []
     om_cost::Vector{Float64} = []
     curtailment_cost::Vector{Float64} = []
-    technology_type::Vector{Int} = []
+    technology_type::Vector{Union{Int, Nothing}} = []
     # index of the bus to which the renewable unit belongs in the collection Bus
     bus_index::Vector{Int} = []
     # index of the bidding group to which the renewable unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
-    generation_ex_ante_file::String = ""
-    generation_ex_post_file::String = ""
+    generation_ex_ante_file::Union{String, Nothing} = nothing
+    generation_ex_post_file::Union{String, Nothing} = nothing
 end
 
 # ---------------------------------------------------------------------
@@ -42,22 +42,20 @@ end
 Initialize the Renewable Unit collection from the database.
 """
 function initialize!(renewable_unit::RenewableUnit, inputs::AbstractInputs)
-    num_renewable_units = PSRI.max_elements(inputs.db, "RenewableUnit")
+    num_renewable_units = length(Quiver.read_element_ids(inputs.db, "RenewableUnit"))
     if num_renewable_units == 0
         return nothing
     end
 
-    renewable_unit.label = PSRI.get_parms(inputs.db, "RenewableUnit", "label")
-    renewable_unit.technology_type =
-        PSRI.get_parms(inputs.db, "RenewableUnit", "technology_type")
-    renewable_unit.bus_index = PSRI.get_map(inputs.db, "RenewableUnit", "Bus", "id")
-    renewable_unit.bidding_group_index = PSRI.get_map(inputs.db, "RenewableUnit", "BiddingGroup", "id")
+    renewable_unit.label = Quiver.read_scalar_strings(inputs.db, "RenewableUnit", "label")
+    renewable_unit.technology_type = Quiver.read_scalar_integers(inputs.db, "RenewableUnit", "technology_type")
+    renewable_unit.bus_index = Quiver.scalar_relation_map(inputs.db, "RenewableUnit", "Bus", "id")
+    renewable_unit.bidding_group_index = Quiver.scalar_relation_map(inputs.db, "RenewableUnit", "BiddingGroup", "id")
 
     # Load time series files
-    renewable_unit.generation_ex_ante_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "RenewableUnit", "generation_ex_ante")
-    renewable_unit.generation_ex_post_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "RenewableUnit", "generation_ex_post")
+    time_series_files = Quiver.read_time_series_files(inputs.db, "RenewableUnit")
+    renewable_unit.generation_ex_ante_file = time_series_files["generation_ex_ante"]
+    renewable_unit.generation_ex_post_file = time_series_files["generation_ex_post"]
 
     update_time_series_from_db!(renewable_unit, inputs.db, initial_date_time(inputs))
 
@@ -65,52 +63,38 @@ function initialize!(renewable_unit::RenewableUnit, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(renewable_unit::RenewableUnit, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(renewable_unit::RenewableUnit, db::Quiver.Database, period_date_time::DateTime)
 
 Update the Renewable Unit collection time series from the database.
 """
 function update_time_series_from_db!(
     renewable_unit::RenewableUnit,
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     period_date_time::DateTime,
 )
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     renewable_unit.existing =
         @memoized_lru "renewable_unit-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "RenewableUnit",
-                "existing";
-                date_time = period_date_time,
-            ),
+            Quiver.read_time_series_row(db, "RenewableUnit", "parameters", "existing"; date_time = period_date_time),
             RenewableUnit_Existence.T,
         )
     renewable_unit.max_generation =
-        @memoized_lru "renewable_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "RenewableUnit",
-            "max_generation";
-            date_time = period_date_time,
+        @memoized_lru "renewable_unit-max_generation-$date" Quiver.read_time_series_row(
+            db, "RenewableUnit", "parameters", "max_generation"; date_time = period_date_time,
         )
     renewable_unit.om_cost =
-        @memoized_lru "renewable_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "RenewableUnit",
-            "om_cost";
-            date_time = period_date_time,
+        @memoized_lru "renewable_unit-om_cost-$date" Quiver.read_time_series_row(
+            db, "RenewableUnit", "parameters", "om_cost"; date_time = period_date_time,
         )
     renewable_unit.curtailment_cost =
-        @memoized_lru "renewable_unit-curtailment_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "RenewableUnit",
-            "curtailment_cost";
-            date_time = period_date_time,
+        @memoized_lru "renewable_unit-curtailment_cost-$date" Quiver.read_time_series_row(
+            db, "RenewableUnit", "parameters", "curtailment_cost"; date_time = period_date_time,
         )
     return nothing
 end
 
 """
-    add_renewable_unit!(db::DatabaseSQLite; kwargs...)
+    add_renewable_unit!(db::Quiver.Database; kwargs...)
 
 Add a Renewable Unit to the database.
 
@@ -121,7 +105,7 @@ Required arguments:
 
 Optional arguments:
 
-  - `technology_type::Int64`: Technology type of the renewable unit
+  - `technology_type::Union{Int, Nothing}`: Technology type of the renewable unit
   - `biddinggroup_id::Int64`: Bidding group of the renewable unit
   - `bus_id::Int64`: Bus of the renewable unit
 
@@ -156,14 +140,20 @@ IARA.add_renewable_unit!(
 )
 ```
 """
-function add_renewable_unit!(db::DatabaseSQLite; kwargs...)
+function add_renewable_unit!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "RenewableUnit"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "RenewableUnit"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "RenewableUnit", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_renewable_unit_time_series!(db::DatabaseSQLite, label::String; date_time::DateTime = DateTime(0), kwargs...)
+    update_renewable_unit_time_series!(db::Quiver.Database, label::String; date_time::DateTime = DateTime(0), kwargs...)
 
 Update time series attributes for the Renewable Unit named 'label' in the database.
 
@@ -173,68 +163,59 @@ IARA.update_renewable_unit_time_series!(db, "gnd_1"; max_generation = 4.5)
 ```
 """
 function update_renewable_unit_time_series!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     date_time::DateTime = DateTime(0),
     kwargs...,
 )
+    id = id_for_label(db, "RenewableUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
     for (attribute, value) in sql_typed_kwargs
-        PSRDatabaseSQLite.update_time_series_row!(
+        row = merged_time_series_row(
             db,
             "RenewableUnit",
+            "parameters",
+            id,
             string(attribute),
-            label,
             value;
             date_time = date_time,
         )
+        Quiver.upsert_time_series_row!(db, "RenewableUnit", "parameters", id; row...)
     end
     return db
 end
 
 """
-    update_renewable_unit!(db::DatabaseSQLite, label::String; kwargs...)
+    update_renewable_unit!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Renewable Unit named 'label' in the database.
 """
 function update_renewable_unit!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "RenewableUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "RenewableUnit",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "RenewableUnit", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_renewable_unit_relation!(db::DatabaseSQLite, renewable_unit_label::String; collection::String, relation_type::String, related_label::String)
+    update_renewable_unit_relation!(db::Quiver.Database, renewable_unit_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Renewable Unit named 'label' in the database.
 """
 function update_renewable_unit_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     renewable_unit_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "RenewableUnit",
-        collection,
-        renewable_unit_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "RenewableUnit", renewable_unit_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "RenewableUnit", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 
@@ -289,7 +270,7 @@ function advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableU
             )
             num_errors += 1
         end
-        if !is_null(renewable_unit.bidding_group_index[i]) &&
+        if has_bidding_group(renewable_unit, i) &&
            !(renewable_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Bidding Group ID $(renewable_unit.bidding_group_index[i]) not found."
@@ -297,26 +278,28 @@ function advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableU
             num_errors += 1
         end
     end
-    if read_ex_ante_renewable_file(inputs) && renewable_unit.generation_ex_ante_file == "" && length(renewable_unit) > 0
+    if read_ex_ante_renewable_file(inputs) && isnothing(renewable_unit.generation_ex_ante_file) &&
+       length(renewable_unit) > 0
         @error(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), but no ex_ante generation file was linked."
         )
         num_errors += 1
     end
-    if read_ex_post_renewable_file(inputs) && renewable_unit.generation_ex_post_file == "" && length(renewable_unit) > 0
+    if read_ex_post_renewable_file(inputs) && isnothing(renewable_unit.generation_ex_post_file) &&
+       length(renewable_unit) > 0
         @error(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), but no ex_post generation file was linked."
         )
         num_errors += 1
     end
-    if !read_ex_ante_renewable_file(inputs) && renewable_unit.generation_ex_ante_file != "" &&
+    if !read_ex_ante_renewable_file(inputs) && !isnothing(renewable_unit.generation_ex_ante_file) &&
        length(renewable_unit) > 0
         @warn(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), " *
             "but an ex_ante generation file was linked. This file will be ignored."
         )
     end
-    if !read_ex_post_renewable_file(inputs) && renewable_unit.generation_ex_post_file != "" &&
+    if !read_ex_post_renewable_file(inputs) && !isnothing(renewable_unit.generation_ex_post_file) &&
        length(renewable_unit) > 0
         @warn(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), " *

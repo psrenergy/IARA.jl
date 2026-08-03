@@ -31,21 +31,11 @@ IARA.update_configuration!(db;
     bid_price_validation = IARA.Configurations_BidPriceValidation.DO_NOT_VALIDATE,
 )
 
-IARA.update_bidding_group!(
-    db,
-    "bg_1";
-)
-
 IARA.update_bidding_group_vectors!(
     db,
     "bg_1";
     risk_factor = [0.1],
     segment_fraction = [1.0],
-)
-
-IARA.update_bidding_group!(
-    db,
-    "bg_2";
 )
 
 IARA.update_bidding_group_vectors!(

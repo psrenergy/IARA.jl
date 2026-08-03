@@ -988,7 +988,7 @@ function run_time_file_suffixes(
     suppress_period_suffix::Bool = false,
 )
     suffix = ""
-    if !is_null(run_time_options.asset_owner_index)
+    if !isnothing(run_time_options.asset_owner_index)
         suffix *= "_asset_owner_$(run_time_options.asset_owner_index)"
     end
     if !suppress_construction_type_suffix

@@ -26,27 +26,27 @@ end
 Initialize the Zone collection from the database.
 """
 function initialize!(zone::Zone, inputs::AbstractInputs)
-    num_zones = PSRI.max_elements(inputs.db, "Zone")
+    num_zones = length(Quiver.read_element_ids(inputs.db, "Zone"))
     if num_zones == 0
         return nothing
     end
 
-    zone.label = PSRI.get_parms(inputs.db, "Zone", "label")
+    zone.label = Quiver.read_scalar_strings(inputs.db, "Zone", "label")
 
     return nothing
 end
 
 """
-    update_time_series_from_db!(zone::Zone, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(zone::Zone, db::Quiver.Database, period_date_time::DateTime)
 
 Update the Zone collection time series from the database.
 """
-function update_time_series_from_db!(zone::Zone, db::DatabaseSQLite, period_date_time::DateTime)
+function update_time_series_from_db!(zone::Zone, db::Quiver.Database, period_date_time::DateTime)
     return nothing
 end
 
 """
-    add_zone!(db::DatabaseSQLite; kwargs...)
+    add_zone!(db::Quiver.Database; kwargs...)
 
 Add a zone to the database.
 
@@ -59,32 +59,25 @@ Example:
 IARA.add_zone!(db; label = "Island Zone")
 ```
 """
-function add_zone!(db::DatabaseSQLite; kwargs...)
+function add_zone!(db::Quiver.Database; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "Zone"; sql_typed_kwargs...)
+    Quiver.create_element!(db, "Zone"; sql_typed_kwargs...)
     return nothing
 end
 
 """
-    update_zone!(db::DatabaseSQLite, label::String; kwargs...)
+    update_zone!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Zone named 'label' in the database.
 """
 function update_zone!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "Zone", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "Zone",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "Zone", id; sql_typed_kwargs...)
     return db
 end
 

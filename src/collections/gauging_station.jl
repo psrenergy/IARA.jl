@@ -25,12 +25,12 @@ Collection representing the gauging stations in the system.
     inflow_initial_state::Matrix{Float64} = Matrix{Float64}(undef, 0, 0)
     inflow_initial_state_variation_type::Vector{GaugingStation_InflowInitialStateVariationType.T} = []
 
-    inflow_noise_ex_ante_file::String = ""
-    inflow_noise_ex_post_file::String = ""
-    parp_coefficients_file::String = ""
-    inflow_period_average_file::String = ""
-    inflow_period_std_dev_file::String = ""
-    inflow_initial_state_by_scenario_file::String = ""
+    inflow_noise_ex_ante_file::Union{String, Nothing} = nothing
+    inflow_noise_ex_post_file::Union{String, Nothing} = nothing
+    parp_coefficients_file::Union{String, Nothing} = nothing
+    inflow_period_average_file::Union{String, Nothing} = nothing
+    inflow_period_std_dev_file::Union{String, Nothing} = nothing
+    inflow_initial_state_by_scenario_file::Union{String, Nothing} = nothing
 end
 
 # ---------------------------------------------------------------------
@@ -43,13 +43,14 @@ end
 Initialize the GaugingStation collection from the database.
 """
 function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
-    num_gauging_stations = PSRI.max_elements(inputs.db, "GaugingStation")
+    num_gauging_stations = length(Quiver.read_element_ids(inputs.db, "GaugingStation"))
     if num_gauging_stations == 0
         return nothing
     end
 
-    gauging_station.label = PSRI.get_parms(inputs.db, "GaugingStation", "label")
-    gauging_station.downstream_index = PSRI.get_map(inputs.db, "GaugingStation", "GaugingStation", "downstream")
+    gauging_station.label = Quiver.read_scalar_strings(inputs.db, "GaugingStation", "label")
+    gauging_station.downstream_index =
+        Quiver.scalar_relation_map(inputs.db, "GaugingStation", "GaugingStation", "downstream")
 
     if read_inflow_from_file(inputs)
         return nothing
@@ -57,11 +58,11 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
 
     gauging_station.inflow_initial_state_variation_type =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "GaugingStation", "inflow_initial_state_variation_type"),
+            Quiver.read_scalar_integers(inputs.db, "GaugingStation", "inflow_initial_state_variation_type"),
             GaugingStation_InflowInitialStateVariationType.T,
         )
-    gauging_station.inflow_initial_state_by_scenario_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_initial_state_by_scenario")
+    time_series_files = Quiver.read_time_series_files(inputs.db, "GaugingStation")
+    gauging_station.inflow_initial_state_by_scenario_file = time_series_files["inflow_initial_state_by_scenario"]
 
     if fit_parp_model(inputs)
         # When fitting the PAR(p) model, these files are output files, so we use the IARA standard.
@@ -72,27 +73,21 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
         gauging_station.inflow_period_std_dev_file = "inflow_period_std_dev"
     else
         # When reading the coefficients, these are input files with user-defined names
-        gauging_station.inflow_noise_ex_ante_file =
-            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_noise_ex_ante")
-        gauging_station.inflow_noise_ex_post_file =
-            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_noise_ex_post")
-        gauging_station.parp_coefficients_file =
-            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "parp_coefficients")
-        gauging_station.inflow_period_average_file =
-            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_period_average")
-        gauging_station.inflow_period_std_dev_file =
-            PSRDatabaseSQLite.read_time_series_file(inputs.db, "GaugingStation", "inflow_period_std_dev")
+        gauging_station.inflow_noise_ex_ante_file = time_series_files["inflow_noise_ex_ante"]
+        gauging_station.inflow_noise_ex_post_file = time_series_files["inflow_noise_ex_post"]
+        gauging_station.parp_coefficients_file = time_series_files["parp_coefficients"]
+        gauging_station.inflow_period_average_file = time_series_files["inflow_period_average"]
+        gauging_station.inflow_period_std_dev_file = time_series_files["inflow_period_std_dev"]
     end
 
+    ids = Quiver.read_element_ids(inputs.db, "GaugingStation")
     gauging_station.historical_inflow = Vector{Vector{Float64}}(undef, num_gauging_stations)
-    for (idx, label) in enumerate(gauging_station.label)
+    for (idx, id) in enumerate(ids)
+        # read_time_series_group returns a completely empty Dict (no keys at all) for an
+        # id with zero rows in the group table.
+        columns = Quiver.read_time_series_group(inputs.db, "GaugingStation", "historical_inflow", id)
         gauging_station.historical_inflow[idx] =
-            PSRDatabaseSQLite.read_time_series_table(
-                inputs.db,
-                "GaugingStation",
-                "historical_inflow",
-                label,
-            ).historical_inflow
+            haskey(columns, "historical_inflow") ? Vector{Float64}(columns["historical_inflow"]) : Float64[]
     end
 
     if any(isempty.(gauging_station.historical_inflow)) ||
@@ -115,14 +110,14 @@ end
 
 function update_time_series_from_db!(
     gauging_station::GaugingStation,
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     period_date_time::DateTime,
 )
     return nothing
 end
 
 """
-    add_gauging_station!(db::DatabaseSQLite; kwargs...)
+    add_gauging_station!(db::Quiver.Database; kwargs...)
 
 Add a Gauging Station to the database.
 
@@ -155,55 +150,51 @@ IARA.add_gauging_station!(db;
 )
 ```
 """
-function add_gauging_station!(db::DatabaseSQLite; kwargs...)
+function add_gauging_station!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    historical_inflow_df = pop!(kwargs, :historical_inflow, nothing)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "GaugingStation"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "GaugingStation"; sql_typed_kwargs...)
+
+    if historical_inflow_df !== nothing
+        ts_kwargs = build_sql_typed_kwargs(historical_inflow_df)
+        Quiver.update_time_series_group!(db, "GaugingStation", "historical_inflow", id; ts_kwargs...)
+    end
     return nothing
 end
 
 """
-    update_gauging_station!(db::DatabaseSQLite, label::String; kwargs...)
+    update_gauging_station!(db::Quiver.Database, label::String; kwargs...)
 
 Update the GaugingStation named 'label' in the database.
 """
 function update_gauging_station!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "GaugingStation", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "GaugingStation",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "GaugingStation", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_gauging_station_relation!(db::DatabaseSQLite, label::String; collection::String, relation_type::String, related_label::String)
+    update_gauging_station_relation!(db::Quiver.Database, label::String; collection::String, relation_type::String, related_label::String)
 
 Update the relation of the GaugingStation named 'label' in the database.
 """
 function update_gauging_station_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     gauging_station_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "GaugingStation",
-        collection,
-        gauging_station_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "GaugingStation", gauging_station_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "GaugingStation", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 
@@ -217,7 +208,7 @@ function validate(gauging_station::GaugingStation)
     if any(
         gauging_station.inflow_initial_state_variation_type .==
         GaugingStation_InflowInitialStateVariationType.BY_SCENARIO,
-    ) && isempty(gauging_station.inflow_initial_state_by_scenario_file)
+    ) && isnothing(gauging_station.inflow_initial_state_by_scenario_file)
         @error(
             "At least one Gauging Station has inflow initial state variation type set to `BY_SCENARIO`, but no inflow initial state by scenario file was linked."
         )
@@ -254,27 +245,27 @@ function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingSt
         end
     end
     if read_parp_coefficients(inputs)
-        if read_ex_post_inflow_file(inputs) && gauging_station.inflow_noise_ex_post_file == ""
+        if read_ex_post_inflow_file(inputs) && isnothing(gauging_station.inflow_noise_ex_post_file)
             @error(
                 "Defining the ex-post inflow noise file name is required when reading PAR(p) coefficients and using the ex-post file."
             )
             num_errors += 1
         end
-        if read_ex_ante_inflow_file(inputs) && gauging_station.inflow_noise_ex_ante_file == ""
+        if read_ex_ante_inflow_file(inputs) && isnothing(gauging_station.inflow_noise_ex_ante_file)
             @error(
                 "Defining the ex-ante inflow noise file name is required when reading PAR(p) coefficients and using the ex-ante file."
             )
             num_errors += 1
         end
-        if gauging_station.parp_coefficients_file == ""
+        if isnothing(gauging_station.parp_coefficients_file)
             @error("Defining the PAR(p) coefficients file name is required when reading PAR(p) coefficients.")
             num_errors += 1
         end
-        if gauging_station.inflow_period_average_file == ""
+        if isnothing(gauging_station.inflow_period_average_file)
             @error("Defining the inflow period average file name is required when reading PAR(p) coefficients.")
             num_errors += 1
         end
-        if gauging_station.inflow_period_std_dev_file == ""
+        if isnothing(gauging_station.inflow_period_std_dev_file)
             @error(
                 "Defining the inflow period standard deviation file name is required when reading PAR(p) coefficients."
             )

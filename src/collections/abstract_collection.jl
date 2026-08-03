@@ -41,7 +41,7 @@ function index_of_elements(
         return element_indexes
     end
     sizehint!(element_indexes, length(c))
-    if is_null(run_time_options.asset_owner_index)
+    if isnothing(run_time_options.asset_owner_index)
         for i in 1:length(c)
             should_include_element = true
             for f in filters
@@ -68,7 +68,7 @@ function index_of_elements(
         for (i, bg_index) in enumerate(bidding_group_index)
             # Skip null/invalid bidding group indices to prevent BoundsError
             # when accessing bidding_group_asset_owner_index
-            if isa(c, DemandUnit) && is_null(bg_index)
+            if isa(c, DemandUnit) && !has_relation(bg_index)
                 continue
             end
             if bidding_group_asset_owner_index(inputs, bg_index) == run_time_options.asset_owner_index
@@ -110,8 +110,17 @@ function is_existing(@nospecialize(c), i::Int)
     return Int(c.existing[i]) == 1
 end
 
-function has_no_bidding_group(@nospecialize(c), i::Int)
-    return is_null(c.bidding_group_index[i])
+"""
+    has_relation(index::Int)
+
+Return whether a relation field entry refers to a related element.
+"""
+function has_relation(index::Int)
+    return index > 0
+end
+
+function has_bidding_group(@nospecialize(c), i::Int)
+    return has_relation(c.bidding_group_index[i])
 end
 
 function iara_log(@nospecialize(collection::C)) where {C <: AbstractCollection}

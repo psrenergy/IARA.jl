@@ -22,10 +22,10 @@ Configurations for the problem.
     number_of_periods::Int = 0
     number_of_scenarios::Int = 0
     number_of_subperiods::Int = 0
-    number_of_nodes::Int = 0
+    number_of_nodes::Union{Int, Nothing} = nothing
     number_of_subscenarios::Int = 0
-    train_mincost_iteration_limit::Int = 0
-    train_mincost_time_limit_sec::Float64 = 0.0
+    train_mincost_iteration_limit::Union{Int, Nothing} = nothing
+    train_mincost_time_limit_sec::Union{Int, Nothing} = nothing
     initial_date_time::DateTime = DateTime(0)
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
@@ -38,7 +38,7 @@ Configurations for the problem.
     cycle_discount_rate::Float64 = 0.0
     cycle_duration_in_hours::Float64 = 0.0
     max_iteration_nash_equilibrium::Int = 0
-    parp_max_lags::Int = 0
+    parp_max_lags::Union{Int, Nothing} = nothing
     renewable_scenarios_files::Configurations_UncertaintyScenariosFiles.T =
         Configurations_UncertaintyScenariosFiles.EX_ANTE_AND_EX_POST
     inflow_model::Configurations_InflowModel.T =
@@ -84,11 +84,11 @@ Configurations for the problem.
     network_representation_ex_post_commercial::Configurations_NetworkRepresentation.T =
         Configurations_NetworkRepresentation.NODAL
     settlement_type::Configurations_FinancialSettlementType.T = Configurations_FinancialSettlementType.EX_ANTE
-    hour_subperiod_map_file::String = ""
-    fcf_cuts_file::String = ""
-    period_season_map_file::String = ""
-    spot_price_floor::Float64 = 0.0
-    spot_price_cap::Float64 = 0.0
+    hour_subperiod_map_file::Union{String, Nothing} = nothing
+    fcf_cuts_file::Union{String, Nothing} = nothing
+    period_season_map_file::Union{String, Nothing} = nothing
+    spot_price_floor::Union{Float64, Nothing} = nothing
+    spot_price_cap::Union{Float64, Nothing} = nothing
     virtual_reservoir_correspondence_type::Configurations_VirtualReservoirCorrespondenceType.T =
         Configurations_VirtualReservoirCorrespondenceType.STANDARD_CORRESPONDENCE_CONSTRAINT
     virtual_reservoir_residual_revenue_split_type::Configurations_VirtualReservoirResidualRevenueSplitType.T =
@@ -97,7 +97,7 @@ Configurations for the problem.
     bid_price_limit_markup_justified_profile::Float64 = 0.0
     bid_price_limit_markup_non_justified_independent::Float64 = 0.0
     bid_price_limit_markup_justified_independent::Float64 = 0.0
-    bid_price_limit_low_reference::Float64 = 0.0
+    bid_price_limit_low_reference::Union{Float64, Nothing} = nothing
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
@@ -131,44 +131,44 @@ Initialize the Configurations collection from the database.
 """
 function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.path_case = path_case(inputs.db)
-    configurations.language = PSRI.get_parms(inputs.db, "Configuration", "language")[1]
+    configurations.language = Quiver.read_scalar_strings(inputs.db, "Configuration", "language")[1]
     configurations.train_mincost_time_limit_sec =
-        PSRI.get_parms(inputs.db, "Configuration", "train_mincost_time_limit_sec")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "train_mincost_time_limit_sec")[1]
     configurations.number_of_periods =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_periods")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "number_of_periods")[1]
     configurations.number_of_scenarios =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_scenarios")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "number_of_scenarios")[1]
     configurations.number_of_subperiods =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_subperiods")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "number_of_subperiods")[1]
     configurations.number_of_nodes =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_nodes")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "number_of_nodes")[1]
     configurations.number_of_subscenarios =
-        PSRI.get_parms(inputs.db, "Configuration", "number_of_subscenarios")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "number_of_subscenarios")[1]
     configurations.train_mincost_iteration_limit =
-        PSRI.get_parms(inputs.db, "Configuration", "train_mincost_iteration_limit")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "train_mincost_iteration_limit")[1]
     configurations.initial_date_time = DateTime(
-        PSRI.get_parms(inputs.db, "Configuration", "initial_date_time")[1],
+        Quiver.read_scalar_strings(inputs.db, "Configuration", "initial_date_time")[1],
         "yyyy-mm-ddTHH:MM:SS",
     )
     configurations.time_series_step =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "time_series_step")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "time_series_step")[1],
             Configurations_TimeSeriesStep.T,
         )
     configurations.policy_graph_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "policy_graph_type")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "policy_graph_type")[1],
             Configurations_PolicyGraphType.T,
         )
     configurations.hydro_balance_subperiod_resolution =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_subperiod_resolution")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "hydro_balance_subperiod_resolution")[1],
             Configurations_HydroBalanceSubperiodRepresentation.T,
         )
     thermal_unit_intra_period_operation =
-        PSRI.get_parms(inputs.db, "Configuration", "thermal_unit_intra_period_operation")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "thermal_unit_intra_period_operation")[1]
     configurations.thermal_unit_intra_period_operation =
-        if is_null(thermal_unit_intra_period_operation)
+        if isnothing(thermal_unit_intra_period_operation)
             Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
         else
             convert_to_enum(
@@ -177,182 +177,196 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             )
         end
     max_iteration_nash_equilibrium =
-        PSRI.get_parms(inputs.db, "Configuration", "max_iteration_nash_equilibrium")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "max_iteration_nash_equilibrium")[1]
     configurations.max_iteration_nash_equilibrium = max_iteration_nash_equilibrium
     configurations.renewable_scenarios_files =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "renewable_scenarios_files")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "renewable_scenarios_files")[1],
             Configurations_UncertaintyScenariosFiles.T,
         )
     configurations.inflow_model =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "inflow_model")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "inflow_model")[1],
             Configurations_InflowModel.T,
         )
     configurations.inflow_scenarios_files =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "inflow_scenarios_files")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "inflow_scenarios_files")[1],
             Configurations_UncertaintyScenariosFiles.T,
         )
     configurations.demand_scenarios_files =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "demand_scenarios_files")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "demand_scenarios_files")[1],
             Configurations_UncertaintyScenariosFiles.T,
         )
     configurations.bid_price_validation =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "bid_price_validation")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "bid_price_validation")[1],
             Configurations_BidPriceValidation.T,
         )
     configurations.bid_processing =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "bid_processing")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "bid_processing")[1],
             Configurations_BidProcessing.T,
         )
     configurations.max_rev_equilibrium_bus_aggregation_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "max_rev_equilibrium_bus_aggregation_type")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "max_rev_equilibrium_bus_aggregation_type")[1],
             Configurations_MaxRevEquilibriumBusAggregationType.T,
         )
     configurations.max_rev_equilibrium_bid_initialization =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "max_rev_equilibrium_bid_initialization")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "max_rev_equilibrium_bid_initialization")[1],
             Configurations_MaxRevEquilibriumBidInitialization.T,
         )
     configurations.settlement_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "settlement_type")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "settlement_type")[1],
             Configurations_FinancialSettlementType.T,
         )
     configurations.cycle_discount_rate =
-        PSRI.get_parms(inputs.db, "Configuration", "cycle_discount_rate")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "cycle_discount_rate")[1]
     configurations.cycle_duration_in_hours =
-        PSRI.get_parms(inputs.db, "Configuration", "cycle_duration_in_hours")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "cycle_duration_in_hours")[1]
     configurations.parp_max_lags =
-        PSRI.get_parms(inputs.db, "Configuration", "parp_max_lags")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "parp_max_lags")[1]
     configurations.demand_deficit_cost =
-        PSRI.get_parms(inputs.db, "Configuration", "demand_deficit_cost")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "demand_deficit_cost")[1]
     configurations.market_clearing_tiebreaker_weight_for_om_costs =
-        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_om_costs")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_om_costs")[1]
     configurations.market_clearing_tiebreaker_weight_for_fcf =
-        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_fcf")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "market_clearing_tiebreaker_weight_for_fcf")[1]
     configurations.construction_type_ex_ante_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_ante_physical")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "construction_type_ex_ante_physical")[1],
             Configurations_ConstructionType.T,
         )
     configurations.construction_type_ex_ante_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_ante_commercial")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "construction_type_ex_ante_commercial")[1],
             Configurations_ConstructionType.T,
         )
     configurations.construction_type_ex_post_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_post_physical")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "construction_type_ex_post_physical")[1],
             Configurations_ConstructionType.T,
         )
     configurations.construction_type_ex_post_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "construction_type_ex_post_commercial")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "construction_type_ex_post_commercial")[1],
             Configurations_ConstructionType.T,
         )
     configurations.integer_variable_representation_ex_ante_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_physical")[1],
+            Quiver.read_scalar_integers(
+                inputs.db,
+                "Configuration",
+                "integer_variable_representation_ex_ante_physical",
+            )[1],
             Configurations_IntegerVariableRepresentation.T,
         )
     configurations.integer_variable_representation_ex_ante_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_ante_commercial")[1],
+            Quiver.read_scalar_integers(
+                inputs.db,
+                "Configuration",
+                "integer_variable_representation_ex_ante_commercial",
+            )[1],
             Configurations_IntegerVariableRepresentation.T,
         )
     configurations.integer_variable_representation_ex_post_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_physical")[1],
+            Quiver.read_scalar_integers(
+                inputs.db,
+                "Configuration",
+                "integer_variable_representation_ex_post_physical",
+            )[1],
             Configurations_IntegerVariableRepresentation.T,
         )
     configurations.integer_variable_representation_ex_post_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "integer_variable_representation_ex_post_commercial")[1],
+            Quiver.read_scalar_integers(
+                inputs.db,
+                "Configuration",
+                "integer_variable_representation_ex_post_commercial",
+            )[1],
             Configurations_IntegerVariableRepresentation.T,
         )
     configurations.network_representation_mincost =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "network_representation_mincost")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "network_representation_mincost")[1],
             Configurations_NetworkRepresentation.T,
         )
     configurations.network_representation_ex_ante_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_ante_physical")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "network_representation_ex_ante_physical")[1],
             Configurations_NetworkRepresentation.T,
         )
     configurations.network_representation_ex_ante_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_ante_commercial")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "network_representation_ex_ante_commercial")[1],
             Configurations_NetworkRepresentation.T,
         )
     configurations.network_representation_ex_post_physical =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_post_physical")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "network_representation_ex_post_physical")[1],
             Configurations_NetworkRepresentation.T,
         )
     configurations.network_representation_ex_post_commercial =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "network_representation_ex_post_commercial")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "network_representation_ex_post_commercial")[1],
             Configurations_NetworkRepresentation.T,
         )
-    configurations.spot_price_floor = PSRI.get_parms(inputs.db, "Configuration", "spot_price_floor")[1]
-    configurations.spot_price_cap = PSRI.get_parms(inputs.db, "Configuration", "spot_price_cap")[1]
+    configurations.spot_price_floor = Quiver.read_scalar_floats(inputs.db, "Configuration", "spot_price_floor")[1]
+    configurations.spot_price_cap = Quiver.read_scalar_floats(inputs.db, "Configuration", "spot_price_cap")[1]
     configurations.virtual_reservoir_correspondence_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "virtual_reservoir_correspondence_type")[1],
             Configurations_VirtualReservoirCorrespondenceType.T,
         )
     configurations.virtual_reservoir_residual_revenue_split_type =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "virtual_reservoir_residual_revenue_split_type")[1],
+            Quiver.read_scalar_integers(inputs.db, "Configuration", "virtual_reservoir_residual_revenue_split_type")[1],
             Configurations_VirtualReservoirResidualRevenueSplitType.T,
         )
     configurations.bid_price_limit_markup_non_justified_profile =
-        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_profile")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_profile")[1]
     configurations.bid_price_limit_markup_justified_profile =
-        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_justified_profile")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "bid_price_limit_markup_justified_profile")[1]
     configurations.bid_price_limit_markup_non_justified_independent =
-        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_independent")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "bid_price_limit_markup_non_justified_independent")[1]
     configurations.bid_price_limit_markup_justified_independent =
-        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_markup_justified_independent")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "bid_price_limit_markup_justified_independent")[1]
     configurations.bid_price_limit_low_reference =
-        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_low_reference")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "bid_price_limit_low_reference")[1]
     configurations.bid_price_limit_high_reference =
-        PSRI.get_parms(inputs.db, "Configuration", "bid_price_limit_high_reference")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "bid_price_limit_high_reference")[1]
     configurations.reference_curve_number_of_segments =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
-        PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
     configurations.supply_function_equilibrium_extra_bid_quantity =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_extra_bid_quantity")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_extra_bid_quantity")[1]
     configurations.supply_function_equilibrium_tolerance =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_tolerance")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_tolerance")[1]
     configurations.supply_function_equilibrium_max_iterations =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
     configurations.supply_function_equilibrium_max_cost_multiplier =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
-    configurations.cvar_alpha = PSRI.get_parms(inputs.db, "Configuration", "cvar_alpha")[1]
-    configurations.cvar_lambda = PSRI.get_parms(inputs.db, "Configuration", "cvar_lambda")[1]
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
+    configurations.cvar_alpha = Quiver.read_scalar_floats(inputs.db, "Configuration", "cvar_alpha")[1]
+    configurations.cvar_lambda = Quiver.read_scalar_floats(inputs.db, "Configuration", "cvar_lambda")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
-        PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
+        read_vector_floats(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
-        PSRI.get_vectors(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
+        read_vector_floats(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
 
     # Load time series files
-    configurations.hour_subperiod_map_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "hour_subperiod_map")
-    configurations.fcf_cuts_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "fcf_cuts")
-    configurations.period_season_map_file =
-        PSRDatabaseSQLite.read_time_series_file(inputs.db, "Configuration", "period_season_map")
+    time_series_files = Quiver.read_time_series_files(inputs.db, "Configuration")
+    configurations.hour_subperiod_map_file = time_series_files["hour_subperiod_map"]
+    configurations.fcf_cuts_file = time_series_files["fcf_cuts"]
+    configurations.period_season_map_file = time_series_files["period_season_map"]
 
     configurations.period_season_map =
         ones(Int, 3, configurations.number_of_scenarios, configurations.number_of_periods)
@@ -363,7 +377,7 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
 end
 
 """
-    update_configuration!(db::DatabaseSQLite; kwargs...)
+    update_configuration!(db::Quiver.Database; kwargs...)
 
 Update the Configuration table in the database.
 
@@ -375,34 +389,17 @@ IARA.update_configuration!(
 )
 ```
 """
-function update_configuration!(db::DatabaseSQLite; kwargs...)
+function update_configuration!(db::Quiver.Database; kwargs...)
+    label = Quiver.read_scalar_strings(db, "Configuration", "label")[1]
+    id = id_for_label(db, "Configuration", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    label = PSRI.get_parms(db, "Configuration", "label")[1]
-    for (attribute, value) in sql_typed_kwargs
-        if isa(value, Vector)
-            PSRI.set_vector!(
-                db,
-                "Configuration",
-                string(attribute),
-                label,
-                value,
-            )
-        else
-            PSRI.set_parm!(
-                db,
-                "Configuration",
-                string(attribute),
-                label,
-                value,
-            )
-        end
-    end
+    Quiver.update_element!(db, "Configuration", id; sql_typed_kwargs...)
     return db
 end
 
 function update_time_series_from_db!(
     configurations::Configurations,
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     period_date_time::DateTime,
 )
     return nothing
@@ -419,8 +416,15 @@ function validate(configurations::Configurations)
         @error("Language must be either \"en\" or \"pt\".")
         num_errors += 1
     end
-    if configurations.train_mincost_time_limit_sec < 0
+    # An absent time limit means "no limit", so only a stored value can be invalid.
+    if !isnothing(configurations.train_mincost_time_limit_sec) &&
+       configurations.train_mincost_time_limit_sec < 0
         @error("train_mincost_time_limit_sec must be non-negative.")
+        num_errors += 1
+    end
+    if !isnothing(configurations.train_mincost_iteration_limit) &&
+       configurations.train_mincost_iteration_limit <= 0
+        @error("train_mincost_iteration_limit must be positive.")
         num_errors += 1
     end
     if configurations.number_of_periods <= 0
@@ -436,7 +440,7 @@ function validate(configurations::Configurations)
         num_errors += 1
     end
     if configurations.policy_graph_type == Configurations_PolicyGraphType.CYCLIC_WITH_NULL_ROOT
-        if is_null(configurations.number_of_nodes)
+        if isnothing(configurations.number_of_nodes)
             @error("Configuration parameter number_of_nodes must be defined when using a cyclic policy graph for SDDP.")
             num_errors += 1
         elseif configurations.number_of_nodes <= 0
@@ -498,7 +502,7 @@ function validate(configurations::Configurations)
         Configurations_InflowModel.FIT_PARP_MODEL_FROM_DATA,
         Configurations_InflowModel.READ_PARP_COEFFICIENTS,
     ]
-    if configurations.inflow_model in inflow_parp_options && is_null(configurations.parp_max_lags)
+    if configurations.inflow_model in inflow_parp_options && isnothing(configurations.parp_max_lags)
         @error("Inflow is set to use the PAR(p) model, but the maximum number of lags is undefined.")
         num_errors += 1
     end
@@ -509,15 +513,15 @@ function validate(configurations::Configurations)
         )
         num_errors += 1
     end
-    if !is_null(configurations.spot_price_floor) && configurations.spot_price_floor < 0
+    if !isnothing(configurations.spot_price_floor) && configurations.spot_price_floor < 0
         @error("Spot price floor must be non-negative.")
         num_errors += 1
     end
-    if !is_null(configurations.spot_price_cap) && configurations.spot_price_cap < 0
+    if !isnothing(configurations.spot_price_cap) && configurations.spot_price_cap < 0
         @error("Spot price cap must be non-negative.")
         num_errors += 1
     end
-    if !is_null(configurations.spot_price_cap) && !is_null(configurations.spot_price_floor) &&
+    if !isnothing(configurations.spot_price_cap) && !isnothing(configurations.spot_price_floor) &&
        configurations.spot_price_cap <= configurations.spot_price_floor
         @error("Spot price cap must be greater than the spot price floor.")
         num_errors += 1
@@ -531,7 +535,7 @@ function validate(configurations::Configurations)
     end
     # Check if bid price validation is enabled (bid_price_validation != DO_NOT_VALIDATE)
     if configurations.bid_price_validation != Configurations_BidPriceValidation.DO_NOT_VALIDATE
-        if is_null(configurations.bid_price_limit_low_reference)
+        if isnothing(configurations.bid_price_limit_low_reference)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
         end
@@ -738,7 +742,8 @@ language(inputs::AbstractInputs) = inputs.collections.configurations.language
 Return the time limit for the case.
 """
 function train_mincost_time_limit_sec(inputs::AbstractInputs)
-    if is_null(inputs.collections.configurations.train_mincost_time_limit_sec) ||
+    # Both an absent value and a stored zero mean "no time limit".
+    if isnothing(inputs.collections.configurations.train_mincost_time_limit_sec) ||
        inputs.collections.configurations.train_mincost_time_limit_sec == 0
         return nothing
     else
@@ -835,11 +840,7 @@ subscenarios(inputs::AbstractInputs, run_time_options) = collect(1:number_of_sub
 Return the iteration limit.
 """
 function train_mincost_iteration_limit(inputs::AbstractInputs)
-    if is_null(inputs.collections.configurations.train_mincost_iteration_limit)
-        return nothing
-    else
-        return inputs.collections.configurations.train_mincost_iteration_limit
-    end
+    return inputs.collections.configurations.train_mincost_iteration_limit
 end
 
 """
@@ -1524,7 +1525,7 @@ hour_subperiod_map_file(inputs::AbstractInputs) = inputs.collections.configurati
 
 Return whether the hour to subperiod map file is defined.
 """
-has_hour_subperiod_map(inputs::AbstractInputs) = hour_subperiod_map_file(inputs) != ""
+has_hour_subperiod_map(inputs::AbstractInputs) = !isnothing(hour_subperiod_map_file(inputs))
 
 """
     fcf_cuts_file(inputs::AbstractInputs)
@@ -1545,7 +1546,7 @@ fcf_cuts_path(inputs::AbstractInputs) = joinpath(path_case(inputs), fcf_cuts_fil
 
 Return whether the FCF cuts file is defined.
 """
-has_fcf_cuts_to_read(inputs::AbstractInputs) = fcf_cuts_file(inputs) != ""
+has_fcf_cuts_to_read(inputs::AbstractInputs) = !isnothing(fcf_cuts_file(inputs))
 
 """
     period_season_map_file(inputs::AbstractInputs)
@@ -1559,7 +1560,7 @@ period_season_map_file(inputs::AbstractInputs) = inputs.collections.configuratio
 
 Return whether the period to season map file is defined.
 """
-has_period_season_map_file(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
+has_period_season_map_file(inputs::AbstractInputs) = !isnothing(period_season_map_file(inputs))
 
 """
     hydro_balance_subperiod_resolution(inputs::AbstractInputs)

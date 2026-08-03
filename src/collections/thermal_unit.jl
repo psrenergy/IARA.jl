@@ -24,19 +24,19 @@ Thermal units are high-level data structures that represent thermal electricity 
     min_generation::Vector{Float64} = []
     max_generation::Vector{Float64} = []
     om_cost::Vector{Float64} = []
-    max_ramp_up::Vector{Float64} = []
-    max_ramp_down::Vector{Float64} = []
-    min_uptime::Vector{Float64} = []
-    max_uptime::Vector{Float64} = []
-    min_downtime::Vector{Float64} = []
-    max_startups::Vector{Int} = []
-    max_shutdowns::Vector{Int} = []
+    max_ramp_up::Vector{Union{Float64, Nothing}} = []
+    max_ramp_down::Vector{Union{Float64, Nothing}} = []
+    min_uptime::Vector{Union{Float64, Nothing}} = []
+    max_uptime::Vector{Union{Float64, Nothing}} = []
+    min_downtime::Vector{Union{Float64, Nothing}} = []
+    max_startups::Vector{Union{Int, Nothing}} = []
+    max_shutdowns::Vector{Union{Int, Nothing}} = []
     startup_cost::Vector{Float64} = []
     shutdown_cost::Vector{Float64} = []
     commitment_initial_condition::Vector{ThermalUnit_CommitmentInitialCondition.T} = []
-    generation_initial_condition::Vector{Float64} = []
-    uptime_initial_condition::Vector{Float64} = []
-    downtime_initial_condition::Vector{Float64} = []
+    generation_initial_condition::Vector{Union{Float64, Nothing}} = []
+    uptime_initial_condition::Vector{Union{Float64, Nothing}} = []
+    downtime_initial_condition::Vector{Union{Float64, Nothing}} = []
     # index of the bus to which the thermal unit belongs in the collection Bus
     bus_index::Vector{Int} = []
     # index of the bidding group to which the thermal unit belongs in the collection BiddingGroup
@@ -53,38 +53,38 @@ end
 Initialize the Thermal Unit collection from the database.
 """
 function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
-    num_thermal_units = PSRI.max_elements(inputs.db, "ThermalUnit")
+    num_thermal_units = length(Quiver.read_element_ids(inputs.db, "ThermalUnit"))
     if num_thermal_units == 0
         return nothing
     end
 
-    thermal_unit.label = PSRI.get_parms(inputs.db, "ThermalUnit", "label")
+    thermal_unit.label = Quiver.read_scalar_strings(inputs.db, "ThermalUnit", "label")
     thermal_unit.has_commitment =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "ThermalUnit", "has_commitment"),
+            Quiver.read_scalar_integers(inputs.db, "ThermalUnit", "has_commitment"),
             ThermalUnit_HasCommitment.T,
         )
-    thermal_unit.max_ramp_up = PSRI.get_parms(inputs.db, "ThermalUnit", "max_ramp_up")
-    thermal_unit.max_ramp_down = PSRI.get_parms(inputs.db, "ThermalUnit", "max_ramp_down")
-    thermal_unit.min_uptime = PSRI.get_parms(inputs.db, "ThermalUnit", "min_uptime")
-    thermal_unit.max_uptime = PSRI.get_parms(inputs.db, "ThermalUnit", "max_uptime")
-    thermal_unit.min_downtime = PSRI.get_parms(inputs.db, "ThermalUnit", "min_downtime")
-    thermal_unit.max_startups = PSRI.get_parms(inputs.db, "ThermalUnit", "max_startups")
-    thermal_unit.max_shutdowns = PSRI.get_parms(inputs.db, "ThermalUnit", "max_shutdowns")
-    thermal_unit.shutdown_cost = PSRI.get_parms(inputs.db, "ThermalUnit", "shutdown_cost")
+    thermal_unit.max_ramp_up = Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "max_ramp_up")
+    thermal_unit.max_ramp_down = Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "max_ramp_down")
+    thermal_unit.min_uptime = Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "min_uptime")
+    thermal_unit.max_uptime = Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "max_uptime")
+    thermal_unit.min_downtime = Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "min_downtime")
+    thermal_unit.max_startups = Quiver.read_scalar_integers(inputs.db, "ThermalUnit", "max_startups")
+    thermal_unit.max_shutdowns = Quiver.read_scalar_integers(inputs.db, "ThermalUnit", "max_shutdowns")
+    thermal_unit.shutdown_cost = Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "shutdown_cost")
     thermal_unit.commitment_initial_condition =
         convert_to_enum.(
-            PSRI.get_parms(inputs.db, "ThermalUnit", "commitment_initial_condition"),
+            Quiver.read_scalar_integers(inputs.db, "ThermalUnit", "commitment_initial_condition"),
             ThermalUnit_CommitmentInitialCondition.T,
         )
     thermal_unit.generation_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "generation_initial_condition")
+        Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "generation_initial_condition")
     thermal_unit.uptime_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "uptime_initial_condition")
+        Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "uptime_initial_condition")
     thermal_unit.downtime_initial_condition =
-        PSRI.get_parms(inputs.db, "ThermalUnit", "downtime_initial_condition")
-    thermal_unit.bus_index = PSRI.get_map(inputs.db, "ThermalUnit", "Bus", "id")
-    thermal_unit.bidding_group_index = PSRI.get_map(inputs.db, "ThermalUnit", "BiddingGroup", "id")
+        Quiver.read_scalar_floats(inputs.db, "ThermalUnit", "downtime_initial_condition")
+    thermal_unit.bus_index = Quiver.scalar_relation_map(inputs.db, "ThermalUnit", "Bus", "id")
+    thermal_unit.bidding_group_index = Quiver.scalar_relation_map(inputs.db, "ThermalUnit", "BiddingGroup", "id")
 
     update_time_series_from_db!(thermal_unit, inputs.db, initial_date_time(inputs))
 
@@ -92,59 +92,47 @@ function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(thermal_unit::ThermalUnit, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(thermal_unit::ThermalUnit, db::Quiver.Database, period_date_time::DateTime)
 
 Update the time series of the Thermal Unit collection from the database.
 """
 function update_time_series_from_db!(
     thermal_unit::ThermalUnit,
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     period_date_time::DateTime,
 )
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     thermal_unit.existing =
         @memoized_lru "thermal_unit-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
-                db,
-                "ThermalUnit",
-                "existing";
-                date_time = period_date_time,
-            ),
+            Quiver.read_time_series_row(db, "ThermalUnit", "parameters", "existing"; date_time = period_date_time),
             ThermalUnit_Existence.T,
         )
+    # An absent min_generation means "no minimum"; 0.0 is what the accessor
+    # substituted before this resolution moved to load time.
     thermal_unit.min_generation =
-        @memoized_lru "thermal_unit-min_generation-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "min_generation";
-            date_time = period_date_time,
+        @memoized_lru "thermal_unit-min_generation-$date" replace(
+            Quiver.read_time_series_row(
+                db, "ThermalUnit", "parameters", "min_generation"; date_time = period_date_time,
+            ),
+            NaN => 0.0,
         )
     thermal_unit.max_generation =
-        @memoized_lru "thermal_unit-max_generation-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "max_generation";
-            date_time = period_date_time,
+        @memoized_lru "thermal_unit-max_generation-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "max_generation"; date_time = period_date_time,
         )
     thermal_unit.om_cost =
-        @memoized_lru "thermal_unit-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "om_cost";
-            date_time = period_date_time,
+        @memoized_lru "thermal_unit-om_cost-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "om_cost"; date_time = period_date_time,
         )
     thermal_unit.startup_cost =
-        @memoized_lru "thermal_unit-startup_cost-$date" PSRDatabaseSQLite.read_time_series_row(
-            db,
-            "ThermalUnit",
-            "startup_cost";
-            date_time = period_date_time,
+        @memoized_lru "thermal_unit-startup_cost-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "startup_cost"; date_time = period_date_time,
         )
     return nothing
 end
 
 """
-    add_thermal_unit!(db::DatabaseSQLite; kwargs...)
+    add_thermal_unit!(db::Quiver.Database; kwargs...)
 
 Add a Thermal Unit to the database.
 
@@ -211,64 +199,58 @@ IARA.add_thermal_unit!(
 )
 ```
 """
-function add_thermal_unit!(db::DatabaseSQLite; kwargs...)
+function add_thermal_unit!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "ThermalUnit"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "ThermalUnit"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "ThermalUnit", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_thermal_unit!(db::DatabaseSQLite, label::String; kwargs...)
+    update_thermal_unit!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Thermal Unit named 'label' in the database.
 """
 function update_thermal_unit!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
+    id = id_for_label(db, "ThermalUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "ThermalUnit",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element!(db, "ThermalUnit", id; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_thermal_unit_relation!(db::DatabaseSQLite, thermal_unit_label::String; collection::String, relation_type::String, related_label::String)
+    update_thermal_unit_relation!(db::Quiver.Database, thermal_unit_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Thermal Unit named 'label' in the database.
 """
 function update_thermal_unit_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     thermal_unit_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
-        db,
-        "ThermalUnit",
-        collection,
-        thermal_unit_label,
-        related_label,
-        relation_type,
-    )
+    id = id_for_label(db, "ThermalUnit", thermal_unit_label)
+    column = fk_column_name(collection, relation_type)
+    Quiver.update_element!(db, "ThermalUnit", id; Dict(Symbol(column) => related_label)...)
     return db
 end
 
 """
     update_thermal_unit_time_series_parameter!(
-        db::DatabaseSQLite, 
-        label::String, 
-        attribute::String, 
-        value; 
+        db::Quiver.Database,
+        label::String,
+        attribute::String,
+        value;
         dimensions...
     )
 
@@ -276,7 +258,7 @@ Update a Thermal Unit time series parameter in the database for a given dimensio
 
 Arguments:
 
-  - `db::PSRClassesInterface.DatabaseSQLite`: Database
+  - `db::Quiver.Database`: Database
   - `label::String`: Thermal Unit label
   - `attribute::String`: Attribute name
   - `value`: Value to be updated
@@ -294,21 +276,13 @@ IARA.update_thermal_unit_time_series_parameter!(
 ```
 """
 function update_thermal_unit_time_series_parameter!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String,
     attribute::String,
     value;
     dimensions...,
 )
-    PSRI.PSRDatabaseSQLite.update_time_series_row!(
-        db,
-        "ThermalUnit",
-        attribute,
-        label,
-        value;
-        dimensions...,
-    )
-    return db
+    return update_time_series_parameter!(db, "ThermalUnit", "parameters", label, attribute, value; dimensions...)
 end
 
 """
@@ -323,8 +297,7 @@ function validate(thermal_unit::ThermalUnit)
             @error("Thermal Unit Label cannot be empty.")
             num_errors += 1
         end
-        if !is_null(thermal_unit.min_generation[i]) &&
-           thermal_unit.min_generation[i] < 0
+        if thermal_unit.min_generation[i] < 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Min Generation must be non-negative. Current value is $(thermal_unit.min_generation[i])."
             )
@@ -342,43 +315,43 @@ function validate(thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_ramp_up[i]) && thermal_unit.max_ramp_up[i] <= 0
+        if has_max_ramp_up(thermal_unit, i) && thermal_unit.max_ramp_up[i] <= 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Max Ramp Up must be strictly positive. Current value is $(thermal_unit.max_ramp_up[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_ramp_down[i]) && thermal_unit.max_ramp_down[i] <= 0
+        if has_max_ramp_down(thermal_unit, i) && thermal_unit.max_ramp_down[i] <= 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Max Ramp Down must be strictly positive. Current value is $(thermal_unit.max_ramp_down[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.min_uptime[i]) && thermal_unit.min_uptime[i] < 0
+        if !isnothing(thermal_unit.min_uptime[i]) && thermal_unit.min_uptime[i] < 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Min Uptime must be non-negative. Current value is $(thermal_unit.min_uptime[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_uptime[i]) && thermal_unit.max_uptime[i] < 0
+        if !isnothing(thermal_unit.max_uptime[i]) && thermal_unit.max_uptime[i] < 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Max Uptime must be non-negative. Current value is $(thermal_unit.max_uptime[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.min_downtime[i]) && thermal_unit.min_downtime[i] < 0
+        if !isnothing(thermal_unit.min_downtime[i]) && thermal_unit.min_downtime[i] < 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Min Downtime must be non-negative. Current value is $(thermal_unit.min_downtime[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_startups[i]) && thermal_unit.max_startups[i] < 0
+        if !isnothing(thermal_unit.max_startups[i]) && thermal_unit.max_startups[i] < 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Max Startups must be non-negative. Current value is $(thermal_unit.max_startups[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_shutdowns[i]) &&
+        if !isnothing(thermal_unit.max_shutdowns[i]) &&
            thermal_unit.max_shutdowns[i] < 0
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Max Shutdowns must be non-negative. Current value is $(thermal_unit.max_shutdowns[i])."
@@ -397,7 +370,7 @@ function validate(thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.generation_initial_condition[i]) &&
+        if !isnothing(thermal_unit.generation_initial_condition[i]) &&
            (
             thermal_unit.generation_initial_condition[i] < 0 ||
             thermal_unit.generation_initial_condition[i] > thermal_unit.max_generation[i]
@@ -407,20 +380,26 @@ function validate(thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.uptime_initial_condition[i]) &&
+        if !isnothing(thermal_unit.uptime_initial_condition[i]) &&
            (
             thermal_unit.uptime_initial_condition[i] < 0 ||
-            thermal_unit.uptime_initial_condition[i] > thermal_unit.max_uptime[i]
+            (
+                !isnothing(thermal_unit.max_uptime[i]) &&
+                thermal_unit.uptime_initial_condition[i] > thermal_unit.max_uptime[i]
+            )
         )
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Uptime Initial Condition must be non-negative and less than or equal to Max Uptime. Current values are $(thermal_unit.uptime_initial_condition[i]) and $(thermal_unit.max_uptime[i])."
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.downtime_initial_condition[i]) &&
+        if !isnothing(thermal_unit.downtime_initial_condition[i]) &&
            (
             thermal_unit.downtime_initial_condition[i] < 0 ||
-            thermal_unit.downtime_initial_condition[i] > thermal_unit.min_downtime[i]
+            (
+                !isnothing(thermal_unit.min_downtime[i]) &&
+                thermal_unit.downtime_initial_condition[i] > thermal_unit.min_downtime[i]
+            )
         )
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Downtime Initial Condition must be non-negative and less than or equal to Min Downtime. Current values are $(thermal_unit.downtime_initial_condition[i]) and $(thermal_unit.min_downtime[i])."
@@ -433,7 +412,7 @@ function validate(thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.max_uptime[i]) &&
+        if !isnothing(thermal_unit.min_uptime[i]) && !isnothing(thermal_unit.max_uptime[i]) &&
            thermal_unit.min_uptime[i] > thermal_unit.max_uptime[i]
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Min Uptime must be less than or equal to Max Uptime. Current values are $(thermal_unit.min_uptime[i]) and $(thermal_unit.max_uptime[i])."
@@ -477,7 +456,7 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-        if !is_null(thermal_unit.bidding_group_index[i]) &&
+        if has_bidding_group(thermal_unit, i) &&
            !(thermal_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Bidding Group ID $(thermal_unit.bidding_group_index[i]) not found."
@@ -489,31 +468,31 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
             if thermal_unit.has_commitment[i] == ThermalUnit_HasCommitment.HAS_COMMITMENT
                 has_commitment_units = true
             end
-            if !is_null(thermal_unit.startup_cost[i]) && thermal_unit.startup_cost[i] > 0
+            if thermal_unit.startup_cost[i] > 0
                 has_startup_cost = true
             end
-            if !is_null(thermal_unit.shutdown_cost[i]) && thermal_unit.shutdown_cost[i] > 0
+            if thermal_unit.shutdown_cost[i] > 0
                 has_shutdown_cost = true
             end
-            if !is_null(thermal_unit.max_startups[i])
+            if !isnothing(thermal_unit.max_startups[i])
                 has_max_startups = true
             end
-            if !is_null(thermal_unit.max_shutdowns[i])
+            if !isnothing(thermal_unit.max_shutdowns[i])
                 has_max_shutdowns = true
             end
-            if !is_null(thermal_unit.min_uptime[i])
+            if !isnothing(thermal_unit.min_uptime[i])
                 has_min_uptime = true
             end
-            if !is_null(thermal_unit.min_downtime[i])
+            if !isnothing(thermal_unit.min_downtime[i])
                 has_min_downtime = true
             end
-            if !is_null(thermal_unit.generation_initial_condition[i])
+            if !isnothing(thermal_unit.generation_initial_condition[i])
                 has_generation_initial_condition = true
             end
-            if !is_null(thermal_unit.uptime_initial_condition[i])
+            if !isnothing(thermal_unit.uptime_initial_condition[i])
                 has_uptime_initial_condition = true
             end
-            if !is_null(thermal_unit.downtime_initial_condition[i])
+            if !isnothing(thermal_unit.downtime_initial_condition[i])
                 has_downtime_initial_condition = true
             end
             if thermal_unit_min_generation(inputs, i) > 0
@@ -593,7 +572,6 @@ end
 Return the min_generation of the Thermal Unit at index 'idx'.
 """
 thermal_unit_min_generation(inputs::AbstractInputs, idx::Int) =
-    is_null(inputs.collections.thermal_unit.min_generation[idx]) ? 0.0 :
     inputs.collections.thermal_unit.min_generation[idx]
 
 """
@@ -610,7 +588,7 @@ has_commitment(thermal_unit::ThermalUnit, idx::Int) =
 Check if the Thermal Unit at index 'idx' has ramp constraints.
 """
 has_ramp_constraints(thermal_unit::ThermalUnit, idx::Int) =
-    !is_null(thermal_unit.max_ramp_up[idx]) || !is_null(thermal_unit.max_ramp_down[idx])
+    has_max_ramp_up(thermal_unit, idx) || has_max_ramp_down(thermal_unit, idx)
 
 """
     has_max_ramp_up(thermal_unit::ThermalUnit, idx::Int)
@@ -618,7 +596,7 @@ has_ramp_constraints(thermal_unit::ThermalUnit, idx::Int) =
 Check if the Thermal Unit at index 'idx' has a max ramp up limit.
 """
 has_max_ramp_up(thermal_unit::ThermalUnit, idx::Int) =
-    !is_null(thermal_unit.max_ramp_up[idx])
+    !isnothing(thermal_unit.max_ramp_up[idx])
 
 """
     has_max_ramp_down(thermal_unit::ThermalUnit, idx::Int)
@@ -626,7 +604,7 @@ has_max_ramp_up(thermal_unit::ThermalUnit, idx::Int) =
 Check if the Thermal Unit at index 'idx' has a max ramp down limit.
 """
 has_max_ramp_down(thermal_unit::ThermalUnit, idx::Int) =
-    !is_null(thermal_unit.max_ramp_down[idx])
+    !isnothing(thermal_unit.max_ramp_down[idx])
 
 """
     has_commitment_initial_condition(thermal_unit::ThermalUnit, idx::Int)

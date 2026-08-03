@@ -26,7 +26,7 @@ function zonal_physical_generation_expression(
            construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
             [is_existing]
         else
-            [is_existing, has_no_bidding_group]
+            [is_existing, !has_bidding_group]
         end
     hydro_filters =
         if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
@@ -34,7 +34,7 @@ function zonal_physical_generation_expression(
            construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
             [is_existing]
         else
-            [is_existing, has_no_bidding_group, !is_associated_with_some_virtual_reservoir]
+            [is_existing, !has_bidding_group, !is_associated_with_some_virtual_reservoir]
         end
     zones = index_of_elements(inputs, Zone)
     blks = subperiods(inputs)
@@ -249,7 +249,7 @@ function nodal_physical_generation_expression(
            construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
             [is_existing]
         else
-            [is_existing, has_no_bidding_group]
+            [is_existing, !has_bidding_group]
         end
     hydro_filters =
         if run_mode(inputs) == RunMode.TRAIN_MIN_COST ||
@@ -257,7 +257,7 @@ function nodal_physical_generation_expression(
            construction_type(inputs, run_time_options) == Configurations_ConstructionType.COST_BASED
             [is_existing]
         else
-            [is_existing, has_no_bidding_group, !is_associated_with_some_virtual_reservoir]
+            [is_existing, !has_bidding_group, !is_associated_with_some_virtual_reservoir]
         end
     buses = index_of_elements(inputs, Bus)
     blks = subperiods(inputs)

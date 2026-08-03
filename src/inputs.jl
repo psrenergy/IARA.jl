@@ -52,7 +52,7 @@ end
         kwargs...
     )
 
-`create_study!` creates a new study and returns a `PSRClassesInterface.PSRDatabaseSQLite.DatabaseSQLite` object.
+`create_study!` creates a new study and returns a `Quiver.Database` object.
 
 Required arguments:
 
@@ -155,13 +155,13 @@ function create_study!(case_path::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
     sql_typed_kwargs[:label] = "Configuration"
 
-    db = PSRI.create_study(
-        PSRI.PSRDatabaseSQLiteInterface(),
-        joinpath(case_path, "study.iara");
-        force = true,
-        path_migrations_directory = migrations_directory(),
-        sql_typed_kwargs...,
-    )
+    db_path = joinpath(case_path, "study.iara")
+    if isfile(db_path)
+        rm(db_path)
+    end
+
+    db = Quiver.from_migrations(db_path, migrations_directory())
+    Quiver.create_element!(db, "Configuration"; sql_typed_kwargs...)
 
     return db
 end
@@ -176,22 +176,9 @@ Required arguments:
   - `read_only::Bool`: Whether the database should be opened in read-only mode. Default is `true`.
 """
 function load_study(case_path::String; read_only::Bool = true)
-    if read_only
-        return PSRI.load_study(
-            PSRI.PSRDatabaseSQLiteInterface(),
-            joinpath(case_path, "study.iara");
-            read_only,
-        )
-    else
-        # If the database is not read-only, we need to provide the migrations directory
-        # and possibly apply the migrations so that users can run with this version of IARA.
-        path_migrations = migrations_directory()
-        return PSRI.load_study(
-            PSRI.PSRDatabaseSQLiteInterface(),
-            joinpath(case_path, "study.iara"),
-            path_migrations,
-        )
-    end
+    # `read_only` is, for now, intentionally unused: Quiver's `from_migrations` doesn't support a
+    # read-only load against an already-migrated database. 
+    return Quiver.from_migrations(joinpath(case_path, "study.iara"), migrations_directory())
 end
 
 """
@@ -200,7 +187,7 @@ end
 Closes the database.
 """
 function close_study!(db::DatabaseSQLite)
-    PSRI.PSRDatabaseSQLite.close!(db)
+    Quiver.close!(db)
     return nothing
 end
 
@@ -215,7 +202,6 @@ function load_inputs(args::Args)
     # Initialize or allocate all fields from collections
 
     try
-        PSRBridge.initialize!(inputs)
         initialize!(inputs)
     catch e
         clean_up(inputs)
@@ -433,7 +419,7 @@ end
 
 Return the path to the case.
 """
-path_case(db::DatabaseSQLite) = dirname(PSRDatabaseSQLite.database_path(db))
+path_case(db::DatabaseSQLite) = dirname(Quiver.path(db))
 
 """
     buses_represented_for_strategic_bidding(inputs::Inputs)

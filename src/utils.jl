@@ -243,14 +243,6 @@ function variable_aggregation_type(unit::String)
     end
 end
 
-function is_null(value)
-    return PSRI.PSRDatabaseSQLite._is_null_in_db(value)
-end
-
-function null_value(type)
-    return PSRDatabaseSQLite._psrdatabasesqlite_null_value(type)
-end
-
 """
     build_sql_typed_kwargs(kwargs::Dict{Symbol, T}) where T
 
@@ -264,6 +256,30 @@ function build_sql_typed_kwargs(kwargs)
         else
             sql_typed_kwargs[key] = value
         end
+    end
+    return sql_typed_kwargs
+end
+
+"""
+    build_sql_typed_kwargs(df::DataFrames.DataFrame)
+
+Converts a DataFrame's Enum-valued columns to Int columns for SQL purposes, and
+`missing` entries to `nothing` (Quiver's own null-cell convention for time series
+group writes), keeping other columns unchanged.
+"""
+function build_sql_typed_kwargs(df::DataFrames.DataFrame)
+    sql_typed_kwargs = Dict{Symbol, Any}()
+    for col_name in DataFrames.names(df)
+        column = df[!, col_name]
+        is_enum_column = any(v -> !ismissing(v) && v isa EnumX.Enum, column)
+        typed_column = if is_enum_column
+            [ismissing(v) ? nothing : Int(v) for v in column]
+        elseif any(ismissing, column)
+            [ismissing(v) ? nothing : v for v in column]
+        else
+            column
+        end
+        sql_typed_kwargs[Symbol(col_name)] = typed_column
     end
     return sql_typed_kwargs
 end
@@ -379,11 +395,20 @@ IARA.link_time_series_to_file(
 ```
 """
 function link_time_series_to_file(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     table_name::String;
     kwargs...,
 )
-    return PSRI.link_series_to_file(db, table_name; kwargs...)
+    # Quiver.update_time_series_files! replaces every file-link column for the
+    # collection, not just the ones passed: any column not in `paths` is reset to
+    # NULL. Read the current links first so a call that only names one file
+    # doesn't wipe out every other file already linked to this collection.
+    paths = Quiver.read_time_series_files(db, table_name)
+    for (k, v) in kwargs
+        paths[String(k)] = v
+    end
+    Quiver.update_time_series_files!(db, table_name, paths)
+    return nothing
 end
 
 """
@@ -391,8 +416,10 @@ end
 
 Deletes an element from a collection in the database.
 """
-function delete_element!(db::DatabaseSQLite, collection::String, label::String)
-    return PSRI.delete_element!(db, collection, label)
+function delete_element!(db::Quiver.Database, collection::String, label::String)
+    id = id_for_label(db, collection, label)
+    Quiver.delete_element!(db, collection, id)
+    return nothing
 end
 
 function enum_name_to_string(enum::EnumX.Enum)
@@ -419,7 +446,7 @@ function marginal_cost_to_opportunity_cost(
         for blk in subperiods(inputs)
             hydro_opportunity_cost[blk, idx] = water_marginal_cost[blk, h] * marginal_cost_to_opportunity_cost
             downstream_idx = hydro_unit_turbine_to(inputs, h)
-            if !is_null(downstream_idx) && downstream_idx in hydro_unit_indexes
+            if has_relation(downstream_idx) && downstream_idx in hydro_unit_indexes
                 hydro_opportunity_cost[blk, idx] -=
                     water_marginal_cost[blk, downstream_idx] * marginal_cost_to_opportunity_cost
             end
@@ -449,7 +476,7 @@ function marginal_cost_to_opportunity_cost(
         for blk in subperiods(inputs)
             hydro_opportunity_cost[blk, idx] = water_marginal_cost[h] * marginal_cost_to_opportunity_cost
             downstream_idx = hydro_unit_turbine_to(inputs, h)
-            if !is_null(downstream_idx) && downstream_idx in hydro_unit_indexes
+            if has_relation(downstream_idx) && downstream_idx in hydro_unit_indexes
                 hydro_opportunity_cost[blk, idx] -=
                     water_marginal_cost[downstream_idx] * marginal_cost_to_opportunity_cost
             end

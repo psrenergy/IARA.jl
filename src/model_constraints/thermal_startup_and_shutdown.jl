@@ -23,8 +23,8 @@ function thermal_startup_and_shutdown!(
 )
     commitment_indexes =
         index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
-    max_startup_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_max_startups(inputs, t))]
-    max_shutdown_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_max_shutdowns(inputs, t))]
+    max_startup_indexes = [t for t in commitment_indexes if !isnothing(thermal_unit_max_startups(inputs, t))]
+    max_shutdown_indexes = [t for t in commitment_indexes if !isnothing(thermal_unit_max_shutdowns(inputs, t))]
 
     # Model Variables
     thermal_commitment = get_model_object(model, :thermal_commitment)

@@ -13,12 +13,12 @@ function water_to_energy_factors(inputs::AbstractInputs, hydro_units_indices::Ve
     water_to_energy_factors = [NaN for h in 1:maximum(index_of_elements(inputs, HydroUnit))]
     ready_for_calculations_indices = [
         h for h in hydro_units_indices if
-        is_null(hydro_unit_turbine_to(inputs, h)) || !(hydro_unit_turbine_to(inputs, h) in hydro_units_indices)
+        !has_relation(hydro_unit_turbine_to(inputs, h)) || !(hydro_unit_turbine_to(inputs, h) in hydro_units_indices)
     ]
     while !isempty(ready_for_calculations_indices)
         h = popfirst!(ready_for_calculations_indices)
         h_downstream = hydro_unit_turbine_to(inputs, h)
-        water_to_energy_factors[h] = if is_null(h_downstream) || !(h_downstream in hydro_units_indices)
+        water_to_energy_factors[h] = if !has_relation(h_downstream) || !(h_downstream in hydro_units_indices)
             hydro_unit_production_factor(inputs, h) / m3_per_second_to_hm3_per_hour()
         else
             hydro_unit_production_factor(inputs, h) / m3_per_second_to_hm3_per_hour() +
@@ -78,13 +78,13 @@ function energy_from_inflows(
             max(volume[h] + total_inflow_as_volume[h] - (hydro_unit_max_volume(inputs, h) + total_max_turbining), 0) # hm3
 
         vr = hydro_unit_virtual_reservoir_index(inputs, h)
-        if !is_null(vr)
+        if has_relation(vr)
             hydro_unit_additional_energy[h] =
                 (total_inflow_as_volume[h] - total_spillage) * virtual_reservoir_water_to_energy_factors(inputs, vr, h)
         end
 
         h_downstream = hydro_unit_spill_to(inputs, h)
-        if !is_null(h_downstream)
+        if has_relation(h_downstream)
             total_inflow_as_volume[h_downstream] += total_spillage
         end
     end
@@ -129,7 +129,7 @@ function calculate_turbinable_spilled_energy(
             available_volume = hydro_unit_max_volume(inputs, h) - volume[b, h]
 
             vr = hydro_unit_virtual_reservoir_index(inputs, h)
-            if !is_null(vr)
+            if has_relation(vr)
                 hydro_unit_turbinable_spilled_energy[b, h] =
                     virtual_reservoir_water_to_energy_factors(inputs, vr, h) *
                     (spillage[b, h] - max(0, inflow_as_volume[h, b] - max_turbining - available_volume))

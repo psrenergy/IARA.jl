@@ -4,7 +4,7 @@ This section contains guides for developers who want to contribute to the develo
 
 ## How to add a new collection
 
-The database definition of IARA.jl is based on the standards described in the [PSRDatabaseSQLite documentation page](https://psrenergy.github.io/PSRClassesInterface.jl/dev/psrdatabasesqlite/rules).
+The database definition of IARA.jl is managed by [Quiver.jl](https://github.com/psrenergy/Quiver.jl). Follow the conventions of the existing migrations in the `database/migrations` folder when defining a new one.
 
 The first step to add a new collection is to define the tables, attributes and relationships as a migration in the database/migrations folder.
 
@@ -12,8 +12,8 @@ After defining the new collection in the migration file the next step is to crea
 
 ```julia
 initialize!(my_new_collection::MyNewCollection, inputs::AbstractInputs)
-add_my_new_collection!(db::DatabaseSQLite; kwargs...)
-update_my_new_collection!(db::DatabaseSQLite, label::String; kwargs...)
+add_my_new_collection!(db::Quiver.Database; kwargs...)
+update_my_new_collection!(db::Quiver.Database, label::String; kwargs...)
 validate(my_new_collection::MyNewCollection, inputs::AbstractInputs)
 advanced_validations(my_new_collection::MyNewCollection, inputs::AbstractInputs)
 ```
@@ -24,7 +24,7 @@ The last step is to add the new collection to the [`IARA.Collections`](@ref) typ
 
 Whenever a time series varies with time and scenario we advise it to be loaded into the inputs using the [`IARA.ViewFromExternalFile`](@ref) abstraction. 
 
-The first step to create a new time series from external file is to define a time series file in the schema, developers can follow the [PSRDatabaseSQLite documentation page](https://psrenergy.github.io/PSRClassesInterface.jl/dev/psrdatabasesqlite/rules) to define the time series file.
+The first step to create a new time series from external file is to define a time series file in the schema, following the conventions of existing time series file definitions in the `database/migrations` folder.
 
 Once the time series file is defined in the schema and read into a collection developers should add a new field to the [`IARA.TimeSeriesViewsFromExternalFiles`](@ref) struct. The new field should be a subtype of the [`IARA.ViewFromExternalFile`](@ref) and could be an existing subtype or a new subtype.
 

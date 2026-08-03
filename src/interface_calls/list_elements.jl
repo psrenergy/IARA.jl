@@ -118,9 +118,8 @@ function list_virtual_reservoirs(inputs::IARA.AbstractInputs)
     IARA.update_time_series_from_db!(inputs, 1)
 
     # Get initial volumes
-    volume_at_beginning_of_period_1 = Vector{Float64}([
-        IARA.hydro_unit_initial_volume(inputs, h) for h in IARA.index_of_elements(inputs, IARA.HydroUnit)
-    ])
+    volume_at_beginning_of_period_1 =
+        [IARA.hydro_unit_initial_volume(inputs, h) for h in IARA.index_of_elements(inputs, IARA.HydroUnit)]
 
     # Get inflow series for period 1, scenario 1, subscenario 1
     IARA.update_time_series_views_from_external_files!(inputs, run_time_options; period = 1, scenario = 1)

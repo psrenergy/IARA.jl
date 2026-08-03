@@ -696,10 +696,6 @@ Get the maximum generation for the Hydro Unit at index 'idx'.
 """
 hydro_unit_max_generation(inputs::AbstractInputs, idx::Int) =
     if isnothing(inputs.collections.hydro_unit.max_generation[idx])
-        isnothing(inputs.collections.hydro_unit.max_turbining[idx]) && error(
-            "Hydro Unit $(inputs.collections.hydro_unit.label[idx]): one of " *
-            "max_generation or max_turbining must be defined.",
-        )
         hydro_unit_max_turbining(inputs, idx) * hydro_unit_production_factor(inputs, idx)
     else
         inputs.collections.hydro_unit.max_generation[idx]
@@ -725,10 +721,6 @@ end
 
 function hydro_unit_max_available_turbining(inputs::AbstractInputs, idx::Int)
     if isnothing(hydro_unit_max_turbining(inputs, idx))
-        isnothing(inputs.collections.hydro_unit.max_generation[idx]) && error(
-            "Hydro Unit $(inputs.collections.hydro_unit.label[idx]): one of " *
-            "max_generation or max_turbining must be defined.",
-        )
         if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE
             return 0.0
         else
@@ -761,6 +753,11 @@ function hydro_unit_initial_volume(inputs::AbstractInputs, idx::Int)
         else
             inputs.collections.hydro_unit.initial_volume[idx]
         end
+    if isnothing(initial_volume)
+        error(
+            "Hydro Unit $(inputs.collections.hydro_unit.label[idx]): initial volume must be defined.",
+        )
+    end
     if inputs.collections.hydro_unit.initial_volume_type[idx] ==
        HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME
         return hydro_unit_min_volume(inputs, idx) +

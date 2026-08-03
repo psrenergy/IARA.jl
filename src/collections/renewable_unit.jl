@@ -82,22 +82,13 @@ function update_time_series_from_db!(
         @memoized_lru "renewable_unit-max_generation-$date" Quiver.read_time_series_row(
             db, "RenewableUnit", "parameters", "max_generation"; date_time = period_date_time,
         )
-    # Absent om_cost/curtailment_cost mean "no cost"; 0.0 is the neutral element for both.
-    # Quiver.read_time_series_row has no null mask at the C boundary, so an absent
-    # float arrives as NaN.
     renewable_unit.om_cost =
-        @memoized_lru "renewable_unit-om_cost-$date" replace(
-            Quiver.read_time_series_row(
-                db, "RenewableUnit", "parameters", "om_cost"; date_time = period_date_time,
-            ),
-            NaN => 0.0,
+        @memoized_lru "renewable_unit-om_cost-$date" Quiver.read_time_series_row(
+            db, "RenewableUnit", "parameters", "om_cost"; date_time = period_date_time,
         )
     renewable_unit.curtailment_cost =
-        @memoized_lru "renewable_unit-curtailment_cost-$date" replace(
-            Quiver.read_time_series_row(
-                db, "RenewableUnit", "parameters", "curtailment_cost"; date_time = period_date_time,
-            ),
-            NaN => 0.0,
+        @memoized_lru "renewable_unit-curtailment_cost-$date" Quiver.read_time_series_row(
+            db, "RenewableUnit", "parameters", "curtailment_cost"; date_time = period_date_time,
         )
     return nothing
 end
@@ -246,13 +237,13 @@ function validate(renewable_unit::RenewableUnit)
             )
             num_errors += 1
         end
-        if renewable_unit.om_cost[i] < 0
+        if renewable_unit.om_cost[i] < 0 || isnan(renewable_unit.om_cost[i])
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) O&M cost must be non-negative. Current value is $(renewable_unit.om_cost[i])."
             )
             num_errors += 1
         end
-        if renewable_unit.curtailment_cost[i] < 0
+        if renewable_unit.curtailment_cost[i] < 0 || isnan(renewable_unit.curtailment_cost[i])
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Curtailment cost must be non-negative. Current value is $(renewable_unit.curtailment_cost[i])."
             )

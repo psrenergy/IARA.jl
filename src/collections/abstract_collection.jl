@@ -115,7 +115,9 @@ end
 
 Return whether a relation field entry refers to a related element.
 """
-has_relation(index::Int) = index > 0
+function has_relation(index::Int)
+    return index > 0
+end
 
 function has_bidding_group(@nospecialize(c), i::Int)
     return has_relation(c.bidding_group_index[i])

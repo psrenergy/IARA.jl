@@ -124,14 +124,9 @@ function update_time_series_from_db!(
         @memoized_lru "thermal_unit-om_cost-$date" Quiver.read_time_series_row(
             db, "ThermalUnit", "parameters", "om_cost"; date_time = period_date_time,
         )
-    # An absent startup_cost means "free to start". Before this resolution existed the
-    # raw NaN reached the objective at model_variables/thermal_commitment.jl:74.
     thermal_unit.startup_cost =
-        @memoized_lru "thermal_unit-startup_cost-$date" replace(
-            Quiver.read_time_series_row(
-                db, "ThermalUnit", "parameters", "startup_cost"; date_time = period_date_time,
-            ),
-            NaN => 0.0,
+        @memoized_lru "thermal_unit-startup_cost-$date" Quiver.read_time_series_row(
+            db, "ThermalUnit", "parameters", "startup_cost"; date_time = period_date_time,
         )
     return nothing
 end

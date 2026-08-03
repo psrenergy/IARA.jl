@@ -1,7 +1,7 @@
 function get_bidding_group_bid_file_paths(inputs::AbstractInputs)
     bid_files = String[]
     if is_market_clearing(inputs) && any_elements(inputs, BiddingGroup)
-        if read_bids_from_file(inputs) && has_any_bid_simple_input_files(inputs)
+        if read_bids_from_file(inputs)
             quantity_bid_base = joinpath(path_case(inputs), bidding_group_quantity_bid_file(inputs))
             convert_time_series_file_to_binary(quantity_bid_base)
             quantity_bid_path = resolve_binary_file_path(quantity_bid_base)
@@ -46,8 +46,7 @@ end
 function get_virtual_reservoir_bid_file_paths(inputs::AbstractInputs)
     bid_files = String[]
     if is_market_clearing(inputs) && any_elements(inputs, VirtualReservoir)
-        if read_bids_from_file(inputs) && !isnothing(virtual_reservoir_quantity_bid_file(inputs)) &&
-           !isnothing(virtual_reservoir_price_bid_file(inputs))
+        if read_bids_from_file(inputs)
             quantity_bid_base = joinpath(path_case(inputs), virtual_reservoir_quantity_bid_file(inputs))
             convert_time_series_file_to_binary(quantity_bid_base)
             quantity_bid_path = resolve_binary_file_path(quantity_bid_base)

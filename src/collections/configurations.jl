@@ -24,7 +24,7 @@ Configurations for the problem.
     number_of_subperiods::Int = 0
     number_of_nodes::Union{Int, Nothing} = nothing
     number_of_subscenarios::Int = 0
-    train_mincost_iteration_limit::Int = 0
+    train_mincost_iteration_limit::Union{Int, Nothing} = nothing
     train_mincost_time_limit_sec::Union{Int, Nothing} = nothing
     initial_date_time::DateTime = DateTime(0)
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
@@ -145,7 +145,7 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.number_of_subscenarios =
         Quiver.read_scalar_integers(inputs.db, "Configuration", "number_of_subscenarios")[1]
     configurations.train_mincost_iteration_limit =
-        something(Quiver.read_scalar_integers(inputs.db, "Configuration", "train_mincost_iteration_limit")[1], 0)
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "train_mincost_iteration_limit")[1]
     configurations.initial_date_time = DateTime(
         Quiver.read_scalar_strings(inputs.db, "Configuration", "initial_date_time")[1],
         "yyyy-mm-ddTHH:MM:SS",
@@ -420,6 +420,11 @@ function validate(configurations::Configurations)
     if !isnothing(configurations.train_mincost_time_limit_sec) &&
        configurations.train_mincost_time_limit_sec < 0
         @error("train_mincost_time_limit_sec must be non-negative.")
+        num_errors += 1
+    end
+    if !isnothing(configurations.train_mincost_iteration_limit) &&
+       configurations.train_mincost_iteration_limit <= 0
+        @error("train_mincost_iteration_limit must be positive.")
         num_errors += 1
     end
     if configurations.number_of_periods <= 0
@@ -835,11 +840,7 @@ subscenarios(inputs::AbstractInputs, run_time_options) = collect(1:number_of_sub
 Return the iteration limit.
 """
 function train_mincost_iteration_limit(inputs::AbstractInputs)
-    if inputs.collections.configurations.train_mincost_iteration_limit == 0
-        return nothing
-    else
-        return inputs.collections.configurations.train_mincost_iteration_limit
-    end
+    return inputs.collections.configurations.train_mincost_iteration_limit
 end
 
 """

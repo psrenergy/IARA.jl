@@ -727,10 +727,7 @@ function hydro_unit_max_available_turbining(inputs::AbstractInputs, idx::Int)
             return inputs.collections.hydro_unit.max_generation[idx] / hydro_unit_production_factor(inputs, idx)
         end
     else
-        # max_generation is independently optional here -- when it is absent, only
-        # max_turbining constrains the unit.
-        if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE ||
-           isnothing(inputs.collections.hydro_unit.max_generation[idx])
+        if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE
             return hydro_unit_max_turbining(inputs, idx)
         else
             return min(

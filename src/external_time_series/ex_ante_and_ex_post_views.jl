@@ -46,8 +46,9 @@ end
 function initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
     ts::ExAnteAndExPostTimeSeriesView,
     inputs;
-    ex_ante_file_path::AbstractString,
-    ex_post_file_path::AbstractString,
+    directory::AbstractString,
+    ex_ante_file::Union{AbstractString, Nothing},
+    ex_post_file::Union{AbstractString, Nothing},
     files_to_read::Configurations_UncertaintyScenariosFiles.T,
     expected_unit::String = "",
     possible_expected_dimensions::Vector{Vector{Symbol}} = Vector{Vector{Symbol}}(),
@@ -67,7 +68,7 @@ function initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
         num_errors += initialize_time_series_view_from_external_file(
             ts.ex_ante,
             inputs,
-            ex_ante_file_path;
+            joinpath(directory, ex_ante_file);
             expected_unit = expected_unit,
             possible_expected_dimensions = possible_expected_dimensions,
             labels_to_read = labels_to_read,
@@ -78,7 +79,7 @@ function initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
         num_errors += initialize_time_series_view_from_external_file(
             ts.ex_post,
             inputs,
-            ex_post_file_path;
+            joinpath(directory, ex_post_file);
             expected_unit = expected_unit,
             labels_to_read = labels_to_read,
         )

@@ -19,8 +19,8 @@ Collection representing the virtual reservoir.
     asset_owner_indices::Vector{Vector{Int}} = []
     asset_owners_inflow_allocation::Vector{Vector{Float64}} = []
     asset_owners_initial_energy_account_share::Vector{Vector{Float64}} = []
-    quantity_bid_file::String = ""
-    price_bid_file::String = ""
+    quantity_bid_file::Union{String, Nothing} = nothing
+    price_bid_file::Union{String, Nothing} = nothing
     # caches
     initial_energy_account::Vector{Vector{Float64}} = []
     water_to_energy_factors::Vector{Vector{Float64}} = []
@@ -39,26 +39,19 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
         return nothing
     end
 
-    virtual_reservoir.label = read_scalar_strings(inputs.db, "VirtualReservoir", "label")
-    # hydrounit_id/assetowner_id/initial_energy_account_share are all nullable
-    # in the schema
-    virtual_reservoir.hydro_unit_indices = vector_relation_map_preserving_nulls(
-        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_hydro_unit", "HydroUnit", "id",
-    )
-    virtual_reservoir.asset_owner_indices = vector_relation_map_preserving_nulls(
-        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_asset_owner_and_parameters", "AssetOwner", "id",
-    )
-    virtual_reservoir.asset_owners_inflow_allocation = read_vector_floats_preserving_nulls(
-        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_asset_owner_and_parameters", "inflow_allocation",
-    )
-    virtual_reservoir.asset_owners_initial_energy_account_share = read_vector_floats_preserving_nulls(
-        inputs.db, "VirtualReservoir", "VirtualReservoir_vector_asset_owner_and_parameters",
-        "initial_energy_account_share",
-    )
+    virtual_reservoir.label = Quiver.read_scalar_strings(inputs.db, "VirtualReservoir", "label")
+    virtual_reservoir.hydro_unit_indices =
+        Quiver.set_relation_map(inputs.db, "VirtualReservoir", "HydroUnit", "id")
+    virtual_reservoir.asset_owner_indices =
+        Quiver.set_relation_map(inputs.db, "VirtualReservoir", "AssetOwner", "id")
+    virtual_reservoir.asset_owners_inflow_allocation =
+        read_set_floats(inputs.db, "VirtualReservoir", "inflow_allocation")
+    virtual_reservoir.asset_owners_initial_energy_account_share =
+        read_set_floats(inputs.db, "VirtualReservoir", "initial_energy_account_share")
     # Load time series files
     time_series_files = Quiver.read_time_series_files(inputs.db, "VirtualReservoir")
-    virtual_reservoir.quantity_bid_file = something(time_series_files["quantity_bid"], "")
-    virtual_reservoir.price_bid_file = something(time_series_files["price_bid"], "")
+    virtual_reservoir.quantity_bid_file = time_series_files["quantity_bid"]
+    virtual_reservoir.price_bid_file = time_series_files["price_bid"]
     # Initialize caches
     virtual_reservoir.initial_energy_account =
         [zeros(Float64, length(index_of_elements(inputs, AssetOwner))) for vr in 1:num_virtual_reservoirs]
@@ -96,23 +89,11 @@ function validate(virtual_reservoir::VirtualReservoir)
             @error("Virtual reservoir $(virtual_reservoir_label) must be associated with at least one hydro unit.")
             num_errors += 1
         end
-        for j in 1:length(virtual_reservoir.hydro_unit_indices[i])
-            if is_null(virtual_reservoir.hydro_unit_indices[i][j])
-                @error("Hydro unit reference for virtual reservoir $(virtual_reservoir_label) must be fulfilled.")
-                num_errors += 1
-            end
-        end
         if length(virtual_reservoir.asset_owner_indices[i]) == 0
             @error("Virtual reservoir $(virtual_reservoir_label) must have at least one asset owner.")
             num_errors += 1
         end
         for j in 1:length(virtual_reservoir.asset_owner_indices[i])
-            if is_null(virtual_reservoir.asset_owners_inflow_allocation[i][j])
-                @error(
-                    "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be defined."
-                )
-                num_errors += 1
-            end
             if virtual_reservoir.asset_owners_inflow_allocation[i][j] < 0
                 @error(
                     "Inflow allocation for asset owner $(virtual_reservoir.asset_owner_indices[i][j]) in virtual reservoir $(virtual_reservoir_label) must be greater than or equal to zero."
@@ -172,15 +153,6 @@ function advanced_validations(inputs::AbstractInputs, virtual_reservoir::Virtual
             @warn("Hydro unit $(hydro_unit_label) is not associated with any virtual reservoir.")
         end
     end
-    for i in 1:length(virtual_reservoir)
-        virtual_reservoir_label = virtual_reservoir.label[i]
-        if any(is_null, virtual_reservoir.asset_owners_initial_energy_account_share[i])
-            @error(
-                "Initial energy account share for virtual reservoir $(virtual_reservoir_label) must be defined for all asset owners."
-            )
-            num_errors += 1
-        end
-    end
     supply_security_agent =
         findfirst(inputs.collections.asset_owner.price_type .== AssetOwner_PriceType.SUPPLY_SECURITY_AGENT)
     if !isnothing(supply_security_agent)
@@ -225,13 +197,14 @@ Add a VirtualReservoir to the database.
 Required arguments:
 
   - `label::String`: Label of the virtual reservoir
-  - `inflow_allocation::Vector{Float64}`: Inflow allocation of the virtual reservoir
+  - `assetowner_id::Vector{String}`: Asset owner of the virtual reservoir
+  - `hydrounit_id::Vector{String}`: Hydro unit of the virtual reservoir
+  - `inflow_allocation::Vector{Float64}`: Inflow allocation per asset owner
+  - `initial_energy_account_share::Vector{Float64}`: Initial energy account share
+    per asset owner
 
-Optional arguments:
-
-  - `initial_energy_account_share::Vector{Float64}`
-  - `assetowner_id::Vector{Int64}`: Asset owner of the virtual reservoir
-  - `hydrounit_id::Vector{Int64}`: Hydro unit of the virtual reservoir
+`assetowner_id`, `inflow_allocation` and `initial_energy_account_share` share one
+set group and must have equal length.
 
 Example:
 ```julia
@@ -250,15 +223,14 @@ function add_virtual_reservoir!(db::Quiver.Database; kwargs...)
     return nothing
 end
 
-# assetowner_id is a nullable FK in this vector group table, and Quiver's
-# NaN-as-NULL write trick only applies to REAL columns, not INTEGER — so unlike
-# BiddingGroup, this can't go through Quiver.update_element! (whole-row
-# replace) without risking a FOREIGN KEY constraint failure. Writes go straight
-# to SQL instead, one row at a time.
+# assetowner_id, inflow_allocation and initial_energy_account_share share one set
+# group. Quiver's update_element! replaces a whole group rather than patching it. Whenever any
+# member is present in kwargs, read the omitted siblings back so all three are
+# written together.
 """
     update_virtual_reservoir!(db::Quiver.Database, label::String; kwargs...)
 
-Update a VirtualReservoir's vector parameters (`inflow_allocation`,
+Update a VirtualReservoir's set parameters (`inflow_allocation`,
 `initial_energy_account_share`, `assetowner_id`). Only the attributes passed in
 `kwargs` are updated; any omitted attribute is left unchanged.
 """
@@ -266,23 +238,24 @@ function update_virtual_reservoir!(db::Quiver.Database, label::String; kwargs...
     id = id_for_label(db, "VirtualReservoir", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
 
-    vector_table = "VirtualReservoir_vector_asset_owner_and_parameters"
-    vector_attributes = (:inflow_allocation, :initial_energy_account_share, :assetowner_id)
-    row_count = vector_group_row_count(db, vector_table, id)
-
-    for attribute in vector_attributes
-        if haskey(sql_typed_kwargs, attribute)
-            values = sql_typed_kwargs[attribute]
-            @assert length(values) == row_count "Expected $row_count values for '$attribute', got $(length(values))"
-            for (vector_index, value) in enumerate(values)
-                Quiver.query_integer(
-                    db,
-                    "UPDATE $vector_table SET $attribute = ? WHERE id = ? AND vector_index = ?",
-                    Any[value, id, vector_index],
-                )
+    set_attributes = (:assetowner_id, :inflow_allocation, :initial_energy_account_share)
+    if any(haskey(sql_typed_kwargs, attribute) for attribute in set_attributes)
+        row_count = length(Quiver.read_set_integers_by_id(db, "VirtualReservoir", "assetowner_id", id))
+        for attribute in set_attributes
+            if haskey(sql_typed_kwargs, attribute)
+                values = sql_typed_kwargs[attribute]
+                @assert length(values) == row_count "Expected $row_count values for '$attribute', got $(length(values))"
+            elseif attribute == :assetowner_id
+                sql_typed_kwargs[attribute] =
+                    Quiver.read_set_integers_by_id(db, "VirtualReservoir", "assetowner_id", id)
+            else
+                sql_typed_kwargs[attribute] =
+                    Quiver.read_set_floats_by_id(db, "VirtualReservoir", string(attribute), id)
             end
         end
     end
+
+    Quiver.update_element!(db, "VirtualReservoir", id; sql_typed_kwargs...)
 
     return db
 end

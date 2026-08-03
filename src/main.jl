@@ -312,6 +312,9 @@ function simulate_all_periods_and_scenarios_of_market_clearing(
     if is_any_construction_type_hybrid(inputs, run_time_options) &&
        market_clearing_tiebreaker_weight_for_fcf(inputs) > 0 &&
        use_scaled_fcf_in_clearing(inputs)
+        if !has_fcf_cuts_to_read(inputs)
+            error("Attempted to scale FCF cuts but no FCF cuts file was provided.")
+        end
         cuts_file = fcf_cuts_file(inputs)
         scaled_cuts_file = "scaled_$(cuts_file)"
         cuts_path = joinpath(path_case(inputs), cuts_file)
@@ -506,6 +509,9 @@ function simulate_all_scenarios_of_single_period_market_clearing(
     if is_any_construction_type_hybrid(inputs, run_time_options) &&
        market_clearing_tiebreaker_weight_for_fcf(inputs) > 0 &&
        use_scaled_fcf_in_clearing(inputs)
+        if !has_fcf_cuts_to_read(inputs)
+            error("Attempted to scale FCF cuts but no FCF cuts file was provided.")
+        end
         cuts_file = fcf_cuts_file(inputs)
         scaled_cuts_file = "scaled_$(cuts_file)"
         cuts_path = joinpath(path_case(inputs), cuts_file)

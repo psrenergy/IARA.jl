@@ -21,20 +21,20 @@ DemandUnit collection definition.
     label::Vector{String} = []
     demand_unit_type::Vector{DemandUnit_DemandType.T} = []
     existing::Vector{DemandUnit_Existence.T} = []
-    max_shift_up_flexible_demand::Vector{Float64} = []
-    max_shift_down_flexible_demand::Vector{Float64} = []
-    curtailment_cost_flexible_demand::Vector{Float64} = []
-    max_curtailment_flexible_demand::Vector{Float64} = []
+    max_shift_up_flexible_demand::Vector{Union{Float64, Nothing}} = []
+    max_shift_down_flexible_demand::Vector{Union{Float64, Nothing}} = []
+    curtailment_cost_flexible_demand::Vector{Union{Float64, Nothing}} = []
+    max_curtailment_flexible_demand::Vector{Union{Float64, Nothing}} = []
     max_demand::Vector{Float64} = []
     # index of the bus to which the demand unit belongs in the collection Bus
     bus_index::Vector{Int} = []
     # index of the bidding_group to which the demand unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
 
-    demand_ex_ante_file::String = ""
-    demand_ex_post_file::String = ""
-    elastic_demand_price_file::String = ""
-    window_file::String = ""
+    demand_ex_ante_file::Union{String, Nothing} = nothing
+    demand_ex_post_file::Union{String, Nothing} = nothing
+    elastic_demand_price_file::Union{String, Nothing} = nothing
+    window_file::Union{String, Nothing} = nothing
     # cache
     _number_of_flexible_demand_windows::Vector{Int} = Vector{Int}(undef, 0)
     _subperiods_in_flexible_demand_window::Vector{Vector{Vector{Int}}} =
@@ -56,29 +56,29 @@ function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
         return nothing
     end
 
-    demand_unit.label = read_scalar_strings(inputs.db, "DemandUnit", "label")
+    demand_unit.label = Quiver.read_scalar_strings(inputs.db, "DemandUnit", "label")
     demand_unit.demand_unit_type =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "DemandUnit", "demand_unit_type"),
+            Quiver.read_scalar_integers(inputs.db, "DemandUnit", "demand_unit_type"),
             DemandUnit_DemandType.T,
         )
     demand_unit.max_shift_up_flexible_demand =
-        read_scalar_floats(inputs.db, "DemandUnit", "max_shift_up_flexible_demand")
+        Quiver.read_scalar_floats(inputs.db, "DemandUnit", "max_shift_up_flexible_demand")
     demand_unit.max_shift_down_flexible_demand =
-        read_scalar_floats(inputs.db, "DemandUnit", "max_shift_down_flexible_demand")
+        Quiver.read_scalar_floats(inputs.db, "DemandUnit", "max_shift_down_flexible_demand")
     demand_unit.curtailment_cost_flexible_demand =
-        read_scalar_floats(inputs.db, "DemandUnit", "curtailment_cost_flexible_demand")
+        Quiver.read_scalar_floats(inputs.db, "DemandUnit", "curtailment_cost_flexible_demand")
     demand_unit.max_curtailment_flexible_demand =
-        read_scalar_floats(inputs.db, "DemandUnit", "max_curtailment_flexible_demand")
-    demand_unit.bus_index = scalar_relation_map(inputs.db, "DemandUnit", "Bus", "id")
-    demand_unit.bidding_group_index = scalar_relation_map(inputs.db, "DemandUnit", "BiddingGroup", "id")
-    demand_unit.max_demand = read_scalar_floats(inputs.db, "DemandUnit", "max_demand")
+        Quiver.read_scalar_floats(inputs.db, "DemandUnit", "max_curtailment_flexible_demand")
+    demand_unit.bus_index = Quiver.scalar_relation_map(inputs.db, "DemandUnit", "Bus", "id")
+    demand_unit.bidding_group_index = Quiver.scalar_relation_map(inputs.db, "DemandUnit", "BiddingGroup", "id")
+    demand_unit.max_demand = Quiver.read_scalar_floats(inputs.db, "DemandUnit", "max_demand")
 
     time_series_files = Quiver.read_time_series_files(inputs.db, "DemandUnit")
-    demand_unit.demand_ex_ante_file = something(time_series_files["demand_ex_ante"], "")
-    demand_unit.demand_ex_post_file = something(time_series_files["demand_ex_post"], "")
-    demand_unit.elastic_demand_price_file = something(time_series_files["elastic_demand_price"], "")
-    demand_unit.window_file = something(time_series_files["demand_window"], "")
+    demand_unit.demand_ex_ante_file = time_series_files["demand_ex_ante"]
+    demand_unit.demand_ex_post_file = time_series_files["demand_ex_post"]
+    demand_unit.elastic_demand_price_file = time_series_files["elastic_demand_price"]
+    demand_unit.window_file = time_series_files["demand_window"]
 
     update_time_series_from_db!(demand_unit, inputs.db, initial_date_time(inputs))
 
@@ -212,19 +212,22 @@ function validate(demand_unit::DemandUnit)
             @error("Demand Unit Label cannot be empty.")
             num_errors += 1
         end
-        if demand_unit.max_shift_up_flexible_demand[i] < 0
+        if !isnothing(demand_unit.max_shift_up_flexible_demand[i]) && demand_unit.max_shift_up_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Max Shift Up must be non-negative.")
             num_errors += 1
         end
-        if demand_unit.max_shift_down_flexible_demand[i] < 0
+        if !isnothing(demand_unit.max_shift_down_flexible_demand[i]) &&
+           demand_unit.max_shift_down_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Max Shift Down must be non-negative.")
             num_errors += 1
         end
-        if demand_unit.curtailment_cost_flexible_demand[i] < 0
+        if !isnothing(demand_unit.curtailment_cost_flexible_demand[i]) &&
+           demand_unit.curtailment_cost_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Curtailment Cost must be non-negative.")
             num_errors += 1
         end
-        if demand_unit.max_curtailment_flexible_demand[i] < 0
+        if !isnothing(demand_unit.max_curtailment_flexible_demand[i]) &&
+           demand_unit.max_curtailment_flexible_demand[i] < 0
             @error("Demand Unit $(demand_unit.label[i]) Max Curtailment must be non-negative.")
             num_errors += 1
         end
@@ -233,7 +236,7 @@ function validate(demand_unit::DemandUnit)
             num_errors += 1
         end
         if demand_unit.demand_unit_type[i] == DemandUnit_DemandType.FLEXIBLE
-            if is_null(demand_unit.max_shift_up_flexible_demand[i])
+            if isnothing(demand_unit.max_shift_up_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Shift Up must be defined for flexible demands."
                 )
@@ -244,7 +247,7 @@ function validate(demand_unit::DemandUnit)
                 )
                 num_errors += 1
             end
-            if is_null(demand_unit.max_shift_down_flexible_demand[i])
+            if isnothing(demand_unit.max_shift_down_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Shift Down must be defined for flexible demands."
                 )
@@ -255,7 +258,7 @@ function validate(demand_unit::DemandUnit)
                 )
                 num_errors += 1
             end
-            if is_null(demand_unit.curtailment_cost_flexible_demand[i])
+            if isnothing(demand_unit.curtailment_cost_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Curtailment Cost must be defined for flexible demands."
                 )
@@ -266,7 +269,7 @@ function validate(demand_unit::DemandUnit)
                 )
                 num_errors += 1
             end
-            if is_null(demand_unit.max_curtailment_flexible_demand[i])
+            if isnothing(demand_unit.max_curtailment_flexible_demand[i])
                 @error(
                     "Demand Unit $(demand_unit.label[i]) Max Curtailment must be defined for flexible demands."
                 )
@@ -280,7 +283,7 @@ function validate(demand_unit::DemandUnit)
         end
     end
     if any(isequal(DemandUnit_DemandType.FLEXIBLE), demand_unit.demand_unit_type)
-        if isempty(demand_unit.window_file)
+        if isnothing(demand_unit.window_file)
             @error("Demand Unit $(demand_unit.label) Window File must be defined for flexible demands.")
             num_errors += 1
         end
@@ -303,30 +306,30 @@ function advanced_validations(inputs::AbstractInputs, demand_unit::DemandUnit)
             num_errors += 1
         end
     end
-    if read_ex_ante_demand_file(inputs) && demand_unit.demand_ex_ante_file == "" && length(demand_unit) > 0
+    if read_ex_ante_demand_file(inputs) && isnothing(demand_unit.demand_ex_ante_file) && length(demand_unit) > 0
         @error(
             "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but no ex_ante demand file was linked."
         )
         num_errors += 1
     end
-    if read_ex_post_demand_file(inputs) && demand_unit.demand_ex_post_file == "" && length(demand_unit) > 0
+    if read_ex_post_demand_file(inputs) && isnothing(demand_unit.demand_ex_post_file) && length(demand_unit) > 0
         @error(
             "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), but no ex_post demand file was linked."
         )
         num_errors += 1
     end
-    if !read_ex_ante_demand_file(inputs) && demand_unit.demand_ex_ante_file != "" && length(demand_unit) > 0
+    if !read_ex_ante_demand_file(inputs) && !isnothing(demand_unit.demand_ex_ante_file) && length(demand_unit) > 0
         @warn(
             "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), " *
             "but an ex_ante demand file was linked. This file will be ignored.")
     end
-    if !read_ex_post_demand_file(inputs) && demand_unit.demand_ex_post_file != "" && length(demand_unit) > 0
+    if !read_ex_post_demand_file(inputs) && !isnothing(demand_unit.demand_ex_post_file) && length(demand_unit) > 0
         @warn(
             "The option demand_scenarios_files is set to $(demand_scenarios_files(inputs)), " *
             "but an ex_post demand file was linked. This file will be ignored.")
     end
     if any(isequal(DemandUnit_DemandType.ELASTIC), demand_unit.demand_unit_type) && need_demand_price_input_data(inputs)
-        if isempty(demand_unit.elastic_demand_price_file)
+        if isnothing(demand_unit.elastic_demand_price_file)
             @error("Demand Unit $(demand_unit.label) Elastic Demand Price File must be defined for elastic demands.")
             num_errors += 1
         end

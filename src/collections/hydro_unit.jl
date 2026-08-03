@@ -19,19 +19,19 @@ Hydro units are high-level data structures that represent hydro electricity gene
 @collection @kwdef mutable struct HydroUnit <: AbstractCollection
     label::Vector{String} = []
     existing::Vector{HydroUnit_Existence.T} = []
-    max_generation::Vector{Float64} = []
+    max_generation::Vector{Union{Float64, Nothing}} = []
     production_factor::Vector{Float64} = []
-    max_turbining::Vector{Float64} = []
+    max_turbining::Vector{Union{Float64, Nothing}} = []
     min_volume::Vector{Float64} = []
     max_volume::Vector{Float64} = []
-    initial_volume::Vector{Float64} = []
+    initial_volume::Vector{Union{Float64, Nothing}} = []
     initial_volume_type::Vector{HydroUnit_InitialVolumeDataType.T} = []
     initial_volume_variation_type::Vector{HydroUnit_InitialVolumeVariationType.T} = []
     min_outflow::Vector{Float64} = []
     om_cost::Vector{Float64} = []
     has_commitment::Vector{HydroUnit_HasCommitment.T} = []
     intra_period_operation::Vector{HydroUnit_IntraPeriodOperation.T} = []
-    min_generation::Vector{Float64} = []
+    min_generation::Vector{Union{Float64, Nothing}} = []
     minimum_outflow_violation_cost::Vector{Float64} = []
     minimum_outflow_violation_benchmark::Vector{Float64} = []
     spillage_cost::Vector{Float64} = []
@@ -45,9 +45,9 @@ Hydro units are high-level data structures that represent hydro electricity gene
     turbine_to::Vector{Int} = []
     # index of the downstream spillage hydro Plant in the collection HydroUnit
     spill_to::Vector{Int} = []
-    inflow_ex_ante_file::String = ""
-    inflow_ex_post_file::String = ""
-    initial_volume_by_scenario_file::String = ""
+    inflow_ex_ante_file::Union{String, Nothing} = nothing
+    inflow_ex_post_file::Union{String, Nothing} = nothing
+    initial_volume_by_scenario_file::Union{String, Nothing} = nothing
 
     # caches
     is_associated_with_some_virtual_reservoir::Vector{Bool} = []
@@ -69,48 +69,51 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
         return nothing
     end
 
-    hydro_unit.label = read_scalar_strings(inputs.db, "HydroUnit", "label")
-    hydro_unit.initial_volume = read_scalar_floats(inputs.db, "HydroUnit", "initial_volume")
+    hydro_unit.label = Quiver.read_scalar_strings(inputs.db, "HydroUnit", "label")
+    hydro_unit.initial_volume = Quiver.read_scalar_floats(inputs.db, "HydroUnit", "initial_volume")
     hydro_unit.initial_volume_type =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "HydroUnit", "initial_volume_type"),
+            Quiver.read_scalar_integers(inputs.db, "HydroUnit", "initial_volume_type"),
             HydroUnit_InitialVolumeDataType.T,
         )
     hydro_unit.initial_volume_variation_type =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "HydroUnit", "initial_volume_variation_type"),
+            Quiver.read_scalar_integers(inputs.db, "HydroUnit", "initial_volume_variation_type"),
             HydroUnit_InitialVolumeVariationType.T,
         )
     hydro_unit.intra_period_operation =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "HydroUnit", "intra_period_operation"),
+            Quiver.read_scalar_integers(inputs.db, "HydroUnit", "intra_period_operation"),
             HydroUnit_IntraPeriodOperation.T,
         )
     hydro_unit.has_commitment =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "HydroUnit", "has_commitment"),
+            Quiver.read_scalar_integers(inputs.db, "HydroUnit", "has_commitment"),
             HydroUnit_HasCommitment.T,
         )
+    # Absence means no penalty. Resolving here keeps the field dense; `validate` already warns
+    # that a zero cost disables the minimum outflow, so absence gets a diagnostic.
     hydro_unit.minimum_outflow_violation_cost =
-        read_scalar_floats(inputs.db, "HydroUnit", "minimum_outflow_violation_cost")
+        something.(Quiver.read_scalar_floats(inputs.db, "HydroUnit", "minimum_outflow_violation_cost"), 0.0)
     hydro_unit.minimum_outflow_violation_benchmark =
-        read_scalar_floats(inputs.db, "HydroUnit", "minimum_outflow_violation_benchmark")
-    hydro_unit.spillage_cost = read_scalar_floats(inputs.db, "HydroUnit", "spillage_cost")
+        Quiver.read_scalar_floats(inputs.db, "HydroUnit", "minimum_outflow_violation_benchmark")
+    hydro_unit.spillage_cost = Quiver.read_scalar_floats(inputs.db, "HydroUnit", "spillage_cost")
 
-    hydro_unit.bus_index = scalar_relation_map(inputs.db, "HydroUnit", "Bus", "id")
-    hydro_unit.bidding_group_index = scalar_relation_map(inputs.db, "HydroUnit", "BiddingGroup", "id")
-    hydro_unit.gauging_station_index = scalar_relation_map(inputs.db, "HydroUnit", "GaugingStation", "id")
-    hydro_unit.turbine_to = scalar_relation_map(inputs.db, "HydroUnit", "HydroUnit", "turbine_to")
-    hydro_unit.spill_to = scalar_relation_map(inputs.db, "HydroUnit", "HydroUnit", "spill_to")
+    hydro_unit.bus_index = Quiver.scalar_relation_map(inputs.db, "HydroUnit", "Bus", "id")
+    hydro_unit.bidding_group_index = Quiver.scalar_relation_map(inputs.db, "HydroUnit", "BiddingGroup", "id")
+    hydro_unit.gauging_station_index = Quiver.scalar_relation_map(inputs.db, "HydroUnit", "GaugingStation", "id")
+    hydro_unit.turbine_to = Quiver.scalar_relation_map(inputs.db, "HydroUnit", "HydroUnit", "turbine_to")
+    hydro_unit.spill_to = Quiver.scalar_relation_map(inputs.db, "HydroUnit", "HydroUnit", "spill_to")
 
     # Load time series files
     time_series_files = Quiver.read_time_series_files(inputs.db, "HydroUnit")
-    hydro_unit.inflow_ex_ante_file = something(time_series_files["inflow_ex_ante"], "")
-    hydro_unit.inflow_ex_post_file = something(time_series_files["inflow_ex_post"], "")
-    hydro_unit.initial_volume_by_scenario_file = something(time_series_files["initial_volume_by_scenario"], "")
+    hydro_unit.inflow_ex_ante_file = time_series_files["inflow_ex_ante"]
+    hydro_unit.inflow_ex_post_file = time_series_files["inflow_ex_post"]
+    hydro_unit.initial_volume_by_scenario_file = time_series_files["initial_volume_by_scenario"]
 
     hydro_unit.is_associated_with_some_virtual_reservoir = zeros(Bool, num_hydro_units)
-    hydro_unit.virtual_reservoir_index = fill(null_value(Int), num_hydro_units)
+    # -1 is the "no relation" convention
+    hydro_unit.virtual_reservoir_index = fill(-1, num_hydro_units)
 
     update_time_series_from_db!(hydro_unit, inputs.db, initial_date_time(inputs))
 
@@ -137,17 +140,29 @@ function update_time_series_from_db!(
         @memoized_lru "hydro_unit-production_factor-$date" Quiver.read_time_series_row(
             db, "HydroUnit", "parameters", "production_factor"; date_time = period_date_time,
         )
+    # Absence cannot resolve to a constant for these three -- min_generation is a
+    # validated error (below), and max_generation/max_turbining fall back to each other
+    # via a per-unit computation (see hydro_unit_max_generation / hydro_unit_max_available_turbining).
     hydro_unit.min_generation =
-        @memoized_lru "hydro_unit-min_generation-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "min_generation"; date_time = period_date_time,
+        @memoized_lru "hydro_unit-min_generation-$date" replace(
+            Quiver.read_time_series_row(
+                db, "HydroUnit", "parameters", "min_generation"; date_time = period_date_time,
+            ),
+            NaN => nothing,
         )
     hydro_unit.max_generation =
-        @memoized_lru "hydro_unit-max_generation-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "max_generation"; date_time = period_date_time,
+        @memoized_lru "hydro_unit-max_generation-$date" replace(
+            Quiver.read_time_series_row(
+                db, "HydroUnit", "parameters", "max_generation"; date_time = period_date_time,
+            ),
+            NaN => nothing,
         )
     hydro_unit.max_turbining =
-        @memoized_lru "hydro_unit-max_turbining-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "max_turbining"; date_time = period_date_time,
+        @memoized_lru "hydro_unit-max_turbining-$date" replace(
+            Quiver.read_time_series_row(
+                db, "HydroUnit", "parameters", "max_turbining"; date_time = period_date_time,
+            ),
+            NaN => nothing,
         )
     hydro_unit.min_volume =
         @memoized_lru "hydro_unit-min_volume-$date" Quiver.read_time_series_row(
@@ -183,7 +198,7 @@ Required arguments:
 
 Optional arguments:
 
-  - `initial_volume::Float64`: Initial volume of the hydro unit
+  - `initial_volume::Union{Float64, Nothing}`: Initial volume of the hydro unit
   - `initial_volume_type::Int64`: Initial volume type of the hydro unit
     + `0` [Per Unit]
     + `2` [Volume] <default>
@@ -448,13 +463,13 @@ function validate(hydro_unit::HydroUnit)
             @error("Hydro Unit Label cannot be empty.")
             num_errors += 1
         end
-        if hydro_unit.max_generation[i] < 0
+        if !isnothing(hydro_unit.max_generation[i]) && hydro_unit.max_generation[i] < 0
             @error(
                 "Hydro Unit $(hydro_unit.label[i]) Maximum generation must be non-negative. Current value is $(hydro_unit.max_generation[i])."
             )
             num_errors += 1
         end
-        if hydro_unit.max_turbining[i] < 0
+        if !isnothing(hydro_unit.max_turbining[i]) && hydro_unit.max_turbining[i] < 0
             @error(
                 "Hydro Unit $(hydro_unit.label[i]) Maximum turbining must be non-negative. Current value is $(hydro_unit.max_turbining[i])."
             )
@@ -472,7 +487,10 @@ function validate(hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if hydro_unit.initial_volume[i] < 0
+        if isnothing(hydro_unit.initial_volume[i])
+            @error("Hydro Unit $(hydro_unit.label[i]) Initial volume must be defined.")
+            num_errors += 1
+        elseif hydro_unit.initial_volume[i] < 0
             @error(
                 "Hydro Unit $(hydro_unit.label[i]) Initial volume must be non-negative. Current value is $(hydro_unit.initial_volume[i])."
             )
@@ -490,7 +508,8 @@ function validate(hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if hydro_unit.initial_volume_variation_type[i] == HydroUnit_InitialVolumeVariationType.CONSTANT_VALUE
+        if hydro_unit.initial_volume_variation_type[i] == HydroUnit_InitialVolumeVariationType.CONSTANT_VALUE &&
+           !isnothing(hydro_unit.initial_volume[i])
             if hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME &&
                !(0.0 <= hydro_unit.initial_volume[i] <= 1.0)
                 @error(
@@ -506,7 +525,7 @@ function validate(hydro_unit::HydroUnit)
                 num_errors += 1
             end
         end
-        if !is_null(hydro_unit.turbine_to[i]) &&
+        if has_relation(hydro_unit.turbine_to[i]) &&
            !(hydro_unit.turbine_to[i] in 1:length(hydro_unit))
             @error(
                 "Hydro Unit $(hydro_unit.label[i]) downstream turbining Hydro Unit $(hydro_unit.turbine_to[i]) not found."
@@ -519,7 +538,7 @@ function validate(hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if !is_null(hydro_unit.spill_to[i]) &&
+        if has_relation(hydro_unit.spill_to[i]) &&
            !(hydro_unit.spill_to[i] in 1:length(hydro_unit))
             @error(
                 "Hydro Unit $(hydro_unit.label[i]) downstream spillage Hydro Unit $(hydro_unit.spill_to[i]) not found."
@@ -533,7 +552,7 @@ function validate(hydro_unit::HydroUnit)
             num_errors += 1
         end
         if hydro_unit.has_commitment[i] == HydroUnit_HasCommitment.HAS_COMMITMENT
-            if is_null(hydro_unit.min_generation[i])
+            if isnothing(hydro_unit.min_generation[i])
                 @error(
                     "Hydro Unit $(hydro_unit.label[i]) Minimum generation must be defined if it has commitment."
                 )
@@ -577,7 +596,7 @@ function validate(hydro_unit::HydroUnit)
         end
     end
     if any(hydro_unit.initial_volume_variation_type .== HydroUnit_InitialVolumeVariationType.BY_SCENARIO)
-        if isempty(hydro_unit.initial_volume_by_scenario_file)
+        if isnothing(hydro_unit.initial_volume_by_scenario_file)
             @error(
                 "At least one Hydro Unit has initial volume variation type set to `BY_SCENARIO`, but no initial volume by scenario file was linked."
             )
@@ -607,7 +626,7 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
             )
             num_errors += 1
         end
-        if !is_null(hydro_unit.bidding_group_index[i]) &&
+        if has_bidding_group(hydro_unit, i) &&
            !(hydro_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Hydro Unit $(hydro_unit.label[i]) Bidding Group ID $(hydro_unit.bidding_group_index[i]) not found."
@@ -616,7 +635,7 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
         end
         if any_elements(inputs, VirtualReservoir)
             if i in union(virtual_reservoir_hydro_unit_indices(inputs)...)
-                if is_null(hydro_unit.bidding_group_index[i])
+                if !has_bidding_group(hydro_unit, i)
                     @error(
                         "Hydro Unit $(hydro_unit.label[i]) is associated with a Virtual Reservoir and must have a Bidding Group for remuneration calculations."
                     )
@@ -632,32 +651,32 @@ function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
         end
     end
     if read_inflow_from_file(inputs)
-        if read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file == "" && length(hydro_unit) > 0
+        if read_ex_ante_inflow_file(inputs) && isnothing(hydro_unit.inflow_ex_ante_file) && length(hydro_unit) > 0
             @error(
                 "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_ante inflow file was linked."
             )
             num_errors += 1
         end
-        if read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file == "" && length(hydro_unit) > 0
+        if read_ex_post_inflow_file(inputs) && isnothing(hydro_unit.inflow_ex_post_file) && length(hydro_unit) > 0
             @error(
                 "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but no ex_post inflow file was linked."
             )
             num_errors += 1
         end
-        if !read_ex_ante_inflow_file(inputs) && hydro_unit.inflow_ex_ante_file != "" && length(hydro_unit) > 0
+        if !read_ex_ante_inflow_file(inputs) && !isnothing(hydro_unit.inflow_ex_ante_file) && length(hydro_unit) > 0
             @warn(
                 "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_ante inflow file was linked.
                 This file will be ignored."
             )
         end
-        if !read_ex_post_inflow_file(inputs) && hydro_unit.inflow_ex_post_file != "" && length(hydro_unit) > 0
+        if !read_ex_post_inflow_file(inputs) && !isnothing(hydro_unit.inflow_ex_post_file) && length(hydro_unit) > 0
             @warn(
                 "The option inflow_scenarios_files is set to $(inflow_scenarios_files(inputs)), but an ex_post inflow file was linked.
                 This file will be ignored."
             )
         end
     end
-    if some_initial_volume_varies_by_scenario(inputs) && hydro_unit.initial_volume_by_scenario_file != ""
+    if some_initial_volume_varies_by_scenario(inputs) && !isnothing(hydro_unit.initial_volume_by_scenario_file)
         @warn(
             "An `initial_volume_by_scenario` file was provided. Please note that its unit is not considered, " *
             "and the initial volume unit is instead determined individually for each hydro unit by the `initial_volume_type` field."
@@ -676,7 +695,11 @@ end
 Get the maximum generation for the Hydro Unit at index 'idx'.
 """
 hydro_unit_max_generation(inputs::AbstractInputs, idx::Int) =
-    if is_null(inputs.collections.hydro_unit.max_generation[idx])
+    if isnothing(inputs.collections.hydro_unit.max_generation[idx])
+        isnothing(inputs.collections.hydro_unit.max_turbining[idx]) && error(
+            "Hydro Unit $(inputs.collections.hydro_unit.label[idx]): one of " *
+            "max_generation or max_turbining must be defined.",
+        )
         hydro_unit_max_turbining(inputs, idx) * hydro_unit_production_factor(inputs, idx)
     else
         inputs.collections.hydro_unit.max_generation[idx]
@@ -692,7 +715,7 @@ function hydro_unit_downstream_cumulative_production_factor(inputs::AbstractInpu
 end
 
 function hydro_unit_downstream_cumulative_production_factor(hydro_unit::HydroUnit, idx::Int)
-    if is_null(hydro_unit.turbine_to[idx])
+    if !has_relation(hydro_unit.turbine_to[idx])
         return hydro_unit.production_factor[idx]
     else
         return hydro_unit.production_factor[idx] +
@@ -701,14 +724,21 @@ function hydro_unit_downstream_cumulative_production_factor(hydro_unit::HydroUni
 end
 
 function hydro_unit_max_available_turbining(inputs::AbstractInputs, idx::Int)
-    if is_null(hydro_unit_max_turbining(inputs, idx))
+    if isnothing(hydro_unit_max_turbining(inputs, idx))
+        isnothing(inputs.collections.hydro_unit.max_generation[idx]) && error(
+            "Hydro Unit $(inputs.collections.hydro_unit.label[idx]): one of " *
+            "max_generation or max_turbining must be defined.",
+        )
         if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE
             return 0.0
         else
             return inputs.collections.hydro_unit.max_generation[idx] / hydro_unit_production_factor(inputs, idx)
         end
     else
-        if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE
+        # max_generation is independently optional here -- when it is absent, only
+        # max_turbining constrains the unit.
+        if hydro_unit_production_factor(inputs, idx) <= DEFAULT_TOLERANCE ||
+           isnothing(inputs.collections.hydro_unit.max_generation[idx])
             return hydro_unit_max_turbining(inputs, idx)
         else
             return min(

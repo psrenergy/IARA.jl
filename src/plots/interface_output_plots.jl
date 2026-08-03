@@ -723,8 +723,8 @@ function plot_bid_curve(inputs::AbstractInputs, plots_path::String)
                 demand_name = "net_demand"
             end
             # Add back the ex-ante value of renewable bids
-            if any_elements(inputs, RenewableUnit; filters = [!has_no_bidding_group])
-                ex_ante_generation, _ = get_renewable_generation_to_plot(inputs; filters = [!has_no_bidding_group])
+            if any_elements(inputs, RenewableUnit; filters = [has_bidding_group])
+                ex_ante_generation, _ = get_renewable_generation_to_plot(inputs; filters = [has_bidding_group])
                 ex_ante_demand = ex_ante_demand .+ ex_ante_generation
                 num_subscenarios = size(ex_post_demand, 1)
                 for s in 1:num_subscenarios

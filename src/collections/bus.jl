@@ -21,8 +21,8 @@ Collection representing the buses in the system.
     label::Vector{String} = []
     # index of the zone to which the bus belongs in the collection Zone
     zone_index::Vector{Int} = []
-    latitude::Vector{Float64} = []
-    longitude::Vector{Float64} = []
+    latitude::Vector{Union{Float64, Nothing}} = []
+    longitude::Vector{Union{Float64, Nothing}} = []
 end
 
 # ---------------------------------------------------------------------
@@ -40,10 +40,10 @@ function initialize!(bus::Bus, inputs::AbstractInputs)
         return nothing
     end
 
-    bus.label = read_scalar_strings(inputs.db, "Bus", "label")
-    bus.zone_index = scalar_relation_map(inputs.db, "Bus", "Zone", "id")
-    bus.latitude = read_scalar_floats(inputs.db, "Bus", "latitude")
-    bus.longitude = read_scalar_floats(inputs.db, "Bus", "longitude")
+    bus.label = Quiver.read_scalar_strings(inputs.db, "Bus", "label")
+    bus.zone_index = Quiver.scalar_relation_map(inputs.db, "Bus", "Zone", "id")
+    bus.latitude = Quiver.read_scalar_floats(inputs.db, "Bus", "latitude")
+    bus.longitude = Quiver.read_scalar_floats(inputs.db, "Bus", "longitude")
 
     update_time_series_from_db!(bus, inputs.db, initial_date_time(inputs))
 
@@ -65,8 +65,8 @@ Required arguments:
 
 Optional arguments:
 
-  - `latitude::Float64`: Latitude of the bus
-  - `longitude::Float64`: Longitude of the bus
+  - `latitude::Union{Float64, Nothing}`: Latitude of the bus
+  - `longitude::Union{Float64, Nothing}`: Longitude of the bus
   - `zone_id::Int64`: Zone of the bus
 
 Example:

@@ -178,7 +178,7 @@ function calculate_incremental_inflow(inputs::Inputs, total_inflow::Vector{Vecto
     upstream_stations = [Int[] for _ in gauging_stations]
     for station in gauging_stations
         downstream_station = gauging_station_downstream_index(inputs, station)
-        if is_null(downstream_station)
+        if !has_relation(downstream_station)
             continue
         end
         push!(upstream_stations[downstream_station], station)

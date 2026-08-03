@@ -44,14 +44,14 @@ function initialize!(branch::Branch, inputs::AbstractInputs)
         return nothing
     end
 
-    branch.label = read_scalar_strings(inputs.db, "Branch", "label")
+    branch.label = Quiver.read_scalar_strings(inputs.db, "Branch", "label")
     branch.line_model =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "Branch", "line_model"),
+            Quiver.read_scalar_integers(inputs.db, "Branch", "line_model"),
             Branch_LineModel.T,
         )
-    branch.bus_to = scalar_relation_map(inputs.db, "Branch", "Bus", "to")
-    branch.bus_from = scalar_relation_map(inputs.db, "Branch", "Bus", "from")
+    branch.bus_to = Quiver.scalar_relation_map(inputs.db, "Branch", "Bus", "to")
+    branch.bus_from = Quiver.scalar_relation_map(inputs.db, "Branch", "Bus", "from")
 
     update_time_series_from_db!(branch, inputs.db, initial_date_time(inputs))
 

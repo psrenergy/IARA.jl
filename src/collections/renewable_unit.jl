@@ -23,13 +23,13 @@ Renewable units are high-level data structures that represent non-dispatchable e
     max_generation::Vector{Float64} = []
     om_cost::Vector{Float64} = []
     curtailment_cost::Vector{Float64} = []
-    technology_type::Vector{Int} = []
+    technology_type::Vector{Union{Int, Nothing}} = []
     # index of the bus to which the renewable unit belongs in the collection Bus
     bus_index::Vector{Int} = []
     # index of the bidding group to which the renewable unit belongs in the collection BiddingGroup
     bidding_group_index::Vector{Int} = []
-    generation_ex_ante_file::String = ""
-    generation_ex_post_file::String = ""
+    generation_ex_ante_file::Union{String, Nothing} = nothing
+    generation_ex_post_file::Union{String, Nothing} = nothing
 end
 
 # ---------------------------------------------------------------------
@@ -47,15 +47,15 @@ function initialize!(renewable_unit::RenewableUnit, inputs::AbstractInputs)
         return nothing
     end
 
-    renewable_unit.label = read_scalar_strings(inputs.db, "RenewableUnit", "label")
-    renewable_unit.technology_type = read_scalar_integers(inputs.db, "RenewableUnit", "technology_type")
-    renewable_unit.bus_index = scalar_relation_map(inputs.db, "RenewableUnit", "Bus", "id")
-    renewable_unit.bidding_group_index = scalar_relation_map(inputs.db, "RenewableUnit", "BiddingGroup", "id")
+    renewable_unit.label = Quiver.read_scalar_strings(inputs.db, "RenewableUnit", "label")
+    renewable_unit.technology_type = Quiver.read_scalar_integers(inputs.db, "RenewableUnit", "technology_type")
+    renewable_unit.bus_index = Quiver.scalar_relation_map(inputs.db, "RenewableUnit", "Bus", "id")
+    renewable_unit.bidding_group_index = Quiver.scalar_relation_map(inputs.db, "RenewableUnit", "BiddingGroup", "id")
 
     # Load time series files
     time_series_files = Quiver.read_time_series_files(inputs.db, "RenewableUnit")
-    renewable_unit.generation_ex_ante_file = something(time_series_files["generation_ex_ante"], "")
-    renewable_unit.generation_ex_post_file = something(time_series_files["generation_ex_post"], "")
+    renewable_unit.generation_ex_ante_file = time_series_files["generation_ex_ante"]
+    renewable_unit.generation_ex_post_file = time_series_files["generation_ex_post"]
 
     update_time_series_from_db!(renewable_unit, inputs.db, initial_date_time(inputs))
 
@@ -82,13 +82,22 @@ function update_time_series_from_db!(
         @memoized_lru "renewable_unit-max_generation-$date" Quiver.read_time_series_row(
             db, "RenewableUnit", "parameters", "max_generation"; date_time = period_date_time,
         )
+    # Absent om_cost/curtailment_cost mean "no cost"; 0.0 is the neutral element for both.
+    # Quiver.read_time_series_row has no null mask at the C boundary, so an absent
+    # float arrives as NaN.
     renewable_unit.om_cost =
-        @memoized_lru "renewable_unit-om_cost-$date" Quiver.read_time_series_row(
-            db, "RenewableUnit", "parameters", "om_cost"; date_time = period_date_time,
+        @memoized_lru "renewable_unit-om_cost-$date" replace(
+            Quiver.read_time_series_row(
+                db, "RenewableUnit", "parameters", "om_cost"; date_time = period_date_time,
+            ),
+            NaN => 0.0,
         )
     renewable_unit.curtailment_cost =
-        @memoized_lru "renewable_unit-curtailment_cost-$date" Quiver.read_time_series_row(
-            db, "RenewableUnit", "parameters", "curtailment_cost"; date_time = period_date_time,
+        @memoized_lru "renewable_unit-curtailment_cost-$date" replace(
+            Quiver.read_time_series_row(
+                db, "RenewableUnit", "parameters", "curtailment_cost"; date_time = period_date_time,
+            ),
+            NaN => 0.0,
         )
     return nothing
 end
@@ -105,7 +114,7 @@ Required arguments:
 
 Optional arguments:
 
-  - `technology_type::Int64`: Technology type of the renewable unit
+  - `technology_type::Union{Int, Nothing}`: Technology type of the renewable unit
   - `biddinggroup_id::Int64`: Bidding group of the renewable unit
   - `bus_id::Int64`: Bus of the renewable unit
 
@@ -237,13 +246,13 @@ function validate(renewable_unit::RenewableUnit)
             )
             num_errors += 1
         end
-        if renewable_unit.om_cost[i] < 0 || isnan(renewable_unit.om_cost[i])
+        if renewable_unit.om_cost[i] < 0
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) O&M cost must be non-negative. Current value is $(renewable_unit.om_cost[i])."
             )
             num_errors += 1
         end
-        if renewable_unit.curtailment_cost[i] < 0 || isnan(renewable_unit.curtailment_cost[i])
+        if renewable_unit.curtailment_cost[i] < 0
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Curtailment cost must be non-negative. Current value is $(renewable_unit.curtailment_cost[i])."
             )
@@ -270,7 +279,7 @@ function advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableU
             )
             num_errors += 1
         end
-        if !is_null(renewable_unit.bidding_group_index[i]) &&
+        if has_bidding_group(renewable_unit, i) &&
            !(renewable_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Bidding Group ID $(renewable_unit.bidding_group_index[i]) not found."
@@ -278,26 +287,28 @@ function advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableU
             num_errors += 1
         end
     end
-    if read_ex_ante_renewable_file(inputs) && renewable_unit.generation_ex_ante_file == "" && length(renewable_unit) > 0
+    if read_ex_ante_renewable_file(inputs) && isnothing(renewable_unit.generation_ex_ante_file) &&
+       length(renewable_unit) > 0
         @error(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), but no ex_ante generation file was linked."
         )
         num_errors += 1
     end
-    if read_ex_post_renewable_file(inputs) && renewable_unit.generation_ex_post_file == "" && length(renewable_unit) > 0
+    if read_ex_post_renewable_file(inputs) && isnothing(renewable_unit.generation_ex_post_file) &&
+       length(renewable_unit) > 0
         @error(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), but no ex_post generation file was linked."
         )
         num_errors += 1
     end
-    if !read_ex_ante_renewable_file(inputs) && renewable_unit.generation_ex_ante_file != "" &&
+    if !read_ex_ante_renewable_file(inputs) && !isnothing(renewable_unit.generation_ex_ante_file) &&
        length(renewable_unit) > 0
         @warn(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), " *
             "but an ex_ante generation file was linked. This file will be ignored."
         )
     end
-    if !read_ex_post_renewable_file(inputs) && renewable_unit.generation_ex_post_file != "" &&
+    if !read_ex_post_renewable_file(inputs) && !isnothing(renewable_unit.generation_ex_post_file) &&
        length(renewable_unit) > 0
         @warn(
             "The option renewable_scenarios_files is set to $(renewable_scenarios_files(inputs)), " *

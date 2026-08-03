@@ -707,7 +707,7 @@ function hydro_available_energy(
     for h in existing_hydro_units
         current_hydro = h
         # Sum 'available_water_ignoring_upstream_plants' of plant 'h' to 'available_water' in all its downstream plants
-        while !is_null(current_hydro)
+        while has_relation(current_hydro)
             available_water[current_hydro] += available_water_ignoring_upstream_plants[h]
             current_hydro = hydro_unit_turbine_to(inputs, current_hydro)
         end

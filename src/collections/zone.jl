@@ -31,7 +31,7 @@ function initialize!(zone::Zone, inputs::AbstractInputs)
         return nothing
     end
 
-    zone.label = read_scalar_strings(inputs.db, "Zone", "label")
+    zone.label = Quiver.read_scalar_strings(inputs.db, "Zone", "label")
 
     return nothing
 end

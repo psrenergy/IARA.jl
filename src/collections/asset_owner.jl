@@ -47,21 +47,21 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
         return nothing
     end
 
-    asset_owner.label = read_scalar_strings(inputs.db, "AssetOwner", "label")
+    asset_owner.label = Quiver.read_scalar_strings(inputs.db, "AssetOwner", "label")
     asset_owner.price_type =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "AssetOwner", "price_type"),
+            Quiver.read_scalar_integers(inputs.db, "AssetOwner", "price_type"),
             AssetOwner_PriceType.T,
         )
     asset_owner.minimum_virtual_reservoir_purchase_bid_quantity_in_mw =
-        read_scalar_floats(inputs.db, "AssetOwner", "minimum_virtual_reservoir_purchase_bid_quantity_in_mw")
+        Quiver.read_scalar_floats(inputs.db, "AssetOwner", "minimum_virtual_reservoir_purchase_bid_quantity_in_mw")
 
-    # Load vectors
-    asset_owner.purchase_discount_rate = read_vector_floats(inputs.db, "AssetOwner", "purchase_discount_rate")
+    # Load sets
+    asset_owner.purchase_discount_rate = read_set_floats(inputs.db, "AssetOwner", "purchase_discount_rate")
     asset_owner.virtual_reservoir_energy_account_upper_bound =
-        read_vector_floats(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
+        read_set_floats(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
     asset_owner.risk_factor_for_virtual_reservoir_bids =
-        read_vector_floats(inputs.db, "AssetOwner", "risk_factor_for_virtual_reservoir_bids")
+        read_set_floats(inputs.db, "AssetOwner", "risk_factor_for_virtual_reservoir_bids")
 
     return nothing
 end
@@ -149,7 +149,7 @@ function update_asset_owner_vectors!(
         for attribute in account_markup_attributes
             if !haskey(sql_typed_kwargs, attribute)
                 sql_typed_kwargs[attribute] =
-                    Quiver.read_vector_floats_by_id(db, "AssetOwner", string(attribute), id)
+                    Quiver.read_set_floats_by_id(db, "AssetOwner", string(attribute), id)
             end
         end
     end
@@ -192,13 +192,7 @@ function validate(asset_owner::AssetOwner)
             end
         end
         for j in 1:length(asset_owner.purchase_discount_rate[i])
-            if is_null(asset_owner.purchase_discount_rate[i][j])
-                num_errors += 1
-                @error(
-                    "Purchase discount rate for asset owner $(asset_owner.label[i]) at index $j is null. " *
-                    "This is not allowed."
-                )
-            elseif asset_owner.purchase_discount_rate[i][j] < 0.0
+            if asset_owner.purchase_discount_rate[i][j] < 0.0
                 num_errors += 1
                 @error(
                     "Purchase discount rate for asset owner $(asset_owner.label[i]) at index $j is less than zero. " *
@@ -259,20 +253,20 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
-is_current_asset_owner_price_taker(a::AssetOwner, i::Int) =
-    if is_null(i)
+is_current_asset_owner_price_taker(a::AssetOwner, i::Union{Int, Nothing}) =
+    if isnothing(i)
         false
     else
         a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER
     end
-is_current_asset_owner_price_maker(a::AssetOwner, i::Int) =
-    if is_null(i)
+is_current_asset_owner_price_maker(a::AssetOwner, i::Union{Int, Nothing}) =
+    if isnothing(i)
         false
     else
         a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
     end
-is_current_asset_owner_supply_security_agent(a::AssetOwner, i::Int) =
-    if is_null(i)
+is_current_asset_owner_supply_security_agent(a::AssetOwner, i::Union{Int, Nothing}) =
+    if isnothing(i)
         false
     else
         a.price_type[i] == AssetOwner_PriceType.SUPPLY_SECURITY_AGENT

@@ -43,9 +43,9 @@ function initialize!(dc_line::DCLine, inputs::AbstractInputs)
         return nothing
     end
 
-    dc_line.label = read_scalar_strings(inputs.db, "DCLine", "label")
-    dc_line.bus_to = scalar_relation_map(inputs.db, "DCLine", "Bus", "to")
-    dc_line.bus_from = scalar_relation_map(inputs.db, "DCLine", "Bus", "from")
+    dc_line.label = Quiver.read_scalar_strings(inputs.db, "DCLine", "label")
+    dc_line.bus_to = Quiver.scalar_relation_map(inputs.db, "DCLine", "Bus", "to")
+    dc_line.bus_from = Quiver.scalar_relation_map(inputs.db, "DCLine", "Bus", "from")
 
     update_time_series_from_db!(dc_line, inputs.db, initial_date_time(inputs))
 

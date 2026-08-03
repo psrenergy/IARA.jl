@@ -43,9 +43,9 @@ function initialize!(interconnection::Interconnection, inputs::AbstractInputs)
         return nothing
     end
 
-    interconnection.label = read_scalar_strings(inputs.db, "Interconnection", "label")
-    interconnection.zone_to = scalar_relation_map(inputs.db, "Interconnection", "Zone", "to")
-    interconnection.zone_from = scalar_relation_map(inputs.db, "Interconnection", "Zone", "from")
+    interconnection.label = Quiver.read_scalar_strings(inputs.db, "Interconnection", "label")
+    interconnection.zone_to = Quiver.scalar_relation_map(inputs.db, "Interconnection", "Zone", "to")
+    interconnection.zone_from = Quiver.scalar_relation_map(inputs.db, "Interconnection", "Zone", "from")
 
     update_time_series_from_db!(interconnection, inputs.db, initial_date_time(inputs))
 

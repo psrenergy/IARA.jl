@@ -243,27 +243,6 @@ function variable_aggregation_type(unit::String)
     end
 end
 
-function is_null(value::Float64)
-    return isnan(value)
-end
-
-function is_null(value::Int64)
-    return value == typemin(Int64)
-end
-
-function is_null(value::String)
-    return isempty(value)
-end
-
-function is_null(value::DateTime)
-    return value == typemin(DateTime)
-end
-
-null_value(::Type{Float64}) = NaN
-null_value(::Type{Int64}) = typemin(Int64)
-null_value(::Type{String}) = ""
-null_value(::Type{DateTime}) = typemin(DateTime)
-
 """
     build_sql_typed_kwargs(kwargs::Dict{Symbol, T}) where T
 
@@ -467,7 +446,7 @@ function marginal_cost_to_opportunity_cost(
         for blk in subperiods(inputs)
             hydro_opportunity_cost[blk, idx] = water_marginal_cost[blk, h] * marginal_cost_to_opportunity_cost
             downstream_idx = hydro_unit_turbine_to(inputs, h)
-            if !is_null(downstream_idx) && downstream_idx in hydro_unit_indexes
+            if has_relation(downstream_idx) && downstream_idx in hydro_unit_indexes
                 hydro_opportunity_cost[blk, idx] -=
                     water_marginal_cost[blk, downstream_idx] * marginal_cost_to_opportunity_cost
             end
@@ -497,7 +476,7 @@ function marginal_cost_to_opportunity_cost(
         for blk in subperiods(inputs)
             hydro_opportunity_cost[blk, idx] = water_marginal_cost[h] * marginal_cost_to_opportunity_cost
             downstream_idx = hydro_unit_turbine_to(inputs, h)
-            if !is_null(downstream_idx) && downstream_idx in hydro_unit_indexes
+            if has_relation(downstream_idx) && downstream_idx in hydro_unit_indexes
                 hydro_opportunity_cost[blk, idx] -=
                     water_marginal_cost[downstream_idx] * marginal_cost_to_opportunity_cost
             end

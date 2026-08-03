@@ -25,18 +25,18 @@ Collection representing the bidding groups in the system.
     # index of the asset_owner to which the bidding group belongs in the collection AssetOwner
     asset_owner_index::Vector{Int} = []
     fixed_cost::Vector{Float64} = []
-    quantity_bid_file::String = ""
-    price_bid_file::String = ""
-    quantity_bid_profile_file::String = ""
-    price_bid_profile_file::String = ""
-    parent_profile_file::String = ""
-    complementary_grouping_profile_file::String = ""
-    minimum_activation_level_profile_file::String = ""
-    bid_price_limit_justified_independent_file::String = ""
-    bid_price_limit_non_justified_independent_file::String = ""
-    bid_price_limit_justified_profile_file::String = ""
-    bid_price_limit_non_justified_profile_file::String = ""
-    bid_justifications_file::String = ""
+    quantity_bid_file::Union{String, Nothing} = nothing
+    price_bid_file::Union{String, Nothing} = nothing
+    quantity_bid_profile_file::Union{String, Nothing} = nothing
+    price_bid_profile_file::Union{String, Nothing} = nothing
+    parent_profile_file::Union{String, Nothing} = nothing
+    complementary_grouping_profile_file::Union{String, Nothing} = nothing
+    minimum_activation_level_profile_file::Union{String, Nothing} = nothing
+    bid_price_limit_justified_independent_file::Union{String, Nothing} = nothing
+    bid_price_limit_non_justified_independent_file::Union{String, Nothing} = nothing
+    bid_price_limit_justified_profile_file::Union{String, Nothing} = nothing
+    bid_price_limit_non_justified_profile_file::Union{String, Nothing} = nothing
+    bid_justifications_file::Union{String, Nothing} = nothing
     # caches
     _has_generation_besides_virtual_reservoirs::Vector{Bool} = []
     _number_of_valid_bidding_segments::Vector{Int} = Int[]
@@ -60,21 +60,13 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
         return nothing
     end
 
-    bidding_group.label = read_scalar_strings(inputs.db, "BiddingGroup", "label")
-    bidding_group.asset_owner_index = scalar_relation_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
-    bidding_group.fixed_cost = read_scalar_floats(inputs.db, "BiddingGroup", "fixed_cost")
+    bidding_group.label = Quiver.read_scalar_strings(inputs.db, "BiddingGroup", "label")
+    bidding_group.asset_owner_index = Quiver.scalar_relation_map(inputs.db, "BiddingGroup", "AssetOwner", "id")
+    bidding_group.fixed_cost = Quiver.read_scalar_floats(inputs.db, "BiddingGroup", "fixed_cost")
 
-    # risk_factor/segment_fraction are nullable columns in
-    # BiddingGroup_vector_markup, so they need the null-preserving reader
-    bidding_group.risk_factor =
-        read_vector_floats_preserving_nulls(inputs.db, "BiddingGroup", "BiddingGroup_vector_markup", "risk_factor")
-    bidding_group.segment_fraction =
-        read_vector_floats_preserving_nulls(
-            inputs.db,
-            "BiddingGroup",
-            "BiddingGroup_vector_markup",
-            "segment_fraction",
-        )
+    # Load sets
+    bidding_group.risk_factor = read_set_floats(inputs.db, "BiddingGroup", "risk_factor")
+    bidding_group.segment_fraction = read_set_floats(inputs.db, "BiddingGroup", "segment_fraction")
 
     for i in 1:num_bidding_groups
         if isempty(bidding_group.segment_fraction[i])
@@ -87,30 +79,27 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
 
     bidding_group.ex_post_adjust_mode =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "BiddingGroup", "ex_post_adjust_mode"),
+            Quiver.read_scalar_integers(inputs.db, "BiddingGroup", "ex_post_adjust_mode"),
             BiddingGroup_ExPostAdjustMode.T,
         )
 
     # Load time series files
     time_series_files = Quiver.read_time_series_files(inputs.db, "BiddingGroup")
-    bidding_group.quantity_bid_file = something(time_series_files["quantity_bid"], "")
-    bidding_group.price_bid_file = something(time_series_files["price_bid"], "")
-    bidding_group.quantity_bid_profile_file = something(time_series_files["quantity_bid_profile"], "")
-    bidding_group.price_bid_profile_file = something(time_series_files["price_bid_profile"], "")
-    bidding_group.parent_profile_file = something(time_series_files["parent_profile"], "")
-    bidding_group.complementary_grouping_profile_file =
-        something(time_series_files["complementary_grouping_profile"], "")
-    bidding_group.minimum_activation_level_profile_file =
-        something(time_series_files["minimum_activation_level_profile"], "")
+    bidding_group.quantity_bid_file = time_series_files["quantity_bid"]
+    bidding_group.price_bid_file = time_series_files["price_bid"]
+    bidding_group.quantity_bid_profile_file = time_series_files["quantity_bid_profile"]
+    bidding_group.price_bid_profile_file = time_series_files["price_bid_profile"]
+    bidding_group.parent_profile_file = time_series_files["parent_profile"]
+    bidding_group.complementary_grouping_profile_file = time_series_files["complementary_grouping_profile"]
+    bidding_group.minimum_activation_level_profile_file = time_series_files["minimum_activation_level_profile"]
     bidding_group.bid_price_limit_justified_independent_file =
-        something(time_series_files["bid_price_limit_justified_independent"], "")
+        time_series_files["bid_price_limit_justified_independent"]
     bidding_group.bid_price_limit_non_justified_independent_file =
-        something(time_series_files["bid_price_limit_non_justified_independent"], "")
-    bidding_group.bid_price_limit_justified_profile_file =
-        something(time_series_files["bid_price_limit_justified_profile"], "")
+        time_series_files["bid_price_limit_non_justified_independent"]
+    bidding_group.bid_price_limit_justified_profile_file = time_series_files["bid_price_limit_justified_profile"]
     bidding_group.bid_price_limit_non_justified_profile_file =
-        something(time_series_files["bid_price_limit_non_justified_profile"], "")
-    bidding_group.bid_justifications_file = something(time_series_files["bid_justifications"], "")
+        time_series_files["bid_price_limit_non_justified_profile"]
+    bidding_group.bid_justifications_file = time_series_files["bid_justifications"]
 
     # Caches
     bidding_group._has_generation_besides_virtual_reservoirs = zeros(Bool, num_bidding_groups)
@@ -209,10 +198,10 @@ function update_bidding_group_relation!(
     return db
 end
 
-# risk_factor and segment_fraction share one underlying table; a group-table update
-# replaces the whole table using only the columns passed in. Whenever either is present
-# in kwargs, read back whichever of the pair is missing so both are always written
-# together
+# risk_factor and segment_fraction share one underlying set table; a group-table
+# update replaces the whole table using only the columns passed in. Whenever either
+# is present in kwargs, read back whichever of the pair is missing so both are
+# always written together
 """
     update_bidding_group_vectors!(db::Quiver.Database, label::String; kwargs...)
 
@@ -231,7 +220,7 @@ function update_bidding_group_vectors!(
         for attribute in markup_attributes
             if !haskey(sql_typed_kwargs, attribute)
                 sql_typed_kwargs[attribute] =
-                    read_vector_floats_preserving_nulls_by_id(db, "BiddingGroup_vector_markup", string(attribute), id)
+                    Quiver.read_set_floats_by_id(db, "BiddingGroup", string(attribute), id)
             end
         end
     end
@@ -257,14 +246,6 @@ function validate(bidding_group::BiddingGroup)
                 "Bidding group $(bidding_group.label[i]) has negative risk factors $(bidding_group.risk_factor[i]). If this is intentional, ignore this warning."
             )
         end
-        if all(is_null.(bidding_group.segment_fraction[i]))
-            continue
-        end
-        if any(is_null.(bidding_group.segment_fraction[i]))
-            @error(
-                "Segment fraction vector has both null and non-null values for Bidding group $(bidding_group.label[i])."
-            )
-        end
     end
     return num_errors
 end
@@ -280,8 +261,9 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     if !iterate_nash_equilibrium(inputs) && is_market_clearing(inputs)
         # Check if bid files are necessary, and if so, if they are provided
         if read_bids_from_file(inputs) && any(bidding_group._has_generation_besides_virtual_reservoirs)
-            if (bidding_group.quantity_bid_file == "" || bidding_group.price_bid_file == "") &&
-               (bidding_group.quantity_bid_profile_file == "" || bidding_group.price_bid_profile_file == "")
+            if (isnothing(bidding_group.quantity_bid_file) || isnothing(bidding_group.price_bid_file)) &&
+               (isnothing(bidding_group.quantity_bid_profile_file) ||
+                isnothing(bidding_group.price_bid_profile_file))
                 @error(
                     "Bid files are required for some bidding groups, but the quantity or price bid files are missing."
                 )
@@ -304,13 +286,13 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     # Check if the bid price limit files are necessary, and if so, if they are provided
     if use_bid_price_limits_from_file(inputs)
         if has_any_simple_bids(inputs)
-            if bidding_group.bid_price_limit_justified_independent_file == ""
+            if isnothing(bidding_group.bid_price_limit_justified_independent_file)
                 @error(
                     "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit justified independent file is missing."
                 )
                 num_errors += 1
             end
-            if bidding_group.bid_price_limit_non_justified_independent_file == ""
+            if isnothing(bidding_group.bid_price_limit_non_justified_independent_file)
                 @error(
                     "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit non-justified independent file is missing."
                 )
@@ -318,13 +300,13 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
             end
         end
         if has_any_profile_bids(inputs)
-            if bidding_group.bid_price_limit_justified_profile_file == ""
+            if isnothing(bidding_group.bid_price_limit_justified_profile_file)
                 @error(
                     "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit justified profile file is missing."
                 )
                 num_errors += 1
             end
-            if bidding_group.bid_price_limit_non_justified_profile_file == ""
+            if isnothing(bidding_group.bid_price_limit_non_justified_profile_file)
                 @error(
                     "Bid price limit source is set to EXTERNAL_UNVALIDATED_BID for some bidding group, but the bid price limit non-justified profile file is missing."
                 )
@@ -342,48 +324,48 @@ function advanced_validations(inputs::AbstractInputs, bidding_group::BiddingGrou
     number_of_units_per_bidding_group = zeros(Int, length(bidding_group))
     for t in thermal_units
         bg_index = thermal_unit_bidding_group_index(inputs, t)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units_per_bidding_group[bg_index] += 1
         end
     end
     for h in hydro_units
         bg_index = hydro_unit_bidding_group_index(inputs, h)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units_per_bidding_group[bg_index] += 1
         end
     end
     for r in renewable_units
         bg_index = renewable_unit_bidding_group_index(inputs, r)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units_per_bidding_group[bg_index] += 1
         end
     end
     for b in battery_units
         bg_index = battery_unit_bidding_group_index(inputs, b)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units_per_bidding_group[bg_index] += 1
         end
     end
     has_demand_with_bidding_group = false
     for d in demand_units
         bg_index = demand_unit_bidding_group_index(inputs, d)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             has_demand_with_bidding_group = true
             number_of_units_per_bidding_group[bg_index] += 1
         end
         if is_market_clearing(inputs)
-            if !is_null(bg_index) && is_flexible(inputs.collections.demand_unit, d)
+            if has_relation(bg_index) && is_flexible(inputs.collections.demand_unit, d)
                 @error("Demand unit $(d) is flexible and this is not allowed for bidding groups.")
             end
-            if !is_null(bg_index) && is_inelastic(inputs.collections.demand_unit, d)
+            if has_relation(bg_index) && is_inelastic(inputs.collections.demand_unit, d)
                 @error("Demand unit $(d) is inelastic and this is not allowed for bidding groups.")
             end
-            if is_elastic(inputs.collections.demand_unit, d) && is_null(bg_index)
+            if is_elastic(inputs.collections.demand_unit, d) && !has_relation(bg_index)
                 @error("Elastic demand unit $(d) is not assigned to any bidding group.")
             end
         end
     end
-    if has_demand_with_bidding_group && demand_unit_elastic_demand_price_file(inputs) != "" &&
+    if has_demand_with_bidding_group && !isnothing(demand_unit_elastic_demand_price_file(inputs)) &&
        is_market_clearing(inputs) && read_bids_from_file(inputs)
         @warn("""
           Elastic demand price file ignored - demand bids are already provided via bidding groups.
@@ -459,7 +441,7 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
 
     for h in hydro_units
         bg_index = hydro_unit_bidding_group_index(inputs, h)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units[bg_index] += 1
             if use_virtual_reservoirs(inputs) &&
                is_associated_with_some_virtual_reservoir(inputs.collections.hydro_unit, h)
@@ -470,28 +452,28 @@ function fill_bidding_group_has_generation_besides_virtual_reservoirs!(inputs::A
 
     for t in thermal_units
         bg_index = thermal_unit_bidding_group_index(inputs, t)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units[bg_index] += 1
         end
     end
 
     for r in renewable_units
         bg_index = renewable_unit_bidding_group_index(inputs, r)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units[bg_index] += 1
         end
     end
 
     for b in battery_units
         bg_index = battery_unit_bidding_group_index(inputs, b)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units[bg_index] += 1
         end
     end
 
     for d in demand_units
         bg_index = demand_unit_bidding_group_index(inputs, d)
-        if !is_null(bg_index)
+        if has_relation(bg_index)
             number_of_units[bg_index] += 1
         end
     end
@@ -544,12 +526,13 @@ function has_any_profile_complex_bids(inputs::AbstractInputs)
 end
 
 function has_any_bid_simple_input_files(inputs::AbstractInputs)
-    return bidding_group_quantity_bid_file(inputs) != "" && bidding_group_price_bid_file(inputs) != ""
+    return !isnothing(bidding_group_quantity_bid_file(inputs)) &&
+           !isnothing(bidding_group_price_bid_file(inputs))
 end
 
 function has_any_profile_input_files(inputs::AbstractInputs)
-    return bidding_group_quantity_bid_profile_file(inputs) != "" &&
-           bidding_group_price_bid_profile_file(inputs) != ""
+    return !isnothing(bidding_group_quantity_bid_profile_file(inputs)) &&
+           !isnothing(bidding_group_price_bid_profile_file(inputs))
 end
 
 """
@@ -558,9 +541,9 @@ end
 Return true if the bidding group has any profile complex input files.
 """
 function has_any_profile_complex_input_files(inputs::AbstractInputs)
-    return bidding_group_parent_profile_file(inputs) != "" &&
-           bidding_group_complementary_grouping_profile_file(inputs) != "" &&
-           bidding_group_minimum_activation_level_profile_file(inputs) != ""
+    return !isnothing(bidding_group_parent_profile_file(inputs)) &&
+           !isnothing(bidding_group_complementary_grouping_profile_file(inputs)) &&
+           !isnothing(bidding_group_minimum_activation_level_profile_file(inputs))
 end
 
 function maximum_number_of_bg_bidding_segments(inputs::AbstractInputs)
@@ -626,6 +609,6 @@ function update_number_of_valid_profiles!(inputs::AbstractInputs, values::Vector
 end
 
 function bids_justifications_exist(inputs::AbstractInputs)
-    return bidding_group_bid_justifications_file(inputs) != "" &&
+    return !isnothing(bidding_group_bid_justifications_file(inputs)) &&
            isfile(joinpath(path_case(inputs), bidding_group_bid_justifications_file(inputs)))
 end

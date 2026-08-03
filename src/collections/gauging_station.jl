@@ -25,12 +25,12 @@ Collection representing the gauging stations in the system.
     inflow_initial_state::Matrix{Float64} = Matrix{Float64}(undef, 0, 0)
     inflow_initial_state_variation_type::Vector{GaugingStation_InflowInitialStateVariationType.T} = []
 
-    inflow_noise_ex_ante_file::String = ""
-    inflow_noise_ex_post_file::String = ""
-    parp_coefficients_file::String = ""
-    inflow_period_average_file::String = ""
-    inflow_period_std_dev_file::String = ""
-    inflow_initial_state_by_scenario_file::String = ""
+    inflow_noise_ex_ante_file::Union{String, Nothing} = nothing
+    inflow_noise_ex_post_file::Union{String, Nothing} = nothing
+    parp_coefficients_file::Union{String, Nothing} = nothing
+    inflow_period_average_file::Union{String, Nothing} = nothing
+    inflow_period_std_dev_file::Union{String, Nothing} = nothing
+    inflow_initial_state_by_scenario_file::Union{String, Nothing} = nothing
 end
 
 # ---------------------------------------------------------------------
@@ -48,9 +48,9 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
         return nothing
     end
 
-    gauging_station.label = read_scalar_strings(inputs.db, "GaugingStation", "label")
+    gauging_station.label = Quiver.read_scalar_strings(inputs.db, "GaugingStation", "label")
     gauging_station.downstream_index =
-        scalar_relation_map(inputs.db, "GaugingStation", "GaugingStation", "downstream")
+        Quiver.scalar_relation_map(inputs.db, "GaugingStation", "GaugingStation", "downstream")
 
     if read_inflow_from_file(inputs)
         return nothing
@@ -58,12 +58,11 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
 
     gauging_station.inflow_initial_state_variation_type =
         convert_to_enum.(
-            read_scalar_integers(inputs.db, "GaugingStation", "inflow_initial_state_variation_type"),
+            Quiver.read_scalar_integers(inputs.db, "GaugingStation", "inflow_initial_state_variation_type"),
             GaugingStation_InflowInitialStateVariationType.T,
         )
     time_series_files = Quiver.read_time_series_files(inputs.db, "GaugingStation")
-    gauging_station.inflow_initial_state_by_scenario_file =
-        something(time_series_files["inflow_initial_state_by_scenario"], "")
+    gauging_station.inflow_initial_state_by_scenario_file = time_series_files["inflow_initial_state_by_scenario"]
 
     if fit_parp_model(inputs)
         # When fitting the PAR(p) model, these files are output files, so we use the IARA standard.
@@ -74,24 +73,21 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
         gauging_station.inflow_period_std_dev_file = "inflow_period_std_dev"
     else
         # When reading the coefficients, these are input files with user-defined names
-        gauging_station.inflow_noise_ex_ante_file = something(time_series_files["inflow_noise_ex_ante"], "")
-        gauging_station.inflow_noise_ex_post_file = something(time_series_files["inflow_noise_ex_post"], "")
-        gauging_station.parp_coefficients_file = something(time_series_files["parp_coefficients"], "")
-        gauging_station.inflow_period_average_file = something(time_series_files["inflow_period_average"], "")
-        gauging_station.inflow_period_std_dev_file = something(time_series_files["inflow_period_std_dev"], "")
+        gauging_station.inflow_noise_ex_ante_file = time_series_files["inflow_noise_ex_ante"]
+        gauging_station.inflow_noise_ex_post_file = time_series_files["inflow_noise_ex_post"]
+        gauging_station.parp_coefficients_file = time_series_files["parp_coefficients"]
+        gauging_station.inflow_period_average_file = time_series_files["inflow_period_average"]
+        gauging_station.inflow_period_std_dev_file = time_series_files["inflow_period_std_dev"]
     end
 
     ids = Quiver.read_element_ids(inputs.db, "GaugingStation")
     gauging_station.historical_inflow = Vector{Vector{Float64}}(undef, num_gauging_stations)
     for (idx, id) in enumerate(ids)
-        # A gauging station can have zero historical_inflow rows (e.g. one auto-created by
-        # add_hydro_unit! without a historical_inflow argument). Quiver.read_time_series_group
-        # returns a completely empty Dict (no keys at all, not even the dimension column) for
-        # an id with zero rows in the group table
+        # read_time_series_group returns a completely empty Dict (no keys at all) for an
+        # id with zero rows in the group table.
         columns = Quiver.read_time_series_group(inputs.db, "GaugingStation", "historical_inflow", id)
         gauging_station.historical_inflow[idx] =
-            haskey(columns, "historical_inflow") ? fill_nulls(columns["historical_inflow"], null_value(Float64)) :
-            Float64[]
+            haskey(columns, "historical_inflow") ? Vector{Float64}(columns["historical_inflow"]) : Float64[]
     end
 
     if any(isempty.(gauging_station.historical_inflow)) ||
@@ -212,7 +208,7 @@ function validate(gauging_station::GaugingStation)
     if any(
         gauging_station.inflow_initial_state_variation_type .==
         GaugingStation_InflowInitialStateVariationType.BY_SCENARIO,
-    ) && isempty(gauging_station.inflow_initial_state_by_scenario_file)
+    ) && isnothing(gauging_station.inflow_initial_state_by_scenario_file)
         @error(
             "At least one Gauging Station has inflow initial state variation type set to `BY_SCENARIO`, but no inflow initial state by scenario file was linked."
         )
@@ -249,27 +245,27 @@ function advanced_validations(inputs::AbstractInputs, gauging_station::GaugingSt
         end
     end
     if read_parp_coefficients(inputs)
-        if read_ex_post_inflow_file(inputs) && gauging_station.inflow_noise_ex_post_file == ""
+        if read_ex_post_inflow_file(inputs) && isnothing(gauging_station.inflow_noise_ex_post_file)
             @error(
                 "Defining the ex-post inflow noise file name is required when reading PAR(p) coefficients and using the ex-post file."
             )
             num_errors += 1
         end
-        if read_ex_ante_inflow_file(inputs) && gauging_station.inflow_noise_ex_ante_file == ""
+        if read_ex_ante_inflow_file(inputs) && isnothing(gauging_station.inflow_noise_ex_ante_file)
             @error(
                 "Defining the ex-ante inflow noise file name is required when reading PAR(p) coefficients and using the ex-ante file."
             )
             num_errors += 1
         end
-        if gauging_station.parp_coefficients_file == ""
+        if isnothing(gauging_station.parp_coefficients_file)
             @error("Defining the PAR(p) coefficients file name is required when reading PAR(p) coefficients.")
             num_errors += 1
         end
-        if gauging_station.inflow_period_average_file == ""
+        if isnothing(gauging_station.inflow_period_average_file)
             @error("Defining the inflow period average file name is required when reading PAR(p) coefficients.")
             num_errors += 1
         end
-        if gauging_station.inflow_period_std_dev_file == ""
+        if isnothing(gauging_station.inflow_period_std_dev_file)
             @error(
                 "Defining the inflow period standard deviation file name is required when reading PAR(p) coefficients."
             )

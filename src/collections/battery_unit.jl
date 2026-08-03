@@ -20,7 +20,7 @@ Collection representing the battery unit in the system.
 @collection @kwdef mutable struct BatteryUnit <: AbstractCollection
     label::Vector{String} = []
     existing::Vector{BatteryUnit_Existence.T} = []
-    initial_storage::Vector{Float64} = []
+    initial_storage::Vector{Union{Float64, Nothing}} = []
     min_storage::Vector{Float64} = []
     max_storage::Vector{Float64} = []
     max_capacity::Vector{Float64} = []
@@ -46,10 +46,10 @@ function initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
         return nothing
     end
 
-    battery_unit.label = read_scalar_strings(inputs.db, "BatteryUnit", "label")
-    battery_unit.initial_storage = read_scalar_floats(inputs.db, "BatteryUnit", "initial_storage")
-    battery_unit.bus_index = scalar_relation_map(inputs.db, "BatteryUnit", "Bus", "id")
-    battery_unit.bidding_group_index = scalar_relation_map(inputs.db, "BatteryUnit", "BiddingGroup", "id")
+    battery_unit.label = Quiver.read_scalar_strings(inputs.db, "BatteryUnit", "label")
+    battery_unit.initial_storage = Quiver.read_scalar_floats(inputs.db, "BatteryUnit", "initial_storage")
+    battery_unit.bus_index = Quiver.scalar_relation_map(inputs.db, "BatteryUnit", "Bus", "id")
+    battery_unit.bidding_group_index = Quiver.scalar_relation_map(inputs.db, "BatteryUnit", "BiddingGroup", "id")
 
     update_time_series_from_db!(battery_unit, inputs.db, initial_date_time(inputs))
 
@@ -103,7 +103,7 @@ Required arguments:
 
 Optional arguments:
 
-  - `initial_storage::Float64`: Initial storage of the battery unit
+  - `initial_storage::Union{Float64, Nothing}`: Initial storage of the battery unit
   - `biddinggroup_id::Int64`: Bidding group of the battery unit
   - `bus_id::Int64`: Bus of the battery unit
 
@@ -209,7 +209,10 @@ function validate(battery_unit::BatteryUnit)
             @error("Battery Label cannot be empty.")
             num_errors += 1
         end
-        if battery_unit.initial_storage[i] < 0
+        if isnothing(battery_unit.initial_storage[i])
+            @error("Battery $(battery_unit.label[i]) Initial Storage must be defined.")
+            num_errors += 1
+        elseif battery_unit.initial_storage[i] < 0
             @error(
                 "Battery $(battery_unit.label[i]) Initial Storage must be non-negative. Current value is $(battery_unit.initial_storage[i])"
             )
@@ -264,7 +267,7 @@ function advanced_validations(inputs::AbstractInputs, battery_unit::BatteryUnit)
             @error("Battery Unit $(battery_unit.label[i]) Bus ID $(battery_unit.bus_index[i]) not found.")
             num_errors += 1
         end
-        if !is_null(battery_unit.bidding_group_index[i]) && !(battery_unit.bidding_group_index[i] in bidding_groups)
+        if has_bidding_group(battery_unit, i) && !(battery_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Battery Unit $(battery_unit.label[i]) Bidding Group ID $(battery_unit.bidding_group_index[i]) not found."
             )

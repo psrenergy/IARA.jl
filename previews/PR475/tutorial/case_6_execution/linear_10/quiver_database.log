@@ -1,9 +1,9 @@
-[2026-07-30 17:58:50.509] [quiver_database_21] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
-[2026-07-30 17:58:50.509] [quiver_database_21] [debug] Database opened successfully, foreign keys enabled
-[2026-07-30 17:58:50.509] [quiver_database_21] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
-[2026-07-30 17:58:50.509] [quiver_database_21] [debug] Database is up to date at version 36
-[2026-07-30 17:58:50.512] [quiver_database_21] [debug] Reading time series files for collection: Configuration
-[2026-07-30 17:58:50.513] [quiver_database_21] [debug] Reading time series files for collection: HydroUnit
-[2026-07-30 17:58:50.515] [quiver_database_21] [debug] Reading time series files for collection: DemandUnit
-[2026-07-30 17:58:51.923] [quiver_database_21] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
-[2026-07-30 17:58:51.924] [quiver_database_21] [info] Database closed
+[2026-08-03 13:42:53.043] [quiver_database_21] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
+[2026-08-03 13:42:53.043] [quiver_database_21] [debug] Database opened successfully, foreign keys enabled
+[2026-08-03 13:42:53.043] [quiver_database_21] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
+[2026-08-03 13:42:53.043] [quiver_database_21] [debug] Database is up to date at version 37
+[2026-08-03 13:42:53.046] [quiver_database_21] [debug] Reading time series files for collection: Configuration
+[2026-08-03 13:42:53.047] [quiver_database_21] [debug] Reading time series files for collection: HydroUnit
+[2026-08-03 13:42:53.048] [quiver_database_21] [debug] Reading time series files for collection: DemandUnit
+[2026-08-03 13:42:54.340] [quiver_database_21] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/linear_10/study.iara
+[2026-08-03 13:42:54.341] [quiver_database_21] [info] Database closed

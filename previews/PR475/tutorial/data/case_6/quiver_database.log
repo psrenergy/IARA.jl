@@ -1,259 +1,259 @@
-[2026-08-03 15:45:17.820] [quiver_database_18] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_6/study.iara
-[2026-08-03 15:45:17.820] [quiver_database_18] [debug] Database opened successfully, foreign keys enabled
-[2026-08-03 15:45:17.820] [quiver_database_18] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_6/study.iara
-[2026-08-03 15:45:17.821] [quiver_database_18] [info] Applying 37 pending migration(s) from version 0 to 37
-[2026-08-03 15:45:17.821] [quiver_database_18] [info] Applying migration 1
-[2026-08-03 15:45:17.821] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.822] [quiver_database_18] [debug] Set database version to 1
-[2026-08-03 15:45:17.825] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.825] [quiver_database_18] [info] Migration 1 applied successfully
-[2026-08-03 15:45:17.825] [quiver_database_18] [info] Applying migration 2
-[2026-08-03 15:45:17.825] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.895] [quiver_database_18] [debug] Set database version to 2
-[2026-08-03 15:45:17.897] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.897] [quiver_database_18] [info] Migration 2 applied successfully
-[2026-08-03 15:45:17.897] [quiver_database_18] [info] Applying migration 3
-[2026-08-03 15:45:17.897] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.937] [quiver_database_18] [debug] Set database version to 3
-[2026-08-03 15:45:17.938] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.938] [quiver_database_18] [info] Migration 3 applied successfully
-[2026-08-03 15:45:17.938] [quiver_database_18] [info] Applying migration 4
-[2026-08-03 15:45:17.938] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.953] [quiver_database_18] [debug] Set database version to 4
-[2026-08-03 15:45:17.954] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.954] [quiver_database_18] [info] Migration 4 applied successfully
-[2026-08-03 15:45:17.954] [quiver_database_18] [info] Applying migration 5
-[2026-08-03 15:45:17.954] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.954] [quiver_database_18] [debug] Set database version to 5
-[2026-08-03 15:45:17.956] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.956] [quiver_database_18] [info] Migration 5 applied successfully
-[2026-08-03 15:45:17.956] [quiver_database_18] [info] Applying migration 6
-[2026-08-03 15:45:17.956] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.958] [quiver_database_18] [debug] Set database version to 6
-[2026-08-03 15:45:17.959] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.959] [quiver_database_18] [info] Migration 6 applied successfully
-[2026-08-03 15:45:17.959] [quiver_database_18] [info] Applying migration 7
-[2026-08-03 15:45:17.959] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.962] [quiver_database_18] [debug] Set database version to 7
-[2026-08-03 15:45:17.963] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.963] [quiver_database_18] [info] Migration 7 applied successfully
-[2026-08-03 15:45:17.963] [quiver_database_18] [info] Applying migration 8
-[2026-08-03 15:45:17.963] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.965] [quiver_database_18] [debug] Set database version to 8
-[2026-08-03 15:45:17.966] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.966] [quiver_database_18] [info] Migration 8 applied successfully
-[2026-08-03 15:45:17.966] [quiver_database_18] [info] Applying migration 9
-[2026-08-03 15:45:17.966] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.968] [quiver_database_18] [debug] Set database version to 9
-[2026-08-03 15:45:17.968] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.968] [quiver_database_18] [info] Migration 9 applied successfully
-[2026-08-03 15:45:17.968] [quiver_database_18] [info] Applying migration 10
-[2026-08-03 15:45:17.968] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.969] [quiver_database_18] [debug] Set database version to 10
-[2026-08-03 15:45:17.969] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.969] [quiver_database_18] [info] Migration 10 applied successfully
-[2026-08-03 15:45:17.969] [quiver_database_18] [info] Applying migration 11
-[2026-08-03 15:45:17.969] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.970] [quiver_database_18] [debug] Set database version to 11
-[2026-08-03 15:45:17.971] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.971] [quiver_database_18] [info] Migration 11 applied successfully
-[2026-08-03 15:45:17.971] [quiver_database_18] [info] Applying migration 12
-[2026-08-03 15:45:17.971] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.975] [quiver_database_18] [debug] Set database version to 12
-[2026-08-03 15:45:17.976] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.976] [quiver_database_18] [info] Migration 12 applied successfully
-[2026-08-03 15:45:17.976] [quiver_database_18] [info] Applying migration 13
-[2026-08-03 15:45:17.976] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.977] [quiver_database_18] [debug] Set database version to 13
-[2026-08-03 15:45:17.978] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.978] [quiver_database_18] [info] Migration 13 applied successfully
-[2026-08-03 15:45:17.978] [quiver_database_18] [info] Applying migration 14
-[2026-08-03 15:45:17.978] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.979] [quiver_database_18] [debug] Set database version to 14
-[2026-08-03 15:45:17.979] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.979] [quiver_database_18] [info] Migration 14 applied successfully
-[2026-08-03 15:45:17.979] [quiver_database_18] [info] Applying migration 15
-[2026-08-03 15:45:17.980] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.982] [quiver_database_18] [debug] Set database version to 15
-[2026-08-03 15:45:17.983] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.983] [quiver_database_18] [info] Migration 15 applied successfully
-[2026-08-03 15:45:17.983] [quiver_database_18] [info] Applying migration 16
-[2026-08-03 15:45:17.983] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.983] [quiver_database_18] [debug] Set database version to 16
-[2026-08-03 15:45:17.984] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.984] [quiver_database_18] [info] Migration 16 applied successfully
-[2026-08-03 15:45:17.984] [quiver_database_18] [info] Applying migration 17
-[2026-08-03 15:45:17.984] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.984] [quiver_database_18] [debug] Set database version to 17
-[2026-08-03 15:45:17.985] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.985] [quiver_database_18] [info] Migration 17 applied successfully
-[2026-08-03 15:45:17.985] [quiver_database_18] [info] Applying migration 18
-[2026-08-03 15:45:17.985] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:17.995] [quiver_database_18] [debug] Set database version to 18
-[2026-08-03 15:45:17.995] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:17.995] [quiver_database_18] [info] Migration 18 applied successfully
-[2026-08-03 15:45:17.995] [quiver_database_18] [info] Applying migration 19
-[2026-08-03 15:45:17.995] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.000] [quiver_database_18] [debug] Set database version to 19
-[2026-08-03 15:45:18.001] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.001] [quiver_database_18] [info] Migration 19 applied successfully
-[2026-08-03 15:45:18.001] [quiver_database_18] [info] Applying migration 20
-[2026-08-03 15:45:18.001] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.007] [quiver_database_18] [debug] Set database version to 20
-[2026-08-03 15:45:18.008] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.008] [quiver_database_18] [info] Migration 20 applied successfully
-[2026-08-03 15:45:18.008] [quiver_database_18] [info] Applying migration 21
-[2026-08-03 15:45:18.008] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.011] [quiver_database_18] [debug] Set database version to 21
-[2026-08-03 15:45:18.012] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.012] [quiver_database_18] [info] Migration 21 applied successfully
-[2026-08-03 15:45:18.012] [quiver_database_18] [info] Applying migration 22
-[2026-08-03 15:45:18.012] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.013] [quiver_database_18] [debug] Set database version to 22
-[2026-08-03 15:45:18.014] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.014] [quiver_database_18] [info] Migration 22 applied successfully
-[2026-08-03 15:45:18.014] [quiver_database_18] [info] Applying migration 23
-[2026-08-03 15:45:18.014] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.014] [quiver_database_18] [debug] Set database version to 23
-[2026-08-03 15:45:18.015] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.015] [quiver_database_18] [info] Migration 23 applied successfully
-[2026-08-03 15:45:18.015] [quiver_database_18] [info] Applying migration 24
-[2026-08-03 15:45:18.015] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.030] [quiver_database_18] [debug] Set database version to 24
-[2026-08-03 15:45:18.031] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.031] [quiver_database_18] [info] Migration 24 applied successfully
-[2026-08-03 15:45:18.031] [quiver_database_18] [info] Applying migration 25
-[2026-08-03 15:45:18.031] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.034] [quiver_database_18] [debug] Set database version to 25
-[2026-08-03 15:45:18.035] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.035] [quiver_database_18] [info] Migration 25 applied successfully
-[2026-08-03 15:45:18.035] [quiver_database_18] [info] Applying migration 26
-[2026-08-03 15:45:18.035] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.036] [quiver_database_18] [debug] Set database version to 26
-[2026-08-03 15:45:18.036] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.036] [quiver_database_18] [info] Migration 26 applied successfully
-[2026-08-03 15:45:18.036] [quiver_database_18] [info] Applying migration 27
-[2026-08-03 15:45:18.036] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.038] [quiver_database_18] [debug] Set database version to 27
-[2026-08-03 15:45:18.039] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.039] [quiver_database_18] [info] Migration 27 applied successfully
-[2026-08-03 15:45:18.039] [quiver_database_18] [info] Applying migration 28
-[2026-08-03 15:45:18.039] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.039] [quiver_database_18] [debug] Set database version to 28
-[2026-08-03 15:45:18.040] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.040] [quiver_database_18] [info] Migration 28 applied successfully
-[2026-08-03 15:45:18.040] [quiver_database_18] [info] Applying migration 29
-[2026-08-03 15:45:18.040] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.042] [quiver_database_18] [debug] Set database version to 29
-[2026-08-03 15:45:18.043] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.043] [quiver_database_18] [info] Migration 29 applied successfully
-[2026-08-03 15:45:18.043] [quiver_database_18] [info] Applying migration 30
-[2026-08-03 15:45:18.043] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.052] [quiver_database_18] [debug] Set database version to 30
-[2026-08-03 15:45:18.053] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.053] [quiver_database_18] [info] Migration 30 applied successfully
-[2026-08-03 15:45:18.053] [quiver_database_18] [info] Applying migration 31
-[2026-08-03 15:45:18.053] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.067] [quiver_database_18] [debug] Set database version to 31
-[2026-08-03 15:45:18.068] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.068] [quiver_database_18] [info] Migration 31 applied successfully
-[2026-08-03 15:45:18.068] [quiver_database_18] [info] Applying migration 32
-[2026-08-03 15:45:18.068] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.077] [quiver_database_18] [debug] Set database version to 32
-[2026-08-03 15:45:18.078] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.078] [quiver_database_18] [info] Migration 32 applied successfully
-[2026-08-03 15:45:18.078] [quiver_database_18] [info] Applying migration 33
-[2026-08-03 15:45:18.078] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.085] [quiver_database_18] [debug] Set database version to 33
-[2026-08-03 15:45:18.085] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.085] [quiver_database_18] [info] Migration 33 applied successfully
-[2026-08-03 15:45:18.085] [quiver_database_18] [info] Applying migration 34
-[2026-08-03 15:45:18.085] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.086] [quiver_database_18] [debug] Set database version to 34
-[2026-08-03 15:45:18.087] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.087] [quiver_database_18] [info] Migration 34 applied successfully
-[2026-08-03 15:45:18.087] [quiver_database_18] [info] Applying migration 35
-[2026-08-03 15:45:18.087] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.095] [quiver_database_18] [debug] Set database version to 35
-[2026-08-03 15:45:18.096] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.096] [quiver_database_18] [info] Migration 35 applied successfully
-[2026-08-03 15:45:18.096] [quiver_database_18] [info] Applying migration 36
-[2026-08-03 15:45:18.096] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.097] [quiver_database_18] [debug] Set database version to 36
-[2026-08-03 15:45:18.098] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.098] [quiver_database_18] [info] Migration 36 applied successfully
-[2026-08-03 15:45:18.098] [quiver_database_18] [info] Applying migration 37
-[2026-08-03 15:45:18.098] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.101] [quiver_database_18] [debug] Set database version to 37
-[2026-08-03 15:45:18.102] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.102] [quiver_database_18] [info] Migration 37 applied successfully
-[2026-08-03 15:45:18.104] [quiver_database_18] [info] All migrations applied successfully. Database now at version 37
-[2026-08-03 15:45:18.133] [quiver_database_18] [debug] Creating element in collection: Configuration
-[2026-08-03 15:45:18.133] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.133] [quiver_database_18] [debug] Inserted element with id: 1
-[2026-08-03 15:45:18.134] [quiver_database_18] [debug] Inserted 1 vector rows into Configuration_vector_subperiod_duration
-[2026-08-03 15:45:18.135] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.135] [quiver_database_18] [info] Created element 1 in Configuration
-[2026-08-03 15:45:18.137] [quiver_database_18] [debug] Creating element in collection: Zone
-[2026-08-03 15:45:18.137] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.137] [quiver_database_18] [debug] Inserted element with id: 1
-[2026-08-03 15:45:18.137] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.137] [quiver_database_18] [info] Created element 1 in Zone
-[2026-08-03 15:45:18.138] [quiver_database_18] [debug] Creating element in collection: Bus
-[2026-08-03 15:45:18.138] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.138] [quiver_database_18] [debug] Inserted element with id: 1
-[2026-08-03 15:45:18.139] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.139] [quiver_database_18] [info] Created element 1 in Bus
-[2026-08-03 15:45:18.141] [quiver_database_18] [debug] Creating element in collection: DemandUnit
-[2026-08-03 15:45:18.141] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.141] [quiver_database_18] [debug] Inserted element with id: 1
-[2026-08-03 15:45:18.142] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.142] [quiver_database_18] [info] Created element 1 in DemandUnit
-[2026-08-03 15:45:18.142] [quiver_database_18] [debug] Updating time series DemandUnit.parameters for id 1 with 1 rows
-[2026-08-03 15:45:18.142] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.143] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.143] [quiver_database_18] [info] Updated time series DemandUnit.parameters for id 1 with 1 rows
-[2026-08-03 15:45:18.211] [quiver_database_18] [debug] Creating element in collection: ThermalUnit
-[2026-08-03 15:45:18.211] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.212] [quiver_database_18] [debug] Inserted element with id: 1
-[2026-08-03 15:45:18.213] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.213] [quiver_database_18] [info] Created element 1 in ThermalUnit
-[2026-08-03 15:45:18.213] [quiver_database_18] [debug] Updating time series ThermalUnit.parameters for id 1 with 1 rows
-[2026-08-03 15:45:18.213] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.214] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.214] [quiver_database_18] [info] Updated time series ThermalUnit.parameters for id 1 with 1 rows
-[2026-08-03 15:45:18.215] [quiver_database_18] [debug] Creating element in collection: ThermalUnit
-[2026-08-03 15:45:18.215] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.215] [quiver_database_18] [debug] Inserted element with id: 2
-[2026-08-03 15:45:18.216] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.216] [quiver_database_18] [info] Created element 2 in ThermalUnit
-[2026-08-03 15:45:18.216] [quiver_database_18] [debug] Updating time series ThermalUnit.parameters for id 2 with 1 rows
-[2026-08-03 15:45:18.216] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.217] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.217] [quiver_database_18] [info] Updated time series ThermalUnit.parameters for id 2 with 1 rows
-[2026-08-03 15:45:18.218] [quiver_database_18] [debug] Creating element in collection: GaugingStation
-[2026-08-03 15:45:18.218] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.218] [quiver_database_18] [debug] Inserted element with id: 1
-[2026-08-03 15:45:18.219] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.219] [quiver_database_18] [info] Created element 1 in GaugingStation
-[2026-08-03 15:45:18.301] [quiver_database_18] [debug] Creating element in collection: HydroUnit
-[2026-08-03 15:45:18.301] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.301] [quiver_database_18] [debug] Inserted element with id: 1
-[2026-08-03 15:45:18.302] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.302] [quiver_database_18] [info] Created element 1 in HydroUnit
-[2026-08-03 15:45:18.302] [quiver_database_18] [debug] Updating time series HydroUnit.parameters for id 1 with 1 rows
-[2026-08-03 15:45:18.302] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.303] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.303] [quiver_database_18] [info] Updated time series HydroUnit.parameters for id 1 with 1 rows
-[2026-08-03 15:45:18.309] [quiver_database_18] [debug] Reading time series files for collection: DemandUnit
-[2026-08-03 15:45:18.309] [quiver_database_18] [debug] Updating time series files for collection: DemandUnit
-[2026-08-03 15:45:18.309] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.310] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.310] [quiver_database_18] [info] Updated time series files for collection: DemandUnit
-[2026-08-03 15:45:18.311] [quiver_database_18] [debug] Reading time series files for collection: HydroUnit
-[2026-08-03 15:45:18.311] [quiver_database_18] [debug] Updating time series files for collection: HydroUnit
-[2026-08-03 15:45:18.311] [quiver_database_18] [debug] Transaction started
-[2026-08-03 15:45:18.312] [quiver_database_18] [debug] Transaction committed
-[2026-08-03 15:45:18.312] [quiver_database_18] [info] Updated time series files for collection: HydroUnit
-[2026-08-03 15:45:18.313] [quiver_database_18] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_6/study.iara
-[2026-08-03 15:45:18.313] [quiver_database_18] [info] Database closed
+[2026-08-03 19:35:46.396] [quiver_database_18] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_6/study.iara
+[2026-08-03 19:35:46.396] [quiver_database_18] [debug] Database opened successfully, foreign keys enabled
+[2026-08-03 19:35:46.396] [quiver_database_18] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_6/study.iara
+[2026-08-03 19:35:46.396] [quiver_database_18] [info] Applying 37 pending migration(s) from version 0 to 37
+[2026-08-03 19:35:46.396] [quiver_database_18] [info] Applying migration 1
+[2026-08-03 19:35:46.396] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.398] [quiver_database_18] [debug] Set database version to 1
+[2026-08-03 19:35:46.400] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.400] [quiver_database_18] [info] Migration 1 applied successfully
+[2026-08-03 19:35:46.400] [quiver_database_18] [info] Applying migration 2
+[2026-08-03 19:35:46.400] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.468] [quiver_database_18] [debug] Set database version to 2
+[2026-08-03 19:35:46.470] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.470] [quiver_database_18] [info] Migration 2 applied successfully
+[2026-08-03 19:35:46.470] [quiver_database_18] [info] Applying migration 3
+[2026-08-03 19:35:46.470] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.508] [quiver_database_18] [debug] Set database version to 3
+[2026-08-03 19:35:46.509] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.509] [quiver_database_18] [info] Migration 3 applied successfully
+[2026-08-03 19:35:46.509] [quiver_database_18] [info] Applying migration 4
+[2026-08-03 19:35:46.509] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.523] [quiver_database_18] [debug] Set database version to 4
+[2026-08-03 19:35:46.524] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.524] [quiver_database_18] [info] Migration 4 applied successfully
+[2026-08-03 19:35:46.524] [quiver_database_18] [info] Applying migration 5
+[2026-08-03 19:35:46.524] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.525] [quiver_database_18] [debug] Set database version to 5
+[2026-08-03 19:35:46.525] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.525] [quiver_database_18] [info] Migration 5 applied successfully
+[2026-08-03 19:35:46.525] [quiver_database_18] [info] Applying migration 6
+[2026-08-03 19:35:46.525] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.527] [quiver_database_18] [debug] Set database version to 6
+[2026-08-03 19:35:46.528] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.528] [quiver_database_18] [info] Migration 6 applied successfully
+[2026-08-03 19:35:46.528] [quiver_database_18] [info] Applying migration 7
+[2026-08-03 19:35:46.528] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.531] [quiver_database_18] [debug] Set database version to 7
+[2026-08-03 19:35:46.532] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.532] [quiver_database_18] [info] Migration 7 applied successfully
+[2026-08-03 19:35:46.532] [quiver_database_18] [info] Applying migration 8
+[2026-08-03 19:35:46.532] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.533] [quiver_database_18] [debug] Set database version to 8
+[2026-08-03 19:35:46.534] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.534] [quiver_database_18] [info] Migration 8 applied successfully
+[2026-08-03 19:35:46.534] [quiver_database_18] [info] Applying migration 9
+[2026-08-03 19:35:46.534] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.536] [quiver_database_18] [debug] Set database version to 9
+[2026-08-03 19:35:46.537] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.537] [quiver_database_18] [info] Migration 9 applied successfully
+[2026-08-03 19:35:46.537] [quiver_database_18] [info] Applying migration 10
+[2026-08-03 19:35:46.537] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.537] [quiver_database_18] [debug] Set database version to 10
+[2026-08-03 19:35:46.538] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.538] [quiver_database_18] [info] Migration 10 applied successfully
+[2026-08-03 19:35:46.538] [quiver_database_18] [info] Applying migration 11
+[2026-08-03 19:35:46.538] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.539] [quiver_database_18] [debug] Set database version to 11
+[2026-08-03 19:35:46.540] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.540] [quiver_database_18] [info] Migration 11 applied successfully
+[2026-08-03 19:35:46.540] [quiver_database_18] [info] Applying migration 12
+[2026-08-03 19:35:46.540] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.544] [quiver_database_18] [debug] Set database version to 12
+[2026-08-03 19:35:46.545] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.545] [quiver_database_18] [info] Migration 12 applied successfully
+[2026-08-03 19:35:46.545] [quiver_database_18] [info] Applying migration 13
+[2026-08-03 19:35:46.545] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.545] [quiver_database_18] [debug] Set database version to 13
+[2026-08-03 19:35:46.546] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.546] [quiver_database_18] [info] Migration 13 applied successfully
+[2026-08-03 19:35:46.546] [quiver_database_18] [info] Applying migration 14
+[2026-08-03 19:35:46.546] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.547] [quiver_database_18] [debug] Set database version to 14
+[2026-08-03 19:35:46.548] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.548] [quiver_database_18] [info] Migration 14 applied successfully
+[2026-08-03 19:35:46.548] [quiver_database_18] [info] Applying migration 15
+[2026-08-03 19:35:46.548] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.550] [quiver_database_18] [debug] Set database version to 15
+[2026-08-03 19:35:46.551] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.551] [quiver_database_18] [info] Migration 15 applied successfully
+[2026-08-03 19:35:46.551] [quiver_database_18] [info] Applying migration 16
+[2026-08-03 19:35:46.551] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.551] [quiver_database_18] [debug] Set database version to 16
+[2026-08-03 19:35:46.552] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.552] [quiver_database_18] [info] Migration 16 applied successfully
+[2026-08-03 19:35:46.552] [quiver_database_18] [info] Applying migration 17
+[2026-08-03 19:35:46.552] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.553] [quiver_database_18] [debug] Set database version to 17
+[2026-08-03 19:35:46.554] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.554] [quiver_database_18] [info] Migration 17 applied successfully
+[2026-08-03 19:35:46.554] [quiver_database_18] [info] Applying migration 18
+[2026-08-03 19:35:46.554] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.563] [quiver_database_18] [debug] Set database version to 18
+[2026-08-03 19:35:46.564] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.564] [quiver_database_18] [info] Migration 18 applied successfully
+[2026-08-03 19:35:46.564] [quiver_database_18] [info] Applying migration 19
+[2026-08-03 19:35:46.564] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.568] [quiver_database_18] [debug] Set database version to 19
+[2026-08-03 19:35:46.569] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.569] [quiver_database_18] [info] Migration 19 applied successfully
+[2026-08-03 19:35:46.569] [quiver_database_18] [info] Applying migration 20
+[2026-08-03 19:35:46.569] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.576] [quiver_database_18] [debug] Set database version to 20
+[2026-08-03 19:35:46.576] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.576] [quiver_database_18] [info] Migration 20 applied successfully
+[2026-08-03 19:35:46.576] [quiver_database_18] [info] Applying migration 21
+[2026-08-03 19:35:46.576] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.580] [quiver_database_18] [debug] Set database version to 21
+[2026-08-03 19:35:46.581] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.581] [quiver_database_18] [info] Migration 21 applied successfully
+[2026-08-03 19:35:46.581] [quiver_database_18] [info] Applying migration 22
+[2026-08-03 19:35:46.581] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.582] [quiver_database_18] [debug] Set database version to 22
+[2026-08-03 19:35:46.583] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.583] [quiver_database_18] [info] Migration 22 applied successfully
+[2026-08-03 19:35:46.583] [quiver_database_18] [info] Applying migration 23
+[2026-08-03 19:35:46.583] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.583] [quiver_database_18] [debug] Set database version to 23
+[2026-08-03 19:35:46.584] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.584] [quiver_database_18] [info] Migration 23 applied successfully
+[2026-08-03 19:35:46.584] [quiver_database_18] [info] Applying migration 24
+[2026-08-03 19:35:46.584] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.598] [quiver_database_18] [debug] Set database version to 24
+[2026-08-03 19:35:46.599] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.599] [quiver_database_18] [info] Migration 24 applied successfully
+[2026-08-03 19:35:46.599] [quiver_database_18] [info] Applying migration 25
+[2026-08-03 19:35:46.599] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.603] [quiver_database_18] [debug] Set database version to 25
+[2026-08-03 19:35:46.604] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.604] [quiver_database_18] [info] Migration 25 applied successfully
+[2026-08-03 19:35:46.604] [quiver_database_18] [info] Applying migration 26
+[2026-08-03 19:35:46.604] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.604] [quiver_database_18] [debug] Set database version to 26
+[2026-08-03 19:35:46.605] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.605] [quiver_database_18] [info] Migration 26 applied successfully
+[2026-08-03 19:35:46.605] [quiver_database_18] [info] Applying migration 27
+[2026-08-03 19:35:46.605] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.606] [quiver_database_18] [debug] Set database version to 27
+[2026-08-03 19:35:46.607] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.607] [quiver_database_18] [info] Migration 27 applied successfully
+[2026-08-03 19:35:46.607] [quiver_database_18] [info] Applying migration 28
+[2026-08-03 19:35:46.607] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.608] [quiver_database_18] [debug] Set database version to 28
+[2026-08-03 19:35:46.608] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.608] [quiver_database_18] [info] Migration 28 applied successfully
+[2026-08-03 19:35:46.608] [quiver_database_18] [info] Applying migration 29
+[2026-08-03 19:35:46.608] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.610] [quiver_database_18] [debug] Set database version to 29
+[2026-08-03 19:35:46.611] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.611] [quiver_database_18] [info] Migration 29 applied successfully
+[2026-08-03 19:35:46.611] [quiver_database_18] [info] Applying migration 30
+[2026-08-03 19:35:46.611] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.620] [quiver_database_18] [debug] Set database version to 30
+[2026-08-03 19:35:46.621] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.621] [quiver_database_18] [info] Migration 30 applied successfully
+[2026-08-03 19:35:46.621] [quiver_database_18] [info] Applying migration 31
+[2026-08-03 19:35:46.621] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.634] [quiver_database_18] [debug] Set database version to 31
+[2026-08-03 19:35:46.635] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.635] [quiver_database_18] [info] Migration 31 applied successfully
+[2026-08-03 19:35:46.635] [quiver_database_18] [info] Applying migration 32
+[2026-08-03 19:35:46.635] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.643] [quiver_database_18] [debug] Set database version to 32
+[2026-08-03 19:35:46.644] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.644] [quiver_database_18] [info] Migration 32 applied successfully
+[2026-08-03 19:35:46.644] [quiver_database_18] [info] Applying migration 33
+[2026-08-03 19:35:46.644] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.650] [quiver_database_18] [debug] Set database version to 33
+[2026-08-03 19:35:46.651] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.651] [quiver_database_18] [info] Migration 33 applied successfully
+[2026-08-03 19:35:46.651] [quiver_database_18] [info] Applying migration 34
+[2026-08-03 19:35:46.651] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.652] [quiver_database_18] [debug] Set database version to 34
+[2026-08-03 19:35:46.652] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.652] [quiver_database_18] [info] Migration 34 applied successfully
+[2026-08-03 19:35:46.652] [quiver_database_18] [info] Applying migration 35
+[2026-08-03 19:35:46.652] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.660] [quiver_database_18] [debug] Set database version to 35
+[2026-08-03 19:35:46.661] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.661] [quiver_database_18] [info] Migration 35 applied successfully
+[2026-08-03 19:35:46.661] [quiver_database_18] [info] Applying migration 36
+[2026-08-03 19:35:46.661] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.662] [quiver_database_18] [debug] Set database version to 36
+[2026-08-03 19:35:46.662] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.662] [quiver_database_18] [info] Migration 36 applied successfully
+[2026-08-03 19:35:46.662] [quiver_database_18] [info] Applying migration 37
+[2026-08-03 19:35:46.662] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.665] [quiver_database_18] [debug] Set database version to 37
+[2026-08-03 19:35:46.666] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.666] [quiver_database_18] [info] Migration 37 applied successfully
+[2026-08-03 19:35:46.668] [quiver_database_18] [info] All migrations applied successfully. Database now at version 37
+[2026-08-03 19:35:46.697] [quiver_database_18] [debug] Creating element in collection: Configuration
+[2026-08-03 19:35:46.697] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.697] [quiver_database_18] [debug] Inserted element with id: 1
+[2026-08-03 19:35:46.697] [quiver_database_18] [debug] Inserted 1 vector rows into Configuration_vector_subperiod_duration
+[2026-08-03 19:35:46.698] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.698] [quiver_database_18] [info] Created element 1 in Configuration
+[2026-08-03 19:35:46.700] [quiver_database_18] [debug] Creating element in collection: Zone
+[2026-08-03 19:35:46.700] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.700] [quiver_database_18] [debug] Inserted element with id: 1
+[2026-08-03 19:35:46.701] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.701] [quiver_database_18] [info] Created element 1 in Zone
+[2026-08-03 19:35:46.701] [quiver_database_18] [debug] Creating element in collection: Bus
+[2026-08-03 19:35:46.701] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.702] [quiver_database_18] [debug] Inserted element with id: 1
+[2026-08-03 19:35:46.702] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.702] [quiver_database_18] [info] Created element 1 in Bus
+[2026-08-03 19:35:46.704] [quiver_database_18] [debug] Creating element in collection: DemandUnit
+[2026-08-03 19:35:46.704] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.704] [quiver_database_18] [debug] Inserted element with id: 1
+[2026-08-03 19:35:46.704] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.704] [quiver_database_18] [info] Created element 1 in DemandUnit
+[2026-08-03 19:35:46.705] [quiver_database_18] [debug] Updating time series DemandUnit.parameters for id 1 with 1 rows
+[2026-08-03 19:35:46.705] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.705] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.705] [quiver_database_18] [info] Updated time series DemandUnit.parameters for id 1 with 1 rows
+[2026-08-03 19:35:46.771] [quiver_database_18] [debug] Creating element in collection: ThermalUnit
+[2026-08-03 19:35:46.771] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.771] [quiver_database_18] [debug] Inserted element with id: 1
+[2026-08-03 19:35:46.773] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.773] [quiver_database_18] [info] Created element 1 in ThermalUnit
+[2026-08-03 19:35:46.773] [quiver_database_18] [debug] Updating time series ThermalUnit.parameters for id 1 with 1 rows
+[2026-08-03 19:35:46.773] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.774] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.774] [quiver_database_18] [info] Updated time series ThermalUnit.parameters for id 1 with 1 rows
+[2026-08-03 19:35:46.775] [quiver_database_18] [debug] Creating element in collection: ThermalUnit
+[2026-08-03 19:35:46.775] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.775] [quiver_database_18] [debug] Inserted element with id: 2
+[2026-08-03 19:35:46.776] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.776] [quiver_database_18] [info] Created element 2 in ThermalUnit
+[2026-08-03 19:35:46.776] [quiver_database_18] [debug] Updating time series ThermalUnit.parameters for id 2 with 1 rows
+[2026-08-03 19:35:46.776] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.777] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.777] [quiver_database_18] [info] Updated time series ThermalUnit.parameters for id 2 with 1 rows
+[2026-08-03 19:35:46.778] [quiver_database_18] [debug] Creating element in collection: GaugingStation
+[2026-08-03 19:35:46.778] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.778] [quiver_database_18] [debug] Inserted element with id: 1
+[2026-08-03 19:35:46.779] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.779] [quiver_database_18] [info] Created element 1 in GaugingStation
+[2026-08-03 19:35:46.858] [quiver_database_18] [debug] Creating element in collection: HydroUnit
+[2026-08-03 19:35:46.858] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.858] [quiver_database_18] [debug] Inserted element with id: 1
+[2026-08-03 19:35:46.859] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.859] [quiver_database_18] [info] Created element 1 in HydroUnit
+[2026-08-03 19:35:46.859] [quiver_database_18] [debug] Updating time series HydroUnit.parameters for id 1 with 1 rows
+[2026-08-03 19:35:46.859] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.860] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.860] [quiver_database_18] [info] Updated time series HydroUnit.parameters for id 1 with 1 rows
+[2026-08-03 19:35:46.866] [quiver_database_18] [debug] Reading time series files for collection: DemandUnit
+[2026-08-03 19:35:46.866] [quiver_database_18] [debug] Updating time series files for collection: DemandUnit
+[2026-08-03 19:35:46.866] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.867] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.867] [quiver_database_18] [info] Updated time series files for collection: DemandUnit
+[2026-08-03 19:35:46.867] [quiver_database_18] [debug] Reading time series files for collection: HydroUnit
+[2026-08-03 19:35:46.867] [quiver_database_18] [debug] Updating time series files for collection: HydroUnit
+[2026-08-03 19:35:46.867] [quiver_database_18] [debug] Transaction started
+[2026-08-03 19:35:46.869] [quiver_database_18] [debug] Transaction committed
+[2026-08-03 19:35:46.869] [quiver_database_18] [info] Updated time series files for collection: HydroUnit
+[2026-08-03 19:35:46.870] [quiver_database_18] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_6/study.iara
+[2026-08-03 19:35:46.870] [quiver_database_18] [info] Database closed

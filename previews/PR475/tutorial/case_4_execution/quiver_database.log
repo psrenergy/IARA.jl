@@ -1,9 +1,9 @@
-[2026-08-03 15:45:02.451] [quiver_database_13] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
-[2026-08-03 15:45:02.452] [quiver_database_13] [debug] Database opened successfully, foreign keys enabled
-[2026-08-03 15:45:02.452] [quiver_database_13] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
-[2026-08-03 15:45:02.452] [quiver_database_13] [debug] Database is up to date at version 37
-[2026-08-03 15:45:02.455] [quiver_database_13] [debug] Reading time series files for collection: Configuration
-[2026-08-03 15:45:02.456] [quiver_database_13] [debug] Reading time series files for collection: DemandUnit
-[2026-08-03 15:45:02.456] [quiver_database_13] [debug] Reading time series files for collection: BiddingGroup
-[2026-08-03 15:45:06.252] [quiver_database_13] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
-[2026-08-03 15:45:06.252] [quiver_database_13] [info] Database closed
+[2026-08-03 19:35:32.152] [quiver_database_13] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
+[2026-08-03 19:35:32.152] [quiver_database_13] [debug] Database opened successfully, foreign keys enabled
+[2026-08-03 19:35:32.152] [quiver_database_13] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
+[2026-08-03 19:35:32.152] [quiver_database_13] [debug] Database is up to date at version 37
+[2026-08-03 19:35:32.155] [quiver_database_13] [debug] Reading time series files for collection: Configuration
+[2026-08-03 19:35:32.156] [quiver_database_13] [debug] Reading time series files for collection: DemandUnit
+[2026-08-03 19:35:32.156] [quiver_database_13] [debug] Reading time series files for collection: BiddingGroup
+[2026-08-03 19:35:35.608] [quiver_database_13] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
+[2026-08-03 19:35:35.608] [quiver_database_13] [info] Database closed

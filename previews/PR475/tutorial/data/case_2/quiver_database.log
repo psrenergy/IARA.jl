@@ -1,50 +1,50 @@
-[2026-08-03 13:42:25.252] [quiver_database_4] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_2/study.iara
-[2026-08-03 13:42:25.252] [quiver_database_4] [debug] Database opened successfully, foreign keys enabled
-[2026-08-03 13:42:25.252] [quiver_database_4] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_2/study.iara
-[2026-08-03 13:42:25.252] [quiver_database_4] [debug] Database is up to date at version 37
-[2026-08-03 13:42:25.315] [quiver_database_4] [debug] Updating element 1 in collection: Configuration
-[2026-08-03 13:42:25.315] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.316] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.316] [quiver_database_4] [info] Updated element 1 in Configuration
-[2026-08-03 13:42:25.318] [quiver_database_4] [debug] Creating element in collection: AssetOwner
-[2026-08-03 13:42:25.318] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.318] [quiver_database_4] [debug] Inserted element with id: 3
-[2026-08-03 13:42:25.319] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.319] [quiver_database_4] [info] Created element 3 in AssetOwner
-[2026-08-03 13:42:25.320] [quiver_database_4] [debug] Creating element in collection: BiddingGroup
-[2026-08-03 13:42:25.320] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.320] [quiver_database_4] [debug] Inserted element with id: 3
-[2026-08-03 13:42:25.320] [quiver_database_4] [debug] Inserted 1 set rows into BiddingGroup_set_markup
-[2026-08-03 13:42:25.321] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.321] [quiver_database_4] [info] Created element 3 in BiddingGroup
-[2026-08-03 13:42:25.398] [quiver_database_4] [debug] Creating element in collection: GaugingStation
-[2026-08-03 13:42:25.398] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.398] [quiver_database_4] [debug] Inserted element with id: 1
-[2026-08-03 13:42:25.399] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.399] [quiver_database_4] [info] Created element 1 in GaugingStation
-[2026-08-03 13:42:25.586] [quiver_database_4] [debug] Creating element in collection: HydroUnit
-[2026-08-03 13:42:25.586] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.586] [quiver_database_4] [debug] Inserted element with id: 1
-[2026-08-03 13:42:25.587] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.587] [quiver_database_4] [info] Created element 1 in HydroUnit
-[2026-08-03 13:42:25.824] [quiver_database_4] [debug] Updating time series HydroUnit.parameters for id 1 with 1 rows
-[2026-08-03 13:42:25.824] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.825] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.825] [quiver_database_4] [info] Updated time series HydroUnit.parameters for id 1 with 1 rows
-[2026-08-03 13:42:25.841] [quiver_database_4] [debug] Reading time series files for collection: DemandUnit
-[2026-08-03 13:42:25.841] [quiver_database_4] [debug] Updating time series files for collection: DemandUnit
-[2026-08-03 13:42:25.841] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.841] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.841] [quiver_database_4] [info] Updated time series files for collection: DemandUnit
-[2026-08-03 13:42:25.842] [quiver_database_4] [debug] Reading time series files for collection: RenewableUnit
-[2026-08-03 13:42:25.842] [quiver_database_4] [debug] Updating time series files for collection: RenewableUnit
-[2026-08-03 13:42:25.842] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.842] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.842] [quiver_database_4] [info] Updated time series files for collection: RenewableUnit
-[2026-08-03 13:42:25.860] [quiver_database_4] [debug] Reading time series files for collection: HydroUnit
-[2026-08-03 13:42:25.860] [quiver_database_4] [debug] Updating time series files for collection: HydroUnit
-[2026-08-03 13:42:25.860] [quiver_database_4] [debug] Transaction started
-[2026-08-03 13:42:25.861] [quiver_database_4] [debug] Transaction committed
-[2026-08-03 13:42:25.861] [quiver_database_4] [info] Updated time series files for collection: HydroUnit
-[2026-08-03 13:42:25.862] [quiver_database_4] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_2/study.iara
-[2026-08-03 13:42:25.862] [quiver_database_4] [info] Database closed
+[2026-08-03 15:44:52.176] [quiver_database_4] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_2/study.iara
+[2026-08-03 15:44:52.176] [quiver_database_4] [debug] Database opened successfully, foreign keys enabled
+[2026-08-03 15:44:52.176] [quiver_database_4] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_2/study.iara
+[2026-08-03 15:44:52.176] [quiver_database_4] [debug] Database is up to date at version 37
+[2026-08-03 15:44:52.245] [quiver_database_4] [debug] Updating element 1 in collection: Configuration
+[2026-08-03 15:44:52.245] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.246] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.246] [quiver_database_4] [info] Updated element 1 in Configuration
+[2026-08-03 15:44:52.248] [quiver_database_4] [debug] Creating element in collection: AssetOwner
+[2026-08-03 15:44:52.248] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.248] [quiver_database_4] [debug] Inserted element with id: 3
+[2026-08-03 15:44:52.249] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.249] [quiver_database_4] [info] Created element 3 in AssetOwner
+[2026-08-03 15:44:52.250] [quiver_database_4] [debug] Creating element in collection: BiddingGroup
+[2026-08-03 15:44:52.250] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.250] [quiver_database_4] [debug] Inserted element with id: 3
+[2026-08-03 15:44:52.250] [quiver_database_4] [debug] Inserted 1 set rows into BiddingGroup_set_markup
+[2026-08-03 15:44:52.251] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.251] [quiver_database_4] [info] Created element 3 in BiddingGroup
+[2026-08-03 15:44:52.333] [quiver_database_4] [debug] Creating element in collection: GaugingStation
+[2026-08-03 15:44:52.333] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.333] [quiver_database_4] [debug] Inserted element with id: 1
+[2026-08-03 15:44:52.334] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.334] [quiver_database_4] [info] Created element 1 in GaugingStation
+[2026-08-03 15:44:52.532] [quiver_database_4] [debug] Creating element in collection: HydroUnit
+[2026-08-03 15:44:52.532] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.533] [quiver_database_4] [debug] Inserted element with id: 1
+[2026-08-03 15:44:52.534] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.534] [quiver_database_4] [info] Created element 1 in HydroUnit
+[2026-08-03 15:44:52.801] [quiver_database_4] [debug] Updating time series HydroUnit.parameters for id 1 with 1 rows
+[2026-08-03 15:44:52.801] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.803] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.803] [quiver_database_4] [info] Updated time series HydroUnit.parameters for id 1 with 1 rows
+[2026-08-03 15:44:52.819] [quiver_database_4] [debug] Reading time series files for collection: DemandUnit
+[2026-08-03 15:44:52.819] [quiver_database_4] [debug] Updating time series files for collection: DemandUnit
+[2026-08-03 15:44:52.819] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.821] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.821] [quiver_database_4] [info] Updated time series files for collection: DemandUnit
+[2026-08-03 15:44:52.821] [quiver_database_4] [debug] Reading time series files for collection: RenewableUnit
+[2026-08-03 15:44:52.821] [quiver_database_4] [debug] Updating time series files for collection: RenewableUnit
+[2026-08-03 15:44:52.821] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.822] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.822] [quiver_database_4] [info] Updated time series files for collection: RenewableUnit
+[2026-08-03 15:44:52.842] [quiver_database_4] [debug] Reading time series files for collection: HydroUnit
+[2026-08-03 15:44:52.842] [quiver_database_4] [debug] Updating time series files for collection: HydroUnit
+[2026-08-03 15:44:52.842] [quiver_database_4] [debug] Transaction started
+[2026-08-03 15:44:52.843] [quiver_database_4] [debug] Transaction committed
+[2026-08-03 15:44:52.843] [quiver_database_4] [info] Updated time series files for collection: HydroUnit
+[2026-08-03 15:44:52.844] [quiver_database_4] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_2/study.iara
+[2026-08-03 15:44:52.844] [quiver_database_4] [info] Database closed

@@ -23,86 +23,86 @@ db = IARA.create_study!(PATH_BASE_CASE;
     cycle_duration_in_hours = cycle_duration_in_hours,
     demand_deficit_cost = 500.0,
     demand_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.044] [quiver_database_8] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_3/study.iara
-[2026-08-03 13:42:31.044] [quiver_database_8] [info] Applying 37 pending migration(s) from version 0 to 37
-[2026-08-03 13:42:31.044] [quiver_database_8] [info] Applying migration 1
-[2026-08-03 13:42:31.048] [quiver_database_8] [info] Migration 1 applied successfully
-[2026-08-03 13:42:31.048] [quiver_database_8] [info] Applying migration 2
-[2026-08-03 13:42:31.114] [quiver_database_8] [info] Migration 2 applied successfully
-[2026-08-03 13:42:31.114] [quiver_database_8] [info] Applying migration 3
-[2026-08-03 13:42:31.151] [quiver_database_8] [info] Migration 3 applied successfully
-[2026-08-03 13:42:31.151] [quiver_database_8] [info] Applying migration 4
-[2026-08-03 13:42:31.165] [quiver_database_8] [info] Migration 4 applied successfully
-[2026-08-03 13:42:31.165] [quiver_database_8] [info] Applying migration 5
-[2026-08-03 13:42:31.167] [quiver_database_8] [info] Migration 5 applied successfully
-[2026-08-03 13:42:31.167] [quiver_database_8] [info] Applying migration 6
-[2026-08-03 13:42:31.169] [quiver_database_8] [info] Migration 6 applied successfully
-[2026-08-03 13:42:31.169] [quiver_database_8] [info] Applying migration 7
-[2026-08-03 13:42:31.173] [quiver_database_8] [info] Migration 7 applied successfully
-[2026-08-03 13:42:31.173] [quiver_database_8] [info] Applying migration 8
-[2026-08-03 13:42:31.174] [quiver_database_8] [info] Migration 8 applied successfully
-[2026-08-03 13:42:31.174] [quiver_database_8] [info] Applying migration 9
-[2026-08-03 13:42:31.177] [quiver_database_8] [info] Migration 9 applied successfully
-[2026-08-03 13:42:31.177] [quiver_database_8] [info] Applying migration 10
-[2026-08-03 13:42:31.178] [quiver_database_8] [info] Migration 10 applied successfully
-[2026-08-03 13:42:31.178] [quiver_database_8] [info] Applying migration 11
-[2026-08-03 13:42:31.179] [quiver_database_8] [info] Migration 11 applied successfully
-[2026-08-03 13:42:31.179] [quiver_database_8] [info] Applying migration 12
-[2026-08-03 13:42:31.183] [quiver_database_8] [info] Migration 12 applied successfully
-[2026-08-03 13:42:31.183] [quiver_database_8] [info] Applying migration 13
-[2026-08-03 13:42:31.185] [quiver_database_8] [info] Migration 13 applied successfully
-[2026-08-03 13:42:31.185] [quiver_database_8] [info] Applying migration 14
-[2026-08-03 13:42:31.186] [quiver_database_8] [info] Migration 14 applied successfully
-[2026-08-03 13:42:31.186] [quiver_database_8] [info] Applying migration 15
-[2026-08-03 13:42:31.189] [quiver_database_8] [info] Migration 15 applied successfully
-[2026-08-03 13:42:31.189] [quiver_database_8] [info] Applying migration 16
-[2026-08-03 13:42:31.190] [quiver_database_8] [info] Migration 16 applied successfully
-[2026-08-03 13:42:31.190] [quiver_database_8] [info] Applying migration 17
-[2026-08-03 13:42:31.191] [quiver_database_8] [info] Migration 17 applied successfully
-[2026-08-03 13:42:31.191] [quiver_database_8] [info] Applying migration 18
-[2026-08-03 13:42:31.201] [quiver_database_8] [info] Migration 18 applied successfully
-[2026-08-03 13:42:31.201] [quiver_database_8] [info] Applying migration 19
-[2026-08-03 13:42:31.205] [quiver_database_8] [info] Migration 19 applied successfully
-[2026-08-03 13:42:31.205] [quiver_database_8] [info] Applying migration 20
-[2026-08-03 13:42:31.212] [quiver_database_8] [info] Migration 20 applied successfully
-[2026-08-03 13:42:31.212] [quiver_database_8] [info] Applying migration 21
-[2026-08-03 13:42:31.216] [quiver_database_8] [info] Migration 21 applied successfully
-[2026-08-03 13:42:31.216] [quiver_database_8] [info] Applying migration 22
-[2026-08-03 13:42:31.218] [quiver_database_8] [info] Migration 22 applied successfully
-[2026-08-03 13:42:31.218] [quiver_database_8] [info] Applying migration 23
-[2026-08-03 13:42:31.218] [quiver_database_8] [info] Migration 23 applied successfully
-[2026-08-03 13:42:31.218] [quiver_database_8] [info] Applying migration 24
-[2026-08-03 13:42:31.233] [quiver_database_8] [info] Migration 24 applied successfully
-[2026-08-03 13:42:31.233] [quiver_database_8] [info] Applying migration 25
-[2026-08-03 13:42:31.237] [quiver_database_8] [info] Migration 25 applied successfully
-[2026-08-03 13:42:31.237] [quiver_database_8] [info] Applying migration 26
-[2026-08-03 13:42:31.238] [quiver_database_8] [info] Migration 26 applied successfully
-[2026-08-03 13:42:31.238] [quiver_database_8] [info] Applying migration 27
-[2026-08-03 13:42:31.240] [quiver_database_8] [info] Migration 27 applied successfully
-[2026-08-03 13:42:31.240] [quiver_database_8] [info] Applying migration 28
-[2026-08-03 13:42:31.241] [quiver_database_8] [info] Migration 28 applied successfully
-[2026-08-03 13:42:31.241] [quiver_database_8] [info] Applying migration 29
-[2026-08-03 13:42:31.244] [quiver_database_8] [info] Migration 29 applied successfully
-[2026-08-03 13:42:31.244] [quiver_database_8] [info] Applying migration 30
-[2026-08-03 13:42:31.253] [quiver_database_8] [info] Migration 30 applied successfully
-[2026-08-03 13:42:31.253] [quiver_database_8] [info] Applying migration 31
-[2026-08-03 13:42:31.267] [quiver_database_8] [info] Migration 31 applied successfully
-[2026-08-03 13:42:31.267] [quiver_database_8] [info] Applying migration 32
-[2026-08-03 13:42:31.276] [quiver_database_8] [info] Migration 32 applied successfully
-[2026-08-03 13:42:31.276] [quiver_database_8] [info] Applying migration 33
-[2026-08-03 13:42:31.283] [quiver_database_8] [info] Migration 33 applied successfully
-[2026-08-03 13:42:31.283] [quiver_database_8] [info] Applying migration 34
-[2026-08-03 13:42:31.284] [quiver_database_8] [info] Migration 34 applied successfully
-[2026-08-03 13:42:31.284] [quiver_database_8] [info] Applying migration 35
-[2026-08-03 13:42:31.292] [quiver_database_8] [info] Migration 35 applied successfully
-[2026-08-03 13:42:31.292] [quiver_database_8] [info] Applying migration 36
-[2026-08-03 13:42:31.293] [quiver_database_8] [info] Migration 36 applied successfully
-[2026-08-03 13:42:31.293] [quiver_database_8] [info] Applying migration 37
-[2026-08-03 13:42:31.297] [quiver_database_8] [info] Migration 37 applied successfully
-[2026-08-03 13:42:31.299] [quiver_database_8] [info] All migrations applied successfully. Database now at version 37
-[2026-08-03 13:42:31.328] [quiver_database_8] [info] Created element 1 in Configuration</code></pre><h2 id="Zone-and-Bus"><a class="docs-heading-anchor" href="#Zone-and-Bus">Zone and Bus</a><a id="Zone-and-Bus-1"></a><a class="docs-heading-anchor-permalink" href="#Zone-and-Bus" title="Permalink"></a></h2><p>In this tutorial we are concerned only with highlighting the specifications of a clearing with profile bids. Therefore, we will be simplifying it by using a single zone and a single bus. We can add each of them by using the <a href="../api_reference.html#IARA.add_zone!-Tuple{Quiver.Database}"><code>IARA.add_zone!</code></a> and <a href="../api_reference.html#IARA.add_bus!-Tuple{Quiver.Database}"><code>IARA.IARA.add_bus!</code></a> functions.</p><pre><code class="language-julia hljs">IARA.add_zone!(db; label = &quot;zone_1&quot;)
-IARA.add_bus!(db; label = &quot;bus_1&quot;, zone_id = &quot;zone_1&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.331] [quiver_database_8] [info] Created element 1 in Zone
-[2026-08-03 13:42:31.376] [quiver_database_8] [info] Created element 1 in Bus</code></pre><h2 id="Demand"><a class="docs-heading-anchor" href="#Demand">Demand</a><a id="Demand-1"></a><a class="docs-heading-anchor-permalink" href="#Demand" title="Permalink"></a></h2><p>This case will have a single demand, which we can add with the function <a href="../api_reference.html#IARA.add_demand_unit!-Tuple{Quiver.Database}"><code>IARA.add_demand_unit!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_demand_unit!(db;
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:58.857] [quiver_database_8] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_3/study.iara
+[2026-08-03 15:44:58.857] [quiver_database_8] [info] Applying 37 pending migration(s) from version 0 to 37
+[2026-08-03 15:44:58.857] [quiver_database_8] [info] Applying migration 1
+[2026-08-03 15:44:58.861] [quiver_database_8] [info] Migration 1 applied successfully
+[2026-08-03 15:44:58.861] [quiver_database_8] [info] Applying migration 2
+[2026-08-03 15:44:58.933] [quiver_database_8] [info] Migration 2 applied successfully
+[2026-08-03 15:44:58.933] [quiver_database_8] [info] Applying migration 3
+[2026-08-03 15:44:58.974] [quiver_database_8] [info] Migration 3 applied successfully
+[2026-08-03 15:44:58.974] [quiver_database_8] [info] Applying migration 4
+[2026-08-03 15:44:58.990] [quiver_database_8] [info] Migration 4 applied successfully
+[2026-08-03 15:44:58.990] [quiver_database_8] [info] Applying migration 5
+[2026-08-03 15:44:58.992] [quiver_database_8] [info] Migration 5 applied successfully
+[2026-08-03 15:44:58.992] [quiver_database_8] [info] Applying migration 6
+[2026-08-03 15:44:58.995] [quiver_database_8] [info] Migration 6 applied successfully
+[2026-08-03 15:44:58.995] [quiver_database_8] [info] Applying migration 7
+[2026-08-03 15:44:58.999] [quiver_database_8] [info] Migration 7 applied successfully
+[2026-08-03 15:44:58.999] [quiver_database_8] [info] Applying migration 8
+[2026-08-03 15:44:59.001] [quiver_database_8] [info] Migration 8 applied successfully
+[2026-08-03 15:44:59.001] [quiver_database_8] [info] Applying migration 9
+[2026-08-03 15:44:59.004] [quiver_database_8] [info] Migration 9 applied successfully
+[2026-08-03 15:44:59.004] [quiver_database_8] [info] Applying migration 10
+[2026-08-03 15:44:59.005] [quiver_database_8] [info] Migration 10 applied successfully
+[2026-08-03 15:44:59.005] [quiver_database_8] [info] Applying migration 11
+[2026-08-03 15:44:59.006] [quiver_database_8] [info] Migration 11 applied successfully
+[2026-08-03 15:44:59.006] [quiver_database_8] [info] Applying migration 12
+[2026-08-03 15:44:59.012] [quiver_database_8] [info] Migration 12 applied successfully
+[2026-08-03 15:44:59.012] [quiver_database_8] [info] Applying migration 13
+[2026-08-03 15:44:59.013] [quiver_database_8] [info] Migration 13 applied successfully
+[2026-08-03 15:44:59.013] [quiver_database_8] [info] Applying migration 14
+[2026-08-03 15:44:59.015] [quiver_database_8] [info] Migration 14 applied successfully
+[2026-08-03 15:44:59.015] [quiver_database_8] [info] Applying migration 15
+[2026-08-03 15:44:59.018] [quiver_database_8] [info] Migration 15 applied successfully
+[2026-08-03 15:44:59.018] [quiver_database_8] [info] Applying migration 16
+[2026-08-03 15:44:59.019] [quiver_database_8] [info] Migration 16 applied successfully
+[2026-08-03 15:44:59.019] [quiver_database_8] [info] Applying migration 17
+[2026-08-03 15:44:59.020] [quiver_database_8] [info] Migration 17 applied successfully
+[2026-08-03 15:44:59.020] [quiver_database_8] [info] Applying migration 18
+[2026-08-03 15:44:59.031] [quiver_database_8] [info] Migration 18 applied successfully
+[2026-08-03 15:44:59.031] [quiver_database_8] [info] Applying migration 19
+[2026-08-03 15:44:59.036] [quiver_database_8] [info] Migration 19 applied successfully
+[2026-08-03 15:44:59.036] [quiver_database_8] [info] Applying migration 20
+[2026-08-03 15:44:59.043] [quiver_database_8] [info] Migration 20 applied successfully
+[2026-08-03 15:44:59.043] [quiver_database_8] [info] Applying migration 21
+[2026-08-03 15:44:59.047] [quiver_database_8] [info] Migration 21 applied successfully
+[2026-08-03 15:44:59.047] [quiver_database_8] [info] Applying migration 22
+[2026-08-03 15:44:59.050] [quiver_database_8] [info] Migration 22 applied successfully
+[2026-08-03 15:44:59.050] [quiver_database_8] [info] Applying migration 23
+[2026-08-03 15:44:59.050] [quiver_database_8] [info] Migration 23 applied successfully
+[2026-08-03 15:44:59.050] [quiver_database_8] [info] Applying migration 24
+[2026-08-03 15:44:59.067] [quiver_database_8] [info] Migration 24 applied successfully
+[2026-08-03 15:44:59.067] [quiver_database_8] [info] Applying migration 25
+[2026-08-03 15:44:59.072] [quiver_database_8] [info] Migration 25 applied successfully
+[2026-08-03 15:44:59.072] [quiver_database_8] [info] Applying migration 26
+[2026-08-03 15:44:59.073] [quiver_database_8] [info] Migration 26 applied successfully
+[2026-08-03 15:44:59.073] [quiver_database_8] [info] Applying migration 27
+[2026-08-03 15:44:59.076] [quiver_database_8] [info] Migration 27 applied successfully
+[2026-08-03 15:44:59.076] [quiver_database_8] [info] Applying migration 28
+[2026-08-03 15:44:59.077] [quiver_database_8] [info] Migration 28 applied successfully
+[2026-08-03 15:44:59.077] [quiver_database_8] [info] Applying migration 29
+[2026-08-03 15:44:59.080] [quiver_database_8] [info] Migration 29 applied successfully
+[2026-08-03 15:44:59.080] [quiver_database_8] [info] Applying migration 30
+[2026-08-03 15:44:59.091] [quiver_database_8] [info] Migration 30 applied successfully
+[2026-08-03 15:44:59.091] [quiver_database_8] [info] Applying migration 31
+[2026-08-03 15:44:59.106] [quiver_database_8] [info] Migration 31 applied successfully
+[2026-08-03 15:44:59.106] [quiver_database_8] [info] Applying migration 32
+[2026-08-03 15:44:59.115] [quiver_database_8] [info] Migration 32 applied successfully
+[2026-08-03 15:44:59.115] [quiver_database_8] [info] Applying migration 33
+[2026-08-03 15:44:59.123] [quiver_database_8] [info] Migration 33 applied successfully
+[2026-08-03 15:44:59.123] [quiver_database_8] [info] Applying migration 34
+[2026-08-03 15:44:59.124] [quiver_database_8] [info] Migration 34 applied successfully
+[2026-08-03 15:44:59.124] [quiver_database_8] [info] Applying migration 35
+[2026-08-03 15:44:59.133] [quiver_database_8] [info] Migration 35 applied successfully
+[2026-08-03 15:44:59.133] [quiver_database_8] [info] Applying migration 36
+[2026-08-03 15:44:59.134] [quiver_database_8] [info] Migration 36 applied successfully
+[2026-08-03 15:44:59.134] [quiver_database_8] [info] Applying migration 37
+[2026-08-03 15:44:59.139] [quiver_database_8] [info] Migration 37 applied successfully
+[2026-08-03 15:44:59.140] [quiver_database_8] [info] All migrations applied successfully. Database now at version 37
+[2026-08-03 15:44:59.171] [quiver_database_8] [info] Created element 1 in Configuration</code></pre><h2 id="Zone-and-Bus"><a class="docs-heading-anchor" href="#Zone-and-Bus">Zone and Bus</a><a id="Zone-and-Bus-1"></a><a class="docs-heading-anchor-permalink" href="#Zone-and-Bus" title="Permalink"></a></h2><p>In this tutorial we are concerned only with highlighting the specifications of a clearing with profile bids. Therefore, we will be simplifying it by using a single zone and a single bus. We can add each of them by using the <a href="../api_reference.html#IARA.add_zone!-Tuple{Quiver.Database}"><code>IARA.add_zone!</code></a> and <a href="../api_reference.html#IARA.add_bus!-Tuple{Quiver.Database}"><code>IARA.IARA.add_bus!</code></a> functions.</p><pre><code class="language-julia hljs">IARA.add_zone!(db; label = &quot;zone_1&quot;)
+IARA.add_bus!(db; label = &quot;bus_1&quot;, zone_id = &quot;zone_1&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.175] [quiver_database_8] [info] Created element 1 in Zone
+[2026-08-03 15:44:59.221] [quiver_database_8] [info] Created element 1 in Bus</code></pre><h2 id="Demand"><a class="docs-heading-anchor" href="#Demand">Demand</a><a id="Demand-1"></a><a class="docs-heading-anchor-permalink" href="#Demand" title="Permalink"></a></h2><p>This case will have a single demand, which we can add with the function <a href="../api_reference.html#IARA.add_demand_unit!-Tuple{Quiver.Database}"><code>IARA.add_demand_unit!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_demand_unit!(db;
     label = &quot;dem_1&quot;,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -110,16 +110,16 @@ IARA.add_bus!(db; label = &quot;bus_1&quot;, zone_id = &quot;zone_1&quot;)</code
     ),
     bus_id = &quot;bus_1&quot;,
     max_demand = 0.03,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.379] [quiver_database_8] [info] Created element 1 in DemandUnit
-[2026-08-03 13:42:31.379] [quiver_database_8] [info] Updated time series DemandUnit.parameters for id 1 with 1 rows</code></pre><p>We can now link the time series files for the demand to the database. You can find this time series file in the <a href="case_03_build_profile_base_case.html"><code>data/case_3</code></a> folder. Let&#39;s take a quick look at the file.</p><pre><code class="language-julia hljs">IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, &quot;demand.csv&quot;))
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.224] [quiver_database_8] [info] Created element 1 in DemandUnit
+[2026-08-03 15:44:59.225] [quiver_database_8] [info] Updated time series DemandUnit.parameters for id 1 with 1 rows</code></pre><p>We can now link the time series files for the demand to the database. You can find this time series file in the <a href="case_03_build_profile_base_case.html"><code>data/case_3</code></a> folder. Let&#39;s take a quick look at the file.</p><pre><code class="language-julia hljs">IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, &quot;demand.csv&quot;))
 
 IARA.link_time_series_to_file(
     db,
     &quot;DemandUnit&quot;;
     demand_ex_ante = &quot;demand&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.382] [quiver_database_8] [info] Updated time series files for collection: DemandUnit</code></pre><h2 id="Asset-Owners-and-Bidding-Groups"><a class="docs-heading-anchor" href="#Asset-Owners-and-Bidding-Groups">Asset Owners and Bidding Groups</a><a id="Asset-Owners-and-Bidding-Groups-1"></a><a class="docs-heading-anchor-permalink" href="#Asset-Owners-and-Bidding-Groups" title="Permalink"></a></h2><p>For this case, we will be demonstrating the differences of a profile bid offer and an independent bid offer. Thus, we will create two Bidding Groups, one for each type of bid, and link them to the same Asset Owner.</p><p>We can add an Asset Owner with the function <a href="../api_reference.html#IARA.add_asset_owner!-Tuple{Quiver.Database}"><code>IARA.add_asset_owner!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_asset_owner!(db;
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.228] [quiver_database_8] [info] Updated time series files for collection: DemandUnit</code></pre><h2 id="Asset-Owners-and-Bidding-Groups"><a class="docs-heading-anchor" href="#Asset-Owners-and-Bidding-Groups">Asset Owners and Bidding Groups</a><a id="Asset-Owners-and-Bidding-Groups-1"></a><a class="docs-heading-anchor-permalink" href="#Asset-Owners-and-Bidding-Groups" title="Permalink"></a></h2><p>For this case, we will be demonstrating the differences of a profile bid offer and an independent bid offer. Thus, we will create two Bidding Groups, one for each type of bid, and link them to the same Asset Owner.</p><p>We can add an Asset Owner with the function <a href="../api_reference.html#IARA.add_asset_owner!-Tuple{Quiver.Database}"><code>IARA.add_asset_owner!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_asset_owner!(db;
     label = &quot;asset_owner_1&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.384] [quiver_database_8] [info] Created element 1 in AssetOwner</code></pre><p>Now we can define its Bidding Groups with <a href="../api_reference.html#IARA.add_bidding_group!-Tuple{Quiver.Database}"><code>IARA.add_bidding_group!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_bidding_group!(db;
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.230] [quiver_database_8] [info] Created element 1 in AssetOwner</code></pre><p>Now we can define its Bidding Groups with <a href="../api_reference.html#IARA.add_bidding_group!-Tuple{Quiver.Database}"><code>IARA.add_bidding_group!</code></a>.</p><pre><code class="language-julia hljs">IARA.add_bidding_group!(db;
     label = &quot;bg_1&quot;,
     assetowner_id = &quot;asset_owner_1&quot;,
 )
@@ -127,13 +127,13 @@ IARA.link_time_series_to_file(
 IARA.add_bidding_group!(db;
     label = &quot;bg_2&quot;,
     assetowner_id = &quot;asset_owner_1&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.431] [quiver_database_8] [info] Created element 1 in BiddingGroup
-[2026-08-03 13:42:31.432] [quiver_database_8] [info] Created element 2 in BiddingGroup</code></pre><p>After adding the Bidding Groups, we can link the time series files for the price and quantity bids. Let&#39;s take a look at each of these files before linking them.</p><h3 id="Quantity-Offer"><a class="docs-heading-anchor" href="#Quantity-Offer">Quantity Offer</a><a id="Quantity-Offer-1"></a><a class="docs-heading-anchor-permalink" href="#Quantity-Offer" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, &quot;quantity_bid.csv&quot;))</code></pre><div><div style = "float: left;"><span>2×6 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">period</th><th style = "text-align: left;">scenario</th><th style = "text-align: left;">subperiod</th><th style = "text-align: left;">bid_segment</th><th style = "text-align: left;">bg_1 - bus_1</th><th style = "text-align: left;">bg_2 - bus_1</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">20.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">20.0</td></tr></tbody></table></div><h3 id="Price-Offer"><a class="docs-heading-anchor" href="#Price-Offer">Price Offer</a><a id="Price-Offer-1"></a><a class="docs-heading-anchor-permalink" href="#Price-Offer" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, &quot;price_bid.csv&quot;))</code></pre><div><div style = "float: left;"><span>2×6 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">period</th><th style = "text-align: left;">scenario</th><th style = "text-align: left;">subperiod</th><th style = "text-align: left;">bid_segment</th><th style = "text-align: left;">bg_1 - bus_1</th><th style = "text-align: left;">bg_2 - bus_1</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">10.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">10.0</td></tr></tbody></table></div><pre><code class="language-julia hljs">IARA.link_time_series_to_file(
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.283] [quiver_database_8] [info] Created element 1 in BiddingGroup
+[2026-08-03 15:44:59.285] [quiver_database_8] [info] Created element 2 in BiddingGroup</code></pre><p>After adding the Bidding Groups, we can link the time series files for the price and quantity bids. Let&#39;s take a look at each of these files before linking them.</p><h3 id="Quantity-Offer"><a class="docs-heading-anchor" href="#Quantity-Offer">Quantity Offer</a><a id="Quantity-Offer-1"></a><a class="docs-heading-anchor-permalink" href="#Quantity-Offer" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, &quot;quantity_bid.csv&quot;))</code></pre><div><div style = "float: left;"><span>2×6 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">period</th><th style = "text-align: left;">scenario</th><th style = "text-align: left;">subperiod</th><th style = "text-align: left;">bid_segment</th><th style = "text-align: left;">bg_1 - bus_1</th><th style = "text-align: left;">bg_2 - bus_1</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">20.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">20.0</td></tr></tbody></table></div><h3 id="Price-Offer"><a class="docs-heading-anchor" href="#Price-Offer">Price Offer</a><a id="Price-Offer-1"></a><a class="docs-heading-anchor-permalink" href="#Price-Offer" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.time_series_dataframe(joinpath(PATH_BASE_CASE, &quot;price_bid.csv&quot;))</code></pre><div><div style = "float: left;"><span>2×6 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">period</th><th style = "text-align: left;">scenario</th><th style = "text-align: left;">subperiod</th><th style = "text-align: left;">bid_segment</th><th style = "text-align: left;">bg_1 - bus_1</th><th style = "text-align: left;">bg_2 - bus_1</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">10.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">10.0</td></tr></tbody></table></div><pre><code class="language-julia hljs">IARA.link_time_series_to_file(
     db,
     &quot;BiddingGroup&quot;;
     quantity_bid = &quot;quantity_bid&quot;,
     price_bid = &quot;price_bid&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.589] [quiver_database_8] [info] Updated time series files for collection: BiddingGroup</code></pre><p>We have just added the time series for the independent bids. Now let&#39;s check the profile bids and link them to our case.</p><h3 id="Quantity-Offer-2"><a class="docs-heading-anchor" href="#Quantity-Offer-2">Quantity Offer</a><a class="docs-heading-anchor-permalink" href="#Quantity-Offer-2" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.time_series_dataframe(
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.457] [quiver_database_8] [info] Updated time series files for collection: BiddingGroup</code></pre><p>We have just added the time series for the independent bids. Now let&#39;s check the profile bids and link them to our case.</p><h3 id="Quantity-Offer-2"><a class="docs-heading-anchor" href="#Quantity-Offer-2">Quantity Offer</a><a class="docs-heading-anchor-permalink" href="#Quantity-Offer-2" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.time_series_dataframe(
     joinpath(PATH_BASE_CASE, &quot;quantity_bid_profile.csv&quot;),
 )</code></pre><div><div style = "float: left;"><span>2×6 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">period</th><th style = "text-align: left;">scenario</th><th style = "text-align: left;">subperiod</th><th style = "text-align: left;">profile</th><th style = "text-align: left;">bg_1 - bus_1</th><th style = "text-align: left;">bg_2 - bus_1</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">25.0</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">1</td><td style = "text-align: right;">50.0</td><td style = "text-align: right;">0.0</td></tr></tbody></table></div><h3 id="Price-Offer-2"><a class="docs-heading-anchor" href="#Price-Offer-2">Price Offer</a><a class="docs-heading-anchor-permalink" href="#Price-Offer-2" title="Permalink"></a></h3><pre><code class="language-julia hljs">IARA.time_series_dataframe(
     joinpath(PATH_BASE_CASE, &quot;price_bid_profile.csv&quot;),
@@ -142,7 +142,7 @@ IARA.add_bidding_group!(db;
     &quot;BiddingGroup&quot;;
     quantity_bid_profile = &quot;quantity_bid_profile&quot;,
     price_bid_profile = &quot;price_bid_profile&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.740] [quiver_database_8] [info] Updated time series files for collection: BiddingGroup</code></pre><h2 id="Generation-Units"><a class="docs-heading-anchor" href="#Generation-Units">Generation Units</a><a id="Generation-Units-1"></a><a class="docs-heading-anchor-permalink" href="#Generation-Units" title="Permalink"></a></h2><pre><code class="language-julia hljs">IARA.add_thermal_unit!(db;
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.619] [quiver_database_8] [info] Updated time series files for collection: BiddingGroup</code></pre><h2 id="Generation-Units"><a class="docs-heading-anchor" href="#Generation-Units">Generation Units</a><a id="Generation-Units-1"></a><a class="docs-heading-anchor-permalink" href="#Generation-Units" title="Permalink"></a></h2><pre><code class="language-julia hljs">IARA.add_thermal_unit!(db;
     label = &quot;ter_1&quot;,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
@@ -168,7 +168,7 @@ IARA.add_thermal_unit!(db;
     biddinggroup_id = &quot;bg_2&quot;,
     has_commitment = 0,
     bus_id = &quot;bus_1&quot;,
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:31.876] [quiver_database_8] [info] Created element 1 in ThermalUnit
-[2026-08-03 13:42:32.107] [quiver_database_8] [info] Updated time series ThermalUnit.parameters for id 1 with 1 rows
-[2026-08-03 13:42:32.108] [quiver_database_8] [info] Created element 2 in ThermalUnit
-[2026-08-03 13:42:32.109] [quiver_database_8] [info] Updated time series ThermalUnit.parameters for id 2 with 1 rows</code></pre><h2 id="Closing-the-case"><a class="docs-heading-anchor" href="#Closing-the-case">Closing the case</a><a id="Closing-the-case-1"></a><a class="docs-heading-anchor-permalink" href="#Closing-the-case" title="Permalink"></a></h2><pre><code class="language-julia hljs">IARA.close_study!(db)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 13:42:32.110] [quiver_database_8] [info] Database closed</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../heuristic_bid_examples.html">« Heuristic bids examples</a><a class="docs-footer-nextpage" href="case_04_build_multi_min_activation.html">Minimum activation bids example »</a><div class="flexbox-break"></div></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 3 August 2026 13:43">Monday 3 August 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:44:59.774] [quiver_database_8] [info] Created element 1 in ThermalUnit
+[2026-08-03 15:45:00.045] [quiver_database_8] [info] Updated time series ThermalUnit.parameters for id 1 with 1 rows
+[2026-08-03 15:45:00.048] [quiver_database_8] [info] Created element 2 in ThermalUnit
+[2026-08-03 15:45:00.049] [quiver_database_8] [info] Updated time series ThermalUnit.parameters for id 2 with 1 rows</code></pre><h2 id="Closing-the-case"><a class="docs-heading-anchor" href="#Closing-the-case">Closing the case</a><a id="Closing-the-case-1"></a><a class="docs-heading-anchor-permalink" href="#Closing-the-case" title="Permalink"></a></h2><pre><code class="language-julia hljs">IARA.close_study!(db)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[2026-08-03 15:45:00.050] [quiver_database_8] [info] Database closed</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../heuristic_bid_examples.html">« Heuristic bids examples</a><a class="docs-footer-nextpage" href="case_04_build_multi_min_activation.html">Minimum activation bids example »</a><div class="flexbox-break"></div></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 3 August 2026 15:45">Monday 3 August 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

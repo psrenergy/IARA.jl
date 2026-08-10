@@ -106,6 +106,7 @@ function supply_function_equilibrium(
     global_q = Vector{Vector{Float64}}()
     global_p = Vector{Vector{Float64}}()
     global_b = Vector{Vector{Float64}}()
+    global_price_type = Vector{AssetOwner_PriceType.T}()
     global_agent_index = 0
 
     # Add all VR bids
@@ -120,6 +121,8 @@ function supply_function_equilibrium(
             )
             for (local_idx, ao) in enumerate(asset_owners_in_vr)
                 global_agent_index += 1
+                price_type = asset_owner_price_type(inputs, ao)
+                push!(global_price_type, price_type)
                 push!(global_q, q[local_idx])
                 push!(global_p, p[local_idx])
                 push!(global_b, b[local_idx])
@@ -142,6 +145,8 @@ function supply_function_equilibrium(
             )
             for (local_idx, bg) in enumerate(bidding_groups)
                 global_agent_index += 1
+                price_type = asset_owner_price_type(inputs, bidding_group_asset_owner_index(inputs, bg))
+                push!(global_price_type, price_type)
                 push!(global_q, q[local_idx])
                 push!(global_p, p[local_idx])
                 push!(global_b, b[local_idx])
@@ -164,7 +169,8 @@ function supply_function_equilibrium(
     for iter in 1:supply_function_equilibrium_max_iterations(inputs)
         global_q, global_p, global_b = run_supply_function_equilibrium_iteration(
             inputs,
-            total_number_of_agents;
+            total_number_of_agents,
+            global_price_type;
             current_quantity = global_q,
             current_price = global_p,
             current_slope = global_b,
@@ -373,7 +379,8 @@ end
 
 function run_supply_function_equilibrium_iteration(
     inputs::AbstractInputs,
-    number_of_asset_owners::Int;
+    number_of_asset_owners::Int,
+    agents_price_type::Vector{AssetOwner_PriceType.T};
     current_quantity::Vector{Vector{Float64}},
     current_price::Vector{Vector{Float64}},
     current_slope::Vector{Vector{Float64}},
@@ -390,7 +397,7 @@ function run_supply_function_equilibrium_iteration(
     for i in 1:number_of_asset_owners
         new_quantity[i] = [current_quantity[i][segment]]
         new_price[i] = [supply_function_equilibrium_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)]
-        new_slope[i] = [update_slope(inputs, current_slope, original_slope, segment)[i]]
+        new_slope[i] = [update_slope(inputs, agents_price_type, current_slope, original_slope, segment)[i]]
     end
 
     # Iterate over the segments
@@ -438,6 +445,7 @@ function run_supply_function_equilibrium_iteration(
 
         next_slope = update_slope(
             inputs,
+            agents_price_type,
             [[next_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners],
             [[true_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners],
             segment,
@@ -465,14 +473,26 @@ end
 
 function update_slope(
     inputs::AbstractInputs,
+    agents_price_type::Vector{AssetOwner_PriceType.T},
     current_slope::Vector{Vector{Float64}},
     original_slope::Vector{Vector{Float64}},
     segment_index::Int,
 )
-    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:length(current_slope)]
-    original_slope_in_segment = [original_slope[i][segment_index] for i in 1:length(original_slope)]
+    number_of_agents = length(current_slope)
+    @assert length(original_slope) == number_of_agents
 
-    B_k = sum(1 ./ current_slope_in_segment)
+    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:number_of_agents]
+    original_slope_in_segment = [original_slope[i][segment_index] for i in 1:number_of_agents]
+    agent_price_type_weight = zeros(number_of_agents)
+    for agent_index in 1:number_of_agents
+        agent_price_type_weight[agent_index] = if agents_price_type[agent_index] == AssetOwner_PriceType.PRICE_TAKER
+            supply_function_equilibrium_price_taker_weight(inputs)
+        else
+            1.0
+        end
+    end
+
+    B_k = sum(agent_price_type_weight ./ current_slope_in_segment)
     new_slope =
         original_slope_in_segment ./ 2 .+ 1 / B_k + sqrt.(((original_slope_in_segment ./ 2) .^ 2) .+ (1 / B_k)^2)
 

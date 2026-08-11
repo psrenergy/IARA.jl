@@ -18,7 +18,7 @@ IARA.update_configuration!(db;
 # Asset owners
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_1",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_2",
@@ -26,7 +26,7 @@ IARA.add_asset_owner!(db;
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_3",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_4",
@@ -34,7 +34,7 @@ IARA.add_asset_owner!(db;
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_5",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_6",
@@ -42,7 +42,7 @@ IARA.add_asset_owner!(db;
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_7",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_8",

@@ -9,7 +9,7 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
-module TestCase23VirtualReservoirCase
+module TestCase23MultipleSubscenariosCase
 
 using Test
 using IARA

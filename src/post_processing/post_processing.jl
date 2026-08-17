@@ -253,16 +253,18 @@ function create_zero_file(
     zeros_array = zeros(Float64, length(labels), reverse(dimension_size)...)
 
     path = joinpath(temp_path, filename)
+    time_dimensions, frequencies =
+        quiver_time_dimension_and_frequency(inputs.collections.configurations.time_series_step)
     write_timeseries_file(
         path,
         zeros_array;
         dimensions = dimensions,
         labels = labels,
-        time_dimension = "period",
+        time_dimension = isempty(time_dimensions) ? "" : only(time_dimensions),
         dimension_size = dimension_size,
         initial_date = initial_date_time(inputs),
         unit = unit,
-        frequency = period_type_string(inputs.collections.configurations.time_series_step),
+        frequency = isempty(frequencies) ? "" : only(frequencies),
     )
     return path
 end

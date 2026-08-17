@@ -207,7 +207,21 @@ SFE generates equilibrium curves for each period/scenario:
 - `bidding_group_sfe_price.csv` - Equilibrium prices (\$/MWh)
 - `bidding_group_sfe_slope.csv` - Equilibrium slopes (\$/MWh²)
 
-All outputs include dimensions for agents, sfe\_iteration, and sfe\_curve\_segment.
+All outputs above include dimensions for agents, sfe\_iteration, and sfe\_curve\_segment. They are diagnostics: they
+describe the equilibrium curve of every iteration, in the internal cumulative and descending-price representation.
+
+**Clearing Bids:**
+
+The equilibrium curves of the final iteration are converted into bids and used by the market clearing. They are written
+in the usual bid convention, with a bid\_segment dimension:
+
+- `virtual_reservoir_sfe_energy_bid.csv` - Quantity bids (MWh)
+- `virtual_reservoir_sfe_price_bid.csv` - Price bids (\$/MWh)
+- `bidding_group_sfe_energy_bid.csv` - Quantity bids (MWh)
+- `bidding_group_sfe_price_bid.csv` - Price bids (\$/MWh)
+
+These replace the heuristic bids in the clearing problem. The heuristic bid outputs are still written, since the
+heuristic pass produces the reference curves that the equilibrium ingests.
 
 ## Usage Example
 

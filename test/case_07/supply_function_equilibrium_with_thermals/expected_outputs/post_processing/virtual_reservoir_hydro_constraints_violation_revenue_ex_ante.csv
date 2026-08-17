@@ -1,6 +1,6 @@
 period,scenario,subscenario,reservoir_1 - asset_owner_1,reservoir_1 - asset_owner_2,reservoir_1 - asset_owner_3,reservoir_1 - asset_owner_4
-1,1,1,0,0,0,0
-1,2,1,0,0,0,0
+1,1,1,-38652.6,-38652.6,-25768.4,-25768.4
+1,2,1,-38652.6,-38652.6,-25768.4,-25768.4
 2,1,1,0,0,0,0
 2,2,1,0,0,0,0
 3,1,1,0,0,0,0

@@ -302,9 +302,9 @@ function initialize!(
     suppress_subscenario_dimension::Bool = false,
     kwargs...,
 )
-    frequency = period_type_string(inputs.collections.configurations.time_series_step)
     initial_date = inputs.collections.configurations.initial_date_time
-    time_dimension = "period"
+    time_dimensions, frequencies =
+        quiver_time_dimension_and_frequency(inputs.collections.configurations.time_series_step)
 
     dimensions = kwargs[:dimensions]
     if (is_ex_post_problem(run_time_options) || force_all_subscenarios) && !suppress_subscenario_dimension
@@ -331,8 +331,8 @@ function initialize!(
         labels = labels,
         dimensions = dimensions,
         dimension_sizes = dimension_size,
-        time_dimensions = [time_dimension],
-        frequencies = [frequency],
+        time_dimensions = time_dimensions,
+        frequencies = frequencies,
     )
     writer = Quiver.Binary.open_file(file; mode = 'w', metadata = md)
 

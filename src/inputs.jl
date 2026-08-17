@@ -549,6 +549,12 @@ function time_series_quantity_bid(
 )
     if read_bids_from_file(inputs) || iterate_nash_equilibrium(inputs)
         return inputs.time_series.quantity_bid
+    elseif should_run_supply_function_equilibrium(inputs)
+        quantity_bid, price_bid =
+            read_serialized_bidding_group_supply_function_equilibrium_bids(inputs; period = period, scenario = scenario)
+        quantity_view = BidsView{Float64}()
+        quantity_view.data = quantity_bid
+        return quantity_view
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_bid, price_bid = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
         quantity_view = BidsView{Float64}()
@@ -571,6 +577,12 @@ function time_series_price_bid(
 )
     if read_bids_from_file(inputs) || iterate_nash_equilibrium(inputs)
         return inputs.time_series.price_bid
+    elseif should_run_supply_function_equilibrium(inputs)
+        quantity_bid, price_bid =
+            read_serialized_bidding_group_supply_function_equilibrium_bids(inputs; period = period, scenario = scenario)
+        price_view = BidsView{Float64}()
+        price_view.data = price_bid
+        return price_view
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_bid, price_bid = read_serialized_heuristic_bids(inputs; period = period, scenario = scenario)
         price_view = BidsView{Float64}()
@@ -703,6 +715,16 @@ function time_series_virtual_reservoir_quantity_bid(
 )
     if read_bids_from_file(inputs)
         return inputs.time_series.virtual_reservoir_quantity_bid
+    elseif should_run_supply_function_equilibrium(inputs)
+        quantity_bid, price_bid =
+            read_serialized_virtual_reservoir_supply_function_equilibrium_bids(
+                inputs;
+                period = period,
+                scenario = scenario,
+            )
+        quantity_view = VirtualReservoirBidsView{Float64}()
+        quantity_view.data = quantity_bid
+        return quantity_view
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_bid, price_bid =
             read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)
@@ -726,6 +748,16 @@ function time_series_virtual_reservoir_price_bid(
 )
     if read_bids_from_file(inputs)
         return inputs.time_series.virtual_reservoir_price_bid
+    elseif should_run_supply_function_equilibrium(inputs)
+        quantity_bid, price_bid =
+            read_serialized_virtual_reservoir_supply_function_equilibrium_bids(
+                inputs;
+                period = period,
+                scenario = scenario,
+            )
+        price_view = VirtualReservoirBidsView{Float64}()
+        price_view.data = price_bid
+        return price_view
     elseif generate_heuristic_bids_for_clearing(inputs)
         quantity_bid, price_bid =
             read_serialized_virtual_reservoir_heuristic_bids(inputs; period = period, scenario = scenario)

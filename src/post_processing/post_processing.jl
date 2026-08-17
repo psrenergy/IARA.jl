@@ -286,8 +286,8 @@ function create_temporary_file_with_subscenario_dimension(
     dimension_size = [metadata_dimension_sizes(reader_metadata)..., number_of_subscenarios]
 
     reader_time_dimensions = Quiver.Binary.get_dimensions(reader_metadata)
-    time_dimensions = [d.name for d in reader_time_dimensions if d.is_time_dimension]
-    frequencies = [d.frequency for d in reader_time_dimensions if d.is_time_dimension]
+    time_dimensions = String[d.name for d in reader_time_dimensions if d.is_time_dimension]
+    frequencies = String[d.frequency for d in reader_time_dimensions if d.is_time_dimension]
 
     md = Quiver.Binary.Metadata(;
         initial_datetime = Quiver.Binary.get_initial_datetime(reader_metadata),

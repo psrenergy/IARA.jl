@@ -235,6 +235,24 @@ function supply_function_equilibrium(
         agent_mappings,
     )
 
+    # Shift the whole price curve down by the smallest markup any agent ended up with. The diagnostic
+    # `*_sfe_price` outputs written above keep the unshifted equilibrium, so the shift is visible as the difference
+    # between them and the `*_sfe_price_bid` outputs below.
+    price_shift = supply_function_equilibrium_price_shift(
+        agent_mappings,
+        vr_price_bid,
+        vr_original_price_bid,
+        bg_price_bid,
+        bg_original_price_bid,
+    )
+
+    if has_virtual_reservoirs
+        shift_price_bid!(vr_price_bid, price_shift)
+    end
+    if has_bidding_groups
+        shift_price_bid!(bg_price_bid, price_shift)
+    end
+
     if has_virtual_reservoirs
         serialize_virtual_reservoir_supply_function_equilibrium_bids(
             inputs,
@@ -505,6 +523,14 @@ function supply_function_equilibrium_bids_from_curve(
     # sign of each increment follows the direction of the curve, so purchase (negative quantity) bids invert correctly.
     incremental_quantity = vcat(ascending_quantity[1], diff(ascending_quantity))
 
+    # The equilibrium builds a single price ladder shared by every agent, and an agent's cumulative quantity stays
+    # flat over the rungs where it has nothing left to offer. Those rungs differentiate to a zero increment, which is
+    # not an offer: keeping them would emit bid segments at prices the agent never bids, interleaved with its real
+    # ones. Drop them so the curve is compact and every segment carries quantity.
+    segments_with_quantity = findall(!iszero, incremental_quantity)
+    incremental_quantity = incremental_quantity[segments_with_quantity]
+    ascending_price = ascending_price[segments_with_quantity]
+
     number_of_valid_segments = length(incremental_quantity)
     if number_of_valid_segments > number_of_bid_segments
         error(
@@ -604,6 +630,105 @@ function supply_function_equilibrium_bids(
     end
 
     return vr_quantity_bid, vr_price_bid, bg_quantity_bid, bg_price_bid
+end
+
+"""
+    supply_function_equilibrium_price_shift(agent_mappings::Vector{AgentMapping}, vr_price_bid, vr_original_price_bid, bg_price_bid, bg_original_price_bid)
+
+Return the downward shift to apply to every agent's equilibrium price curve.
+
+The shift is `min(P_i - C_i)` over all agents `i`, where `P_i` is the equilibrium price and `C_i` the original
+reference (cost) price. It is a single scalar for the whole system, so shifting by it preserves the relative position
+of the agents' curves, and it is non-negative by construction, so it can only reduce markups.
+"""
+function supply_function_equilibrium_price_shift(
+    agent_mappings::Vector{AgentMapping},
+    vr_price_bid::Union{Array{Float64, 3}, Nothing},
+    vr_original_price_bid::Union{Array{Float64, 3}, Nothing},
+    bg_price_bid::Union{Array{Float64, 4}, Nothing},
+    bg_original_price_bid::Union{Array{Float64, 4}, Nothing},
+)
+    # The gap is measured at the first (lowest price) bid segment of each agent, rather than as the minimum over all
+    # of its segments. Because the equilibrium shares one price ladder and the first segment always survives
+    # compaction, every agent's `P_i` is the same bottom rung, so this collapses to `P[1] - maximum(C_i[1])`: the
+    # highest cost agent sets the shift and ends up exactly at its cost. Measuring at matched quantities, or over all
+    # segments, would make the shift depend on the equilibrium's per-agent structure.
+    segment = 1
+
+    # Every agent enters the minimum, price takers included. Restricting it to price makers (via the
+    # `global_price_type` vector built alongside `agent_mappings`) is a possible future refinement: a price taker
+    # bidding near its cost pins the shift close to zero for everyone.
+    price_shift = Inf
+
+    # The first segment is the cheapest offer, so it also bounds how far the curve can move before any price would
+    # turn negative.
+    lowest_equilibrium_price = Inf
+
+    for mapping in agent_mappings
+        equilibrium_price, original_price = if mapping.source_type == :vr
+            vr = mapping.location_index
+            ao = mapping.original_agent_id
+            vr_price_bid[vr, ao, segment], vr_original_price_bid[vr, ao, segment]
+        else
+            bus = mapping.location_index
+            bg = mapping.original_agent_id
+            # Prices are repeated across subperiods on both curves, so any subperiod gives the same gap.
+            bg_price_bid[bg, bus, segment, 1], bg_original_price_bid[bg, bus, segment, 1]
+        end
+
+        # An agent whose curve produced no valid segment is left zero padded by
+        # `supply_function_equilibrium_bids_from_curve`. It has nothing to offer, so it must not pin the shift.
+        if equilibrium_price == 0.0
+            continue
+        end
+
+        price_shift = min(price_shift, equilibrium_price - original_price)
+        lowest_equilibrium_price = min(lowest_equilibrium_price, equilibrium_price)
+    end
+
+    if !isfinite(price_shift)
+        return 0.0
+    end
+
+    # A negative gap means the equilibrium price fell below the reference cost, the same curve inversion that
+    # `test_inversion` reports. Shifting by it would raise prices, so the shift is suppressed instead.
+    if price_shift < 0.0
+        @warn("Equilibrium price below the reference curve cost; the price curve shift was suppressed.")
+        return 0.0
+    end
+
+    # Nothing downstream enforces a lower bound on bid prices, so the shift is capped here to keep the curve
+    # non-negative.
+    if price_shift > lowest_equilibrium_price
+        @warn(
+            "The price curve shift of $(price_shift) would make bid prices negative; " *
+            "it was capped at the lowest equilibrium price, $(lowest_equilibrium_price)."
+        )
+        return lowest_equilibrium_price
+    end
+
+    return price_shift
+end
+
+"""
+    shift_price_bid!(price_bid::Array{Float64}, price_shift::Float64)
+
+Subtract `price_shift` from every bid segment that carries a price.
+
+A zero price marks the trailing padding that `supply_function_equilibrium_bids_from_curve` leaves after an agent's
+valid segments, which must stay at zero rather than become `-price_shift`.
+"""
+function shift_price_bid!(
+    price_bid::Array{Float64},
+    price_shift::Float64,
+)
+    for i in eachindex(price_bid)
+        if price_bid[i] != 0.0
+            price_bid[i] -= price_shift
+        end
+    end
+
+    return nothing
 end
 
 function run_supply_function_equilibrium_iteration(

@@ -365,7 +365,11 @@ function bidding_group_markup_bids_for_period_scenario(
         end
     end
 
-    @assert number_of_segments_validation_flag
+    # Under the supply function equilibrium the maximum is sized for the equilibrium curves, not for the heuristic
+    # pass that produces the equilibrium's input, so the heuristic bids are not expected to reach it.
+    if !should_run_supply_function_equilibrium(inputs)
+        @assert number_of_segments_validation_flag
+    end
 
     write_bid_output(
         outputs,
@@ -410,10 +414,12 @@ function bidding_group_markup_bids_for_period_scenario(
     )
 
     if is_market_clearing(inputs)
+        # The supply function equilibrium applies its own strategic markup on top of the curve it ingests, so it must
+        # receive the bids without the exogenous risk factor markup. Otherwise the markup would be applied twice.
         serialize_heuristic_bids(
             inputs,
             quantity_bids,
-            price_bids;
+            should_run_supply_function_equilibrium(inputs) ? no_markup_price_bids : price_bids;
             period,
             scenario,
         )
@@ -1587,21 +1593,50 @@ end
 
 function update_number_of_segments_for_heuristic_bids!(inputs::Inputs)
     if iterate_nash_equilibrium(inputs)
-        update_number_of_bg_valid_bidding_segments!(inputs, ones(Int, number_of_elements(inputs, BiddingGroup)))
+        update_number_of_bg_valid_bidding_segments!(
+            inputs,
+            ones(Int, number_of_elements(inputs, BiddingGroup));
+            set_once = true,
+        )
         update_maximum_number_of_bg_bidding_segments!(inputs, 1)
     end
     if generate_heuristic_bids_for_clearing(inputs)
         number_of_bg_bid_segments = number_of_bidding_group_bid_segments_for_heuristic_bids(inputs)
-        update_number_of_bg_valid_bidding_segments!(inputs, number_of_bg_bid_segments)
+        number_of_vr_bid_segments = number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs)
+
+        # The supply function equilibrium output, not the heuristic bids, is what reaches the clearing problem. The
+        # equilibrium curve of a given agent can have up to one segment per price point of every other agent's curve,
+        # so it needs the (loose) analytic bound below. The number of segments must be known before `build_model`, and
+        # the equilibrium can only be computed period by period, so a per-period tight count is not available here.
+        sfe_number_of_segments =
+            if should_run_supply_function_equilibrium(inputs)
+                maximum_number_of_segments_in_supply_function_equilibrium(
+                    inputs;
+                    # `has_any_simple_bids` reads the very value we are about to set, so the bound cannot rely on it.
+                    consider_bidding_groups = any(number_of_bg_bid_segments .> 0),
+                )
+            else
+                nothing
+            end
+
+        if !isnothing(sfe_number_of_segments)
+            # A bidding group with no heuristic segments has nothing to offer, and therefore no equilibrium curve.
+            # Keeping its count at zero also preserves `has_any_simple_bids` for cases with virtual reservoirs only.
+            number_of_bg_bid_segments =
+                [segments == 0 ? 0 : sfe_number_of_segments for segments in number_of_bg_bid_segments]
+            number_of_vr_bid_segments =
+                [segments == 0 ? 0 : sfe_number_of_segments for segments in number_of_vr_bid_segments]
+        end
+
+        update_number_of_bg_valid_bidding_segments!(inputs, number_of_bg_bid_segments; set_once = true)
         maximum_number_of_bg_bid_segments = maximum(number_of_bg_bid_segments; init = 0)
         update_maximum_number_of_bg_bidding_segments!(inputs, maximum_number_of_bg_bid_segments)
 
-        number_of_vr_bid_segments = number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs)
-        update_number_of_vr_valid_bidding_segments!(inputs, number_of_vr_bid_segments)
+        update_number_of_vr_valid_bidding_segments!(inputs, number_of_vr_bid_segments; set_once = true)
         maximum_number_of_vr_bid_segments = maximum(number_of_vr_bid_segments; init = 0)
         update_maximum_number_of_vr_bidding_segments!(inputs, maximum_number_of_vr_bid_segments)
 
-        @info("Heuristic bids")
+        @info(isnothing(sfe_number_of_segments) ? "Heuristic bids" : "Supply function equilibrium bids")
         @info("   Number of bidding group segments: $maximum_number_of_bg_bid_segments")
         @info("   Number of virtual reservoir segments: $maximum_number_of_vr_bid_segments")
         @info("")

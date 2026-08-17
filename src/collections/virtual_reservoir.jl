@@ -292,11 +292,26 @@ function update_maximum_number_of_vr_bidding_segments!(inputs::AbstractInputs, v
     return nothing
 end
 
-function update_number_of_vr_valid_bidding_segments!(inputs::AbstractInputs, values::Vector{Int})
-    if length(inputs.collections.virtual_reservoir._number_of_valid_bidding_segments) == 0
+function update_number_of_vr_valid_bidding_segments!(
+    inputs::AbstractInputs,
+    values::Vector{Int};
+    set_once::Bool = false,
+)
+    previous_values = inputs.collections.virtual_reservoir._number_of_valid_bidding_segments
+    if length(previous_values) == 0
         inputs.collections.virtual_reservoir._number_of_valid_bidding_segments = zeros(
             Int,
             length(index_of_elements(inputs, VirtualReservoir)),
+        )
+    elseif set_once && previous_values != values
+        # When the count is set once before `build_model`, it sizes JuMP containers that are never rebuilt. Changing it
+        # afterwards either indexes outside of those containers or silently skips the tail of the update loops, leaving
+        # the previous period's bids in the model parameters. Both must fail loudly.
+        # Callers that rebuild the model for every period, such as the path that reads bids from file, legitimately
+        # change the count between periods and must not pass `set_once`.
+        error(
+            "The number of valid bidding segments for virtual reservoirs is already set to $(previous_values). " *
+            "It cannot be updated to $(values), because the model containers are built with the current value.",
         )
     end
     inputs.collections.virtual_reservoir._number_of_valid_bidding_segments .= values

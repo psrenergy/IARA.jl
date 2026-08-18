@@ -377,6 +377,23 @@ function is_ex_ante_problem(run_time_options::RunTimeOptions)
 end
 
 """
+    ignore_renewable_generation_scenario(inputs::Inputs, run_time_options::RunTimeOptions)
+
+Check if the renewable generation scenario should be ignored, i.e. treated as full availability.
+
+This happens in ex-ante hybrid problems whenever at least one ex-post problem is not skipped,
+because in that case the renewable availability is settled in the ex-post problem.
+"""
+function ignore_renewable_generation_scenario(inputs::Inputs, run_time_options::RunTimeOptions)
+    return is_ex_ante_problem(run_time_options) &&
+           construction_type(inputs, run_time_options) == Configurations_ConstructionType.HYBRID &&
+           (
+               construction_type_ex_post_physical(inputs) != Configurations_ConstructionType.SKIP ||
+               construction_type_ex_post_commercial(inputs) != Configurations_ConstructionType.SKIP
+           )
+end
+
+"""
     is_commercial_problem(run_time_options::RunTimeOptions)
 
 Check if the problem is commercial.

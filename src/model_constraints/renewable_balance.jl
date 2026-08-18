@@ -29,13 +29,23 @@ function renewable_balance!(
     # Model parameters
     renewable_generation_scenario = get_model_object(model, :renewable_generation_scenario)
 
+    # In ex-ante hybrid problems with at least one ex-post problem, the renewable availability is
+    # settled in the ex-post problem, so full availability is assumed here.
+    generation_scenario =
+        if ignore_renewable_generation_scenario(inputs, run_time_options)
+            # (b, r) -> 1.0
+            (b, r) -> renewable_generation_scenario[b, r]
+        else
+            (b, r) -> renewable_generation_scenario[b, r]
+        end
+
     # Constraints
     @constraint(
         model.jump_model,
         renewable_balance[b in subperiods(inputs), r in renewable_units],
         renewable_generation[b, r] + renewable_curtailment[b, r] ==
         renewable_unit_max_generation(inputs, r) * subperiod_duration_in_hours(inputs, b) *
-        renewable_generation_scenario[b, r]
+        generation_scenario(b, r)
     )
 
     return nothing

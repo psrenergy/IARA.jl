@@ -33,8 +33,7 @@ function renewable_balance!(
     # settled in the ex-post problem, so full availability is assumed here.
     generation_scenario =
         if ignore_renewable_generation_scenario(inputs, run_time_options)
-            # (b, r) -> 1.0
-            (b, r) -> renewable_generation_scenario[b, r]
+            (b, r) -> 1.0
         else
             (b, r) -> renewable_generation_scenario[b, r]
         end

@@ -1,0 +1,11 @@
+[2026-08-03 19:35:31.932] [quiver_database_11] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
+[2026-08-03 19:35:31.932] [quiver_database_11] [debug] Database opened successfully, foreign keys enabled
+[2026-08-03 19:35:31.932] [quiver_database_11] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
+[2026-08-03 19:35:31.932] [quiver_database_11] [debug] Database is up to date at version 37
+[2026-08-03 19:35:32.126] [quiver_database_11] [debug] Reading time series files for collection: BiddingGroup
+[2026-08-03 19:35:32.126] [quiver_database_11] [debug] Updating time series files for collection: BiddingGroup
+[2026-08-03 19:35:32.126] [quiver_database_11] [debug] Transaction started
+[2026-08-03 19:35:32.128] [quiver_database_11] [debug] Transaction committed
+[2026-08-03 19:35:32.128] [quiver_database_11] [info] Updated time series files for collection: BiddingGroup
+[2026-08-03 19:35:32.129] [quiver_database_11] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/data/case_4/study.iara
+[2026-08-03 19:35:32.129] [quiver_database_11] [info] Database closed

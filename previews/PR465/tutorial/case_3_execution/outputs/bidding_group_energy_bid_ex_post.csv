@@ -1,0 +1,3 @@
+period,scenario,subscenario,subperiod,bid_segment,bg_1 - bus_1,bg_2 - bus_1
+1,1,1,1,1,0.0,0.02
+1,1,1,2,1,0.0,0.02

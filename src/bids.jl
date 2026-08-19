@@ -190,35 +190,31 @@ function number_of_virtual_reservoir_bid_segments_for_heuristic_bids(inputs::Abs
     return number_per_virtual_reservoir
 end
 
-"""
-    number_of_units_per_bidding_group_and_bus(inputs::Inputs)
-
-Return a `(bidding_group, bus)` matrix with the number of units each bidding group owns at each bus.
-
-The units counted are the ones that back a bidding group's own offers, so hydro units represented through a virtual
-reservoir are excluded, exactly as in `bidding_group_markup_units`. A zero entry means the pair has nothing to offer at
-that bus.
-"""
-function number_of_units_per_bidding_group_and_bus(inputs::Inputs)
-    _, bidding_group_hydro_units, bidding_group_thermal_units, bidding_group_renewable_units,
-    bidding_group_demand_units = bidding_group_markup_units(inputs)
-
-    return get_number_of_units_per_bus_and_bg(inputs, bidding_group_hydro_units, hydro_unit_bus_index) .+
-           get_number_of_units_per_bus_and_bg(inputs, bidding_group_thermal_units, thermal_unit_bus_index) .+
-           get_number_of_units_per_bus_and_bg(inputs, bidding_group_renewable_units, renewable_unit_bus_index) .+
-           get_number_of_units_per_bus_and_bg(inputs, bidding_group_demand_units, demand_unit_bus_index)
-end
-
 function number_of_bidding_group_bid_segments_for_heuristic_bids(inputs::Inputs)
     bidding_group_indexes = index_of_elements(inputs, BiddingGroup)
     number_of_bidding_groups = length(bidding_group_indexes)
     number_of_buses = number_of_elements(inputs, Bus)
-    bidding_group_number_of_risk_factors, _, _, _, _ = bidding_group_markup_units(inputs)
+    bidding_group_number_of_risk_factors, bidding_group_hydro_units,
+    bidding_group_thermal_units, bidding_group_renewable_units, bidding_group_demand_units =
+        bidding_group_markup_units(inputs)
 
-    units_per_bidding_group_and_bus = number_of_units_per_bidding_group_and_bus(inputs)
+    number_of_hydro_units_per_bidding_group_and_bus =
+        get_number_of_units_per_bus_and_bg(inputs, bidding_group_hydro_units, hydro_unit_bus_index)
+    number_of_thermal_units_per_bidding_group_and_bus =
+        get_number_of_units_per_bus_and_bg(inputs, bidding_group_thermal_units, thermal_unit_bus_index)
+    number_of_renewable_units_per_bidding_group_and_bus =
+        get_number_of_units_per_bus_and_bg(inputs, bidding_group_renewable_units, renewable_unit_bus_index)
+    number_of_demand_units_per_bidding_group_and_bus =
+        get_number_of_units_per_bus_and_bg(inputs, bidding_group_demand_units, demand_unit_bus_index)
+
+    number_of_units_per_bidding_group_and_bus =
+        number_of_hydro_units_per_bidding_group_and_bus .+
+        number_of_thermal_units_per_bidding_group_and_bus .+
+        number_of_renewable_units_per_bidding_group_and_bus .+
+        number_of_demand_units_per_bidding_group_and_bus
 
     maximum_number_of_units_per_bidding_group =
-        dropdims(maximum(units_per_bidding_group_and_bus; dims = 2, init = 0); dims = 2)
+        dropdims(maximum(number_of_units_per_bidding_group_and_bus; dims = 2, init = 0); dims = 2)
 
     number_of_bid_segments = bidding_group_number_of_risk_factors .* maximum_number_of_units_per_bidding_group
 

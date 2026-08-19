@@ -1051,11 +1051,6 @@ Return an upper bound on the number of segments of an agent's equilibrium curve.
 The iteration adds at most one point per price point of the participating agents' original curves, so the bound is the
 total number of reference curve segments across all agents, plus the synthetic point at the demand deficit cost.
 
-An agent that owns no unit at its bus has no energy to offer at any price, so
-`remove_redundant_reference_curve_segments` collapses its reference curve to a single point. Such an agent contributes
-one price point to the shared ladder instead of `reference_curve_number_of_segments`. The equilibrium still enumerates
-it as an agent, so it cannot be dropped from the count, only charged its real contribution.
-
 `consider_bidding_groups` defaults to `has_any_simple_bids(inputs)`, which is only meaningful once the number of
 bidding group segments has been set. Callers that run before that must pass it explicitly.
 """
@@ -1063,33 +1058,24 @@ function maximum_number_of_segments_in_supply_function_equilibrium(
     inputs::AbstractInputs;
     consider_bidding_groups::Bool = has_any_simple_bids(inputs),
 )
-    number_of_reference_curve_segments = reference_curve_number_of_segments(inputs)
-    total_points = 0
+    total_agents = 0
 
     # Add all VR asset owner pairs
     if use_virtual_reservoirs(inputs)
         for vr in index_of_elements(inputs, VirtualReservoir)
-            total_points +=
-                length(virtual_reservoir_asset_owner_indices(inputs, vr)) * number_of_reference_curve_segments
+            total_agents += length(virtual_reservoir_asset_owner_indices(inputs, vr))
         end
     end
 
-    # Add all BG bus pairs, charging a pair that owns no unit for the single point its collapsed curve contributes.
+    # Add all BG bus pairs
     if any_elements(inputs, BiddingGroup) && consider_bidding_groups
         bidding_groups =
             index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
         buses = index_of_elements(inputs, Bus)
-        units_per_bidding_group_and_bus = number_of_units_per_bidding_group_and_bus(inputs)
-        for bg in bidding_groups, bus in buses
-            total_points += if units_per_bidding_group_and_bus[bg, bus] == 0
-                1
-            else
-                number_of_reference_curve_segments
-            end
-        end
+        total_agents += length(bidding_groups) * length(buses)
     end
 
-    return total_points + 1
+    return reference_curve_number_of_segments(inputs) * total_agents + 1
 end
 
 function number_of_segments_for_vr_in_nash_equilibrium(

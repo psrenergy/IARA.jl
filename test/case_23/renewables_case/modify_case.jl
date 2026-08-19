@@ -61,7 +61,9 @@ for i in 1:2
         biddinggroup_id = "Eolico $i",
         bus_id = "Sistema",
     )
+end
 
+for i in 1:2
     IARA.add_asset_owner!(db; label = "Agente Solar $i", purchase_discount_rate = [0.1])
     IARA.add_bidding_group!(
         db;

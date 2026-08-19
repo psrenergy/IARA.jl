@@ -417,30 +417,67 @@ function treat_bidding_group_data(
     return treated_quantity_bids, treated_price_bids, treated_slopes
 end
 
+"""
+    group_quantities_by_equal_price(quantity::Vector{Float64}, price::Vector{Float64}, tolerance::Float64)
+
+Group the segments of a bid curve into one segment per distinct price, summing the quantities within each group.
+
+Two prices count as the same when `isapprox` holds for them at `tolerance`, so that prices differing only by floating
+point noise are not split into separate segments. Because approximate equality is not transitive, the grouping is
+defined by walking the prices in ascending order and starting a new group whenever the gap to the current group exceeds
+the tolerance; this guarantees that every segment is assigned to exactly one group. Each group is represented by the
+lowest price in it.
+
+Returns the grouped quantities and prices, both in ascending price order.
+"""
+function group_quantities_by_equal_price(
+    quantity::Vector{Float64},
+    price::Vector{Float64},
+    tolerance::Float64,
+)
+    @assert length(quantity) == length(price)
+
+    grouped_quantity = Float64[]
+    grouped_price = Float64[]
+
+    for index in sortperm(price)
+        if !isempty(grouped_price) && isapprox(price[index], grouped_price[end]; rtol = tolerance, atol = tolerance)
+            grouped_quantity[end] += quantity[index]
+        else
+            push!(grouped_quantity, quantity[index])
+            push!(grouped_price, price[index])
+        end
+    end
+
+    return grouped_quantity, grouped_price
+end
+
+"""
+    remove_redundant_reference_curve_segments(quantity::Vector{Float64}, price::Vector{Float64}, tolerance::Float64)
+
+Reduce a reference bid curve to its meaningful segments: one segment per distinct price, in ascending price order.
+
+Segments that share a price are merged by [`group_quantities_by_equal_price`](@ref), and groups that offer no energy are
+then dropped. A zero quantity group contributes nothing at any price, and keeping it would repeat the previous
+cumulative quantity once `quantity_points_from_segments` accumulates the segments, which makes the curve vertical at
+that point. The zero padding of the bid arrays arrives here as one such group.
+
+At least one segment is always returned, so that an agent with nothing to offer still yields a well formed curve.
+"""
 function remove_redundant_reference_curve_segments(
     quantity::Vector{Float64},
     price::Vector{Float64},
+    tolerance::Float64 = DEFAULT_TOLERANCE,
 )
-    new_price = unique(price)
-    number_of_unique_prices = length(new_price)
+    new_quantity, new_price = group_quantities_by_equal_price(quantity, price, tolerance)
 
-    new_quantity = zeros(number_of_unique_prices)
-    for i in 1:number_of_unique_prices
-        positions = findall(price .== new_price[i])
-        new_quantity[i] = sum(quantity[positions])
+    segments_with_quantity = findall(q -> !isapprox(q, 0.0; atol = tolerance), new_quantity)
+    if isempty(segments_with_quantity)
+        # The agent has no energy to offer at any price. Keep one segment so that the curve stays well formed.
+        return new_quantity[1:1], new_price[1:1]
     end
 
-    if new_price[end] == 0.0 && new_quantity[end] == 0.0 && length(new_price) > 1
-        new_price = new_price[1:end-1]
-        new_quantity = new_quantity[1:end-1]
-    end
-
-    # Sort by ascending price order
-    sorted_indices = sortperm(new_price)
-    new_price = new_price[sorted_indices]
-    new_quantity = new_quantity[sorted_indices]
-
-    return new_quantity, new_price
+    return new_quantity[segments_with_quantity], new_price[segments_with_quantity]
 end
 
 function quantity_points_from_segments(

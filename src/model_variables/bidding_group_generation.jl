@@ -121,9 +121,44 @@ function bidding_group_generation!(
 
     adjust_quantity_bid_for_ex_post!(inputs, run_time_options, quantity_bid_series, subscenario)
 
+    # Model variables
+    linear_combination_bid_segments = get_model_object(model, :linear_combination_bid_segments)
+
     for blk in blks, bg in bidding_groups, bds in 1:number_of_bg_valid_bidding_segments(inputs, bg), bus in buses
-        set_parameter_value(bidding_group_quantity_bid[blk, bg, bds, bus], quantity_bid_series[bg, bus, bds, blk])
+        quantity_bid = quantity_bid_series[bg, bus, bds, blk]
+        set_parameter_value(bidding_group_quantity_bid[blk, bg, bds, bus], quantity_bid)
         set_parameter_value(bidding_group_price_bid[blk, bg, bds, bus], price_bid_series[bg, bus, bds, blk])
+        deactivate_or_reactivate_bid_segment!(linear_combination_bid_segments[blk, bg, bds, bus], quantity_bid)
+    end
+    return nothing
+end
+
+"""
+    deactivate_or_reactivate_bid_segment!(linear_combination::JuMP.VariableRef, quantity_bid::Float64)
+
+Pin the convex combination weight of a bid segment to zero when the segment carries no quantity, and release it again
+when it does.
+
+The number of bid segments is fixed before `build_model`, so every period is built for the largest count any
+period needs. A segment whose quantity is zero in the current period still leaves the constraint
+`bidding_group_generation == linear_combination * bidding_group_quantity_bid` in the model, where it degenerates
+to `bidding_group_generation == 0` and leaves the weight free over `[0, 1]` with no cost and no other constraint.
+Those unpriced free variables are pure dual degeneracy, and there can be many of them: the supply function
+equilibrium sizes every agent by a loose analytic bound, so most segments are zero in any given period. Fixing the
+weight lets the solver's presolve remove the segment instead of pivoting on it.
+"""
+function deactivate_or_reactivate_bid_segment!(linear_combination::JuMP.VariableRef, quantity_bid::Float64)
+    segment_is_empty = abs(quantity_bid) <= DEFAULT_TOLERANCE
+    if segment_is_empty
+        if !JuMP.is_fixed(linear_combination)
+            # `force` is required because the variable is built with the `[0, 1]` bounds that `unfix` restores below.
+            JuMP.fix(linear_combination, 0.0; force = true)
+        end
+    elseif JuMP.is_fixed(linear_combination)
+        JuMP.unfix(linear_combination)
+        # `unfix` drops the bounds along with the fixed value, so the original ones have to be set again.
+        JuMP.set_lower_bound(linear_combination, 0.0)
+        JuMP.set_upper_bound(linear_combination, 1.0)
     end
     return nothing
 end

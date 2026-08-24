@@ -187,22 +187,6 @@ solar_indexes = [2, 4]
 low_values = 0.2
 medium_values = 0.6
 high_values = 1.0
-wind_scenarios = [
-    low_values,
-    low_values,
-    medium_values,
-    medium_values,
-    high_values,
-    high_values,
-]
-solar_scenarios = [
-    medium_values,
-    high_values,
-    low_values,
-    high_values,
-    low_values,
-    medium_values,
-]
 
 # The generation time series is in p.u., so each unit's factor is scaled by its
 # installed capacity to get MW
@@ -211,24 +195,91 @@ installed_capacity[wind_indexes] .= wind_max_generation
 installed_capacity[solar_indexes] .= solar_max_generation
 
 max_demand = 400.0
-demand_ex_post = [300.0, 200.0, 400.0, 300.0, 400.0, 200.0]
+low_demand = 200.0
+medium_demand = 300.0
+high_demand = 400.0
 
-# Sort the subscenarios by increasing net demand, so that all time series are
-# written in the same, monotonic order. The ex-ante renewable generation is the
-# average over subscenarios, hence constant, so it does not affect the ordering
-renewable_generation_per_subscenario = [
-    wind_scenarios[subscenario] * sum(installed_capacity[wind_indexes]) +
-    solar_scenarios[subscenario] * sum(installed_capacity[solar_indexes])
-    for subscenario in 1:number_of_subscenarios
+# Correlation patterns between wind, solar and demand
+# ---------------------------------------------------
+# Each period pairs the six subscenarios differently, so that the case covers a
+# range of correlation structures. Every series always takes each level (low,
+# medium, high) exactly twice; only the pairing between them changes.
+#
+# Periods 1 and 2 keep the original pattern of the case, and periods 3 to 6 use
+# pseudo-random pairings, chosen so that no two series are strongly correlated
+# and no obvious rule relates them. The combination of high demand with both low
+# solar and low wind is not allowed, and none of the patterns below contains it.
+const LOW = 1
+const MEDIUM = 2
+const HIGH = 3
+
+renewable_levels = [low_values, medium_values, high_values]
+demand_levels = [low_demand, medium_demand, high_demand]
+
+# Each entry is (wind, solar, demand) levels over the six subscenarios
+correlation_patterns = [
+    # Original pattern of the case
+    (
+        [LOW, LOW, MEDIUM, MEDIUM, HIGH, HIGH],
+        [MEDIUM, HIGH, LOW, HIGH, LOW, MEDIUM],
+        [MEDIUM, LOW, HIGH, MEDIUM, HIGH, LOW],
+    ),
+    (
+        [HIGH, MEDIUM, HIGH, LOW, LOW, MEDIUM],
+        [LOW, HIGH, MEDIUM, HIGH, MEDIUM, LOW],
+        [MEDIUM, LOW, HIGH, MEDIUM, HIGH, LOW],
+    ),
+    (
+        [HIGH, MEDIUM, HIGH, LOW, LOW, MEDIUM],
+        [LOW, HIGH, MEDIUM, LOW, MEDIUM, HIGH],
+        [MEDIUM, LOW, HIGH, MEDIUM, HIGH, LOW],
+    ),
+    (
+        [HIGH, LOW, HIGH, LOW, MEDIUM, MEDIUM],
+        [HIGH, MEDIUM, MEDIUM, LOW, HIGH, LOW],
+        [MEDIUM, LOW, HIGH, MEDIUM, HIGH, LOW],
+    ),
+    (
+        [HIGH, HIGH, MEDIUM, LOW, MEDIUM, LOW],
+        [LOW, MEDIUM, HIGH, HIGH, MEDIUM, LOW],
+        [MEDIUM, LOW, HIGH, MEDIUM, HIGH, LOW],
+    ),
 ]
-subscenario_order = sortperm(demand_ex_post .- renewable_generation_per_subscenario)
-wind_scenarios = wind_scenarios[subscenario_order]
-solar_scenarios = solar_scenarios[subscenario_order]
-demand_ex_post = demand_ex_post[subscenario_order]
 
-for subscenario in 1:number_of_subscenarios
-    renewable_generation_ex_post[wind_indexes, :, subscenario, :, :] .= wind_scenarios[subscenario]
-    renewable_generation_ex_post[solar_indexes, :, subscenario, :, :] .= solar_scenarios[subscenario]
+# Periods 1 and 2 share the original pattern; the remaining periods take one each
+period_to_pattern = [1, 1, 2, 3, 4, 5]
+
+wind_scenarios = zeros(number_of_subscenarios, number_of_periods)
+solar_scenarios = zeros(number_of_subscenarios, number_of_periods)
+demand_ex_post = zeros(number_of_subscenarios, number_of_periods)
+
+for period in 1:number_of_periods
+    wind_levels, solar_levels, demand_pattern = correlation_patterns[period_to_pattern[period]]
+
+    period_wind = renewable_levels[wind_levels]
+    period_solar = renewable_levels[solar_levels]
+    period_demand = demand_levels[demand_pattern]
+
+    # Sort the subscenarios by increasing net demand, so that every period is
+    # written in the same, monotonic order. This only permutes the subscenario
+    # slots, so the correlation defined by the pattern is preserved. The ex-ante
+    # renewable generation is an average over subscenarios, hence constant, so
+    # it does not affect the ordering
+    renewable_generation_per_subscenario =
+        period_wind * sum(installed_capacity[wind_indexes]) +
+        period_solar * sum(installed_capacity[solar_indexes])
+    subscenario_order = sortperm(period_demand .- renewable_generation_per_subscenario)
+
+    wind_scenarios[:, period] = period_wind[subscenario_order]
+    solar_scenarios[:, period] = period_solar[subscenario_order]
+    demand_ex_post[:, period] = period_demand[subscenario_order]
+end
+
+for period in 1:number_of_periods, subscenario in 1:number_of_subscenarios
+    renewable_generation_ex_post[wind_indexes, :, subscenario, :, period] .=
+        wind_scenarios[subscenario, period]
+    renewable_generation_ex_post[solar_indexes, :, subscenario, :, period] .=
+        solar_scenarios[subscenario, period]
 end
 
 IARA.write_timeseries_file(
@@ -264,8 +315,9 @@ demand_factor_ex_post = zeros(
     number_of_scenarios,
     number_of_periods,
 )
-for subscenario in 1:number_of_subscenarios
-    demand_factor_ex_post[:, :, subscenario, :, :] .= demand_ex_post[subscenario] / max_demand
+for period in 1:number_of_periods, subscenario in 1:number_of_subscenarios
+    demand_factor_ex_post[:, :, subscenario, :, period] .=
+        demand_ex_post[subscenario, period] / max_demand
 end
 
 IARA.write_timeseries_file(
@@ -290,22 +342,53 @@ IARA.link_time_series_to_file(
     demand_ex_post = "demand_ex_post",
 )
 
-# Total renewable generation per subscenario
-# -----------------------------------------
-println("Total renewable generation per subscenario:")
-renewable_generation_ex_ante = 0.0
-for idx in 1:4
-    global renewable_generation_ex_ante +=
-        sum(renewable_generation_ex_post[idx, 1, :, 1, 1] * installed_capacity[idx]) / number_of_subscenarios
+# Correlation table
+# -----------------
+# For each period and subscenario, show the level taken by each series along
+# with the resulting renewable generation and net demand
+level_name(value, levels) = ["low", "medium", "high"][findfirst(==(value), levels)]
+
+wind_capacity = sum(installed_capacity[wind_indexes])
+solar_capacity = sum(installed_capacity[solar_indexes])
+
+println("Correlation between wind, solar and demand per period:")
+println(
+    rpad("Period", 8),
+    rpad("Subscen.", 10),
+    rpad("Wind", 9),
+    rpad("Solar", 9),
+    rpad("Demand", 9),
+    lpad("Renew. (MW)", 13),
+    lpad("Net dem. (MW)", 15),
+)
+for period in 1:number_of_periods
+    # The ex-ante generation is the average over the subscenarios of the period
+    renewable_generation_ex_ante =
+        sum(
+            wind_scenarios[subscenario, period] * wind_capacity +
+            solar_scenarios[subscenario, period] * solar_capacity for
+            subscenario in 1:number_of_subscenarios
+        ) / number_of_subscenarios
+
+    for subscenario in 1:number_of_subscenarios
+        renewable_generation =
+            wind_scenarios[subscenario, period] * wind_capacity +
+            solar_scenarios[subscenario, period] * solar_capacity
+        net_demand =
+            demand_ex_post[subscenario, period] + renewable_generation_ex_ante -
+            renewable_generation
+
+        println(
+            rpad(period, 8),
+            rpad(subscenario, 10),
+            rpad(level_name(wind_scenarios[subscenario, period], renewable_levels), 9),
+            rpad(level_name(solar_scenarios[subscenario, period], renewable_levels), 9),
+            rpad(level_name(demand_ex_post[subscenario, period], demand_levels), 9),
+            lpad(renewable_generation, 13),
+            lpad(net_demand, 15),
+        )
+    end
+    println("    Ex-ante renewable generation: $renewable_generation_ex_ante MW")
 end
-for subscenario in 1:number_of_subscenarios
-    generation_per_unit =
-        renewable_generation_ex_post[:, 1, subscenario, 1, 1] .* installed_capacity
-    net_demand = demand_ex_post[subscenario] + renewable_generation_ex_ante - sum(generation_per_unit)
-    println("    Subscenario $subscenario:")
-    println("        Renewable generation: $(sum(generation_per_unit)) MW")
-    println("        Net demand: $net_demand MW")
-end
-println("    Ex-ante : $renewable_generation_ex_ante MW")
 
 IARA.close_study!(db)

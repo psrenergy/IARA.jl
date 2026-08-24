@@ -10,6 +10,7 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
+number_of_periods = 6
 number_of_renewable_units = 4
 number_of_subscenarios = 6
 wind_max_generation = 80.0
@@ -19,8 +20,10 @@ solar_max_generation = 50.0
 # renewable generation scenarios added below
 IARA.update_configuration!(
     db;
+    number_of_periods = number_of_periods,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_POST,
     number_of_subscenarios = number_of_subscenarios,
+    bid_price_limit_low_reference = 100.0,
 )
 
 # Remove the third and fourth agent of each thermal type, along with their assets
@@ -200,6 +203,29 @@ solar_scenarios = [
     low_values,
     medium_values,
 ]
+
+# The generation time series is in p.u., so each unit's factor is scaled by its
+# installed capacity to get MW
+installed_capacity = zeros(number_of_renewable_units)
+installed_capacity[wind_indexes] .= wind_max_generation
+installed_capacity[solar_indexes] .= solar_max_generation
+
+max_demand = 400.0
+demand_ex_post = [300.0, 200.0, 400.0, 300.0, 400.0, 200.0]
+
+# Sort the subscenarios by increasing net demand, so that all time series are
+# written in the same, monotonic order. The ex-ante renewable generation is the
+# average over subscenarios, hence constant, so it does not affect the ordering
+renewable_generation_per_subscenario = [
+    wind_scenarios[subscenario] * sum(installed_capacity[wind_indexes]) +
+    solar_scenarios[subscenario] * sum(installed_capacity[solar_indexes])
+    for subscenario in 1:number_of_subscenarios
+]
+subscenario_order = sortperm(demand_ex_post .- renewable_generation_per_subscenario)
+wind_scenarios = wind_scenarios[subscenario_order]
+solar_scenarios = solar_scenarios[subscenario_order]
+demand_ex_post = demand_ex_post[subscenario_order]
+
 for subscenario in 1:number_of_subscenarios
     renewable_generation_ex_post[wind_indexes, :, subscenario, :, :] .= wind_scenarios[subscenario]
     renewable_generation_ex_post[solar_indexes, :, subscenario, :, :] .= solar_scenarios[subscenario]
@@ -231,9 +257,6 @@ IARA.link_time_series_to_file(
 # ------------------
 # The base case wrote the ex-post demand for 4 subscenarios, so it must be
 # rewritten for the new subscenario count
-max_demand = 400.0
-demand_ex_post = [300.0, 200.0, 400.0, 300.0, 400.0, 200.0]
-
 demand_factor_ex_post = zeros(
     number_of_buses,
     number_of_subperiods,
@@ -269,12 +292,6 @@ IARA.link_time_series_to_file(
 
 # Total renewable generation per subscenario
 # -----------------------------------------
-# The generation time series is in p.u., so each unit's factor is scaled by its
-# installed capacity to get MW
-installed_capacity = zeros(number_of_renewable_units)
-installed_capacity[wind_indexes] .= wind_max_generation
-installed_capacity[solar_indexes] .= solar_max_generation
-
 println("Total renewable generation per subscenario:")
 renewable_generation_ex_ante = 0.0
 for idx in 1:4

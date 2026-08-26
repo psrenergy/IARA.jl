@@ -12,7 +12,6 @@ db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
     demand_deficit_cost = 600.0,
-    supply_function_equilibrium_max_cost_multiplier = 1.25,
 )
 
 # Asset owners

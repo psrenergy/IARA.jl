@@ -26,14 +26,14 @@ IARA.update_configuration!(db;
 
 ### SFE Parameters
 
-- **`supply_function_equilibrium_extra_bid_quantity`** (Float64, default: 1.0)
-  Determines the quantity value for the artificial bid added during SFE preprocessing.
+- **`supply_function_equilibrium_min_slope`** (Float64, default: 0.02)
+  Minimum slope allowed for the bid curves.
+
+- **`supply_function_equilibrium_max_slope`** (Float64, default: 50.0)
+  Maximum slope allowed for the bid curves. Must be greater than `supply_function_equilibrium_min_slope`.
 
 - **`supply_function_equilibrium_max_iterations`** (Int, default: 20)
   Maximum iterations for equilibrium computation within each period/scenario.
-
-- **`supply_function_equilibrium_tolerance`** (Float64, default: 0.000001)
-  Minimum slope tolerance. Curves with slopes below this value trigger errors.
 
 - **`supply_function_equilibrium_max_cost_multiplier`** (Float64, default: 2.0)
   Maximum price cap as multiplier of deficit cost.
@@ -43,9 +43,9 @@ IARA.update_configuration!(db;
 IARA.update_configuration!(db;
     bid_processing = IARA.Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM,
     reference_curve_number_of_segments = 10,
-    supply_function_equilibrium_extra_bid_quantity = 1.0,
+    supply_function_equilibrium_min_slope = 0.02,
+    supply_function_equilibrium_max_slope = 50.0,
     supply_function_equilibrium_max_iterations = 20,
-    supply_function_equilibrium_tolerance = 0.000001,
     supply_function_equilibrium_max_cost_multiplier = 2.0,
     demand_deficit_cost = 3000.0,
 )

@@ -144,8 +144,8 @@ Optional arguments:
   - `language::String`
   - `train_mincost_time_limit_sec::Int64`
   - `bid_price_limit_low_reference::Float64`
-  - `supply_function_equilibrium_extra_bid_quantity::Float64`
-  - `supply_function_equilibrium_tolerance::Float64`
+  - `supply_function_equilibrium_min_slope::Float64`
+  - `supply_function_equilibrium_max_slope::Float64`
   - `supply_function_equilibrium_max_iterations::Int64`
   - `supply_function_equilibrium_max_cost_multiplier::Float64`
   - `subperiod_duration_in_hours::Vector{Float64}`: Subperiod duration in hours of the configuration

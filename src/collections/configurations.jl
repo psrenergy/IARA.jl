@@ -101,8 +101,8 @@ Configurations for the problem.
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
     reference_curve_final_segment_price_markup::Float64 = 0.0
-    supply_function_equilibrium_extra_bid_quantity::Float64 = 0.0
-    supply_function_equilibrium_tolerance::Float64 = 0.0
+    supply_function_equilibrium_min_slope::Float64 = 0.0
+    supply_function_equilibrium_max_slope::Float64 = 0.0
     supply_function_equilibrium_max_iterations::Int = 0
     supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
     supply_function_equilibrium_price_taker_weight::Float64 = 0.0
@@ -330,10 +330,10 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
         PSRI.get_parms(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
-    configurations.supply_function_equilibrium_extra_bid_quantity =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_extra_bid_quantity")[1]
-    configurations.supply_function_equilibrium_tolerance =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_tolerance")[1]
+    configurations.supply_function_equilibrium_min_slope =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_min_slope")[1]
+    configurations.supply_function_equilibrium_max_slope =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_slope")[1]
     configurations.supply_function_equilibrium_max_iterations =
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
     configurations.supply_function_equilibrium_max_cost_multiplier =
@@ -538,6 +538,20 @@ function validate(configurations::Configurations)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
         end
+    end
+    if configurations.supply_function_equilibrium_min_slope < DEFAULT_TOLERANCE
+        @error(
+            "supply_function_equilibrium_min_slope must be at least $(DEFAULT_TOLERANCE). " *
+            "Current value: $(configurations.supply_function_equilibrium_min_slope)."
+        )
+        num_errors += 1
+    end
+    if configurations.supply_function_equilibrium_max_slope <= configurations.supply_function_equilibrium_min_slope
+        @error(
+            "supply_function_equilibrium_max_slope must be greater than supply_function_equilibrium_min_slope. " *
+            "Current values: max_slope = $(configurations.supply_function_equilibrium_max_slope), min_slope = $(configurations.supply_function_equilibrium_min_slope)."
+        )
+        num_errors += 1
     end
     if configurations.cvar_alpha <= 0.0 || configurations.cvar_alpha > 1.0
         @error("cvar_alpha must be in (0.0, 1.0].")
@@ -1654,20 +1668,20 @@ reference_curve_final_segment_price_markup(inputs::AbstractInputs) =
     inputs.collections.configurations.reference_curve_final_segment_price_markup
 
 """
-    supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs)
+    supply_function_equilibrium_min_slope(inputs::AbstractInputs)
 
-Return the extra bid quantity for the Supply Function Equilibrium.
+Return the minimum slope for the bid curves in the Supply Function Equilibrium.
 """
-supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs) =
-    inputs.collections.configurations.supply_function_equilibrium_extra_bid_quantity
+supply_function_equilibrium_min_slope(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_min_slope
 
 """
-    supply_function_equilibrium_tolerance(inputs)
+    supply_function_equilibrium_max_slope(inputs::AbstractInputs)
 
-Return the tolerance for the bid slopes in the Supply Function Equilibrium.
+Return the maximum slope for the bid curves in the Supply Function Equilibrium.
 """
-supply_function_equilibrium_tolerance(inputs::AbstractInputs) =
-    inputs.collections.configurations.supply_function_equilibrium_tolerance
+supply_function_equilibrium_max_slope(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_max_slope
 
 """
     supply_function_equilibrium_max_iterations(inputs)

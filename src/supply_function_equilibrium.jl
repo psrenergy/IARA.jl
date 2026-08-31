@@ -341,12 +341,11 @@ function treat_reference_curve_data(
             price[vr_index, ao, :],
         )
         treated_quantity_bids[i] = quantity_points_from_segments(treated_quantity_bids[i])
-        treated_quantity_bids[i], treated_price_bids[i] = reverse_bid_order_and_add_point(
+        treated_quantity_bids[i], treated_price_bids[i], treated_slopes[i] = reverse_bid_order_and_add_points(
             inputs,
             treated_quantity_bids[i],
             treated_price_bids[i],
         )
-        treated_slopes[i] = diff(treated_price_bids[i]) ./ diff(treated_quantity_bids[i])
     end
 
     validate_nash_input_data(
@@ -395,12 +394,11 @@ function treat_bidding_group_data(
             aggregated_price[i, :],
         )
         treated_quantity_bids[i] = quantity_points_from_segments(treated_quantity_bids[i])
-        treated_quantity_bids[i], treated_price_bids[i] = reverse_bid_order_and_add_point(
+        treated_quantity_bids[i], treated_price_bids[i], treated_slopes[i] = reverse_bid_order_and_add_points(
             inputs,
             treated_quantity_bids[i],
             treated_price_bids[i],
         )
-        treated_slopes[i] = diff(treated_price_bids[i]) ./ diff(treated_quantity_bids[i])
     end
 
     validate_nash_input_data(
@@ -493,15 +491,64 @@ function quantity_points_from_segments(
     return new_quantity
 end
 
-function reverse_bid_order_and_add_point(
+function reverse_bid_order_and_add_points(
     inputs::AbstractInputs,
     quantity::Vector{Float64},
     price::Vector{Float64},
 )
-    new_quantity = vcat((quantity[end] + supply_function_equilibrium_extra_bid_quantity(inputs)), reverse(quantity))
-    new_price = vcat(demand_deficit_cost(inputs), reverse(price))
+    new_quantity = Float64[]
+    new_price = Float64[]
+    new_slope = Float64[]
 
-    return new_quantity, new_price
+    @assert length(quantity) == length(price)
+
+    reference_quantity = vcat(0, quantity)
+    reference_price = vcat(price, demand_deficit_cost(inputs))
+    number_of_points = length(reference_quantity)
+
+    min_slope = supply_function_equilibrium_min_slope(inputs)
+    max_slope = supply_function_equilibrium_max_slope(inputs)
+
+    #(q0, p0)
+    push!(new_quantity, reference_quantity[1])
+    push!(new_price, reference_price[1])
+
+    for i in 1:number_of_points-1
+        q0 = reference_quantity[i]
+        q1 = reference_quantity[i+1]
+        p0 = reference_price[i]
+        p1 = reference_price[i+1]
+
+        slope = (p1 - p0) / (q1 - q0)
+
+        # If the slope is outside the [min_slope, max_slope] range, no new point is added
+        if slope <= min_slope || slope >= max_slope
+            push!(new_quantity, q1)
+            push!(new_price, p1)
+            push!(new_slope, slope)
+            continue
+        end
+
+        # (q_new, p_new) is the intersection of a line passing through (q0, p0) with slope eta_min
+        # and a line passing through (p1, q1) with slope eta_max
+        q_new = q0 + (max_slope * (q1 - q0) - (p1 - p0)) / (max_slope - min_slope)
+        p_new = p0 + min_slope * (q_new - q0)
+
+        # new point
+        push!(new_quantity, q_new)
+        push!(new_price, p_new)
+        push!(new_slope, min_slope)
+        # (q1, p1)
+        push!(new_quantity, q1)
+        push!(new_price, p1)
+        push!(new_slope, max_slope)
+    end
+
+    reverse!(new_quantity)
+    reverse!(new_price)
+    reverse!(new_slope)
+
+    return new_quantity, new_price, new_slope
 end
 
 function validate_nash_input_data(
@@ -514,7 +561,7 @@ function validate_nash_input_data(
     @assert length(agent_labels) == length(slope)
 
     for i in eachindex(agent_labels)
-        @assert all(slope[i] .> supply_function_equilibrium_tolerance(inputs)) "Reference bid curve for $(agent_labels[i]) has a segment with slope below the tolerance: $(slope[i])"
+        @assert all(slope[i] .> DEFAULT_TOLERANCE^2) "Reference bid curve for $(agent_labels[i]) has a segment with slope below the tolerance: $(slope[i])"
         @assert all(price[i] .<= supply_function_equilibrium_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for $(agent_labels[i]) has a price point above the demand deficit cost: $(price[i])"
     end
 
@@ -527,8 +574,8 @@ end
 Convert the equilibrium curve of a single agent into incremental quantity and price bids, in the IARA convention.
 
 The equilibrium curve is a list of cumulative quantity points in descending price order, whose first point is the
-synthetic point that `reverse_bid_order_and_add_point` added at the demand deficit cost. This function inverts that
-representation: it drops the synthetic point, restores the ascending price order, and differentiates the cumulative
+synthetic point that `reverse_bid_order_and_add_points` added at the demand deficit cost. This function inverts that
+representation: it drops the last synthetic point, restores the ascending price order, and differentiates the cumulative
 quantities back into incremental bids (inverting `quantity_points_from_segments`). The result is trimmed or zero-padded
 to `number_of_bid_segments`.
 """
@@ -796,7 +843,7 @@ function run_supply_function_equilibrium_iteration(
         minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners]
         if maximum(
             [new_quantity[i][segment] for i in 1:number_of_asset_owners] - minimum_quantities,
-        ) == 0
+        ) <= DEFAULT_TOLERANCE
             break
         end
 
@@ -889,8 +936,11 @@ function update_slope(
 
     agent_indexes = findall(isfinite, original_slope_in_segment)
 
-    if length(agent_indexes) < 3
-        new_slope[agent_indexes] .= supply_function_equilibrium_tolerance(inputs)
+    if sum(agent_price_type_weight[agent_indexes]) < 3
+        for agent_idx in agent_indexes
+            new_slope[agent_idx] =
+                min(supply_function_equilibrium_min_slope(inputs), original_slope_in_segment[agent_idx])
+        end
     end
 
     return new_slope
@@ -992,10 +1042,12 @@ function get_current_segment(
     minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners]
 
     for i in 1:number_of_asset_owners
-        if current_quantity_in_segment[i] > minimum_quantities[i]
-            idx = findfirst(reference_quantity[i] .< current_quantity_in_segment[i])
+        if current_quantity_in_segment[i] > minimum_quantities[i] + DEFAULT_TOLERANCE
+            idx = findfirst(
+                reference_quantity[i] .< current_quantity_in_segment[i] - DEFAULT_TOLERANCE,
+            )
             if isnothing(idx)
-                segments[i] = number_of_segments_for_vr_in_nash_equilibrium(inputs, number_of_asset_owners)
+                segments[i] = length(reference_quantity[i]) - 1
             else
                 segments[i] = idx - 1
             end
@@ -1036,7 +1088,7 @@ function test_inversion(
         (original_quantity_in_segment .- quantity_in_segment[agent_indexes]) .* original_slope_in_segment
     price_delta = price_in_segment .- reference_price
 
-    if any(price_delta .< 0)
+    if any(price_delta .< -DEFAULT_TOLERANCE)
         @warn("Curve inversion")
     end
 

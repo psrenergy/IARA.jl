@@ -13,6 +13,9 @@ function is_reference_curve(inputs::Inputs, run_time_options::RunTimeOptions)
 end
 
 function reference_curve_multipliers(inputs::Inputs)
+    if use_input_vector
+        return input_vector
+    end
     all_multipliers = range(0.0, 1.0; length = reference_curve_number_of_segments(inputs) + 1)
     # Remove the first multiplier, which is always 0.0
     return all_multipliers[2:end]

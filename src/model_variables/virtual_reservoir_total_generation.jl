@@ -92,6 +92,10 @@ function virtual_reservoir_total_generation!(
     # Calculate available energy for each virtual reservoir
     available_energy = [min(total_stored_energy[vr], maximum_turbinable_energy[vr]) for vr in virtual_reservoirs]
 
+    if sum(available_energy[vr] for vr in vrs) > demanda_total
+        available_energy .* (demanda_total / sum(available_energy))
+    end
+
     for vr in virtual_reservoirs
         set_parameter_value(virtual_reservoir_available_energy[vr], available_energy[vr])
     end

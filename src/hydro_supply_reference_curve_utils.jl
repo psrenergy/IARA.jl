@@ -12,12 +12,6 @@ function is_reference_curve(inputs::Inputs, run_time_options::RunTimeOptions)
     return run_time_options.is_reference_curve
 end
 
-function reference_curve_multipliers(inputs::Inputs)
-    all_multipliers = range(0.0, 1.0; length = reference_curve_number_of_segments(inputs) + 1)
-    # Remove the first multiplier, which is always 0.0
-    return all_multipliers[2:end]
-end
-
 function update_virtual_reservoir_reference_multiplier!(
     model::ProblemModel,
     inputs::Inputs,

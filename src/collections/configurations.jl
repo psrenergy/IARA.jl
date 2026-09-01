@@ -100,6 +100,7 @@ Configurations for the problem.
     bid_price_limit_low_reference::Float64 = 0.0
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
+    reference_curve_multipliers::Vector{Float64} = []
     reference_curve_final_segment_price_markup::Float64 = 0.0
     supply_function_equilibrium_min_slope::Float64 = 0.0
     supply_function_equilibrium_max_slope::Float64 = 0.0
@@ -348,6 +349,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_vectors(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
         PSRI.get_vectors(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
+    configurations.reference_curve_multipliers =
+        PSRI.get_vectors(inputs.db, "Configuration", "reference_curve_multipliers")[1]
 
     # Load time series files
     configurations.hour_subperiod_map_file =
@@ -455,6 +458,22 @@ function validate(configurations::Configurations)
                 )
                 num_errors += 1
             end
+        end
+    end
+    if !isempty(configurations.reference_curve_multipliers)
+        if !all(0.0 .< configurations.reference_curve_multipliers .<= 1.0)
+            @error("Reference curve multipliers must all lie in the interval (0, 1].")
+            num_errors += 1
+        elseif !issorted(configurations.reference_curve_multipliers; lt = <=)
+            @error("Reference curve multipliers must be strictly increasing.")
+            num_errors += 1
+        elseif last(configurations.reference_curve_multipliers) != 1.0
+            # Not an error: the energy above the last multiplier is offered as a final segment
+            # priced with the reference_curve_final_segment_price_markup.
+            @warn(
+                "The last reference curve multiplier is $(last(configurations.reference_curve_multipliers)), not 1.0. " *
+                "The remaining energy will be offered in a single segment priced with the final segment markup."
+            )
         end
     end
     if configurations.max_iteration_nash_equilibrium < 0
@@ -1656,8 +1675,27 @@ bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_p
 
 Return the number of segments in the reference curve.
 """
-reference_curve_number_of_segments(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_number_of_segments
+reference_curve_number_of_segments(inputs::AbstractInputs) = length(reference_curve_multipliers(inputs))
+
+"""
+    reference_curve_multipliers(inputs::AbstractInputs)
+
+Return the fractions of the available energy that define each reference curve segment.
+"""
+function reference_curve_multipliers(inputs::AbstractInputs)
+    multipliers = inputs.collections.configurations.reference_curve_multipliers
+    if !isempty(multipliers)
+        return multipliers
+    end
+    number_of_segments = inputs.collections.configurations.reference_curve_number_of_segments
+    if number_of_segments == 0
+        return Float64[]
+    end
+    # If the vector is empty, space the multipliers evenly between zero and one
+    all_multipliers = range(0.0, 1.0; length = number_of_segments + 1)
+    # Remove the first multiplier, which is always 0.0
+    return collect(all_multipliers[2:end])
+end
 
 """
     reference_curve_final_segment_price_markup(inputs::AbstractInputs)

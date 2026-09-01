@@ -106,6 +106,7 @@ reduced_test_list = Dict(
 #     "case_07/ex_post_settlement_case/test_case.jl",
 #     "case_07/min_cost_case/test_case.jl",
 #     "case_07/multiple_markdowns_case/test_case.jl",
+#     "case_07/reference_curve_multipliers_case/test_case.jl",
 #     "case_07/supply_function_equilibrium/test_case.jl",
 #     "case_07/supply_function_equilibrium_bg_risk_factor/test_case.jl",
 #     "case_07/supply_function_equilibrium_bid_conversion/test_case.jl",

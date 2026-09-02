@@ -150,6 +150,7 @@ Optional arguments:
   - `supply_function_equilibrium_max_cost_multiplier::Float64`
   - `subperiod_duration_in_hours::Vector{Float64}`: Subperiod duration in hours of the configuration
   - `expected_number_of_repeats_per_node::Vector{Float64}`:
+  - `reference_curve_multipliers::Vector{Float64}`
 """
 function create_study!(case_path::String; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)

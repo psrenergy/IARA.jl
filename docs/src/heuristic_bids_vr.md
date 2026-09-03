@@ -20,8 +20,8 @@ The variables, constraints, objective function, and parameters of the $Z(\theta)
 
 ## Parameters
 - ``\hat{q}_r(\omega)``: Uncapped available energy of virtual reservoir $r$ for current period, scenario $\omega$. Calculated as the minimum between the total stored energy at $r$ and the maximum turbinable energy at $r$ considering the period duration: $\hat{q}_r(\omega) = \min(\sum_{i \in I^{VR}(r)} E_{r,i}\; , \; \sum_{h \in J^{H}_{VR}(r)} \sum_{\tau \in B(t)} \rho_h \cdot U_h \cdot d(\tau))$
-- ``D(\omega)``: Total demand energy of the period, over all subperiods and existing demands: $D(\omega) = \sum_{j \in J^{D}} \sum_{\tau \in B(t)} D_{j,\tau}(\omega)$
-- ``\bar{q}_r(\omega)``: Available energy of virtual reservoir $r$ for current period, scenario $\omega$. It is the uncapped available energy, scaled down proportionally across reservoirs when the total exceeds the demand of the period: $\bar{q}_r(\omega) = \hat{q}_r(\omega) \cdot \min\left(1\; , \; \frac{D(\omega)}{\sum_{r' \in J^{VR}} \hat{q}_{r'}(\omega)}\right)$. Both terms of the fraction are in the same energy unit. The demand cap limits the width of the reference curve to the energy that the market could absorb in the period, so that the multipliers $\Theta$ sample the range where clearing actually happens.
+- ``D(\omega)``: Total demand energy of the period: $D(\omega) = \sum_{j \in J^{DI} \cup J^{DE} \cup J^{DF}} \sum_{\tau \in B(t)} D_{j,\tau}(\omega)$
+- ``\bar{q}_r(\omega)``: Available energy of virtual reservoir $r$ for current period, scenario $\omega$. It is the uncapped available energy, scaled down proportionally across reservoirs when the total exceeds the demand of the period: $\bar{q}_r(\omega) = \hat{q}_r(\omega) \cdot \min\left(1\; , \; \frac{D(\omega)}{\sum_{r' \in J^{VR}} \hat{q}_{r'}(\omega)}\right)$
 
 
 ## Variables

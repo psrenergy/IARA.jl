@@ -92,6 +92,23 @@ function virtual_reservoir_total_generation!(
     # Calculate available energy for each virtual reservoir
     available_energy = [min(total_stored_energy[vr], maximum_turbinable_energy[vr]) for vr in virtual_reservoirs]
 
+    # Total demand energy of the period. demand_mw_to_gwh returns GWh, while the energies
+    # above are in MWh.
+    demand_units = index_of_elements(inputs, DemandUnit; filters = [is_existing])
+    demand_series = time_series_demand(inputs, run_time_options; subscenario)
+    total_demand_energy =
+        sum(
+            demand_mw_to_gwh(inputs, demand_series[d, b], d, b)
+            for b in subperiods(inputs), d in demand_units;
+            init = 0.0,
+        ) / MW_to_GW()
+
+    # A curve wider than the demand prices quantities the market cannot absorb. Scaling keeps each
+    # reservoir's share; the zero check avoids zeroing the curve when there is no demand.
+    if total_demand_energy > 0 && sum(available_energy) > total_demand_energy
+        available_energy .*= total_demand_energy / sum(available_energy)
+    end
+
     for vr in virtual_reservoirs
         set_parameter_value(virtual_reservoir_available_energy[vr], available_energy[vr])
     end

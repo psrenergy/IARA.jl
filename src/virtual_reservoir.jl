@@ -325,6 +325,63 @@ function virtual_reservoir_stored_energy(
 end
 
 """
+    virtual_reservoir_available_energy(
+        inputs::AbstractInputs,
+        run_time_options::RunTimeOptions,
+        period::Int,
+        scenario::Int,
+        subscenario::Int,
+    )
+
+Energy that each virtual reservoir can offer in the period, in MWh: the stored energy, limited
+by the turbining capacity of its hydro units and by the total demand of the period. This is the
+width of the hydro reference curve, so capping it keeps the segments on quantities the market
+can absorb. Total demand is a deliberately loose ceiling: a loose cap only costs resolution,
+while a tight one truncates the curve below the quantities that clear.
+"""
+function virtual_reservoir_available_energy(
+    inputs::AbstractInputs,
+    run_time_options::RunTimeOptions,
+    period::Int,
+    scenario::Int,
+    subscenario::Int,
+)
+    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    demand_units = index_of_elements(inputs, DemandUnit; filters = [is_existing])
+
+    stored_energy = virtual_reservoir_stored_energy(inputs, run_time_options, period, scenario, subscenario)
+
+    # Calculate maximum turbinable energy
+    maximum_turbinable_energy = [
+        sum(
+            hydro_unit_max_available_turbining(inputs, h) * subperiod_duration_in_hours(inputs, b) *
+            hydro_unit_production_factor(inputs, h)
+            for b in subperiods(inputs), h in virtual_reservoir_hydro_unit_indices(inputs, vr)
+        ) for vr in virtual_reservoirs
+    ]
+
+    available_energy = min.(stored_energy, maximum_turbinable_energy)
+
+    # Total demand energy of the period. demand_mw_to_gwh returns GWh, while the energies
+    # above are in MWh.
+    demand_series = time_series_demand(inputs, run_time_options; subscenario)
+    total_demand_energy =
+        sum(
+            demand_mw_to_gwh(inputs, demand_series[d, b], d, b)
+            for b in subperiods(inputs), d in demand_units;
+            init = 0.0,
+        ) / MW_to_GW()
+
+    # A curve wider than the demand prices quantities the market cannot absorb. Scaling keeps each
+    # reservoir's share; the zero check avoids zeroing the curve when there is no demand.
+    if total_demand_energy > 0 && sum(available_energy) > total_demand_energy
+        available_energy .*= total_demand_energy / sum(available_energy)
+    end
+
+    return available_energy
+end
+
+"""
     initialize_virtual_reservoir_inflow_energy_arrival_output(
         outputs::Outputs,
         inputs::Inputs,

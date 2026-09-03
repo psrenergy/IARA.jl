@@ -69,10 +69,9 @@ function virtual_reservoir_total_generation!(
 
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
-    virtual_reservoir_available_energy = get_model_object(model, :virtual_reservoir_available_energy)
+    available_energy_parameter = get_model_object(model, :virtual_reservoir_available_energy)
 
-    # Calculate total stored energy
-    total_stored_energy = virtual_reservoir_stored_energy(
+    available_energy = virtual_reservoir_available_energy(
         inputs,
         run_time_options,
         simulation_period,
@@ -80,37 +79,8 @@ function virtual_reservoir_total_generation!(
         subscenario,
     )
 
-    # Calculate maximum turbinable energy
-    maximum_turbinable_energy = [
-        sum(
-            hydro_unit_max_available_turbining(inputs, h) * subperiod_duration_in_hours(inputs, b) *
-            hydro_unit_production_factor(inputs, h)
-            for b in subperiods(inputs), h in virtual_reservoir_hydro_unit_indices(inputs, vr)
-        ) for vr in virtual_reservoirs
-    ]
-
-    # Calculate available energy for each virtual reservoir
-    available_energy = [min(total_stored_energy[vr], maximum_turbinable_energy[vr]) for vr in virtual_reservoirs]
-
-    # Total demand energy of the period. demand_mw_to_gwh returns GWh, while the energies
-    # above are in MWh.
-    demand_units = index_of_elements(inputs, DemandUnit; filters = [is_existing])
-    demand_series = time_series_demand(inputs, run_time_options; subscenario)
-    total_demand_energy =
-        sum(
-            demand_mw_to_gwh(inputs, demand_series[d, b], d, b)
-            for b in subperiods(inputs), d in demand_units;
-            init = 0.0,
-        ) / MW_to_GW()
-
-    # A curve wider than the demand prices quantities the market cannot absorb. Scaling keeps each
-    # reservoir's share; the zero check avoids zeroing the curve when there is no demand.
-    if total_demand_energy > 0 && sum(available_energy) > total_demand_energy
-        available_energy .*= total_demand_energy / sum(available_energy)
-    end
-
     for vr in virtual_reservoirs
-        set_parameter_value(virtual_reservoir_available_energy[vr], available_energy[vr])
+        set_parameter_value(available_energy_parameter[vr], available_energy[vr])
     end
 
     return nothing

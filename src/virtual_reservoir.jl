@@ -336,9 +336,7 @@ end
 Total energy that the virtual reservoirs can offer in the period, in MWh: the stored energy of
 each reservoir, limited by the turbining capacity of its hydro units, summed over all reservoirs
 and limited by the total demand of the period. This is the width of the hydro reference curve, so
-capping it keeps the segments on quantities the market can absorb. Total demand is a deliberately
-loose ceiling: a loose cap only costs resolution, while a tight one truncates the curve below the
-quantities that clear.
+capping it keeps the segments on quantities the market can absorb.
 """
 function virtual_reservoir_total_available_energy(
     inputs::AbstractInputs,

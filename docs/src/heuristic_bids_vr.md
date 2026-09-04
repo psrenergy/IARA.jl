@@ -19,9 +19,9 @@ The variables, constraints, objective function, and parameters of the $Z(\theta)
 - ``C``: Set of future cost cutting planes coefficients.
 
 ## Parameters
-- ``\hat{q}_r(\omega)``: Uncapped available energy of virtual reservoir $r$ for current period, scenario $\omega$. Calculated as the minimum between the total stored energy at $r$ and the maximum turbinable energy at $r$ considering the period duration: $\hat{q}_r(\omega) = \min(\sum_{i \in I^{VR}(r)} E_{r,i}\; , \; \sum_{h \in J^{H}_{VR}(r)} \sum_{\tau \in B(t)} \rho_h \cdot U_h \cdot d(\tau))$
+- ``\hat{q}_r(\omega)``: Available energy of virtual reservoir $r$ for current period, scenario $\omega$. Calculated as the minimum between the total stored energy at $r$ and the maximum turbinable energy at $r$ considering the period duration: $\hat{q}_r(\omega) = \min(\sum_{i \in I^{VR}(r)} E_{r,i}\; , \; \sum_{h \in J^{H}_{VR}(r)} \sum_{\tau \in B(t)} \rho_h \cdot U_h \cdot d(\tau))$
 - ``D(\omega)``: Total demand energy of the period: $D(\omega) = \sum_{j \in J^{DI} \cup J^{DE} \cup J^{DF}} \sum_{\tau \in B(t)} D_{j,\tau}(\omega)$
-- ``\bar{q}_r(\omega)``: Available energy of virtual reservoir $r$ for current period, scenario $\omega$. It is the uncapped available energy, scaled down proportionally across reservoirs when the total exceeds the demand of the period: $\bar{q}_r(\omega) = \hat{q}_r(\omega) \cdot \min\left(1\; , \; \frac{D(\omega)}{\sum_{r' \in J^{VR}} \hat{q}_{r'}(\omega)}\right)$
+- ``\bar{Q}(\omega)``: Total reference energy of the period, which is the width of the reference curve: $\bar{Q}(\omega) = \min\left(\sum_{r \in J^{VR}} \hat{q}_r(\omega)\; , \; D(\omega)\right)$. The demand cap keeps the multipliers $\Theta$ sampling the energy that the market could absorb, and is not applied when there is no demand in the period.
 
 
 ## Variables
@@ -50,7 +50,7 @@ The variables, constraints, objective function, and parameters of the $Z(\theta)
 ### Generation reference
 
 ```math
-    \sum_{r \in J^{VR}} q_r = \theta \cdot \sum_{r \in J^{VR}} \bar{q}_r(\omega) \quad :\mu
+    \sum_{r \in J^{VR}} q_r = \theta \cdot \bar{Q}(\omega) \quad :\mu
 ```
 
 ### Non-decreasing Generation Reference

@@ -54,7 +54,7 @@ function initialize_reference_curve_outputs(
 
     add_symbol_to_query_from_subproblem_result!(
         outputs,
-        :virtual_reservoir_available_energy,
+        :virtual_reservoir_total_available_energy,
     )
 
     add_symbol_to_query_from_subproblem_result!(

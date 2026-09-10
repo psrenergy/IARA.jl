@@ -1046,9 +1046,10 @@ function update_slope(
             end
     end
 
-    B_k = sum(agent_weight ./ current_slope_in_segment)
+    B_k = sum(1 ./ current_slope_in_segment)
     new_slope =
-        original_slope_in_segment ./ 2 .+ 1 / B_k + sqrt.(((original_slope_in_segment ./ 2) .^ 2) .+ (1 / B_k)^2)
+        original_slope_in_segment ./ 2 .+ 1 / (agent_weight .* B_k) +
+        sqrt.(((original_slope_in_segment ./ 2) .^ 2) .+ (1 / (agent_weight .* B_k))^2)
 
     agent_indexes = findall(isfinite, original_slope_in_segment)
 

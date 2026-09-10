@@ -1,0 +1,8 @@
+dimension_sizes = [ 2, 12, 1, 1, 5 ]
+dimensions = [ 'period', 'scenario', 'subscenario', 'subperiod', 'bid_segment' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'Thermal Owner - Island', 'Price Taker - Island', 'Hydro Owner - Island' ]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

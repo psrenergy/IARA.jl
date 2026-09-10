@@ -1,0 +1,8 @@
+dimension_sizes = [ 10, 1, 1 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2000-01-01T00:00:00'
+labels = [ 'gauging_station' ]
+time_dimensions = [ 'period' ]
+unit = 'm3/s'
+version = '1'

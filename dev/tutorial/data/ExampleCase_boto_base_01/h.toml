@@ -1,0 +1,8 @@
+dimension_sizes = [ 6, 3, 3 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2020-01-01T00:00:00'
+labels = [ 'Hydro Upstream', 'Hydro Downstream' ]
+time_dimensions = [ 'period' ]
+unit = 'm3/s'
+version = '1'

@@ -24,6 +24,7 @@ Collection representing the asset owners in the problem.
     virtual_reservoir_energy_account_upper_bound::Vector{Vector{Float64}} = []
     risk_factor_for_virtual_reservoir_bids::Vector{Vector{Float64}} = []
     minimum_virtual_reservoir_purchase_bid_quantity_in_mw::Vector{Float64} = []
+    supply_function_equilibrium_weight::Vector{Float64} = []
     # The convex revenue cache has information for a single asset owner at a time
     # Array dimensions are [bus, subperiod]
     # Vector dimension is the number of points in the convex hull
@@ -55,6 +56,8 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
         )
     asset_owner.minimum_virtual_reservoir_purchase_bid_quantity_in_mw =
         PSRI.get_parms(inputs.db, "AssetOwner", "minimum_virtual_reservoir_purchase_bid_quantity_in_mw")
+    asset_owner.supply_function_equilibrium_weight =
+        PSRI.get_parms(inputs.db, "AssetOwner", "supply_function_equilibrium_weight")
 
     # Load vectors
     asset_owner.purchase_discount_rate = PSRI.get_vectors(inputs.db, "AssetOwner", "purchase_discount_rate")
@@ -81,6 +84,8 @@ Required arguments:
   - `virtual_reservoir_energy_account_upper_bound::Vector{Float64}`
   - `risk_factor_for_virtual_reservoir_bids::Vector{Float64}`
   - `purchase_discount_rate::Vector{Float64}`
+  - `supply_function_equilibrium_weight::Float64`: number of equivalent owners this price taker
+  represents. Only used for price takers. <default 20.0>
 
 Example:
 
@@ -204,6 +209,12 @@ function validate(asset_owner::AssetOwner)
                 "This is not allowed."
             )
         end
+        if asset_owner.supply_function_equilibrium_weight[i] <= 0
+            num_errors += 1
+            @error(
+                "Supply function equilibrium weight for asset owner $(asset_owner.label[i]) must be positive."
+            )
+        end
     end
     return num_errors
 end
@@ -250,47 +261,47 @@ end
 # Collection getters
 # ---------------------------------------------------------------------
 
-is_current_asset_owner_price_taker(a::AssetOwner, i::Int) =
+is_asset_owner_price_taker(a::AssetOwner, i::Int) =
     if is_null(i)
         false
     else
         a.price_type[i] == AssetOwner_PriceType.PRICE_TAKER
     end
-is_current_asset_owner_price_maker(a::AssetOwner, i::Int) =
+is_asset_owner_price_maker(a::AssetOwner, i::Int) =
     if is_null(i)
         false
     else
         a.price_type[i] == AssetOwner_PriceType.PRICE_MAKER
     end
-is_current_asset_owner_supply_security_agent(a::AssetOwner, i::Int) =
+is_asset_owner_supply_security_agent(a::AssetOwner, i::Int) =
     if is_null(i)
         false
     else
         a.price_type[i] == AssetOwner_PriceType.SUPPLY_SECURITY_AGENT
     end
 is_current_asset_owner_price_taker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
-    is_current_asset_owner_price_taker(inputs.collections.asset_owner, run_time_options.asset_owner_index)
+    is_asset_owner_price_taker(inputs.collections.asset_owner, run_time_options.asset_owner_index)
 is_current_asset_owner_price_maker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
-    is_current_asset_owner_price_maker(inputs.collections.asset_owner, run_time_options.asset_owner_index)
+    is_asset_owner_price_maker(inputs.collections.asset_owner, run_time_options.asset_owner_index)
 is_current_asset_owner_supply_security_agent(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
-    is_current_asset_owner_supply_security_agent(inputs.collections.asset_owner, run_time_options.asset_owner_index)
+    is_asset_owner_supply_security_agent(inputs.collections.asset_owner, run_time_options.asset_owner_index)
 is_current_asset_owner_bidder(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     is_current_asset_owner_price_taker(inputs, run_time_options) ||
     is_current_asset_owner_price_maker(inputs, run_time_options) ||
     is_current_asset_owner_supply_security_agent(inputs, run_time_options)
 any_asset_owner_is_price_taker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     any(
-        is_current_asset_owner_price_taker(inputs.collections.asset_owner, i) for
+        is_asset_owner_price_taker(inputs.collections.asset_owner, i) for
         i in 1:length(inputs.collections.asset_owner)
     )
 any_asset_owner_is_price_maker(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     any(
-        is_current_asset_owner_price_maker(inputs.collections.asset_owner, i) for
+        is_asset_owner_price_maker(inputs.collections.asset_owner, i) for
         i in 1:length(inputs.collections.asset_owner)
     )
 any_asset_owner_is_supply_security_agent(inputs::AbstractInputs, run_time_options::RunTimeOptions) =
     any(
-        is_current_asset_owner_supply_security_agent(inputs.collections.asset_owner, i) for
+        is_asset_owner_supply_security_agent(inputs.collections.asset_owner, i) for
         i in 1:length(inputs.collections.asset_owner)
     )
 

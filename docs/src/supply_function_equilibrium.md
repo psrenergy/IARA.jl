@@ -54,6 +54,13 @@ IARA.update_configuration!(db;
 )
 ```
 
+### Asset owner parameters
+
+- **`supply_function_equilibrium_weight`** (Float64, default: 20.0)
+  Weight of this asset owner in the slope update, i.e. the number of equivalent owners the competitive fringe it
+  represents is assumed to contain. Must be positive. Only price takers carry a weight; the value is ignored for any
+  other price type, which always weighs 1.
+
 ## Mathematical Formulation
 
 ### Execution Flow
@@ -95,6 +102,7 @@ STEP 3: Market Clearing
 - ``C^\delta``: Demand deficit cost (``\$/MWh``)
 - ``Q_{i,\tau}``: Quantity for agent ``i`` at subperiod ``\tau``
 - ``P_{i,\tau}``: Price for agent ``i`` at subperiod ``\tau``
+- ``w_i``: Weight of agent ``i`` in the slope update, ``1`` for every agent that is not a price taker
 
 **Variables:**
 - ``q_i(k)``: Cumulative quantity for agent ``i`` at segment ``k``
@@ -161,7 +169,7 @@ b_i^*(1) = b_i^0(1) \quad \forall i \in \mathcal{A}
 For segment ``k`` with all agents in ``\mathcal{A}``:
 
 ```math
-B_k = \sum_{i \in \mathcal{A}} \frac{1}{b_i^*(k)}
+B_k = \sum_{i \in \mathcal{A}} \frac{w_i}{b_i^*(k)}
 ```
 
 ```math

@@ -106,7 +106,6 @@ Configurations for the problem.
     supply_function_equilibrium_max_slope::Float64 = 0.0
     supply_function_equilibrium_max_iterations::Int = 0
     supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
-    supply_function_equilibrium_price_taker_weight::Float64 = 0.0
 
     # CVaR risk measure
     cvar_alpha::Float64 = 0.0
@@ -339,8 +338,6 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
     configurations.supply_function_equilibrium_max_cost_multiplier =
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
-    configurations.supply_function_equilibrium_price_taker_weight =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_price_taker_weight")[1]
     configurations.cvar_alpha = PSRI.get_parms(inputs.db, "Configuration", "cvar_alpha")[1]
     configurations.cvar_lambda = PSRI.get_parms(inputs.db, "Configuration", "cvar_lambda")[1]
 
@@ -1736,14 +1733,6 @@ Return the maximum cost multiplier for the Supply Function Equilibrium.
 """
 supply_function_equilibrium_max_cost_multiplier(inputs::AbstractInputs) =
     inputs.collections.configurations.supply_function_equilibrium_max_cost_multiplier
-
-"""
-    supply_function_equilibrium_price_taker_weight(inputs)
-
-Return the weight used to represent price taker agents in the Supply Function Equilibrium.
-"""
-supply_function_equilibrium_price_taker_weight(inputs::AbstractInputs) =
-    inputs.collections.configurations.supply_function_equilibrium_price_taker_weight
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

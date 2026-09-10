@@ -237,12 +237,15 @@ function supply_function_equilibrium(
     # `*_sfe_price` outputs written above keep the unshifted equilibrium, so the shift is visible as the difference
     # between them and the `*_sfe_price_bid` outputs below.
     price_shift = supply_function_equilibrium_price_shift(
+        inputs,
         agent_mappings,
         vr_price_bid,
         vr_original_price_bid,
         bg_price_bid,
         bg_original_price_bid,
     )
+
+    println("The price shift (Delta P) calculated was $price_shift.")
 
     if has_virtual_reservoirs
         shift_price_bid!(vr_price_bid, price_shift)
@@ -736,7 +739,7 @@ function minimum_nonzero_price(prices)
 end
 
 """
-    supply_function_equilibrium_price_shift(agent_mappings::Vector{AgentMapping}, vr_price_bid, vr_original_price_bid, bg_price_bid, bg_original_price_bid)
+    supply_function_equilibrium_price_shift(inputs::AbstractInputs, agent_mappings::Vector{AgentMapping}, vr_price_bid, vr_original_price_bid, bg_price_bid, bg_original_price_bid)
 
 Return the downward shift to apply to every agent's equilibrium price curve.
 
@@ -744,8 +747,12 @@ The shift is `min(P_i - C_i)` over all agents `i`, where `P_i` is agent `i`'s ch
 cheapest original reference (cost) price, both taken over the segments that carry an offer. It is a single scalar for
 the whole system, so shifting by it preserves the relative position of the agents' curves, and it is non-negative by
 construction, so it can only reduce markups.
+
+When `supply_function_equilibrium_force_origin_on_output` is set, the shift is instead the lowest equilibrium price
+across all agents, which pushes the cheapest segment of the system's curve down to a price of zero.
 """
 function supply_function_equilibrium_price_shift(
+    inputs::AbstractInputs,
     agent_mappings::Vector{AgentMapping},
     vr_price_bid::Union{Array{Float64, 3}, Nothing},
     vr_original_price_bid::Union{Array{Float64, 3}, Nothing},
@@ -790,13 +797,41 @@ function supply_function_equilibrium_price_shift(
         equilibrium_price = minimum_nonzero_price(equilibrium_prices)
         original_price = minimum_nonzero_price(original_prices)
 
-        # An agent whose curve produced no valid segment has nothing to offer at all.
-        if !isfinite(equilibrium_price) || !isfinite(original_price)
+        # An agent whose equilibrium curve produced no valid segment has nothing to offer at all.
+        if !isfinite(equilibrium_price)
+            continue
+        end
+
+        # The lowest equilibrium price covers every agent that offers something, even one whose reference curve has
+        # no priced segment: that agent still contributes a segment to the output curve, so it must be able to pin
+        # the shift that forces the curve through the origin.
+        lowest_equilibrium_price = min(lowest_equilibrium_price, equilibrium_price)
+
+        # The markup, on the other hand, is undefined without a reference cost to measure it against.
+        if !isfinite(original_price)
             continue
         end
 
         price_shift = min(price_shift, equilibrium_price - original_price)
-        lowest_equilibrium_price = min(lowest_equilibrium_price, equilibrium_price)
+    end
+
+    # Forcing the output curve through the origin overrides the markup-based shift: the whole system curve is moved
+    # down by its cheapest equilibrium price, so that price lands exactly at zero. This is checked before the
+    # markup-based early returns because it does not depend on the reference cost curve at all.
+    if supply_function_equilibrium_force_origin_on_output(inputs)
+        if !isfinite(lowest_equilibrium_price)
+            return 0.0
+        end
+
+        # Unlike the markup-based shift, this one is not bounded by the reference cost curve, so it can push prices
+        # below cost and invert the curve, the same condition `test_inversion` reports.
+        @warn(
+            "supply_function_equilibrium_force_origin_on_output is enabled: the price curve was shifted by the " *
+            "lowest equilibrium price, $(lowest_equilibrium_price), instead of by the smallest markup. This shift " *
+            "is not bounded by the reference curve cost and may invert the curve; make sure this is intended."
+        )
+
+        return lowest_equilibrium_price
     end
 
     if !isfinite(price_shift)

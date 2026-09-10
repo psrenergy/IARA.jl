@@ -38,6 +38,9 @@ IARA.update_configuration!(db;
 - **`supply_function_equilibrium_max_cost_multiplier`** (Float64, default: 2.0)
   Maximum price cap as multiplier of deficit cost.
 
+- **`supply_function_equilibrium_force_origin_on_output`** (Bool, default: false)
+  When `true`, the output bid curves are shifted down by the lowest equilibrium price of the system instead of by the smallest markup, so the cheapest segment of the resulting curve is priced at zero.
+
 - **`reference_curve_multipliers`** (Vector{Float64}, default: empty)
   Fractions of the available energy defining each reference curve segment, strictly increasing and within `(0, 1]`, e.g. `[0.01, 0.1, 0.25, 0.5, 1.0]`. When left empty, `reference_curve_number_of_segments` evenly spaced fractions are used instead.
 

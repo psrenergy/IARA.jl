@@ -220,6 +220,8 @@ SFE generates equilibrium curves for each period/scenario:
 
 All outputs above include dimensions for agents, sfe\_iteration, and sfe\_curve\_segment. They are diagnostics: they
 describe the equilibrium curve of every iteration, in the internal cumulative and descending-price representation.
+Index 1 of sfe\_iteration is the reference curve the equilibrium starts from, so iteration `k` sits at index `k+1`.
+At index 1 the slope has one entry fewer than the quantity, since a reference curve has one slope per interval.
 
 **Clearing Bids:**
 

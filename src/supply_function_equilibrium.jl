@@ -24,6 +24,8 @@ function supply_function_equilibrium(
     vr_price_output = nothing
     vr_slope_output = nothing
     has_virtual_reservoirs = use_virtual_reservoirs(inputs)
+    # Extra slot for the reference curve the equilibrium starts from.
+    number_of_output_iterations = supply_function_equilibrium_max_iterations(inputs) + 1
 
     if has_virtual_reservoirs
         vr_original_quantity_bid, vr_original_price_bid =
@@ -37,21 +39,21 @@ function supply_function_equilibrium(
             Float64,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         vr_price_output = zeros(
             Float64,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         vr_slope_output = fill(
             Inf,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
     end
@@ -81,21 +83,21 @@ function supply_function_equilibrium(
             Float64,
             number_of_bidding_groups,
             number_of_buses,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         bg_price_output = zeros(
             Float64,
             number_of_bidding_groups,
             number_of_buses,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         bg_slope_output = fill(
             Inf,
             number_of_bidding_groups,
             number_of_buses,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
     end
@@ -163,37 +165,42 @@ function supply_function_equilibrium(
 
     total_number_of_agents = length(global_q)
 
-    # Run unified Nash iteration on ALL bids simultaneously
-    for iter in 1:supply_function_equilibrium_max_iterations(inputs)
-        global_q, global_p, global_b = run_supply_function_equilibrium_iteration(
-            inputs,
-            total_number_of_agents,
-            global_asset_owner_index;
-            current_quantity = global_q,
-            current_price = global_p,
-            current_slope = global_b,
-            original_quantity = original_global_q,
-            original_price = original_global_p,
-            original_slope = original_global_b,
-        )
+    # Run unified Nash iteration on ALL bids simultaneously.
+    # Iteration 0 runs no equilibrium: it just writes out the reference curves it starts from.
+    for iter in 0:supply_function_equilibrium_max_iterations(inputs)
+        if iter > 0
+            global_q, global_p, global_b = run_supply_function_equilibrium_iteration(
+                inputs,
+                total_number_of_agents,
+                global_asset_owner_index;
+                current_quantity = global_q,
+                current_price = global_p,
+                current_slope = global_b,
+                original_quantity = original_global_q,
+                original_price = original_global_p,
+                original_slope = original_global_b,
+            )
+        end
 
         # Disaggregate results back to VR and BG outputs
         for mapping in agent_mappings
             agent_idx = mapping.agent_index_in_global
             number_of_segments = length(global_q[agent_idx])
+            # A reference curve has one slope per interval, one fewer than its number of points.
+            number_of_slopes = length(global_b[agent_idx])
 
             if mapping.source_type == :vr
                 vr = mapping.location_index
                 ao = mapping.original_agent_id
-                vr_quantity_output[vr, ao, iter, 1:number_of_segments] = global_q[agent_idx]
-                vr_price_output[vr, ao, iter, 1:number_of_segments] = global_p[agent_idx]
-                vr_slope_output[vr, ao, iter, 1:number_of_segments] = global_b[agent_idx]
+                vr_quantity_output[vr, ao, iter+1, 1:number_of_segments] = global_q[agent_idx]
+                vr_price_output[vr, ao, iter+1, 1:number_of_segments] = global_p[agent_idx]
+                vr_slope_output[vr, ao, iter+1, 1:number_of_slopes] = global_b[agent_idx]
             elseif mapping.source_type == :bg
                 bus = mapping.location_index
                 bg_local_idx = mapping.agent_local_index
-                bg_quantity_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_q[agent_idx]
-                bg_price_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_p[agent_idx]
-                bg_slope_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_b[agent_idx]
+                bg_quantity_output[bg_local_idx, bus, iter+1, 1:number_of_segments] = global_q[agent_idx]
+                bg_price_output[bg_local_idx, bus, iter+1, 1:number_of_segments] = global_p[agent_idx]
+                bg_slope_output[bg_local_idx, bus, iter+1, 1:number_of_slopes] = global_b[agent_idx]
             end
         end
     end

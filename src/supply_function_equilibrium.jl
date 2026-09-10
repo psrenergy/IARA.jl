@@ -924,7 +924,7 @@ function update_slope(
     for agent_index in 1:number_of_agents
         asset_owner_index = agents_asset_owner_index[agent_index]
         agent_weight[agent_index] =
-            if is_current_asset_owner_price_taker(inputs.collections.asset_owner, asset_owner_index)
+            if is_asset_owner_price_taker(inputs.collections.asset_owner, asset_owner_index)
                 asset_owner_supply_function_equilibrium_weight(inputs, asset_owner_index)
             else
                 1.0

@@ -106,6 +106,7 @@ Configurations for the problem.
     supply_function_equilibrium_max_slope::Float64 = 0.0
     supply_function_equilibrium_max_iterations::Int = 0
     supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
+    supply_function_equilibrium_force_origin_on_output::Bool = false
 
     # CVaR risk measure
     cvar_alpha::Float64 = 0.0
@@ -338,6 +339,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
     configurations.supply_function_equilibrium_max_cost_multiplier =
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
+    configurations.supply_function_equilibrium_force_origin_on_output =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_force_origin_on_output")[1] |> Bool
     configurations.cvar_alpha = PSRI.get_parms(inputs.db, "Configuration", "cvar_alpha")[1]
     configurations.cvar_lambda = PSRI.get_parms(inputs.db, "Configuration", "cvar_lambda")[1]
 
@@ -1733,6 +1736,14 @@ Return the maximum cost multiplier for the Supply Function Equilibrium.
 """
 supply_function_equilibrium_max_cost_multiplier(inputs::AbstractInputs) =
     inputs.collections.configurations.supply_function_equilibrium_max_cost_multiplier
+
+"""
+    supply_function_equilibrium_force_origin_on_output(inputs)
+
+Return whether the Supply Function Equilibrium bid curves must be shifted so that they touch the origin.
+"""
+supply_function_equilibrium_force_origin_on_output(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_force_origin_on_output
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

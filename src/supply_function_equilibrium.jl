@@ -237,6 +237,7 @@ function supply_function_equilibrium(
     # `*_sfe_price` outputs written above keep the unshifted equilibrium, so the shift is visible as the difference
     # between them and the `*_sfe_price_bid` outputs below.
     price_shift = supply_function_equilibrium_price_shift(
+        inputs,
         agent_mappings,
         vr_price_bid,
         vr_original_price_bid,
@@ -736,7 +737,22 @@ function minimum_nonzero_price(prices)
 end
 
 """
-    supply_function_equilibrium_price_shift(agent_mappings::Vector{AgentMapping}, vr_price_bid, vr_original_price_bid, bg_price_bid, bg_original_price_bid)
+    agent_mapping_label(inputs::AbstractInputs, mapping::AgentMapping)
+
+Return a human-readable label for an agent of the supply function equilibrium.
+"""
+function agent_mapping_label(inputs::AbstractInputs, mapping::AgentMapping)
+    if mapping.source_type == :vr
+        return "asset owner $(asset_owner_label(inputs, mapping.original_agent_id)) " *
+               "in virtual reservoir $(virtual_reservoir_label(inputs, mapping.location_index))"
+    else
+        return "bidding group $(bidding_group_label(inputs, mapping.original_agent_id)) " *
+               "in bus $(bus_label(inputs, mapping.location_index))"
+    end
+end
+
+"""
+    supply_function_equilibrium_price_shift(inputs::AbstractInputs, agent_mappings::Vector{AgentMapping}, vr_price_bid, vr_original_price_bid, bg_price_bid, bg_original_price_bid)
 
 Return the downward shift to apply to every agent's equilibrium price curve.
 
@@ -744,8 +760,12 @@ The shift is `min(P_i - C_i)` over all agents `i`, where `P_i` is agent `i`'s ch
 cheapest original reference (cost) price, both taken over the segments that carry an offer. It is a single scalar for
 the whole system, so shifting by it preserves the relative position of the agents' curves, and it is non-negative by
 construction, so it can only reduce markups.
+
+When `supply_function_equilibrium_force_origin_on_output` is set, the shift is instead the lowest equilibrium price
+across all agents, which pushes the cheapest segment of the system's curve down to a price of zero.
 """
 function supply_function_equilibrium_price_shift(
+    inputs::AbstractInputs,
     agent_mappings::Vector{AgentMapping},
     vr_price_bid::Union{Array{Float64, 3}, Nothing},
     vr_original_price_bid::Union{Array{Float64, 3}, Nothing},
@@ -767,8 +787,16 @@ function supply_function_equilibrium_price_shift(
     # taker bidding near its cost pins the shift close to zero for everyone.
     price_shift = Inf
 
-    # The cheapest offer also bounds how far the curve can move before any price would turn negative.
+    # The agent that attains `price_shift`, kept for reporting: the shift is a single scalar, so knowing which agent
+    # set it, and at which prices, is the only way to explain the resulting curve from the outputs alone.
+    binding_mapping = nothing
+    binding_equilibrium_price = Inf
+    binding_original_price = Inf
+
+    # The cheapest offer also bounds how far the curve can move before any price would turn negative, and it is the
+    # shift itself when the curve is forced through the origin, so the agent holding it is tracked too.
     lowest_equilibrium_price = Inf
+    lowest_price_mapping = nothing
 
     for mapping in agent_mappings
         equilibrium_prices, original_prices = if mapping.source_type == :vr
@@ -790,23 +818,72 @@ function supply_function_equilibrium_price_shift(
         equilibrium_price = minimum_nonzero_price(equilibrium_prices)
         original_price = minimum_nonzero_price(original_prices)
 
-        # An agent whose curve produced no valid segment has nothing to offer at all.
-        if !isfinite(equilibrium_price) || !isfinite(original_price)
+        # An agent whose equilibrium curve produced no valid segment has nothing to offer at all.
+        if !isfinite(equilibrium_price)
             continue
         end
 
-        price_shift = min(price_shift, equilibrium_price - original_price)
-        lowest_equilibrium_price = min(lowest_equilibrium_price, equilibrium_price)
+        # The lowest equilibrium price covers every agent that offers something, even one whose reference curve has
+        # no priced segment: that agent still contributes a segment to the output curve, so it must be able to pin
+        # the shift that forces the curve through the origin.
+        if equilibrium_price < lowest_equilibrium_price
+            lowest_equilibrium_price = equilibrium_price
+            lowest_price_mapping = mapping
+        end
+
+        # The markup, on the other hand, is undefined without a reference cost to measure it against.
+        if !isfinite(original_price)
+            continue
+        end
+
+        markup = equilibrium_price - original_price
+        if markup < price_shift
+            price_shift = markup
+            binding_mapping = mapping
+            binding_equilibrium_price = equilibrium_price
+            binding_original_price = original_price
+        end
+    end
+
+    # Forcing the output curve through the origin overrides the markup-based shift: the whole system curve is moved
+    # down by its cheapest equilibrium price, so that price lands exactly at zero. This is checked before the
+    # markup-based early returns because it does not depend on the reference cost curve at all.
+    if supply_function_equilibrium_force_origin_on_output(inputs)
+        if !isfinite(lowest_equilibrium_price)
+            @info("No agent offered a priced segment; the price curve shift was set to zero.")
+            return 0.0
+        end
+
+        # Unlike the markup-based shift, this one is not bounded by the reference cost curve, so it can push prices
+        # below cost and invert the curve, the same condition `test_inversion` reports.
+        @warn(
+            "supply_function_equilibrium_force_origin_on_output is enabled: the price curve was shifted by the " *
+            "lowest equilibrium price, $(lowest_equilibrium_price), set by " *
+            "$(agent_mapping_label(inputs, lowest_price_mapping)), instead of by the smallest markup. This shift " *
+            "is not bounded by the reference curve cost and may invert the curve; make sure this is intended."
+        )
+
+        return lowest_equilibrium_price
     end
 
     if !isfinite(price_shift)
+        @info("No agent had both an equilibrium and a reference price; the price curve shift was set to zero.")
         return 0.0
     end
+
+    # The shift is a single scalar applied to every agent, so the log records which agent set it and at which
+    # prices. Without this, recovering the binding agent from the outputs means differencing the shifted bids
+    # against the reference curve by hand.
+    binding_label = agent_mapping_label(inputs, binding_mapping)
 
     # A negative gap means the equilibrium price fell below the reference cost, the same curve inversion that
     # `test_inversion` reports. Shifting by it would raise prices, so the shift is suppressed instead.
     if price_shift < 0.0
-        @warn("Equilibrium price below the reference curve cost; the price curve shift was suppressed.")
+        @warn(
+            "Equilibrium price below the reference curve cost for $(binding_label) " *
+            "(equilibrium $(binding_equilibrium_price), reference $(binding_original_price)); " *
+            "the price curve shift was suppressed."
+        )
         return 0.0
     end
 
@@ -814,11 +891,18 @@ function supply_function_equilibrium_price_shift(
     # non-negative.
     if price_shift > lowest_equilibrium_price
         @warn(
-            "The price curve shift of $(price_shift) would make bid prices negative; " *
-            "it was capped at the lowest equilibrium price, $(lowest_equilibrium_price)."
+            "The price curve shift of $(price_shift), set by $(binding_label) " *
+            "(equilibrium $(binding_equilibrium_price), reference $(binding_original_price)), " *
+            "would make bid prices negative; it was capped at the lowest equilibrium price, " *
+            "$(lowest_equilibrium_price)."
         )
         return lowest_equilibrium_price
     end
+
+    @info(
+        "The price curve shift (Delta P) is $(price_shift), set by $(binding_label): " *
+        "equilibrium price $(binding_equilibrium_price) minus reference price $(binding_original_price)."
+    )
 
     return price_shift
 end

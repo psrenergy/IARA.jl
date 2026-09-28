@@ -148,6 +148,7 @@ Optional arguments:
   - `supply_function_equilibrium_max_slope::Float64`
   - `supply_function_equilibrium_max_iterations::Int64`
   - `supply_function_equilibrium_max_cost_multiplier::Float64`
+  - `supply_function_equilibrium_force_origin_on_output::Bool`
   - `subperiod_duration_in_hours::Vector{Float64}`: Subperiod duration in hours of the configuration
   - `expected_number_of_repeats_per_node::Vector{Float64}`:
   - `reference_curve_multipliers::Vector{Float64}`

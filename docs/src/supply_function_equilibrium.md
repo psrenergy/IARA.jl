@@ -32,6 +32,8 @@ IARA.update_configuration!(db;
 - **`supply_function_equilibrium_max_slope`** (Float64, default: 50.0)
   Maximum slope allowed for the bid curves. Must be greater than `supply_function_equilibrium_min_slope`.
 
+  Both slope bounds refer to a single owner. For a price taker, both are divided by its `supply_function_equilibrium_weight`, since its curve aggregates that many equivalent owners.
+
 - **`supply_function_equilibrium_max_iterations`** (Int, default: 20)
   Maximum iterations for equilibrium computation within each period/scenario.
 

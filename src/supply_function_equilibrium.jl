@@ -344,6 +344,7 @@ function treat_reference_curve_data(
             inputs,
             treated_quantity_bids[i],
             treated_price_bids[i],
+            ao,
         )
     end
 
@@ -397,6 +398,7 @@ function treat_bidding_group_data(
             inputs,
             treated_quantity_bids[i],
             treated_price_bids[i],
+            bidding_group_asset_owner_index(inputs, bg),
         )
     end
 
@@ -490,10 +492,25 @@ function quantity_points_from_segments(
     return new_quantity
 end
 
+"""
+    supply_function_equilibrium_agent_weight(inputs::AbstractInputs, asset_owner_index::Int)
+
+Number of equivalent owners that the agents of `asset_owner_index` stand for in the equilibrium.
+
+Only price takers stand for more than one owner; every other price type weighs one.
+"""
+function supply_function_equilibrium_agent_weight(inputs::AbstractInputs, asset_owner_index::Int)
+    if !is_asset_owner_price_taker(inputs.collections.asset_owner, asset_owner_index)
+        return 1.0
+    end
+    return asset_owner_supply_function_equilibrium_weight(inputs, asset_owner_index)
+end
+
 function reverse_bid_order_and_add_points(
     inputs::AbstractInputs,
     quantity::Vector{Float64},
     price::Vector{Float64},
+    asset_owner_index::Int,
 )
     new_quantity = Float64[]
     new_price = Float64[]
@@ -505,8 +522,11 @@ function reverse_bid_order_and_add_points(
     reference_price = vcat(price, demand_deficit_cost(inputs))
     number_of_points = length(reference_quantity)
 
-    min_slope = supply_function_equilibrium_min_slope(inputs)
-    max_slope = supply_function_equilibrium_max_slope(inputs)
+    # The slope bounds describe the bid step of a single owner. An agent that stands for `weight` equivalent
+    # owners offers their aggregate curve, which is `weight` times flatter, so its bounds scale alike.
+    weight = supply_function_equilibrium_agent_weight(inputs, asset_owner_index)
+    min_slope = supply_function_equilibrium_min_slope(inputs) / weight
+    max_slope = supply_function_equilibrium_max_slope(inputs) / weight
 
     #(q0, p0)
     push!(new_quantity, reference_quantity[1])
@@ -1035,16 +1055,7 @@ function update_slope(
 
     current_slope_in_segment = [current_slope[i][segment_index] for i in 1:number_of_agents]
     original_slope_in_segment = [original_slope[i][segment_index] for i in 1:number_of_agents]
-    agent_weight = zeros(number_of_agents)
-    for agent_index in 1:number_of_agents
-        asset_owner_index = agents_asset_owner_index[agent_index]
-        agent_weight[agent_index] =
-            if is_asset_owner_price_taker(inputs.collections.asset_owner, asset_owner_index)
-                asset_owner_supply_function_equilibrium_weight(inputs, asset_owner_index)
-            else
-                1.0
-            end
-    end
+    agent_weight = [supply_function_equilibrium_agent_weight(inputs, ao) for ao in agents_asset_owner_index]
 
     B_k = sum(agent_weight ./ current_slope_in_segment)
     new_slope =

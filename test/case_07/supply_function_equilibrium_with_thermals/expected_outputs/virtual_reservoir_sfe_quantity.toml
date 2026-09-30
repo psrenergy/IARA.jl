@@ -1,4 +1,4 @@
-dimension_sizes = [ 3, 2, 20, 121 ]
+dimension_sizes = [ 3, 2, 21, 121 ]
 dimensions = [ 'period', 'scenario', 'sfe_iteration', 'sfe_curve_segment' ]
 frequencies = [ 'monthly' ]
 initial_datetime = '2020-01-01T00:00:00'

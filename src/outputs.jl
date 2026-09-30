@@ -280,7 +280,8 @@ function get_outputs_dimension_size(
         elseif dimension == "sfe_curve_segment"
             push!(dimension_size, maximum_number_of_segments_in_supply_function_equilibrium(inputs))
         elseif dimension == "sfe_iteration"
-            push!(dimension_size, supply_function_equilibrium_max_iterations(inputs))
+            # Extra slot for the reference curve the equilibrium starts from.
+            push!(dimension_size, supply_function_equilibrium_max_iterations(inputs) + 1)
         else
             error("Dimension $dimension not recognized")
         end

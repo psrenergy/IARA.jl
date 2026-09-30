@@ -1,0 +1,7 @@
+period,scenario,bid_segment,reservoir_1 - asset_owner_1,reservoir_1 - asset_owner_2
+1,1,1,3200.0,4800.0
+1,1,2,0.0,0.0
+2,1,1,6400.0,9600.0
+2,1,2,0.0,0.0
+3,1,1,9600.0,14400.0
+3,1,2,0.0,0.0

@@ -1,0 +1,8 @@
+version = 1
+dimensions = ["season", "sample", "subperiod"]
+dimension_size = [4, 1, 1]
+initial_date = "2020-01-01 00:00:00"
+time_dimension = "season"
+frequency = "month"
+unit = "p.u."
+labels = ["dem_1"]

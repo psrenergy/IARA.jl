@@ -1,0 +1,8 @@
+dimension_sizes = [ 2, 12, 1 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2000-01-01T00:00:00'
+labels = [ 'Solar1' ]
+time_dimensions = [ 'period' ]
+unit = 'p.u.'
+version = '1'

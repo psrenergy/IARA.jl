@@ -42,12 +42,12 @@ function train_nash_equilibrium_model(inputs::Inputs)
 
     for nash_equilibrium_iteration in 1:max_iteration_nash_equilibrium(inputs)
         # Train the model for the current iteration
-        price_taker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_current_asset_owner_price_taker])
+        price_taker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_asset_owner_price_taker])
         for asset_owner_index in price_taker_asset_owners
             run_time_options = RunTimeOptions(; asset_owner_index, nash_equilibrium_iteration)
             train_model_and_run_simulation(inputs, run_time_options)
         end
-        price_maker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_current_asset_owner_price_maker])
+        price_maker_asset_owners = index_of_elements(inputs, AssetOwner; filters = [is_asset_owner_price_maker])
         for asset_owner_index in price_maker_asset_owners
             run_time_options = RunTimeOptions(; asset_owner_index, nash_equilibrium_iteration)
             train_model_and_run_simulation(inputs, run_time_options)

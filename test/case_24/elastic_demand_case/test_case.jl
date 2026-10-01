@@ -83,6 +83,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "bidding_group_energy_bid.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_1.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "outputs/heuristic_bid_1", "bidding_group_price_bid_period_1.csv"),
     joinpath(PATH, "bidding_group_price_bid.csv");
     force = true,
@@ -109,6 +115,12 @@ cp(
 cp(
     joinpath(PATH, "outputs/heuristic_bid_1", "bidding_group_no_markup_price_bid_period_1.toml"),
     joinpath(PATH, "bidding_group_no_markup_price_bid_period_1.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "outputs/heuristic_bid_1", "bidding_group_no_markup_price_bid_period_1.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_1.qvr");
     force = true,
 )
 
@@ -161,6 +173,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "outputs/heuristic_bid_1", "virtual_reservoir_no_markup_price_bid_period_1.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_1.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1.csv");
     force = true,
@@ -169,6 +187,12 @@ cp(
 cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "virtual_reservoir_energy_bid.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1.qvr");
     force = true,
 )
 
@@ -234,6 +258,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "bidding_group_energy_bid.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_2.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "outputs/heuristic_bid_2", "bidding_group_price_bid_period_2.csv"),
     joinpath(PATH, "bidding_group_price_bid.csv");
     force = true,
@@ -260,6 +290,12 @@ cp(
 cp(
     joinpath(PATH, "outputs/heuristic_bid_2", "bidding_group_no_markup_price_bid_period_2.toml"),
     joinpath(PATH, "bidding_group_no_markup_price_bid_period_2.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "outputs/heuristic_bid_2", "bidding_group_no_markup_price_bid_period_2.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_2.qvr");
     force = true,
 )
 
@@ -312,6 +348,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "outputs/heuristic_bid_2", "virtual_reservoir_no_markup_price_bid_period_2.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_2.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_2.csv");
     force = true,
@@ -320,6 +362,12 @@ cp(
 cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_2.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "virtual_reservoir_energy_bid.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_2.qvr");
     force = true,
 )
 
@@ -385,6 +433,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "bidding_group_energy_bid.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_3.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "outputs/heuristic_bid_3", "bidding_group_price_bid_period_3.csv"),
     joinpath(PATH, "bidding_group_price_bid.csv");
     force = true,
@@ -411,6 +465,12 @@ cp(
 cp(
     joinpath(PATH, "outputs/heuristic_bid_3", "bidding_group_no_markup_price_bid_period_3.toml"),
     joinpath(PATH, "bidding_group_no_markup_price_bid_period_3.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "outputs/heuristic_bid_3", "bidding_group_no_markup_price_bid_period_3.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_3.qvr");
     force = true,
 )
 
@@ -463,6 +523,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "outputs/heuristic_bid_3", "virtual_reservoir_no_markup_price_bid_period_3.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_3.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_3.csv");
     force = true,
@@ -471,6 +537,12 @@ cp(
 cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_3.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "virtual_reservoir_energy_bid.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_3.qvr");
     force = true,
 )
 
@@ -536,6 +608,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "bidding_group_energy_bid.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_energy_bid_period_4.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "outputs/heuristic_bid_4", "bidding_group_price_bid_period_4.csv"),
     joinpath(PATH, "bidding_group_price_bid.csv");
     force = true,
@@ -562,6 +640,12 @@ cp(
 cp(
     joinpath(PATH, "outputs/heuristic_bid_4", "bidding_group_no_markup_price_bid_period_4.toml"),
     joinpath(PATH, "bidding_group_no_markup_price_bid_period_4.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "outputs/heuristic_bid_4", "bidding_group_no_markup_price_bid_period_4.qvr"),
+    joinpath(PATH, "bidding_group_no_markup_price_bid_period_4.qvr");
     force = true,
 )
 
@@ -614,6 +698,12 @@ cp(
 )
 
 cp(
+    joinpath(PATH, "outputs/heuristic_bid_4", "virtual_reservoir_no_markup_price_bid_period_4.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_4.qvr");
+    force = true,
+)
+
+cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_4.csv");
     force = true,
@@ -622,6 +712,12 @@ cp(
 cp(
     joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
     joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_4.toml");
+    force = true,
+)
+
+cp(
+    joinpath(PATH, "virtual_reservoir_energy_bid.qvr"),
+    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_4.qvr");
     force = true,
 )
 

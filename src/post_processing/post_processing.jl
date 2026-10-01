@@ -253,16 +253,18 @@ function create_zero_file(
     zeros_array = zeros(Float64, length(labels), reverse(dimension_size)...)
 
     path = joinpath(temp_path, filename)
+    time_dimensions, frequencies =
+        quiver_time_dimension_and_frequency(inputs.collections.configurations.time_series_step)
     write_timeseries_file(
         path,
         zeros_array;
         dimensions = dimensions,
         labels = labels,
-        time_dimension = "period",
+        time_dimension = isempty(time_dimensions) ? "" : only(time_dimensions),
         dimension_size = dimension_size,
         initial_date = initial_date_time(inputs),
         unit = unit,
-        frequency = period_type_string(inputs.collections.configurations.time_series_step),
+        frequency = isempty(frequencies) ? "" : only(frequencies),
     )
     return path
 end
@@ -284,8 +286,8 @@ function create_temporary_file_with_subscenario_dimension(
     dimension_size = [metadata_dimension_sizes(reader_metadata)..., number_of_subscenarios]
 
     reader_time_dimensions = Quiver.Binary.get_dimensions(reader_metadata)
-    time_dimensions = [d.name for d in reader_time_dimensions if d.is_time_dimension]
-    frequencies = [d.frequency for d in reader_time_dimensions if d.is_time_dimension]
+    time_dimensions = String[d.name for d in reader_time_dimensions if d.is_time_dimension]
+    frequencies = String[d.frequency for d in reader_time_dimensions if d.is_time_dimension]
 
     md = Quiver.Binary.Metadata(;
         initial_datetime = Quiver.Binary.get_initial_datetime(reader_metadata),

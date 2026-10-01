@@ -231,13 +231,9 @@ function hydro_generation!(
             ],
         )
 
-        hydro_units_with_minimum_outflow = index_of_elements_that_appear_at_some_point_in_study_horizon(
-            inputs,
-            HydroUnit;
-            run_time_options,
-            filters = [has_min_outflow],
-        )
-
+        # Written for every hydro unit, like the other hydro cost outputs, so that the cost files of
+        # this technology share a label set and can be summed in the post-processing. Units without a
+        # minimum outflow simply keep a zero violation cost.
         initialize!(
             QuiverOutput,
             outputs;
@@ -245,7 +241,7 @@ function hydro_generation!(
             output_name = "hydro_minimum_outflow_violation_cost",
             dimensions = ["period", "scenario", "subperiod"],
             unit = "\$",
-            labels = hydro_unit_label(inputs)[hydro_units_with_minimum_outflow],
+            labels = hydro_unit_label(inputs)[hydros],
             run_time_options,
         )
     end
@@ -354,13 +350,6 @@ function hydro_generation!(
     )
 
     if any_elements(inputs, HydroUnit; run_time_options, filters = [has_min_outflow])
-        hydro_units_with_minimum_outflow = index_of_elements(
-            inputs,
-            HydroUnit;
-            run_time_options,
-            filters = [has_min_outflow],
-        )
-
         existing_hydro_units_with_min_outflow = index_of_elements(
             inputs,
             HydroUnit;
@@ -370,8 +359,10 @@ function hydro_generation!(
 
         hydro_minimum_outflow_violation_cost = simulation_results.data[:hydro_minimum_outflow_violation_cost_expression]
 
+        # The output file holds every hydro unit, so the violation costs are placed in the positions of
+        # the units that actually have a minimum outflow.
         indices_of_elements_in_output = find_indices_of_elements_to_write_in_output(;
-            elements_in_output_file = hydro_units_with_minimum_outflow,
+            elements_in_output_file = hydro_units,
             elements_to_write = existing_hydro_units_with_min_outflow,
         )
 

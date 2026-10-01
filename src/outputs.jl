@@ -280,7 +280,8 @@ function get_outputs_dimension_size(
         elseif dimension == "sfe_curve_segment"
             push!(dimension_size, maximum_number_of_segments_in_supply_function_equilibrium(inputs))
         elseif dimension == "sfe_iteration"
-            push!(dimension_size, supply_function_equilibrium_max_iterations(inputs))
+            # Extra slot for the reference curve the equilibrium starts from.
+            push!(dimension_size, supply_function_equilibrium_max_iterations(inputs) + 1)
         else
             error("Dimension $dimension not recognized")
         end
@@ -302,9 +303,9 @@ function initialize!(
     suppress_subscenario_dimension::Bool = false,
     kwargs...,
 )
-    frequency = period_type_string(inputs.collections.configurations.time_series_step)
     initial_date = inputs.collections.configurations.initial_date_time
-    time_dimension = "period"
+    time_dimensions, frequencies =
+        quiver_time_dimension_and_frequency(inputs.collections.configurations.time_series_step)
 
     dimensions = kwargs[:dimensions]
     if (is_ex_post_problem(run_time_options) || force_all_subscenarios) && !suppress_subscenario_dimension
@@ -331,8 +332,8 @@ function initialize!(
         labels = labels,
         dimensions = dimensions,
         dimension_sizes = dimension_size,
-        time_dimensions = [time_dimension],
-        frequencies = [frequency],
+        time_dimensions = time_dimensions,
+        frequencies = frequencies,
     )
     writer = Quiver.Binary.open_file(file; mode = 'w', metadata = md)
 

@@ -24,7 +24,7 @@ function virtual_reservoir_total_generation!(
     virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
 
     placeholder_virtual_reservoir_reference_multiplier = 0.0
-    placeholder_virtual_reservoir_available_energy = 0.0
+    placeholder_virtual_reservoir_total_available_energy = 0.0
 
     # Variables
     @variable(
@@ -43,11 +43,9 @@ function virtual_reservoir_total_generation!(
     ) # MWh
     @variable(
         model.jump_model,
-        virtual_reservoir_available_energy[
-            vr in virtual_reservoirs,
-        ]
+        virtual_reservoir_total_available_energy
         in
-        MOI.Parameter(placeholder_virtual_reservoir_available_energy)
+        MOI.Parameter(placeholder_virtual_reservoir_total_available_energy)
     ) # MWh
 
     return nothing
@@ -67,12 +65,9 @@ function virtual_reservoir_total_generation!(
     # To see how the param is updated at each iteration, see the "update_virtual_reservoir_reference_multiplier!" 
     # function in the "hydro_supply_reference_curve_utils.jl" file.
 
-    virtual_reservoirs = index_of_elements(inputs, VirtualReservoir)
+    available_energy_parameter = get_model_object(model, :virtual_reservoir_total_available_energy)
 
-    virtual_reservoir_available_energy = get_model_object(model, :virtual_reservoir_available_energy)
-
-    # Calculate total stored energy
-    total_stored_energy = virtual_reservoir_stored_energy(
+    available_energy = virtual_reservoir_total_available_energy(
         inputs,
         run_time_options,
         simulation_period,
@@ -80,21 +75,7 @@ function virtual_reservoir_total_generation!(
         subscenario,
     )
 
-    # Calculate maximum turbinable energy
-    maximum_turbinable_energy = [
-        sum(
-            hydro_unit_max_available_turbining(inputs, h) * subperiod_duration_in_hours(inputs, b) *
-            hydro_unit_production_factor(inputs, h)
-            for b in subperiods(inputs), h in virtual_reservoir_hydro_unit_indices(inputs, vr)
-        ) for vr in virtual_reservoirs
-    ]
-
-    # Calculate available energy for each virtual reservoir
-    available_energy = [min(total_stored_energy[vr], maximum_turbinable_energy[vr]) for vr in virtual_reservoirs]
-
-    for vr in virtual_reservoirs
-        set_parameter_value(virtual_reservoir_available_energy[vr], available_energy[vr])
-    end
+    set_parameter_value(available_energy_parameter, available_energy)
 
     return nothing
 end

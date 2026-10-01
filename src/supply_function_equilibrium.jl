@@ -24,6 +24,8 @@ function supply_function_equilibrium(
     vr_price_output = nothing
     vr_slope_output = nothing
     has_virtual_reservoirs = use_virtual_reservoirs(inputs)
+    # Extra slot for the reference curve the equilibrium starts from.
+    number_of_output_iterations = supply_function_equilibrium_max_iterations(inputs) + 1
 
     if has_virtual_reservoirs
         vr_original_quantity_bid, vr_original_price_bid =
@@ -37,21 +39,21 @@ function supply_function_equilibrium(
             Float64,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         vr_price_output = zeros(
             Float64,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         vr_slope_output = fill(
             Inf,
             number_of_virtual_reservoirs,
             number_of_asset_owners,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
     end
@@ -81,21 +83,21 @@ function supply_function_equilibrium(
             Float64,
             number_of_bidding_groups,
             number_of_buses,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         bg_price_output = zeros(
             Float64,
             number_of_bidding_groups,
             number_of_buses,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
         bg_slope_output = fill(
             Inf,
             number_of_bidding_groups,
             number_of_buses,
-            supply_function_equilibrium_max_iterations(inputs),
+            number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
     end
@@ -106,6 +108,7 @@ function supply_function_equilibrium(
     global_q = Vector{Vector{Float64}}()
     global_p = Vector{Vector{Float64}}()
     global_b = Vector{Vector{Float64}}()
+    global_asset_owner_index = Vector{Int}()
     global_agent_index = 0
 
     # Add all VR bids
@@ -120,6 +123,7 @@ function supply_function_equilibrium(
             )
             for (local_idx, ao) in enumerate(asset_owners_in_vr)
                 global_agent_index += 1
+                push!(global_asset_owner_index, ao)
                 push!(global_q, q[local_idx])
                 push!(global_p, p[local_idx])
                 push!(global_b, b[local_idx])
@@ -142,6 +146,7 @@ function supply_function_equilibrium(
             )
             for (local_idx, bg) in enumerate(bidding_groups)
                 global_agent_index += 1
+                push!(global_asset_owner_index, bidding_group_asset_owner_index(inputs, bg))
                 push!(global_q, q[local_idx])
                 push!(global_p, p[local_idx])
                 push!(global_b, b[local_idx])
@@ -160,36 +165,42 @@ function supply_function_equilibrium(
 
     total_number_of_agents = length(global_q)
 
-    # Run unified Nash iteration on ALL bids simultaneously
-    for iter in 1:supply_function_equilibrium_max_iterations(inputs)
-        global_q, global_p, global_b = run_supply_function_equilibrium_iteration(
-            inputs,
-            total_number_of_agents;
-            current_quantity = global_q,
-            current_price = global_p,
-            current_slope = global_b,
-            original_quantity = original_global_q,
-            original_price = original_global_p,
-            original_slope = original_global_b,
-        )
+    # Run unified Nash iteration on ALL bids simultaneously.
+    # Iteration 0 runs no equilibrium: it just writes out the reference curves it starts from.
+    for iter in 0:supply_function_equilibrium_max_iterations(inputs)
+        if iter > 0
+            global_q, global_p, global_b = run_supply_function_equilibrium_iteration(
+                inputs,
+                total_number_of_agents,
+                global_asset_owner_index;
+                current_quantity = global_q,
+                current_price = global_p,
+                current_slope = global_b,
+                original_quantity = original_global_q,
+                original_price = original_global_p,
+                original_slope = original_global_b,
+            )
+        end
 
         # Disaggregate results back to VR and BG outputs
         for mapping in agent_mappings
             agent_idx = mapping.agent_index_in_global
             number_of_segments = length(global_q[agent_idx])
+            # A reference curve has one slope per interval, one fewer than its number of points.
+            number_of_slopes = length(global_b[agent_idx])
 
             if mapping.source_type == :vr
                 vr = mapping.location_index
                 ao = mapping.original_agent_id
-                vr_quantity_output[vr, ao, iter, 1:number_of_segments] = global_q[agent_idx]
-                vr_price_output[vr, ao, iter, 1:number_of_segments] = global_p[agent_idx]
-                vr_slope_output[vr, ao, iter, 1:number_of_segments] = global_b[agent_idx]
+                vr_quantity_output[vr, ao, iter+1, 1:number_of_segments] = global_q[agent_idx]
+                vr_price_output[vr, ao, iter+1, 1:number_of_segments] = global_p[agent_idx]
+                vr_slope_output[vr, ao, iter+1, 1:number_of_slopes] = global_b[agent_idx]
             elseif mapping.source_type == :bg
                 bus = mapping.location_index
                 bg_local_idx = mapping.agent_local_index
-                bg_quantity_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_q[agent_idx]
-                bg_price_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_p[agent_idx]
-                bg_slope_output[bg_local_idx, bus, iter, 1:number_of_segments] = global_b[agent_idx]
+                bg_quantity_output[bg_local_idx, bus, iter+1, 1:number_of_segments] = global_q[agent_idx]
+                bg_price_output[bg_local_idx, bus, iter+1, 1:number_of_segments] = global_p[agent_idx]
+                bg_slope_output[bg_local_idx, bus, iter+1, 1:number_of_slopes] = global_b[agent_idx]
             end
         end
     end
@@ -220,6 +231,100 @@ function supply_function_equilibrium(
         )
     end
 
+    # Convert the equilibrium curves of the final iteration into clearing bids. We use the loop-exit values of
+    # global_q and global_p rather than slicing the output arrays, to avoid depending on their padding.
+    vr_quantity_bid, vr_price_bid, bg_quantity_bid, bg_price_bid = supply_function_equilibrium_bids(
+        inputs,
+        global_q,
+        global_p,
+        agent_mappings,
+    )
+
+    # Shift the whole price curve down by the smallest markup any agent ended up with. The diagnostic
+    # `*_sfe_price` outputs written above keep the unshifted equilibrium, so the shift is visible as the difference
+    # between them and the `*_sfe_price_bid` outputs below.
+    price_shift = supply_function_equilibrium_price_shift(
+        inputs,
+        agent_mappings,
+        vr_price_bid,
+        vr_original_price_bid,
+        bg_price_bid,
+        bg_original_price_bid,
+    )
+
+    if has_virtual_reservoirs
+        shift_price_bid!(vr_price_bid, price_shift)
+    end
+    if has_bidding_groups
+        shift_price_bid!(bg_price_bid, price_shift)
+    end
+
+    if has_virtual_reservoirs
+        serialize_virtual_reservoir_supply_function_equilibrium_bids(
+            inputs,
+            vr_quantity_bid,
+            vr_price_bid;
+            period,
+            scenario,
+        )
+
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_sfe_energy_bid",
+            vr_quantity_bid,
+            period,
+            scenario,
+        )
+        write_virtual_reservoir_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "virtual_reservoir_sfe_price_bid",
+            vr_price_bid,
+            period,
+            scenario,
+        )
+    end
+
+    if has_bidding_groups
+        serialize_bidding_group_supply_function_equilibrium_bids(
+            inputs,
+            bg_quantity_bid,
+            bg_price_bid;
+            period,
+            scenario,
+        )
+
+        bidding_group_indexes =
+            index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
+        write_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "bidding_group_sfe_energy_bid",
+            # We have to permutate the dimensions because the function expects the dimensions in the order
+            # subperiod, bidding_group, bid_segments, bus
+            permutedims(bg_quantity_bid[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+            period,
+            scenario,
+            subscenario = 1,
+            filters = [has_generation_besides_virtual_reservoirs],
+        )
+        write_bid_output(
+            outputs,
+            inputs,
+            run_time_options,
+            "bidding_group_sfe_price_bid",
+            permutedims(bg_price_bid[bidding_group_indexes, :, :, :], (4, 1, 3, 2));
+            period,
+            scenario,
+            subscenario = 1,
+            filters = [has_generation_besides_virtual_reservoirs],
+        )
+    end
+
     return nothing
 end
 
@@ -242,12 +347,12 @@ function treat_reference_curve_data(
             price[vr_index, ao, :],
         )
         treated_quantity_bids[i] = quantity_points_from_segments(treated_quantity_bids[i])
-        treated_quantity_bids[i], treated_price_bids[i] = reverse_bid_order_and_add_point(
+        treated_quantity_bids[i], treated_price_bids[i], treated_slopes[i] = reverse_bid_order_and_add_points(
             inputs,
             treated_quantity_bids[i],
             treated_price_bids[i],
+            ao,
         )
-        treated_slopes[i] = diff(treated_price_bids[i]) ./ diff(treated_quantity_bids[i])
     end
 
     validate_nash_input_data(
@@ -255,7 +360,10 @@ function treat_reference_curve_data(
         treated_quantity_bids,
         treated_price_bids,
         treated_slopes,
-        vr_index,
+        [
+            "asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index))"
+            for ao in asset_owners_in_virtual_reservoir
+        ],
     )
 
     return treated_quantity_bids, treated_price_bids, treated_slopes
@@ -293,41 +401,89 @@ function treat_bidding_group_data(
             aggregated_price[i, :],
         )
         treated_quantity_bids[i] = quantity_points_from_segments(treated_quantity_bids[i])
-        treated_quantity_bids[i], treated_price_bids[i] = reverse_bid_order_and_add_point(
+        treated_quantity_bids[i], treated_price_bids[i], treated_slopes[i] = reverse_bid_order_and_add_points(
             inputs,
             treated_quantity_bids[i],
             treated_price_bids[i],
+            bidding_group_asset_owner_index(inputs, bg),
         )
-        treated_slopes[i] = diff(treated_price_bids[i]) ./ diff(treated_quantity_bids[i])
     end
+
+    validate_nash_input_data(
+        inputs,
+        treated_quantity_bids,
+        treated_price_bids,
+        treated_slopes,
+        [
+            "bidding group $(bidding_group_label(inputs, bg)) in bus $(bus_label(inputs, bus_index))"
+            for bg in bidding_groups
+        ],
+    )
 
     return treated_quantity_bids, treated_price_bids, treated_slopes
 end
 
+"""
+    group_quantities_by_equal_price(quantity::Vector{Float64}, price::Vector{Float64}, tolerance::Float64)
+
+Group the segments of a bid curve into one segment per distinct price, summing the quantities within each group.
+
+Two prices count as the same when `isapprox` holds for them at `tolerance`, so that prices differing only by floating
+point noise are not split into separate segments. Because approximate equality is not transitive, the grouping is
+defined by walking the prices in ascending order and starting a new group whenever the gap to the current group exceeds
+the tolerance; this guarantees that every segment is assigned to exactly one group. Each group is represented by the
+lowest price in it.
+
+Returns the grouped quantities and prices, both in ascending price order.
+"""
+function group_quantities_by_equal_price(
+    quantity::Vector{Float64},
+    price::Vector{Float64},
+    tolerance::Float64,
+)
+    @assert length(quantity) == length(price)
+
+    grouped_quantity = Float64[]
+    grouped_price = Float64[]
+
+    for index in sortperm(price)
+        if !isempty(grouped_price) && isapprox(price[index], grouped_price[end]; rtol = tolerance, atol = tolerance)
+            grouped_quantity[end] += quantity[index]
+        else
+            push!(grouped_quantity, quantity[index])
+            push!(grouped_price, price[index])
+        end
+    end
+
+    return grouped_quantity, grouped_price
+end
+
+"""
+    remove_redundant_reference_curve_segments(quantity::Vector{Float64}, price::Vector{Float64}, tolerance::Float64)
+
+Reduce a reference bid curve to its meaningful segments: one segment per distinct price, in ascending price order.
+
+Segments that share a price are merged by [`group_quantities_by_equal_price`](@ref), and groups that offer no energy are
+then dropped. A zero quantity group contributes nothing at any price, and keeping it would repeat the previous
+cumulative quantity once `quantity_points_from_segments` accumulates the segments, which makes the curve vertical at
+that point. The zero padding of the bid arrays arrives here as one such group.
+
+At least one segment is always returned, so that an agent with nothing to offer still yields a well formed curve.
+"""
 function remove_redundant_reference_curve_segments(
     quantity::Vector{Float64},
     price::Vector{Float64},
+    tolerance::Float64 = DEFAULT_TOLERANCE,
 )
-    new_price = unique(price)
-    number_of_unique_prices = length(new_price)
+    new_quantity, new_price = group_quantities_by_equal_price(quantity, price, tolerance)
 
-    new_quantity = zeros(number_of_unique_prices)
-    for i in 1:number_of_unique_prices
-        positions = findall(price .== new_price[i])
-        new_quantity[i] = sum(quantity[positions])
+    segments_with_quantity = findall(q -> !isapprox(q, 0.0; atol = tolerance), new_quantity)
+    if isempty(segments_with_quantity)
+        # The agent has no energy to offer at any price. Keep one segment so that the curve stays well formed.
+        return new_quantity[1:1], new_price[1:1]
     end
 
-    if new_price[end] == 0.0 && new_quantity[end] == 0.0 && length(new_price) > 1
-        new_price = new_price[1:end-1]
-        new_quantity = new_quantity[1:end-1]
-    end
-
-    # Sort by ascending price order
-    sorted_indices = sortperm(new_price)
-    new_price = new_price[sorted_indices]
-    new_quantity = new_quantity[sorted_indices]
-
-    return new_quantity, new_price
+    return new_quantity[segments_with_quantity], new_price[segments_with_quantity]
 end
 
 function quantity_points_from_segments(
@@ -343,15 +499,82 @@ function quantity_points_from_segments(
     return new_quantity
 end
 
-function reverse_bid_order_and_add_point(
+"""
+    supply_function_equilibrium_agent_weight(inputs::AbstractInputs, asset_owner_index::Int)
+
+Number of equivalent owners that the agents of `asset_owner_index` stand for in the equilibrium.
+
+Only price takers stand for more than one owner; every other price type weighs one.
+"""
+function supply_function_equilibrium_agent_weight(inputs::AbstractInputs, asset_owner_index::Int)
+    if !is_asset_owner_price_taker(inputs.collections.asset_owner, asset_owner_index)
+        return 1.0
+    end
+    return asset_owner_supply_function_equilibrium_weight(inputs, asset_owner_index)
+end
+
+function reverse_bid_order_and_add_points(
     inputs::AbstractInputs,
     quantity::Vector{Float64},
     price::Vector{Float64},
+    asset_owner_index::Int,
 )
-    new_quantity = vcat((quantity[end] + supply_function_equilibrium_extra_bid_quantity(inputs)), reverse(quantity))
-    new_price = vcat(demand_deficit_cost(inputs), reverse(price))
+    new_quantity = Float64[]
+    new_price = Float64[]
+    new_slope = Float64[]
 
-    return new_quantity, new_price
+    @assert length(quantity) == length(price)
+
+    reference_quantity = vcat(0, quantity)
+    reference_price = vcat(price, demand_deficit_cost(inputs))
+    number_of_points = length(reference_quantity)
+
+    # The slope bounds describe the bid step of a single owner. An agent that stands for `weight` equivalent
+    # owners offers their aggregate curve, which is `weight` times flatter, so its bounds scale alike.
+    weight = supply_function_equilibrium_agent_weight(inputs, asset_owner_index)
+    min_slope = supply_function_equilibrium_min_slope(inputs) / weight
+    max_slope = supply_function_equilibrium_max_slope(inputs) / weight
+
+    #(q0, p0)
+    push!(new_quantity, reference_quantity[1])
+    push!(new_price, reference_price[1])
+
+    for i in 1:number_of_points-1
+        q0 = reference_quantity[i]
+        q1 = reference_quantity[i+1]
+        p0 = reference_price[i]
+        p1 = reference_price[i+1]
+
+        slope = (p1 - p0) / (q1 - q0)
+
+        # If the slope is outside the [min_slope, max_slope] range, no new point is added
+        if slope <= min_slope || slope >= max_slope
+            push!(new_quantity, q1)
+            push!(new_price, p1)
+            push!(new_slope, slope)
+            continue
+        end
+
+        # (q_new, p_new) is the intersection of a line passing through (q0, p0) with slope eta_min
+        # and a line passing through (p1, q1) with slope eta_max
+        q_new = q0 + (max_slope * (q1 - q0) - (p1 - p0)) / (max_slope - min_slope)
+        p_new = p0 + min_slope * (q_new - q0)
+
+        # new point
+        push!(new_quantity, q_new)
+        push!(new_price, p_new)
+        push!(new_slope, min_slope)
+        # (q1, p1)
+        push!(new_quantity, q1)
+        push!(new_price, p1)
+        push!(new_slope, max_slope)
+    end
+
+    reverse!(new_quantity)
+    reverse!(new_price)
+    reverse!(new_slope)
+
+    return new_quantity, new_price, new_slope
 end
 
 function validate_nash_input_data(
@@ -359,13 +582,374 @@ function validate_nash_input_data(
     quantity::Vector{Vector{Float64}},
     price::Vector{Vector{Float64}},
     slope::Vector{Vector{Float64}},
-    vr_index::Int,
+    agent_labels::Vector{String},
 )
-    asset_owners_in_virtual_reservoir = virtual_reservoir_asset_owner_indices(inputs, vr_index)
+    @assert length(agent_labels) == length(slope)
 
-    for (i, ao) in enumerate(asset_owners_in_virtual_reservoir)
-        @assert all(slope[i] .> supply_function_equilibrium_tolerance(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a segment with slope below the tolerance: $(slope[i])"
-        @assert all(price[i] .<= supply_function_equilibrium_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for asset owner $(asset_owner_label(inputs, ao)) in virtual reservoir $(virtual_reservoir_label(inputs, vr_index)) has a price point above the demand deficit cost: $(price[i])"
+    for i in eachindex(agent_labels)
+        @assert all(slope[i] .> DEFAULT_TOLERANCE^2) "Reference bid curve for $(agent_labels[i]) has a segment with slope below the tolerance: $(slope[i])"
+        @assert all(price[i] .<= supply_function_equilibrium_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)) "Reference bid curve for $(agent_labels[i]) has a price point above the demand deficit cost: $(price[i])"
+    end
+
+    return nothing
+end
+
+"""
+    supply_function_equilibrium_bids_from_curve(quantity::Vector{Float64}, price::Vector{Float64}, number_of_bid_segments::Int)
+
+Convert the equilibrium curve of a single agent into incremental quantity and price bids, in the IARA convention.
+
+The equilibrium curve is a list of cumulative quantity points in descending price order, whose first point is the
+synthetic point that `reverse_bid_order_and_add_points` added at the demand deficit cost. This function inverts that
+representation: it drops the last synthetic point, restores the ascending price order, and differentiates the cumulative
+quantities back into incremental bids (inverting `quantity_points_from_segments`). The result is trimmed or zero-padded
+to `number_of_bid_segments`.
+"""
+function supply_function_equilibrium_bids_from_curve(
+    quantity::Vector{Float64},
+    price::Vector{Float64},
+    number_of_bid_segments::Int,
+)
+    @assert length(quantity) == length(price)
+
+    quantity_bids = zeros(number_of_bid_segments)
+    price_bids = zeros(number_of_bid_segments)
+
+    # Restore the ascending price order that the bid convention uses. The stored curve runs from the largest
+    # cumulative quantity downward, so a bare `diff` of it would yield negative increments for sell bids.
+    ascending_quantity = reverse(quantity)
+    ascending_price = reverse(price)
+
+    # Drop the synthetic point priced at the demand deficit cost, which is now the last one. Keeping it would add a
+    # spurious segment priced at the deficit cost.
+    ascending_quantity = ascending_quantity[1:(end-1)]
+    ascending_price = ascending_price[1:(end-1)]
+
+    if isempty(ascending_quantity)
+        return quantity_bids, price_bids
+    end
+
+    # Cumulative quantity points back to incremental segments. The first point is the increment from zero, and the
+    # sign of each increment follows the direction of the curve, so purchase (negative quantity) bids invert correctly.
+    incremental_quantity = vcat(ascending_quantity[1], diff(ascending_quantity))
+
+    # The equilibrium builds a single price ladder shared by every agent, and an agent's cumulative quantity stays
+    # flat over the rungs where it has nothing left to offer. Those rungs differentiate to a zero increment, which is
+    # not an offer: keeping them would emit bid segments at prices the agent never bids, interleaved with its real
+    # ones. Drop them so the curve is compact and every segment carries quantity.
+    segments_with_quantity = findall(!iszero, incremental_quantity)
+    incremental_quantity = incremental_quantity[segments_with_quantity]
+    ascending_price = ascending_price[segments_with_quantity]
+
+    number_of_valid_segments = length(incremental_quantity)
+    if number_of_valid_segments > number_of_bid_segments
+        error(
+            "The supply function equilibrium produced $(number_of_valid_segments) bid segments, but the model was " *
+            "built for $(number_of_bid_segments). This means the analytic bound in " *
+            "`maximum_number_of_segments_in_supply_function_equilibrium` is not valid for this case.",
+        )
+    end
+
+    quantity_bids[1:number_of_valid_segments] = incremental_quantity
+    price_bids[1:number_of_valid_segments] = ascending_price
+
+    return quantity_bids, price_bids
+end
+
+"""
+    supply_function_equilibrium_bids(inputs::AbstractInputs, global_quantity::Vector{Vector{Float64}}, global_price::Vector{Vector{Float64}}, agent_mappings::Vector{AgentMapping})
+
+Convert the equilibrium curves of every agent into clearing bids, in the IARA convention.
+
+Returns `(vr_quantity_bid, vr_price_bid, bg_quantity_bid, bg_price_bid)`, where the virtual reservoir arrays are
+indexed by `(virtual_reservoir, asset_owner, bid_segment)` and the bidding group arrays by
+`(bidding_group, bus, bid_segment, subperiod)`. Each pair is `nothing` when the corresponding source has no agents.
+"""
+function supply_function_equilibrium_bids(
+    inputs::AbstractInputs,
+    global_quantity::Vector{Vector{Float64}},
+    global_price::Vector{Vector{Float64}},
+    agent_mappings::Vector{AgentMapping},
+)
+    has_virtual_reservoirs = any(mapping -> mapping.source_type == :vr, agent_mappings)
+    has_bidding_groups = any(mapping -> mapping.source_type == :bg, agent_mappings)
+
+    vr_quantity_bid = nothing
+    vr_price_bid = nothing
+    if has_virtual_reservoirs
+        vr_quantity_bid = zeros(
+            number_of_elements(inputs, VirtualReservoir),
+            number_of_elements(inputs, AssetOwner),
+            maximum_number_of_vr_bidding_segments(inputs),
+        )
+        vr_price_bid = zeros(
+            number_of_elements(inputs, VirtualReservoir),
+            number_of_elements(inputs, AssetOwner),
+            maximum_number_of_vr_bidding_segments(inputs),
+        )
+    end
+
+    bg_quantity_bid = nothing
+    bg_price_bid = nothing
+    if has_bidding_groups
+        bg_quantity_bid = zeros(
+            number_of_elements(inputs, BiddingGroup),
+            number_of_elements(inputs, Bus),
+            maximum_number_of_bg_bidding_segments(inputs),
+            number_of_subperiods(inputs),
+        )
+        bg_price_bid = zeros(
+            number_of_elements(inputs, BiddingGroup),
+            number_of_elements(inputs, Bus),
+            maximum_number_of_bg_bidding_segments(inputs),
+            number_of_subperiods(inputs),
+        )
+    end
+
+    subperiod_duration_sum = sum(subperiod_duration_in_hours(inputs))
+
+    for mapping in agent_mappings
+        agent_index = mapping.agent_index_in_global
+
+        if mapping.source_type == :vr
+            vr = mapping.location_index
+            ao = mapping.original_agent_id
+            quantity_bid, price_bid = supply_function_equilibrium_bids_from_curve(
+                global_quantity[agent_index],
+                global_price[agent_index],
+                maximum_number_of_vr_bidding_segments(inputs),
+            )
+            vr_quantity_bid[vr, ao, :] = quantity_bid
+            vr_price_bid[vr, ao, :] = price_bid
+        elseif mapping.source_type == :bg
+            bus = mapping.location_index
+            bg = mapping.original_agent_id
+            quantity_bid, price_bid = supply_function_equilibrium_bids_from_curve(
+                global_quantity[agent_index],
+                global_price[agent_index],
+                maximum_number_of_bg_bidding_segments(inputs),
+            )
+            # The equilibrium is computed on the subperiod-aggregated curve, so the result is split back across
+            # subperiods proportionally to their duration, matching `disaggregate_bg_output_in_subperiods`.
+            for subperiod in subperiods(inputs)
+                duration_share = subperiod_duration_in_hours(inputs, subperiod) / subperiod_duration_sum
+                bg_quantity_bid[bg, bus, :, subperiod] = quantity_bid .* duration_share
+                bg_price_bid[bg, bus, :, subperiod] = price_bid
+            end
+        end
+    end
+
+    return vr_quantity_bid, vr_price_bid, bg_quantity_bid, bg_price_bid
+end
+
+"""
+    minimum_nonzero_price(prices)
+
+Return the lowest price among the segments that carry an offer, or `Inf` when none of them do.
+
+A zero price marks a segment with no offer, either the trailing padding of a bid array or a segment the heuristic
+explicitly zeroed out, so it is skipped rather than treated as a price of zero. Negative prices are kept: a purchase
+bid is a real offer.
+"""
+function minimum_nonzero_price(prices)
+    lowest_price = Inf
+
+    for price in prices
+        if price != 0.0
+            lowest_price = min(lowest_price, price)
+        end
+    end
+
+    return lowest_price
+end
+
+"""
+    agent_mapping_label(inputs::AbstractInputs, mapping::AgentMapping)
+
+Return a human-readable label for an agent of the supply function equilibrium.
+"""
+function agent_mapping_label(inputs::AbstractInputs, mapping::AgentMapping)
+    if mapping.source_type == :vr
+        return "asset owner $(asset_owner_label(inputs, mapping.original_agent_id)) " *
+               "in virtual reservoir $(virtual_reservoir_label(inputs, mapping.location_index))"
+    else
+        return "bidding group $(bidding_group_label(inputs, mapping.original_agent_id)) " *
+               "in bus $(bus_label(inputs, mapping.location_index))"
+    end
+end
+
+"""
+    supply_function_equilibrium_price_shift(inputs::AbstractInputs, agent_mappings::Vector{AgentMapping}, vr_price_bid, vr_original_price_bid, bg_price_bid, bg_original_price_bid)
+
+Return the downward shift to apply to every agent's equilibrium price curve.
+
+The shift is `min(P_i - C_i)` over all agents `i`, where `P_i` is agent `i`'s cheapest equilibrium price and `C_i` its
+cheapest original reference (cost) price, both taken over the segments that carry an offer. It is a single scalar for
+the whole system, so shifting by it preserves the relative position of the agents' curves, and it is non-negative by
+construction, so it can only reduce markups.
+
+When `supply_function_equilibrium_force_origin_on_output` is set, the shift is instead the lowest equilibrium price
+across all agents, which pushes the cheapest segment of the system's curve down to a price of zero.
+"""
+function supply_function_equilibrium_price_shift(
+    inputs::AbstractInputs,
+    agent_mappings::Vector{AgentMapping},
+    vr_price_bid::Union{Array{Float64, 3}, Nothing},
+    vr_original_price_bid::Union{Array{Float64, 3}, Nothing},
+    bg_price_bid::Union{Array{Float64, 4}, Nothing},
+    bg_original_price_bid::Union{Array{Float64, 4}, Nothing},
+)
+    # The gap is measured between each agent's cheapest equilibrium offer and its cheapest reference cost, so it
+    # collapses to `min(P_i) - maximum(min(C_i))`: the highest cost agent sets the shift and ends up exactly at its
+    # cost. Both sides are taken as a minimum over the agent's segments rather than read at segment 1, because only
+    # the equilibrium curve is sorted by price. `supply_function_equilibrium_bids_from_curve` emits it in ascending
+    # price order, but the reference curve arrives as the raw serialized heuristic bids, whose segment dimension is
+    # positional: for bidding groups the index is `unit * risk_factor` in collection order (`build_*_bids!`), and for
+    # virtual reservoirs the purchase segments are appended after the sell segments at strictly lower prices. Reading
+    # `C_i[1]` there would pick an arbitrary segment's cost. Measuring at matched quantities would instead make the
+    # shift depend on the equilibrium's per-agent structure.
+
+    # Every agent enters the minimum, price takers included. Restricting it to price makers (via the
+    # `global_asset_owner_index` vector built alongside `agent_mappings`) is a possible future refinement: a price
+    # taker bidding near its cost pins the shift close to zero for everyone.
+    price_shift = Inf
+
+    # The agent that attains `price_shift`, kept for reporting: the shift is a single scalar, so knowing which agent
+    # set it, and at which prices, is the only way to explain the resulting curve from the outputs alone.
+    binding_mapping = nothing
+    binding_equilibrium_price = Inf
+    binding_original_price = Inf
+
+    # The cheapest offer also bounds how far the curve can move before any price would turn negative, and it is the
+    # shift itself when the curve is forced through the origin, so the agent holding it is tracked too.
+    lowest_equilibrium_price = Inf
+    lowest_price_mapping = nothing
+
+    for mapping in agent_mappings
+        equilibrium_prices, original_prices = if mapping.source_type == :vr
+            vr = mapping.location_index
+            ao = mapping.original_agent_id
+            view(vr_price_bid, vr, ao, :), view(vr_original_price_bid, vr, ao, :)
+        else
+            bus = mapping.location_index
+            bg = mapping.original_agent_id
+            # Prices are repeated across subperiods on both curves, so any subperiod gives the same gap.
+            view(bg_price_bid, bg, bus, :, 1), view(bg_original_price_bid, bg, bus, :, 1)
+        end
+
+        # A zero price marks a segment that carries no offer: the trailing padding that
+        # `supply_function_equilibrium_bids_from_curve` leaves after an agent's valid segments, and, on the reference
+        # curve, the purchase segments that the heuristic zeroes out when they fall below the minimum purchase
+        # quantity (their quantity is zeroed alongside the price). Such segments must not pin the shift, so they are
+        # excluded from both minima instead of being taken as a free price of zero.
+        equilibrium_price = minimum_nonzero_price(equilibrium_prices)
+        original_price = minimum_nonzero_price(original_prices)
+
+        # An agent whose equilibrium curve produced no valid segment has nothing to offer at all.
+        if !isfinite(equilibrium_price)
+            continue
+        end
+
+        # The lowest equilibrium price covers every agent that offers something, even one whose reference curve has
+        # no priced segment: that agent still contributes a segment to the output curve, so it must be able to pin
+        # the shift that forces the curve through the origin.
+        if equilibrium_price < lowest_equilibrium_price
+            lowest_equilibrium_price = equilibrium_price
+            lowest_price_mapping = mapping
+        end
+
+        # The markup, on the other hand, is undefined without a reference cost to measure it against.
+        if !isfinite(original_price)
+            continue
+        end
+
+        markup = equilibrium_price - original_price
+        if markup < price_shift
+            price_shift = markup
+            binding_mapping = mapping
+            binding_equilibrium_price = equilibrium_price
+            binding_original_price = original_price
+        end
+    end
+
+    # Forcing the output curve through the origin overrides the markup-based shift: the whole system curve is moved
+    # down by its cheapest equilibrium price, so that price lands exactly at zero. This is checked before the
+    # markup-based early returns because it does not depend on the reference cost curve at all.
+    if supply_function_equilibrium_force_origin_on_output(inputs)
+        if !isfinite(lowest_equilibrium_price)
+            @info("No agent offered a priced segment; the price curve shift was set to zero.")
+            return 0.0
+        end
+
+        # Unlike the markup-based shift, this one is not bounded by the reference cost curve, so it can push prices
+        # below cost and invert the curve, the same condition `test_inversion` reports.
+        @warn(
+            "supply_function_equilibrium_force_origin_on_output is enabled: the price curve was shifted by the " *
+            "lowest equilibrium price, $(lowest_equilibrium_price), set by " *
+            "$(agent_mapping_label(inputs, lowest_price_mapping)), instead of by the smallest markup. This shift " *
+            "is not bounded by the reference curve cost and may invert the curve; make sure this is intended."
+        )
+
+        return lowest_equilibrium_price
+    end
+
+    if !isfinite(price_shift)
+        @info("No agent had both an equilibrium and a reference price; the price curve shift was set to zero.")
+        return 0.0
+    end
+
+    # The shift is a single scalar applied to every agent, so the log records which agent set it and at which
+    # prices. Without this, recovering the binding agent from the outputs means differencing the shifted bids
+    # against the reference curve by hand.
+    binding_label = agent_mapping_label(inputs, binding_mapping)
+
+    # A negative gap means the equilibrium price fell below the reference cost, the same curve inversion that
+    # `test_inversion` reports. Shifting by it would raise prices, so the shift is suppressed instead.
+    if price_shift < 0.0
+        @warn(
+            "Equilibrium price below the reference curve cost for $(binding_label) " *
+            "(equilibrium $(binding_equilibrium_price), reference $(binding_original_price)); " *
+            "the price curve shift was suppressed."
+        )
+        return 0.0
+    end
+
+    # Nothing downstream enforces a lower bound on bid prices, so the shift is capped here to keep the curve
+    # non-negative.
+    if price_shift > lowest_equilibrium_price
+        @warn(
+            "The price curve shift of $(price_shift), set by $(binding_label) " *
+            "(equilibrium $(binding_equilibrium_price), reference $(binding_original_price)), " *
+            "would make bid prices negative; it was capped at the lowest equilibrium price, " *
+            "$(lowest_equilibrium_price)."
+        )
+        return lowest_equilibrium_price
+    end
+
+    @info(
+        "The price curve shift (Delta P) is $(price_shift), set by $(binding_label): " *
+        "equilibrium price $(binding_equilibrium_price) minus reference price $(binding_original_price)."
+    )
+
+    return price_shift
+end
+
+"""
+    shift_price_bid!(price_bid::Array{Float64}, price_shift::Float64)
+
+Subtract `price_shift` from every bid segment that carries a price.
+
+A zero price marks the trailing padding that `supply_function_equilibrium_bids_from_curve` leaves after an agent's
+valid segments, which must stay at zero rather than become `-price_shift`.
+"""
+function shift_price_bid!(
+    price_bid::Array{Float64},
+    price_shift::Float64,
+)
+    for i in eachindex(price_bid)
+        if price_bid[i] != 0.0
+            price_bid[i] -= price_shift
+        end
     end
 
     return nothing
@@ -373,7 +957,8 @@ end
 
 function run_supply_function_equilibrium_iteration(
     inputs::AbstractInputs,
-    number_of_asset_owners::Int;
+    number_of_asset_owners::Int,
+    agents_asset_owner_index::Vector{Int};
     current_quantity::Vector{Vector{Float64}},
     current_price::Vector{Vector{Float64}},
     current_slope::Vector{Vector{Float64}},
@@ -390,7 +975,7 @@ function run_supply_function_equilibrium_iteration(
     for i in 1:number_of_asset_owners
         new_quantity[i] = [current_quantity[i][segment]]
         new_price[i] = [supply_function_equilibrium_max_cost_multiplier(inputs) * demand_deficit_cost(inputs)]
-        new_slope[i] = [update_slope(inputs, current_slope, original_slope, segment)[i]]
+        new_slope[i] = [update_slope(inputs, agents_asset_owner_index, current_slope, original_slope, segment)[i]]
     end
 
     # Iterate over the segments
@@ -398,7 +983,7 @@ function run_supply_function_equilibrium_iteration(
         minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners]
         if maximum(
             [new_quantity[i][segment] for i in 1:number_of_asset_owners] - minimum_quantities,
-        ) == 0
+        ) <= DEFAULT_TOLERANCE
             break
         end
 
@@ -438,6 +1023,7 @@ function run_supply_function_equilibrium_iteration(
 
         next_slope = update_slope(
             inputs,
+            agents_asset_owner_index,
             [[next_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners],
             [[true_slope[i] for _ in 1:segment] for i in 1:number_of_asset_owners],
             segment,
@@ -465,21 +1051,30 @@ end
 
 function update_slope(
     inputs::AbstractInputs,
+    agents_asset_owner_index::Vector{Int},
     current_slope::Vector{Vector{Float64}},
     original_slope::Vector{Vector{Float64}},
     segment_index::Int,
 )
-    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:length(current_slope)]
-    original_slope_in_segment = [original_slope[i][segment_index] for i in 1:length(original_slope)]
+    number_of_agents = length(current_slope)
+    @assert length(original_slope) == number_of_agents
+    @assert length(agents_asset_owner_index) == number_of_agents
 
-    B_k = sum(1 ./ current_slope_in_segment)
+    current_slope_in_segment = [current_slope[i][segment_index] for i in 1:number_of_agents]
+    original_slope_in_segment = [original_slope[i][segment_index] for i in 1:number_of_agents]
+    agent_weight = [supply_function_equilibrium_agent_weight(inputs, ao) for ao in agents_asset_owner_index]
+
+    B_k = sum(agent_weight ./ current_slope_in_segment)
     new_slope =
         original_slope_in_segment ./ 2 .+ 1 / B_k + sqrt.(((original_slope_in_segment ./ 2) .^ 2) .+ (1 / B_k)^2)
 
     agent_indexes = findall(isfinite, original_slope_in_segment)
 
-    if length(agent_indexes) < 3
-        new_slope[agent_indexes] .= supply_function_equilibrium_tolerance(inputs)
+    if sum(agent_weight[agent_indexes]) < 3
+        for agent_idx in agent_indexes
+            new_slope[agent_idx] =
+                min(supply_function_equilibrium_min_slope(inputs), original_slope_in_segment[agent_idx])
+        end
     end
 
     return new_slope
@@ -581,10 +1176,12 @@ function get_current_segment(
     minimum_quantities = [minimum(original_quantity[i]) for i in 1:number_of_asset_owners]
 
     for i in 1:number_of_asset_owners
-        if current_quantity_in_segment[i] > minimum_quantities[i]
-            idx = findfirst(reference_quantity[i] .< current_quantity_in_segment[i])
+        if current_quantity_in_segment[i] > minimum_quantities[i] + DEFAULT_TOLERANCE
+            idx = findfirst(
+                reference_quantity[i] .< current_quantity_in_segment[i] - DEFAULT_TOLERANCE,
+            )
             if isnothing(idx)
-                segments[i] = number_of_segments_for_vr_in_nash_equilibrium(inputs, number_of_asset_owners)
+                segments[i] = length(reference_quantity[i]) - 1
             else
                 segments[i] = idx - 1
             end
@@ -625,14 +1222,28 @@ function test_inversion(
         (original_quantity_in_segment .- quantity_in_segment[agent_indexes]) .* original_slope_in_segment
     price_delta = price_in_segment .- reference_price
 
-    if any(price_delta .< 0)
+    if any(price_delta .< -DEFAULT_TOLERANCE)
         @warn("Curve inversion")
     end
 
     return nothing
 end
 
-function maximum_number_of_segments_in_supply_function_equilibrium(inputs::AbstractInputs)
+"""
+    maximum_number_of_segments_in_supply_function_equilibrium(inputs::AbstractInputs; consider_bidding_groups::Bool)
+
+Return an upper bound on the number of segments of an agent's equilibrium curve.
+
+The iteration adds at most one point per price point of the participating agents' original curves, so the bound is the
+total number of reference curve segments across all agents, plus the synthetic point at the demand deficit cost.
+
+`consider_bidding_groups` defaults to `has_any_simple_bids(inputs)`, which is only meaningful once the number of
+bidding group segments has been set. Callers that run before that must pass it explicitly.
+"""
+function maximum_number_of_segments_in_supply_function_equilibrium(
+    inputs::AbstractInputs;
+    consider_bidding_groups::Bool = has_any_simple_bids(inputs),
+)
     total_agents = 0
 
     # Add all VR asset owner pairs
@@ -643,7 +1254,7 @@ function maximum_number_of_segments_in_supply_function_equilibrium(inputs::Abstr
     end
 
     # Add all BG bus pairs
-    if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
+    if any_elements(inputs, BiddingGroup) && consider_bidding_groups
         bidding_groups =
             index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
         buses = index_of_elements(inputs, Bus)
@@ -705,6 +1316,28 @@ function initialize_supply_function_equilibrium_outputs(
             labels = vr_labels,
             run_time_options,
         )
+
+        # These are the bids that reach the clearing problem, as opposed to the diagnostic curves above.
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "virtual_reservoir_sfe_energy_bid",
+            dimensions = ["period", "scenario", "bid_segment"],
+            unit = "MWh",
+            labels = vr_labels,
+            run_time_options,
+        )
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "virtual_reservoir_sfe_price_bid",
+            dimensions = ["period", "scenario", "bid_segment"],
+            unit = "\$/MWh",
+            labels = vr_labels,
+            run_time_options,
+        )
     end
 
     if any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
@@ -744,6 +1377,28 @@ function initialize_supply_function_equilibrium_outputs(
             output_name = "bidding_group_sfe_slope",
             dimensions = ["period", "scenario", "subperiod", "sfe_iteration", "sfe_curve_segment"],
             unit = "\$/MWh2",
+            labels = bg_labels,
+            run_time_options,
+        )
+
+        # These are the bids that reach the clearing problem, as opposed to the diagnostic curves above.
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "bidding_group_sfe_energy_bid",
+            dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+            unit = "MWh",
+            labels = bg_labels,
+            run_time_options,
+        )
+        initialize!(
+            QuiverOutput,
+            outputs;
+            inputs,
+            output_name = "bidding_group_sfe_price_bid",
+            dimensions = ["period", "scenario", "subperiod", "bid_segment"],
+            unit = "\$/MWh",
             labels = bg_labels,
             run_time_options,
         )

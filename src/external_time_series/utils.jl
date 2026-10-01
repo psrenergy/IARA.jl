@@ -381,6 +381,26 @@ function quiver_initial_datetime_string(initial_date::Union{String, DateTime})
 end
 
 """
+    quiver_time_dimension_and_frequency(time_series_step::Configurations_TimeSeriesStep.T)
+
+Return the `(time_dimensions, frequencies)` pair that `Quiver.Binary.Metadata` expects for a given
+`time_series_step`, both as vectors ready to be splatted into the metadata constructor.
+
+Quiver only knows calendar frequencies (`yearly`, `monthly`, `weekly`, `daily`, `hourly`). Under
+`FROZEN_TIME` the periods do not advance in time, so there is no calendar frequency to report and the
+file is written without a time dimension.
+"""
+function quiver_time_dimension_and_frequency(
+    time_series_step::Configurations_TimeSeriesStep.T,
+    time_dimension::String = "period",
+)
+    if time_series_step == Configurations_TimeSeriesStep.FROZEN_TIME
+        return String[], String[]
+    end
+    return [time_dimension], [period_type_string(time_series_step)]
+end
+
+"""
     array_to_binary_file(filename::String, data::Array{T, N};
         dimensions::Vector{String}, labels::Vector{String}, dimension_size::Vector{Int},
         time_dimension::String = "", initial_date::Union{String, DateTime} = "", unit::String = "",

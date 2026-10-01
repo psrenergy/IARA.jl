@@ -26,7 +26,8 @@ function virtual_reservoir_generation_reference!(
 
     # Model parameters
     virtual_reservoir_reference_multiplier = get_model_object(model, :virtual_reservoir_reference_multiplier)
-    virtual_reservoir_available_energy = get_model_object(model, :virtual_reservoir_available_energy)
+    virtual_reservoir_total_available_energy =
+        get_model_object(model, :virtual_reservoir_total_available_energy)
 
     # Model constraints
     @constraint(
@@ -34,7 +35,7 @@ function virtual_reservoir_generation_reference!(
         virtual_reservoir_generation_reference,
         sum(virtual_reservoir_total_generation)
         ==
-        virtual_reservoir_reference_multiplier * sum(virtual_reservoir_available_energy)
+        virtual_reservoir_reference_multiplier * virtual_reservoir_total_available_energy
     )
 
     return nothing

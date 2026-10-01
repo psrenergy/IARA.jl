@@ -100,11 +100,13 @@ Configurations for the problem.
     bid_price_limit_low_reference::Union{Float64, Nothing} = nothing
     bid_price_limit_high_reference::Float64 = 0.0
     reference_curve_number_of_segments::Int = 0
+    reference_curve_multipliers::Vector{Float64} = []
     reference_curve_final_segment_price_markup::Float64 = 0.0
-    supply_function_equilibrium_extra_bid_quantity::Float64 = 0.0
-    supply_function_equilibrium_tolerance::Float64 = 0.0
+    supply_function_equilibrium_min_slope::Float64 = 0.0
+    supply_function_equilibrium_max_slope::Float64 = 0.0
     supply_function_equilibrium_max_iterations::Int = 0
     supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
+    supply_function_equilibrium_force_origin_on_output::Bool = false
 
     # CVaR risk measure
     cvar_alpha::Float64 = 0.0
@@ -345,14 +347,17 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         Quiver.read_scalar_integers(inputs.db, "Configuration", "reference_curve_number_of_segments")[1]
     configurations.reference_curve_final_segment_price_markup =
         Quiver.read_scalar_floats(inputs.db, "Configuration", "reference_curve_final_segment_price_markup")[1]
-    configurations.supply_function_equilibrium_extra_bid_quantity =
-        Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_extra_bid_quantity")[1]
-    configurations.supply_function_equilibrium_tolerance =
-        Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_tolerance")[1]
+    configurations.supply_function_equilibrium_min_slope =
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_min_slope")[1]
+    configurations.supply_function_equilibrium_max_slope =
+        Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_max_slope")[1]
     configurations.supply_function_equilibrium_max_iterations =
         Quiver.read_scalar_integers(inputs.db, "Configuration", "supply_function_equilibrium_max_iterations")[1]
     configurations.supply_function_equilibrium_max_cost_multiplier =
         Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
+    configurations.supply_function_equilibrium_force_origin_on_output =
+        Quiver.read_scalar_integers(inputs.db, "Configuration", "supply_function_equilibrium_force_origin_on_output")[1] |>
+        Bool
     configurations.cvar_alpha = Quiver.read_scalar_floats(inputs.db, "Configuration", "cvar_alpha")[1]
     configurations.cvar_lambda = Quiver.read_scalar_floats(inputs.db, "Configuration", "cvar_lambda")[1]
 
@@ -361,6 +366,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         read_vector_floats(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
         read_vector_floats(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
+    configurations.reference_curve_multipliers =
+        read_vector_floats(inputs.db, "Configuration", "reference_curve_multipliers")[1]
 
     # Load time series files
     time_series_files = Quiver.read_time_series_files(inputs.db, "Configuration")
@@ -458,6 +465,22 @@ function validate(configurations::Configurations)
             end
         end
     end
+    if !isempty(configurations.reference_curve_multipliers)
+        if !all(0.0 .< configurations.reference_curve_multipliers .<= 1.0)
+            @error("Reference curve multipliers must all lie in the interval (0, 1].")
+            num_errors += 1
+        elseif !issorted(configurations.reference_curve_multipliers; lt = <=)
+            @error("Reference curve multipliers must be strictly increasing.")
+            num_errors += 1
+        elseif last(configurations.reference_curve_multipliers) != 1.0
+            # Not an error: the energy above the last multiplier is offered as a final segment
+            # priced with the reference_curve_final_segment_price_markup.
+            @warn(
+                "The last reference curve multiplier is $(last(configurations.reference_curve_multipliers)), not 1.0. " *
+                "The remaining energy will be offered in a single segment priced with the final segment markup."
+            )
+        end
+    end
     if configurations.max_iteration_nash_equilibrium < 0
         @error("Maximum number of iterations for Nash equilibrium must be non-negative.")
         num_errors += 1
@@ -539,6 +562,20 @@ function validate(configurations::Configurations)
             @error("Bid price limit low reference must be defined when bidding group bid validation is enabled.")
             num_errors += 1
         end
+    end
+    if configurations.supply_function_equilibrium_min_slope < DEFAULT_TOLERANCE
+        @error(
+            "supply_function_equilibrium_min_slope must be at least $(DEFAULT_TOLERANCE). " *
+            "Current value: $(configurations.supply_function_equilibrium_min_slope)."
+        )
+        num_errors += 1
+    end
+    if configurations.supply_function_equilibrium_max_slope <= configurations.supply_function_equilibrium_min_slope
+        @error(
+            "supply_function_equilibrium_max_slope must be greater than supply_function_equilibrium_min_slope. " *
+            "Current values: max_slope = $(configurations.supply_function_equilibrium_max_slope), min_slope = $(configurations.supply_function_equilibrium_min_slope)."
+        )
+        num_errors += 1
     end
     if configurations.cvar_alpha <= 0.0 || configurations.cvar_alpha > 1.0
         @error("cvar_alpha must be in (0.0, 1.0].")
@@ -1640,8 +1677,27 @@ bid_price_limit_high_reference(inputs) = inputs.collections.configurations.bid_p
 
 Return the number of segments in the reference curve.
 """
-reference_curve_number_of_segments(inputs::AbstractInputs) =
-    inputs.collections.configurations.reference_curve_number_of_segments
+reference_curve_number_of_segments(inputs::AbstractInputs) = length(reference_curve_multipliers(inputs))
+
+"""
+    reference_curve_multipliers(inputs::AbstractInputs)
+
+Return the fractions of the available energy that define each reference curve segment.
+"""
+function reference_curve_multipliers(inputs::AbstractInputs)
+    multipliers = inputs.collections.configurations.reference_curve_multipliers
+    if !isempty(multipliers)
+        return multipliers
+    end
+    number_of_segments = inputs.collections.configurations.reference_curve_number_of_segments
+    if number_of_segments == 0
+        return Float64[]
+    end
+    # If the vector is empty, space the multipliers evenly between zero and one
+    all_multipliers = range(0.0, 1.0; length = number_of_segments + 1)
+    # Remove the first multiplier, which is always 0.0
+    return collect(all_multipliers[2:end])
+end
 
 """
     reference_curve_final_segment_price_markup(inputs::AbstractInputs)
@@ -1652,20 +1708,20 @@ reference_curve_final_segment_price_markup(inputs::AbstractInputs) =
     inputs.collections.configurations.reference_curve_final_segment_price_markup
 
 """
-    supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs)
+    supply_function_equilibrium_min_slope(inputs::AbstractInputs)
 
-Return the extra bid quantity for the Supply Function Equilibrium.
+Return the minimum slope for the bid curves in the Supply Function Equilibrium.
 """
-supply_function_equilibrium_extra_bid_quantity(inputs::AbstractInputs) =
-    inputs.collections.configurations.supply_function_equilibrium_extra_bid_quantity
+supply_function_equilibrium_min_slope(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_min_slope
 
 """
-    supply_function_equilibrium_tolerance(inputs)
+    supply_function_equilibrium_max_slope(inputs::AbstractInputs)
 
-Return the tolerance for the bid slopes in the Supply Function Equilibrium.
+Return the maximum slope for the bid curves in the Supply Function Equilibrium.
 """
-supply_function_equilibrium_tolerance(inputs::AbstractInputs) =
-    inputs.collections.configurations.supply_function_equilibrium_tolerance
+supply_function_equilibrium_max_slope(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_max_slope
 
 """
     supply_function_equilibrium_max_iterations(inputs)
@@ -1682,6 +1738,14 @@ Return the maximum cost multiplier for the Supply Function Equilibrium.
 """
 supply_function_equilibrium_max_cost_multiplier(inputs::AbstractInputs) =
     inputs.collections.configurations.supply_function_equilibrium_max_cost_multiplier
+
+"""
+    supply_function_equilibrium_force_origin_on_output(inputs)
+
+Return whether the Supply Function Equilibrium bid curves must be shifted so that they touch the origin.
+"""
+supply_function_equilibrium_force_origin_on_output(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_force_origin_on_output
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

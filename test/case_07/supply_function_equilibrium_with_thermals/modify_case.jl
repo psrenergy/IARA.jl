@@ -12,13 +12,12 @@ db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
     demand_deficit_cost = 600.0,
-    supply_function_equilibrium_max_cost_multiplier = 1.25,
 )
 
 # Asset owners
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_1",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_2",
@@ -26,7 +25,7 @@ IARA.add_asset_owner!(db;
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_3",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_4",
@@ -34,7 +33,7 @@ IARA.add_asset_owner!(db;
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_5",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_6",
@@ -42,7 +41,7 @@ IARA.add_asset_owner!(db;
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_7",
-    price_type = IARA.AssetOwner_PriceType.PRICE_MAKER,
+    price_type = IARA.AssetOwner_PriceType.PRICE_TAKER,
 )
 IARA.add_asset_owner!(db;
     label = "thermal_asset_owner_8",

@@ -234,6 +234,63 @@ function serialize_virtual_reservoir_heuristic_bids(
 end
 
 """
+    serialize_bidding_group_supply_function_equilibrium_bids(inputs::Inputs, quantity_bid::Array{Float64, 4}, price_bid::Array{Float64, 4}; period::Int, scenario::Int)
+
+Serialize bidding group supply function equilibrium bids.
+
+These are written to their own files, separate from the heuristic bids, because the supply function equilibrium reads
+the heuristic bids as its input. Overwriting them would make the mode non-idempotent.
+"""
+function serialize_bidding_group_supply_function_equilibrium_bids(
+    inputs::Inputs,
+    quantity_bid::Array{Float64, 4},
+    price_bid::Array{Float64, 4};
+    period::Int,
+    scenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+    serialized_file_name =
+        joinpath(temp_path, "bidding_group_sfe_bids_period_$(period)_scenario_$(scenario).json")
+
+    data_to_serialize = Dict{Symbol, Any}()
+    data_to_serialize[:quantity_bid] = quantity_bid
+    data_to_serialize[:price_bid] = price_bid
+
+    Serialization.serialize(serialized_file_name, data_to_serialize)
+    return nothing
+end
+
+"""
+    serialize_virtual_reservoir_supply_function_equilibrium_bids(inputs::Inputs, quantity_bid::Array{Float64, 3}, price_bid::Array{Float64, 3}; period::Int, scenario::Int)
+
+Serialize virtual reservoir supply function equilibrium bids.
+"""
+function serialize_virtual_reservoir_supply_function_equilibrium_bids(
+    inputs::Inputs,
+    quantity_bid::Array{Float64, 3},
+    price_bid::Array{Float64, 3};
+    period::Int,
+    scenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    if !isdir(temp_path)
+        mkdir(temp_path)
+    end
+    serialized_file_name =
+        joinpath(temp_path, "virtual_reservoir_sfe_bids_period_$(period)_scenario_$(scenario).json")
+
+    data_to_serialize = Dict{Symbol, Any}()
+    data_to_serialize[:quantity_bid] = quantity_bid
+    data_to_serialize[:price_bid] = price_bid
+
+    Serialization.serialize(serialized_file_name, data_to_serialize)
+    return nothing
+end
+
+"""
     read_serialized_clearing_variable(inputs::Inputs, clearing_model_subproblem::RunTime_ClearingSubproblem.T, symbol_to_read::Symbol; period::Int, scenario::Int)
 
 Read serialized clearing variable.
@@ -302,6 +359,43 @@ function read_serialized_virtual_reservoir_heuristic_bids(
     temp_path = joinpath(path_case(inputs), "temp")
     serialized_file_name =
         joinpath(temp_path, "virtual_reservoir_heuristic_bids_period_$(period)_scenario_$(scenario).json")
+
+    data = Serialization.deserialize(serialized_file_name)
+
+    return data[:quantity_bid], data[:price_bid]
+end
+
+"""
+    read_serialized_bidding_group_supply_function_equilibrium_bids(inputs::Inputs; period::Int, scenario::Int)
+
+Read serialized bidding group supply function equilibrium bids.
+"""
+function read_serialized_bidding_group_supply_function_equilibrium_bids(
+    inputs::Inputs;
+    period::Int,
+    scenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    serialized_file_name =
+        joinpath(temp_path, "bidding_group_sfe_bids_period_$(period)_scenario_$(scenario).json")
+    data = Serialization.deserialize(serialized_file_name)
+
+    return data[:quantity_bid], data[:price_bid]
+end
+
+"""
+    read_serialized_virtual_reservoir_supply_function_equilibrium_bids(inputs::Inputs; period::Int, scenario::Int)
+
+Read serialized virtual reservoir supply function equilibrium bids.
+"""
+function read_serialized_virtual_reservoir_supply_function_equilibrium_bids(
+    inputs::Inputs;
+    period::Int,
+    scenario::Int,
+)
+    temp_path = joinpath(path_case(inputs), "temp")
+    serialized_file_name =
+        joinpath(temp_path, "virtual_reservoir_sfe_bids_period_$(period)_scenario_$(scenario).json")
 
     data = Serialization.deserialize(serialized_file_name)
 

@@ -26,30 +26,45 @@ IARA.update_configuration!(db;
 
 ### SFE Parameters
 
-- **`supply_function_equilibrium_extra_bid_quantity`** (Float64, default: 1.0)
-  Determines the quantity value for the artificial bid added during SFE preprocessing.
+- **`supply_function_equilibrium_min_slope`** (Float64, default: 0.02)
+  Minimum slope allowed for the bid curves.
+
+- **`supply_function_equilibrium_max_slope`** (Float64, default: 50.0)
+  Maximum slope allowed for the bid curves. Must be greater than `supply_function_equilibrium_min_slope`.
+
+  Both slope bounds refer to a single owner. For a price taker, both are divided by its `supply_function_equilibrium_weight`, since its curve aggregates that many equivalent owners.
 
 - **`supply_function_equilibrium_max_iterations`** (Int, default: 20)
   Maximum iterations for equilibrium computation within each period/scenario.
 
-- **`supply_function_equilibrium_tolerance`** (Float64, default: 0.000001)
-  Minimum slope tolerance. Curves with slopes below this value trigger errors.
-
 - **`supply_function_equilibrium_max_cost_multiplier`** (Float64, default: 2.0)
   Maximum price cap as multiplier of deficit cost.
+
+- **`supply_function_equilibrium_force_origin_on_output`** (Bool, default: false)
+  When `true`, the output bid curves are shifted down by the lowest equilibrium price of the system instead of by the smallest markup, so the cheapest segment of the resulting curve is priced at zero.
+
+- **`reference_curve_multipliers`** (Vector{Float64}, default: empty)
+  Fractions of the available energy defining each reference curve segment, strictly increasing and within `(0, 1]`, e.g. `[0.01, 0.1, 0.25, 0.5, 1.0]`. When left empty, `reference_curve_number_of_segments` evenly spaced fractions are used instead.
 
 **Example:**
 ```julia
 IARA.update_configuration!(db;
     bid_processing = IARA.Configurations_BidProcessing.ITERATED_BIDS_FROM_SUPPLY_FUNCTION_EQUILIBRIUM,
     reference_curve_number_of_segments = 10,
-    supply_function_equilibrium_extra_bid_quantity = 1.0,
+    supply_function_equilibrium_min_slope = 0.02,
+    supply_function_equilibrium_max_slope = 50.0,
     supply_function_equilibrium_max_iterations = 20,
-    supply_function_equilibrium_tolerance = 0.000001,
     supply_function_equilibrium_max_cost_multiplier = 2.0,
     demand_deficit_cost = 3000.0,
 )
 ```
+
+### Asset owner parameters
+
+- **`supply_function_equilibrium_weight`** (Float64, default: 20.0)
+  Weight of this asset owner in the slope update, i.e. the number of equivalent owners the competitive fringe it
+  represents is assumed to contain. Must be positive. Only price takers carry a weight; the value is ignored for any
+  other price type, which always weighs 1.
 
 ## Mathematical Formulation
 
@@ -92,6 +107,7 @@ STEP 3: Market Clearing
 - ``C^\delta``: Demand deficit cost (``\$/MWh``)
 - ``Q_{i,\tau}``: Quantity for agent ``i`` at subperiod ``\tau``
 - ``P_{i,\tau}``: Price for agent ``i`` at subperiod ``\tau``
+- ``w_i``: Weight of agent ``i`` in the slope update, ``1`` for every agent that is not a price taker
 
 **Variables:**
 - ``q_i(k)``: Cumulative quantity for agent ``i`` at segment ``k``
@@ -158,7 +174,7 @@ b_i^*(1) = b_i^0(1) \quad \forall i \in \mathcal{A}
 For segment ``k`` with all agents in ``\mathcal{A}``:
 
 ```math
-B_k = \sum_{i \in \mathcal{A}} \frac{1}{b_i^*(k)}
+B_k = \sum_{i \in \mathcal{A}} \frac{w_i}{b_i^*(k)}
 ```
 
 ```math
@@ -207,7 +223,23 @@ SFE generates equilibrium curves for each period/scenario:
 - `bidding_group_sfe_price.csv` - Equilibrium prices (\$/MWh)
 - `bidding_group_sfe_slope.csv` - Equilibrium slopes (\$/MWh²)
 
-All outputs include dimensions for agents, sfe\_iteration, and sfe\_curve\_segment.
+All outputs above include dimensions for agents, sfe\_iteration, and sfe\_curve\_segment. They are diagnostics: they
+describe the equilibrium curve of every iteration, in the internal cumulative and descending-price representation.
+Index 1 of sfe\_iteration is the reference curve the equilibrium starts from, so iteration `k` sits at index `k+1`.
+At index 1 the slope has one entry fewer than the quantity, since a reference curve has one slope per interval.
+
+**Clearing Bids:**
+
+The equilibrium curves of the final iteration are converted into bids and used by the market clearing. They are written
+in the usual bid convention, with a bid\_segment dimension:
+
+- `virtual_reservoir_sfe_energy_bid.csv` - Quantity bids (MWh)
+- `virtual_reservoir_sfe_price_bid.csv` - Price bids (\$/MWh)
+- `bidding_group_sfe_energy_bid.csv` - Quantity bids (MWh)
+- `bidding_group_sfe_price_bid.csv` - Price bids (\$/MWh)
+
+These replace the heuristic bids in the clearing problem. The heuristic bid outputs are still written, since the
+heuristic pass produces the reference curves that the equilibrium ingests.
 
 ## Usage Example
 

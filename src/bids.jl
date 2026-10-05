@@ -1414,7 +1414,11 @@ function adjust_quantity_bid_for_ex_post!(
     quantity_bid_series::IARA.BidsView{Float64},
     subscenario::Int,
 )
-    if !is_market_clearing(inputs) || is_ex_ante_problem(run_time_options) || !read_ex_post_renewable_file(inputs) ||
+    # Sell bids are adjusted when renewable generation has ex-post scenarios, and purchase (demand) bids also when
+    # demand has ex-post scenarios
+    adjust_sell_bids = read_ex_post_renewable_file(inputs)
+    adjust_purchase_bids = adjust_sell_bids || read_ex_post_demand_file(inputs)
+    if !is_market_clearing(inputs) || is_ex_ante_problem(run_time_options) || !adjust_purchase_bids ||
        maximum_number_of_bg_bidding_segments(inputs) == 0
         return nothing
     end
@@ -1469,6 +1473,9 @@ function adjust_quantity_bid_for_ex_post!(
                         )
                     elseif bidding_group_ex_post_adjust(inputs, bg) ==
                            BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_BID
+                        # TODO: The sell and purchase segments are netted together, so in a bidding group with both
+                        # (e.g. a thermal unit and an elastic demand) one side is zeroed or scaled by the wrong total.
+                        # The positive and negative segments should be summed separately.
                         total_energy_ex_ante = max(sum(quantity_bid_series.data[bg, bus, :, blk]), 0.0)
                         total_demand_ex_ante = min(sum(quantity_bid_series.data[bg, bus, :, blk]), 0.0)
                     end
@@ -1495,7 +1502,11 @@ function adjust_quantity_bid_for_ex_post!(
                         subscenario,
                         demand_units_indexes,
                     )
-                    if quantity_bid_series.data[bg, bus, bds, blk] > 0.0
+                    # TODO: A bidding group without supply (or demand) units at the bus has its sell (or purchase)
+                    # bids scaled by 0, since there is no energy (or demand) to adjust them to. In BID_BASED clearing,
+                    # where the bids are the whole offer of the group, this removes it from the ex-post clearing.
+                    # These bids should be kept as submitted.
+                    if quantity_bid_series.data[bg, bus, bds, blk] > 0.0 && adjust_sell_bids
                         if total_energy_ex_ante == 0.0
                             adjustment_factors[bg, bus, bds, blk] = 0.0
                         else

@@ -100,7 +100,7 @@ function initialize_plotly()
     return nothing
 end
 
-function _get_plot_color(index::Int; transparent::Bool = false, dark_shade::Bool = false)
+function _get_plot_color(index::Int; transparent::Bool = false, dark_shade::Bool = false, light_shade::Bool = false)
     colors = [
         (31, 119, 180),
         (255, 127, 14),
@@ -118,6 +118,9 @@ function _get_plot_color(index::Int; transparent::Bool = false, dark_shade::Bool
 
     color = if dark_shade
         "rgb$(Int.(round.(color .* 0.6)))"
+    elseif light_shade
+        # Same distance as the dark shade, but towards white
+        "rgb$(Int.(round.(color .+ (255 .- color) .* 0.4)))"
     else
         "rgb$color"
     end

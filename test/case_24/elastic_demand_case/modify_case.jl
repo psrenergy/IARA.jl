@@ -8,6 +8,11 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+# Elastic demand setup:
+#   true  -> constant at 1.0 p.u., 1/6 the size of the inelastic demand
+#   false -> follows the inelastic demand profile, 1/4 the size of the inelastic demand
+constant_elastic_demand = false
+
 db = IARA.load_study(PATH; read_only = false)
 
 IARA.add_asset_owner!(db; label = "Agente Demanda Elastica", purchase_discount_rate = [0.1])
@@ -18,14 +23,16 @@ IARA.add_bidding_group!(
     assetowner_id = "Agente Demanda Elastica",
     risk_factor = [0.0],
     segment_fraction = [1.0],
-    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.NO_ADJUSTMENT,
+    ex_post_adjust_mode = IARA.BiddingGroup_ExPostAdjustMode.PROPORTIONAL_TO_EX_POST_GENERATION_OVER_EX_ANTE_GENERATION,
 )
 
-# Add a elastic demand, 1/4 the size of the inelastic demand
+# Add an elastic demand, a fraction of the size of the inelastic demand
+elastic_max_demand = constant_elastic_demand ? max_demand / 6 : max_demand / 4
+
 IARA.add_demand_unit!(db;
     label = "Demanda Elastica",
     demand_unit_type = IARA.DemandUnit_DemandType.ELASTIC,
-    max_demand = max_demand / 4,
+    max_demand = elastic_max_demand,
     parameters = DataFrame(;
         date_time = [DateTime(0)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
@@ -35,7 +42,12 @@ IARA.add_demand_unit!(db;
 )
 
 # Modify the demand timeseries to include elastic demand
-new_demand_ex_post = vcat(demand_factor_ex_post, demand_factor_ex_post)
+elastic_demand_factor_ex_post = if constant_elastic_demand
+    ones(size(demand_factor_ex_post))
+else
+    demand_factor_ex_post
+end
+new_demand_ex_post = vcat(demand_factor_ex_post, elastic_demand_factor_ex_post)
 
 IARA.write_timeseries_file(
     joinpath(PATH, "demand_ex_post"),
@@ -44,19 +56,6 @@ IARA.write_timeseries_file(
     labels = ["Demanda", "Demanda Elastica"],
     time_dimension = "period",
     dimension_size = [number_of_periods, number_of_scenarios, number_of_subscenarios, number_of_subperiods],
-    initial_date = "2025-01-01T00:00:00",
-    unit = "p.u.",
-)
-
-new_demand_ex_ante = vcat(demand_factor_ex_ante, demand_factor_ex_ante)
-
-IARA.write_timeseries_file(
-    joinpath(PATH, "demand_ex_ante"),
-    new_demand_ex_ante;
-    dimensions = ["period", "scenario", "subperiod"],
-    labels = ["Demanda", "Demanda Elastica"],
-    time_dimension = "period",
-    dimension_size = [number_of_periods, number_of_scenarios, number_of_subperiods],
     initial_date = "2025-01-01T00:00:00",
     unit = "p.u.",
 )

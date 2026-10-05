@@ -19,7 +19,6 @@ const PATH = @__DIR__
 db = nothing
 try
     include("../base_case/build_case.jl")
-    include("../virtual_reservoir_case/modify_case.jl")
     include("modify_case.jl")
 finally
     if db !== nothing
@@ -100,54 +99,6 @@ cp(
     force = true,
 )
 
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_1", "virtual_reservoir_energy_bid_period_1.csv"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_1", "virtual_reservoir_energy_bid_period_1.toml"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_1", "virtual_reservoir_price_bid_period_1.csv"),
-    joinpath(PATH, "virtual_reservoir_price_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_1", "virtual_reservoir_price_bid_period_1.toml"),
-    joinpath(PATH, "virtual_reservoir_price_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_1", "virtual_reservoir_no_markup_price_bid_period_1.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_1.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_1", "virtual_reservoir_no_markup_price_bid_period_1.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_1.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_1.toml");
-    force = true,
-)
-
 IARA.single_period_market_clearing(
     PATH;
     plot_outputs = false,
@@ -161,11 +112,6 @@ IARA.single_period_market_clearing(
 cp(
     joinpath(PATH, "outputs/market_clearing_1", "EX_POST_PHYSICAL_period_1_scenario_1.json"),
     joinpath(PATH, "EX_POST_PHYSICAL_period_1_scenario_1.json");
-    force = true,
-)
-cp(
-    joinpath(PATH, "outputs/market_clearing_1", "virtual_reservoir_energy_account_period_1_scenario_1.json"),
-    joinpath(PATH, "virtual_reservoir_energy_account_period_1_scenario_1.json");
     force = true,
 )
 
@@ -227,54 +173,6 @@ cp(
     force = true,
 )
 
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_2", "virtual_reservoir_energy_bid_period_2.csv"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_2", "virtual_reservoir_energy_bid_period_2.toml"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_2", "virtual_reservoir_price_bid_period_2.csv"),
-    joinpath(PATH, "virtual_reservoir_price_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_2", "virtual_reservoir_price_bid_period_2.toml"),
-    joinpath(PATH, "virtual_reservoir_price_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_2", "virtual_reservoir_no_markup_price_bid_period_2.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_2.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_2", "virtual_reservoir_no_markup_price_bid_period_2.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_2.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_2.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_2.toml");
-    force = true,
-)
-
 IARA.single_period_market_clearing(
     PATH;
     plot_outputs = false,
@@ -288,11 +186,6 @@ IARA.single_period_market_clearing(
 cp(
     joinpath(PATH, "outputs/market_clearing_2", "EX_POST_PHYSICAL_period_2_scenario_1.json"),
     joinpath(PATH, "EX_POST_PHYSICAL_period_2_scenario_1.json");
-    force = true,
-)
-cp(
-    joinpath(PATH, "outputs/market_clearing_2", "virtual_reservoir_energy_account_period_2_scenario_1.json"),
-    joinpath(PATH, "virtual_reservoir_energy_account_period_2_scenario_1.json");
     force = true,
 )
 
@@ -354,54 +247,6 @@ cp(
     force = true,
 )
 
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_3", "virtual_reservoir_energy_bid_period_3.csv"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_3", "virtual_reservoir_energy_bid_period_3.toml"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_3", "virtual_reservoir_price_bid_period_3.csv"),
-    joinpath(PATH, "virtual_reservoir_price_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_3", "virtual_reservoir_price_bid_period_3.toml"),
-    joinpath(PATH, "virtual_reservoir_price_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_3", "virtual_reservoir_no_markup_price_bid_period_3.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_3.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_3", "virtual_reservoir_no_markup_price_bid_period_3.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_3.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_3.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_3.toml");
-    force = true,
-)
-
 IARA.single_period_market_clearing(
     PATH;
     plot_outputs = false,
@@ -415,11 +260,6 @@ IARA.single_period_market_clearing(
 cp(
     joinpath(PATH, "outputs/market_clearing_3", "EX_POST_PHYSICAL_period_3_scenario_1.json"),
     joinpath(PATH, "EX_POST_PHYSICAL_period_3_scenario_1.json");
-    force = true,
-)
-cp(
-    joinpath(PATH, "outputs/market_clearing_3", "virtual_reservoir_energy_account_period_3_scenario_1.json"),
-    joinpath(PATH, "virtual_reservoir_energy_account_period_3_scenario_1.json");
     force = true,
 )
 
@@ -478,54 +318,6 @@ cp(
 cp(
     joinpath(PATH, "outputs/heuristic_bid_4", "bidding_group_no_markup_price_bid_period_4.toml"),
     joinpath(PATH, "bidding_group_no_markup_price_bid_period_4.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_4", "virtual_reservoir_energy_bid_period_4.csv"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_4", "virtual_reservoir_energy_bid_period_4.toml"),
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_4", "virtual_reservoir_price_bid_period_4.csv"),
-    joinpath(PATH, "virtual_reservoir_price_bid.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_4", "virtual_reservoir_price_bid_period_4.toml"),
-    joinpath(PATH, "virtual_reservoir_price_bid.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_4", "virtual_reservoir_no_markup_price_bid_period_4.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_4.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "outputs/heuristic_bid_4", "virtual_reservoir_no_markup_price_bid_period_4.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_price_bid_period_4.toml");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.csv"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_4.csv");
-    force = true,
-)
-
-cp(
-    joinpath(PATH, "virtual_reservoir_energy_bid.toml"),
-    joinpath(PATH, "virtual_reservoir_no_markup_energy_bid_period_4.toml");
     force = true,
 )
 

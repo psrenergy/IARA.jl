@@ -19,6 +19,14 @@ function build_ui_initial_plots(
             plot_renewable_generation(inputs, agent_plots_path; asset_owner_index)
         end
     end
+    if any_elements(inputs, DemandUnit; filters = [is_elastic, !has_no_bidding_group])
+        if !ispath(agent_plots_path)
+            mkdir(agent_plots_path)
+        end
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            plot_demand(inputs, agent_plots_path; asset_owner_index)
+        end
+    end
     if any_elements(inputs, VirtualReservoir)
         if !ispath(agent_plots_path)
             mkdir(agent_plots_path)
@@ -33,10 +41,20 @@ function build_ui_initial_plots(
     return nothing
 end
 
-function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = false)
+# If an asset owner is given, plots only the elastic demand that bids through its bidding groups
+function plot_demand(
+    inputs::AbstractInputs,
+    plots_path::String;
+    net_demand = false,
+    asset_owner_index::Int = null_value(Int),
+)
     num_periods = number_of_periods(inputs)
     num_subperiods = number_of_subperiods(inputs)
-    ex_ante_demand, ex_post_demand = get_demands_to_plot(inputs)
+    ex_ante_demand, ex_post_demand = get_demands_to_plot(inputs; asset_owner_index)
+
+    if isempty(ex_ante_demand) || isempty(ex_post_demand)
+        return nothing
+    end
 
     if net_demand
         ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs)
@@ -50,7 +68,9 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
     # Add artifical agent dimension to get plot ticks
     ticks_demand = [ex_ante_demand'; ex_post_min_demand'; ex_post_max_demand']
 
-    demand_name = if net_demand
+    demand_name = if !is_null(asset_owner_index)
+        "elastic_demand"
+    elseif net_demand
         "net_demand"
     else
         "total_demand"
@@ -68,6 +88,11 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
     title = get_name(inputs, demand_name)
     unit = "MW"
     color_idx = 0
+
+    if !is_null(asset_owner_index)
+        ao_label = asset_owner_label(inputs, asset_owner_index)
+        title = "$ao_label - $title"
+    end
 
     # Ex-post max demand
     color_idx += 1
@@ -143,7 +168,11 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
         ),
     )
 
-    _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "$(demand_name).html"))
+    if is_null(asset_owner_index)
+        _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "$(demand_name).html"))
+    else
+        _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "$(demand_name)_$(ao_label).html"))
+    end
 
     return nothing
 end

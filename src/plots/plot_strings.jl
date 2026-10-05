@@ -76,6 +76,22 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "First Scenario Net Demand",
             "pt" => "Demanda Líquida do Primeiro Cenário",
         ),
+        "elastic_demand" => Dict(
+            "en" => "Elastic Demand",
+            "pt" => "Demanda Elástica",
+        ),
+        "maximum_elastic_demand" => Dict(
+            "en" => "Maximum Elastic Demand",
+            "pt" => "Demanda Elástica Máxima",
+        ),
+        "minimum_elastic_demand" => Dict(
+            "en" => "Minimum Elastic Demand",
+            "pt" => "Demanda Elástica Mínima",
+        ),
+        "average_elastic_demand" => Dict(
+            "en" => "Average Elastic Demand",
+            "pt" => "Demanda Elástica Média",
+        ),
         "renewable_generation" => Dict(
             "en" => "Renewable Generation",
             "pt" => "Geração Renovável",
@@ -156,9 +172,25 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Deficit",
             "pt" => "Déficit",
         ),
+        "attended_elastic_demand" => Dict(
+            "en" => "Attended Elastic Demand",
+            "pt" => "Demanda Elástica Atendida",
+        ),
+        "cut_elastic_demand" => Dict(
+            "en" => "Cut Elastic Demand",
+            "pt" => "Demanda Elástica Cortada",
+        ),
         "available_bids" => Dict(
             "en" => "Available Bids",
             "pt" => "Ofertas Disponíveis",
+        ),
+        "demand_cut_offers" => Dict(
+            "en" => "Demand Cut Offers",
+            "pt" => "Ofertas de Redução de Demanda",
+        ),
+        "demand_curve" => Dict(
+            "en" => "Demand Curve",
+            "pt" => "Curva de Demanda",
         ),
         "bids" => Dict(
             "en" => "Bids",
@@ -175,6 +207,10 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
         "operating_cost" => Dict(
             "en" => "Operating Cost",
             "pt" => "Custo Variável Unitário",
+        ),
+        "willingness_to_pay" => Dict(
+            "en" => "Willingness to Pay",
+            "pt" => "Disposição a Pagar",
         ),
         "quantity" => Dict(
             "en" => "Quantity",

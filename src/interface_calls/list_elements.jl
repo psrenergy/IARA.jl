@@ -195,6 +195,9 @@ function list_assets(inputs::IARA.AbstractInputs)
         )
         push!(assets_list, asset_dict)
     end
+    if IARA.any_elements(inputs, IARA.DemandUnit; filters = [!IARA.has_no_bidding_group])
+        ex_ante_demand = get_ex_ante_demand_per_period(inputs)
+    end
     for (demand_unit_index, demand_unit_label) in enumerate(IARA.demand_unit_label(inputs))
         if IARA.is_null(IARA.demand_unit_bidding_group_index(inputs)[demand_unit_index])
             continue
@@ -203,10 +206,27 @@ function list_assets(inputs::IARA.AbstractInputs)
             "label" => demand_unit_label,
             "type" => "demand",
             "max_demand" => IARA.demand_unit_max_demand(inputs, demand_unit_index),
+            "ex_ante_demand" => ex_ante_demand[demand_unit_index],
         )
         push!(assets_list, asset_dict)
     end
     return assets_list
+end
+
+# Ex-ante demand of each demand unit in MW, indexed as [demand_unit][period][subperiod].
+# Uses scenario 1, like the UI input plots.
+function get_ex_ante_demand_per_period(inputs::IARA.AbstractInputs)
+    run_time_options = IARA.RunTimeOptions()
+    num_demand_units = IARA.number_of_elements(inputs, IARA.DemandUnit)
+    ex_ante_demand = [Vector{Float64}[] for _ in 1:num_demand_units]
+    for period in 1:IARA.number_of_periods(inputs)
+        IARA.update_time_series_views_from_external_files!(inputs, run_time_options; period, scenario = 1)
+        demand_series = IARA.time_series_demand(inputs, run_time_options)
+        for d in 1:num_demand_units
+            push!(ex_ante_demand[d], demand_series[d, :] .* IARA.demand_unit_max_demand(inputs, d))
+        end
+    end
+    return ex_ante_demand
 end
 
 function list_buses(inputs::IARA.AbstractInputs)

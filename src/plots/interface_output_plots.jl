@@ -21,6 +21,33 @@ function build_ui_operator_plots(
     plots_path = joinpath(output_path(inputs), "plots", "operator")
     mkdir(plots_path)
     plot_virtual_reservoir_results = any_elements(inputs, VirtualReservoir)
+    # With demand agents, the revenues are plotted as the spot clearing and the costs as the fixed price clearing
+    plot_clearings = has_demand_agents(inputs)
+    revenue_key = plot_clearings ? "spot_clearing" : "revenue"
+    cost_title_key = plot_clearings ? "fixed_price_clearing" : "total_cost"
+    revenue_subtitle = plot_clearings ? get_name(inputs, "spot_clearing_subtitle") : ""
+    cost_subtitle = plot_clearings ? get_name(inputs, "fixed_price_clearing_subtitle") : ""
+
+    # Profit
+    profit_file_path = get_profit_file(inputs)
+    vr_profit_file_path = if plot_virtual_reservoir_results
+        get_virtual_reservoir_profit_file(inputs)
+    else
+        ""
+    end
+    if isfile(profit_file_path)
+        plot_path = joinpath(plots_path, "total_profit")
+        plot_operator_output(
+            inputs,
+            plot_path,
+            get_name(inputs, "total_profit");
+            bg_file_path = profit_file_path,
+            vr_file_path = vr_profit_file_path,
+            round_data = true,
+            # Like the two-settlement total revenue, the two-settlement total profit is not split by source
+            merge_bg_and_vr = settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.TWO_SETTLEMENT,
+        )
+    end
 
     # Revenue
     revenue_files = get_revenue_files(inputs)
@@ -35,24 +62,22 @@ function build_ui_operator_plots(
         plot_operator_output(
             inputs,
             plot_path,
-            get_name(inputs, "ex_ante_revenue");
+            get_name(inputs, "ex_ante_$revenue_key");
             bg_file_path = revenue_files[1],
+            subtitle = revenue_subtitle,
             vr_file_path = vr_revenue_files[1],
             round_data = true,
             ex_ante_plot = true,
-            plot_cut_elastic_demand = true,
-            plot_attended_elastic_demand = false,
         )
         plot_path = joinpath(plots_path, "total_revenue_ex_post")
         plot_operator_output(
             inputs,
             plot_path,
-            get_name(inputs, "ex_post_revenue");
+            get_name(inputs, "ex_post_$revenue_key");
             bg_file_path = revenue_files[2],
+            subtitle = revenue_subtitle,
             vr_file_path = vr_revenue_files[2],
             round_data = true,
-            plot_cut_elastic_demand = true,
-            plot_attended_elastic_demand = false,
         )
         # Ex-ante revenue summed to every ex-post scenario, without splitting the bars by source
         vr_total_revenue_file = if plot_virtual_reservoir_results
@@ -64,13 +89,12 @@ function build_ui_operator_plots(
         plot_operator_output(
             inputs,
             plot_path,
-            get_name(inputs, "total_revenue");
+            get_name(inputs, "total_$revenue_key");
             bg_file_path = get_two_settlement_total_revenue_file(inputs),
+            subtitle = revenue_subtitle,
             vr_file_path = vr_total_revenue_file,
             round_data = true,
             merge_bg_and_vr = true,
-            plot_cut_elastic_demand = true,
-            plot_attended_elastic_demand = false,
         )
     else
         @assert length(revenue_files) == 1
@@ -78,12 +102,11 @@ function build_ui_operator_plots(
         plot_operator_output(
             inputs,
             plot_path,
-            get_name(inputs, "total_revenue");
+            get_name(inputs, "total_$revenue_key");
             bg_file_path = revenue_files[1],
+            subtitle = revenue_subtitle,
             vr_file_path = vr_revenue_files[1],
             round_data = true,
-            plot_cut_elastic_demand = true,
-            plot_attended_elastic_demand = false,
         )
     end
 
@@ -104,7 +127,6 @@ function build_ui_operator_plots(
             bg_file_path = generation_files[1],
             vr_file_path = vr_generation_files[1],
             ex_ante_plot = true,
-            plot_cut_elastic_demand = true,
         )
         plot_path = joinpath(plots_path, "total_generation_ex_post")
         plot_operator_output(
@@ -113,7 +135,6 @@ function build_ui_operator_plots(
             get_name(inputs, "ex_post_generation");
             bg_file_path = generation_files[2],
             vr_file_path = vr_generation_files[2],
-            plot_cut_elastic_demand = true,
         )
     else
         @assert length(generation_files) == 1
@@ -124,7 +145,24 @@ function build_ui_operator_plots(
             get_name(inputs, "total_generation");
             bg_file_path = generation_files[1],
             vr_file_path = vr_generation_files[1],
-            plot_cut_elastic_demand = true,
+        )
+    end
+
+    # Cost, plotted as the fixed price clearing with demand agents: minus the variable cost of the generation, plus the
+    # elastic demand valued at the elastic demand price
+    cost_file_path = get_variable_cost_file(inputs)
+    if isfile(cost_file_path)
+        plot_path = joinpath(plots_path, "total_cost")
+        plot_operator_output(
+            inputs,
+            plot_path,
+            get_name(inputs, cost_title_key);
+            bg_file_path = cost_file_path,
+            subtitle = cost_subtitle,
+            round_data = true,
+            fixed_component = bidding_group_fixed_cost(inputs),
+            negate_bg_data = plot_clearings,
+            elastic_demand_revenue_file_path = plot_clearings ? get_elastic_demand_revenue_file(cost_file_path) : "",
         )
     end
 
@@ -151,6 +189,12 @@ function build_ui_agents_plots(
     plots_path = joinpath(output_path(inputs), "plots", "agents")
     mkdir(plots_path)
     plot_virtual_reservoir_results = any_elements(inputs, VirtualReservoir)
+    # With demand agents, the revenues are plotted as the spot clearing and the costs as the fixed price clearing
+    plot_clearings = has_demand_agents(inputs)
+    revenue_key = plot_clearings ? "spot_clearing" : "revenue"
+    cost_title_key = plot_clearings ? "fixed_price_clearing" : "total_cost"
+    revenue_subtitle = plot_clearings ? get_name(inputs, "spot_clearing_subtitle") : ""
+    cost_subtitle = plot_clearings ? get_name(inputs, "fixed_price_clearing_subtitle") : ""
 
     # Profit
     profit_file_path = get_profit_file(inputs)
@@ -172,8 +216,6 @@ function build_ui_agents_plots(
                 bg_file_path = profit_file_path,
                 vr_file_path = vr_profit_file_path,
                 round_data = true,
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, profit_file_path; asset_owner_index),
-                plot_attended_elastic_demand = false,
             )
         end
     end
@@ -189,7 +231,7 @@ function build_ui_agents_plots(
         @assert length(revenue_files) == 2
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - $(get_name(inputs, "ex_ante_revenue"))"
+            title = "$ao_label - $(get_name(inputs, "ex_ante_$revenue_key"))"
             plot_path = joinpath(plots_path, "revenue_ex_ante_$ao_label.html")
             plot_agent_output(
                 inputs,
@@ -197,16 +239,15 @@ function build_ui_agents_plots(
                 asset_owner_index,
                 title;
                 bg_file_path = revenue_files[1],
+                subtitle = revenue_subtitle,
                 vr_file_path = vr_revenue_files[1],
                 round_data = true,
                 ex_ante_plot = true,
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, revenue_files[1]; asset_owner_index),
-                plot_attended_elastic_demand = false,
             )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - $(get_name(inputs, "ex_post_revenue"))"
+            title = "$ao_label - $(get_name(inputs, "ex_post_$revenue_key"))"
             plot_path = joinpath(plots_path, "revenue_ex_post_$ao_label.html")
             plot_agent_output(
                 inputs,
@@ -214,17 +255,38 @@ function build_ui_agents_plots(
                 asset_owner_index,
                 title;
                 bg_file_path = revenue_files[2],
+                subtitle = revenue_subtitle,
                 vr_file_path = vr_revenue_files[2],
                 round_data = true,
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, revenue_files[2]; asset_owner_index),
-                plot_attended_elastic_demand = false,
+            )
+        end
+        # Ex-ante revenue summed to every ex-post scenario, without splitting the bars by source
+        vr_total_revenue_file = if plot_virtual_reservoir_results
+            get_virtual_reservoir_two_settlement_total_revenue_file(inputs)
+        else
+            ""
+        end
+        for asset_owner_index in index_of_elements(inputs, AssetOwner)
+            ao_label = asset_owner_label(inputs, asset_owner_index)
+            title = "$ao_label - $(get_name(inputs, "total_$revenue_key"))"
+            plot_path = joinpath(plots_path, "revenue_$ao_label.html")
+            plot_agent_output(
+                inputs,
+                plot_path,
+                asset_owner_index,
+                title;
+                bg_file_path = get_two_settlement_total_revenue_file(inputs),
+                subtitle = revenue_subtitle,
+                vr_file_path = vr_total_revenue_file,
+                round_data = true,
+                merge_bg_and_vr = true,
             )
         end
     else
         @assert length(revenue_files) == 1
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - $(get_name(inputs, "total_revenue"))"
+            title = "$ao_label - $(get_name(inputs, "total_$revenue_key"))"
             plot_path = joinpath(plots_path, "revenue_$ao_label.html")
             plot_agent_output(
                 inputs,
@@ -232,10 +294,9 @@ function build_ui_agents_plots(
                 asset_owner_index,
                 title;
                 bg_file_path = revenue_files[1],
+                subtitle = revenue_subtitle,
                 vr_file_path = vr_revenue_files[1],
                 round_data = true,
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, revenue_files[1]; asset_owner_index),
-                plot_attended_elastic_demand = false,
             )
         end
     end
@@ -261,7 +322,6 @@ function build_ui_agents_plots(
                 bg_file_path = generation_files[1],
                 vr_file_path = vr_generation_files[1],
                 ex_ante_plot = true,
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, generation_files[1]; asset_owner_index),
             )
         end
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
@@ -275,7 +335,6 @@ function build_ui_agents_plots(
                 title;
                 bg_file_path = generation_files[2],
                 vr_file_path = vr_generation_files[2],
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, generation_files[2]; asset_owner_index),
             )
         end
     else
@@ -291,17 +350,18 @@ function build_ui_agents_plots(
                 title;
                 bg_file_path = generation_files[1],
                 vr_file_path = vr_generation_files[1],
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, generation_files[1]; asset_owner_index),
             )
         end
     end
 
-    # Costs
+    # Costs, plotted as the fixed price clearing with demand agents: minus the variable cost of the generation, plus the
+    # elastic demand valued at the elastic demand price
     cost_file_path = get_variable_cost_file(inputs)
     if isfile(cost_file_path)
+        elastic_demand_revenue_file_path = plot_clearings ? get_elastic_demand_revenue_file(cost_file_path) : ""
         for asset_owner_index in index_of_elements(inputs, AssetOwner)
             ao_label = asset_owner_label(inputs, asset_owner_index)
-            title = "$ao_label - $(get_name(inputs, "total_cost"))"
+            title = "$ao_label - $(get_name(inputs, cost_title_key))"
             plot_path = joinpath(plots_path, "cost_$ao_label.html")
             plot_agent_output(
                 inputs,
@@ -309,10 +369,12 @@ function build_ui_agents_plots(
                 asset_owner_index,
                 title;
                 bg_file_path = cost_file_path,
+                subtitle = cost_subtitle,
                 round_data = true,
                 fixed_component = bidding_group_fixed_cost(inputs),
-                cut_elastic_demand = get_cut_elastic_demand_to_plot(inputs, cost_file_path; asset_owner_index),
-                plot_attended_elastic_demand = false,
+                merge_fixed_component = plot_clearings,
+                negate_bg_data = plot_clearings,
+                elastic_demand_revenue_file_path,
             )
         end
     end
@@ -963,14 +1025,29 @@ function _demand_in_line(
     return ex_post_demand[subscenario, demand_time_index]
 end
 
-# Base of bars stacked on bars that span from `base` to `base + y`: positive values are stacked above the top of the
-# bars and negative values below their bottom
-function _stacked_bar_base(
-    values::AbstractVector{<:Real},
-    base::AbstractVector{<:Real},
-    y::AbstractVector{<:Real},
+# Layout title of a plot, with the subtitle below it if it is not empty
+function _plot_title(title::String, subtitle::String)
+    plot_title = Dict{String, Any}(
+        "text" => title,
+        "font" => Dict("size" => title_font_size()),
+    )
+    if !isempty(subtitle)
+        plot_title["subtitle"] = Dict("text" => subtitle)
+    end
+    return plot_title
+end
+
+# Sum of the fixed component of the bidding groups of the asset owner
+function _asset_owner_fixed_component(
+    inputs::AbstractInputs,
+    fixed_component::Vector{Float64},
+    asset_owner_index::Int,
 )
-    return ifelse.(values .>= 0, max.(base, base .+ y), min.(base, base .+ y))
+    asset_owner_bidding_groups = filter(
+        bg -> bidding_group_asset_owner_index(inputs, bg) == asset_owner_index,
+        index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs]),
+    )
+    return sum(fixed_component[asset_owner_bidding_groups]; init = 0.0)
 end
 
 function plot_agent_output(
@@ -983,21 +1060,22 @@ function plot_agent_output(
     round_data::Bool = false,
     ex_ante_plot::Bool = false,
     fixed_component::Vector{Float64} = Float64[],
+    # If true, the fixed component is added to the bidding group data instead of plotted as a separate bar
+    merge_fixed_component::Bool = false,
     subscenario_index::Union{Int, Nothing} = nothing,
-    cut_elastic_demand::Union{Matrix{Float64}, Nothing} = nothing,
-    # If false and there is cut elastic demand, the bidding group data is not plotted, leaving only the cut elastic demand
-    plot_attended_elastic_demand::Bool = true,
+    merge_bg_and_vr::Bool = false,
+    subtitle::String = "",
+    # If true, the bidding group data, including the fixed component, is plotted with the opposite sign
+    negate_bg_data::Bool = false,
+    # Elastic demand revenue file with the same dimensions as the bidding group file, added to the bidding group data
+    elastic_demand_revenue_file_path::String = "",
 )
     if isempty(bg_file_path) && isempty(vr_file_path)
         error("At least one of bg_file_path or vr_file_path must be provided")
     end
-    if !isnothing(cut_elastic_demand)
-        @assert !isempty(bg_file_path) "Cut elastic demand plotting requires bidding group data"
+    if !isempty(fixed_component) || negate_bg_data || !isempty(elastic_demand_revenue_file_path)
+        @assert !isempty(bg_file_path) "Fixed component and elastic demand plotting and negating data require bidding group data"
     end
-    # TODO: The bidding group data sums every bidding group of the asset owner, so if the asset owner also has
-    # generation (e.g. renewable units in the same bidding group as the elastic demand), it is hidden together with the
-    # attended elastic demand, or labeled as attended elastic demand. Only the attended elastic demand should be split.
-    plot_bg_data = isnothing(cut_elastic_demand) || plot_attended_elastic_demand
 
     # Read and format BG data
     if !isempty(bg_file_path)
@@ -1007,11 +1085,30 @@ function plot_agent_output(
             asset_owner_index,
             subscenario_index,
         )
+        if !isempty(fixed_component)
+            fixed_component =
+                [_asset_owner_fixed_component(inputs, fixed_component, asset_owner_index) / bg_num_subperiods]
+            if merge_fixed_component
+                bg_data = bg_data .+ fixed_component
+                fixed_component = Float64[]
+            end
+        end
+        if negate_bg_data
+            bg_data = -bg_data
+            fixed_component = -fixed_component
+        end
+        if !isempty(elastic_demand_revenue_file_path)
+            elastic_demand_revenue, _ = format_data_to_plot(
+                inputs,
+                elastic_demand_revenue_file_path;
+                asset_owner_index,
+                subscenario_index,
+            )
+            @assert size(elastic_demand_revenue) == size(bg_data) "Mismatch between elastic demand revenue and bidding group data dimensions"
+            bg_data = bg_data .+ elastic_demand_revenue
+        end
         if round_data
             bg_data = round.(bg_data; digits = 1)
-            if !isnothing(cut_elastic_demand)
-                cut_elastic_demand = round.(cut_elastic_demand; digits = 1)
-            end
         end
     end
 
@@ -1043,22 +1140,16 @@ function plot_agent_output(
         vr_metadata.unit
     end
 
-    # The fixed component is bidding group data, so it is left out when only the cut elastic demand is plotted
-    if !plot_bg_data
-        fixed_component = Float64[]
-    end
-
-    # Read and format fixed component data
-    if !isempty(fixed_component)
-        asset_owner_bidding_groups = Int[]
-        bidding_group_indexes =
-            index_of_elements(inputs, BiddingGroup; filters = [has_generation_besides_virtual_reservoirs])
-        for bg in bidding_group_indexes
-            if bidding_group_asset_owner_index(inputs, bg) == asset_owner_index
-                push!(asset_owner_bidding_groups, bg)
-            end
+    if merge_bg_and_vr && !isempty(bg_file_path) && !isempty(vr_file_path)
+        @assert vr_num_subscenarios == num_subscenarios "Mismatch between bidding group and virtual reservoir subscenarios"
+        # VR data has no subperiod dimension, so it is stored at subperiod index 1.
+        # Divide by num_subperiods to distribute the total evenly across subperiod bars.
+        bg_data = bg_data .+ vr_data[1:1, :] ./ num_subperiods
+        if round_data
+            bg_data = round.(bg_data; digits = 1)
         end
-        fixed_component = sum(fixed_component[asset_owner_bidding_groups]; dims = 1) / num_subperiods
+        # From here on, the merged data is plotted as a single bar
+        vr_file_path = ""
     end
 
     configs = Vector{Config}()
@@ -1092,10 +1183,7 @@ function plot_agent_output(
         end
 
         if !isempty(bg_file_path)
-            if !isnothing(cut_elastic_demand)
-                # The bidding group generation is the attended elastic demand, with a negative sign
-                variable_component_name = get_name(inputs, "attended_elastic_demand")
-            elseif !isempty(vr_file_path)
+            if !isempty(vr_file_path)
                 variable_component_name = title * get_name(inputs, "bidding_group_suffix")
             end
             if num_subperiods > 1
@@ -1103,47 +1191,22 @@ function plot_agent_output(
             end
 
             # Stack BG on top of positive VR
-            bg_y_values = plot_bg_data ? bg_data[subperiod, :] : zeros(Float64, num_subscenarios)
+            bg_y_values = bg_data[subperiod, :]
             bg_base = isempty(vr_file_path) ? zeros(Float64, num_subscenarios) : vr_y_positive
 
-            if plot_bg_data
-                push!(
-                    configs,
-                    Config(;
-                        x = 1:num_subscenarios,
-                        y = bg_y_values,
-                        base = bg_base,
-                        name = variable_component_name,
-                        marker = Dict("color" => _get_plot_color(subperiod)),
-                        type = "bar",
-                        customdata = bg_y_values,
-                        hovertemplate = "(%{customdata})",
-                    ),
-                )
-            end
-
-            # Stack the cut elastic demand on the attended elastic demand: below it when negative, as in the generation,
-            # where the bar then reaches the total elastic demand, and above it when positive
-            if !isnothing(cut_elastic_demand)
-                cut_component_name = get_name(inputs, "cut_elastic_demand")
-                if num_subperiods > 1
-                    cut_component_name *= " - $(get_name(inputs, "subperiod")) $subperiod"
-                end
-                cut_y_values = cut_elastic_demand[subperiod, :]
-                push!(
-                    configs,
-                    Config(;
-                        x = 1:num_subscenarios,
-                        y = cut_y_values,
-                        base = _stacked_bar_base(cut_y_values, bg_base, bg_y_values),
-                        name = cut_component_name,
-                        marker = Dict("color" => _get_plot_color(subperiod; light_shade = true)),
-                        type = "bar",
-                        customdata = cut_y_values,
-                        hovertemplate = "(%{customdata})",
-                    ),
-                )
-            end
+            push!(
+                configs,
+                Config(;
+                    x = 1:num_subscenarios,
+                    y = bg_y_values,
+                    base = bg_base,
+                    name = variable_component_name,
+                    marker = Dict("color" => _get_plot_color(subperiod)),
+                    type = "bar",
+                    customdata = bg_y_values,
+                    hovertemplate = "(%{customdata})",
+                ),
+            )
         end
         if !isempty(vr_file_path)
             vr_component_name = title
@@ -1211,10 +1274,7 @@ function plot_agent_output(
     end
     main_configuration = Config(;
         barmode = "overlay",
-        title = Dict(
-            "text" => title,
-            "font" => Dict("size" => title_font_size()),
-        ),
+        title = _plot_title(title, subtitle),
         xaxis = Dict(
             "title" => Dict(
                 "text" => x_axis_title,
@@ -1256,17 +1316,22 @@ function plot_operator_output(
     ex_ante_plot::Bool = false,
     subscenario_index::Union{Int, Nothing} = nothing,
     merge_bg_and_vr::Bool = false,
-    plot_cut_elastic_demand::Bool = false,
-    # If false, the bidding group data is not plotted for the asset owners with cut elastic demand, leaving only the
-    # cut elastic demand
-    plot_attended_elastic_demand::Bool = true,
+    subtitle::String = "",
+    # Fixed component of each bidding group, added to the bidding group data of its asset owner
+    fixed_component::Vector{Float64} = Float64[],
+    # If true, the bidding group data, including the fixed component, is plotted with the opposite sign
+    negate_bg_data::Bool = false,
+    # Elastic demand revenue file with the same dimensions as the bidding group file, added to the bidding group data
+    elastic_demand_revenue_file_path::String = "",
 )
     if isempty(bg_file_path) && isempty(vr_file_path)
         error("At least one of bg_file_path or vr_file_path must be provided")
     end
-    if plot_cut_elastic_demand
-        @assert !isempty(bg_file_path) "Cut elastic demand plotting requires bidding group data"
+    if !isempty(fixed_component) || negate_bg_data || !isempty(elastic_demand_revenue_file_path)
+        @assert !isempty(bg_file_path) "Fixed component and elastic demand plotting and negating data require bidding group data"
     end
+
+    asset_owner_indexes = index_of_elements(inputs, AssetOwner)
 
     if !isempty(bg_file_path)
         bg_data, bg_metadata, bg_num_subperiods, bg_num_subscenarios = format_data_to_plot(
@@ -1274,6 +1339,24 @@ function plot_operator_output(
             bg_file_path;
             subscenario_index,
         )
+        if !isempty(fixed_component)
+            for asset_owner_index in asset_owner_indexes
+                bg_data[asset_owner_index, :, :] .+=
+                    _asset_owner_fixed_component(inputs, fixed_component, asset_owner_index) / bg_num_subperiods
+            end
+        end
+        if negate_bg_data
+            bg_data = -bg_data
+        end
+        if !isempty(elastic_demand_revenue_file_path)
+            elastic_demand_revenue, _ = format_data_to_plot(
+                inputs,
+                elastic_demand_revenue_file_path;
+                subscenario_index,
+            )
+            @assert size(elastic_demand_revenue) == size(bg_data) "Mismatch between elastic demand revenue and bidding group data dimensions"
+            bg_data = bg_data .+ elastic_demand_revenue
+        end
         if round_data
             bg_data = round.(bg_data; digits = 1)
         end
@@ -1317,19 +1400,6 @@ function plot_operator_output(
         vr_file_path = ""
     end
 
-    asset_owner_indexes = index_of_elements(inputs, AssetOwner)
-
-    # Cut elastic demand of the asset owners that have elastic demand
-    cut_elastic_demand = Dict{Int, Matrix{Float64}}()
-    if plot_cut_elastic_demand
-        for asset_owner_index in asset_owner_indexes
-            cut = get_cut_elastic_demand_to_plot(inputs, bg_file_path; asset_owner_index)
-            if !isnothing(cut)
-                cut_elastic_demand[asset_owner_index] = round_data ? round.(cut; digits = 1) : cut
-            end
-        end
-    end
-
     for subperiod in 1:num_subperiods
         # First pass: collect all positive VR cumulative sums per x position for stacking BG on top
         positive_vr_cumsum = Dict{Int, Vector{Float64}}()
@@ -1361,22 +1431,11 @@ function plot_operator_output(
                 asset_owner_index:(length(asset_owner_indexes)+1):num_subscenarios*(length(asset_owner_indexes)+1)
 
             if !isempty(bg_file_path)
-                has_cut_elastic_demand = haskey(cut_elastic_demand, asset_owner_index)
-                # TODO: Same as in plot_agent_output, the generation of an asset owner with elastic demand is hidden
-                # together with the attended elastic demand, or labeled as attended elastic demand
-                plot_bg_data = !has_cut_elastic_demand || plot_attended_elastic_demand
                 ao_label_for_bg = ao_label
-                if has_cut_elastic_demand
-                    # The bidding group generation is the attended elastic demand, with a negative sign
-                    ao_label_for_bg *= " - $(get_name(inputs, "attended_elastic_demand"))"
-                elseif !isempty(vr_file_path)
+                if !isempty(vr_file_path)
                     ao_label_for_bg *= get_name(inputs, "bidding_group_suffix")
                 end
-                bg_y_values = if plot_bg_data
-                    vcat(bg_data[asset_owner_index, subperiod, :], 0.0)
-                else
-                    zeros(Float64, num_subscenarios + 1)
-                end
+                bg_y_values = vcat(bg_data[asset_owner_index, subperiod, :], 0.0)
 
                 # Stack BG on top of positive VR
                 bg_base = zeros(Float64, length(bg_y_values))
@@ -1388,42 +1447,20 @@ function plot_operator_output(
                     end
                 end
 
-                if plot_bg_data
-                    push!(
-                        configs,
-                        Config(;
-                            x = x_positions,
-                            y = bg_y_values,
-                            base = bg_base,
-                            name = ao_label_for_bg,
-                            marker = Dict("color" => _get_plot_color(asset_owner_index)),
-                            type = "bar",
-                            width = 1,
-                            customdata = bg_y_values,
-                            hovertemplate = "(%{customdata})",
-                        ),
-                    )
-                end
-
-                # Stack the cut elastic demand on the attended elastic demand: below it when negative, as in the
-                # generation, where the bar then reaches the total elastic demand, and above it when positive
-                if has_cut_elastic_demand
-                    cut_y_values = vcat(cut_elastic_demand[asset_owner_index][subperiod, :], 0.0)
-                    push!(
-                        configs,
-                        Config(;
-                            x = x_positions,
-                            y = cut_y_values,
-                            base = _stacked_bar_base(cut_y_values, bg_base, bg_y_values),
-                            name = "$ao_label - $(get_name(inputs, "cut_elastic_demand"))",
-                            marker = Dict("color" => _get_plot_color(asset_owner_index; light_shade = true)),
-                            type = "bar",
-                            width = 1,
-                            customdata = cut_y_values,
-                            hovertemplate = "(%{customdata})",
-                        ),
-                    )
-                end
+                push!(
+                    configs,
+                    Config(;
+                        x = x_positions,
+                        y = bg_y_values,
+                        base = bg_base,
+                        name = ao_label_for_bg,
+                        marker = Dict("color" => _get_plot_color(asset_owner_index)),
+                        type = "bar",
+                        width = 1,
+                        customdata = bg_y_values,
+                        hovertemplate = "(%{customdata})",
+                    ),
+                )
             end
 
             if !isempty(vr_file_path)
@@ -1501,10 +1538,7 @@ function plot_operator_output(
         end
         main_configuration = Config(;
             barmode = "overlay",
-            title = Dict(
-                "text" => plot_title,
-                "font" => Dict("size" => title_font_size()),
-            ),
+            title = _plot_title(plot_title, subtitle),
             xaxis = Dict(
                 "title" => Dict(
                     "text" => x_axis_title,

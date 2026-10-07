@@ -58,13 +58,33 @@ function calculate_profits_settlement(
         "bidding_group_profit_$(settlement_string)" * run_time_file_suffixes(inputs, run_time_options),
     )
 
-    Quiver.apply_expression(
-        file_profit,
-        [file_revenue, file_total_costs],
-        -,
-        Quiver.csv;
-        digits = 6,
+    # The elastic demand revenue is written for the same clearing procedure as the variable costs, if there is elastic
+    # demand in the bidding groups
+    bidding_group_elastic_demand_revenue_file = joinpath(
+        post_processing_dir,
+        replace(
+            basename(bidding_group_variable_costs_file),
+            "bidding_group_variable_costs" => "bidding_group_elastic_demand_revenue",
+        ),
     )
+
+    if isfile(bidding_group_elastic_demand_revenue_file * ".csv")
+        Quiver.apply_expression(
+            file_profit,
+            [file_revenue, file_total_costs, bidding_group_elastic_demand_revenue_file],
+            (revenue, costs, elastic_demand_revenue) -> revenue - costs + elastic_demand_revenue,
+            Quiver.csv;
+            digits = 6,
+        )
+    else
+        Quiver.apply_expression(
+            file_profit,
+            [file_revenue, file_total_costs],
+            -,
+            Quiver.csv;
+            digits = 6,
+        )
+    end
 
     return nothing
 end

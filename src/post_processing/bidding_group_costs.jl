@@ -373,10 +373,150 @@ function _write_fixed_costs_bg_file(
     return nothing
 end
 
+# Revenue of the elastic demand of each bidding group, which is its attended elastic demand valued at the elastic demand
+# price. It is written for the same clearing procedures as the costs, so that the profit can add it to the revenue.
+function _write_elastic_demand_revenue_bg_file(
+    inputs::Inputs,
+    outputs_post_processing::Outputs,
+    model_outputs_time_serie::OutputReaders,
+    run_time_options::RunTimeOptions,
+    clearing_procedure::String;
+    is_ex_post::Bool = false,
+)
+    outputs_dir = output_path(inputs, run_time_options)
+    post_processing_dir = post_processing_path(inputs, run_time_options)
+
+    attended_elastic_demand_file = joinpath(
+        outputs_dir,
+        "attended_elastic_demand_$(clearing_procedure)" * run_time_file_suffixes(inputs, run_time_options),
+    )
+    if !isfile(attended_elastic_demand_file * ".csv")
+        return nothing
+    end
+
+    elastic_demand_price, elastic_demand_price_metadata = read_timeseries_file(
+        get_quiver_file_path(joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs))),
+    )
+    if elastic_demand_price_metadata.dimensions != [:period, :scenario, :subperiod]
+        @warn "Elastic demand revenue not implemented for elastic demand price dimensions $(elastic_demand_price_metadata.dimensions)"
+        return nothing
+    end
+
+    if is_ex_post
+        dimensions = ["period", "scenario", "subscenario", "subperiod"]
+    else
+        dimensions = ["period", "scenario", "subperiod"]
+    end
+
+    labels_by_pairs = labels_for_output_by_pair_of_agents(
+        inputs,
+        run_time_options,
+        inputs.collections.bidding_group,
+        inputs.collections.bus;
+        index_getter = all_buses,
+        filters_to_apply_in_first_collection = [has_generation_besides_virtual_reservoirs],
+    )
+
+    initialize!(
+        QuiverOutput,
+        outputs_post_processing;
+        inputs,
+        output_name = "bidding_group_elastic_demand_revenue_$(clearing_procedure)",
+        dimensions = dimensions,
+        unit = "\$",
+        labels = labels_by_pairs,
+        run_time_options,
+        dir_path = post_processing_dir,
+    )
+
+    bidding_group_elastic_demand_revenue_writer = get_writer(
+        outputs_post_processing,
+        inputs,
+        run_time_options,
+        "bidding_group_elastic_demand_revenue_$(clearing_procedure)",
+    )
+
+    attended_elastic_demand_reader =
+        open_time_series_output(inputs, model_outputs_time_serie, attended_elastic_demand_file)
+
+    # The file labels may be in a different order than the demand units
+    elastic_demand_units = index_of_elements(inputs, DemandUnit; filters = [is_elastic, !has_no_bidding_group])
+    attended_elastic_demand_indexes = Int[]
+    elastic_demand_price_indexes = Int[]
+    bidding_group_bus_indexes = Int[]
+    for d in elastic_demand_units
+        label = demand_unit_label(inputs, d)
+        push!(
+            attended_elastic_demand_indexes,
+            findfirst(isequal(label), attended_elastic_demand_reader.metadata.labels),
+        )
+        push!(elastic_demand_price_indexes, findfirst(isequal(label), elastic_demand_price_metadata.labels))
+        bidding_group_bus_label = "$(bidding_group_label(inputs, demand_unit_bidding_group_index(inputs, d))) - $(bus_label(inputs, demand_unit_bus_index(inputs, d)))"
+        push!(bidding_group_bus_indexes, findfirst(isequal(bidding_group_bus_label), labels_by_pairs))
+    end
+
+    # Elastic demand revenue at the current position of the attended elastic demand reader
+    function elastic_demand_revenue_by_pairs(price_period::Int, scenario::Int, subperiod::Int)
+        bidding_group_elastic_demand_revenue = zeros(length(labels_by_pairs))
+        for i in eachindex(elastic_demand_units)
+            # The data array has the dimensions in reverse order
+            price = elastic_demand_price[elastic_demand_price_indexes[i], subperiod, scenario, price_period]
+            # GWh to MWh
+            bidding_group_elastic_demand_revenue[bidding_group_bus_indexes[i]] +=
+                attended_elastic_demand_reader.data[attended_elastic_demand_indexes[i]] * price / MW_to_GW()
+        end
+        return bidding_group_elastic_demand_revenue
+    end
+
+    num_periods = if is_single_period(inputs)
+        1
+    else
+        number_of_periods(inputs)
+    end
+
+    for period in 1:num_periods
+        # The elastic demand price file has every period of the study
+        price_period = is_single_period(inputs) ? inputs.args.period : period
+        for scenario in scenarios(inputs)
+            if is_ex_post
+                for subscenario in subscenarios(inputs, run_time_options)
+                    for subperiod in subperiods(inputs)
+                        Quiver.goto!(attended_elastic_demand_reader; period, scenario, subscenario, subperiod)
+                        Quiver.write!(
+                            bidding_group_elastic_demand_revenue_writer,
+                            elastic_demand_revenue_by_pairs(price_period, scenario, subperiod);
+                            period,
+                            scenario,
+                            subscenario,
+                            subperiod,
+                        )
+                    end
+                end
+            else
+                for subperiod in subperiods(inputs)
+                    Quiver.goto!(attended_elastic_demand_reader; period, scenario, subperiod)
+                    Quiver.write!(
+                        bidding_group_elastic_demand_revenue_writer,
+                        elastic_demand_revenue_by_pairs(price_period, scenario, subperiod);
+                        period,
+                        scenario,
+                        subperiod,
+                    )
+                end
+            end
+        end
+    end
+
+    Quiver.close!(bidding_group_elastic_demand_revenue_writer)
+
+    return nothing
+end
+
 """
     create_bidding_group_cost_files(inputs::Inputs, outputs_post_processing::Outputs, model_outputs_time_serie::OutputReaders, run_time_options::RunTimeOptions)
 
-Create the bidding group cost files for ex-ante and ex-post data (physical and commercial).
+Create the bidding group cost files for ex-ante and ex-post data (physical and commercial), and the elastic demand
+revenue files for the same data.
 """
 function create_bidding_group_cost_files(
     inputs::Inputs,
@@ -398,6 +538,12 @@ function create_bidding_group_cost_files(
         construction_type_ex_post_commercial(inputs)
     ]
     is_ex_post = [false, false, true, true]
+
+    write_elastic_demand_revenue = any_elements(inputs, DemandUnit; filters = [is_elastic, !has_no_bidding_group])
+    if write_elastic_demand_revenue && isempty(demand_unit_elastic_demand_price_file(inputs))
+        @warn "Elastic demand price file not linked, the elastic demand revenue will not be added to the bidding group profits"
+        write_elastic_demand_revenue = false
+    end
 
     for (i, clearing_procedure) in enumerate(clearing_procedures)
         # Skip if there isn't physical data for construction type
@@ -425,6 +571,16 @@ function create_bidding_group_cost_files(
             clearing_procedure;
             is_ex_post = is_ex_post[i],
         )
+        if write_elastic_demand_revenue
+            _write_elastic_demand_revenue_bg_file(
+                inputs,
+                outputs_post_processing,
+                model_outputs_time_serie,
+                run_time_options,
+                clearing_procedure;
+                is_ex_post = is_ex_post[i],
+            )
+        end
     end
 
     return

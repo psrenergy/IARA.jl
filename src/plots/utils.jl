@@ -209,27 +209,38 @@ function get_virtual_reservoir_generation_files(inputs::AbstractInputs)
     return filenames
 end
 
+# Returns an empty string if no cost file is found, which happens when every clearing is bid-based or skipped
 function get_variable_cost_file(inputs::AbstractInputs)
     base_name = "bidding_group_variable_costs"
     period_suffix = "_period_$(inputs.args.period)"
     extension = ".csv"
 
     subproblem_suffixes = ["_ex_post_physical", "_ex_post_commercial", "_ex_ante_physical", "_ex_ante_commercial"]
-    filename = ""
 
     for subproblem_suffix in subproblem_suffixes
         filename = base_name * subproblem_suffix * period_suffix * extension
-        if isfile(joinpath(output_path(inputs), filename))
-            break
-        elseif isfile(joinpath(post_processing_path(inputs), filename))
-            break
-        end
-        if subproblem_suffix == last(subproblem_suffixes)
-            error("Cost file not found")
+        for dir in [output_path(inputs), post_processing_path(inputs)]
+            if isfile(joinpath(dir, filename))
+                return joinpath(dir, filename)
+            end
         end
     end
 
-    return joinpath(post_processing_path(inputs), filename)
+    return ""
+end
+
+# Elastic demand revenue file written by the post-processing for the same clearing procedure as the variable cost
+# file, so that both have the same dimensions. Returns an empty string if it is not found, which happens when there is
+# no elastic demand in the bidding groups or the elastic demand price file is not linked.
+function get_elastic_demand_revenue_file(variable_cost_file_path::String)
+    file_path = joinpath(
+        dirname(variable_cost_file_path),
+        replace(
+            basename(variable_cost_file_path),
+            "bidding_group_variable_costs" => "bidding_group_elastic_demand_revenue",
+        ),
+    )
+    return isfile(file_path) ? file_path : ""
 end
 
 function get_load_marginal_cost_files(inputs::AbstractInputs)
@@ -413,235 +424,10 @@ function get_demands_to_plot(
     return ex_ante_demand, ex_post_demand
 end
 
-# Cut elastic demand of the asset owner in the plotted quantity of a bidding group file, with dimensions
-# (subperiod, subscenario):
-# - generation files: the cut elastic demand in MW, with a negative sign like the attended elastic demand
-# - revenue files: the cut elastic demand valued at the spot price, in $
-# - cost files: the cut elastic demand valued at the elastic demand price, in $
-# - profit files: the revenue minus the cost above, in $
-# Returns nothing if the asset owner has no elastic demand.
-function get_cut_elastic_demand_to_plot(
-    inputs::AbstractInputs,
-    bg_file_path::String;
-    asset_owner_index::Int,
-)
-    demand_units = filter(
-        d ->
-            bidding_group_asset_owner_index(inputs, demand_unit_bidding_group_index(inputs, d)) == asset_owner_index,
-        index_of_elements(inputs, DemandUnit; filters = [is_existing, is_elastic, !has_no_bidding_group]),
-    )
-    if isempty(demand_units)
-        return nothing
-    end
-
-    bg_file_name = basename(bg_file_path)
-    if startswith(bg_file_name, "bidding_group_generation")
-        # The demand outputs are read from the same subproblem as the generation file
-        file_suffix = replace(bg_file_name, "bidding_group_generation" => "")
-        cut_demand = _get_cut_elastic_demand_per_unit(
-            inputs,
-            demand_units,
-            file_suffix;
-            asset_owner_index,
-            convert_to_MW = true,
-        )
-        if isnothing(cut_demand)
-            return nothing
-        end
-        return -dropdims(sum(cut_demand; dims = 1); dims = 1)
-    elseif occursin("revenue", bg_file_name)
-        return _get_cut_elastic_demand_revenue(inputs, demand_units, bg_file_name; asset_owner_index)
-    elseif occursin("profit", bg_file_name)
-        revenue = _get_cut_elastic_demand_revenue(inputs, demand_units, bg_file_name; asset_owner_index)
-        cost = _get_cut_elastic_demand_cost(inputs, demand_units; asset_owner_index)
-        if isnothing(revenue) || isnothing(cost)
-            return nothing
-        end
-        return revenue .- cost
-    elseif occursin("cost", bg_file_name)
-        return _get_cut_elastic_demand_cost(inputs, demand_units; asset_owner_index)
-    else
-        error("Cut elastic demand plotting not implemented for file $(bg_file_path)")
-    end
-end
-
-# Revenue of the cut elastic demand valued at the spot price of each demand unit's bus or zone, in $, with dimensions
-# (subperiod, subscenario). The cut elastic demand is settled like the bidding group generation in the revenue of the
-# bidding group file: in the ex-ante settlement, the ex-post cut demand is valued at the ex-ante spot price; in the
-# two-settlement, the ex-post revenue values the difference between the ex-post and ex-ante cut demand at the ex-post
-# spot price, and the total revenue (also used in the profit) is the sum of the ex-ante and ex-post revenues.
-function _get_cut_elastic_demand_revenue(
-    inputs::AbstractInputs,
-    demand_units::Vector{Int},
-    bg_file_name::String;
-    asset_owner_index::Int,
-)
-    # Settlement terms as (cut demand subproblem, spot price subproblem, sign)
-    settlement_terms = if settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_ANTE
-        [("ex_post", "ex_ante", 1.0)]
-    elseif settlement_type(inputs) == IARA.Configurations_FinancialSettlementType.EX_POST
-        [("ex_post", "ex_post", 1.0)]
-    elseif occursin("ex_ante", bg_file_name)
-        [("ex_ante", "ex_ante", 1.0)]
-    elseif occursin("ex_post", bg_file_name)
-        [("ex_post", "ex_post", 1.0), ("ex_ante", "ex_post", -1.0)]
-    else
-        [("ex_ante", "ex_ante", 1.0), ("ex_post", "ex_post", 1.0), ("ex_ante", "ex_post", -1.0)]
-    end
-
-    revenue = zeros(number_of_subperiods(inputs), 1)
-    for (cut_demand_subproblem, spot_price_subproblem, sign) in settlement_terms
-        # Like the bidding group revenue, use the physical demand and the commercial spot price when available
-        cut_demand_file_suffix = _output_file_suffix(
-            inputs,
-            "demand",
-            ["$(cut_demand_subproblem)_physical", "$(cut_demand_subproblem)_commercial"],
-        )
-        spot_price_file_suffix = _output_file_suffix(
-            inputs,
-            "load_marginal_cost",
-            ["$(spot_price_subproblem)_commercial", "$(spot_price_subproblem)_physical"],
-        )
-        if isnothing(cut_demand_file_suffix) || isnothing(spot_price_file_suffix)
-            @warn "Demand or spot price files not found, the cut elastic demand revenue will not be plotted"
-            return nothing
-        end
-        cut_demand = _get_cut_elastic_demand_per_unit(
-            inputs,
-            demand_units,
-            cut_demand_file_suffix;
-            asset_owner_index,
-            convert_to_MW = false,
-        )
-        if isnothing(cut_demand)
-            return nothing
-        end
-        spot_price, _ = format_data_to_plot(
-            inputs,
-            joinpath(output_path(inputs), "load_marginal_cost" * spot_price_file_suffix);
-            asset_owner_index,
-            aggregate_header_by_asset_owner = false,
-        )
-        spot_price = reshape(apply_lmc_bounds(vec(spot_price), inputs), size(spot_price))
-
-        network_representation = if spot_price_subproblem == "ex_ante"
-            network_representation_ex_ante_commercial(inputs)
-        else
-            network_representation_ex_post_commercial(inputs)
-        end
-        for (i, d) in enumerate(demand_units)
-            location_index = if network_representation == Configurations_NetworkRepresentation.ZONAL
-                demand_unit_zone_index(inputs, d)
-            else
-                demand_unit_bus_index(inputs, d)
-            end
-            # GWh to MWh
-            revenue = revenue .+ sign .* cut_demand[i, :, :] .* spot_price[location_index, :, :] ./ MW_to_GW()
-        end
-    end
-
-    return revenue
-end
-
-# Cost of the cut elastic demand valued at the elastic demand price of each demand unit, in $, with dimensions
-# (subperiod, subscenario). Like the bidding group costs in the profit, it uses the ex-post cut demand.
-# Returns nothing if the elastic demand price or the demand outputs are not found.
-function _get_cut_elastic_demand_cost(
-    inputs::AbstractInputs,
-    demand_units::Vector{Int};
-    asset_owner_index::Int,
-)
-    if isempty(demand_unit_elastic_demand_price_file(inputs))
-        @warn "Elastic demand price file not linked, the cut elastic demand cost will not be plotted"
-        return nothing
-    end
-    cut_demand_file_suffix = _output_file_suffix(inputs, "demand", ["ex_post_physical", "ex_post_commercial"])
-    if isnothing(cut_demand_file_suffix)
-        @warn "Ex-post demand files not found, the cut elastic demand cost will not be plotted"
-        return nothing
-    end
-    cut_demand = _get_cut_elastic_demand_per_unit(
-        inputs,
-        demand_units,
-        cut_demand_file_suffix;
-        asset_owner_index,
-        convert_to_MW = false,
-    )
-    if isnothing(cut_demand)
-        return nothing
-    end
-
-    elastic_demand_price_file = joinpath(path_case(inputs), demand_unit_elastic_demand_price_file(inputs) * ".csv")
-    elastic_demand_price, elastic_demand_price_metadata = read_timeseries_file(elastic_demand_price_file)
-    @assert elastic_demand_price_metadata.dimensions == [:period, :scenario, :subperiod] "Invalid dimensions $(elastic_demand_price_metadata.dimensions) for time series file $(elastic_demand_price_file)"
-    # Use only the first scenario, like the other plots
-    scenario = 1
-
-    cost = zeros(size(cut_demand, 2), size(cut_demand, 3))
-    for (i, d) in enumerate(demand_units)
-        label_index = findfirst(isequal(demand_unit_label(inputs, d)), elastic_demand_price_metadata.labels)
-        # The data array has the dimensions in reverse order
-        price = elastic_demand_price[label_index, :, scenario, inputs.args.period]
-        # GWh to MWh
-        cost .+= cut_demand[i, :, :] .* price ./ MW_to_GW()
-    end
-
-    return cost
-end
-
-# Cut elastic demand (demand minus attended elastic demand) of each demand unit, in GWh or in MW, with dimensions
-# (demand unit, subperiod, subscenario). The file suffix selects the subproblem and period of the demand outputs,
-# e.g. "_ex_post_physical_period_1.csv". Returns nothing if the demand outputs are not found.
-function _get_cut_elastic_demand_per_unit(
-    inputs::AbstractInputs,
-    demand_units::Vector{Int},
-    file_suffix::String;
-    asset_owner_index::Int,
-    convert_to_MW::Bool,
-)
-    demand_file_path = joinpath(output_path(inputs), "demand" * file_suffix)
-    attended_demand_file_path = joinpath(output_path(inputs), "attended_elastic_demand" * file_suffix)
-    if !isfile(demand_file_path) || !isfile(attended_demand_file_path)
-        @warn "Demand files not found, the cut elastic demand will not be plotted: $(demand_file_path), $(attended_demand_file_path)"
-        return nothing
-    end
-
-    demand, demand_metadata = format_data_to_plot(
-        inputs,
-        demand_file_path;
-        asset_owner_index,
-        aggregate_header_by_asset_owner = false,
-        convert_to_MW,
-    )
-    attended_demand, attended_demand_metadata = format_data_to_plot(
-        inputs,
-        attended_demand_file_path;
-        asset_owner_index,
-        aggregate_header_by_asset_owner = false,
-        convert_to_MW,
-    )
-
-    cut_demand = zeros(length(demand_units), size(demand, 2), size(demand, 3))
-    for (i, d) in enumerate(demand_units)
-        label = demand_unit_label(inputs, d)
-        demand_index = findfirst(isequal(label), demand_metadata.labels)
-        attended_demand_index = findfirst(isequal(label), attended_demand_metadata.labels)
-        cut_demand[i, :, :] = demand[demand_index, :, :] .- attended_demand[attended_demand_index, :, :]
-    end
-
-    # Remove negative values that come from numerical noise
-    return max.(cut_demand, 0.0)
-end
-
-# Suffix of the first output file of the period found among the subproblems, e.g. "_ex_post_physical_period_1.csv"
-function _output_file_suffix(inputs::AbstractInputs, base_name::String, subproblems::Vector{String})
-    for subproblem in subproblems
-        file_suffix = "_$(subproblem)_period_$(inputs.args.period).csv"
-        if isfile(joinpath(output_path(inputs), base_name * file_suffix))
-            return file_suffix
-        end
-    end
-    return nothing
+# Whether some asset owner has elastic demand that bids through its bidding groups. In this case, the revenue plots
+# show the spot clearing and the cost plots show the fixed price clearing.
+function has_demand_agents(inputs::AbstractInputs)
+    return any_elements(inputs, DemandUnit; filters = [is_existing, is_elastic, !has_no_bidding_group])
 end
 
 function get_renewable_generation_to_plot(
@@ -676,7 +462,9 @@ function get_renewable_generation_to_plot(
         # Use only first scenario
         scenario = 1
         for r in renewable_units
-            ex_ante_generation += data[r, scenario, :] * renewable_unit_max_generation(inputs, r)
+            # The file labels may be in a different order than the renewable units
+            label_index = findfirst(isequal(renewable_unit_label(inputs, r)), metadata.labels)
+            ex_ante_generation += data[label_index, scenario, :] * renewable_unit_max_generation(inputs, r)
         end
         if num_scenarios > 1
             @warn "Plotting renewable generation for scenario 1 and ignoring the other scenarios. Total number of scenarios in file $generation_file: $num_scenarios"
@@ -696,7 +484,9 @@ function get_renewable_generation_to_plot(
         # Use only first scenario
         scenario = 1
         for r in renewable_units
-            ex_post_generation += data[r, :, scenario, :] * renewable_unit_max_generation(inputs, r)
+            # The file labels may be in a different order than the renewable units
+            label_index = findfirst(isequal(renewable_unit_label(inputs, r)), metadata.labels)
+            ex_post_generation += data[label_index, :, scenario, :] * renewable_unit_max_generation(inputs, r)
         end
         if num_scenarios > 1
             @warn "Plotting renewable generation for scenario 1 and ignoring the other scenarios. Total number of scenarios in file $generation_file: $num_scenarios"

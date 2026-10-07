@@ -140,6 +140,22 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
             "en" => "Ex-Post Revenue",
             "pt" => "Receita Ex-Post",
         ),
+        "total_spot_clearing" => Dict(
+            "en" => "Total Spot Clearing",
+            "pt" => "Liquidação Total a Preço Spot",
+        ),
+        "ex_ante_spot_clearing" => Dict(
+            "en" => "Ex-Ante Spot Clearing",
+            "pt" => "Liquidação a Preço Spot Ex-Ante",
+        ),
+        "ex_post_spot_clearing" => Dict(
+            "en" => "Ex-Post Spot Clearing",
+            "pt" => "Liquidação a Preço Spot Ex-Post",
+        ),
+        "spot_clearing_subtitle" => Dict(
+            "en" => "Generator Revenue / Demand Cost",
+            "pt" => "Receita do Gerador / Custo da Demanda",
+        ),
         "total_generation" => Dict(
             "en" => "Total Generation",
             "pt" => "Geração Total",
@@ -171,14 +187,6 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
         "deficit" => Dict(
             "en" => "Deficit",
             "pt" => "Déficit",
-        ),
-        "attended_elastic_demand" => Dict(
-            "en" => "Attended Elastic Demand",
-            "pt" => "Demanda Elástica Atendida",
-        ),
-        "cut_elastic_demand" => Dict(
-            "en" => "Cut Elastic Demand",
-            "pt" => "Demanda Elástica Cortada",
         ),
         "available_bids" => Dict(
             "en" => "Available Bids",
@@ -231,6 +239,14 @@ function fill_plot_strings_dict!(inputs::AbstractInputs)
         "total_cost" => Dict(
             "en" => "Total Cost",
             "pt" => "Custo Total",
+        ),
+        "fixed_price_clearing" => Dict(
+            "en" => "Fixed Price Clearing",
+            "pt" => "Liquidação a Preço Fixo",
+        ),
+        "fixed_price_clearing_subtitle" => Dict(
+            "en" => "Generator Cost / Demand Revenue",
+            "pt" => "Custo do Gerador / Receita da Demanda",
         ),
         "final_energy_account" => Dict(
             "en" => "Virtual Reservoir Final Energy Account",

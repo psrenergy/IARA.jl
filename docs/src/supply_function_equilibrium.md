@@ -190,6 +190,24 @@ Each agent's optimal slope ``b_i^*(k)`` balances:
 
 In competitive markets (large ``|\mathcal{A}|``, high ``B_k``), slopes approach marginal costs. In concentrated markets, markups are substantial.
 
+### Subperiod Disaggregation
+
+The equilibrium of a bidding group is computed on its subperiod-aggregated curve, so the result is split back across
+subperiods following the original bids. The equilibrium marks prices up but keeps each agent's merit order: the ``n``-th
+MWh of an agent's equilibrium curve is the ``n``-th MWh of its aggregated reference curve. Each stretch ``[a, b]`` of
+cumulative quantity on the equilibrium curve therefore takes its energy from the subperiods that the original bids at
+the same cumulative quantity come from:
+
+```math
+Q_{i,\tau}([a, b]) = \sum_{k \in K_i} \left| [a, b] \cap [\bar{q}_i(k-1), \bar{q}_i(k)] \right| \cdot \frac{Q_{i,k,\tau}}{Q_{i,k,agg}}
+```
+
+where segment ``k`` of the aggregated reference curve, in ascending price order, spans the cumulative quantities
+``[\bar{q}_i(k-1), \bar{q}_i(k)]`` and gathers ``Q_{i,k,\tau}`` from subperiod ``\tau``, out of ``Q_{i,k,agg}`` in all.
+Prices are repeated across subperiods. An equilibrium segment built on a renewable unit's energy thus follows that unit's
+availability across subperiods, while the energy of a unit with constant capacity is split in proportion to subperiod
+duration.
+
 ## Virtual Reservoirs vs Bidding Groups
 
 The SFE algorithm treats both entity types in a unified framework with key differences:
@@ -203,7 +221,8 @@ The SFE algorithm treats both entity types in a unified framework with key diffe
 - Have subperiod dimension (intra-period variation)
 - Reference curves from unit offers
 - Aggregated across subperiods before SFE
-- Results disaggregated back proportionally after equilibrium
+- Results split back across subperiods following the original bids after equilibrium (see
+  [Subperiod Disaggregation](@ref))
 - Each BG-Bus pair is an agent
 
 **Unified Treatment:**

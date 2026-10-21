@@ -7,6 +7,13 @@ struct AgentMapping
     original_agent_id::Int           # Asset owner ID or Bidding group ID
 end
 
+# How the subperiod-aggregated reference curve of a bidding group splits across subperiods, used to bring the
+# equilibrium curve back to subperiods. See `bidding_group_subperiod_shape`.
+struct SubperiodShape
+    cumulative_quantity::Vector{Float64}  # Cumulative quantity at the end of each segment, in ascending price order
+    subperiod_share::Matrix{Float64}      # Share of each segment's quantity in each subperiod, (segment, subperiod)
+end
+
 function supply_function_equilibrium(
     inputs::AbstractInputs,
     outputs::Outputs,
@@ -68,6 +75,7 @@ function supply_function_equilibrium(
     bg_quantity_output = nothing
     bg_price_output = nothing
     bg_slope_output = nothing
+    bg_subperiod_shapes = nothing
     has_bidding_groups = any_elements(inputs, BiddingGroup) && has_any_simple_bids(inputs)
 
     if has_bidding_groups
@@ -100,6 +108,7 @@ function supply_function_equilibrium(
             number_of_output_iterations,
             maximum_number_of_segments_in_supply_function_equilibrium(inputs),
         )
+        bg_subperiod_shapes = Matrix{SubperiodShape}(undef, number_of_bidding_groups, number_of_buses)
     end
 
     # Aggregate all bids into a single (q, p, b) triple
@@ -138,7 +147,7 @@ function supply_function_equilibrium(
     # Add all BG bids
     if has_bidding_groups
         for bus in buses
-            q, p, b = treat_bidding_group_data(
+            q, p, b, subperiod_shapes = treat_bidding_group_data(
                 inputs,
                 bg_original_quantity_bid,
                 bg_original_price_bid,
@@ -150,6 +159,7 @@ function supply_function_equilibrium(
                 push!(global_q, q[local_idx])
                 push!(global_p, p[local_idx])
                 push!(global_b, b[local_idx])
+                bg_subperiod_shapes[local_idx, bus] = subperiod_shapes[local_idx]
                 push!(
                     agent_mappings,
                     AgentMapping(global_agent_index, :bg, bus, local_idx, bg),
@@ -226,6 +236,7 @@ function supply_function_equilibrium(
             bg_quantity_output,
             bg_price_output,
             bg_slope_output,
+            bg_subperiod_shapes,
             period,
             scenario,
         )
@@ -238,6 +249,7 @@ function supply_function_equilibrium(
         global_q,
         global_p,
         agent_mappings,
+        bg_subperiod_shapes,
     )
 
     # Shift the whole price curve down by the smallest markup any agent ended up with. The diagnostic
@@ -394,11 +406,19 @@ function treat_bidding_group_data(
     treated_quantity_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
     treated_price_bids = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
     treated_slopes = Vector{Vector{Float64}}(undef, number_of_bidding_groups)
+    subperiod_shapes = Vector{SubperiodShape}(undef, number_of_bidding_groups)
+    duration_share = subperiod_duration_in_hours(inputs) ./ sum(subperiod_duration_in_hours(inputs))
 
     for (i, bg) in enumerate(bidding_groups)
         treated_quantity_bids[i], treated_price_bids[i] = remove_redundant_reference_curve_segments(
             aggregated_quantity[i, :],
             aggregated_price[i, :],
+        )
+        subperiod_shapes[i] = bidding_group_subperiod_shape(
+            quantity[bg, bus_index, :, :],
+            aggregated_quantity[i, :],
+            aggregated_price[i, :],
+            duration_share,
         )
         treated_quantity_bids[i] = quantity_points_from_segments(treated_quantity_bids[i])
         treated_quantity_bids[i], treated_price_bids[i], treated_slopes[i] = reverse_bid_order_and_add_points(
@@ -420,7 +440,7 @@ function treat_bidding_group_data(
         ],
     )
 
-    return treated_quantity_bids, treated_price_bids, treated_slopes
+    return treated_quantity_bids, treated_price_bids, treated_slopes, subperiod_shapes
 end
 
 """
@@ -476,14 +496,27 @@ function remove_redundant_reference_curve_segments(
     tolerance::Float64 = DEFAULT_TOLERANCE,
 )
     new_quantity, new_price = group_quantities_by_equal_price(quantity, price, tolerance)
+    kept_segments = kept_reference_curve_segments(new_quantity, tolerance)
+    return new_quantity[kept_segments], new_price[kept_segments]
+end
 
-    segments_with_quantity = findall(q -> !isapprox(q, 0.0; atol = tolerance), new_quantity)
+"""
+    kept_reference_curve_segments(grouped_quantity::Vector{Float64}, tolerance::Float64)
+
+Indices of the grouped segments that [`remove_redundant_reference_curve_segments`](@ref) keeps: the ones that offer
+energy, or only the first one when none does.
+"""
+function kept_reference_curve_segments(
+    grouped_quantity::Vector{Float64},
+    tolerance::Float64,
+)
+    segments_with_quantity = findall(q -> !isapprox(q, 0.0; atol = tolerance), grouped_quantity)
     if isempty(segments_with_quantity)
         # The agent has no energy to offer at any price. Keep one segment so that the curve stays well formed.
-        return new_quantity[1:1], new_price[1:1]
+        return [1]
     end
 
-    return new_quantity[segments_with_quantity], new_price[segments_with_quantity]
+    return segments_with_quantity
 end
 
 function quantity_points_from_segments(
@@ -497,6 +530,117 @@ function quantity_points_from_segments(
     end
 
     return new_quantity
+end
+
+"""
+    bidding_group_subperiod_shape(quantity::Matrix{Float64}, aggregated_quantity::Vector{Float64}, aggregated_price::Vector{Float64}, duration_share::Vector{Float64}, tolerance::Float64)
+
+Describe how the subperiod-aggregated reference curve of a bidding group splits across subperiods.
+
+`quantity` holds the original bids of a bidding group in a bus, indexed by `(segment, subperiod)`, and
+`aggregated_quantity` and `aggregated_price` the curve they aggregate into. That curve is reduced to the segments that
+[`remove_redundant_reference_curve_segments`](@ref) keeps for the equilibrium, and each of them is split across
+subperiods like the original bids it gathers.
+
+The equilibrium relates every point of an agent's curve to the reference curve segment at the same cumulative quantity
+(see `get_current_segment`): it marks prices up, but the `n`-th MWh of the agent's curve is still the `n`-th MWh of its
+reference curve. So a stretch of the equilibrium curve takes its energy from the subperiods that the reference curve
+takes it from at the same cumulative quantity, and a segment built on a renewable unit's energy follows that unit's
+availability rather than the bidding group's average.
+
+An agent that offers nothing has no shape to follow, so its single segment is split by `duration_share`.
+"""
+function bidding_group_subperiod_shape(
+    quantity::Matrix{Float64},
+    aggregated_quantity::Vector{Float64},
+    aggregated_price::Vector{Float64},
+    duration_share::Vector{Float64},
+    tolerance::Float64 = DEFAULT_TOLERANCE,
+)
+    grouped_quantity, _ = group_quantities_by_equal_price(aggregated_quantity, aggregated_price, tolerance)
+    kept_segments = kept_reference_curve_segments(grouped_quantity, tolerance)
+
+    number_of_segments = length(kept_segments)
+    number_of_subperiods = size(quantity, 2)
+    subperiod_share = zeros(number_of_segments, number_of_subperiods)
+
+    # The grouping depends on the prices alone, so grouping each subperiod's quantities at the aggregated prices
+    # gathers them into the same segments as the aggregated curve.
+    for subperiod in 1:number_of_subperiods
+        grouped_quantity_in_subperiod, _ =
+            group_quantities_by_equal_price(quantity[:, subperiod], aggregated_price, tolerance)
+        subperiod_share[:, subperiod] = grouped_quantity_in_subperiod[kept_segments]
+    end
+
+    for segment in 1:number_of_segments
+        segment_quantity = grouped_quantity[kept_segments[segment]]
+        if isapprox(segment_quantity, 0.0; atol = tolerance)
+            # Only the single segment of an agent that offers nothing can be empty.
+            subperiod_share[segment, :] = duration_share
+        else
+            subperiod_share[segment, :] ./= segment_quantity
+        end
+    end
+
+    return SubperiodShape(quantity_points_from_segments(grouped_quantity[kept_segments]), subperiod_share)
+end
+
+"""
+    disaggregate_quantity_in_subperiods(shape::SubperiodShape, lower_quantity::Float64, upper_quantity::Float64)
+
+Split the stretch of a subperiod-aggregated curve between the cumulative quantities `lower_quantity` and
+`upper_quantity`, with `lower_quantity <= upper_quantity`, into the quantity it takes from each subperiod.
+
+Each part of the stretch is split like the segment of `shape` it falls on. The first and last segments extend past the
+ends of the curve, so a stretch that overshoots them by rounding noise is still split in full.
+"""
+function disaggregate_quantity_in_subperiods(
+    shape::SubperiodShape,
+    lower_quantity::Float64,
+    upper_quantity::Float64,
+)
+    quantity_in_subperiods = zeros(size(shape.subperiod_share, 2))
+    return disaggregate_quantity_in_subperiods!(quantity_in_subperiods, shape, lower_quantity, upper_quantity)
+end
+
+"""
+    disaggregate_quantity_in_subperiods!(quantity_in_subperiods::AbstractVector{Float64}, shape::SubperiodShape, lower_quantity::Float64, upper_quantity::Float64)
+
+In-place version of [`disaggregate_quantity_in_subperiods`](@ref), which writes the split into `quantity_in_subperiods`.
+"""
+function disaggregate_quantity_in_subperiods!(
+    quantity_in_subperiods::AbstractVector{Float64},
+    shape::SubperiodShape,
+    lower_quantity::Float64,
+    upper_quantity::Float64,
+)
+    number_of_segments = length(shape.cumulative_quantity)
+    quantity_in_subperiods .= 0.0
+
+    for segment in 1:number_of_segments
+        segment_start = segment == 1 ? -Inf : shape.cumulative_quantity[segment-1]
+        segment_end = segment == number_of_segments ? Inf : shape.cumulative_quantity[segment]
+        overlap = min(upper_quantity, segment_end) - max(lower_quantity, segment_start)
+        if overlap > 0.0
+            quantity_in_subperiods .+= overlap .* view(shape.subperiod_share, segment, :)
+        end
+    end
+
+    return quantity_in_subperiods
+end
+
+"""
+    subperiod_share_at_quantity(shape::SubperiodShape, quantity::Float64)
+
+Share of each subperiod in the segment of `shape` that holds the cumulative quantity `quantity`, as a view into
+`shape`.
+
+A quantity on the boundary between two segments belongs to the lower one, and, as in
+[`disaggregate_quantity_in_subperiods`](@ref), the first and last segments extend past the ends of the curve.
+"""
+function subperiod_share_at_quantity(shape::SubperiodShape, quantity::Float64)
+    segment = min(searchsortedfirst(shape.cumulative_quantity, quantity), length(shape.cumulative_quantity))
+    return view(shape.subperiod_share, segment, :)
 end
 
 """
@@ -657,19 +801,23 @@ function supply_function_equilibrium_bids_from_curve(
 end
 
 """
-    supply_function_equilibrium_bids(inputs::AbstractInputs, global_quantity::Vector{Vector{Float64}}, global_price::Vector{Vector{Float64}}, agent_mappings::Vector{AgentMapping})
+    supply_function_equilibrium_bids(inputs::AbstractInputs, global_quantity::Vector{Vector{Float64}}, global_price::Vector{Vector{Float64}}, agent_mappings::Vector{AgentMapping}, bg_subperiod_shapes::Union{Matrix{SubperiodShape}, Nothing})
 
 Convert the equilibrium curves of every agent into clearing bids, in the IARA convention.
 
 Returns `(vr_quantity_bid, vr_price_bid, bg_quantity_bid, bg_price_bid)`, where the virtual reservoir arrays are
 indexed by `(virtual_reservoir, asset_owner, bid_segment)` and the bidding group arrays by
 `(bidding_group, bus, bid_segment, subperiod)`. Each pair is `nothing` when the corresponding source has no agents.
+
+`bg_subperiod_shapes` holds the subperiod shape of each bidding group agent, indexed by its position among the
+bidding groups in the equilibrium and by its bus, and is only read when there are bidding group agents.
 """
 function supply_function_equilibrium_bids(
     inputs::AbstractInputs,
     global_quantity::Vector{Vector{Float64}},
     global_price::Vector{Vector{Float64}},
     agent_mappings::Vector{AgentMapping},
+    bg_subperiod_shapes::Union{Matrix{SubperiodShape}, Nothing},
 )
     has_virtual_reservoirs = any(mapping -> mapping.source_type == :vr, agent_mappings)
     has_bidding_groups = any(mapping -> mapping.source_type == :bg, agent_mappings)
@@ -706,8 +854,6 @@ function supply_function_equilibrium_bids(
         )
     end
 
-    subperiod_duration_sum = sum(subperiod_duration_in_hours(inputs))
-
     for mapping in agent_mappings
         agent_index = mapping.agent_index_in_global
 
@@ -730,11 +876,16 @@ function supply_function_equilibrium_bids(
                 maximum_number_of_bg_bidding_segments(inputs),
             )
             # The equilibrium is computed on the subperiod-aggregated curve, so the result is split back across
-            # subperiods proportionally to their duration, matching `disaggregate_bg_output_in_subperiods`.
-            for subperiod in subperiods(inputs)
-                duration_share = subperiod_duration_in_hours(inputs, subperiod) / subperiod_duration_sum
-                bg_quantity_bid[bg, bus, :, subperiod] = quantity_bid .* duration_share
-                bg_price_bid[bg, bus, :, subperiod] = price_bid
+            # subperiods like the original bids, matching `disaggregate_bg_output_in_subperiods`. The bid segments
+            # follow one another along the aggregated curve, each covering the stretch where the previous one ended.
+            subperiod_shape = bg_subperiod_shapes[mapping.agent_local_index, bus]
+            segment_start = 0.0
+            for segment in eachindex(quantity_bid)
+                segment_end = segment_start + quantity_bid[segment]
+                bg_quantity_bid[bg, bus, segment, :] =
+                    disaggregate_quantity_in_subperiods(subperiod_shape, segment_start, segment_end)
+                bg_price_bid[bg, bus, segment, :] .= price_bid[segment]
+                segment_start = segment_end
             end
         end
     end
@@ -1457,11 +1608,12 @@ function write_supply_function_equilibrium_bg_outputs(
     quantity::Array{Float64, 4},
     price::Array{Float64, 4},
     slope::Array{Float64, 4},
+    subperiod_shapes::Matrix{SubperiodShape},
     period::Int,
     scenario::Int,
 )
     reshaped_quantity, reshaped_price, reshaped_slope =
-        disaggregate_bg_output_in_subperiods(inputs, quantity, price, slope)
+        disaggregate_bg_output_in_subperiods(inputs, quantity, price, slope, subperiod_shapes)
 
     write_nash_equilibrium_bg_output!(
         outputs,
@@ -1501,9 +1653,9 @@ function disaggregate_bg_output_in_subperiods(
     quantity::Array{Float64, 4},
     price::Array{Float64, 4},
     slope::Array{Float64, 4},
+    subperiod_shapes::Matrix{SubperiodShape},
 )
     number_of_bidding_groups, number_of_buses, number_of_iterations, number_of_segments = size(quantity)
-    subperiod_duration_sum = sum(subperiod_duration_in_hours(inputs))
 
     reshaped_quantity = zeros(
         Float64,
@@ -1530,11 +1682,27 @@ function disaggregate_bg_output_in_subperiods(
         number_of_segments,
     )
 
-    for subperiod in subperiods(inputs)
-        duration = subperiod_duration_in_hours(inputs, subperiod)
-        reshaped_quantity[:, :, subperiod, :, :] .= quantity .* (duration / subperiod_duration_sum) # quantity is divided into the subperiods
-        reshaped_price[:, :, subperiod, :, :] .= price # price is repeated
-        reshaped_slope[:, :, subperiod, :, :] .= slope .* (subperiod_duration_sum / duration) # slope is multiplied by the inverse of the quantity factor
+    # The curves are split across subperiods like the original bids, matching `supply_function_equilibrium_bids`.
+    for bg in 1:number_of_bidding_groups, bus in 1:number_of_buses
+        subperiod_shape = subperiod_shapes[bg, bus]
+        for iteration in 1:number_of_iterations, segment in 1:number_of_segments
+            point_quantity = quantity[bg, bus, iteration, segment]
+            # A point holds the cumulative quantity of the whole curve below it.
+            disaggregate_quantity_in_subperiods!(
+                view(reshaped_quantity, bg, bus, :, iteration, segment),
+                subperiod_shape,
+                0.0,
+                point_quantity,
+            )
+            reshaped_price[bg, bus, :, iteration, segment] .= price[bg, bus, iteration, segment] # price is repeated
+            # A slope holds on the stretch down to the next point. Dividing it by the subperiod shares of the reference
+            # curve segment under that stretch inverts the quantity split, and a subperiod with no share there gets an
+            # infinite slope, a vertical curve. The equilibrium never steps past a point of the reference curve, so the
+            # stretch between two points lies on a single segment, which its midpoint identifies.
+            next_point_quantity = segment < number_of_segments ? quantity[bg, bus, iteration, segment+1] : 0.0
+            share = subperiod_share_at_quantity(subperiod_shape, (point_quantity + next_point_quantity) / 2)
+            reshaped_slope[bg, bus, :, iteration, segment] .= slope[bg, bus, iteration, segment] ./ share
+        end
     end
 
     return reshaped_quantity, reshaped_price, reshaped_slope

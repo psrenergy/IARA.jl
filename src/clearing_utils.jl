@@ -523,6 +523,12 @@ function read_cuts_into_clearing_model!(
     run_time_options::RunTimeOptions,
     period::Int,
 )
+    # Cyclic policy graphs read the cuts of every node at once and the clearing models are built
+    # only once, so after the first period the cuts are already there. Reading them again only
+    # adds duplicates and makes the cut selection slower at each period.
+    if cyclic_policy_graph(inputs) && clearing_model_has_cuts(model)
+        return nothing
+    end
     if use_scaled_fcf_in_clearing(inputs)
         read_cuts_to_model!(model, inputs, run_time_options; current_period = period)
     elseif use_fcf_in_clearing(inputs, run_time_options)
@@ -532,6 +538,18 @@ function read_cuts_into_clearing_model!(
         read_cuts_to_model!(model, inputs, run_time_options; current_period = period)
     end
     return nothing
+end
+
+"""
+    clearing_model_has_cuts(model::ProblemModel)
+
+Check if any node of the clearing model's policy graph already has FCF cuts.
+"""
+function clearing_model_has_cuts(model::ProblemModel)
+    return any(
+        !isempty(node.bellman_function.global_theta.cuts) for
+        node in values(model.policy_graph.nodes) if node.bellman_function !== nothing
+    )
 end
 
 """

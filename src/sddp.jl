@@ -8,6 +8,20 @@
 # See https://github.com/psrenergy/IARA.jl
 #############################################################################
 
+"""
+    clear_highs_solver_data!(model::JuMP.Model)
+
+Clear the solution data (basis, factorization) kept by the inner HiGHS instance, keeping the model.
+Does nothing when the optimizer is not HiGHS.
+"""
+function clear_highs_solver_data!(model::JuMP.Model)
+    inner = backend(model).optimizer.model.optimizer
+    if inner isa HiGHS.Optimizer
+        HiGHS.Highs_clearSolver(inner)
+    end
+    return nothing
+end
+
 function build_model(
     inputs::Inputs,
     run_time_options::RunTimeOptions,
@@ -339,6 +353,14 @@ function set_custom_hook(
     end
 
     function all_optimize_hooks(model)
+        # The clearing models reuse the same HiGHS instance across periods. Its leftover solver
+        # data (basis, factorization, scaling) can make the simplex stall, and it makes the chosen
+        # optimum depend on the previous periods. Clear it so each solve depends only on the
+        # current LP. The model itself (constraints, bounds and the period data) is not touched.
+        # The reference curve model is rebuilt every period, so its warm start is kept.
+        if !is_reference_curve(inputs, run_time_options)
+            clear_highs_solver_data!(model)
+        end
         if integer_variable_representation(inputs, run_time_options) ==
            Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY
             fix_integer_variables_hook(model)

@@ -18,6 +18,11 @@
 # 
 # $IARA_GAME_ROUND: The period to be executed. It should be an integer
 #
+# $STORAGE_PROVIDER: Where the case files live, "s3" (default, AWS S3) or "minio"
+#
+# $S3_ENDPOINT_URL: The S3 API URL of the MinIO server, e.g. http://minio:9000.
+#  Required when STORAGE_PROVIDER is "minio", ignored otherwise
+#
 # Usage:
 #  $ ./IARA_ecs.sh
 
@@ -28,10 +33,39 @@ if [ -z "$S3_BUCKET" ]; then
     export S3_BUCKET="meta-ccee-iara-artifacts"
 fi
 export CASE_PATH="iara-case"
+if [ -z "$STORAGE_PROVIDER" ]; then
+    export STORAGE_PROVIDER="s3"
+fi
+S3_ENDPOINT_ARGS=()
+
+# Every bucket access goes through here, so it reaches AWS S3 or MinIO
+# depending on STORAGE_PROVIDER
+function s3_cmd () {
+    aws s3 "$@" "${S3_ENDPOINT_ARGS[@]}"
+}
+
+function configure_storage () {
+    if [ "$STORAGE_PROVIDER" == "s3" ]; then
+        echo "Storage: s3"
+    elif [ "$STORAGE_PROVIDER" == "minio" ]; then
+        if [ -z "$S3_ENDPOINT_URL" ]; then
+            echo "ERROR: Missing S3_ENDPOINT_URL variable. It is required when STORAGE_PROVIDER is minio"
+            exit 1
+        fi
+        S3_ENDPOINT_ARGS=(--endpoint-url "$S3_ENDPOINT_URL")
+        # MinIO serves buckets as paths (host/bucket), not as subdomains
+        aws configure set default.s3.addressing_style path
+        aws configure set default.region "${AWS_DEFAULT_REGION:-us-east-1}"
+        echo "Storage: minio ($S3_ENDPOINT_URL)"
+    else
+        echo "ERROR: STORAGE_PROVIDER should be s3 or minio, got $STORAGE_PROVIDER"
+        exit 1
+    fi
+}
 
 function download_and_unzip_complete_case () {
     echo "Downloading input data..."
-    aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/ ./$IARA_CASE --recursive --exclude "results/*" --exclude "*.log" --exclude "bids/bids.zip"
+    s3_cmd cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/ ./$IARA_CASE --recursive --exclude "results/*" --exclude "*.log" --exclude "bids/bids.zip"
 
     unzip -qo ./$IARA_CASE/game_inputs.zip -d $CASE_PATH
 
@@ -63,7 +97,7 @@ function download_and_unzip_case () {
         fi
         
         echo "Downloading input data from previous round..."
-        aws s3 cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip ./$IARA_CASE.zip
+        s3_cmd cp s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip ./$IARA_CASE.zip
         unzip -qo $IARA_CASE.zip -d $CASE_PATH
     fi
     echo "Completed."
@@ -87,7 +121,7 @@ function catch_iara_error() {
     if [ -e './iara_error.log' ]
         then
             echo "Uploading error log to S3..."
-            aws s3 cp ./iara_error.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/iara_error.log
+            s3_cmd cp ./iara_error.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/iara_error.log
             echo "Completed."
     fi
     
@@ -115,7 +149,7 @@ function save_iara_case_to_next_round() {
     cd -
 
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$next_round/game_inputs.zip 
+    s3_cmd cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$next_round/game_inputs.zip 
 
     echo "Completed."
 }
@@ -136,7 +170,7 @@ function save_heuristic_bids_to_current_round() {
         cd -    
 
         echo "Uploading zip to S3..."
-        aws s3 cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip  
+        s3_cmd cp ./$CASE_PATH.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip  
     else
         echo "No virtual reservoir heuristic bids found, skipping zip and upload."
     fi
@@ -151,13 +185,13 @@ function save_iara_log() {
         then
         if [ "$IARA_COMMAND" == "json and htmls for case creation"  ]; 
             then
-            aws s3 cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/json_iara.log
+            s3_cmd cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/json_iara.log
         elif [ "$IARA_COMMAND" == "heuristic bid"  ]; 
             then
-            aws s3 cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_iara.log
+            s3_cmd cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_iara.log
         elif [ "$IARA_COMMAND" == "single period market clearing"  ]; 
             then
-            aws s3 cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/market_clearing_iara.log
+            s3_cmd cp ./$CASE_PATH/$1/iara.log s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/market_clearing_iara.log
         fi
     else
         echo "IARA log not found in $1"
@@ -172,7 +206,7 @@ function wait_for_game_inputs_file () {
 
     echo "Waiting for previous round file (timeout: ${timeout}s)..."
 
-    while ! aws s3 ls s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip > /dev/null 2>&1; do
+    while ! s3_cmd ls s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/game_inputs.zip > /dev/null 2>&1; do
         if [ "$elapsed" -ge "$timeout" ]; then
             echo "Timeout: File not found"
             return 1
@@ -187,9 +221,11 @@ function wait_for_game_inputs_file () {
 }
 
 if [ -z "$IARA_COMMAND" ]; then
-    echo "ERROR: Missing IARA_COMMAND variable. Please provide the command to be executed" 
+    echo "ERROR: Missing IARA_COMMAND variable. Please provide the command to be executed"
     exit 1
 fi
+
+configure_storage
 
 if [ "$IARA_COMMAND" == "help" ]; then
    
@@ -226,9 +262,9 @@ if [ "$IARA_COMMAND" == "json and htmls for case creation" ]; then
     rm -rf $CASE_PATH/game_summary/plots
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_summary/ --recursive  
+    s3_cmd cp ./$CASE_PATH/game_summary/ s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_summary/ --recursive  
     echo "Uploading game_inputs.zip to game_round_1 folder..."
-    aws s3 cp $IARA_VOLUME/$IARA_CASE/game_inputs.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_1/game_inputs.zip
+    s3_cmd cp $IARA_VOLUME/$IARA_CASE/game_inputs.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_1/game_inputs.zip
     echo "Completed."    
     exit 0
 fi
@@ -250,7 +286,7 @@ if [ "$IARA_COMMAND" == "heuristic bid" ]; then
     cd -
     
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/heuristic_bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/heuristic_bids.zip 
+    s3_cmd cp ./$CASE_PATH/heuristic_bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/heuristic_bids/heuristic_bids.zip 
     
     save_heuristic_bids_to_current_round
     exit 0
@@ -279,12 +315,12 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
     cd -
 
     echo "Uploading results to S3..."
-    aws s3 cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
-    aws s3 cp $IARA_VOLUME/${IARA_CASE}_bids_round_${IARA_GAME_ROUND}/bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip
+    s3_cmd cp ./$CASE_PATH/results/plots.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/plots.zip  
+    s3_cmd cp $IARA_VOLUME/${IARA_CASE}_bids_round_${IARA_GAME_ROUND}/bids.zip s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/bids/bids.zip
 
     echo "Saving energy account Ex-post results..."
     if [ -f "./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
-        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/final_energy_account_ex_post.csv
+        s3_cmd cp ./$CASE_PATH/results/virtual_reservoir_final_energy_account_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/final_energy_account_ex_post.csv
         echo "Energy account Ex-post results saved."
     else
         echo "Energy account Ex-post results file not found, skipping upload."
@@ -292,7 +328,7 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
 
     echo "Saving hydro assets volume after round..."
     if [ -f "./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
-        aws s3 cp ./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/hydro_assets_volume.csv
+        s3_cmd cp ./$CASE_PATH/results/hydro_final_volume_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/hydro_assets_volume.csv
         echo "Hydro assets volume after round saved."
     else
         echo "Hydro assets volume file not found, skipping upload."
@@ -300,7 +336,7 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
 
     echo "Saving inflow energy arrival after round..."
     if [ -f "./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_post_physical_period_${IARA_GAME_ROUND}.csv" ]; then
-        aws s3 cp ./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
+        s3_cmd cp ./$CASE_PATH/results/virtual_reservoir_next_period_inflow_energy_arrival_ex_post_physical_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_inflow_energy_arrival.csv
         echo "Inflow energy arrival after round saved."
     else
         echo "Inflow energy arrival file not found, skipping upload."
@@ -308,7 +344,7 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
 
     echo "Saving bg profits after round..."
     if [ -f "./$CASE_PATH/results/post_processing/bidding_group_profit_total_period_${IARA_GAME_ROUND}.csv" ]; then
-        aws s3 cp ./$CASE_PATH/results/post_processing/bidding_group_profit_total_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/bidding_group_profits.csv
+        s3_cmd cp ./$CASE_PATH/results/post_processing/bidding_group_profit_total_period_${IARA_GAME_ROUND}.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/bidding_group_profits.csv
         echo "Bidding group profits after round saved."
     else
         echo "Bidding group profits file not found, skipping upload."
@@ -316,7 +352,7 @@ if [ "$IARA_COMMAND" == "single period market clearing" ]; then
 
     echo "Saving vr revenue after round..."
     if [ -f "./$CASE_PATH/results/post_processing/virtual_reservoir_total_revenue.csv" ]; then
-        aws s3 cp ./$CASE_PATH/results/post_processing/virtual_reservoir_total_revenue.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_revenue.csv
+        s3_cmd cp ./$CASE_PATH/results/post_processing/virtual_reservoir_total_revenue.csv s3://$S3_BUCKET/$IARA_FOLDER/$IARA_CASE/game_round_$IARA_GAME_ROUND/results/virtual_reservoir_revenue.csv
         echo "Virtual reservoir revenue after round saved."
     else
         echo "Virtual reservoir revenue file not found, skipping upload."

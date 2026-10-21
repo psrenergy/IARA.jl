@@ -1,0 +1,8 @@
+dimension_sizes = [ 2, 3, 1 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'Hydro1' ]
+time_dimensions = [ 'period' ]
+unit = '$/MWh'
+version = '1'

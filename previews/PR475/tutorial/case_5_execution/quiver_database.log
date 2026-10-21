@@ -1,0 +1,11 @@
+[2026-08-03 19:35:39.419] [quiver_database_17] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
+[2026-08-03 19:35:39.420] [quiver_database_17] [debug] Database opened successfully, foreign keys enabled
+[2026-08-03 19:35:39.420] [quiver_database_17] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
+[2026-08-03 19:35:39.420] [quiver_database_17] [debug] Database is up to date at version 37
+[2026-08-03 19:35:39.422] [quiver_database_17] [debug] Reading time series files for collection: Configuration
+[2026-08-03 19:35:39.423] [quiver_database_17] [debug] Reading time series files for collection: HydroUnit
+[2026-08-03 19:35:39.424] [quiver_database_17] [debug] Reading time series files for collection: DemandUnit
+[2026-08-03 19:35:39.425] [quiver_database_17] [debug] Reading time series files for collection: BiddingGroup
+[2026-08-03 19:35:39.425] [quiver_database_17] [debug] Reading time series files for collection: VirtualReservoir
+[2026-08-03 19:35:46.338] [quiver_database_17] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
+[2026-08-03 19:35:46.338] [quiver_database_17] [info] Database closed

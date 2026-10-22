@@ -358,7 +358,9 @@ function set_custom_hook(
         # optimum depend on the previous periods. Clear it so each solve depends only on the
         # current LP. The model itself (constraints, bounds and the period data) is not touched.
         # The reference curve model is rebuilt every period, so its warm start is kept.
-        if !is_reference_curve(inputs, run_time_options)
+        # Policy training (SDDP) solves the same LP many times with different noise and relies on
+        # the warm start, so the clearing only applies to market clearing runs.
+        if is_market_clearing(inputs) && !is_reference_curve(inputs, run_time_options)
             clear_highs_solver_data!(model)
         end
         if integer_variable_representation(inputs, run_time_options) ==

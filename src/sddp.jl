@@ -110,8 +110,16 @@ function train_model!(model::ProblemModel, inputs::Inputs, run_time_options::Run
     # different trajectories, stops at a different iteration, and produces
     # different cuts (and therefore different simulation outputs).
     Random.seed!(1234)
+    # Local patch: IARA_SDDP_MAX_DEPTH truncates each forward pass to that many nodes. With a
+    # realistic discount the cyclic graph almost never terminates on its own, so the forward
+    # pass would cover hundreds of periods. Unset or 0 keeps the SDDP.jl default (no limit).
+    max_depth = parse(Int, get(ENV, "IARA_SDDP_MAX_DEPTH", "0"))
+    if max_depth > 0
+        @info("SDDP forward pass truncated to $max_depth nodes (IARA_SDDP_MAX_DEPTH).")
+    end
     SDDP.train(
         model.policy_graph;
+        sampling_scheme = SDDP.InSampleMonteCarlo(; max_depth = max_depth),
         risk_measure = build_risk_measure(inputs),
         stopping_rules = [
             SDDP.SimulationStoppingRule(),

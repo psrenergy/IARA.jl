@@ -31,7 +31,7 @@ TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 
 [compat]
 ArgParse = "1.2"
-CSV = "0.10"
+CSV = "0.10, 1"
 DataFrames = "1"
 Dates = "1"
 EnumX = "1"

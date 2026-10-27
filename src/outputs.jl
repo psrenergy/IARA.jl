@@ -278,7 +278,7 @@ function get_outputs_dimension_size(
         elseif dimension == "reference_curve_segment"
             push!(dimension_size, reference_curve_number_of_segments(inputs))
         elseif dimension == "sfe_curve_segment"
-            push!(dimension_size, maximum_number_of_segments_in_supply_function_equilibrium(inputs))
+            push!(dimension_size, number_of_points_in_supply_function_equilibrium_outputs(inputs))
         elseif dimension == "sfe_iteration"
             # Extra slot for the reference curve the equilibrium starts from.
             push!(dimension_size, supply_function_equilibrium_max_iterations(inputs) + 1)

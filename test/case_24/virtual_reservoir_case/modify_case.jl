@@ -33,7 +33,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "Sistema",
     biddinggroup_id = "Peaker 1",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
         max_generation = 350.0,
@@ -50,7 +50,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "Sistema",
     biddinggroup_id = "Peaker 2",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
         max_generation = 350.0,
@@ -67,7 +67,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "Sistema",
     biddinggroup_id = "Peaker 3",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
         max_generation = 350.0,
@@ -84,7 +84,7 @@ IARA.add_hydro_unit!(db;
 #     bus_id = "Sistema",
 #     biddinggroup_id = "Peaker 4",
 #     parameters = DataFrame(;
-#         date_time = DateTime(0),
+#         date_time = DateTime(1),
 #         existing = Int(IARA.HydroUnit_Existence.EXISTS),
 #         production_factor = 0.036,
 #         max_generation = 350.0,
@@ -102,7 +102,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "Sistema",
     biddinggroup_id = "Termico 1",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
         max_generation = 350.0,
@@ -120,7 +120,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "Sistema",
     biddinggroup_id = "Termico 2",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
         max_generation = 350.0,
@@ -138,7 +138,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "Sistema",
     biddinggroup_id = "Termico 3",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.036,
         max_generation = 350.0,
@@ -155,7 +155,7 @@ IARA.add_hydro_unit!(db;
 #     bus_id = "Sistema",
 #     biddinggroup_id = "Termico 4",
 #     parameters = DataFrame(;
-#         date_time = DateTime(0),
+#         date_time = DateTime(1),
 #         existing = Int(IARA.HydroUnit_Existence.EXISTS),
 #         production_factor = 0.036,
 #         max_generation = 350.0,

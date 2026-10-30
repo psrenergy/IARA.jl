@@ -38,7 +38,7 @@ end
 Initialize the DC Line collection from the database.
 """
 function initialize!(dc_line::DCLine, inputs::AbstractInputs)
-    num_dc_lines = length(Quiver.read_element_ids(inputs.db, "DCLine"))
+    num_dc_lines = Quiver.number_of_elements(inputs.db, "DCLine")
     if num_dc_lines == 0
         return nothing
     end
@@ -108,7 +108,7 @@ Example:
 IARA.add_dc_line!(db;
     label = "dc_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DCLine_Existence.EXISTS)],
         capacity_to = [5.5],
         capacity_from = [5.5],
@@ -140,9 +140,8 @@ function update_dc_line!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "DCLine", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "DCLine", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "DCLine", label; sql_typed_kwargs...)
     return db
 end
 
@@ -158,9 +157,7 @@ function update_dc_line_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "DCLine", dc_line_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "DCLine", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(db, "DCLine", collection, relation_type, dc_line_label, related_label)
     return db
 end
 
@@ -176,14 +173,13 @@ function update_dc_line_time_series_parameter!(
     value;
     dimensions...,
 )
-    update_time_series_parameter!(
+    Quiver.upsert_time_series_row_by_label!(
         db,
         "DCLine",
         "parameters",
-        label,
-        attribute,
-        value;
+        label;
         dimensions...,
+        Symbol(attribute) => value,
     )
     return db
 end

@@ -15,12 +15,8 @@ using Test
 using IARA
 
 function test_iara_migrations()
-    # Quiver's Julia bindings only expose a one-directional `Quiver.from_migrations`
-    # (build a fresh database up to the latest version). There is no exposed way to
-    # run migrations down, so the old PSRDatabaseSQLite.test_migrations round-trip
-    # (apply every migration up, then down, and assert the database ends up empty)
-    # can't be reproduced against Quiver as-is.
-    @test_broken false
+    # Applies every migration up, then down, and throws if any table remains.
+    @test isnothing(IARA.Quiver.validate_migrations(IARA.migrations_directory()))
     return nothing
 end
 

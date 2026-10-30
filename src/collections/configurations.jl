@@ -25,8 +25,8 @@ Configurations for the problem.
     number_of_nodes::Union{Int, Nothing} = nothing
     number_of_subscenarios::Int = 0
     train_mincost_iteration_limit::Union{Int, Nothing} = nothing
-    train_mincost_time_limit_sec::Union{Int, Nothing} = nothing
-    initial_date_time::DateTime = DateTime(0)
+    train_mincost_time_limit_sec::Union{Float64, Nothing} = nothing
+    initial_date_time::DateTime = DateTime(1)
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
@@ -356,18 +356,22 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.supply_function_equilibrium_max_cost_multiplier =
         Quiver.read_scalar_floats(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
     configurations.supply_function_equilibrium_force_origin_on_output =
-        Quiver.read_scalar_integers(inputs.db, "Configuration", "supply_function_equilibrium_force_origin_on_output")[1] |>
+        Quiver.read_scalar_integers(
+            inputs.db,
+            "Configuration",
+            "supply_function_equilibrium_force_origin_on_output",
+        )[1] |>
         Bool
     configurations.cvar_alpha = Quiver.read_scalar_floats(inputs.db, "Configuration", "cvar_alpha")[1]
     configurations.cvar_lambda = Quiver.read_scalar_floats(inputs.db, "Configuration", "cvar_lambda")[1]
 
     # Load vectors
     configurations.subperiod_duration_in_hours =
-        read_vector_floats(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
+        Quiver.read_vector_floats(inputs.db, "Configuration", "subperiod_duration_in_hours")[1]
     configurations.expected_number_of_repeats_per_node =
-        read_vector_floats(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
+        Quiver.read_vector_floats(inputs.db, "Configuration", "expected_number_of_repeats_per_node")[1]
     configurations.reference_curve_multipliers =
-        read_vector_floats(inputs.db, "Configuration", "reference_curve_multipliers")[1]
+        Quiver.read_vector_floats(inputs.db, "Configuration", "reference_curve_multipliers")[1]
 
     # Load time series files
     time_series_files = Quiver.read_time_series_files(inputs.db, "Configuration")
@@ -398,9 +402,8 @@ IARA.update_configuration!(
 """
 function update_configuration!(db::Quiver.Database; kwargs...)
     label = Quiver.read_scalar_strings(db, "Configuration", "label")[1]
-    id = id_for_label(db, "Configuration", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "Configuration", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "Configuration", label; sql_typed_kwargs...)
     return db
 end
 
@@ -427,11 +430,6 @@ function validate(configurations::Configurations)
     if !isnothing(configurations.train_mincost_time_limit_sec) &&
        configurations.train_mincost_time_limit_sec < 0
         @error("train_mincost_time_limit_sec must be non-negative.")
-        num_errors += 1
-    end
-    if !isnothing(configurations.train_mincost_iteration_limit) &&
-       configurations.train_mincost_iteration_limit <= 0
-        @error("train_mincost_iteration_limit must be positive.")
         num_errors += 1
     end
     if configurations.number_of_periods <= 0
@@ -794,7 +792,7 @@ end
 Return the path to the PAR(p) model files.
 """
 path_parp(inputs::AbstractInputs) = joinpath(path_case(inputs), "parp")
-path_parp(db::DatabaseSQLite) = joinpath(path_case(db), "parp")
+path_parp(db::Quiver.Database) = joinpath(path_case(db), "parp")
 
 """
     number_of_periods(inputs::AbstractInputs)

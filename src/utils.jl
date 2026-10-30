@@ -263,23 +263,13 @@ end
 """
     build_sql_typed_kwargs(df::DataFrames.DataFrame)
 
-Converts a DataFrame's Enum-valued columns to Int columns for SQL purposes, and
-`missing` entries to `nothing` (Quiver's own null-cell convention for time series
-group writes), keeping other columns unchanged.
+Converts a DataFrame's columns to kwargs, replacing `missing` entries with `nothing`
+(Quiver's null-cell convention for time series group writes).
 """
 function build_sql_typed_kwargs(df::DataFrames.DataFrame)
     sql_typed_kwargs = Dict{Symbol, Any}()
     for col_name in DataFrames.names(df)
-        column = df[!, col_name]
-        is_enum_column = any(v -> !ismissing(v) && v isa EnumX.Enum, column)
-        typed_column = if is_enum_column
-            [ismissing(v) ? nothing : Int(v) for v in column]
-        elseif any(ismissing, column)
-            [ismissing(v) ? nothing : v for v in column]
-        else
-            column
-        end
-        sql_typed_kwargs[Symbol(col_name)] = typed_column
+        sql_typed_kwargs[Symbol(col_name)] = replace(df[!, col_name], missing => nothing)
     end
     return sql_typed_kwargs
 end
@@ -321,7 +311,7 @@ function time_series_dataframe(path::String)
 end
 
 """
-    link_time_series_to_file(db::DatabaseSQLite, table_name::String; kwargs...)
+    link_time_series_to_file(db::Quiver.Database, table_name::String; kwargs...)
 
 Links a time series to a file in the database.
 
@@ -399,26 +389,18 @@ function link_time_series_to_file(
     table_name::String;
     kwargs...,
 )
-    # Quiver.update_time_series_files! replaces every file-link column for the
-    # collection, not just the ones passed: any column not in `paths` is reset to
-    # NULL. Read the current links first so a call that only names one file
-    # doesn't wipe out every other file already linked to this collection.
-    paths = Quiver.read_time_series_files(db, table_name)
-    for (k, v) in kwargs
-        paths[String(k)] = v
-    end
+    paths = Dict{String, Union{String, Nothing}}(String(column) => file for (column, file) in kwargs)
     Quiver.update_time_series_files!(db, table_name, paths)
     return nothing
 end
 
 """
-    delete_element!(db::DatabaseSQLite, collection::String, label::String)
+    delete_element!(db::Quiver.Database, collection::String, label::String)
 
 Deletes an element from a collection in the database.
 """
 function delete_element!(db::Quiver.Database, collection::String, label::String)
-    id = id_for_label(db, collection, label)
-    Quiver.delete_element!(db, collection, id)
+    Quiver.delete_element_by_label!(db, collection, label)
     return nothing
 end
 

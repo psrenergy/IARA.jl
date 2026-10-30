@@ -42,7 +42,7 @@ end
 Initialize the Renewable Unit collection from the database.
 """
 function initialize!(renewable_unit::RenewableUnit, inputs::AbstractInputs)
-    num_renewable_units = length(Quiver.read_element_ids(inputs.db, "RenewableUnit"))
+    num_renewable_units = Quiver.number_of_elements(inputs.db, "RenewableUnit")
     if num_renewable_units == 0
         return nothing
     end
@@ -129,7 +129,7 @@ IARA.add_renewable_unit!(
     db;
     label = "Solar1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [80.0],
         om_cost = [0.0],
@@ -153,7 +153,7 @@ function add_renewable_unit!(db::Quiver.Database; kwargs...)
 end
 
 """
-    update_renewable_unit_time_series!(db::Quiver.Database, label::String; date_time::DateTime = DateTime(0), kwargs...)
+    update_renewable_unit_time_series!(db::Quiver.Database, label::String; date_time::DateTime = DateTime(1), kwargs...)
 
 Update time series attributes for the Renewable Unit named 'label' in the database.
 
@@ -165,23 +165,11 @@ IARA.update_renewable_unit_time_series!(db, "gnd_1"; max_generation = 4.5)
 function update_renewable_unit_time_series!(
     db::Quiver.Database,
     label::String;
-    date_time::DateTime = DateTime(0),
+    date_time::DateTime = DateTime(1),
     kwargs...,
 )
-    id = id_for_label(db, "RenewableUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        row = merged_time_series_row(
-            db,
-            "RenewableUnit",
-            "parameters",
-            id,
-            string(attribute),
-            value;
-            date_time = date_time,
-        )
-        Quiver.upsert_time_series_row!(db, "RenewableUnit", "parameters", id; row...)
-    end
+    Quiver.upsert_time_series_row_by_label!(db, "RenewableUnit", "parameters", label; date_time, sql_typed_kwargs...)
     return db
 end
 
@@ -195,9 +183,8 @@ function update_renewable_unit!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "RenewableUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "RenewableUnit", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "RenewableUnit", label; sql_typed_kwargs...)
     return db
 end
 
@@ -213,9 +200,14 @@ function update_renewable_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "RenewableUnit", renewable_unit_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "RenewableUnit", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(
+        db,
+        "RenewableUnit",
+        collection,
+        relation_type,
+        renewable_unit_label,
+        related_label,
+    )
     return db
 end
 
@@ -270,7 +262,7 @@ function advanced_validations(inputs::AbstractInputs, renewable_unit::RenewableU
             )
             num_errors += 1
         end
-        if has_bidding_group(renewable_unit, i) &&
+        if has_relation(renewable_unit.bidding_group_index[i]) &&
            !(renewable_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Bidding Group ID $(renewable_unit.bidding_group_index[i]) not found."

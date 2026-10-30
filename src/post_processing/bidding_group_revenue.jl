@@ -92,8 +92,8 @@ function get_spot_prices(spot_price_data, bus_collection, generation_labels, net
 end
 
 # Helper functions for price bounds. A `nothing` bound means unbounded on that side.
-_check_floor(price::Real, floor::Union{Real, Nothing}) = isnothing(floor) ? price : max(price, floor)
-_check_cap(price::Real, cap::Union{Real, Nothing}) = isnothing(cap) ? price : min(price, cap)
+_check_floor(price::Real, floor::Union{Real, Nothing}) = !isnothing(floor) ? max(price, floor) : price
+_check_cap(price::Real, cap::Union{Real, Nothing}) = !isnothing(cap) ? min(price, cap) : price
 
 function _write_revenue_without_subscenarios(
     inputs::Inputs,

@@ -113,14 +113,14 @@ end
 """
     has_relation(index::Int)
 
-Return whether a relation field entry refers to a related element.
+Return whether a relation field entry refers to a related element (`Quiver.scalar_relation_map` uses `-1` for none).
 """
 function has_relation(index::Int)
     return index > 0
 end
 
-function has_bidding_group(@nospecialize(c), i::Int)
-    return has_relation(c.bidding_group_index[i])
+function has_no_bidding_group(@nospecialize(c), i::Int)
+    return !has_relation(c.bidding_group_index[i])
 end
 
 function iara_log(@nospecialize(collection::C)) where {C <: AbstractCollection}

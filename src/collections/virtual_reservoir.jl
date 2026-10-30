@@ -34,7 +34,7 @@ end
 Initialize the VirtualReservoir collection from the database.
 """
 function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs)
-    num_virtual_reservoirs = length(Quiver.read_element_ids(inputs.db, "VirtualReservoir"))
+    num_virtual_reservoirs = Quiver.number_of_elements(inputs.db, "VirtualReservoir")
     if num_virtual_reservoirs == 0
         return nothing
     end
@@ -45,9 +45,9 @@ function initialize!(virtual_reservoir::VirtualReservoir, inputs::AbstractInputs
     virtual_reservoir.asset_owner_indices =
         Quiver.set_relation_map(inputs.db, "VirtualReservoir", "AssetOwner", "id")
     virtual_reservoir.asset_owners_inflow_allocation =
-        read_set_floats(inputs.db, "VirtualReservoir", "inflow_allocation")
+        Quiver.read_set_floats(inputs.db, "VirtualReservoir", "inflow_allocation")
     virtual_reservoir.asset_owners_initial_energy_account_share =
-        read_set_floats(inputs.db, "VirtualReservoir", "initial_energy_account_share")
+        Quiver.read_set_floats(inputs.db, "VirtualReservoir", "initial_energy_account_share")
     # Load time series files
     time_series_files = Quiver.read_time_series_files(inputs.db, "VirtualReservoir")
     virtual_reservoir.quantity_bid_file = time_series_files["quantity_bid"]
@@ -223,45 +223,21 @@ function add_virtual_reservoir!(db::Quiver.Database; kwargs...)
     return nothing
 end
 
-# assetowner_id, inflow_allocation and initial_energy_account_share share one set
-# group. Quiver's update_element! replaces a whole group rather than patching it. Whenever any
-# member is present in kwargs, read the omitted siblings back so all three are
-# written together.
 """
     update_virtual_reservoir!(db::Quiver.Database, label::String; kwargs...)
 
 Update a VirtualReservoir's set parameters (`inflow_allocation`,
-`initial_energy_account_share`, `assetowner_id`). Only the attributes passed in
-`kwargs` are updated; any omitted attribute is left unchanged.
+`initial_energy_account_share`, `assetowner_id`). They form one set group, which is
+written whole, so all three must be passed together.
 """
 function update_virtual_reservoir!(db::Quiver.Database, label::String; kwargs...)
-    id = id_for_label(db, "VirtualReservoir", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-
-    set_attributes = (:assetowner_id, :inflow_allocation, :initial_energy_account_share)
-    if any(haskey(sql_typed_kwargs, attribute) for attribute in set_attributes)
-        row_count = length(Quiver.read_set_integers_by_id(db, "VirtualReservoir", "assetowner_id", id))
-        for attribute in set_attributes
-            if haskey(sql_typed_kwargs, attribute)
-                values = sql_typed_kwargs[attribute]
-                @assert length(values) == row_count "Expected $row_count values for '$attribute', got $(length(values))"
-            elseif attribute == :assetowner_id
-                sql_typed_kwargs[attribute] =
-                    Quiver.read_set_integers_by_id(db, "VirtualReservoir", "assetowner_id", id)
-            else
-                sql_typed_kwargs[attribute] =
-                    Quiver.read_set_floats_by_id(db, "VirtualReservoir", string(attribute), id)
-            end
-        end
-    end
-
-    Quiver.update_element!(db, "VirtualReservoir", id; sql_typed_kwargs...)
-
+    Quiver.update_element_by_label!(db, "VirtualReservoir", label; sql_typed_kwargs...)
     return db
 end
 
 function delete_virtual_reservoir!(db::Quiver.Database, label::String)
-    delete_element!(db, "VirtualReservoir", label)
+    Quiver.delete_element_by_label!(db, "VirtualReservoir", label)
     return nothing
 end
 

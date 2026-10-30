@@ -39,7 +39,7 @@ end
 Initialize the Branch collection from the database.
 """
 function initialize!(branch::Branch, inputs::AbstractInputs)
-    num_branches = length(Quiver.read_element_ids(inputs.db, "Branch"))
+    num_branches = Quiver.number_of_elements(inputs.db, "Branch")
     if num_branches == 0
         return nothing
     end
@@ -72,11 +72,19 @@ function update_time_series_from_db!(branch::Branch, db::Quiver.Database, period
         )
     branch.capacity =
         @memoized_lru "branch-capacity-$date" Quiver.read_time_series_row(
-            db, "Branch", "parameters", "capacity"; date_time = period_date_time,
+            db,
+            "Branch",
+            "parameters",
+            "capacity";
+            date_time = period_date_time,
         )
     branch.reactance =
         @memoized_lru "branch-reactance-$date" Quiver.read_time_series_row(
-            db, "Branch", "parameters", "reactance"; date_time = period_date_time,
+            db,
+            "Branch",
+            "parameters",
+            "reactance";
+            date_time = period_date_time,
         )
     return nothing
 end
@@ -120,7 +128,7 @@ Example:
 IARA.add_branch!(db;
     label = "ac_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.Branch_Existence.EXISTS)],
         capacity = [15.0],
         reactance = [0.4],
@@ -152,9 +160,8 @@ function update_branch!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "Branch", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "Branch", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "Branch", label; sql_typed_kwargs...)
     return db
 end
 
@@ -170,9 +177,7 @@ function update_branch_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "Branch", branch_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "Branch", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(db, "Branch", collection, relation_type, branch_label, related_label)
     return db
 end
 

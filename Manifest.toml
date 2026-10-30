@@ -2,7 +2,7 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "4aef764452522c5e3bd8c19a397160cb37a1bcbd"
+project_hash = "7ef22fbea579ab7345923156b4ea29059a4f5093"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -642,9 +642,9 @@ version = "2.11.3"
 
 [[deps.Quiver]]
 deps = ["Artifacts", "CEnum", "Dates", "Libdl"]
-git-tree-sha1 = "68b9427dc17f6495a5dc043a344139aae6290cd5"
+git-tree-sha1 = "98023df1de758c83fa84d73d8be4fb8672892d41"
 uuid = "cdbb3f72-2527-4dbd-9d0e-93533a5519ac"
-version = "0.9.16"
+version = "0.13.6"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "StyledStrings", "Unicode"]

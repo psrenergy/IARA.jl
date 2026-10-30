@@ -39,7 +39,7 @@ IARA.add_thermal_unit!(
     case_edit_unit;
     label = "Geothermal",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [20.0],
         om_cost = [3.0],

@@ -43,7 +43,7 @@ end
 Initialize the GaugingStation collection from the database.
 """
 function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
-    num_gauging_stations = length(Quiver.read_element_ids(inputs.db, "GaugingStation"))
+    num_gauging_stations = Quiver.number_of_elements(inputs.db, "GaugingStation")
     if num_gauging_stations == 0
         return nothing
     end
@@ -83,11 +83,9 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
     ids = Quiver.read_element_ids(inputs.db, "GaugingStation")
     gauging_station.historical_inflow = Vector{Vector{Float64}}(undef, num_gauging_stations)
     for (idx, id) in enumerate(ids)
-        # read_time_series_group returns a completely empty Dict (no keys at all) for an
-        # id with zero rows in the group table.
         columns = Quiver.read_time_series_group(inputs.db, "GaugingStation", "historical_inflow", id)
-        gauging_station.historical_inflow[idx] =
-            haskey(columns, "historical_inflow") ? Vector{Float64}(columns["historical_inflow"]) : Float64[]
+        # An id with no rows comes back as an empty Dict, without the column key.
+        gauging_station.historical_inflow[idx] = Vector{Float64}(get(columns, "historical_inflow", Float64[]))
     end
 
     if any(isempty.(gauging_station.historical_inflow)) ||
@@ -100,7 +98,7 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
     # Get the last 'parp_max_lags' inflow values for each gauging station
     gauging_station.inflow_initial_state = zeros(num_gauging_stations, parp_max_lags(inputs))
     for (idx, inflow_vector) in enumerate(gauging_station.historical_inflow)
-        gauging_station.inflow_initial_state[idx, :] = inflow_vector[end-parp_max_lags(inputs)+1:end]
+        gauging_station.inflow_initial_state[idx, :] = inflow_vector[(end-parp_max_lags(inputs)+1):end]
     end
 
     update_time_series_from_db!(gauging_station, inputs.db, initial_date_time(inputs))
@@ -174,9 +172,8 @@ function update_gauging_station!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "GaugingStation", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "GaugingStation", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "GaugingStation", label; sql_typed_kwargs...)
     return db
 end
 
@@ -192,9 +189,14 @@ function update_gauging_station_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "GaugingStation", gauging_station_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "GaugingStation", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(
+        db,
+        "GaugingStation",
+        collection,
+        relation_type,
+        gauging_station_label,
+        related_label,
+    )
     return db
 end
 

@@ -118,7 +118,7 @@ IARA.add_hydro_unit!(db;
     label = "Hydro1",
     intra_period_operation = IARA.HydroUnit_IntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1], # 1 = true
         production_factor = [1.0], # MW/m³/s
         max_generation = [100.0], # MW

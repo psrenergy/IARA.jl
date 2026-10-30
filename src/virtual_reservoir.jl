@@ -13,7 +13,8 @@ function water_to_energy_factors(inputs::AbstractInputs, hydro_units_indices::Ve
     water_to_energy_factors = [NaN for h in 1:maximum(index_of_elements(inputs, HydroUnit))]
     ready_for_calculations_indices = [
         h for h in hydro_units_indices if
-        !has_relation(hydro_unit_turbine_to(inputs, h)) || !(hydro_unit_turbine_to(inputs, h) in hydro_units_indices)
+        !has_relation(hydro_unit_turbine_to(inputs, h)) ||
+            !(hydro_unit_turbine_to(inputs, h) in hydro_units_indices)
     ]
     while !isempty(ready_for_calculations_indices)
         h = popfirst!(ready_for_calculations_indices)

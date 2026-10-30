@@ -58,7 +58,7 @@ IARA.add_hydro_unit!(db;
     initial_volume = 12.0 * m3_per_second_to_hm3,
     bus_id = "bus_1",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 1.0,
         max_generation = 3.5,
@@ -74,7 +74,7 @@ IARA.add_hydro_unit!(db;
     initial_volume = 12.0 * m3_per_second_to_hm3,
     bus_id = "bus_1",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 1.0,
         max_generation = 3.5,
@@ -90,7 +90,7 @@ IARA.add_demand_unit!(db;
     label = "demand_1",
     bus_id = "bus_1",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.DemandUnit_Existence.EXISTS),
     ),
     max_demand = max_demand,

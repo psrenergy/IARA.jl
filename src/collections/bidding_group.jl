@@ -55,7 +55,7 @@ end
 Initialize the BiddingGroup collection from the database.
 """
 function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
-    num_bidding_groups = length(Quiver.read_element_ids(inputs.db, "BiddingGroup"))
+    num_bidding_groups = Quiver.number_of_elements(inputs.db, "BiddingGroup")
     if num_bidding_groups == 0
         return nothing
     end
@@ -65,8 +65,8 @@ function initialize!(bidding_group::BiddingGroup, inputs::AbstractInputs)
     bidding_group.fixed_cost = Quiver.read_scalar_floats(inputs.db, "BiddingGroup", "fixed_cost")
 
     # Load sets
-    bidding_group.risk_factor = read_set_floats(inputs.db, "BiddingGroup", "risk_factor")
-    bidding_group.segment_fraction = read_set_floats(inputs.db, "BiddingGroup", "segment_fraction")
+    bidding_group.risk_factor = Quiver.read_set_floats(inputs.db, "BiddingGroup", "risk_factor")
+    bidding_group.segment_fraction = Quiver.read_set_floats(inputs.db, "BiddingGroup", "segment_fraction")
 
     for i in 1:num_bidding_groups
         if isempty(bidding_group.segment_fraction[i])
@@ -163,9 +163,8 @@ function update_bidding_group!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "BiddingGroup", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "BiddingGroup", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "BiddingGroup", label; sql_typed_kwargs...)
     return db
 end
 
@@ -192,40 +191,24 @@ function update_bidding_group_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "BiddingGroup", bidding_group_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "BiddingGroup", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(db, "BiddingGroup", collection, relation_type, bidding_group_label, related_label)
     return db
 end
 
-# risk_factor and segment_fraction share one underlying set table; a group-table
-# update replaces the whole table using only the columns passed in. Whenever either
-# is present in kwargs, read back whichever of the pair is missing so both are
-# always written together
 """
     update_bidding_group_vectors!(db::Quiver.Database, label::String; kwargs...)
 
 Update the vectors of the Bidding Group named 'label' in the database.
+`risk_factor` and `segment_fraction` form one set group, which is written whole, so they
+must be passed together.
 """
 function update_bidding_group_vectors!(
     db::Quiver.Database,
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "BiddingGroup", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-
-    markup_attributes = (:risk_factor, :segment_fraction)
-    if any(haskey(sql_typed_kwargs, attribute) for attribute in markup_attributes)
-        for attribute in markup_attributes
-            if !haskey(sql_typed_kwargs, attribute)
-                sql_typed_kwargs[attribute] =
-                    Quiver.read_set_floats_by_id(db, "BiddingGroup", string(attribute), id)
-            end
-        end
-    end
-
-    Quiver.update_element!(db, "BiddingGroup", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "BiddingGroup", label; sql_typed_kwargs...)
     return db
 end
 

@@ -7,11 +7,11 @@ function build_ui_initial_plots(
         mkdir(plots_path)
     end
     plot_demand(inputs, plots_path)
-    if any_elements(inputs, RenewableUnit; filters = [!has_bidding_group])
+    if any_elements(inputs, RenewableUnit; filters = [has_no_bidding_group])
         plot_renewable_generation(inputs, plots_path)
         plot_demand(inputs, plots_path; net_demand = true)
     end
-    if any_elements(inputs, RenewableUnit; filters = [has_bidding_group])
+    if any_elements(inputs, RenewableUnit; filters = [!has_no_bidding_group])
         if !ispath(agent_plots_path)
             mkdir(agent_plots_path)
         end

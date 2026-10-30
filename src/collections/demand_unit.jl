@@ -51,7 +51,7 @@ end
 Initialize the Demand collection from the database.
 """
 function initialize!(demand_unit::DemandUnit, inputs::AbstractInputs)
-    num_demands = length(Quiver.read_element_ids(inputs.db, "DemandUnit"))
+    num_demands = Quiver.number_of_elements(inputs.db, "DemandUnit")
     if num_demands == 0
         return nothing
     end
@@ -140,7 +140,7 @@ Example:
 IARA.add_demand_unit!(db;
     label = "Demand1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "Island",
@@ -165,9 +165,8 @@ end
 Update the Demand named 'label' in the database.
 """
 function update_demand_unit!(db::Quiver.Database, label::String; kwargs...)
-    id = id_for_label(db, "DemandUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "DemandUnit", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "DemandUnit", label; sql_typed_kwargs...)
     return db
 end
 
@@ -194,9 +193,7 @@ function update_demand_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "DemandUnit", demand_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "DemandUnit", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(db, "DemandUnit", collection, relation_type, demand_label, related_label)
     return db
 end
 

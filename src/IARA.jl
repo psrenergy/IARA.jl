@@ -38,7 +38,6 @@ using Statistics
 using Printf
 
 const Log = LoggingPolyglot
-const DatabaseSQLite = Quiver.Database
 const POI = ParametricOptInterface
 const DEFAULT_TOLERANCE = 1e-6
 
@@ -64,8 +63,6 @@ include("path_utils.jl")
 include("enumx.jl")
 include("run_time_options.jl")
 include("revenue_convex_hull.jl")
-
-include("database_utils.jl")
 
 include("collections/abstract_collection.jl")
 include("collections/asset_owner.jl")

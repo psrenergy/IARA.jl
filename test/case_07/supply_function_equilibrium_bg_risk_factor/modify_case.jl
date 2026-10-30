@@ -18,6 +18,7 @@ for bg in 1:8
         db,
         "thermal_bg_$(bg)";
         risk_factor = [0.3],
+        segment_fraction = [1.0],
     )
 end
 

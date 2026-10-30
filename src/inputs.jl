@@ -40,7 +40,7 @@ end
 Struct of all input data.
 """
 @kwdef mutable struct Inputs <: AbstractInputs
-    db::DatabaseSQLite
+    db::Quiver.Database
     args::Args
     time_series::TimeSeriesViewsFromExternalFiles = TimeSeriesViewsFromExternalFiles()
     collections::Collections = Collections()
@@ -178,17 +178,20 @@ Required arguments:
   - `read_only::Bool`: Whether the database should be opened in read-only mode. Default is `true`.
 """
 function load_study(case_path::String; read_only::Bool = true)
-    # `read_only` is, for now, intentionally unused: Quiver's `from_migrations` doesn't support a
-    # read-only load against an already-migrated database. 
-    return Quiver.from_migrations(joinpath(case_path, "study.iara"), migrations_directory())
+    db_path = joinpath(case_path, "study.iara")
+    if read_only
+        return Quiver.open(db_path; read_only = true)
+    end
+    # A writable load also applies pending migrations, so users can run older cases with this version of IARA.
+    return Quiver.from_migrations(db_path, migrations_directory())
 end
 
 """
-    close_study!(db::DatabaseSQLite)
+    close_study!(db::Quiver.Database)
 
 Closes the database.
 """
-function close_study!(db::DatabaseSQLite)
+function close_study!(db::Quiver.Database)
     Quiver.close!(db)
     return nothing
 end
@@ -417,11 +420,11 @@ end
 # ---------------------------------------------------------------------
 
 """
-    path_case(db::DatabaseSQLite)
+    path_case(db::Quiver.Database)
 
 Return the path to the case.
 """
-path_case(db::DatabaseSQLite) = dirname(Quiver.path(db))
+path_case(db::Quiver.Database) = dirname(Quiver.path(db))
 
 """
     buses_represented_for_strategic_bidding(inputs::Inputs)

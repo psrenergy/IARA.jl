@@ -38,7 +38,7 @@ end
 Initialize the Interconnection collection from the database.
 """
 function initialize!(interconnection::Interconnection, inputs::AbstractInputs)
-    num_interconnections = length(Quiver.read_element_ids(inputs.db, "Interconnection"))
+    num_interconnections = Quiver.number_of_elements(inputs.db, "Interconnection")
     if num_interconnections == 0
         return nothing
     end
@@ -108,7 +108,7 @@ Example:
 IARA.add_interconnection!(db;
     label = "dc_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.Interconnection_Existence.EXISTS)],
         capacity_to = [5.5],
         capacity_from = [5.5],
@@ -140,9 +140,8 @@ function update_interconnection!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "Interconnection", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "Interconnection", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "Interconnection", label; sql_typed_kwargs...)
     return db
 end
 
@@ -158,9 +157,14 @@ function update_interconnection_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "Interconnection", interconnection_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "Interconnection", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(
+        db,
+        "Interconnection",
+        collection,
+        relation_type,
+        interconnection_label,
+        related_label,
+    )
     return db
 end
 
@@ -176,14 +180,13 @@ function update_interconnection_time_series_parameter!(
     value;
     dimensions...,
 )
-    update_time_series_parameter!(
+    Quiver.upsert_time_series_row_by_label!(
         db,
         "Interconnection",
         "parameters",
-        label,
-        attribute,
-        value;
+        label;
         dimensions...,
+        Symbol(attribute) => value,
     )
     return db
 end

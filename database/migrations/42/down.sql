@@ -1,5 +1,16 @@
 PRAGMA user_version = 41;
 
+-- Restores the year-0000 time series sentinel.
+UPDATE BatteryUnit_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE Branch_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE DCLine_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE DemandUnit_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE HydroUnit_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE Interconnection_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE RenewableUnit_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE ThermalUnit_time_series_parameters SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+UPDATE GaugingStation_time_series_historical_inflow SET date_time = '0000' || substr(date_time, 5) WHERE date_time LIKE '0001-%';
+
 CREATE TABLE Configuration_vector_subperiod_duration_old (
     id INTEGER,
     vector_index INTEGER NOT NULL,
@@ -35,6 +46,23 @@ DROP TABLE Configuration_vector_expected_number_of_repeats_per_node;
 ALTER TABLE Configuration_vector_expected_number_of_repeats_per_node_old
     RENAME TO Configuration_vector_expected_number_of_repeats_per_node;
 
+CREATE TABLE Configuration_vector_reference_curve_multipliers_old (
+    id INTEGER,
+    vector_index INTEGER NOT NULL,
+    reference_curve_multipliers REAL,
+    FOREIGN KEY(id) REFERENCES Configuration(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    PRIMARY KEY (id, vector_index)
+) STRICT;
+
+INSERT INTO Configuration_vector_reference_curve_multipliers_old (id, vector_index, reference_curve_multipliers)
+    SELECT id, vector_index, reference_curve_multipliers
+    FROM Configuration_vector_reference_curve_multipliers;
+
+DROP TABLE Configuration_vector_reference_curve_multipliers;
+
+ALTER TABLE Configuration_vector_reference_curve_multipliers_old
+    RENAME TO Configuration_vector_reference_curve_multipliers;
+
 CREATE TABLE AssetOwner_vector_purchase_discount_rate (
     id INTEGER,
     vector_index INTEGER NOT NULL,
@@ -45,7 +73,7 @@ CREATE TABLE AssetOwner_vector_purchase_discount_rate (
 
 INSERT INTO AssetOwner_vector_purchase_discount_rate (id, vector_index, purchase_discount_rate)
     SELECT id,
-           ROW_NUMBER() OVER (PARTITION BY id ORDER BY purchase_discount_rate),
+           ROW_NUMBER() OVER (PARTITION BY id ORDER BY rowid),
            purchase_discount_rate
     FROM AssetOwner_set_purchase_discount_rate;
 
@@ -64,11 +92,7 @@ INSERT INTO AssetOwner_vector_account_markup
         (id, vector_index, virtual_reservoir_energy_account_upper_bound,
          risk_factor_for_virtual_reservoir_bids)
     SELECT id,
-           ROW_NUMBER() OVER (
-               PARTITION BY id
-               ORDER BY virtual_reservoir_energy_account_upper_bound,
-                        risk_factor_for_virtual_reservoir_bids
-           ),
+           ROW_NUMBER() OVER (PARTITION BY id ORDER BY rowid),
            virtual_reservoir_energy_account_upper_bound,
            risk_factor_for_virtual_reservoir_bids
     FROM AssetOwner_set_account_markup;
@@ -86,7 +110,7 @@ CREATE TABLE VirtualReservoir_vector_hydro_unit (
 
 INSERT INTO VirtualReservoir_vector_hydro_unit (id, vector_index, hydrounit_id)
     SELECT id,
-           ROW_NUMBER() OVER (PARTITION BY id ORDER BY hydrounit_id),
+           ROW_NUMBER() OVER (PARTITION BY id ORDER BY rowid),
            hydrounit_id
     FROM VirtualReservoir_set_hydro_unit;
 
@@ -106,7 +130,7 @@ CREATE TABLE VirtualReservoir_vector_asset_owner_and_parameters (
 INSERT INTO VirtualReservoir_vector_asset_owner_and_parameters
         (id, vector_index, assetowner_id, inflow_allocation, initial_energy_account_share)
     SELECT id,
-           ROW_NUMBER() OVER (PARTITION BY id ORDER BY assetowner_id),
+           ROW_NUMBER() OVER (PARTITION BY id ORDER BY rowid),
            assetowner_id,
            inflow_allocation,
            initial_energy_account_share
@@ -125,7 +149,7 @@ CREATE TABLE BiddingGroup_vector_markup (
 
 INSERT INTO BiddingGroup_vector_markup (id, vector_index, risk_factor, segment_fraction)
     SELECT id,
-           ROW_NUMBER() OVER (PARTITION BY id ORDER BY risk_factor, segment_fraction),
+           ROW_NUMBER() OVER (PARTITION BY id ORDER BY rowid),
            risk_factor,
            segment_fraction
     FROM BiddingGroup_set_markup;

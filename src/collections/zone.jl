@@ -26,7 +26,7 @@ end
 Initialize the Zone collection from the database.
 """
 function initialize!(zone::Zone, inputs::AbstractInputs)
-    num_zones = length(Quiver.read_element_ids(inputs.db, "Zone"))
+    num_zones = Quiver.number_of_elements(inputs.db, "Zone")
     if num_zones == 0
         return nothing
     end
@@ -75,9 +75,8 @@ function update_zone!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "Zone", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "Zone", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "Zone", label; sql_typed_kwargs...)
     return db
 end
 

@@ -5,7 +5,7 @@ IARA.update_hydro_unit_time_series_parameter!(
     "hydro_1",
     "min_volume",
     3.0; # 0.0 -> 3.0
-    date_time = DateTime(0),
+    date_time = DateTime(1),
 )
 
 IARA.update_hydro_unit_time_series_parameter!(
@@ -13,7 +13,7 @@ IARA.update_hydro_unit_time_series_parameter!(
     "hydro_1",
     "max_volume",
     10.0; # 7.0 -> 10.0
-    date_time = DateTime(0),
+    date_time = DateTime(1),
 )
 
 IARA.update_hydro_unit!(

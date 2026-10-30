@@ -35,7 +35,7 @@ end
 Initialize the Bus collection from the database.
 """
 function initialize!(bus::Bus, inputs::AbstractInputs)
-    num_buses = length(Quiver.read_element_ids(inputs.db, "Bus"))
+    num_buses = Quiver.number_of_elements(inputs.db, "Bus")
     if num_buses == 0
         return nothing
     end
@@ -93,9 +93,8 @@ function update_bus!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "Bus", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "Bus", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "Bus", label; sql_typed_kwargs...)
     return db
 end
 
@@ -117,9 +116,7 @@ function update_bus_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "Bus", bus_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "Bus", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(db, "Bus", collection, relation_type, bus_label, related_label)
     return db
 end
 

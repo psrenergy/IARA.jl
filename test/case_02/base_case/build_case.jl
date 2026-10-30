@@ -49,7 +49,7 @@ IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 IARA.add_thermal_unit!(db;
     label = "max_uptime_plant",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         startup_cost = [0.0],
         min_generation = [0.0],
@@ -65,7 +65,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "min_downtime_plant",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         startup_cost = [0.0],
         min_generation = [0.0],
@@ -81,7 +81,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "unconstrained_plant",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         startup_cost = [0.0],
         min_generation = [0.0],
@@ -95,7 +95,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "min_uptime_plant",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         startup_cost = [0.0],
         min_generation = [3.0],
@@ -115,7 +115,7 @@ IARA.add_demand_unit!(db;
     label = "dem_1",
     demand_unit_type = IARA.DemandUnit_DemandType.INELASTIC,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     max_shift_up_flexible_demand = 0.0,

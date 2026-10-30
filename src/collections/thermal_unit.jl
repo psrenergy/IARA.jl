@@ -53,7 +53,7 @@ end
 Initialize the Thermal Unit collection from the database.
 """
 function initialize!(thermal_unit::ThermalUnit, inputs::AbstractInputs)
-    num_thermal_units = length(Quiver.read_element_ids(inputs.db, "ThermalUnit"))
+    num_thermal_units = Quiver.number_of_elements(inputs.db, "ThermalUnit")
     if num_thermal_units == 0
         return nothing
     end
@@ -110,11 +110,11 @@ function update_time_series_from_db!(
     # An absent min_generation means "no minimum"; 0.0 is what the accessor
     # substituted before this resolution moved to load time.
     thermal_unit.min_generation =
-        @memoized_lru "thermal_unit-min_generation-$date" replace(
+        @memoized_lru "thermal_unit-min_generation-$date" something.(
             Quiver.read_time_series_row(
                 db, "ThermalUnit", "parameters", "min_generation"; date_time = period_date_time,
             ),
-            NaN => 0.0,
+            0.0,
         )
     thermal_unit.max_generation =
         @memoized_lru "thermal_unit-max_generation-$date" Quiver.read_time_series_row(
@@ -124,9 +124,13 @@ function update_time_series_from_db!(
         @memoized_lru "thermal_unit-om_cost-$date" Quiver.read_time_series_row(
             db, "ThermalUnit", "parameters", "om_cost"; date_time = period_date_time,
         )
+    # An absent startup_cost means no startup cost.
     thermal_unit.startup_cost =
-        @memoized_lru "thermal_unit-startup_cost-$date" Quiver.read_time_series_row(
-            db, "ThermalUnit", "parameters", "startup_cost"; date_time = period_date_time,
+        @memoized_lru "thermal_unit-startup_cost-$date" something.(
+            Quiver.read_time_series_row(
+                db, "ThermalUnit", "parameters", "startup_cost"; date_time = period_date_time,
+            ),
+            0.0,
         )
     return nothing
 end
@@ -189,7 +193,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [20.0],
         om_cost = [10.0],
@@ -221,9 +225,8 @@ function update_thermal_unit!(
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "ThermalUnit", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "ThermalUnit", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "ThermalUnit", label; sql_typed_kwargs...)
     return db
 end
 
@@ -239,9 +242,7 @@ function update_thermal_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    id = id_for_label(db, "ThermalUnit", thermal_unit_label)
-    column = fk_column_name(collection, relation_type)
-    Quiver.update_element!(db, "ThermalUnit", id; Dict(Symbol(column) => related_label)...)
+    Quiver.update_relation_by_label!(db, "ThermalUnit", collection, relation_type, thermal_unit_label, related_label)
     return db
 end
 
@@ -271,7 +272,7 @@ IARA.update_thermal_unit_time_series_parameter!(
     "therm_1",
     "om_cost",
     30.0;
-    date_time = DateTime(0), # dimension value
+    date_time = DateTime(1), # dimension value
 )
 ```
 """
@@ -282,7 +283,15 @@ function update_thermal_unit_time_series_parameter!(
     value;
     dimensions...,
 )
-    return update_time_series_parameter!(db, "ThermalUnit", "parameters", label, attribute, value; dimensions...)
+    Quiver.upsert_time_series_row_by_label!(
+        db,
+        "ThermalUnit",
+        "parameters",
+        label;
+        dimensions...,
+        Symbol(attribute) => value,
+    )
+    return db
 end
 
 """
@@ -456,7 +465,7 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
             )
             num_errors += 1
         end
-        if has_bidding_group(thermal_unit, i) &&
+        if has_relation(thermal_unit.bidding_group_index[i]) &&
            !(thermal_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Thermal Unit $(thermal_unit.label[i]) Bidding Group ID $(thermal_unit.bidding_group_index[i]) not found."

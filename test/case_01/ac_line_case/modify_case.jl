@@ -17,7 +17,7 @@ IARA.delete_element!(db, "DCLine", "dc_1")
 IARA.add_branch!(db;
     label = "ac_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.Branch_Existence.EXISTS)],
         capacity = [5.5],
         reactance = [0.5],
@@ -33,7 +33,7 @@ IARA.add_bus!(db; label = "bus_3", zone_id = "zone_1")
 IARA.add_branch!(db;
     label = "ac_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.Branch_Existence.EXISTS)],
         capacity = [10.0],
         reactance = [0.2],
@@ -48,7 +48,7 @@ IARA.update_demand_unit_relation!(db, "dem_1"; collection = "Bus", relation_type
 IARA.add_branch!(db;
     label = "ac_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.Branch_Existence.EXISTS)],
         capacity = [15.0],
         reactance = [0.4],

@@ -43,7 +43,7 @@ end
 Initialize the AssetOwner collection from the database.
 """
 function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
-    num_asset_owners = length(Quiver.read_element_ids(inputs.db, "AssetOwner"))
+    num_asset_owners = Quiver.number_of_elements(inputs.db, "AssetOwner")
     if num_asset_owners == 0
         return nothing
     end
@@ -60,11 +60,11 @@ function initialize!(asset_owner::AssetOwner, inputs::AbstractInputs)
         Quiver.read_scalar_floats(inputs.db, "AssetOwner", "supply_function_equilibrium_weight")
 
     # Load sets
-    asset_owner.purchase_discount_rate = read_set_floats(inputs.db, "AssetOwner", "purchase_discount_rate")
+    asset_owner.purchase_discount_rate = Quiver.read_set_floats(inputs.db, "AssetOwner", "purchase_discount_rate")
     asset_owner.virtual_reservoir_energy_account_upper_bound =
-        read_set_floats(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
+        Quiver.read_set_floats(inputs.db, "AssetOwner", "virtual_reservoir_energy_account_upper_bound")
     asset_owner.risk_factor_for_virtual_reservoir_bids =
-        read_set_floats(inputs.db, "AssetOwner", "risk_factor_for_virtual_reservoir_bids")
+        Quiver.read_set_floats(inputs.db, "AssetOwner", "risk_factor_for_virtual_reservoir_bids")
 
     return nothing
 end
@@ -104,7 +104,7 @@ function add_asset_owner!(db::Quiver.Database; kwargs...)
 end
 
 function delete_asset_owner!(db::Quiver.Database, label::String)
-    delete_element!(db, "AssetOwner", label)
+    Quiver.delete_element_by_label!(db, "AssetOwner", label)
     return nothing
 end
 
@@ -123,43 +123,25 @@ IARA.update_asset_owner!(
 ```
 """
 function update_asset_owner!(db::Quiver.Database, label::String; kwargs...)
-    id = id_for_label(db, "AssetOwner", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element!(db, "AssetOwner", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "AssetOwner", label; sql_typed_kwargs...)
     return db
 end
 
-# virtual_reservoir_energy_account_upper_bound and risk_factor_for_virtual_reservoir_bids
-# share one underlying table with both columns NOT NULL; a group-table update replaces
-# the whole table using only the columns passed in. Whenever either is present in
-# kwargs, read back whichever of the pair is missing so both are always written together.
 """
     update_asset_owner_vectors!(db::Quiver.Database, label::String; kwargs...)
 
 Update the vectors of the AssetOwner named `label` in the database.
+`virtual_reservoir_energy_account_upper_bound` and `risk_factor_for_virtual_reservoir_bids`
+form one set group, which is written whole, so they must be passed together.
 """
 function update_asset_owner_vectors!(
     db::Quiver.Database,
     label::String;
     kwargs...,
 )
-    id = id_for_label(db, "AssetOwner", label)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-
-    account_markup_attributes = (
-        :virtual_reservoir_energy_account_upper_bound,
-        :risk_factor_for_virtual_reservoir_bids,
-    )
-    if any(haskey(sql_typed_kwargs, attribute) for attribute in account_markup_attributes)
-        for attribute in account_markup_attributes
-            if !haskey(sql_typed_kwargs, attribute)
-                sql_typed_kwargs[attribute] =
-                    Quiver.read_set_floats_by_id(db, "AssetOwner", string(attribute), id)
-            end
-        end
-    end
-
-    Quiver.update_element!(db, "AssetOwner", id; sql_typed_kwargs...)
+    Quiver.update_element_by_label!(db, "AssetOwner", label; sql_typed_kwargs...)
     return db
 end
 

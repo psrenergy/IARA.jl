@@ -50,7 +50,7 @@ IARA.add_bus!(db; label = "bus_2", zone_id = "zone_1")
 IARA.add_renewable_unit!(db;
     label = "gnd_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.RenewableUnit_Existence.EXISTS)],
         max_generation = [4.0],
         om_cost = [0.0],
@@ -63,7 +63,7 @@ IARA.add_renewable_unit!(db;
 IARA.add_hydro_unit!(db;
     label = "hyd_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0), DateTime("2020-03-01T00:00:00")],
+        date_time = [DateTime(1), DateTime("2020-03-01T00:00:00")],
         existing = [Int(IARA.HydroUnit_Existence.DOES_NOT_EXIST), Int(IARA.HydroUnit_Existence.EXISTS)],
         production_factor = [1.0, missing],
         min_generation = [0.0, missing],
@@ -83,7 +83,7 @@ IARA.add_hydro_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -101,7 +101,7 @@ IARA.add_demand_unit!(db;
     curtailment_cost_flexible_demand = 0.0,
     max_curtailment_flexible_demand = 0.0,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_1",
@@ -111,7 +111,7 @@ IARA.add_demand_unit!(db;
 IARA.add_dc_line!(db;
     label = "dc_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DCLine_Existence.EXISTS)],
         capacity_to = [5.5],
         capacity_from = [5.5],
@@ -171,7 +171,7 @@ IARA.link_time_series_to_file(
 IARA.add_hydro_unit!(db;
     label = "hyd_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
         production_factor = [1.0],
         min_generation = [0.0],
@@ -191,7 +191,7 @@ IARA.add_hydro_unit!(
     db;
     label = "hyd_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
         min_volume = [0.0],
         max_generation = [3.5],

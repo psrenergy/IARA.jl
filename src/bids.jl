@@ -974,12 +974,9 @@ function virtual_reservoir_markup_bids_for_period_scenario(
                         current_account -= bid
                     end
 
-                    # Advance to the next reference segment once the current one is fully consumed
-                    if isapprox(
-                        sum_of_ao_selling_bids,
-                        sum(ao_reference_quantity_bid[1:current_reference_segment]);
-                        atol = DEFAULT_TOLERANCE,
-                    )
+                    # Advance to the next reference segment once consumed; >= also skips negative segments
+                    if sum_of_ao_selling_bids >=
+                       sum(ao_reference_quantity_bid[1:current_reference_segment]) - DEFAULT_TOLERANCE
                         current_reference_segment += 1
                         if current_reference_segment > length(ao_reference_quantity_bid)
                             # We have reached the end of the reference curve, so we stop defining bids for this asset owner

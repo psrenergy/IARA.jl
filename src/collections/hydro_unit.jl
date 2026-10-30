@@ -498,7 +498,7 @@ function validate(hydro_unit::HydroUnit)
                 @error("Hydro Unit $(hydro_unit.label[i]) Initial volume must be defined.")
                 num_errors += 1
             elseif hydro_unit.initial_volume_type[i] == HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME &&
-               !(0.0 <= hydro_unit.initial_volume[i] <= 1.0)
+                   !(0.0 <= hydro_unit.initial_volume[i] <= 1.0)
                 @error(
                     "Hydro Unit $(hydro_unit.label[i]) Initial volume type is `PerUnit` must be between 0 and 1. Current value is $(hydro_unit.initial_volume[i])."
                 )

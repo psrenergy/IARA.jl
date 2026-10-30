@@ -12,7 +12,7 @@ period,scenario,subscenario,subperiod,Hydro Upstream,Hydro Downstream
 1,1,4,2,0,0
 1,1,4,3,0,0
 1,2,1,1,0,0
-1,2,1,2,1.0656,0
+1,2,1,2,1.065601,0
 1,2,1,3,0.489601,0
 1,2,2,1,0,0
 1,2,2,2,0.806399,0
@@ -156,7 +156,7 @@ period,scenario,subscenario,subperiod,Hydro Upstream,Hydro Downstream
 5,1,4,2,0,0
 5,1,4,3,0,0
 5,2,1,1,0,0
-5,2,1,2,1.0656,0
+5,2,1,2,1.065601,0
 5,2,1,3,0.489601,0
 5,2,2,1,0,0
 5,2,2,2,0.806399,0
@@ -192,7 +192,7 @@ period,scenario,subscenario,subperiod,Hydro Upstream,Hydro Downstream
 6,1,4,2,0,0
 6,1,4,3,0,0
 6,2,1,1,0,0
-6,2,1,2,1.0656,0
+6,2,1,2,1.065601,0
 6,2,1,3,0.489601,0
 6,2,2,1,0,0
 6,2,2,2,0.806399,0

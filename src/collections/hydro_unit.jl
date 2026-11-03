@@ -91,8 +91,7 @@ function initialize!(hydro_unit::HydroUnit, inputs::AbstractInputs)
             Quiver.read_scalar_integers(inputs.db, "HydroUnit", "has_commitment"),
             HydroUnit_HasCommitment.T,
         )
-    # Absence means no penalty. Resolving here keeps the field dense; `validate` already warns
-    # that a zero cost disables the minimum outflow, so absence gets a diagnostic.
+    # An absent minimum_outflow_violation_cost means no penalty.
     hydro_unit.minimum_outflow_violation_cost =
         something.(Quiver.read_scalar_floats(inputs.db, "HydroUnit", "minimum_outflow_violation_cost"), 0.0)
     hydro_unit.minimum_outflow_violation_benchmark =

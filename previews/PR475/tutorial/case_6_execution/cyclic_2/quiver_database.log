@@ -1,18 +1,18 @@
-[2026-11-03 17:44:46.723] [quiver_database_22] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
-[2026-11-03 17:44:46.723] [quiver_database_22] [debug] Database opened successfully, foreign keys enabled
-[2026-11-03 17:44:46.723] [quiver_database_22] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
-[2026-11-03 17:44:46.724] [quiver_database_22] [debug] Database is up to date at version 42
-[2026-11-03 17:44:46.796] [quiver_database_22] [debug] Updating element 1 in collection: Configuration
-[2026-11-03 17:44:46.796] [quiver_database_22] [debug] Transaction started
-[2026-11-03 17:44:46.798] [quiver_database_22] [debug] Transaction committed
-[2026-11-03 17:44:46.798] [quiver_database_22] [info] Updated element 1 in Configuration
-[2026-11-03 17:44:46.801] [quiver_database_22] [debug] Updating time series files for collection: DemandUnit
-[2026-11-03 17:44:46.801] [quiver_database_22] [debug] Transaction started
-[2026-11-03 17:44:46.801] [quiver_database_22] [debug] Transaction committed
-[2026-11-03 17:44:46.801] [quiver_database_22] [info] Updated time series files for collection: DemandUnit
-[2026-11-03 17:44:46.802] [quiver_database_22] [debug] Updating time series files for collection: HydroUnit
-[2026-11-03 17:44:46.802] [quiver_database_22] [debug] Transaction started
-[2026-11-03 17:44:46.803] [quiver_database_22] [debug] Transaction committed
-[2026-11-03 17:44:46.803] [quiver_database_22] [info] Updated time series files for collection: HydroUnit
-[2026-11-03 17:44:46.804] [quiver_database_22] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
-[2026-11-03 17:44:46.804] [quiver_database_22] [info] Database closed
+[2026-11-03 20:58:01.849] [quiver_database_22] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
+[2026-11-03 20:58:01.849] [quiver_database_22] [debug] Database opened successfully, foreign keys enabled
+[2026-11-03 20:58:01.849] [quiver_database_22] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
+[2026-11-03 20:58:01.850] [quiver_database_22] [debug] Database is up to date at version 42
+[2026-11-03 20:58:01.919] [quiver_database_22] [debug] Updating element 1 in collection: Configuration
+[2026-11-03 20:58:01.919] [quiver_database_22] [debug] Transaction started
+[2026-11-03 20:58:01.921] [quiver_database_22] [debug] Transaction committed
+[2026-11-03 20:58:01.921] [quiver_database_22] [info] Updated element 1 in Configuration
+[2026-11-03 20:58:01.923] [quiver_database_22] [debug] Updating time series files for collection: DemandUnit
+[2026-11-03 20:58:01.923] [quiver_database_22] [debug] Transaction started
+[2026-11-03 20:58:01.924] [quiver_database_22] [debug] Transaction committed
+[2026-11-03 20:58:01.924] [quiver_database_22] [info] Updated time series files for collection: DemandUnit
+[2026-11-03 20:58:01.925] [quiver_database_22] [debug] Updating time series files for collection: HydroUnit
+[2026-11-03 20:58:01.925] [quiver_database_22] [debug] Transaction started
+[2026-11-03 20:58:01.926] [quiver_database_22] [debug] Transaction committed
+[2026-11-03 20:58:01.926] [quiver_database_22] [info] Updated time series files for collection: HydroUnit
+[2026-11-03 20:58:01.926] [quiver_database_22] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_6_execution/cyclic_2/study.iara
+[2026-11-03 20:58:01.926] [quiver_database_22] [info] Database closed

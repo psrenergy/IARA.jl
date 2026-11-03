@@ -1,14 +1,14 @@
-[2026-11-03 17:44:31.024] [quiver_database_16] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
-[2026-11-03 17:44:31.024] [quiver_database_16] [debug] Database opened successfully, foreign keys enabled
-[2026-11-03 17:44:31.024] [quiver_database_16] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
-[2026-11-03 17:44:31.025] [quiver_database_16] [debug] Database is up to date at version 42
-[2026-11-03 17:44:31.030] [quiver_database_16] [debug] Updating element 1 in collection: Configuration
-[2026-11-03 17:44:31.030] [quiver_database_16] [debug] Transaction started
-[2026-11-03 17:44:31.031] [quiver_database_16] [debug] Transaction committed
-[2026-11-03 17:44:31.031] [quiver_database_16] [info] Updated element 1 in Configuration
-[2026-11-03 17:44:31.063] [quiver_database_16] [debug] Updating time series files for collection: Configuration
-[2026-11-03 17:44:31.063] [quiver_database_16] [debug] Transaction started
-[2026-11-03 17:44:31.064] [quiver_database_16] [debug] Transaction committed
-[2026-11-03 17:44:31.064] [quiver_database_16] [info] Updated time series files for collection: Configuration
-[2026-11-03 17:44:31.065] [quiver_database_16] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
-[2026-11-03 17:44:31.065] [quiver_database_16] [info] Database closed
+[2026-11-03 20:57:46.531] [quiver_database_16] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
+[2026-11-03 20:57:46.531] [quiver_database_16] [debug] Database opened successfully, foreign keys enabled
+[2026-11-03 20:57:46.531] [quiver_database_16] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
+[2026-11-03 20:57:46.532] [quiver_database_16] [debug] Database is up to date at version 42
+[2026-11-03 20:57:46.537] [quiver_database_16] [debug] Updating element 1 in collection: Configuration
+[2026-11-03 20:57:46.537] [quiver_database_16] [debug] Transaction started
+[2026-11-03 20:57:46.538] [quiver_database_16] [debug] Transaction committed
+[2026-11-03 20:57:46.538] [quiver_database_16] [info] Updated element 1 in Configuration
+[2026-11-03 20:57:46.567] [quiver_database_16] [debug] Updating time series files for collection: Configuration
+[2026-11-03 20:57:46.567] [quiver_database_16] [debug] Transaction started
+[2026-11-03 20:57:46.568] [quiver_database_16] [debug] Transaction committed
+[2026-11-03 20:57:46.568] [quiver_database_16] [info] Updated time series files for collection: Configuration
+[2026-11-03 20:57:46.569] [quiver_database_16] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_5_execution/study.iara
+[2026-11-03 20:57:46.569] [quiver_database_16] [info] Database closed

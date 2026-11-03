@@ -20,9 +20,9 @@ Renewable units are high-level data structures that represent non-dispatchable e
 @collection @kwdef mutable struct RenewableUnit <: AbstractCollection
     label::Vector{String} = []
     existing::Vector{RenewableUnit_Existence.T} = []
-    max_generation::Vector{Float64} = []
-    om_cost::Vector{Float64} = []
-    curtailment_cost::Vector{Float64} = []
+    max_generation::Vector{Union{Float64, Nothing}} = []
+    om_cost::Vector{Union{Float64, Nothing}} = []
+    curtailment_cost::Vector{Union{Float64, Nothing}} = []
     technology_type::Vector{Union{Int, Nothing}} = []
     # index of the bus to which the renewable unit belongs in the collection Bus
     bus_index::Vector{Int} = []
@@ -223,19 +223,19 @@ function validate(renewable_unit::RenewableUnit)
             @error("Renewable Unit Label cannot be empty.")
             num_errors += 1
         end
-        if renewable_unit.max_generation[i] < 0
+        if isnothing(renewable_unit.max_generation[i]) || renewable_unit.max_generation[i] < 0
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Maximum generation must be non-negative. Current value is $(renewable_unit.max_generation[i])."
             )
             num_errors += 1
         end
-        if renewable_unit.om_cost[i] < 0
+        if isnothing(renewable_unit.om_cost[i]) || renewable_unit.om_cost[i] < 0
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) O&M cost must be non-negative. Current value is $(renewable_unit.om_cost[i])."
             )
             num_errors += 1
         end
-        if renewable_unit.curtailment_cost[i] < 0
+        if isnothing(renewable_unit.curtailment_cost[i]) || renewable_unit.curtailment_cost[i] < 0
             @error(
                 "Renewable Unit $(renewable_unit.label[i]) Curtailment cost must be non-negative. Current value is $(renewable_unit.curtailment_cost[i])."
             )

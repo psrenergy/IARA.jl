@@ -206,10 +206,7 @@ function validate(battery_unit::BatteryUnit)
             @error("Battery Label cannot be empty.")
             num_errors += 1
         end
-        if isnothing(battery_unit.initial_storage[i])
-            @error("Battery $(battery_unit.label[i]) Initial Storage must be defined.")
-            num_errors += 1
-        elseif battery_unit.initial_storage[i] < 0
+        if !isnothing(battery_unit.initial_storage[i]) && battery_unit.initial_storage[i] < 0
             @error(
                 "Battery $(battery_unit.label[i]) Initial Storage must be non-negative. Current value is $(battery_unit.initial_storage[i])"
             )

@@ -1,10 +1,10 @@
-[2026-11-03 17:26:05.039] [quiver_database_2] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing/study.iara
-[2026-11-03 17:26:05.039] [quiver_database_2] [debug] Database opened successfully, foreign keys enabled
-[2026-11-03 17:26:05.039] [quiver_database_2] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing/study.iara
-[2026-11-03 17:26:05.040] [quiver_database_2] [debug] Database is up to date at version 42
-[2026-11-03 17:26:05.304] [quiver_database_2] [debug] Updating element 1 in collection: Configuration
-[2026-11-03 17:26:05.304] [quiver_database_2] [debug] Transaction started
-[2026-11-03 17:26:05.305] [quiver_database_2] [debug] Transaction committed
-[2026-11-03 17:26:05.305] [quiver_database_2] [info] Updated element 1 in Configuration
-[2026-11-03 17:26:05.306] [quiver_database_2] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing/study.iara
-[2026-11-03 17:26:05.306] [quiver_database_2] [info] Database closed
+[2026-11-03 17:44:01.812] [quiver_database_2] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing/study.iara
+[2026-11-03 17:44:01.812] [quiver_database_2] [debug] Database opened successfully, foreign keys enabled
+[2026-11-03 17:44:01.812] [quiver_database_2] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing/study.iara
+[2026-11-03 17:44:01.812] [quiver_database_2] [debug] Database is up to date at version 42
+[2026-11-03 17:44:02.029] [quiver_database_2] [debug] Updating element 1 in collection: Configuration
+[2026-11-03 17:44:02.029] [quiver_database_2] [debug] Transaction started
+[2026-11-03 17:44:02.031] [quiver_database_2] [debug] Transaction committed
+[2026-11-03 17:44:02.031] [quiver_database_2] [info] Updated element 1 in Configuration
+[2026-11-03 17:44:02.031] [quiver_database_2] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_1_execution/market_clearing/study.iara
+[2026-11-03 17:44:02.031] [quiver_database_2] [info] Database closed

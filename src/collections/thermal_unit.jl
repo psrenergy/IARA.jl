@@ -107,8 +107,7 @@ function update_time_series_from_db!(
             Quiver.read_time_series_row(db, "ThermalUnit", "parameters", "existing"; date_time = period_date_time),
             ThermalUnit_Existence.T,
         )
-    # An absent min_generation means "no minimum"; 0.0 is what the accessor
-    # substituted before this resolution moved to load time.
+    # An absent min_generation means no minimum.
     thermal_unit.min_generation =
         @memoized_lru "thermal_unit-min_generation-$date" something.(
             Quiver.read_time_series_row(

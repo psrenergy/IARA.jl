@@ -9,8 +9,7 @@
 #############################################################################
 
 @kwdef struct RunTimeOptions
-    # `nothing` means "no asset-owner filter is active". Not persisted; this is IARA's
-    # own run-time state, not a database null.
+    # `nothing` means no asset-owner filter is active.
     asset_owner_index::Union{Int, Nothing} = nothing
     nash_equilibrium_iteration::Int = 0
     is_nash_equilibrium_initialization::Bool = false

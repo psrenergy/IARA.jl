@@ -140,9 +140,7 @@ function update_time_series_from_db!(
         @memoized_lru "hydro_unit-production_factor-$date" Quiver.read_time_series_row(
             db, "HydroUnit", "parameters", "production_factor"; date_time = period_date_time,
         )
-    # Absence cannot resolve to a constant for these three -- min_generation is a
-    # validated error (below), and max_generation/max_turbining fall back to each other
-    # via a per-unit computation (see hydro_unit_max_generation / hydro_unit_max_available_turbining).
+    # Kept optional: absence is validated or resolved per unit (see hydro_unit_max_generation).
     hydro_unit.min_generation =
         @memoized_lru "hydro_unit-min_generation-$date" Quiver.read_time_series_row(
             db, "HydroUnit", "parameters", "min_generation"; date_time = period_date_time,
@@ -737,6 +735,7 @@ function hydro_unit_initial_volume(inputs::AbstractInputs, idx::Int)
         else
             inputs.collections.hydro_unit.initial_volume[idx]
         end
+    # Returns Float64, never nothing: list_virtual_reservoirs relies on this when there are no hydro units.
     if isnothing(initial_volume)
         error("Hydro Unit $(inputs.collections.hydro_unit.label[idx]) Initial volume must be defined.")
     end

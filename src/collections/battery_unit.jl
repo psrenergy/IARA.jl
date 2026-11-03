@@ -99,11 +99,11 @@ Add a Battery Unit to the database.
 Required arguments:
 
   - `label::String`: Label of the battery unit
+  - `initial_storage::Float64`: Initial storage of the battery unit
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
-  - `initial_storage::Union{Float64, Nothing}`: Initial storage of the battery unit
   - `biddinggroup_id::Int64`: Bidding group of the battery unit
   - `bus_id::Int64`: Bus of the battery unit
 
@@ -206,7 +206,10 @@ function validate(battery_unit::BatteryUnit)
             @error("Battery Label cannot be empty.")
             num_errors += 1
         end
-        if !isnothing(battery_unit.initial_storage[i]) && battery_unit.initial_storage[i] < 0
+        if isnothing(battery_unit.initial_storage[i])
+            @error("Battery $(battery_unit.label[i]) Initial Storage must be defined.")
+            num_errors += 1
+        elseif battery_unit.initial_storage[i] < 0
             @error(
                 "Battery $(battery_unit.label[i]) Initial Storage must be non-negative. Current value is $(battery_unit.initial_storage[i])"
             )

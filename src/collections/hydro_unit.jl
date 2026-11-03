@@ -737,6 +737,9 @@ function hydro_unit_initial_volume(inputs::AbstractInputs, idx::Int)
         else
             inputs.collections.hydro_unit.initial_volume[idx]
         end
+    if isnothing(initial_volume)
+        error("Hydro Unit $(inputs.collections.hydro_unit.label[idx]) Initial volume must be defined.")
+    end
     if inputs.collections.hydro_unit.initial_volume_type[idx] ==
        HydroUnit_InitialVolumeDataType.FRACTION_OF_USEFUL_VOLUME
         return hydro_unit_min_volume(inputs, idx) +

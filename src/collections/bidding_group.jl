@@ -157,6 +157,8 @@ end
     update_bidding_group!(db::Quiver.Database, label::String; kwargs...)
 
 Update the BiddingGroup named 'label' in the database.
+`risk_factor` and `segment_fraction` form one set group, which is written whole, so they
+must be passed together.
 """
 function update_bidding_group!(
     db::Quiver.Database,
@@ -192,23 +194,6 @@ function update_bidding_group_relation!(
     related_label::String,
 )
     Quiver.update_relation_by_label!(db, "BiddingGroup", collection, relation_type, bidding_group_label, related_label)
-    return db
-end
-
-"""
-    update_bidding_group_vectors!(db::Quiver.Database, label::String; kwargs...)
-
-Update the vectors of the Bidding Group named 'label' in the database.
-`risk_factor` and `segment_fraction` form one set group, which is written whole, so they
-must be passed together.
-"""
-function update_bidding_group_vectors!(
-    db::Quiver.Database,
-    label::String;
-    kwargs...,
-)
-    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element_by_label!(db, "BiddingGroup", label; sql_typed_kwargs...)
     return db
 end
 

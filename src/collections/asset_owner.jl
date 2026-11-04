@@ -112,6 +112,8 @@ end
     update_asset_owner!(db::Quiver.Database, label::String; kwargs...)
 
 Update the AssetOwner named 'label' in the database.
+`virtual_reservoir_energy_account_upper_bound` and `risk_factor_for_virtual_reservoir_bids`
+form one set group, which is written whole, so they must be passed together.
 
 Example:
 ```julia
@@ -123,23 +125,6 @@ IARA.update_asset_owner!(
 ```
 """
 function update_asset_owner!(db::Quiver.Database, label::String; kwargs...)
-    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element_by_label!(db, "AssetOwner", label; sql_typed_kwargs...)
-    return db
-end
-
-"""
-    update_asset_owner_vectors!(db::Quiver.Database, label::String; kwargs...)
-
-Update the vectors of the AssetOwner named `label` in the database.
-`virtual_reservoir_energy_account_upper_bound` and `risk_factor_for_virtual_reservoir_bids`
-form one set group, which is written whole, so they must be passed together.
-"""
-function update_asset_owner_vectors!(
-    db::Quiver.Database,
-    label::String;
-    kwargs...,
-)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
     Quiver.update_element_by_label!(db, "AssetOwner", label; sql_typed_kwargs...)
     return db

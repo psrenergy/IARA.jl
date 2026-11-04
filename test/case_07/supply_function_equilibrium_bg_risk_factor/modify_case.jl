@@ -14,7 +14,7 @@ db = IARA.load_study(PATH; read_only = false)
 # markup is zero by construction and those cases cannot tell whether the curves entering the equilibrium carry it.
 # Here the risk factors are nonzero, so the equilibrium must ingest the no-markup prices instead of double-marking them.
 for bg in 1:8
-    IARA.update_bidding_group_vectors!(
+    IARA.update_bidding_group!(
         db,
         "thermal_bg_$(bg)";
         risk_factor = [0.3],

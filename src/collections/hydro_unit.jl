@@ -297,21 +297,6 @@ function update_hydro_unit!(
 end
 
 """
-    update_hydro_unit_vectors!(db::Quiver.Database, label::String; kwargs...)
-
-Update the vectors of the Hydro Unit named 'label' in the database.
-"""
-function update_hydro_unit_vectors!(
-    db::Quiver.Database,
-    label::String;
-    kwargs...,
-)
-    sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    Quiver.update_element_by_label!(db, "HydroUnit", label; sql_typed_kwargs...)
-    return db
-end
-
-"""
     update_hydro_unit_relation!(
         db::Quiver.Database, 
         hydro_unit_label::String; 

@@ -1,10 +1,10 @@
-[2026-11-03 20:57:38.867] [quiver_database_12] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
-[2026-11-03 20:57:38.867] [quiver_database_12] [debug] Database opened successfully, foreign keys enabled
-[2026-11-03 20:57:38.867] [quiver_database_12] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
-[2026-11-03 20:57:38.867] [quiver_database_12] [debug] Database is up to date at version 42
-[2026-11-03 20:57:38.872] [quiver_database_12] [debug] Updating element 1 in collection: Configuration
-[2026-11-03 20:57:38.872] [quiver_database_12] [debug] Transaction started
-[2026-11-03 20:57:38.873] [quiver_database_12] [debug] Transaction committed
-[2026-11-03 20:57:38.873] [quiver_database_12] [info] Updated element 1 in Configuration
-[2026-11-03 20:57:38.874] [quiver_database_12] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
-[2026-11-03 20:57:38.874] [quiver_database_12] [info] Database closed
+[2026-11-04 14:42:32.405] [quiver_database_12] [debug] Opening database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
+[2026-11-04 14:42:32.405] [quiver_database_12] [debug] Database opened successfully, foreign keys enabled
+[2026-11-04 14:42:32.405] [quiver_database_12] [info] Database opened successfully: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
+[2026-11-04 14:42:32.405] [quiver_database_12] [debug] Database is up to date at version 42
+[2026-11-04 14:42:32.409] [quiver_database_12] [debug] Updating element 1 in collection: Configuration
+[2026-11-04 14:42:32.409] [quiver_database_12] [debug] Transaction started
+[2026-11-04 14:42:32.410] [quiver_database_12] [debug] Transaction committed
+[2026-11-04 14:42:32.410] [quiver_database_12] [info] Updated element 1 in Configuration
+[2026-11-04 14:42:32.410] [quiver_database_12] [debug] Closing database: /home/runner/work/IARA.jl/IARA.jl/docs/build/tutorial/case_4_execution/study.iara
+[2026-11-04 14:42:32.410] [quiver_database_12] [info] Database closed

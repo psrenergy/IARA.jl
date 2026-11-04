@@ -80,7 +80,7 @@ try
             bus_from = String(row.bus_from),
             bus_to = String(row.bus_to),
             parameters = DataFrame(;
-                date_time = [DateTime(0)],
+                date_time = [DateTime(1)],
                 existing = [Int(IARA.DCLine_Existence.EXISTS)],
                 capacity_to = [row.capacity_to],
                 capacity_from = [row.capacity_from],
@@ -255,7 +255,7 @@ try
             demand_unit_type = contains(row.label, "FLEX") ? IARA.DemandUnit_DemandType.ELASTIC :
                                IARA.DemandUnit_DemandType.INELASTIC,
             parameters = DataFrame(;
-                date_time = [DateTime(0)],
+                date_time = [DateTime(1)],
                 existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
             ),
             biddinggroup...,
@@ -282,7 +282,7 @@ try
             generation_initial_condition = 0.0,
             ramp_kwargs...,
             parameters = DataFrame(;
-                date_time = [DateTime(0)],
+                date_time = [DateTime(1)],
                 existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
                 om_cost = [row.om_cost],
                 max_generation = [row.capacity],
@@ -298,7 +298,7 @@ try
             bus_id = String(row.bus_id),
             biddinggroup_id = String(row.biddinggroup_id),
             parameters = DataFrame(;
-                date_time = [DateTime(0)],
+                date_time = [DateTime(1)],
                 existing = [Int(IARA.RenewableUnit_Existence.EXISTS)],
                 max_generation = [row.capacity],
                 om_cost = [row.cost],
@@ -315,7 +315,7 @@ try
             inflow_initial_state_variation_type = IARA.GaugingStation_InflowInitialStateVariationType.BY_SCENARIO,
         )
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = Int(IARA.HydroUnit_Existence.EXISTS),
             max_generation = row.capacity,
             om_cost = row.cost,

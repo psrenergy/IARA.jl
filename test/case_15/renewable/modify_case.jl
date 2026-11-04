@@ -21,7 +21,7 @@ max_generation = 60.0
 IARA.add_renewable_unit!(db;
     label = "Renovavel 1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [max_generation],
         om_cost = [0.0],

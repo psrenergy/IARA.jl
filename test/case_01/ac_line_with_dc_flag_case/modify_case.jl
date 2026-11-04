@@ -17,7 +17,7 @@ IARA.delete_element!(db, "DCLine", "dc_1")
 IARA.add_branch!(db;
     label = "ac_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.Branch_Existence.EXISTS)],
         capacity = [5.5],
         reactance = [0.5],

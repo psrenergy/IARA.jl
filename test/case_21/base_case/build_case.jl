@@ -101,7 +101,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Termica 1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [70.0],
         om_cost = [80.0],
@@ -113,7 +113,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Termica 2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [40.0],
         om_cost = [130.0],
@@ -125,7 +125,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Termica 3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [30.0],
         om_cost = [200.0],
@@ -138,7 +138,7 @@ IARA.add_thermal_unit!(
 IARA.add_renewable_unit!(db;
     label = "Solar 1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [100.0],
         om_cost = [3.0],
@@ -150,7 +150,7 @@ IARA.add_renewable_unit!(db;
 IARA.add_renewable_unit!(db;
     label = "Solar 2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [60.0],
         om_cost = [5.0],
@@ -162,7 +162,7 @@ IARA.add_renewable_unit!(db;
 IARA.add_renewable_unit!(db;
     label = "Eolica 1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [50.0],
         om_cost = [10.0],
@@ -179,7 +179,7 @@ IARA.add_demand_unit!(
     label = "Demanda",
     max_demand = max_demand,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "Sistema",

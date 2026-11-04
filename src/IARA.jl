@@ -23,7 +23,6 @@ using ParametricOptInterface
 using PeriodicAutoregressive
 using PlotlyLight
 using PSRBridge
-using PSRClassesInterface
 using Quiver
 using Serialization
 using SDDP
@@ -39,9 +38,6 @@ using Statistics
 using Printf
 
 const Log = LoggingPolyglot
-const PSRI = PSRClassesInterface
-const PSRDatabaseSQLite = PSRI.PSRDatabaseSQLite
-const DatabaseSQLite = PSRI.PSRDatabaseSQLite.DatabaseSQLite
 const POI = ParametricOptInterface
 const DEFAULT_TOLERANCE = 1e-6
 

@@ -103,7 +103,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_1a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.02],
         om_cost = [3.0],
@@ -115,7 +115,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_1b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.08],
         om_cost = [5.0],
@@ -127,7 +127,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_2a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.02],
         om_cost = [3.0],
@@ -139,7 +139,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_2b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.08],
         om_cost = [5.0],
@@ -151,7 +151,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_3a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.02],
         om_cost = [3.0],
@@ -163,7 +163,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_3b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.08],
         om_cost = [5.0],
@@ -175,7 +175,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_4a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.04],
         om_cost = [40.0],
@@ -187,7 +187,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_4b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.16],
         om_cost = [60.0],
@@ -199,7 +199,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_5a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.04],
         om_cost = [40.0],
@@ -211,7 +211,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_5b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.16],
         om_cost = [60.0],
@@ -223,7 +223,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_6a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.04],
         om_cost = [40.0],
@@ -235,7 +235,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_6b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.16],
         om_cost = [60.0],
@@ -247,7 +247,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_7a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.02],
         om_cost = [90.0],
@@ -259,7 +259,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_7b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.08],
         om_cost = [110.0],
@@ -271,7 +271,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_8a",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.02],
         om_cost = [90.0],
@@ -283,7 +283,7 @@ IARA.add_thermal_unit!(
     db;
     label = "thermal_8b",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [0.08],
         om_cost = [110.0],

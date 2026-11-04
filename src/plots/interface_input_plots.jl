@@ -148,7 +148,11 @@ function plot_demand(inputs::AbstractInputs, plots_path::String; net_demand = fa
     return nothing
 end
 
-function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; asset_owner_index::Int = null_value(Int))
+function plot_renewable_generation(
+    inputs::AbstractInputs,
+    plots_path::String;
+    asset_owner_index::Union{Int, Nothing} = nothing,
+)
     num_periods = number_of_periods(inputs)
     num_subperiods = number_of_subperiods(inputs)
     ex_ante_generation, ex_post_generation = get_renewable_generation_to_plot(inputs; asset_owner_index)
@@ -170,7 +174,7 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; a
     unit = "MW"
     color_idx = 0
 
-    if !is_null(asset_owner_index)
+    if !isnothing(asset_owner_index)
         ao_label = asset_owner_label(inputs, asset_owner_index)
         title = "$ao_label - $title"
     end
@@ -249,7 +253,7 @@ function plot_renewable_generation(inputs::AbstractInputs, plots_path::String; a
         ),
     )
 
-    if is_null(asset_owner_index)
+    if isnothing(asset_owner_index)
         _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "renewable_generation.html"))
     else
         _save_plot(Plot(configs, main_configuration), joinpath(plots_path, "renewable_generation_$(ao_label).html"))

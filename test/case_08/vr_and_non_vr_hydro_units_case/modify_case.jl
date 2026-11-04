@@ -12,7 +12,7 @@ IARA.add_hydro_unit!(db;
     initial_volume = 5.0 * m3_per_second_to_hm3,
     bus_id = "bus_1",
     parameters = DataFrame(;
-        date_time = DateTime(0),
+        date_time = DateTime(1),
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 1.5,
         max_generation = 2.0,

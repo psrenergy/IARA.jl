@@ -116,7 +116,14 @@ function update_bus_relation!(
     relation_type::String,
     related_label::String,
 )
-    Quiver.update_relation_by_label!(db, "Bus", collection, relation_type, bus_label, related_label)
+    Quiver.update_relation_by_label!(
+        db,
+        "Bus",
+        collection,
+        relation_type,
+        bus_label,
+        related_label,
+    )
     return db
 end
 

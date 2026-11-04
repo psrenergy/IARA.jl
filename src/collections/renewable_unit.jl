@@ -75,20 +75,38 @@ function update_time_series_from_db!(
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     renewable_unit.existing =
         @memoized_lru "renewable_unit-existing-$date" convert_to_enum.(
-            Quiver.read_time_series_row(db, "RenewableUnit", "parameters", "existing"; date_time = period_date_time),
+            Quiver.read_time_series_row(
+                db,
+                "RenewableUnit",
+                "parameters",
+                "existing";
+                date_time = period_date_time,
+            ),
             RenewableUnit_Existence.T,
         )
     renewable_unit.max_generation =
         @memoized_lru "renewable_unit-max_generation-$date" Quiver.read_time_series_row(
-            db, "RenewableUnit", "parameters", "max_generation"; date_time = period_date_time,
+            db,
+            "RenewableUnit",
+            "parameters",
+            "max_generation";
+            date_time = period_date_time,
         )
     renewable_unit.om_cost =
         @memoized_lru "renewable_unit-om_cost-$date" Quiver.read_time_series_row(
-            db, "RenewableUnit", "parameters", "om_cost"; date_time = period_date_time,
+            db,
+            "RenewableUnit",
+            "parameters",
+            "om_cost";
+            date_time = period_date_time,
         )
     renewable_unit.curtailment_cost =
         @memoized_lru "renewable_unit-curtailment_cost-$date" Quiver.read_time_series_row(
-            db, "RenewableUnit", "parameters", "curtailment_cost"; date_time = period_date_time,
+            db,
+            "RenewableUnit",
+            "parameters",
+            "curtailment_cost";
+            date_time = period_date_time,
         )
     return nothing
 end

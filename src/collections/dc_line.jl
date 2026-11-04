@@ -61,16 +61,30 @@ function update_time_series_from_db!(dc_line::DCLine, db::Quiver.Database, perio
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     dc_line.existing =
         @memoized_lru "dc_line-existing-$date" convert_to_enum.(
-            Quiver.read_time_series_row(db, "DCLine", "parameters", "existing"; date_time = period_date_time),
+            Quiver.read_time_series_row(
+                db,
+                "DCLine",
+                "parameters",
+                "existing";
+                date_time = period_date_time,
+            ),
             DCLine_Existence.T,
         )
     dc_line.capacity_to =
         @memoized_lru "dc_line-capacity_to-$date" Quiver.read_time_series_row(
-            db, "DCLine", "parameters", "capacity_to"; date_time = period_date_time,
+            db,
+            "DCLine",
+            "parameters",
+            "capacity_to";
+            date_time = period_date_time,
         )
     dc_line.capacity_from =
         @memoized_lru "dc_line-capacity_from-$date" Quiver.read_time_series_row(
-            db, "DCLine", "parameters", "capacity_from"; date_time = period_date_time,
+            db,
+            "DCLine",
+            "parameters",
+            "capacity_from";
+            date_time = period_date_time,
         )
     return nothing
 end
@@ -157,7 +171,14 @@ function update_dc_line_relation!(
     relation_type::String,
     related_label::String,
 )
-    Quiver.update_relation_by_label!(db, "DCLine", collection, relation_type, dc_line_label, related_label)
+    Quiver.update_relation_by_label!(
+        db,
+        "DCLine",
+        collection,
+        relation_type,
+        dc_line_label,
+        related_label,
+    )
     return db
 end
 

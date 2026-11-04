@@ -69,24 +69,46 @@ function update_time_series_from_db!(
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     battery_unit.existing =
         @memoized_lru "battery-existing-$date" convert_to_enum.(
-            Quiver.read_time_series_row(db, "BatteryUnit", "parameters", "existing"; date_time = period_date_time),
+            Quiver.read_time_series_row(
+                db,
+                "BatteryUnit",
+                "parameters",
+                "existing";
+                date_time = period_date_time,
+            ),
             BatteryUnit_Existence.T,
         )
     battery_unit.min_storage =
         @memoized_lru "battery-min_storage-$date" Quiver.read_time_series_row(
-            db, "BatteryUnit", "parameters", "min_storage"; date_time = period_date_time,
+            db,
+            "BatteryUnit",
+            "parameters",
+            "min_storage";
+            date_time = period_date_time,
         )
     battery_unit.max_storage =
         @memoized_lru "battery-max_storage-$date" Quiver.read_time_series_row(
-            db, "BatteryUnit", "parameters", "max_storage"; date_time = period_date_time,
+            db,
+            "BatteryUnit",
+            "parameters",
+            "max_storage";
+            date_time = period_date_time,
         )
     battery_unit.max_capacity =
         @memoized_lru "battery-max_capacity-$date" Quiver.read_time_series_row(
-            db, "BatteryUnit", "parameters", "max_capacity"; date_time = period_date_time,
+            db,
+            "BatteryUnit",
+            "parameters",
+            "max_capacity";
+            date_time = period_date_time,
         )
     battery_unit.om_cost =
         @memoized_lru "battery-om_cost-$date" Quiver.read_time_series_row(
-            db, "BatteryUnit", "parameters", "om_cost"; date_time = period_date_time,
+            db,
+            "BatteryUnit",
+            "parameters",
+            "om_cost";
+            date_time = period_date_time,
         )
     return nothing
 end
@@ -190,7 +212,14 @@ function update_battery_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    Quiver.update_relation_by_label!(db, "BatteryUnit", collection, relation_type, battery_unit_label, related_label)
+    Quiver.update_relation_by_label!(
+        db,
+        "BatteryUnit",
+        collection,
+        relation_type,
+        battery_unit_label,
+        related_label,
+    )
     return db
 end
 

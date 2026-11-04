@@ -104,30 +104,52 @@ function update_time_series_from_db!(
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     thermal_unit.existing =
         @memoized_lru "thermal_unit-existing-$date" convert_to_enum.(
-            Quiver.read_time_series_row(db, "ThermalUnit", "parameters", "existing"; date_time = period_date_time),
+            Quiver.read_time_series_row(
+                db,
+                "ThermalUnit",
+                "parameters",
+                "existing";
+                date_time = period_date_time,
+            ),
             ThermalUnit_Existence.T,
         )
     # An absent min_generation means no minimum.
     thermal_unit.min_generation =
         @memoized_lru "thermal_unit-min_generation-$date" something.(
             Quiver.read_time_series_row(
-                db, "ThermalUnit", "parameters", "min_generation"; date_time = period_date_time,
+                db,
+                "ThermalUnit",
+                "parameters",
+                "min_generation";
+                date_time = period_date_time,
             ),
             0.0,
         )
     thermal_unit.max_generation =
         @memoized_lru "thermal_unit-max_generation-$date" Quiver.read_time_series_row(
-            db, "ThermalUnit", "parameters", "max_generation"; date_time = period_date_time,
+            db,
+            "ThermalUnit",
+            "parameters",
+            "max_generation";
+            date_time = period_date_time,
         )
     thermal_unit.om_cost =
         @memoized_lru "thermal_unit-om_cost-$date" Quiver.read_time_series_row(
-            db, "ThermalUnit", "parameters", "om_cost"; date_time = period_date_time,
+            db,
+            "ThermalUnit",
+            "parameters",
+            "om_cost";
+            date_time = period_date_time,
         )
     # An absent startup_cost means no startup cost.
     thermal_unit.startup_cost =
         @memoized_lru "thermal_unit-startup_cost-$date" something.(
             Quiver.read_time_series_row(
-                db, "ThermalUnit", "parameters", "startup_cost"; date_time = period_date_time,
+                db,
+                "ThermalUnit",
+                "parameters",
+                "startup_cost";
+                date_time = period_date_time,
             ),
             0.0,
         )
@@ -241,7 +263,14 @@ function update_thermal_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    Quiver.update_relation_by_label!(db, "ThermalUnit", collection, relation_type, thermal_unit_label, related_label)
+    Quiver.update_relation_by_label!(
+        db,
+        "ThermalUnit",
+        collection,
+        relation_type,
+        thermal_unit_label,
+        related_label,
+    )
     return db
 end
 

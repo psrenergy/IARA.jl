@@ -193,7 +193,14 @@ function update_bidding_group_relation!(
     relation_type::String,
     related_label::String,
 )
-    Quiver.update_relation_by_label!(db, "BiddingGroup", collection, relation_type, bidding_group_label, related_label)
+    Quiver.update_relation_by_label!(
+        db,
+        "BiddingGroup",
+        collection,
+        relation_type,
+        bidding_group_label,
+        related_label,
+    )
     return db
 end
 

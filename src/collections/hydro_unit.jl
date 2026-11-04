@@ -132,45 +132,83 @@ function update_time_series_from_db!(
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     hydro_unit.existing =
         @memoized_lru "hydro_unit-existing-$date" convert_to_enum.(
-            Quiver.read_time_series_row(db, "HydroUnit", "parameters", "existing"; date_time = period_date_time),
+            Quiver.read_time_series_row(
+                db,
+                "HydroUnit",
+                "parameters",
+                "existing";
+                date_time = period_date_time,
+            ),
             HydroUnit_Existence.T,
         )
     hydro_unit.production_factor =
         @memoized_lru "hydro_unit-production_factor-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "production_factor"; date_time = period_date_time,
+            db,
+            "HydroUnit",
+            "parameters",
+            "production_factor";
+            date_time = period_date_time,
         )
     # Kept optional: absence is validated or resolved per unit (see hydro_unit_max_generation).
     hydro_unit.min_generation =
         @memoized_lru "hydro_unit-min_generation-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "min_generation"; date_time = period_date_time,
+            db,
+            "HydroUnit",
+            "parameters",
+            "min_generation";
+            date_time = period_date_time,
         )
     hydro_unit.max_generation =
         @memoized_lru "hydro_unit-max_generation-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "max_generation"; date_time = period_date_time,
+            db,
+            "HydroUnit",
+            "parameters",
+            "max_generation";
+            date_time = period_date_time,
         )
     hydro_unit.max_turbining =
         @memoized_lru "hydro_unit-max_turbining-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "max_turbining"; date_time = period_date_time,
+            db,
+            "HydroUnit",
+            "parameters",
+            "max_turbining";
+            date_time = period_date_time,
         )
     hydro_unit.min_volume =
         @memoized_lru "hydro_unit-min_volume-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "min_volume"; date_time = period_date_time,
+            db,
+            "HydroUnit",
+            "parameters",
+            "min_volume";
+            date_time = period_date_time,
         )
     hydro_unit.max_volume =
         @memoized_lru "hydro_unit-max_volume-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "max_volume"; date_time = period_date_time,
+            db,
+            "HydroUnit",
+            "parameters",
+            "max_volume";
+            date_time = period_date_time,
         )
     # An absent min_outflow means no minimum outflow.
     hydro_unit.min_outflow =
         @memoized_lru "hydro_unit-min_outflow-$date" something.(
             Quiver.read_time_series_row(
-                db, "HydroUnit", "parameters", "min_outflow"; date_time = period_date_time,
+                db,
+                "HydroUnit",
+                "parameters",
+                "min_outflow";
+                date_time = period_date_time,
             ),
             0.0,
         )
     hydro_unit.om_cost =
         @memoized_lru "hydro_unit-om_cost-$date" Quiver.read_time_series_row(
-            db, "HydroUnit", "parameters", "om_cost"; date_time = period_date_time,
+            db,
+            "HydroUnit",
+            "parameters",
+            "om_cost";
+            date_time = period_date_time,
         )
     return nothing
 end
@@ -331,7 +369,14 @@ function update_hydro_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    Quiver.update_relation_by_label!(db, "HydroUnit", collection, relation_type, hydro_unit_label, related_label)
+    Quiver.update_relation_by_label!(
+        db,
+        "HydroUnit",
+        collection,
+        relation_type,
+        hydro_unit_label,
+        related_label,
+    )
     return db
 end
 
@@ -398,7 +443,14 @@ function set_hydro_turbine_to!(
     hydro_unit_from::String,
     hydro_unit_to::String,
 )
-    Quiver.update_relation_by_label!(db, "HydroUnit", "HydroUnit", "turbine_to", hydro_unit_from, hydro_unit_to)
+    Quiver.update_relation_by_label!(
+        db,
+        "HydroUnit",
+        "HydroUnit",
+        "turbine_to",
+        hydro_unit_from,
+        hydro_unit_to,
+    )
     return nothing
 end
 
@@ -417,7 +469,14 @@ function set_hydro_spill_to!(
     hydro_unit_from::String,
     hydro_unit_to::String,
 )
-    Quiver.update_relation_by_label!(db, "HydroUnit", "HydroUnit", "spill_to", hydro_unit_from, hydro_unit_to)
+    Quiver.update_relation_by_label!(
+        db,
+        "HydroUnit",
+        "HydroUnit",
+        "spill_to",
+        hydro_unit_from,
+        hydro_unit_to,
+    )
     return nothing
 end
 
@@ -741,7 +800,7 @@ function hydro_subperiods(inputs::AbstractInputs)
         # There is one more subperiod because this is the volume at the start of each subperiod.
         # In this case the last subperiod is actually the final volume of a certain period and
         # the first subperiod of the next period
-        return collect(1:(number_of_subperiods(inputs)+1))
+        return collect(1:number_of_subperiods(inputs)+1)
     elseif hydro_balance_subperiod_resolution(inputs) ==
            Configurations_HydroBalanceSubperiodRepresentation.AGGREGATED_SUBPERIODS
         # In this case the first subperiod is the only one in the period and the second subperiod is only used to represent

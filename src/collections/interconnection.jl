@@ -61,16 +61,30 @@ function update_time_series_from_db!(interconnection::Interconnection, db::Quive
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     interconnection.existing =
         @memoized_lru "interconnection-existing-$date" convert_to_enum.(
-            Quiver.read_time_series_row(db, "Interconnection", "parameters", "existing"; date_time = period_date_time),
+            Quiver.read_time_series_row(
+                db,
+                "Interconnection",
+                "parameters",
+                "existing";
+                date_time = period_date_time,
+            ),
             Interconnection_Existence.T,
         )
     interconnection.capacity_to =
         @memoized_lru "interconnection-capacity_to-$date" Quiver.read_time_series_row(
-            db, "Interconnection", "parameters", "capacity_to"; date_time = period_date_time,
+            db,
+            "Interconnection",
+            "parameters",
+            "capacity_to";
+            date_time = period_date_time,
         )
     interconnection.capacity_from =
         @memoized_lru "interconnection-capacity_from-$date" Quiver.read_time_series_row(
-            db, "Interconnection", "parameters", "capacity_from"; date_time = period_date_time,
+            db,
+            "Interconnection",
+            "parameters",
+            "capacity_from";
+            date_time = period_date_time,
         )
     return nothing
 end

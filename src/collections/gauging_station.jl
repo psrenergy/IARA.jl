@@ -98,7 +98,7 @@ function initialize!(gauging_station::GaugingStation, inputs::AbstractInputs)
     # Get the last 'parp_max_lags' inflow values for each gauging station
     gauging_station.inflow_initial_state = zeros(num_gauging_stations, parp_max_lags(inputs))
     for (idx, inflow_vector) in enumerate(gauging_station.historical_inflow)
-        gauging_station.inflow_initial_state[idx, :] = inflow_vector[(end-parp_max_lags(inputs)+1):end]
+        gauging_station.inflow_initial_state[idx, :] = inflow_vector[end-parp_max_lags(inputs)+1:end]
     end
 
     update_time_series_from_db!(gauging_station, inputs.db, initial_date_time(inputs))

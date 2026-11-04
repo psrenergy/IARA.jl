@@ -94,7 +94,13 @@ function update_time_series_from_db!(demand_unit::DemandUnit, db::Quiver.Databas
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     demand_unit.existing =
         @memoized_lru "demand_unit-existing-$date" convert_to_enum.(
-            Quiver.read_time_series_row(db, "DemandUnit", "parameters", "existing"; date_time = period_date_time),
+            Quiver.read_time_series_row(
+                db,
+                "DemandUnit",
+                "parameters",
+                "existing";
+                date_time = period_date_time,
+            ),
             DemandUnit_Existence.T,
         )
     return nothing
@@ -193,7 +199,14 @@ function update_demand_unit_relation!(
     relation_type::String,
     related_label::String,
 )
-    Quiver.update_relation_by_label!(db, "DemandUnit", collection, relation_type, demand_label, related_label)
+    Quiver.update_relation_by_label!(
+        db,
+        "DemandUnit",
+        collection,
+        relation_type,
+        demand_label,
+        related_label,
+    )
     return db
 end
 

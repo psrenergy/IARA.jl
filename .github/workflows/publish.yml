@@ -102,16 +102,7 @@ jobs:
         if: inputs[matrix.os] == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # TEST ONLY: the credentials and Julia environment ecs.jl uses, with no ECS task and no GHCR push.
-        run: |
-          julia +1.11.9 --project=./compile -e '
-            using CD
-            configuration = build_configuration(; package_path = pwd(), development_stage = "${{ inputs.development_stage }}", version_suffix = "${{ inputs.version_suffix }}")
-            println("version: ", configuration.version)
-            objects = CD.S3.list_objects_v2("psr-models", Dict("prefix" => "IARA/", "max-keys" => "3"))
-            println("psr-models IARA/ keys: ", objects["KeyCount"])
-          '
-          docker version --format 'docker server {{.Server.Version}}'
+        run: julia +1.11.9 --project=./compile ./compile/ecs.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}" --overwrite "${{ inputs.overwrite }}" --docker_only "${{ inputs.docker_only }}" --os ${{ matrix.os }}
 
   post-publish:
     if: inputs.development_stage == 'Stable'
@@ -126,7 +117,7 @@ jobs:
 
   notify-failure:
     name: Notify Slack on failure
-    if: false # TEST ONLY: no Slack message from the test run
+    if: failure()
     needs:
       - pre-publish
       - build-publish-os

@@ -43,7 +43,7 @@ env:
 jobs:
   pre-publish:
     name: Tag check
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
@@ -57,7 +57,7 @@ jobs:
         os: [windows, linux]
     name: Build and publish ${{ matrix.os }}
     needs: [pre-publish]
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
@@ -73,6 +73,19 @@ jobs:
       - uses: psrenergy/setup-git-token@v1
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      # GitHub-hosted runners have no juliaup, which the `julia +1.11.2` calls below need.
+      - uses: julia-actions/install-juliaup@v3
+        if: inputs[matrix.os] == true
+        with:
+          channel: '1.11.2'
+
+      # The Julia depot starts empty on every run. Installing the compile environment before
+      # the AWS step keeps that time out of the role's one-hour session, which the ECS build
+      # has to fit in.
+      - name: Install the compile environment
+        if: inputs[matrix.os] == true
+        run: julia +1.11.2 --project=./compile -e 'import Pkg; Pkg.instantiate(); Pkg.precompile()'
 
       - name: Configure AWS credentials (assume role)
         if: inputs[matrix.os] == true
@@ -91,7 +104,7 @@ jobs:
   post-publish:
     if: inputs.development_stage == 'Stable'
     name: Create release
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [build-publish-os]
     steps:
       - uses: actions/checkout@v7
@@ -106,7 +119,7 @@ jobs:
       - pre-publish
       - build-publish-os
       - post-publish
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
       - uses: psrenergy/notify-on-failure@v1
         with:

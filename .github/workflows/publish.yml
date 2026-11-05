@@ -84,8 +84,8 @@ jobs:
           channel: '1.11.9'
 
       # The Julia depot starts empty on every run. Installing the compile environment before
-      # the AWS step keeps that time out of the role's one-hour session, which the ECS build
-      # has to fit in.
+      # the AWS step keeps that time out of the role's session, which the ECS build has to
+      # fit in.
       - name: Install the compile environment
         if: inputs[matrix.os] == true
         run: julia +1.11.9 --project=./compile -e 'import Pkg; Pkg.instantiate(); Pkg.precompile()'
@@ -97,6 +97,10 @@ jobs:
           role-to-assume: arn:aws:iam::747020361772:role/IARA.jl-actions-role
           role-session-name: iara-publish-${{ matrix.os }}
           aws-region: us-east-1
+          # The credentials have to outlive the ECS build, its watch and the GHCR push. The
+          # Linux build has taken up to 60 minutes and the Windows build about 3 hours, so the
+          # session lasts 4 hours, the role's MaxSessionDuration.
+          role-duration-seconds: 14400
 
       - name: Start AWS ECS instance
         if: inputs[matrix.os] == true

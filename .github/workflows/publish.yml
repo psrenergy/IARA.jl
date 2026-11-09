@@ -3,12 +3,12 @@ on:
   workflow_dispatch:
     inputs:
       windows:
-        description: "Build windows"
+        description: "Build windows (x86_64)"
         required: true
         type: boolean
         default: true
-      linux:
-        description: "Build linux"
+      linux_x86_64:
+        description: "Build linux (x86_64)"
         required: true
         type: boolean
         default: true
@@ -25,90 +25,80 @@ on:
         description: "Version suffix (ignored if stable)"
         type: string
         required: false
+      psrcloud:
+        description: "PSRCloud"
+        required: true
+        type: boolean
+        default: true
       overwrite:
         description: "Overwrite"
         required: true
         type: boolean
         default: false
-      docker_only:
-        description: "Skip builds and only publish Docker image"
-        required: true
-        type: boolean
-        default: false
+
+permissions:
+  contents: read
+  id-token: write
 
 env:
   HUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PSR_CLOUD_PASSWORD_HASH: ${{ secrets.PSR_CLOUD_PASSWORD_HASH }}
+  PSR_CLOUD_USER: ${{ secrets.PSR_CLOUD_USER }}
   SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
 
 jobs:
-  pre-publish:
-    name: Tag check
-    runs-on: [self-hosted, linux]
+  build-publish-windows-x86-64:
+    name: Build and publish windows (x86_64)
+    if: inputs.windows
+    runs-on: windows-latest
+    timeout-minutes: 150
     steps:
-      - uses: actions/checkout@v7
+      - uses: psrenergy/cd@v2
         with:
-          fetch-depth: 0
-      - uses: psrenergy/assert-tag@v1
-
-  build-publish-os:
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [windows, linux]
-    name: Build and publish ${{ matrix.os }}
-    needs: [pre-publish]
-    runs-on: [self-hosted, linux]
-    permissions:
-      id-token: write
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v7
-        if: inputs[matrix.os] == true
-        with:
-          fetch-depth: 0
-
-      - uses: astral-sh/setup-uv@v7
-
-      - uses: psrenergy/setup-git-token@v1
-        with:
+          development_stage: ${{ inputs.development_stage }}
+          overwrite: ${{ inputs.overwrite }}
+          version_suffix: ${{ inputs.version_suffix }}
+          arn: ${{ secrets.AWS_JULIA_PUBLISH_ROLE_ARN }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Configure AWS credentials (assume role)
-        if: inputs[matrix.os] == true
-        uses: aws-actions/configure-aws-credentials@v4
+  build-publish-linux-x86-64:
+    name: Build and publish linux (x86_64)
+    if: inputs.linux_x86_64
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: psrenergy/cd@v2
         with:
-          role-to-assume: arn:aws:iam::747020361772:role/IARA.jl-actions-role
-          role-session-name: iara-publish-${{ matrix.os }}
-          aws-region: us-east-1
-
-      - name: Start AWS ECS instance
-        if: inputs[matrix.os] == true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: julia +1.11.2 --project=./compile ./compile/ecs.jl --development_stage "${{ inputs.development_stage }}" --version_suffix "${{ inputs.version_suffix }}" --overwrite "${{ inputs.overwrite }}" --docker_only "${{ inputs.docker_only }}" --os ${{ matrix.os }}
+          development_stage: ${{ inputs.development_stage }}
+          overwrite: ${{ inputs.overwrite }}
+          version_suffix: ${{ inputs.version_suffix }}
+          arn: ${{ secrets.AWS_JULIA_PUBLISH_ROLE_ARN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
   post-publish:
-    if: inputs.development_stage == 'Stable'
     name: Create release
-    runs-on: self-hosted
-    needs: [build-publish-os]
+    if: inputs.development_stage == 'Stable'
+    needs:
+      - build-publish-windows-x86-64
+      - build-publish-linux-x86-64
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - uses: psrenergy/create-tag-and-release@v1
 
   notify-failure:
     name: Notify Slack on failure
     if: failure()
     needs:
-      - pre-publish
-      - build-publish-os
+      - build-publish-windows-x86-64
+      - build-publish-linux-x86-64
       - post-publish
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: psrenergy/notify-on-failure@v1
         with:
           token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-          channel: C05FS4ZJYLU
+          channel: ${{ secrets.SLACK_DEV_CHANNEL }}

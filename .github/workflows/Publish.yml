@@ -1,0 +1,97 @@
+name: Publish
+on:
+  workflow_dispatch:
+    inputs:
+      windows:
+        description: "Build windows (x86_64)"
+        required: true
+        type: boolean
+        default: true
+      linux_x86_64:
+        description: "Build linux (x86_64)"
+        required: true
+        type: boolean
+        default: true
+      development_stage:
+        type: choice
+        description: "Development stage"
+        required: true
+        options:
+          - Alpha
+          - Beta
+          - RC
+          - Stable
+      version_suffix:
+        description: "Version suffix (ignored if stable)"
+        type: string
+        required: false
+      overwrite:
+        description: "Overwrite"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  HUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+
+jobs:
+  build-publish-windows-x86-64:
+    name: Build and publish windows (x86_64)
+    if: inputs.windows
+    runs-on: windows-latest
+    timeout-minutes: 150
+    steps:
+      - uses: psrenergy/cd@v2
+        with:
+          development_stage: ${{ inputs.development_stage }}
+          overwrite: ${{ inputs.overwrite }}
+          version_suffix: ${{ inputs.version_suffix }}
+          arn: ${{ secrets.AWS_JULIA_PUBLISH_ROLE_ARN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+  build-publish-linux-x86-64:
+    name: Build and publish linux (x86_64)
+    if: inputs.linux_x86_64
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: psrenergy/cd@v2
+        with:
+          development_stage: ${{ inputs.development_stage }}
+          overwrite: ${{ inputs.overwrite }}
+          version_suffix: ${{ inputs.version_suffix }}
+          arn: ${{ secrets.AWS_JULIA_PUBLISH_ROLE_ARN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+  post-publish:
+    name: Create release
+    if: inputs.development_stage == 'Stable'
+    needs:
+      - build-publish-windows-x86-64
+      - build-publish-linux-x86-64
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: psrenergy/create-tag-and-release@v1
+
+  notify-failure:
+    name: Notify Slack on failure
+    if: failure()
+    needs:
+      - build-publish-windows-x86-64
+      - build-publish-linux-x86-64
+      - post-publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: psrenergy/notify-on-failure@v1
+        with:
+          token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          channel: ${{ secrets.SLACK_DEV_CHANNEL }}

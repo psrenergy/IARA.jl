@@ -1047,15 +1047,46 @@ cyclic_intra_period_chronology(inputs::AbstractInputs) =
     intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.CYCLIC
 
 """
+    reads_thermal_initial_conditions(inputs::AbstractInputs)
+
+Return whether the thermal unit initial conditions are used anywhere in the study.
+This only happens under `FREE_START`, in a linear policy graph.
+"""
+reads_thermal_initial_conditions(inputs::AbstractInputs) =
+    intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.FREE_START &&
+    linear_policy_graph(inputs)
+
+"""
     use_thermal_initial_conditions(inputs::AbstractInputs, node::Int)
 
 Return whether the thermal unit initial conditions constrain the first subperiod of the given node.
 This only happens under `FREE_START`, in a linear policy graph, at the first node.
 """
 use_thermal_initial_conditions(inputs::AbstractInputs, node::Int) =
-    intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.FREE_START &&
-    linear_policy_graph(inputs) &&
-    node == 1
+    reads_thermal_initial_conditions(inputs) && node == 1
+
+"""
+    previous_subperiod(inputs::AbstractInputs, subperiod::Int)
+
+Return the subperiod that precedes `subperiod` within the period, or `nothing` if it has no predecessor.
+Under `CYCLIC`, the last subperiod is the predecessor of the first one.
+"""
+function previous_subperiod(inputs::AbstractInputs, subperiod::Int)
+    if subperiod > 1
+        return subperiod - 1
+    elseif cyclic_intra_period_chronology(inputs)
+        return number_of_subperiods(inputs)
+    end
+    return nothing
+end
+
+"""
+    subperiods_with_predecessor(inputs::AbstractInputs)
+
+Return the subperiods that have a predecessor within the period. Under `CYCLIC`, these are all subperiods.
+"""
+subperiods_with_predecessor(inputs::AbstractInputs) =
+    [b for b in subperiods(inputs) if !isnothing(previous_subperiod(inputs, b))]
 
 """
     cycle_discount_rate(inputs::AbstractInputs)

@@ -34,32 +34,38 @@ function thermal_ramp!(
     # Model Variables
     thermal_generation = get_model_object(model, :thermal_generation)
 
+    # Average power [MW] in subperiod b, and time [h] between the midpoints of subperiod b and its predecessor
+    average_power(b, t) = thermal_generation[b, t] / subperiod_duration_in_hours(inputs, b)
+    hours_since_previous_midpoint(b) =
+        (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, previous_subperiod(inputs, b))) /
+        2
+
     # Ramp constraints
+    # Under CYCLIC, the last subperiod is the predecessor of the first one
     @constraint(
         model.jump_model,
         thermal_ramp_up[
-            b in 2:number_of_subperiods(inputs),
+            b in subperiods_with_predecessor(inputs),
             t in ramp_up_indexes,
         ],
-        thermal_generation[b, t]
+        average_power(b, t)
         -
-        thermal_generation[b-1, t]
+        average_power(previous_subperiod(inputs, b), t)
         <=
-        thermal_unit_max_ramp_up(inputs, t) * per_minute_to_per_hour()
-        * (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, b - 1)) / 2
+        thermal_unit_max_ramp_up(inputs, t) * per_minute_to_per_hour() * hours_since_previous_midpoint(b)
     )
 
     @constraint(
         model.jump_model,
         thermal_ramp_down[
-            b in 2:number_of_subperiods(inputs),
+            b in subperiods_with_predecessor(inputs),
             t in ramp_down_indexes,
         ],
-        thermal_generation[b-1, t]
+        average_power(previous_subperiod(inputs, b), t)
         -
-        thermal_generation[b, t] <=
-        thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour()
-        * (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, b - 1)) / 2
+        average_power(b, t)
+        <=
+        thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour() * hours_since_previous_midpoint(b)
     )
 
     # Initial conditions
@@ -91,38 +97,6 @@ function thermal_ramp!(
             thermal_generation[1, t] / subperiod_duration_in_hours(inputs, 1)
             <=
             thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour() * subperiod_duration_in_hours(inputs, 1)
-        )
-    end
-
-    # Connect first subperiod to last subperiod
-    if cyclic_intra_period_chronology(inputs)
-        @constraint(
-            model.jump_model,
-            thermal_ramp_up_last_subperiod[
-                t in ramp_up_indexes
-            ],
-            thermal_generation[1, t] / subperiod_duration_in_hours(inputs, 1)
-            -
-            thermal_generation[end, t] / subperiod_duration_in_hours(inputs, number_of_subperiods(inputs))
-            <=
-            thermal_unit_max_ramp_up(inputs, t) * per_minute_to_per_hour()
-            *
-            (subperiod_duration_in_hours(inputs, number_of_subperiods(inputs)) + subperiod_duration_in_hours(inputs, 1)) /
-            2
-        )
-        @constraint(
-            model.jump_model,
-            thermal_ramp_down_last_subperiod[
-                t in ramp_down_indexes
-            ],
-            thermal_generation[end, t] / subperiod_duration_in_hours(inputs, number_of_subperiods(inputs))
-            -
-            thermal_generation[1, t] / subperiod_duration_in_hours(inputs, 1)
-            <=
-            thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour()
-            *
-            (subperiod_duration_in_hours(inputs, number_of_subperiods(inputs)) + subperiod_duration_in_hours(inputs, 1)) /
-            2
         )
     end
 

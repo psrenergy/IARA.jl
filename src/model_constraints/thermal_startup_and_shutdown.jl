@@ -37,32 +37,33 @@ function thermal_startup_and_shutdown!(
     thermal_shutdown = get_model_object(model, :thermal_shutdown)
 
     # Startup and shutdown definition
+    # Under CYCLIC, the last subperiod is the predecessor of the first one
     @constraint(
         model.jump_model,
         thermal_startup_and_shutdown[
-            b in 2:number_of_subperiods(inputs),
+            b in subperiods_with_predecessor(inputs),
             t in commitment_indexes,
         ],
         thermal_startup[b, t] - thermal_shutdown[b, t] ==
-        thermal_commitment[b, t] - thermal_commitment[b-1, t]
+        thermal_commitment[b, t] - thermal_commitment[previous_subperiod(inputs, b), t]
     )
     @constraint(
         model.jump_model,
         thermal_commitment_is_on[
-            b in 2:number_of_subperiods(inputs),
+            b in subperiods_with_predecessor(inputs),
             t in commitment_indexes,
         ],
         thermal_startup[b, t] + thermal_shutdown[b, t] <=
-        thermal_commitment[b, t] + thermal_commitment[b-1, t]
+        thermal_commitment[b, t] + thermal_commitment[previous_subperiod(inputs, b), t]
     )
     @constraint(
         model.jump_model,
         thermal_commitment_is_off[
-            b in 2:number_of_subperiods(inputs),
+            b in subperiods_with_predecessor(inputs),
             t in commitment_indexes,
         ],
         thermal_startup[b, t] + thermal_shutdown[b, t] +
-        thermal_commitment[b, t] + thermal_commitment[b-1, t]
+        thermal_commitment[b, t] + thermal_commitment[previous_subperiod(inputs, b), t]
         <=
         2
     )
@@ -94,38 +95,6 @@ function thermal_startup_and_shutdown!(
             ],
             thermal_startup[1, t] + thermal_shutdown[1, t] +
             thermal_commitment[1, t] + Int(thermal_unit_commitment_initial_condition(inputs, t))
-            <=
-            2
-        )
-    end
-
-    # Connect first subperiod to last subperiod
-    if cyclic_intra_period_chronology(inputs)
-        thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
-        thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
-        @constraint(
-            model.jump_model,
-            thermal_startup_and_shutdown_last_subperiod[
-                t in commitment_indexes
-            ],
-            thermal_startup_loop[t] - thermal_shutdown_loop[t] ==
-            thermal_commitment[1, t] - thermal_commitment[end, t]
-        )
-        @constraint(
-            model.jump_model,
-            thermal_commitment_is_on_last_subperiod[
-                t in commitment_indexes
-            ],
-            thermal_startup_loop[t] + thermal_shutdown_loop[t] <=
-            thermal_commitment[1, t] + thermal_commitment[end, t]
-        )
-        @constraint(
-            model.jump_model,
-            thermal_commitment_is_off_last_subperiod[
-                t in commitment_indexes
-            ],
-            thermal_startup_loop[t] + thermal_shutdown_loop[t] +
-            thermal_commitment[1, t] + thermal_commitment[end, t]
             <=
             2
         )

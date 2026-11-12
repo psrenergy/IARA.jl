@@ -1,0 +1,8 @@
+dimension_sizes = [ 6, 3, 4, 3 ]
+dimensions = [ 'period', 'scenario', 'subscenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'Thermal 1', 'Thermal 2', 'Thermal 3', 'Thermal 4', 'Thermal 5', 'Thermal 6' ]
+time_dimensions = [ 'period' ]
+unit = 'GWh'
+version = '1'

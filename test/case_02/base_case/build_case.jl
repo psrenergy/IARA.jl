@@ -39,6 +39,7 @@ db = IARA.create_study!(PATH;
     inflow_model = IARA.Configurations_InflowModel.READ_INFLOW_FROM_FILE,
     inflow_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
     renewable_scenarios_files = IARA.Configurations_UncertaintyScenariosFiles.ONLY_EX_ANTE,
+    intra_period_chronological_constraints = IARA.Configurations_IntraPeriodChronologicalConstraints.FREE_START,
 )
 
 # Add collection elements

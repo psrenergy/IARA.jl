@@ -21,6 +21,11 @@ function thermal_min_max_up_down_time!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
+    # Under IGNORE, consecutive subperiods are not linked, so none of these constraints are built
+    if ignore_intra_period_chronology(inputs)
+        return nothing
+    end
+
     # Indexes
     commitment_indexes =
         index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
@@ -37,7 +42,7 @@ function thermal_min_max_up_down_time!(
     minimum_up_time_indicator = zeros(number_of_subperiods(inputs), length(minimum_up_time_indexes))
     minimum_down_time_indicator = zeros(number_of_subperiods(inputs), length(minimum_down_time_indexes))
     maximum_up_time_counter = zeros(number_of_subperiods(inputs), length(maximum_up_time_indexes))
-    if model.node == 1
+    if use_thermal_initial_conditions(inputs, model.node)
         # Minimum uptime initial conditions
         for (i, plant_idx) in enumerate(minimum_up_time_indexes)
             uptime_initial_condition = thermal_unit_uptime_initial_condition(inputs, plant_idx)
@@ -197,8 +202,7 @@ function thermal_min_max_up_down_time!(
         thermal_unit_max_uptime(inputs, t)
     )
 
-    if thermal_unit_intra_period_operation(inputs) ==
-       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
+    if cyclic_intra_period_chronology(inputs)
         thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
         thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
         # The minimum uptime and downtime constraints here are similar to the ones above, 

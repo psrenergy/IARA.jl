@@ -38,13 +38,17 @@ label.en = "Cyclic With Season Root"
 id = 0
 label.en = "One Month Per Period"
 
-[[hydro_balance_subperiod_resolution]]
+[[intra_period_chronological_constraints]]
 id = 0
-label.en = "Chronological Subperiods"
+label.en = "Free Start"
 
-[[hydro_balance_subperiod_resolution]]
+[[intra_period_chronological_constraints]]
 id = 1
-label.en = "Aggregated Subperiods"
+label.en = "Cyclic"
+
+[[intra_period_chronological_constraints]]
+id = 2
+label.en = "Ignore"
 
 [[variable_aggregation_type]]
 id = 0
@@ -149,14 +153,6 @@ label.en = "Constrained on Period Aggregate"
 [[make_whole_payments]]
 id = 3
 label.en = "Ignore"
-
-[[consider_subperiods_loop_for_thermal_constraints]]
-id = 0
-label.en = "Consider"
-
-[[consider_subperiods_loop_for_thermal_constraints]]
-id = 1
-label.en = "Do Not Consider"
 
 [[buses_aggregation_for_strategic_bidding]]
 id = 0

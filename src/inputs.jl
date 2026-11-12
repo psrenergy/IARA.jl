@@ -112,8 +112,7 @@ Optional arguments:
 
   - `number_of_nodes::Int64`: Number of nodes in the configuration
   - `train_mincost_iteration_limit::Int64`
-  - `hydro_balance_subperiod_resolution::Int64`: Hydro balance subperiod resolution of the configuration <default `0`>
-  - `thermal_unit_intra_period_operation::Int64`: Loop subperiods for thermal constraints of the configuration
+  - `intra_period_chronological_constraints::Int64`: Representation of the constraints that link consecutive subperiods within a period <default `1`>
   - `aggregate_buses_for_strategic_bidding::Int64`: Aggregate buses for strategic bidding of the configuration
   - `parp_max_lags::Int64`: PARP max lags of the configuration <default `6`>
   - `construction_type_ex_ante_physical::Int64`: Construction type ex ante physical of the configuration <default `-1`>

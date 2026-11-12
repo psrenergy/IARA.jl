@@ -46,6 +46,7 @@ db = IARA.create_study!(PATH;
     construction_type_ex_post_physical = IARA.Configurations_ConstructionType.HYBRID,
     construction_type_ex_post_commercial = IARA.Configurations_ConstructionType.SKIP,
     time_series_step = IARA.Configurations_TimeSeriesStep.FROZEN_TIME,
+    intra_period_chronological_constraints = IARA.Configurations_IntraPeriodChronologicalConstraints.FREE_START,
     bid_processing = IARA.Configurations_BidProcessing.PARAMETERIZED_HEURISTIC_BIDS,
     reference_curve_number_of_segments,
     demand_deficit_cost,

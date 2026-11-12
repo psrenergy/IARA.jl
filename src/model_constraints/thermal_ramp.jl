@@ -21,6 +21,11 @@ function thermal_ramp!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
+    # Under IGNORE, consecutive subperiods are not linked, so none of these constraints are built
+    if ignore_intra_period_chronology(inputs)
+        return nothing
+    end
+
     ramp_up_indexes =
         index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_max_ramp_up])
     ramp_down_indexes =
@@ -58,7 +63,7 @@ function thermal_ramp!(
     )
 
     # Initial conditions
-    if model.node == 1
+    if use_thermal_initial_conditions(inputs, model.node)
         ramp_up_initial_indexes =
             [t for t in ramp_up_indexes if !is_null(thermal_unit_generation_initial_condition(inputs, t))]
         ramp_down_initial_indexes =
@@ -90,8 +95,7 @@ function thermal_ramp!(
     end
 
     # Connect first subperiod to last subperiod
-    if thermal_unit_intra_period_operation(inputs) ==
-       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
+    if cyclic_intra_period_chronology(inputs)
         @constraint(
             model.jump_model,
             thermal_ramp_up_last_subperiod[
@@ -122,7 +126,6 @@ function thermal_ramp!(
         )
     end
 
-    # TODO: Include initial condition and subperiods connection to documentation
     return nothing
 end
 

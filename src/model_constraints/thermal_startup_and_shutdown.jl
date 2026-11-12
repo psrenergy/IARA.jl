@@ -21,6 +21,11 @@ function thermal_startup_and_shutdown!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
+    # Under IGNORE, consecutive subperiods are not linked, so none of these constraints are built
+    if ignore_intra_period_chronology(inputs)
+        return nothing
+    end
+
     commitment_indexes =
         index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
     max_startup_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_max_startups(inputs, t))]
@@ -63,7 +68,7 @@ function thermal_startup_and_shutdown!(
     )
 
     # Startup and shutdown initial conditions
-    if model.node == 1
+    if use_thermal_initial_conditions(inputs, model.node)
         initial_condition_indexes =
             [t for t in commitment_indexes if has_commitment_initial_condition(inputs.collections.thermal_unit, t)]
         @constraint(
@@ -95,8 +100,7 @@ function thermal_startup_and_shutdown!(
     end
 
     # Connect first subperiod to last subperiod
-    if thermal_unit_intra_period_operation(inputs) ==
-       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
+    if cyclic_intra_period_chronology(inputs)
         thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
         thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
         @constraint(

@@ -687,7 +687,6 @@ end
 
 Return the minimum activation level profile time series.
 """
-
 function time_series_minimum_activation_level_profile(
     inputs,
     period::Int,

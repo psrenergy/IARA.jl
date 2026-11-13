@@ -640,12 +640,12 @@ function validate(hydro_unit::HydroUnit)
     return num_errors
 end
 
+# TODO: add validation to bidding_group or virtual_reservoir not nullity
 """
     advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
 
 Validate the Hydro Units' context within the inputs. Return the number of errors found.
 """
-# TODO: add validation to bidding_group or virtual_reservoir not nullity
 function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup)

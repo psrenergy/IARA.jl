@@ -1,0 +1,720 @@
+diff --git a/docs/src/centralized_operation_problem.md b/docs/src/centralized_operation_problem.md
+index 582c8089..70edc9ae 100644
+--- a/docs/src/centralized_operation_problem.md
++++ b/docs/src/centralized_operation_problem.md
+@@ -190,11 +190,26 @@ The table below summarizes which constraints are built under each option.
+ | Constraints | `CYCLIC` | `FREE_START` | `IGNORE` |
+ |---|---|---|---|
+ | Hydro balance | intra-period | intra-period | aggregated |
+-| Thermal commitment, ramping, minimum up/down time, maximum uptime | with connection of the last subperiod to the first | yes | no |
++| Thermal commitment, ramping, minimum up/down time, maximum uptime | yes, with the last subperiod as the predecessor of the first | yes | no |
+ | Thermal maximum startups/shutdowns | yes | yes | no |
+ | Thermal initial conditions | no | first period of a linear policy graph | no |
+ | Thermal bounds | yes | yes | yes |
+ 
++The thermal constraints below are written in terms of the predecessor $p(\tau)$ of subperiod $\tau$:
++
++```math
++    p(\tau) =
++    \begin{cases}
++        \tau - 1 & \text{if } \tau > 1 \\
++        |B(t)| & \text{if } \tau = 1 \text{ under } \texttt{CYCLIC} \\
++        \text{undefined} & \text{if } \tau = 1 \text{ under } \texttt{FREE\_START}
++    \end{cases}
++```
++
++The set $B^P(t) \subseteq B(t)$ contains the subperiods that have a predecessor: all subperiods under `CYCLIC`, and all but the first one under `FREE_START`.
++
++Some constraints also look back a given number of hours $h$ from subperiod $\tau$. The lookback window $W_\tau(h)$ contains $\tau$ and the subperiods $p(\tau), p(p(\tau)), \ldots$, as long as the total duration of these predecessors is strictly less than $h$. The window $\overline{W}_\tau(h)$ is defined in the same way, with "less than or equal to" instead of "strictly less than". Under `CYCLIC`, the windows wrap around from the first subperiod to the last one, and contain at most $|B(t)|$ subperiods.
++
+ ### Demand Balance (Zonal)
+ 
+ ```math
+@@ -312,50 +327,37 @@ Under the `IGNORE` option, the intra-period balance is replaced by a single bala
+ ### Thermal Commitment
+ 
+ ```math
+-    y^T_{j, \tau} - w^T_{j, \tau} = x^T_{j, \tau} - x^T_{j, \tau-1}
+-    \quad \forall j \in J^{TC}, \tau \in B(t)
++    y^T_{j, \tau} - w^T_{j, \tau} = x^T_{j, \tau} - x^T_{j, p(\tau)}
++    \quad \forall j \in J^{TC}, \tau \in B^P(t)
+ ```
+ 
+ ```math
+-    y^T_{j, \tau} + w^T_{j, \tau} \leq x^T_{j, \tau} + x^T_{j, \tau-1}
+-    \quad \forall j \in J^{TC}, \tau \in B(t)
++    y^T_{j, \tau} + w^T_{j, \tau} \leq x^T_{j, \tau} + x^T_{j, p(\tau)}
++    \quad \forall j \in J^{TC}, \tau \in B^P(t)
+ ```
+ 
+ ```math
+-    y^T_{j, \tau} + w^T_{j, \tau} + x^T_{j, \tau} + x^T_{j, \tau-1} \leq 2
+-    \quad \forall j \in J^{TC}, \tau \in B(t)
+-```
+-
+-For $\tau = 1$, these constraints are only built when the initial conditions are used, with $x^T_{j, 0}$ given by the initial condition. Under the `CYCLIC` option, the last subperiod is connected to the first one with the auxiliary variables $y^{T_{loop}}_j$ and $w^{T_{loop}}_j$:
+-
+-```math
+-    y^{T_{loop}}_j - w^{T_{loop}}_j = x^T_{j, 1} - x^T_{j, |B(t)|}
+-    \quad \forall j \in J^{TC}
++    y^T_{j, \tau} + w^T_{j, \tau} + x^T_{j, \tau} + x^T_{j, p(\tau)} \leq 2
++    \quad \forall j \in J^{TC}, \tau \in B^P(t)
+ ```
+ 
+-```math
+-    y^{T_{loop}}_j + w^{T_{loop}}_j \leq x^T_{j, 1} + x^T_{j, |B(t)|}
+-    \quad \forall j \in J^{TC}
+-```
+-
+-```math
+-    y^{T_{loop}}_j + w^{T_{loop}}_j + x^T_{j, 1} + x^T_{j, |B(t)|} \leq 2
+-    \quad \forall j \in J^{TC}
+-```
++Under `CYCLIC`, a startup or shutdown between the last and the first subperiod is therefore represented by $y^T_{j, 1}$ or $w^T_{j, 1}$, and pays the corresponding cost. Under `FREE_START`, when the initial conditions are used, the same constraints are also built for $\tau = 1$, with $x^T_{j, 0}$ given by the initial condition.
+ 
+ ### Thermal Ramping
+ 
++The ramping constraints limit the change in average power between consecutive subperiods, over the time between their midpoints:
++
+ ```math
+-    g^T_{j, \tau} - g^T_{j, \tau-1} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
+-    \quad \forall j \in J^T, \tau \in B(t)
++    \frac{g^T_{j, \tau}}{d(\tau)} - \frac{g^T_{j, p(\tau)}}{d(p(\tau))} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(p(\tau))}{2}
++    \quad \forall j \in J^T, \tau \in B^P(t)
+ ```
+ 
+ ```math
+-    g^T_{j, \tau-1} - g^T_{j, \tau} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
+-    \quad \forall j \in J^T, \tau \in B(t)
++    \frac{g^T_{j, p(\tau)}}{d(p(\tau))} - \frac{g^T_{j, \tau}}{d(\tau)} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(p(\tau))}{2}
++    \quad \forall j \in J^T, \tau \in B^P(t)
+ ```
+ 
+-For $\tau = 1$, when the initial conditions are used, the ramping constraints are written with respect to the initial generation $g^T_{j, 0}$:
++Under `FREE_START`, when the initial conditions are used, the ramping constraints for $\tau = 1$ are written with respect to the initial generation $g^T_{j, 0}$:
+ 
+ ```math
+     \frac{g^T_{j, 1}}{d(1)} - g^T_{j, 0} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot d(1)
+@@ -367,18 +369,6 @@ For $\tau = 1$, when the initial conditions are used, the ramping constraints ar
+     \quad \forall j \in J^T
+ ```
+ 
+-Under the `CYCLIC` option, the last subperiod is connected to the first one:
+-
+-```math
+-    \frac{g^T_{j, 1}}{d(1)} - \frac{g^T_{j, |B(t)|}}{d(|B(t)|)} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(1)+d(|B(t)|)}{2}
+-    \quad \forall j \in J^T
+-```
+-
+-```math
+-    \frac{g^T_{j, |B(t)|}}{d(|B(t)|)} - \frac{g^T_{j, 1}}{d(1)} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(1)+d(|B(t)|)}{2}
+-    \quad \forall j \in J^T
+-```
+-
+ ### Thermal Minimum Up/Down Time
+ 
+ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the following terms are defined:
+@@ -401,30 +391,24 @@ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the followi
+     \quad \forall j \in J^{TC}, \tau \in B(t)
+ ```
+ The indicators $I^{up}$ and $I^{down}$ represent whether the plant started/stopped in the previous period AND has yet to reach the minimum uptime/downtime.
+-Also, the following auxiliar terms are defined:
+ 
+-```math
+-    \Gamma^{UT^{min}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) < UT^{min}_j } \right\}
+-```
+-```math
+-    \Gamma^{DT^{min}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) < DT^{min}_j } \right\}
+-```
+-
+-With these terms, the following constraints are defined:
++With these terms and the lookback windows defined above, the following constraints are defined:
+ 
+ ```math
+-    \left(\sum_{\gamma = \Gamma^{UT^{min}}_{j, \tau}}^{\tau}{y^T_{j, \gamma}}\right) + I^{up}_{j, \tau} \leq x^T_{j, \tau} , 
++    \left(\sum_{\gamma \in W_\tau(UT^{min}_j)}{y^T_{j, \gamma}}\right) + I^{up}_{j, \tau} \leq x^T_{j, \tau} , 
+     \quad \forall j \in J^{TC}, \tau \in B(t)
+ ```
+ 
+ ```math
+-    \left(\sum_{\gamma= \Gamma^{DT^{min}}_{j, \tau}}^{\tau}{w^T_{j, \gamma}}\right) + I^{down}_{j, \tau} \leq 1 - x^T_{j, \tau}, 
++    \left(\sum_{\gamma \in W_\tau(DT^{min}_j)}{w^T_{j, \gamma}}\right) + I^{down}_{j, \tau} \leq 1 - x^T_{j, \tau}, 
+     \quad \forall j \in J^{TC}, \tau \in B(t)
+ ```
+ 
+ For the uptime, the constraint states that if the plant started in the last $UT^{min}_j$ hours or if the indicator $I^{up}_{j, \tau}$ is active, then the plant must remain active.
+ The same logic applies to the downtime.
+ 
++Under `CYCLIC`, if $UT^{min}_j$ is at least the duration of the period, every window contains all subperiods. A single startup would then require the plant to be active in all subperiods, which leaves no subperiod from which to start up, so the commitment of the plant is constant over the period. The same holds for $DT^{min}_j$ and shutdowns.
++
+ ### Thermal Maximum Uptime
+ 
+ Based on the initial condition $t^{up}_{j,0}$ and the $UT^{max}$ parameter, the following terms are defined. When the initial conditions are not used, $T^{up}_{j, \tau} = 0$:
+@@ -439,19 +423,17 @@ Based on the initial condition $t^{up}_{j,0}$ and the $UT^{max}$ parameter, the
+     \quad \forall j \in J^{TC}, \tau \in B(t)
+ ```
+ 
+-```math
+-     \Gamma^{UT^{max}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) \leq UT^{max}_j } \right\}
+-```
+-For a time window of $UT^{max}_j$ hours before the beginning of subperiod $\tau$, the term $T^{up}_{j, \tau}$ represents the amount of hours that the plant has been active in the period before. The term $\Gamma^{UT^{max}}_{j, \tau}$ indicates the first subperiod in the current period that is within the time window of $UT^{max}_j$ hours before the current subperiod $\tau$. 
++For a time window of $UT^{max}_j$ hours before the beginning of subperiod $\tau$, the term $T^{up}_{j, \tau}$ represents the amount of hours that the plant has been active in the period before.
+ 
+ With these terms, the following constraint is defined:
+ 
+ ```math
+-    \left(\sum_{\gamma=\Gamma^{UT^{max}}_{j, \tau}}^{\tau}{d(\tau) \cdot x^T_{j, \gamma}}\right) + T^{up}_{j, \tau} \leq UT^{max}_j
++    \left(\sum_{\gamma \in \overline{W}_\tau(UT^{max}_j)}{d(\gamma) \cdot x^T_{j, \gamma}}\right) + T^{up}_{j, \tau} \leq UT^{max}_j
+     \quad \forall j \in J^{TC}, \tau \in B(t)
+ ```
+ The constraint states that the amount of time that the plant has been active in the last $UT^{max}_j$ hours plus the time that the plant is active in the current subperiod must be less than or equal to $UT^{max}_j$.
+ 
++Under `CYCLIC`, if $UT^{max}_j$ is shorter than the duration of the period, a plant that is active in all subperiods violates this constraint, so at least one shutdown is required in each period. If $UT^{max}_j$ is at least the duration of the period, the plant can remain active in all subperiods.
+ 
+ ### Renewable Balance
+ 
+diff --git a/src/collections/configurations.jl b/src/collections/configurations.jl
+index 199c500e..2db396fc 100644
+--- a/src/collections/configurations.jl
++++ b/src/collections/configurations.jl
+@@ -1046,6 +1046,16 @@ Return whether the last subperiod is treated as the predecessor of the first sub
+ cyclic_intra_period_chronology(inputs::AbstractInputs) =
+     intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.CYCLIC
+ 
++"""
++    reads_thermal_initial_conditions(inputs::AbstractInputs)
++
++Return whether the thermal unit initial conditions are used anywhere in the study.
++This only happens under `FREE_START`, in a linear policy graph.
++"""
++reads_thermal_initial_conditions(inputs::AbstractInputs) =
++    intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.FREE_START &&
++    linear_policy_graph(inputs)
++
+ """
+     use_thermal_initial_conditions(inputs::AbstractInputs, node::Int)
+ 
+@@ -1053,9 +1063,30 @@ Return whether the thermal unit initial conditions constrain the first subperiod
+ This only happens under `FREE_START`, in a linear policy graph, at the first node.
+ """
+ use_thermal_initial_conditions(inputs::AbstractInputs, node::Int) =
+-    intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.FREE_START &&
+-    linear_policy_graph(inputs) &&
+-    node == 1
++    reads_thermal_initial_conditions(inputs) && node == 1
++
++"""
++    previous_subperiod(inputs::AbstractInputs, subperiod::Int)
++
++Return the subperiod that precedes `subperiod` within the period, or `nothing` if it has no predecessor.
++Under `CYCLIC`, the last subperiod is the predecessor of the first one.
++"""
++function previous_subperiod(inputs::AbstractInputs, subperiod::Int)
++    if subperiod > 1
++        return subperiod - 1
++    elseif cyclic_intra_period_chronology(inputs)
++        return number_of_subperiods(inputs)
++    end
++    return nothing
++end
++
++"""
++    subperiods_with_predecessor(inputs::AbstractInputs)
++
++Return the subperiods that have a predecessor within the period. Under `CYCLIC`, these are all subperiods.
++"""
++subperiods_with_predecessor(inputs::AbstractInputs) =
++    [b for b in subperiods(inputs) if !isnothing(previous_subperiod(inputs, b))]
+ 
+ """
+     cycle_discount_rate(inputs::AbstractInputs)
+diff --git a/src/collections/thermal_unit.jl b/src/collections/thermal_unit.jl
+index 9d9bc298..4b9fdb7d 100644
+--- a/src/collections/thermal_unit.jl
++++ b/src/collections/thermal_unit.jl
+@@ -163,8 +163,8 @@ Required arguments:
+ 
+ Optional arguments:
+ 
+-  - `max_ramp_up::Float64`: Max ramp up of the thermal unit `[MW/h]`
+-  - `max_ramp_down::Float64`: Max ramp down of the thermal unit `[MW/h]`
++  - `max_ramp_up::Float64`: Max ramp up of the thermal unit `[MW/min]`
++  - `max_ramp_down::Float64`: Max ramp down of the thermal unit `[MW/min]`
+   - `min_uptime::Float64`: Min uptime of the thermal unit `[h]`
+   - `max_uptime::Float64`: Max uptime of the thermal unit `[h]`
+   - `min_downtime::Float64`: Min downtime of the thermal unit `[h]`
+@@ -528,6 +528,29 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
+         end
+     end
+ 
++    # Warn about initial conditions that will not be used
++    if !reads_thermal_initial_conditions(inputs)
++        units_with_initial_conditions = [
++            thermal_unit.label[i] for i in 1:length(thermal_unit) if
++            has_commitment_initial_condition(thermal_unit, i) ||
++            !is_null(thermal_unit.generation_initial_condition[i]) ||
++            !is_null(thermal_unit.uptime_initial_condition[i]) ||
++            !is_null(thermal_unit.downtime_initial_condition[i])
++        ]
++        if !isempty(units_with_initial_conditions)
++            max_labels_to_show = 10
++            labels_to_show = join(first(units_with_initial_conditions, max_labels_to_show), ", ")
++            if length(units_with_initial_conditions) > max_labels_to_show
++                labels_to_show *= " and $(length(units_with_initial_conditions) - max_labels_to_show) more"
++            end
++            @warn(
++                "Thermal unit initial conditions are only used under the FREE_START option of " *
++                "intra_period_chronological_constraints with a linear policy graph. " *
++                "The initial conditions set for the following thermal units will be ignored: $labels_to_show."
++            )
++        end
++    end
++
+     # Print consolidated warning if any characteristics are present
+     if generate_heuristic_bids_for_clearing(inputs)
+         characteristics = String[]
+diff --git a/src/model_constraints/thermal_min_max_up_down_time.jl b/src/model_constraints/thermal_min_max_up_down_time.jl
+index 9c83fdd9..3d73c574 100644
+--- a/src/model_constraints/thermal_min_max_up_down_time.jl
++++ b/src/model_constraints/thermal_min_max_up_down_time.jl
+@@ -106,20 +106,20 @@ function thermal_min_max_up_down_time!(
+         end
+     end
+ 
+-    first_subperiod_that_matters_for_min_uptime_map =
+-        zeros(Int, number_of_subperiods(inputs), length(minimum_up_time_indexes))
+-    for b in subperiods(inputs)
+-        first_subperiod_that_matters_for_min_uptime_map[b, :] .= b
+-        subperiod_duration_sum = 0
+-        for some_previous_subperiod in b-1:-1:1
+-            subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
+-            for (i, plant_idx) in enumerate(minimum_up_time_indexes)
+-                if subperiod_duration_sum < thermal_unit_min_uptime(inputs, plant_idx)
+-                    first_subperiod_that_matters_for_min_uptime_map[b, i] = some_previous_subperiod
+-                end
+-            end
+-        end
+-    end
++    # Lookback windows: subperiod b followed by the predecessors that still bind it.
++    # Under CYCLIC, the windows wrap around from the first subperiod to the last one.
++    minimum_up_time_window = [
++        lookback_subperiods(inputs, b, thermal_unit_min_uptime(inputs, t)) for
++        b in subperiods(inputs), t in minimum_up_time_indexes
++    ]
++    minimum_down_time_window = [
++        lookback_subperiods(inputs, b, thermal_unit_min_downtime(inputs, t)) for
++        b in subperiods(inputs), t in minimum_down_time_indexes
++    ]
++    maximum_up_time_window = [
++        lookback_subperiods(inputs, b, thermal_unit_max_uptime(inputs, t); include_boundary = true) for
++        b in subperiods(inputs), t in maximum_up_time_indexes
++    ]
+ 
+     # Constraints
+     @constraint(
+@@ -128,64 +128,26 @@ function thermal_min_max_up_down_time!(
+             b in subperiods(inputs),
+             (i, t) in enumerate(minimum_up_time_indexes),
+         ],
+-        sum(
+-            thermal_startup[j, t] for
+-            j in first_subperiod_that_matters_for_min_uptime_map[b, i]:b
+-        )
++        sum(thermal_startup[j, t] for j in minimum_up_time_window[b, i])
+         +
+         minimum_up_time_indicator[b, i]
+         <=
+         thermal_commitment[b, t]
+     )
+ 
+-    first_subperiod_that_matters_for_min_downtime_map =
+-        zeros(Int, number_of_subperiods(inputs), length(minimum_down_time_indexes))
+-
+-    for b in subperiods(inputs)
+-        first_subperiod_that_matters_for_min_downtime_map[b, :] .= b
+-        subperiod_duration_sum = 0
+-        for some_previous_subperiod in b-1:-1:1
+-            subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
+-            for (i, plant_idx) in enumerate(minimum_down_time_indexes)
+-                if subperiod_duration_sum < thermal_unit_min_downtime(inputs, plant_idx)
+-                    first_subperiod_that_matters_for_min_downtime_map[b, i] = some_previous_subperiod
+-                end
+-            end
+-        end
+-    end
+-
+     @constraint(
+         model.jump_model,
+         thermal_minimum_downtime[
+             b in subperiods(inputs),
+             (i, t) in enumerate(minimum_down_time_indexes),
+         ],
+-        sum(
+-            thermal_shutdown[j, t] for
+-            j in first_subperiod_that_matters_for_min_downtime_map[b, i]:b
+-        )
++        sum(thermal_shutdown[j, t] for j in minimum_down_time_window[b, i])
+         +
+         minimum_down_time_indicator[b, i]
+         <=
+         1 - thermal_commitment[b, t]
+     )
+ 
+-    first_subperiod_that_matters_for_max_uptime_map =
+-        zeros(Int, number_of_subperiods(inputs), length(maximum_up_time_indexes))
+-
+-    for b in subperiods(inputs)
+-        first_subperiod_that_matters_for_max_uptime_map[b, :] .= b
+-        subperiod_duration_sum = 0
+-        for some_previous_subperiod in b-1:-1:1
+-            subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
+-            for (i, plant_idx) in enumerate(maximum_up_time_indexes)
+-                if subperiod_duration_sum <= thermal_unit_max_uptime(inputs, plant_idx)
+-                    first_subperiod_that_matters_for_max_uptime_map[b, i] = some_previous_subperiod
+-                end
+-            end
+-        end
+-    end
+-
+     @constraint(
+         model.jump_model,
+         thermal_maximum_uptime[
+@@ -194,7 +156,7 @@ function thermal_min_max_up_down_time!(
+         ],
+         sum(
+             thermal_commitment[j, t] * subperiod_duration_in_hours(inputs, j) for
+-            j in first_subperiod_that_matters_for_max_uptime_map[b, i]:b
++            j in maximum_up_time_window[b, i]
+         )
+         +
+         maximum_up_time_counter[b, i]
+@@ -202,104 +164,34 @@ function thermal_min_max_up_down_time!(
+         thermal_unit_max_uptime(inputs, t)
+     )
+ 
+-    if cyclic_intra_period_chronology(inputs)
+-        thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
+-        thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
+-        # The minimum uptime and downtime constraints here are similar to the ones above, 
+-        # but considers one less subperiod in the sum(), and add the 'loop' variables linking the last subperiod to the first one
+-
+-        first_subperiod_that_matters_for_loop_min_uptime_map = zeros(Int, length(minimum_up_time_indexes))
+-        for (i, plant_idx) in enumerate(minimum_up_time_indexes)
+-            first_subperiod_that_matters_for_loop_min_uptime_map[i] = 0
+-            subperiod_duration_sum = 0
+-            for some_previous_subperiod in
+-                number_of_subperiods(inputs):-1:first_subperiod_that_matters_for_max_uptime_map[end, i]
+-                subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
+-                if subperiod_duration_sum < thermal_unit_min_uptime(inputs, plant_idx)
+-                    first_subperiod_that_matters_for_loop_min_uptime_map[i] = some_previous_subperiod
+-                end
+-            end
+-        end
++    return nothing
++end
+ 
+-        @constraint(
+-            model.jump_model,
+-            thermal_minimum_uptime_loop[
+-                (i, t) in enumerate(minimum_up_time_indexes);
+-                first_subperiod_that_matters_for_loop_min_uptime_map[i] > 0
+-            ],
+-            sum(
+-                thermal_startup[j, t] for
+-                j in first_subperiod_that_matters_for_loop_min_uptime_map[i]:number_of_subperiods(inputs)
+-            )
+-            +
+-            thermal_startup_loop[t]
+-            <=
+-            thermal_commitment[1, t]
+-        )
++"""
++    lookback_subperiods(inputs::AbstractInputs, subperiod::Int, hours::Real; include_boundary::Bool = false)
+ 
+-        first_subperiod_that_matters_for_loop_min_downtime_map = zeros(Int, length(minimum_down_time_indexes))
+-        for (i, plant_idx) in enumerate(minimum_down_time_indexes)
+-            first_subperiod_that_matters_for_loop_min_downtime_map[i] = 0
+-            subperiod_duration_sum = 0
+-            for some_previous_subperiod in
+-                number_of_subperiods(inputs):-1:first_subperiod_that_matters_for_max_uptime_map[end, i]
+-                subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
+-                if subperiod_duration_sum < thermal_unit_min_downtime(inputs, plant_idx)
+-                    first_subperiod_that_matters_for_loop_min_downtime_map[i] = some_previous_subperiod
+-                end
+-            end
++Return `subperiod` followed by its predecessors, walking back while the accumulated duration of the predecessors
++is strictly below `hours` (or at most `hours`, when `include_boundary` is true).
++Under `CYCLIC`, the walk wraps around from the first subperiod to the last one, and stops before any subperiod
++would be visited twice.
++"""
++function lookback_subperiods(inputs::AbstractInputs, subperiod::Int, hours::Real; include_boundary::Bool = false)
++    window = [subperiod]
++    accumulated_duration = 0.0
++    current = subperiod
++    for _ in 1:number_of_subperiods(inputs)-1
++        current = previous_subperiod(inputs, current)
++        if isnothing(current)
++            break
+         end
+-
+-        @constraint(
+-            model.jump_model,
+-            thermal_minimum_downtime_loop[
+-                (i, t) in enumerate(minimum_down_time_indexes);
+-                first_subperiod_that_matters_for_loop_min_downtime_map[i] > 0
+-            ],
+-            sum(
+-                thermal_shutdown[j, t] for
+-                j in first_subperiod_that_matters_for_loop_min_downtime_map[i]:number_of_subperiods(inputs)
+-            )
+-            +
+-            thermal_shutdown_loop[t]
+-            <=
+-            1 - thermal_commitment[1, t]
+-        )
+-
+-        # The maximum uptime constraint here is similar to the one above, 
+-        # but considers one less subperiod in the sum(), and adds the commitment for the first subperiod
+-
+-        first_subperiod_that_matters_for_loop_max_uptime_map = zeros(Int, length(maximum_up_time_indexes))
+-        for (i, plant_idx) in enumerate(maximum_up_time_indexes)
+-            first_subperiod_that_matters_for_loop_max_uptime_map[i] = 0
+-            subperiod_duration_sum = 0
+-            for some_previous_subperiod in
+-                number_of_subperiods(inputs):-1:first_subperiod_that_matters_for_max_uptime_map[end, i]
+-                subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
+-                if subperiod_duration_sum <= thermal_unit_max_uptime(inputs, plant_idx)
+-                    first_subperiod_that_matters_for_loop_max_uptime_map[i] = some_previous_subperiod
+-                end
+-            end
++        accumulated_duration += subperiod_duration_in_hours(inputs, current)
++        is_within_window = include_boundary ? accumulated_duration <= hours : accumulated_duration < hours
++        if !is_within_window
++            break
+         end
+-
+-        @constraint(
+-            model.jump_model,
+-            thermal_maximum_uptime_loop[
+-                (i, t) in enumerate(maximum_up_time_indexes);
+-                first_subperiod_that_matters_for_loop_max_uptime_map[i] > 0
+-            ],
+-            sum(
+-                thermal_commitment[b, t] * subperiod_duration_in_hours(inputs, b) for
+-                b in first_subperiod_that_matters_for_loop_max_uptime_map[i]:number_of_subperiods(inputs)
+-            )
+-            +
+-            thermal_commitment[1, t] * subperiod_duration_in_hours(inputs, 1)
+-            <=
+-            thermal_unit_max_uptime(inputs, t)
+-        )
++        push!(window, current)
+     end
+-
+-    return nothing
++    return window
+ end
+ 
+ function thermal_min_max_up_down_time!(
+diff --git a/src/model_constraints/thermal_ramp.jl b/src/model_constraints/thermal_ramp.jl
+index ade197c0..6b5118b7 100644
+--- a/src/model_constraints/thermal_ramp.jl
++++ b/src/model_constraints/thermal_ramp.jl
+@@ -34,32 +34,38 @@ function thermal_ramp!(
+     # Model Variables
+     thermal_generation = get_model_object(model, :thermal_generation)
+ 
++    # Average power [MW] in subperiod b, and time [h] between the midpoints of subperiod b and its predecessor
++    average_power(b, t) = thermal_generation[b, t] / subperiod_duration_in_hours(inputs, b)
++    hours_since_previous_midpoint(b) =
++        (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, previous_subperiod(inputs, b))) /
++        2
++
+     # Ramp constraints
++    # Under CYCLIC, the last subperiod is the predecessor of the first one
+     @constraint(
+         model.jump_model,
+         thermal_ramp_up[
+-            b in 2:number_of_subperiods(inputs),
++            b in subperiods_with_predecessor(inputs),
+             t in ramp_up_indexes,
+         ],
+-        thermal_generation[b, t]
++        average_power(b, t)
+         -
+-        thermal_generation[b-1, t]
++        average_power(previous_subperiod(inputs, b), t)
+         <=
+-        thermal_unit_max_ramp_up(inputs, t) * per_minute_to_per_hour()
+-        * (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, b - 1)) / 2
++        thermal_unit_max_ramp_up(inputs, t) * per_minute_to_per_hour() * hours_since_previous_midpoint(b)
+     )
+ 
+     @constraint(
+         model.jump_model,
+         thermal_ramp_down[
+-            b in 2:number_of_subperiods(inputs),
++            b in subperiods_with_predecessor(inputs),
+             t in ramp_down_indexes,
+         ],
+-        thermal_generation[b-1, t]
++        average_power(previous_subperiod(inputs, b), t)
+         -
+-        thermal_generation[b, t] <=
+-        thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour()
+-        * (subperiod_duration_in_hours(inputs, b) + subperiod_duration_in_hours(inputs, b - 1)) / 2
++        average_power(b, t)
++        <=
++        thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour() * hours_since_previous_midpoint(b)
+     )
+ 
+     # Initial conditions
+@@ -94,38 +100,6 @@ function thermal_ramp!(
+         )
+     end
+ 
+-    # Connect first subperiod to last subperiod
+-    if cyclic_intra_period_chronology(inputs)
+-        @constraint(
+-            model.jump_model,
+-            thermal_ramp_up_last_subperiod[
+-                t in ramp_up_indexes
+-            ],
+-            thermal_generation[1, t] / subperiod_duration_in_hours(inputs, 1)
+-            -
+-            thermal_generation[end, t] / subperiod_duration_in_hours(inputs, number_of_subperiods(inputs))
+-            <=
+-            thermal_unit_max_ramp_up(inputs, t) * per_minute_to_per_hour()
+-            *
+-            (subperiod_duration_in_hours(inputs, number_of_subperiods(inputs)) + subperiod_duration_in_hours(inputs, 1)) /
+-            2
+-        )
+-        @constraint(
+-            model.jump_model,
+-            thermal_ramp_down_last_subperiod[
+-                t in ramp_down_indexes
+-            ],
+-            thermal_generation[end, t] / subperiod_duration_in_hours(inputs, number_of_subperiods(inputs))
+-            -
+-            thermal_generation[1, t] / subperiod_duration_in_hours(inputs, 1)
+-            <=
+-            thermal_unit_max_ramp_down(inputs, t) * per_minute_to_per_hour()
+-            *
+-            (subperiod_duration_in_hours(inputs, number_of_subperiods(inputs)) + subperiod_duration_in_hours(inputs, 1)) /
+-            2
+-        )
+-    end
+-
+     return nothing
+ end
+ 
+diff --git a/src/model_constraints/thermal_startup_and_shutdown.jl b/src/model_constraints/thermal_startup_and_shutdown.jl
+index 274f5206..aa6b4dff 100644
+--- a/src/model_constraints/thermal_startup_and_shutdown.jl
++++ b/src/model_constraints/thermal_startup_and_shutdown.jl
+@@ -37,32 +37,33 @@ function thermal_startup_and_shutdown!(
+     thermal_shutdown = get_model_object(model, :thermal_shutdown)
+ 
+     # Startup and shutdown definition
++    # Under CYCLIC, the last subperiod is the predecessor of the first one
+     @constraint(
+         model.jump_model,
+         thermal_startup_and_shutdown[
+-            b in 2:number_of_subperiods(inputs),
++            b in subperiods_with_predecessor(inputs),
+             t in commitment_indexes,
+         ],
+         thermal_startup[b, t] - thermal_shutdown[b, t] ==
+-        thermal_commitment[b, t] - thermal_commitment[b-1, t]
++        thermal_commitment[b, t] - thermal_commitment[previous_subperiod(inputs, b), t]
+     )
+     @constraint(
+         model.jump_model,
+         thermal_commitment_is_on[
+-            b in 2:number_of_subperiods(inputs),
++            b in subperiods_with_predecessor(inputs),
+             t in commitment_indexes,
+         ],
+         thermal_startup[b, t] + thermal_shutdown[b, t] <=
+-        thermal_commitment[b, t] + thermal_commitment[b-1, t]
++        thermal_commitment[b, t] + thermal_commitment[previous_subperiod(inputs, b), t]
+     )
+     @constraint(
+         model.jump_model,
+         thermal_commitment_is_off[
+-            b in 2:number_of_subperiods(inputs),
++            b in subperiods_with_predecessor(inputs),
+             t in commitment_indexes,
+         ],
+         thermal_startup[b, t] + thermal_shutdown[b, t] +
+-        thermal_commitment[b, t] + thermal_commitment[b-1, t]
++        thermal_commitment[b, t] + thermal_commitment[previous_subperiod(inputs, b), t]
+         <=
+         2
+     )
+@@ -99,38 +100,6 @@ function thermal_startup_and_shutdown!(
+         )
+     end
+ 
+-    # Connect first subperiod to last subperiod
+-    if cyclic_intra_period_chronology(inputs)
+-        thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
+-        thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
+-        @constraint(
+-            model.jump_model,
+-            thermal_startup_and_shutdown_last_subperiod[
+-                t in commitment_indexes
+-            ],
+-            thermal_startup_loop[t] - thermal_shutdown_loop[t] ==
+-            thermal_commitment[1, t] - thermal_commitment[end, t]
+-        )
+-        @constraint(
+-            model.jump_model,
+-            thermal_commitment_is_on_last_subperiod[
+-                t in commitment_indexes
+-            ],
+-            thermal_startup_loop[t] + thermal_shutdown_loop[t] <=
+-            thermal_commitment[1, t] + thermal_commitment[end, t]
+-        )
+-        @constraint(
+-            model.jump_model,
+-            thermal_commitment_is_off_last_subperiod[
+-                t in commitment_indexes
+-            ],
+-            thermal_startup_loop[t] + thermal_shutdown_loop[t] +
+-            thermal_commitment[1, t] + thermal_commitment[end, t]
+-            <=
+-            2
+-        )
+-    end
+-
+     # Startup and shutdown limits
+     @constraint(
+         model.jump_model,
+diff --git a/src/model_variables/thermal_commitment.jl b/src/model_variables/thermal_commitment.jl
+index 7fe2651c..33944677 100644
+--- a/src/model_variables/thermal_commitment.jl
++++ b/src/model_variables/thermal_commitment.jl
+@@ -51,22 +51,6 @@ function thermal_commitment!(
+         upper_bound = 1.0,
+     )
+ 
+-    if cyclic_intra_period_chronology(inputs)
+-        # Add fictitious startup and shutdown variables to connect the last subperiod to the first subperiod
+-        @variable(
+-            model.jump_model,
+-            thermal_startup_loop[t in commitment_indexes],
+-            lower_bound = 0.0,
+-            upper_bound = 1.0,
+-        )
+-        @variable(
+-            model.jump_model,
+-            thermal_shutdown_loop[t in commitment_indexes],
+-            lower_bound = 0.0,
+-            upper_bound = 1.0,
+-        )
+-    end
+-
+     @expression(
+         model.jump_model,
+         thermal_startup_cost[b in subperiods(inputs), t in commitment_indexes],

@@ -51,23 +51,6 @@ function thermal_commitment!(
         upper_bound = 1.0,
     )
 
-    if thermal_unit_intra_period_operation(inputs) ==
-       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
-        # Add fictitious startup and shutdown variables to connect the last subperiod to the first subperiod
-        @variable(
-            model.jump_model,
-            thermal_startup_loop[t in commitment_indexes],
-            lower_bound = 0.0,
-            upper_bound = 1.0,
-        )
-        @variable(
-            model.jump_model,
-            thermal_shutdown_loop[t in commitment_indexes],
-            lower_bound = 0.0,
-            upper_bound = 1.0,
-        )
-    end
-
     @expression(
         model.jump_model,
         thermal_startup_cost[b in subperiods(inputs), t in commitment_indexes],

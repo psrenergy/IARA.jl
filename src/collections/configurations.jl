@@ -31,10 +31,8 @@ Configurations for the problem.
     subperiod_duration_in_hours::Vector{Float64} = []
     policy_graph_type::Configurations_PolicyGraphType.T = Configurations_PolicyGraphType.LINEAR
     expected_number_of_repeats_per_node::Vector{Float64} = []
-    hydro_balance_subperiod_resolution::Configurations_HydroBalanceSubperiodRepresentation.T =
-        Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
-    thermal_unit_intra_period_operation::Configurations_ThermalUnitIntraPeriodOperation.T =
-        Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
+    intra_period_chronological_constraints::Configurations_IntraPeriodChronologicalConstraints.T =
+        Configurations_IntraPeriodChronologicalConstraints.CYCLIC
     cycle_discount_rate::Float64 = 0.0
     cycle_duration_in_hours::Float64 = 0.0
     max_iteration_nash_equilibrium::Int = 0
@@ -162,22 +160,11 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
             PSRI.get_parms(inputs.db, "Configuration", "policy_graph_type")[1],
             Configurations_PolicyGraphType.T,
         )
-    configurations.hydro_balance_subperiod_resolution =
+    configurations.intra_period_chronological_constraints =
         convert_to_enum(
-            PSRI.get_parms(inputs.db, "Configuration", "hydro_balance_subperiod_resolution")[1],
-            Configurations_HydroBalanceSubperiodRepresentation.T,
+            PSRI.get_parms(inputs.db, "Configuration", "intra_period_chronological_constraints")[1],
+            Configurations_IntraPeriodChronologicalConstraints.T,
         )
-    thermal_unit_intra_period_operation =
-        PSRI.get_parms(inputs.db, "Configuration", "thermal_unit_intra_period_operation")[1]
-    configurations.thermal_unit_intra_period_operation =
-        if is_null(thermal_unit_intra_period_operation)
-            Configurations_ThermalUnitIntraPeriodOperation.FLEXIBLE_START_FLEXIBLE_END
-        else
-            convert_to_enum(
-                thermal_unit_intra_period_operation,
-                Configurations_ThermalUnitIntraPeriodOperation.T,
-            )
-        end
     max_iteration_nash_equilibrium =
         PSRI.get_parms(inputs.db, "Configuration", "max_iteration_nash_equilibrium")[1]
     configurations.max_iteration_nash_equilibrium = max_iteration_nash_equilibrium
@@ -1036,12 +1023,70 @@ function use_binary_variables(inputs::AbstractInputs, run_time_options)
 end
 
 """
-    thermal_unit_intra_period_operation(inputs::AbstractInputs)
+    intra_period_chronological_constraints(inputs::AbstractInputs)
 
-Return whether subperiods should be looped for thermal constraints.
+Return the representation of the constraints that link consecutive subperiods within a period.
 """
-thermal_unit_intra_period_operation(inputs::AbstractInputs) =
-    inputs.collections.configurations.thermal_unit_intra_period_operation
+intra_period_chronological_constraints(inputs::AbstractInputs) =
+    inputs.collections.configurations.intra_period_chronological_constraints
+
+"""
+    ignore_intra_period_chronology(inputs::AbstractInputs)
+
+Return whether the constraints that link consecutive subperiods are ignored.
+"""
+ignore_intra_period_chronology(inputs::AbstractInputs) =
+    intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.IGNORE
+
+"""
+    cyclic_intra_period_chronology(inputs::AbstractInputs)
+
+Return whether the last subperiod is treated as the predecessor of the first subperiod.
+"""
+cyclic_intra_period_chronology(inputs::AbstractInputs) =
+    intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.CYCLIC
+
+"""
+    reads_thermal_initial_conditions(inputs::AbstractInputs)
+
+Return whether the thermal unit initial conditions are used anywhere in the study.
+This only happens under `FREE_START`, in a linear policy graph.
+"""
+reads_thermal_initial_conditions(inputs::AbstractInputs) =
+    intra_period_chronological_constraints(inputs) == Configurations_IntraPeriodChronologicalConstraints.FREE_START &&
+    linear_policy_graph(inputs)
+
+"""
+    use_thermal_initial_conditions(inputs::AbstractInputs, node::Int)
+
+Return whether the thermal unit initial conditions constrain the first subperiod of the given node.
+This only happens under `FREE_START`, in a linear policy graph, at the first node.
+"""
+use_thermal_initial_conditions(inputs::AbstractInputs, node::Int) =
+    reads_thermal_initial_conditions(inputs) && node == 1
+
+"""
+    previous_subperiod(inputs::AbstractInputs, subperiod::Int)
+
+Return the subperiod that precedes `subperiod` within the period, or `nothing` if it has no predecessor.
+Under `CYCLIC`, the last subperiod is the predecessor of the first one.
+"""
+function previous_subperiod(inputs::AbstractInputs, subperiod::Int)
+    if subperiod > 1
+        return subperiod - 1
+    elseif cyclic_intra_period_chronology(inputs)
+        return number_of_subperiods(inputs)
+    end
+    return nothing
+end
+
+"""
+    subperiods_with_predecessor(inputs::AbstractInputs)
+
+Return the subperiods that have a predecessor within the period. Under `CYCLIC`, these are all subperiods.
+"""
+subperiods_with_predecessor(inputs::AbstractInputs) =
+    [b for b in subperiods(inputs) if !isnothing(previous_subperiod(inputs, b))]
 
 """
     cycle_discount_rate(inputs::AbstractInputs)
@@ -1596,14 +1641,6 @@ period_season_map_file(inputs::AbstractInputs) = inputs.collections.configuratio
 Return whether the period to season map file is defined.
 """
 has_period_season_map_file(inputs::AbstractInputs) = period_season_map_file(inputs) != ""
-
-"""
-    hydro_balance_subperiod_resolution(inputs::AbstractInputs)
-
-Return the hydro balance subperiod resolution.
-"""
-hydro_balance_subperiod_resolution(inputs::AbstractInputs) =
-    inputs.collections.configurations.hydro_balance_subperiod_resolution
 
 """
     virtual_reservoir_correspondence_type(inputs)

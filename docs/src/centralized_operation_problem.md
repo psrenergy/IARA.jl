@@ -177,6 +177,39 @@ Some branches may have a flag indicating that they are modeled as DC lines.
 
 The following constraints are defined for a subproblem at period $t$ and scenario $\omega$.
 
+### Intra-period chronological constraints
+
+The configuration `intra_period_chronological_constraints` defines how the constraints that link consecutive subperiods within a period are represented. Consecutive periods are never linked by these constraints, except for the reservoir volumes, which are state variables. The available options are:
+
+- `CYCLIC` (default): consecutive subperiods are linked, and the last subperiod $|B(t)|$ is treated as the predecessor of the first subperiod. Thermal unit initial conditions are not used.
+- `FREE_START`: consecutive subperiods are linked, and the first subperiod has no predecessor. Thermal unit initial conditions are only used in the first period of a linear policy graph; in cyclic policy graphs they are not used.
+- `IGNORE`: consecutive subperiods are not linked. The hydro balance is aggregated over the period, and the thermal commitment, ramping, minimum up/down time, maximum uptime and maximum startup/shutdown constraints are not built. Thermal commitment remains defined per subperiod, together with its generation bounds.
+
+The table below summarizes which constraints are built under each option.
+
+| Constraints | `CYCLIC` | `FREE_START` | `IGNORE` |
+|---|---|---|---|
+| Hydro balance | intra-period | intra-period | aggregated |
+| Thermal commitment, ramping, minimum up/down time, maximum uptime | yes, with the last subperiod as the predecessor of the first | yes | no |
+| Thermal maximum startups/shutdowns | yes | yes | no |
+| Thermal initial conditions | no | first period of a linear policy graph | no |
+| Thermal bounds | yes | yes | yes |
+
+The thermal constraints below are written in terms of the predecessor $p(\tau)$ of subperiod $\tau$:
+
+```math
+    p(\tau) =
+    \begin{cases}
+        \tau - 1 & \text{if } \tau > 1 \\
+        |B(t)| & \text{if } \tau = 1 \text{ under } \texttt{CYCLIC} \\
+        \text{undefined} & \text{if } \tau = 1 \text{ under } \texttt{FREE\_START}
+    \end{cases}
+```
+
+The set $B^P(t) \subseteq B(t)$ contains the subperiods that have a predecessor: all subperiods under `CYCLIC`, and all but the first one under `FREE_START`.
+
+Some constraints also look back a given number of hours $h$ from subperiod $\tau$. The lookback window $W_\tau(h)$ contains $\tau$ and the subperiods $p(\tau), p(p(\tau)), \ldots$, as long as the total duration of these predecessors is strictly less than $h$. The window $\overline{W}_\tau(h)$ is defined in the same way, with "less than or equal to" instead of "strictly less than". Under `CYCLIC`, the windows wrap around from the first subperiod to the last one, and contain at most $|B(t)|$ subperiods.
+
 ### Demand Balance (Zonal)
 
 ```math
@@ -247,6 +280,17 @@ The following constraints are defined for a subproblem at period $t$ and scenari
     \quad \forall j \in J^H, \tau \in B(t)
 ```
 
+#### Aggregated balance
+
+Under the `IGNORE` option, the intra-period balance is replaced by a single balance over the period, in which $v_{j, 2}$ is the volume at the end of the period:
+
+```math
+    v_{j, 2} = v_{j, 1} + \sum_{\tau \in B(t)} \left( - u_{j, \tau} - z_{j, \tau}
+    + \sum_{n \in J^H_U(j)}{u_{n, \tau}} 
+    + \sum_{n \in J^H_Z(j)}{z_{n, \tau}} +  a_{j, \tau} + a^S_{j, \tau} \right) \\
+    \quad \forall j \in J^H
+```
+
 #### Inter-period balance
 
 ```math
@@ -283,30 +327,46 @@ The following constraints are defined for a subproblem at period $t$ and scenari
 ### Thermal Commitment
 
 ```math
-    y^T_{j, \tau} - w^T_{j, \tau} = x^T_{j, \tau} - x^T_{j, \tau-1}
-    \quad \forall j \in J^{TC}, \tau \in B(t)
+    y^T_{j, \tau} - w^T_{j, \tau} = x^T_{j, \tau} - x^T_{j, p(\tau)}
+    \quad \forall j \in J^{TC}, \tau \in B^P(t)
 ```
 
 ```math
-    y^T_{j, \tau} + w^T_{j, \tau} \leq x^T_{j, \tau} + x^T_{j, \tau-1}
-    \quad \forall j \in J^{TC}, \tau \in B(t)
+    y^T_{j, \tau} + w^T_{j, \tau} \leq x^T_{j, \tau} + x^T_{j, p(\tau)}
+    \quad \forall j \in J^{TC}, \tau \in B^P(t)
 ```
 
 ```math
-    y^T_{j, \tau} + w^T_{j, \tau} + x^T_{j, \tau} + x^T_{j, \tau-1} \leq 2
-    \quad \forall j \in J^{TC}, \tau \in B(t)
+    y^T_{j, \tau} + w^T_{j, \tau} + x^T_{j, \tau} + x^T_{j, p(\tau)} \leq 2
+    \quad \forall j \in J^{TC}, \tau \in B^P(t)
 ```
+
+Under `CYCLIC`, a startup or shutdown between the last and the first subperiod is therefore represented by $y^T_{j, 1}$ or $w^T_{j, 1}$, and pays the corresponding cost. Under `FREE_START`, when the initial conditions are used, the same constraints are also built for $\tau = 1$, with $x^T_{j, 0}$ given by the initial condition.
 
 ### Thermal Ramping
 
+The ramping constraints limit the change in average power between consecutive subperiods, over the time between their midpoints:
+
 ```math
-    g^T_{j, \tau} - g^T_{j, \tau-1} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
-    \quad \forall j \in J^T, \tau \in B(t)
+    \frac{g^T_{j, \tau}}{d(\tau)} - \frac{g^T_{j, p(\tau)}}{d(p(\tau))} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(p(\tau))}{2}
+    \quad \forall j \in J^T, \tau \in B^P(t)
 ```
 
 ```math
-    g^T_{j, \tau-1} - g^T_{j, \tau} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(\tau-1)}{2}
-    \quad \forall j \in J^T, \tau \in B(t)
+    \frac{g^T_{j, p(\tau)}}{d(p(\tau))} - \frac{g^T_{j, \tau}}{d(\tau)} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot \frac{d(\tau)+d(p(\tau))}{2}
+    \quad \forall j \in J^T, \tau \in B^P(t)
+```
+
+Under `FREE_START`, when the initial conditions are used, the ramping constraints for $\tau = 1$ are written with respect to the initial generation $g^T_{j, 0}$:
+
+```math
+    \frac{g^T_{j, 1}}{d(1)} - g^T_{j, 0} \leq \Delta^{up}_j \cdot C_{1/h \rightarrow 1/min} \cdot d(1)
+    \quad \forall j \in J^T
+```
+
+```math
+    g^T_{j, 0} - \frac{g^T_{j, 1}}{d(1)} \leq \Delta^{down}_j \cdot C_{1/h \rightarrow 1/min} \cdot d(1)
+    \quad \forall j \in J^T
 ```
 
 ### Thermal Minimum Up/Down Time
@@ -316,7 +376,7 @@ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the followi
 ```math
     I^{up}_{j, \tau} =
     \begin{cases}
-        1 & \text{if } t = 1 \text{ and } t^{up}_{j, 0} + \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)} < UT^{min}_j \\
+        1 & \text{if the initial conditions are used and } t^{up}_{j, 0} + \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)} < UT^{min}_j \\
         0 & \text{otherwise}
     \end{cases}
     \quad \forall j \in J^{TC}, \tau \in B(t)
@@ -325,39 +385,33 @@ Based on the initial conditions $t^{up}_{j,0}$ and $t^{down}_{j,0}$, the followi
 ```math
     I^{down}_{j, \tau} =
     \begin{cases}
-        1 & \text{if } t = 1 \text{ and } t^{down}_{j, 0} + \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)}  < DT^{min}_j \\
+        1 & \text{if the initial conditions are used and } t^{down}_{j, 0} + \sum_{\gamma = 1}^{\tau - 1}{d(\gamma)}  < DT^{min}_j \\
         0 & \text{otherwise}
     \end{cases}
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 The indicators $I^{up}$ and $I^{down}$ represent whether the plant started/stopped in the previous period AND has yet to reach the minimum uptime/downtime.
-Also, the following auxiliar terms are defined:
+
+With these terms and the lookback windows defined above, the following constraints are defined:
 
 ```math
-    \Gamma^{UT^{min}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) < UT^{min}_j } \right\}
-```
-```math
-    \Gamma^{DT^{min}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) < DT^{min}_j } \right\}
-```
-
-With these terms, the following constraints are defined:
-
-```math
-    \left(\sum_{\gamma = \Gamma^{UT^{min}}_{j, \tau}}^{\tau}{y^T_{j, \gamma}}\right) + I^{up}_{j, \tau} \leq x^T_{j, \tau} , 
+    \left(\sum_{\gamma \in W_\tau(UT^{min}_j)}{y^T_{j, \gamma}}\right) + I^{up}_{j, \tau} \leq x^T_{j, \tau} , 
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
 ```math
-    \left(\sum_{\gamma= \Gamma^{DT^{min}}_{j, \tau}}^{\tau}{w^T_{j, \gamma}}\right) + I^{down}_{j, \tau} \leq 1 - x^T_{j, \tau}, 
+    \left(\sum_{\gamma \in W_\tau(DT^{min}_j)}{w^T_{j, \gamma}}\right) + I^{down}_{j, \tau} \leq 1 - x^T_{j, \tau}, 
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
 For the uptime, the constraint states that if the plant started in the last $UT^{min}_j$ hours or if the indicator $I^{up}_{j, \tau}$ is active, then the plant must remain active.
 The same logic applies to the downtime.
 
+Under `CYCLIC`, if $UT^{min}_j$ is at least the duration of the period, every window contains all subperiods. A single startup would then require the plant to be active in all subperiods, which leaves no subperiod from which to start up, so the commitment of the plant is constant over the period. The same holds for $DT^{min}_j$ and shutdowns.
+
 ### Thermal Maximum Uptime
 
-Based on the initial condition $t^{up}_{j,0}$ and the $UT^{max}$ parameter, the following terms are defined:
+Based on the initial condition $t^{up}_{j,0}$ and the $UT^{max}$ parameter, the following terms are defined. When the initial conditions are not used, $T^{up}_{j, \tau} = 0$:
 
 ```math
     T^{up}_{j, \tau} =
@@ -369,19 +423,17 @@ Based on the initial condition $t^{up}_{j,0}$ and the $UT^{max}$ parameter, the 
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 
-```math
-     \Gamma^{UT^{max}}_{j, \tau} = min \left\{ \gamma \in B(t) \Big\vert \sum_{\kappa = \gamma}^{\tau-1}{d(\kappa) \leq UT^{max}_j } \right\}
-```
-For a time window of $UT^{max}_j$ hours before the beginning of subperiod $\tau$, the term $T^{up}_{j, \tau}$ represents the amount of hours that the plant has been active in the period before. The term $\Gamma^{UT^{max}}_{j, \tau}$ indicates the first subperiod in the current period that is within the time window of $UT^{max}_j$ hours before the current subperiod $\tau$. 
+For a time window of $UT^{max}_j$ hours before the beginning of subperiod $\tau$, the term $T^{up}_{j, \tau}$ represents the amount of hours that the plant has been active in the period before.
 
 With these terms, the following constraint is defined:
 
 ```math
-    \left(\sum_{\gamma=\Gamma^{UT^{max}}_{j, \tau}}^{\tau}{d(\tau) \cdot x^T_{j, \gamma}}\right) + T^{up}_{j, \tau} \leq UT^{max}_j
+    \left(\sum_{\gamma \in \overline{W}_\tau(UT^{max}_j)}{d(\gamma) \cdot x^T_{j, \gamma}}\right) + T^{up}_{j, \tau} \leq UT^{max}_j
     \quad \forall j \in J^{TC}, \tau \in B(t)
 ```
 The constraint states that the amount of time that the plant has been active in the last $UT^{max}_j$ hours plus the time that the plant is active in the current subperiod must be less than or equal to $UT^{max}_j$.
 
+Under `CYCLIC`, if $UT^{max}_j$ is shorter than the duration of the period, a plant that is active in all subperiods violates this constraint, so at least one shutdown is required in each period. If $UT^{max}_j$ is at least the duration of the period, the plant can remain active in all subperiods.
 
 ### Renewable Balance
 

@@ -12,6 +12,7 @@ db = IARA.load_study(PATH; read_only = false)
 
 IARA.update_configuration!(db;
     integer_variable_representation_mincost = IARA.Configurations_IntegerVariableRepresentation.CALCULATE_NORMALLY,
+    intra_period_chronological_constraints = IARA.Configurations_IntraPeriodChronologicalConstraints.FREE_START,
 )
 
 IARA.add_thermal_unit!(db;

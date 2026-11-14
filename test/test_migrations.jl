@@ -14,10 +14,9 @@ module TestMigrations
 using Test
 using IARA
 
-const PSRDatabaseSQLite = IARA.PSRDatabaseSQLite
-
 function test_iara_migrations()
-    @test PSRDatabaseSQLite.test_migrations(IARA.migrations_directory())
+    # Applies every migration up, then down, and throws if any table remains.
+    @test isnothing(IARA.Quiver.validate_migrations(IARA.migrations_directory()))
     return nothing
 end
 

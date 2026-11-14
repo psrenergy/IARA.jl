@@ -196,7 +196,7 @@ function list_assets(inputs::IARA.AbstractInputs)
         push!(assets_list, asset_dict)
     end
     for (demand_unit_index, demand_unit_label) in enumerate(IARA.demand_unit_label(inputs))
-        if IARA.is_null(IARA.demand_unit_bidding_group_index(inputs)[demand_unit_index])
+        if !IARA.has_relation(IARA.demand_unit_bidding_group_index(inputs)[demand_unit_index])
             continue
         end
         asset_dict = Dict(

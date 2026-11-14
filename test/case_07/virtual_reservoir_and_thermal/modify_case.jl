@@ -8,7 +8,7 @@ IARA.add_bidding_group!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = 1,
         min_generation = 0.0,
         max_generation = 100.0,
@@ -22,7 +22,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = 1,
         min_generation = 0.0,
         max_generation = 100.0,

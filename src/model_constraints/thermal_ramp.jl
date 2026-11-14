@@ -60,9 +60,9 @@ function thermal_ramp!(
     # Initial conditions
     if model.node == 1
         ramp_up_initial_indexes =
-            [t for t in ramp_up_indexes if !is_null(thermal_unit_generation_initial_condition(inputs, t))]
+            [t for t in ramp_up_indexes if !isnothing(thermal_unit_generation_initial_condition(inputs, t))]
         ramp_down_initial_indexes =
-            [t for t in ramp_down_indexes if !is_null(thermal_unit_generation_initial_condition(inputs, t))]
+            [t for t in ramp_down_indexes if !isnothing(thermal_unit_generation_initial_condition(inputs, t))]
 
         @constraint(
             model.jump_model,

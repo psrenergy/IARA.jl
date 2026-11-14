@@ -20,7 +20,7 @@ Collection representing the battery unit in the system.
 @collection @kwdef mutable struct BatteryUnit <: AbstractCollection
     label::Vector{String} = []
     existing::Vector{BatteryUnit_Existence.T} = []
-    initial_storage::Vector{Float64} = []
+    initial_storage::Vector{Union{Float64, Nothing}} = []
     min_storage::Vector{Float64} = []
     max_storage::Vector{Float64} = []
     max_capacity::Vector{Float64} = []
@@ -41,15 +41,15 @@ end
 Initialize the Battery Unit collection from the database.
 """
 function initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
-    num_battery_units = PSRI.max_elements(inputs.db, "BatteryUnit")
+    num_battery_units = Quiver.number_of_elements(inputs.db, "BatteryUnit")
     if num_battery_units == 0
         return nothing
     end
 
-    battery_unit.label = PSRI.get_parms(inputs.db, "BatteryUnit", "label")
-    battery_unit.initial_storage = PSRI.get_parms(inputs.db, "BatteryUnit", "initial_storage")
-    battery_unit.bus_index = PSRI.get_map(inputs.db, "BatteryUnit", "Bus", "id")
-    battery_unit.bidding_group_index = PSRI.get_map(inputs.db, "BatteryUnit", "BiddingGroup", "id")
+    battery_unit.label = Quiver.read_scalar_strings(inputs.db, "BatteryUnit", "label")
+    battery_unit.initial_storage = Quiver.read_scalar_floats(inputs.db, "BatteryUnit", "initial_storage")
+    battery_unit.bus_index = Quiver.scalar_relation_map(inputs.db, "BatteryUnit", "Bus", "id")
+    battery_unit.bidding_group_index = Quiver.scalar_relation_map(inputs.db, "BatteryUnit", "BiddingGroup", "id")
 
     update_time_series_from_db!(battery_unit, inputs.db, initial_date_time(inputs))
 
@@ -57,47 +57,56 @@ function initialize!(battery_unit::BatteryUnit, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(battery_unit::BatteryUnit, db::Quiver.Database, period_date_time::DateTime)
 
 Update the Battery Unit time series from the database.
 """
-function update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLite, period_date_time::DateTime)
+function update_time_series_from_db!(
+    battery_unit::BatteryUnit,
+    db::Quiver.Database,
+    period_date_time::DateTime,
+)
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     battery_unit.existing =
         @memoized_lru "battery-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
+            Quiver.read_time_series_row(
                 db,
                 "BatteryUnit",
+                "parameters",
                 "existing";
                 date_time = period_date_time,
             ),
             BatteryUnit_Existence.T,
         )
     battery_unit.min_storage =
-        @memoized_lru "battery-min_storage-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-min_storage-$date" Quiver.read_time_series_row(
             db,
             "BatteryUnit",
+            "parameters",
             "min_storage";
             date_time = period_date_time,
         )
     battery_unit.max_storage =
-        @memoized_lru "battery-max_storage-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-max_storage-$date" Quiver.read_time_series_row(
             db,
             "BatteryUnit",
+            "parameters",
             "max_storage";
             date_time = period_date_time,
         )
     battery_unit.max_capacity =
-        @memoized_lru "battery-max_capacity-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-max_capacity-$date" Quiver.read_time_series_row(
             db,
             "BatteryUnit",
+            "parameters",
             "max_capacity";
             date_time = period_date_time,
         )
     battery_unit.om_cost =
-        @memoized_lru "battery-om_cost-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "battery-om_cost-$date" Quiver.read_time_series_row(
             db,
             "BatteryUnit",
+            "parameters",
             "om_cost";
             date_time = period_date_time,
         )
@@ -105,18 +114,18 @@ function update_time_series_from_db!(battery_unit::BatteryUnit, db::DatabaseSQLi
 end
 
 """
-    add_battery_unit!(db::DatabaseSQLite; kwargs...)
+    add_battery_unit!(db::Quiver.Database; kwargs...)
 
 Add a Battery Unit to the database.
 
 Required arguments:
 
   - `label::String`: Label of the battery unit
+  - `initial_storage::Float64`: Initial storage of the battery unit
   - `parameters::DataFrames.DataFrame: A dataframe containing time series attributes (described below).`
 
 Optional arguments:
 
-  - `initial_storage::Float64`: Initial storage of the battery unit
   - `biddinggroup_id::Int64`: Bidding group of the battery unit
   - `bus_id::Int64`: Bus of the battery unit
 
@@ -143,7 +152,7 @@ Example:
 IARA.add_battery_unit!(db;
     label = "bat_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.BatteryUnit_Existence.EXISTS)],
         min_storage = [0.0],
         max_storage = [10.0] * 1e3,
@@ -155,14 +164,20 @@ IARA.add_battery_unit!(db;
 )
 ```
 """
-function add_battery_unit!(db::DatabaseSQLite; kwargs...)
+function add_battery_unit!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "BatteryUnit"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "BatteryUnit"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "BatteryUnit", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_battery_unit!(db::DatabaseSQLite, label::String; kwargs...)
+    update_battery_unit!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Battery Unit named 'label' in the database.
 
@@ -176,42 +191,34 @@ IARA.update_battery_unit!(
 ```
 """
 function update_battery_unit!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "BatteryUnit",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element_by_label!(db, "BatteryUnit", label; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_battery_unit_relation!(db::DatabaseSQLite, battery_unit_label::String; collection::String, relation_type::String, related_label::String)
+    update_battery_unit_relation!(db::Quiver.Database, battery_unit_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the Battery Unit named 'label' in the database.
 """
 function update_battery_unit_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     battery_unit_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
+    Quiver.update_relation_by_label!(
         db,
         "BatteryUnit",
         collection,
+        relation_type,
         battery_unit_label,
         related_label,
-        relation_type,
     )
     return db
 end
@@ -228,7 +235,7 @@ function validate(battery_unit::BatteryUnit)
             @error("Battery Label cannot be empty.")
             num_errors += 1
         end
-        if battery_unit.initial_storage[i] < 0
+        if !isnothing(battery_unit.initial_storage[i]) && battery_unit.initial_storage[i] < 0
             @error(
                 "Battery $(battery_unit.label[i]) Initial Storage must be non-negative. Current value is $(battery_unit.initial_storage[i])"
             )
@@ -283,7 +290,8 @@ function advanced_validations(inputs::AbstractInputs, battery_unit::BatteryUnit)
             @error("Battery Unit $(battery_unit.label[i]) Bus ID $(battery_unit.bus_index[i]) not found.")
             num_errors += 1
         end
-        if !is_null(battery_unit.bidding_group_index[i]) && !(battery_unit.bidding_group_index[i] in bidding_groups)
+        if has_relation(battery_unit.bidding_group_index[i]) &&
+           !(battery_unit.bidding_group_index[i] in bidding_groups)
             @error(
                 "Battery Unit $(battery_unit.label[i]) Bidding Group ID $(battery_unit.bidding_group_index[i]) not found."
             )

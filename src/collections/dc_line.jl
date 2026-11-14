@@ -38,14 +38,14 @@ end
 Initialize the DC Line collection from the database.
 """
 function initialize!(dc_line::DCLine, inputs::AbstractInputs)
-    num_dc_lines = PSRI.max_elements(inputs.db, "DCLine")
+    num_dc_lines = Quiver.number_of_elements(inputs.db, "DCLine")
     if num_dc_lines == 0
         return nothing
     end
 
-    dc_line.label = PSRI.get_parms(inputs.db, "DCLine", "label")
-    dc_line.bus_to = PSRI.get_map(inputs.db, "DCLine", "Bus", "to")
-    dc_line.bus_from = PSRI.get_map(inputs.db, "DCLine", "Bus", "from")
+    dc_line.label = Quiver.read_scalar_strings(inputs.db, "DCLine", "label")
+    dc_line.bus_to = Quiver.scalar_relation_map(inputs.db, "DCLine", "Bus", "to")
+    dc_line.bus_from = Quiver.scalar_relation_map(inputs.db, "DCLine", "Bus", "from")
 
     update_time_series_from_db!(dc_line, inputs.db, initial_date_time(inputs))
 
@@ -53,33 +53,36 @@ function initialize!(dc_line::DCLine, inputs::AbstractInputs)
 end
 
 """
-    update_time_series_from_db!(dc_link::DCLine, db::DatabaseSQLite, period_date_time::DateTime)
+    update_time_series_from_db!(dc_link::DCLine, db::Quiver.Database, period_date_time::DateTime)
 
 Update the DC Line collection time series from the database.
 """
-function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, period_date_time::DateTime)
+function update_time_series_from_db!(dc_line::DCLine, db::Quiver.Database, period_date_time::DateTime)
     date = Dates.format(period_date_time, "yyyymmddHHMMSS")
     dc_line.existing =
         @memoized_lru "dc_line-existing-$date" convert_to_enum.(
-            PSRDatabaseSQLite.read_time_series_row(
+            Quiver.read_time_series_row(
                 db,
                 "DCLine",
+                "parameters",
                 "existing";
                 date_time = period_date_time,
             ),
             DCLine_Existence.T,
         )
     dc_line.capacity_to =
-        @memoized_lru "dc_line-capacity_to-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "dc_line-capacity_to-$date" Quiver.read_time_series_row(
             db,
             "DCLine",
+            "parameters",
             "capacity_to";
             date_time = period_date_time,
         )
     dc_line.capacity_from =
-        @memoized_lru "dc_line-capacity_from-$date" PSRDatabaseSQLite.read_time_series_row(
+        @memoized_lru "dc_line-capacity_from-$date" Quiver.read_time_series_row(
             db,
             "DCLine",
+            "parameters",
             "capacity_from";
             date_time = period_date_time,
         )
@@ -87,7 +90,7 @@ function update_time_series_from_db!(dc_line::DCLine, db::DatabaseSQLite, period
 end
 
 """
-    add_dc_line!(db::DatabaseSQLite; kwargs...)
+    add_dc_line!(db::Quiver.Database; kwargs...)
 
 Add a DC Line to the database.
 
@@ -119,7 +122,7 @@ Example:
 IARA.add_dc_line!(db;
     label = "dc_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DCLine_Existence.EXISTS)],
         capacity_to = [5.5],
         capacity_from = [5.5],
@@ -129,77 +132,75 @@ IARA.add_dc_line!(db;
 )
 ```
 """
-function add_dc_line!(db::DatabaseSQLite; kwargs...)
+function add_dc_line!(db::Quiver.Database; kwargs...)
+    kwargs = Dict(kwargs...)
+    parameters_df = pop!(kwargs, :parameters)
+
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "DCLine"; sql_typed_kwargs...)
+    id = Quiver.create_element!(db, "DCLine"; sql_typed_kwargs...)
+
+    ts_kwargs = build_sql_typed_kwargs(parameters_df)
+    Quiver.update_time_series_group!(db, "DCLine", "parameters", id; ts_kwargs...)
     return nothing
 end
 
 """
-    update_dc_line!(db::DatabaseSQLite, label::String; kwargs...)
+    update_dc_line!(db::Quiver.Database, label::String; kwargs...)
 
 Update the DC Line named 'label' in the database.
 """
 function update_dc_line!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "DCLine",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element_by_label!(db, "DCLine", label; sql_typed_kwargs...)
     return db
 end
 
 """
-    update_dc_line_relation!(db::DatabaseSQLite, dc_line_label::String; collection::String, relation_type::String, related_label::String)
+    update_dc_line_relation!(db::Quiver.Database, dc_line_label::String; collection::String, relation_type::String, related_label::String)
 
 Update the DC Line named 'label' in the database.
 """
 function update_dc_line_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     dc_line_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
+    Quiver.update_relation_by_label!(
         db,
         "DCLine",
         collection,
+        relation_type,
         dc_line_label,
         related_label,
-        relation_type,
     )
     return db
 end
 
 """
-    update_dc_line_time_series_parameter!(db::DatabaseSQLite, label::String, attribute::String, value; dimensions...)
+    update_dc_line_time_series_parameter!(db::Quiver.Database, label::String, attribute::String, value; dimensions...)
 
 Update a DC Line time series parameter in the database.
 """
 function update_dc_line_time_series_parameter!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String,
     attribute::String,
     value;
     dimensions...,
 )
-    PSRI.PSRDatabaseSQLite.update_time_series_row!(
+    Quiver.upsert_time_series_row_by_label!(
         db,
         "DCLine",
-        attribute,
-        label,
-        value;
+        "parameters",
+        label;
         dimensions...,
+        Symbol(attribute) => value,
     )
     return db
 end

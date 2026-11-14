@@ -86,7 +86,7 @@ number_of_bidding_groups = 3
 IARA.add_renewable_unit!(db;
     label = "gnd_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [5.0],
         om_cost = [0.0],
@@ -100,7 +100,7 @@ IARA.add_renewable_unit!(db;
 IARA.add_hydro_unit!(db;
     label = "hyd_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
         production_factor = [1.0],
         min_generation = [0.0],
@@ -119,7 +119,7 @@ IARA.add_hydro_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -139,7 +139,7 @@ IARA.add_demand_unit!(db;
     curtailment_cost_flexible_demand = 0.0,
     max_curtailment_flexible_demand = 0.0,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.DemandUnit_Existence.EXISTS),
     ),
     bus_id = "bus_1",

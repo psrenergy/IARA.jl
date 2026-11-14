@@ -34,7 +34,7 @@ IARA.add_bidding_group!(db;
 IARA.add_renewable_unit!(db;
     label = "gnd_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [4.0],
         om_cost = [0.0],
@@ -48,7 +48,7 @@ IARA.add_renewable_unit!(db;
 IARA.add_renewable_unit!(db;
     label = "gnd_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [4.0],
         om_cost = [0.0],
@@ -62,7 +62,7 @@ IARA.add_renewable_unit!(db;
 IARA.add_renewable_unit!(db;
     label = "gnd_4",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [4.0],
         om_cost = [0.0],

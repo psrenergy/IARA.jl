@@ -400,10 +400,10 @@ end
 
 function get_renewable_generation_to_plot(
     inputs::AbstractInputs;
-    asset_owner_index::Int = null_value(Int),
+    asset_owner_index::Union{Int, Nothing} = nothing,
     @nospecialize(filters::Vector{<:Function} = Function[])
 )
-    if is_null(asset_owner_index)
+    if isnothing(asset_owner_index)
         renewable_units = index_of_elements(inputs, RenewableUnit; filters)
     else
         bidding_groups = filter(

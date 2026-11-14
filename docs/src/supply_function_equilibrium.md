@@ -292,7 +292,7 @@ IARA.add_hydro_unit!(db;
     initial_volume = 900.0,
     bus_id = "bus_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 3.6,
         max_generation = 400.0,
@@ -308,7 +308,7 @@ IARA.add_hydro_unit!(db;
     initial_volume = 0.0,
     bus_id = "bus_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 3.6,
         max_generation = 700.0,

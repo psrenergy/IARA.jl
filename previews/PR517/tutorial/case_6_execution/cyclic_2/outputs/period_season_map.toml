@@ -1,0 +1,8 @@
+dimension_sizes = [ 2, 3 ]
+dimensions = [ 'period', 'scenario' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2024-01-01T00:00:00'
+labels = [ 'season', 'sample', 'next_subscenario' ]
+time_dimensions = [ 'period' ]
+unit = ' '
+version = '1'

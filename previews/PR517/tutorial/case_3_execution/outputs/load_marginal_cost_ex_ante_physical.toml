@@ -1,0 +1,8 @@
+dimension_sizes = [ 1, 1, 2 ]
+dimensions = [ 'period', 'scenario', 'subperiod' ]
+frequencies = [ 'monthly' ]
+initial_datetime = '2020-01-01T00:00:00'
+labels = [ 'bus_1' ]
+time_dimensions = [ 'period' ]
+unit = '$/MWh'
+version = '1'

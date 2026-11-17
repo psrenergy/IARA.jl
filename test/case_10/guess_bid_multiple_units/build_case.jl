@@ -90,7 +90,7 @@ IARA.add_bidding_group!(
 IARA.add_demand_unit!(db;
     label = "Demand1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "Island",
@@ -100,7 +100,7 @@ IARA.add_demand_unit!(db;
 IARA.add_demand_unit!(db;
     label = "Demand2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "Island",
@@ -110,7 +110,7 @@ IARA.add_demand_unit!(db;
 IARA.add_demand_unit!(db;
     label = "Demand3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "Island",
@@ -121,7 +121,7 @@ IARA.add_renewable_unit!(
     db;
     label = "Solar1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [80.0],
         om_cost = [0.0],
@@ -135,7 +135,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [20.0],
         om_cost = [10.0],
@@ -148,7 +148,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [20.0],
         om_cost = [30.0],
@@ -161,7 +161,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [20.0],
         om_cost = [100.0],
@@ -174,7 +174,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal4",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [20.0],
         om_cost = [300.0],
@@ -187,7 +187,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal5",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [50.0],
         om_cost = [1000.0],
@@ -200,7 +200,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal6",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [50.0],
         om_cost = [3000.0],

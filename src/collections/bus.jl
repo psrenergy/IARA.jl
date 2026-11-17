@@ -21,8 +21,8 @@ Collection representing the buses in the system.
     label::Vector{String} = []
     # index of the zone to which the bus belongs in the collection Zone
     zone_index::Vector{Int} = []
-    latitude::Vector{Float64} = []
-    longitude::Vector{Float64} = []
+    latitude::Vector{Union{Float64, Nothing}} = []
+    longitude::Vector{Union{Float64, Nothing}} = []
 end
 
 # ---------------------------------------------------------------------
@@ -35,27 +35,27 @@ end
 Initialize the Bus collection from the database.
 """
 function initialize!(bus::Bus, inputs::AbstractInputs)
-    num_buses = PSRI.max_elements(inputs.db, "Bus")
+    num_buses = Quiver.number_of_elements(inputs.db, "Bus")
     if num_buses == 0
         return nothing
     end
 
-    bus.label = PSRI.get_parms(inputs.db, "Bus", "label")
-    bus.zone_index = PSRI.get_map(inputs.db, "Bus", "Zone", "id")
-    bus.latitude = PSRI.get_parms(inputs.db, "Bus", "latitude")
-    bus.longitude = PSRI.get_parms(inputs.db, "Bus", "longitude")
+    bus.label = Quiver.read_scalar_strings(inputs.db, "Bus", "label")
+    bus.zone_index = Quiver.scalar_relation_map(inputs.db, "Bus", "Zone", "id")
+    bus.latitude = Quiver.read_scalar_floats(inputs.db, "Bus", "latitude")
+    bus.longitude = Quiver.read_scalar_floats(inputs.db, "Bus", "longitude")
 
     update_time_series_from_db!(bus, inputs.db, initial_date_time(inputs))
 
     return nothing
 end
 
-function update_time_series_from_db!(bus::Bus, db::DatabaseSQLite, period_date_time::DateTime)
+function update_time_series_from_db!(bus::Bus, db::Quiver.Database, period_date_time::DateTime)
     return nothing
 end
 
 """
-    add_bus!(db::DatabaseSQLite; kwargs...)
+    add_bus!(db::Quiver.Database; kwargs...)
 
 Add a bus to the database.
 
@@ -65,8 +65,8 @@ Required arguments:
 
 Optional arguments:
 
-  - `latitude::Float64`: Latitude of the bus
-  - `longitude::Float64`: Longitude of the bus
+  - `latitude::Union{Float64, Nothing}`: Latitude of the bus
+  - `longitude::Union{Float64, Nothing}`: Longitude of the bus
   - `zone_id::Int64`: Zone of the bus
 
 Example:
@@ -77,38 +77,30 @@ IARA.add_bus!(db;
 )
 ```
 """
-function add_bus!(db::DatabaseSQLite; kwargs...)
+function add_bus!(db::Quiver.Database; kwargs...)
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    PSRI.create_element!(db, "Bus"; sql_typed_kwargs...)
+    Quiver.create_element!(db, "Bus"; sql_typed_kwargs...)
     return nothing
 end
 
 """
-    update_bus!(db::DatabaseSQLite, label::String; kwargs...)
+    update_bus!(db::Quiver.Database, label::String; kwargs...)
 
 Update the Bus named 'label' in the database.
 """
 function update_bus!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     label::String;
     kwargs...,
 )
     sql_typed_kwargs = build_sql_typed_kwargs(kwargs)
-    for (attribute, value) in sql_typed_kwargs
-        PSRI.set_parm!(
-            db,
-            "Bus",
-            string(attribute),
-            label,
-            value,
-        )
-    end
+    Quiver.update_element_by_label!(db, "Bus", label; sql_typed_kwargs...)
     return db
 end
 
 """
     update_bus_relation!(
-        db::DatabaseSQLite,
+        db::Quiver.Database,
         bus_label::String;
         collection::String,
         relation_type::String,
@@ -118,19 +110,19 @@ end
 Update the relation of the bus named `bus_label` with the collection `collection`.
 """
 function update_bus_relation!(
-    db::DatabaseSQLite,
+    db::Quiver.Database,
     bus_label::String;
     collection::String,
     relation_type::String,
     related_label::String,
 )
-    PSRI.set_related!(
+    Quiver.update_relation_by_label!(
         db,
         "Bus",
         collection,
+        relation_type,
         bus_label,
         related_label,
-        relation_type,
     )
     return db
 end

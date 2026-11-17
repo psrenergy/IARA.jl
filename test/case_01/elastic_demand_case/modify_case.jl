@@ -15,7 +15,7 @@ IARA.add_demand_unit!(db;
     label = "dem_2",
     demand_unit_type = IARA.DemandUnit_DemandType.ELASTIC,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",

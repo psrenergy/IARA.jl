@@ -80,7 +80,7 @@ IARA.add_bus!(db; label = "bus_1", zone_id = "zone_1")
 IARA.add_demand_unit!(db;
     label = "dem_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "bus_1",
@@ -169,7 +169,7 @@ IARA.link_time_series_to_file(
 IARA.add_thermal_unit!(db;
     label = "ter_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = 1,
         min_generation = 0.0,
         max_generation = 50.0,
@@ -183,7 +183,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = 1,
         min_generation = 0.0,
         max_generation = 20.0,

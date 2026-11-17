@@ -24,9 +24,9 @@ function thermal_min_max_up_down_time!(
     # Indexes
     commitment_indexes =
         index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
-    minimum_up_time_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_min_uptime(inputs, t))]
-    minimum_down_time_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_min_downtime(inputs, t))]
-    maximum_up_time_indexes = [t for t in commitment_indexes if !is_null(thermal_unit_max_uptime(inputs, t))]
+    minimum_up_time_indexes = [t for t in commitment_indexes if !isnothing(thermal_unit_min_uptime(inputs, t))]
+    minimum_down_time_indexes = [t for t in commitment_indexes if !isnothing(thermal_unit_min_downtime(inputs, t))]
+    maximum_up_time_indexes = [t for t in commitment_indexes if !isnothing(thermal_unit_max_uptime(inputs, t))]
 
     # Model Variables
     thermal_commitment = get_model_object(model, :thermal_commitment)
@@ -41,7 +41,7 @@ function thermal_min_max_up_down_time!(
         # Minimum uptime initial conditions
         for (i, plant_idx) in enumerate(minimum_up_time_indexes)
             uptime_initial_condition = thermal_unit_uptime_initial_condition(inputs, plant_idx)
-            if is_null(uptime_initial_condition)
+            if isnothing(uptime_initial_condition)
                 continue
             end
             sum_of_previous_subperiods_duration = 0.0
@@ -61,7 +61,7 @@ function thermal_min_max_up_down_time!(
         # Minimum downtime initial conditions
         for (i, plant_idx) in enumerate(minimum_down_time_indexes)
             downtime_initial_condition = thermal_unit_downtime_initial_condition(inputs, plant_idx)
-            if is_null(downtime_initial_condition)
+            if isnothing(downtime_initial_condition)
                 continue
             end
             sum_of_previous_subperiods_duration = 0
@@ -80,7 +80,7 @@ function thermal_min_max_up_down_time!(
         # Maximum uptime initial conditions
         for (i, plant_idx) in enumerate(maximum_up_time_indexes)
             uptime_initial_condition = thermal_unit_uptime_initial_condition(inputs, plant_idx)
-            if is_null(uptime_initial_condition)
+            if isnothing(uptime_initial_condition)
                 continue
             end
             # This counter indicates how many of the previous 'thermal_unit_max_uptime' hours the plant has been active for,

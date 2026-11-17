@@ -45,7 +45,7 @@ number_of_bidding_groups += 1
 IARA.add_demand_unit!(db;
     label = "dem_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "bus_2",
@@ -55,7 +55,7 @@ IARA.add_demand_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_sb_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -69,7 +69,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_sb_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -83,7 +83,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_sb_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -97,7 +97,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_sb_4",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -111,7 +111,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_sb_5",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -125,7 +125,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_sb_6",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 2.5,

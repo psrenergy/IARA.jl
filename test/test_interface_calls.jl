@@ -15,8 +15,6 @@ using Test
 using IARA
 using JSON
 
-const PSRDatabaseSQLite = IARA.PSRDatabaseSQLite
-
 function test_iara_interface_call()
     # Build an example case
     case_path = joinpath(pwd(), "test_iara_interface_call")

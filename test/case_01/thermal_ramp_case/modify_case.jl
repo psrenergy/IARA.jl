@@ -13,7 +13,7 @@ db = IARA.load_study(PATH; read_only = false)
 IARA.add_thermal_unit!(db;
     label = "ter_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         min_generation = [0.0],
         max_generation = [0.5],
@@ -29,7 +29,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         min_generation = [0.0],
         max_generation = [0.5],
@@ -44,7 +44,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_4",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         min_generation = [0.0],
         max_generation = [0.5],

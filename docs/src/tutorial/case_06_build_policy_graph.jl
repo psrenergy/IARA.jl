@@ -61,7 +61,7 @@ IARA.add_bus!(db; label = "Bus1", zone_id = "Zone1")
 IARA.add_demand_unit!(db;
     label = "Demand1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "Bus1",
@@ -76,7 +76,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [25.0],
         om_cost = [10.0],
@@ -88,7 +88,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [50.0],
         om_cost = [20.0],
@@ -107,7 +107,7 @@ IARA.add_gauging_station!(db;
 IARA.add_hydro_unit!(db;
     label = "Hydro1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1], # 1 = true
         production_factor = [1.0], # MW/m³/s
         max_generation = [150.0], # MW

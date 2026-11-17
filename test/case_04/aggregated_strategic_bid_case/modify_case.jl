@@ -44,7 +44,7 @@ number_of_bidding_groups += 1
 IARA.add_thermal_unit!(db;
     label = "ter_ab_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -58,7 +58,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_ab_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -72,7 +72,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_ab_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,
@@ -86,7 +86,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_ab_4",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         min_generation = 0.0,
         max_generation = 5.0,

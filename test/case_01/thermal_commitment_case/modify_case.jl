@@ -17,7 +17,7 @@ IARA.update_configuration!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         startup_cost = [0.1] * 1e3,
         min_generation = [1.0],
@@ -35,7 +35,7 @@ IARA.add_thermal_unit!(db;
 IARA.add_thermal_unit!(db;
     label = "ter_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
         startup_cost = [0.1] * 1e3,
         min_generation = [1.0],

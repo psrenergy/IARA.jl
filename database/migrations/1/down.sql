@@ -1,5 +1,14 @@
 PRAGMA user_version = 0;
 
+DROP TABLE VirtualReservoir_time_series_files;
+DROP TABLE VirtualReservoir_vector_owner_and_allocation;
+DROP TABLE VirtualReservoir_vector_hydro_plant;
+DROP TABLE Reserve_time_series_files;
+DROP TABLE Reserve_vector_thermal_plant;
+DROP TABLE Reserve_vector_hydro_plant;
+DROP TABLE Reserve_vector_battery;
+DROP TABLE VirtualReservoir;
+DROP TABLE Reserve;
 DROP TABLE Configuration;
 DROP TABLE Configuration_vector_block_duration;
 DROP TABLE Configuration_time_series_files;
@@ -29,12 +38,3 @@ DROP TABLE AssetOwner_vector_markup;
 DROP TABLE BiddingGroup_time_series_files;
 DROP TABLE BiddingGroup;
 DROP TABLE BiddingGroup_vector_markup;
-DROP TABLE VirtualReservoir;
-DROP TABLE VirtualReservoir_time_series_files;
-DROP TABLE VirtualReservoir_vector_owner_and_allocation;
-DROP TABLE VirtualReservoir_vector_hydro_plant;
-DROP TABLE Reserve;
-DROP TABLE Reserve_time_series_files;
-DROP TABLE Reserve_vector_thermal_plant;
-DROP TABLE Reserve_vector_hydro_plant;
-DROP TABLE Reserve_vector_battery;

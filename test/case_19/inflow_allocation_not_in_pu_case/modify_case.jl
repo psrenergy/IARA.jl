@@ -1,19 +1,19 @@
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.PSRDatabaseSQLite.update_vector_parameters!(
+IARA.update_virtual_reservoir!(
     db,
-    "VirtualReservoir",
-    "inflow_allocation",
-    "VR 1",
-    [21.0, 9.0],
+    "VR 1";
+    assetowner_id = ["AO 1", "AO 2"],
+    inflow_allocation = [21.0, 9.0],
+    initial_energy_account_share = [0.7, 0.3],
 )
 
-IARA.PSRDatabaseSQLite.update_vector_parameters!(
+IARA.update_virtual_reservoir!(
     db,
-    "VirtualReservoir",
-    "inflow_allocation",
-    "VR 2",
-    [1.0, 1.0],
+    "VR 2";
+    assetowner_id = ["AO 1", "AO 2"],
+    inflow_allocation = [1.0, 1.0],
+    initial_energy_account_share = [0.5, 0.5],
 )
 
 IARA.close_study!(db)

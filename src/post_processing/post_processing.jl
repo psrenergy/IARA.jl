@@ -414,6 +414,6 @@ end
 Sum across all agent/label columns and rename the result to `new_label`.
 """
 function sum_over_agents(file_or_expr, new_label::String)
-    summed = Quiver.aggregate_agents(file_or_expr, Quiver.C.QUIVER_EXPRESSION_AGGREGATE_AGENTS_OPERATION_SUM)
+    summed = Quiver.aggregate_agents(file_or_expr, Quiver.C.QUIVER_EXPRESSION_AGGREGATE_OPERATION_SUM)
     return Quiver.rename_agents(summed, Dict("sum" => new_label))
 end

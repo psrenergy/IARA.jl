@@ -105,7 +105,7 @@ function _write_costs_bg_file(
                                 end
                                 bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
                                 bus_index = generic_unit_bus_index(inputs, collection, unit)
-                                if is_null(bidding_group_index) || is_null(bus_index)
+                                if !has_relation(bidding_group_index) || !has_relation(bus_index)
                                     continue
                                 end
                                 bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"
@@ -146,7 +146,7 @@ function _write_costs_bg_file(
                             end
                             bidding_group_index = generic_unit_bidding_group_index(inputs, collection, unit)
                             bus_index = generic_unit_bus_index(inputs, collection, unit)
-                            if is_null(bidding_group_index) || is_null(bus_index)
+                            if !has_relation(bidding_group_index) || !has_relation(bus_index)
                                 continue
                             end
                             bidding_group_bus_label = "$(bidding_group_label(inputs, bidding_group_index)) - $(bus_label(inputs, bus_index))"

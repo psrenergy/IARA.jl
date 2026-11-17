@@ -31,7 +31,7 @@ IARA.update_hydro_unit_time_series_parameter!(
     "hyd_1",
     "max_volume",
     30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours);
-    date_time = DateTime(0),
+    date_time = DateTime(1),
 )
 
 # Rename period to season for cyclic cases
@@ -88,7 +88,7 @@ IARA.update_hydro_unit_time_series_parameter!(
     "max_volume",
     30.0 * m3_per_second_to_hm3 * (new_subperiod_duration / subperiod_duration_in_hours) *
     number_of_years_to_simulate;
-    date_time = DateTime(0),
+    date_time = DateTime(1),
 )
 
 IARA.close_study!(db)

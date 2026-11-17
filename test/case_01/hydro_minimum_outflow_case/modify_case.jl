@@ -16,7 +16,7 @@ IARA.update_hydro_unit_time_series_parameter!(
     "hyd_1",
     "min_outflow",
     2.0;
-    date_time = DateTime(0),
+    date_time = DateTime(1),
 )
 
 IARA.close_study!(db)

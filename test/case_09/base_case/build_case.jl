@@ -47,7 +47,7 @@ try
     IARA.add_dc_line!(db;
         label = "East-West Link",
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = [Int(IARA.DCLine_Existence.EXISTS)],
             capacity_to = [100.0],
             capacity_from = [100.0],
@@ -89,7 +89,7 @@ try
     IARA.add_renewable_unit!(db;
         label = "Solar",
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = [1],
             max_generation = [80.0],
             om_cost = [0.0],
@@ -103,7 +103,7 @@ try
     IARA.add_hydro_unit!(db;
         label = "Hydro Upstream",
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
             production_factor = [0.125],
             max_generation = [10.0],
@@ -121,7 +121,7 @@ try
     IARA.add_hydro_unit!(db;
         label = "Hydro Downstream",
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
             production_factor = [0.875],
             max_generation = [70.0],
@@ -207,7 +207,7 @@ try
 
     for d in demands
         aux = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = Int(IARA.DemandUnit_Existence.EXISTS),
         )
 
@@ -221,7 +221,7 @@ try
 
     for t in thermals
         aux = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = Int(IARA.ThermalUnit_Existence.EXISTS),
             max_generation = t["cap"],
             om_cost = t["price"],

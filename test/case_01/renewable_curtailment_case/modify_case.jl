@@ -18,7 +18,7 @@ IARA.delete_element!(db,
 IARA.add_renewable_unit!(db;
     label = "gnd_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.RenewableUnit_Existence.EXISTS)],
         max_generation = [8.0],
         om_cost = [0.0],

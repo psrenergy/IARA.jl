@@ -57,7 +57,7 @@ IARA.add_thermal_unit!(
     bus_id = "bus_1",
     biddinggroup_id = "BG 2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         max_generation = [100.0],
         om_cost = [100.0],
@@ -70,7 +70,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "bus_1",
     biddinggroup_id = "BG 1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.36,
         max_generation = 100.0,
@@ -89,7 +89,7 @@ IARA.add_hydro_unit!(db;
     hydrounit_turbine_to = "hydro_1",
     hydrounit_spill_to = "hydro_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.36,
         max_generation = 100.0,
@@ -106,7 +106,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "bus_1",
     biddinggroup_id = "BG 1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.36,
         max_generation = 100.0,
@@ -125,7 +125,7 @@ IARA.add_hydro_unit!(db;
     hydrounit_turbine_to = "hydro_3",
     hydrounit_spill_to = "hydro_3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.HydroUnit_Existence.EXISTS),
         production_factor = 0.36,
         max_generation = 100.0,
@@ -157,7 +157,7 @@ IARA.add_demand_unit!(db;
     bus_id = "bus_1",
     max_demand = 400.0,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.DemandUnit_Existence.EXISTS),
     ),
 )

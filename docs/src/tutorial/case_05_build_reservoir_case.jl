@@ -89,7 +89,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "bus_1",
     minimum_outflow_violation_cost = 600.0,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = 1,
         production_factor = 1000.0 * m3_per_second_to_hm3_per_hour,
         max_generation = 400.0,
@@ -107,7 +107,7 @@ IARA.add_hydro_unit!(db;
     bus_id = "bus_1",
     minimum_outflow_violation_cost = 600.0,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = 1,
         production_factor = 1000.0 * m3_per_second_to_hm3_per_hour,
         max_generation = 400.0,
@@ -176,7 +176,7 @@ IARA.update_hydro_unit_relation!(db,
 IARA.add_demand_unit!(db;
     label = "dem_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "bus_1",

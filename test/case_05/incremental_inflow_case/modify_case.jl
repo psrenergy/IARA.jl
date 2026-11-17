@@ -23,7 +23,7 @@ IARA.add_gauging_station!(db;
 IARA.add_hydro_unit!(db;
     label = "hyd_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
         production_factor = [0.5],
         min_generation = [0.0],

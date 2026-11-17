@@ -127,8 +127,9 @@ function initialize_time_series_from_external_files(inputs)
             num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
                 inputs.time_series.inflow,
                 inputs;
-                ex_ante_file_path = joinpath(path_case(inputs), hydro_unit_inflow_ex_ante_file(inputs)),
-                ex_post_file_path = joinpath(path_case(inputs), hydro_unit_inflow_ex_post_file(inputs)),
+                directory = path_case(inputs),
+                ex_ante_file = hydro_unit_inflow_ex_ante_file(inputs),
+                ex_post_file = hydro_unit_inflow_ex_post_file(inputs),
                 files_to_read = inflow_scenarios_files(inputs),
                 expected_unit = "m3/s",
                 possible_expected_dimensions = possible_dimensions,
@@ -143,8 +144,9 @@ function initialize_time_series_from_external_files(inputs)
             num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
                 inputs.time_series.inflow_noise,
                 inputs;
-                ex_ante_file_path = joinpath(path_parp(inputs), gauging_station_inflow_noise_ex_ante_file(inputs)),
-                ex_post_file_path = joinpath(path_parp(inputs), gauging_station_inflow_noise_ex_post_file(inputs)),
+                directory = path_parp(inputs),
+                ex_ante_file = gauging_station_inflow_noise_ex_ante_file(inputs),
+                ex_post_file = gauging_station_inflow_noise_ex_post_file(inputs),
                 files_to_read = inflow_scenarios_files(inputs),
                 expected_unit = "m3/s",
                 possible_expected_dimensions = possible_dimensions,
@@ -233,8 +235,9 @@ function initialize_time_series_from_external_files(inputs)
         num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
             inputs.time_series.demand,
             inputs;
-            ex_ante_file_path = joinpath(path_case(inputs), demand_unit_demand_ex_ante_file(inputs)),
-            ex_post_file_path = joinpath(path_case(inputs), demand_unit_demand_ex_post_file(inputs)),
+            directory = path_case(inputs),
+            ex_ante_file = demand_unit_demand_ex_ante_file(inputs),
+            ex_post_file = demand_unit_demand_ex_post_file(inputs),
             files_to_read = demand_scenarios_files(inputs),
             expected_unit = "p.u.",
             possible_expected_dimensions = possible_dimensions,
@@ -252,8 +255,9 @@ function initialize_time_series_from_external_files(inputs)
         num_errors += initialize_ex_ante_and_ex_post_time_series_view_from_external_files!(
             inputs.time_series.renewable_generation,
             inputs;
-            ex_ante_file_path = joinpath(path_case(inputs), renewable_unit_generation_ex_ante_file(inputs)),
-            ex_post_file_path = joinpath(path_case(inputs), renewable_unit_generation_ex_post_file(inputs)),
+            directory = path_case(inputs),
+            ex_ante_file = renewable_unit_generation_ex_ante_file(inputs),
+            ex_post_file = renewable_unit_generation_ex_post_file(inputs),
             files_to_read = renewable_scenarios_files(inputs),
             expected_unit = "p.u.",
             possible_expected_dimensions = possible_dimensions,

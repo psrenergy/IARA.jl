@@ -10,12 +10,12 @@
 
 db = IARA.load_study(PATH; read_only = false)
 
-IARA.update_asset_owner_vectors!(db,
+IARA.update_asset_owner!(db,
     "asset_owner_1";
     purchase_discount_rate = [0.0],
 )
 
-IARA.update_asset_owner_vectors!(db,
+IARA.update_asset_owner!(db,
     "asset_owner_2";
     purchase_discount_rate = [0.0],
 )

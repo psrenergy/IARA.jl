@@ -16,7 +16,7 @@ IARA.add_hydro_unit!(
     db;
     label = "hyd_2",
     parameters = DataFrame(;
-        date_time = [DateTime(0), DateTime("2020-03-01T00:00:00")],
+        date_time = [DateTime(1), DateTime("2020-03-01T00:00:00")],
         existing = [Int(IARA.HydroUnit_Existence.DOES_NOT_EXIST), Int(IARA.HydroUnit_Existence.EXISTS)],
         min_volume = [0.0, missing],
         max_generation = [3.5, missing],

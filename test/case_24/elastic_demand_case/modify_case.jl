@@ -27,7 +27,7 @@ IARA.add_demand_unit!(db;
     demand_unit_type = IARA.DemandUnit_DemandType.ELASTIC,
     max_demand = max_demand / 4,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     bus_id = "Sistema",

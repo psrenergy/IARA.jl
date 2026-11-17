@@ -71,7 +71,7 @@ for h in 1:number_of_hydro_units
     IARA.add_hydro_unit!(db;
         label = "hyd_$(bus_labels[h])",
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = [Int(IARA.HydroUnit_Existence.EXISTS)],
             min_generation = [0.0],
             max_generation = [hydro_unit_maximum_generation[h]],
@@ -430,7 +430,7 @@ for (bus_idx, bus_number_of_thermal_units) in enumerate(number_of_thermal_units)
         IARA.add_thermal_unit!(db;
             label = "ter_" * bus_labels[bus_idx] * "_$t",
             parameters = DataFrame(;
-                date_time = [DateTime(0)],
+                date_time = [DateTime(1)],
                 existing = [Int(IARA.ThermalUnit_Existence.EXISTS)],
                 startup_cost = [0.0],
                 min_generation = [thermal_unit_minimum_generation[bus_idx][t]],
@@ -478,7 +478,7 @@ for (bus_idx, label) in enumerate(bus_labels)
         label = "dem_$label",
         demand_unit_type = IARA.DemandUnit_DemandType.INELASTIC,
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
         ),
         max_shift_up_flexible_demand = 0.0,
@@ -508,7 +508,7 @@ for d in 1:number_of_dc_lines
     IARA.add_dc_line!(db;
         label = "$(dc_line_bus_from[d])->$(dc_line_bus_to[d])",
         parameters = DataFrame(;
-            date_time = [DateTime(0)],
+            date_time = [DateTime(1)],
             existing = Int(IARA.DCLine_Existence.EXISTS),
             capacity_to = dc_line_capacity_to[d],
             capacity_from = dc_line_capacity_from[d],

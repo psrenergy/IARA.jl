@@ -46,7 +46,7 @@ IARA.add_demand_unit!(
     label = "flex_dem_1",
     demand_unit_type = IARA.DemandUnit_DemandType.FLEXIBLE,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [Int(IARA.DemandUnit_Existence.EXISTS)],
     ),
     max_shift_up_flexible_demand = 1.0,
@@ -100,7 +100,7 @@ IARA.add_thermal_unit!(
     label = "thermal_1",
     bus_id = "bus_1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = Int(IARA.ThermalUnit_Existence.EXISTS),
         max_generation = 6.0,
         om_cost = 0.0,

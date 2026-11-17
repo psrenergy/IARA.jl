@@ -78,7 +78,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal 1",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [100.0],
         om_cost = [40.0],
@@ -91,7 +91,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal 2",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [100.0],
         om_cost = [50.0],
@@ -104,7 +104,7 @@ IARA.add_thermal_unit!(
     db;
     label = "Thermal 3",
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
         max_generation = [100.0],
         om_cost = [65.0],
@@ -119,7 +119,7 @@ IARA.add_demand_unit!(
     label = "Demand 1",
     max_demand = max_demand,
     parameters = DataFrame(;
-        date_time = [DateTime(0)],
+        date_time = [DateTime(1)],
         existing = [1],
     ),
     bus_id = "Bus 1",

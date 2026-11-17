@@ -21,6 +21,11 @@ function thermal_min_max_up_down_time!(
     run_time_options::RunTimeOptions,
     ::Type{SubproblemBuild},
 )
+    # Under IGNORE, consecutive subperiods are not linked, so none of these constraints are built
+    if ignore_intra_period_chronology(inputs)
+        return nothing
+    end
+
     # Indexes
     commitment_indexes =
         index_of_elements(inputs, ThermalUnit; run_time_options, filters = [is_existing, has_commitment])
@@ -37,7 +42,7 @@ function thermal_min_max_up_down_time!(
     minimum_up_time_indicator = zeros(number_of_subperiods(inputs), length(minimum_up_time_indexes))
     minimum_down_time_indicator = zeros(number_of_subperiods(inputs), length(minimum_down_time_indexes))
     maximum_up_time_counter = zeros(number_of_subperiods(inputs), length(maximum_up_time_indexes))
-    if model.node == 1
+    if use_thermal_initial_conditions(inputs, model.node)
         # Minimum uptime initial conditions
         for (i, plant_idx) in enumerate(minimum_up_time_indexes)
             uptime_initial_condition = thermal_unit_uptime_initial_condition(inputs, plant_idx)
@@ -101,20 +106,20 @@ function thermal_min_max_up_down_time!(
         end
     end
 
-    first_subperiod_that_matters_for_min_uptime_map =
-        zeros(Int, number_of_subperiods(inputs), length(minimum_up_time_indexes))
-    for b in subperiods(inputs)
-        first_subperiod_that_matters_for_min_uptime_map[b, :] .= b
-        subperiod_duration_sum = 0
-        for some_previous_subperiod in b-1:-1:1
-            subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
-            for (i, plant_idx) in enumerate(minimum_up_time_indexes)
-                if subperiod_duration_sum < thermal_unit_min_uptime(inputs, plant_idx)
-                    first_subperiod_that_matters_for_min_uptime_map[b, i] = some_previous_subperiod
-                end
-            end
-        end
-    end
+    # Lookback windows: subperiod b followed by the predecessors that still bind it.
+    # Under CYCLIC, the windows wrap around from the first subperiod to the last one.
+    minimum_up_time_window = [
+        lookback_subperiods(inputs, b, thermal_unit_min_uptime(inputs, t)) for
+        b in subperiods(inputs), t in minimum_up_time_indexes
+    ]
+    minimum_down_time_window = [
+        lookback_subperiods(inputs, b, thermal_unit_min_downtime(inputs, t)) for
+        b in subperiods(inputs), t in minimum_down_time_indexes
+    ]
+    maximum_up_time_window = [
+        lookback_subperiods(inputs, b, thermal_unit_max_uptime(inputs, t); include_boundary = true) for
+        b in subperiods(inputs), t in maximum_up_time_indexes
+    ]
 
     # Constraints
     @constraint(
@@ -123,31 +128,12 @@ function thermal_min_max_up_down_time!(
             b in subperiods(inputs),
             (i, t) in enumerate(minimum_up_time_indexes),
         ],
-        sum(
-            thermal_startup[j, t] for
-            j in first_subperiod_that_matters_for_min_uptime_map[b, i]:b
-        )
+        sum(thermal_startup[j, t] for j in minimum_up_time_window[b, i])
         +
         minimum_up_time_indicator[b, i]
         <=
         thermal_commitment[b, t]
     )
-
-    first_subperiod_that_matters_for_min_downtime_map =
-        zeros(Int, number_of_subperiods(inputs), length(minimum_down_time_indexes))
-
-    for b in subperiods(inputs)
-        first_subperiod_that_matters_for_min_downtime_map[b, :] .= b
-        subperiod_duration_sum = 0
-        for some_previous_subperiod in b-1:-1:1
-            subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
-            for (i, plant_idx) in enumerate(minimum_down_time_indexes)
-                if subperiod_duration_sum < thermal_unit_min_downtime(inputs, plant_idx)
-                    first_subperiod_that_matters_for_min_downtime_map[b, i] = some_previous_subperiod
-                end
-            end
-        end
-    end
 
     @constraint(
         model.jump_model,
@@ -155,31 +141,12 @@ function thermal_min_max_up_down_time!(
             b in subperiods(inputs),
             (i, t) in enumerate(minimum_down_time_indexes),
         ],
-        sum(
-            thermal_shutdown[j, t] for
-            j in first_subperiod_that_matters_for_min_downtime_map[b, i]:b
-        )
+        sum(thermal_shutdown[j, t] for j in minimum_down_time_window[b, i])
         +
         minimum_down_time_indicator[b, i]
         <=
         1 - thermal_commitment[b, t]
     )
-
-    first_subperiod_that_matters_for_max_uptime_map =
-        zeros(Int, number_of_subperiods(inputs), length(maximum_up_time_indexes))
-
-    for b in subperiods(inputs)
-        first_subperiod_that_matters_for_max_uptime_map[b, :] .= b
-        subperiod_duration_sum = 0
-        for some_previous_subperiod in b-1:-1:1
-            subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
-            for (i, plant_idx) in enumerate(maximum_up_time_indexes)
-                if subperiod_duration_sum <= thermal_unit_max_uptime(inputs, plant_idx)
-                    first_subperiod_that_matters_for_max_uptime_map[b, i] = some_previous_subperiod
-                end
-            end
-        end
-    end
 
     @constraint(
         model.jump_model,
@@ -189,7 +156,7 @@ function thermal_min_max_up_down_time!(
         ],
         sum(
             thermal_commitment[j, t] * subperiod_duration_in_hours(inputs, j) for
-            j in first_subperiod_that_matters_for_max_uptime_map[b, i]:b
+            j in maximum_up_time_window[b, i]
         )
         +
         maximum_up_time_counter[b, i]
@@ -197,105 +164,34 @@ function thermal_min_max_up_down_time!(
         thermal_unit_max_uptime(inputs, t)
     )
 
-    if thermal_unit_intra_period_operation(inputs) ==
-       Configurations_ThermalUnitIntraPeriodOperation.CYCLIC_WITH_FLEXIBLE_START
-        thermal_startup_loop = get_model_object(model, :thermal_startup_loop)
-        thermal_shutdown_loop = get_model_object(model, :thermal_shutdown_loop)
-        # The minimum uptime and downtime constraints here are similar to the ones above, 
-        # but considers one less subperiod in the sum(), and add the 'loop' variables linking the last subperiod to the first one
-
-        first_subperiod_that_matters_for_loop_min_uptime_map = zeros(Int, length(minimum_up_time_indexes))
-        for (i, plant_idx) in enumerate(minimum_up_time_indexes)
-            first_subperiod_that_matters_for_loop_min_uptime_map[i] = 0
-            subperiod_duration_sum = 0
-            for some_previous_subperiod in
-                number_of_subperiods(inputs):-1:first_subperiod_that_matters_for_max_uptime_map[end, i]
-                subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
-                if subperiod_duration_sum < thermal_unit_min_uptime(inputs, plant_idx)
-                    first_subperiod_that_matters_for_loop_min_uptime_map[i] = some_previous_subperiod
-                end
-            end
-        end
-
-        @constraint(
-            model.jump_model,
-            thermal_minimum_uptime_loop[
-                (i, t) in enumerate(minimum_up_time_indexes);
-                first_subperiod_that_matters_for_loop_min_uptime_map[i] > 0
-            ],
-            sum(
-                thermal_startup[j, t] for
-                j in first_subperiod_that_matters_for_loop_min_uptime_map[i]:number_of_subperiods(inputs)
-            )
-            +
-            thermal_startup_loop[t]
-            <=
-            thermal_commitment[1, t]
-        )
-
-        first_subperiod_that_matters_for_loop_min_downtime_map = zeros(Int, length(minimum_down_time_indexes))
-        for (i, plant_idx) in enumerate(minimum_down_time_indexes)
-            first_subperiod_that_matters_for_loop_min_downtime_map[i] = 0
-            subperiod_duration_sum = 0
-            for some_previous_subperiod in
-                number_of_subperiods(inputs):-1:first_subperiod_that_matters_for_max_uptime_map[end, i]
-                subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
-                if subperiod_duration_sum < thermal_unit_min_downtime(inputs, plant_idx)
-                    first_subperiod_that_matters_for_loop_min_downtime_map[i] = some_previous_subperiod
-                end
-            end
-        end
-
-        @constraint(
-            model.jump_model,
-            thermal_minimum_downtime_loop[
-                (i, t) in enumerate(minimum_down_time_indexes);
-                first_subperiod_that_matters_for_loop_min_downtime_map[i] > 0
-            ],
-            sum(
-                thermal_shutdown[j, t] for
-                j in first_subperiod_that_matters_for_loop_min_downtime_map[i]:number_of_subperiods(inputs)
-            )
-            +
-            thermal_shutdown_loop[t]
-            <=
-            1 - thermal_commitment[1, t]
-        )
-
-        # The maximum uptime constraint here is similar to the one above, 
-        # but considers one less subperiod in the sum(), and adds the commitment for the first subperiod
-
-        first_subperiod_that_matters_for_loop_max_uptime_map = zeros(Int, length(maximum_up_time_indexes))
-        for (i, plant_idx) in enumerate(maximum_up_time_indexes)
-            first_subperiod_that_matters_for_loop_max_uptime_map[i] = 0
-            subperiod_duration_sum = 0
-            for some_previous_subperiod in
-                number_of_subperiods(inputs):-1:first_subperiod_that_matters_for_max_uptime_map[end, i]
-                subperiod_duration_sum += subperiod_duration_in_hours(inputs, some_previous_subperiod)
-                if subperiod_duration_sum <= thermal_unit_max_uptime(inputs, plant_idx)
-                    first_subperiod_that_matters_for_loop_max_uptime_map[i] = some_previous_subperiod
-                end
-            end
-        end
-
-        @constraint(
-            model.jump_model,
-            thermal_maximum_uptime_loop[
-                (i, t) in enumerate(maximum_up_time_indexes);
-                first_subperiod_that_matters_for_loop_max_uptime_map[i] > 0
-            ],
-            sum(
-                thermal_commitment[b, t] * subperiod_duration_in_hours(inputs, b) for
-                b in first_subperiod_that_matters_for_loop_max_uptime_map[i]:number_of_subperiods(inputs)
-            )
-            +
-            thermal_commitment[1, t] * subperiod_duration_in_hours(inputs, 1)
-            <=
-            thermal_unit_max_uptime(inputs, t)
-        )
-    end
-
     return nothing
+end
+
+"""
+    lookback_subperiods(inputs::AbstractInputs, subperiod::Int, hours::Real; include_boundary::Bool = false)
+
+Return `subperiod` followed by its predecessors, walking back while the accumulated duration of the predecessors
+is strictly below `hours` (or at most `hours`, when `include_boundary` is true).
+Under `CYCLIC`, the walk wraps around from the first subperiod to the last one, and stops before any subperiod
+would be visited twice.
+"""
+function lookback_subperiods(inputs::AbstractInputs, subperiod::Int, hours::Real; include_boundary::Bool = false)
+    window = [subperiod]
+    accumulated_duration = 0.0
+    current = subperiod
+    for _ in 1:number_of_subperiods(inputs)-1
+        current = previous_subperiod(inputs, current)
+        if isnothing(current)
+            break
+        end
+        accumulated_duration += subperiod_duration_in_hours(inputs, current)
+        is_within_window = include_boundary ? accumulated_duration <= hours : accumulated_duration < hours
+        if !is_within_window
+            break
+        end
+        push!(window, current)
+    end
+    return window
 end
 
 function thermal_min_max_up_down_time!(

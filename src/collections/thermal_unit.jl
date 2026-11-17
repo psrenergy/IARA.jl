@@ -163,8 +163,8 @@ Required arguments:
 
 Optional arguments:
 
-  - `max_ramp_up::Float64`: Max ramp up of the thermal unit `[MW/h]`
-  - `max_ramp_down::Float64`: Max ramp down of the thermal unit `[MW/h]`
+  - `max_ramp_up::Float64`: Max ramp up of the thermal unit `[MW/min]`
+  - `max_ramp_down::Float64`: Max ramp down of the thermal unit `[MW/min]`
   - `min_uptime::Float64`: Min uptime of the thermal unit `[h]`
   - `max_uptime::Float64`: Max uptime of the thermal unit `[h]`
   - `min_downtime::Float64`: Min downtime of the thermal unit `[h]`
@@ -525,6 +525,29 @@ function advanced_validations(inputs::AbstractInputs, thermal_unit::ThermalUnit)
             if has_commitment_initial_condition(thermal_unit, i)
                 has_commitment_initial_condition_flag = true
             end
+        end
+    end
+
+    # Warn about initial conditions that will not be used
+    if !reads_thermal_initial_conditions(inputs)
+        units_with_initial_conditions = [
+            thermal_unit.label[i] for i in 1:length(thermal_unit) if
+            has_commitment_initial_condition(thermal_unit, i) ||
+            !is_null(thermal_unit.generation_initial_condition[i]) ||
+            !is_null(thermal_unit.uptime_initial_condition[i]) ||
+            !is_null(thermal_unit.downtime_initial_condition[i])
+        ]
+        if !isempty(units_with_initial_conditions)
+            max_labels_to_show = 10
+            labels_to_show = join(first(units_with_initial_conditions, max_labels_to_show), ", ")
+            if length(units_with_initial_conditions) > max_labels_to_show
+                labels_to_show *= " and $(length(units_with_initial_conditions) - max_labels_to_show) more"
+            end
+            @warn(
+                "Thermal unit initial conditions are only used under the FREE_START option of " *
+                "intra_period_chronological_constraints with a linear policy graph. " *
+                "The initial conditions set for the following thermal units will be ignored: $labels_to_show."
+            )
         end
     end
 

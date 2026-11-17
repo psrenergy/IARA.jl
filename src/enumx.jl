@@ -116,11 +116,6 @@ end
     FROZEN_TIME = 1
 end
 
-@enumx Configurations_HydroBalanceSubperiodRepresentation begin
-    CHRONOLOGICAL_SUBPERIODS = 0
-    AGGREGATED_SUBPERIODS = 1
-end
-
 # TODO review this implementation in favour of something more generic
 function period_type_string(time_series_step::Configurations_TimeSeriesStep.T)
     if time_series_step == Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
@@ -260,14 +255,18 @@ end
 end
 
 """
-    Configurations_ThermalUnitIntraPeriodOperation
+    Configurations_IntraPeriodChronologicalConstraints
 
-  - `CYCLIC_WITH_FLEXIBLE_START`: Consider subperiods loop for thermal constraints (1)
-  - `FLEXIBLE_START_FLEXIBLE_END`: Do not consider subperiods loop for thermal constraints (0)
+Representation of the constraints that link consecutive subperiods within a period.
+
+  - `FREE_START`: Consecutive subperiods are linked, and the first subperiod is not linked to the last one (0)
+  - `CYCLIC`: Consecutive subperiods are linked, and the last subperiod is the predecessor of the first one (1)
+  - `IGNORE`: Consecutive subperiods are not linked, and the hydro balance is aggregated over the period (2)
 """
-@enumx Configurations_ThermalUnitIntraPeriodOperation begin
-    CYCLIC_WITH_FLEXIBLE_START = 1
-    FLEXIBLE_START_FLEXIBLE_END = 0
+@enumx Configurations_IntraPeriodChronologicalConstraints begin
+    FREE_START = 0
+    CYCLIC = 1
+    IGNORE = 2
 end
 
 """ 

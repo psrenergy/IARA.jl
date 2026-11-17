@@ -640,12 +640,12 @@ function validate(hydro_unit::HydroUnit)
     return num_errors
 end
 
+# TODO: add validation to bidding_group or virtual_reservoir not nullity
 """
     advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
 
 Validate the Hydro Units' context within the inputs. Return the number of errors found.
 """
-# TODO: add validation to bidding_group or virtual_reservoir not nullity
 function advanced_validations(inputs::AbstractInputs, hydro_unit::HydroUnit)
     buses = index_of_elements(inputs, Bus)
     bidding_groups = index_of_elements(inputs, BiddingGroup)
@@ -797,17 +797,15 @@ function hydro_unit_initial_volume(inputs::AbstractInputs, idx::Int)
 end
 
 function hydro_subperiods(inputs::AbstractInputs)
-    if hydro_balance_subperiod_resolution(inputs) ==
-       Configurations_HydroBalanceSubperiodRepresentation.CHRONOLOGICAL_SUBPERIODS
+    if ignore_intra_period_chronology(inputs)
+        # In this case the first subperiod is the only one in the period and the second subperiod is only used to represent
+        # the final volume of the period.
+        return [1, 2]
+    else
         # There is one more subperiod because this is the volume at the start of each subperiod.
         # In this case the last subperiod is actually the final volume of a certain period and
         # the first subperiod of the next period
         return collect(1:number_of_subperiods(inputs)+1)
-    elseif hydro_balance_subperiod_resolution(inputs) ==
-           Configurations_HydroBalanceSubperiodRepresentation.AGGREGATED_SUBPERIODS
-        # In this case the first subperiod is the only one in the period and the second subperiod is only used to represent
-        # the final volume of the period.
-        return [1, 2]
     end
 end
 

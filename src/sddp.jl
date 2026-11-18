@@ -110,12 +110,12 @@ function train_model!(model::ProblemModel, inputs::Inputs, run_time_options::Run
     # different trajectories, stops at a different iteration, and produces
     # different cuts (and therefore different simulation outputs).
     Random.seed!(1234)
-    # Local patch: IARA_SDDP_MAX_DEPTH truncates each forward pass to that many nodes. With a
+    # train_mincost_forward_pass_max_depth truncates each forward pass to that many nodes. With a
     # realistic discount the cyclic graph almost never terminates on its own, so the forward
-    # pass would cover hundreds of periods. Unset or 0 keeps the SDDP.jl default (no limit).
-    max_depth = parse(Int, get(ENV, "IARA_SDDP_MAX_DEPTH", "0"))
+    # pass would cover hundreds of periods. Zero keeps the SDDP.jl default (no limit).
+    max_depth = train_mincost_forward_pass_max_depth(inputs)
     if max_depth > 0
-        @info("SDDP forward pass truncated to $max_depth nodes (IARA_SDDP_MAX_DEPTH).")
+        @info("SDDP forward pass truncated to $max_depth nodes (train_mincost_forward_pass_max_depth).")
     end
     # The stopping rule simulates the policy too, so it gets the same truncation.
     sampling_scheme = SDDP.InSampleMonteCarlo(; max_depth = max_depth)
@@ -370,7 +370,8 @@ function set_custom_hook(
         # The reference curve model is rebuilt every period, so its warm start is kept.
         # Policy training (SDDP) solves the same LP many times with different noise and relies on
         # the warm start, so the clearing only applies to market clearing runs.
-        if is_market_clearing(inputs) && !is_reference_curve(inputs, run_time_options)
+        if market_clearing_clear_solver_data(inputs) && is_market_clearing(inputs) &&
+           !is_reference_curve(inputs, run_time_options)
             clear_highs_solver_data!(model)
         end
         if integer_variable_representation(inputs, run_time_options) ==

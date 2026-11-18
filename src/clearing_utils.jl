@@ -526,7 +526,8 @@ function read_cuts_into_clearing_model!(
     # Cyclic policy graphs read the cuts of every node at once and the clearing models are built
     # only once, so after the first period the cuts are already there. Reading them again only
     # adds duplicates and makes the cut selection slower at each period.
-    if cyclic_policy_graph(inputs) && clearing_model_has_cuts(model)
+    if market_clearing_read_cuts_once_in_cyclic_graph(inputs) && cyclic_policy_graph(inputs) &&
+       clearing_model_has_cuts(model)
         return nothing
     end
     if use_scaled_fcf_in_clearing(inputs)

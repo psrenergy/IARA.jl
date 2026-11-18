@@ -752,7 +752,8 @@ to `number_of_bid_segments`.
 function supply_function_equilibrium_bids_from_curve(
     quantity::Vector{Float64},
     price::Vector{Float64},
-    number_of_bid_segments::Int,
+    number_of_bid_segments::Int;
+    merge_excess_segments::Bool = false,
 )
     @assert length(quantity) == length(price)
 
@@ -785,7 +786,9 @@ function supply_function_equilibrium_bids_from_curve(
     incremental_quantity = incremental_quantity[segments_with_quantity]
     ascending_price = ascending_price[segments_with_quantity]
 
-    if length(incremental_quantity) > number_of_bid_segments && sfe_max_curve_points_override() > 0
+    # With a longer price ladder (`supply_function_equilibrium_max_curve_points`), the curve can have more segments
+    # than the model holds, so the closest ones are merged.
+    if length(incremental_quantity) > number_of_bid_segments && merge_excess_segments
         incremental_quantity, ascending_price =
             merge_closest_bid_segments(incremental_quantity, ascending_price, number_of_bid_segments)
     end
@@ -808,7 +811,7 @@ end
 """
     merge_closest_bid_segments(quantity::Vector{Float64}, price::Vector{Float64}, number_of_bid_segments::Int)
 
-Local patch: reduce bids in ascending price order to `number_of_bid_segments` by repeatedly merging the pair of
+Reduce bids in ascending price order to `number_of_bid_segments` by repeatedly merging the pair of
 neighbouring segments with the smallest price gap into one segment at their quantity-weighted price. Segments of
 opposite sign (sale and purchase) are never merged.
 """
@@ -902,7 +905,8 @@ function supply_function_equilibrium_bids(
             quantity_bid, price_bid = supply_function_equilibrium_bids_from_curve(
                 global_quantity[agent_index],
                 global_price[agent_index],
-                maximum_number_of_vr_bidding_segments(inputs),
+                maximum_number_of_vr_bidding_segments(inputs);
+                merge_excess_segments = supply_function_equilibrium_max_curve_points(inputs) > 0,
             )
             vr_quantity_bid[vr, ao, :] = quantity_bid
             vr_price_bid[vr, ao, :] = price_bid
@@ -912,7 +916,8 @@ function supply_function_equilibrium_bids(
             quantity_bid, price_bid = supply_function_equilibrium_bids_from_curve(
                 global_quantity[agent_index],
                 global_price[agent_index],
-                maximum_number_of_bg_bidding_segments(inputs),
+                maximum_number_of_bg_bidding_segments(inputs);
+                merge_excess_segments = supply_function_equilibrium_max_curve_points(inputs) > 0,
             )
             # The equilibrium is computed on the subperiod-aggregated curve, so the result is split back across
             # subperiods like the original bids, matching `disaggregate_bg_output_in_subperiods`. The bid segments
@@ -978,8 +983,11 @@ cheapest original reference (cost) price, both taken over the segments that carr
 the whole system, so shifting by it preserves the relative position of the agents' curves, and it is non-negative by
 construction, so it can only reduce markups.
 
-When `supply_function_equilibrium_force_origin_on_output` is set, the shift is instead the lowest equilibrium price
-across all agents, which pushes the cheapest segment of the system's curve down to a price of zero.
+`supply_function_equilibrium_force_origin_on_output` can replace this shift:
+  - `LOWEST_EQUILIBRIUM_PRICE`: the shift is the lowest equilibrium price across all agents, which pushes the cheapest
+    segment of the system's curve down to a price of zero.
+  - `HIGHEST_PRICE_MARKUP`: the shift is `min(max P_i - max C_i)`, the smallest markup measured at the top of the
+    curves, bounded by the lowest equilibrium price.
 """
 function supply_function_equilibrium_price_shift(
     inputs::AbstractInputs,
@@ -1015,8 +1023,8 @@ function supply_function_equilibrium_price_shift(
     lowest_equilibrium_price = Inf
     lowest_price_mapping = nothing
 
-    # Local patch: with IARA_SFE_FORCE_ORIGIN_ANCHOR=top, the forced shift is measured at the top of the curves,
-    # min(max P_i - max C_i), instead of at the bottom.
+    # With HIGHEST_PRICE_MARKUP, the forced shift is measured at the top of the curves, min(max P_i - max C_i),
+    # instead of at the bottom.
     top_shift = Inf
     top_mapping = nothing
     top_equilibrium_price = Inf
@@ -1080,16 +1088,18 @@ function supply_function_equilibrium_price_shift(
     # Forcing the output curve through the origin overrides the markup-based shift: the whole system curve is moved
     # down by its cheapest equilibrium price, so that price lands exactly at zero. This is checked before the
     # markup-based early returns because it does not depend on the reference cost curve at all.
-    if supply_function_equilibrium_force_origin_on_output(inputs)
+    forced_shift = supply_function_equilibrium_force_origin_on_output(inputs)
+    if forced_shift != Configurations_SupplyFunctionEquilibriumForcedShift.DO_NOT_FORCE
         if !isfinite(lowest_equilibrium_price)
             @info("No agent offered a priced segment; the price curve shift was set to zero.")
             return 0.0
         end
 
-        if get(ENV, "IARA_SFE_FORCE_ORIGIN_ANCHOR", "") == "top" && isfinite(top_shift)
+        if forced_shift == Configurations_SupplyFunctionEquilibriumForcedShift.HIGHEST_PRICE_MARKUP &&
+           isfinite(top_shift)
             shift = clamp(top_shift, 0.0, lowest_equilibrium_price)
             @info(
-                "Forced price curve shift anchored at the top (IARA_SFE_FORCE_ORIGIN_ANCHOR): $(shift), set by " *
+                "Forced price curve shift anchored at the top (HIGHEST_PRICE_MARKUP): $(shift), set by " *
                 "$(agent_mapping_label(inputs, top_mapping)): highest equilibrium price $(top_equilibrium_price) " *
                 "minus highest reference price $(top_original_price). Lowest equilibrium price: " *
                 "$(lowest_equilibrium_price)."
@@ -1480,22 +1490,31 @@ function maximum_number_of_segments_in_supply_function_equilibrium(
     return reference_curve_number_of_segments(inputs) * total_agents + 1
 end
 
-# Local patch: size of the diagnostic `*_sfe_*` outputs, which hold every point of the price ladder. The clearing bids
-# keep the bound above; see `merge_closest_bid_segments`.
-function number_of_points_in_supply_function_equilibrium_outputs(inputs::AbstractInputs)
-    return max(maximum_number_of_segments_in_supply_function_equilibrium(inputs), sfe_max_curve_points_override() + 1)
-end
+"""
+    number_of_points_in_supply_function_equilibrium_outputs(inputs::AbstractInputs)
 
-# Local patch: IARA_SFE_MAX_CURVE_POINTS raises the number of points of the shared price ladder. The default
-# (`reference_curve_number_of_segments * agents`) can end before the agents' curves reach their minimum quantity, and
-# whatever is left is lumped at the last price. Unset or 0 keeps the default.
-sfe_max_curve_points_override() = parse(Int, get(ENV, "IARA_SFE_MAX_CURVE_POINTS", "0"))
+Size of the diagnostic `*_sfe_*` outputs, which hold every point of the price ladder. The clearing bids keep the bound
+of `maximum_number_of_segments_in_supply_function_equilibrium`; see `merge_closest_bid_segments`.
+
+`supply_function_equilibrium_max_curve_points` raises the number of points of the shared price ladder. The default
+(`reference_curve_number_of_segments * agents`) can end before the agents' curves reach their minimum quantity, and
+whatever is left is lumped at the last price.
+"""
+function number_of_points_in_supply_function_equilibrium_outputs(inputs::AbstractInputs)
+    return max(
+        maximum_number_of_segments_in_supply_function_equilibrium(inputs),
+        supply_function_equilibrium_max_curve_points(inputs) + 1,
+    )
+end
 
 function number_of_segments_for_vr_in_nash_equilibrium(
     inputs::AbstractInputs,
     number_of_asset_owners_in_vr::Int,
 )
-    return max(reference_curve_number_of_segments(inputs) * number_of_asset_owners_in_vr, sfe_max_curve_points_override())
+    return max(
+        reference_curve_number_of_segments(inputs) * number_of_asset_owners_in_vr,
+        supply_function_equilibrium_max_curve_points(inputs),
+    )
 end
 
 function initialize_supply_function_equilibrium_outputs(

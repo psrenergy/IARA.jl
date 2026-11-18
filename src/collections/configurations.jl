@@ -26,6 +26,7 @@ Configurations for the problem.
     number_of_subscenarios::Int = 0
     train_mincost_iteration_limit::Int = 0
     train_mincost_time_limit_sec::Float64 = 0.0
+    train_mincost_forward_pass_max_depth::Int = 0
     initial_date_time::DateTime = DateTime(0)
     time_series_step::Configurations_TimeSeriesStep.T = Configurations_TimeSeriesStep.ONE_MONTH_PER_PERIOD
     subperiod_duration_in_hours::Vector{Float64} = []
@@ -106,7 +107,11 @@ Configurations for the problem.
     supply_function_equilibrium_max_slope::Float64 = 0.0
     supply_function_equilibrium_max_iterations::Int = 0
     supply_function_equilibrium_max_cost_multiplier::Float64 = 0.0
-    supply_function_equilibrium_force_origin_on_output::Bool = false
+    supply_function_equilibrium_force_origin_on_output::Configurations_SupplyFunctionEquilibriumForcedShift.T =
+        Configurations_SupplyFunctionEquilibriumForcedShift.DO_NOT_FORCE
+    supply_function_equilibrium_max_curve_points::Int = 0
+    market_clearing_read_cuts_once_in_cyclic_graph::Bool = false
+    market_clearing_clear_solver_data::Bool = false
 
     # CVaR risk measure
     cvar_alpha::Float64 = 0.0
@@ -148,6 +153,8 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
         PSRI.get_parms(inputs.db, "Configuration", "number_of_subscenarios")[1]
     configurations.train_mincost_iteration_limit =
         PSRI.get_parms(inputs.db, "Configuration", "train_mincost_iteration_limit")[1]
+    configurations.train_mincost_forward_pass_max_depth =
+        PSRI.get_parms(inputs.db, "Configuration", "train_mincost_forward_pass_max_depth")[1]
     configurations.initial_date_time = DateTime(
         PSRI.get_parms(inputs.db, "Configuration", "initial_date_time")[1],
         "yyyy-mm-ddTHH:MM:SS",
@@ -340,7 +347,16 @@ function initialize!(configurations::Configurations, inputs::AbstractInputs)
     configurations.supply_function_equilibrium_max_cost_multiplier =
         PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_cost_multiplier")[1]
     configurations.supply_function_equilibrium_force_origin_on_output =
-        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_force_origin_on_output")[1] |> Bool
+        convert_to_enum(
+            PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_force_origin_on_output")[1],
+            Configurations_SupplyFunctionEquilibriumForcedShift.T,
+        )
+    configurations.supply_function_equilibrium_max_curve_points =
+        PSRI.get_parms(inputs.db, "Configuration", "supply_function_equilibrium_max_curve_points")[1]
+    configurations.market_clearing_read_cuts_once_in_cyclic_graph =
+        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_read_cuts_once_in_cyclic_graph")[1] |> Bool
+    configurations.market_clearing_clear_solver_data =
+        PSRI.get_parms(inputs.db, "Configuration", "market_clearing_clear_solver_data")[1] |> Bool
     configurations.cvar_alpha = PSRI.get_parms(inputs.db, "Configuration", "cvar_alpha")[1]
     configurations.cvar_lambda = PSRI.get_parms(inputs.db, "Configuration", "cvar_lambda")[1]
 
@@ -427,6 +443,14 @@ function validate(configurations::Configurations)
     end
     if configurations.train_mincost_time_limit_sec < 0
         @error("train_mincost_time_limit_sec must be non-negative.")
+        num_errors += 1
+    end
+    if configurations.train_mincost_forward_pass_max_depth < 0
+        @error("train_mincost_forward_pass_max_depth must be non-negative.")
+        num_errors += 1
+    end
+    if configurations.supply_function_equilibrium_max_curve_points < 0
+        @error("supply_function_equilibrium_max_curve_points must be non-negative.")
         num_errors += 1
     end
     if configurations.number_of_periods <= 0
@@ -1740,10 +1764,45 @@ supply_function_equilibrium_max_cost_multiplier(inputs::AbstractInputs) =
 """
     supply_function_equilibrium_force_origin_on_output(inputs)
 
-Return whether the Supply Function Equilibrium bid curves must be shifted so that they touch the origin.
+Return how the Supply Function Equilibrium bid curves are shifted down, as a
+`Configurations_SupplyFunctionEquilibriumForcedShift`.
 """
 supply_function_equilibrium_force_origin_on_output(inputs::AbstractInputs) =
     inputs.collections.configurations.supply_function_equilibrium_force_origin_on_output
+
+"""
+    supply_function_equilibrium_max_curve_points(inputs)
+
+Return the number of points of the price ladder shared by the agents in the Supply Function Equilibrium. Zero keeps the
+default, `reference_curve_number_of_segments` times the number of agents.
+"""
+supply_function_equilibrium_max_curve_points(inputs::AbstractInputs) =
+    inputs.collections.configurations.supply_function_equilibrium_max_curve_points
+
+"""
+    market_clearing_read_cuts_once_in_cyclic_graph(inputs)
+
+Return whether the clearing models of a cyclic policy graph read the FCF cuts only once, in the first period, instead
+of in every period.
+"""
+market_clearing_read_cuts_once_in_cyclic_graph(inputs::AbstractInputs) =
+    inputs.collections.configurations.market_clearing_read_cuts_once_in_cyclic_graph
+
+"""
+    market_clearing_clear_solver_data(inputs)
+
+Return whether the HiGHS solver data (basis, factorization) is cleared before each market clearing solve.
+"""
+market_clearing_clear_solver_data(inputs::AbstractInputs) =
+    inputs.collections.configurations.market_clearing_clear_solver_data
+
+"""
+    train_mincost_forward_pass_max_depth(inputs)
+
+Return the maximum number of nodes visited by each SDDP forward pass. Zero means no limit.
+"""
+train_mincost_forward_pass_max_depth(inputs::AbstractInputs) =
+    inputs.collections.configurations.train_mincost_forward_pass_max_depth
 
 """
     integer_variable_representation(inputs::Inputs, run_time_options)

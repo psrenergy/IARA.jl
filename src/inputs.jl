@@ -148,7 +148,14 @@ Optional arguments:
   - `supply_function_equilibrium_max_slope::Float64`
   - `supply_function_equilibrium_max_iterations::Int64`
   - `supply_function_equilibrium_max_cost_multiplier::Float64`
-  - `supply_function_equilibrium_force_origin_on_output::Bool`
+  - `supply_function_equilibrium_force_origin_on_output::Int64`
+    + `0` [Smallest markup] <default>
+    + `1` [Lowest equilibrium price]
+    + `2` [Highest price markup]
+  - `supply_function_equilibrium_max_curve_points::Int64`: 0 keeps the default ladder <default>
+  - `market_clearing_read_cuts_once_in_cyclic_graph::Int64`: 0 or 1, default 0
+  - `market_clearing_clear_solver_data::Int64`: 0 or 1, default 0
+  - `train_mincost_forward_pass_max_depth::Int64`: 0 means no limit <default>
   - `subperiod_duration_in_hours::Vector{Float64}`: Subperiod duration in hours of the configuration
   - `expected_number_of_repeats_per_node::Vector{Float64}`:
   - `reference_curve_multipliers::Vector{Float64}`

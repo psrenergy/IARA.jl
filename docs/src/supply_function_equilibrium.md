@@ -40,8 +40,27 @@ IARA.update_configuration!(db;
 - **`supply_function_equilibrium_max_cost_multiplier`** (Float64, default: 2.0)
   Maximum price cap as multiplier of deficit cost.
 
-- **`supply_function_equilibrium_force_origin_on_output`** (Bool, default: false)
-  When `true`, the output bid curves are shifted down by the lowest equilibrium price of the system instead of by the smallest markup, so the cheapest segment of the resulting curve is priced at zero.
+- **`supply_function_equilibrium_force_origin_on_output`** (Int, default: 0)
+  How the output bid curves are shifted down:
+  - `0` (`DO_NOT_FORCE`): by the smallest markup across agents, measured at the cheapest segment of each curve.
+  - `1` (`LOWEST_EQUILIBRIUM_PRICE`): by the lowest equilibrium price of the system, so the cheapest segment of the resulting curve is priced at zero.
+  - `2` (`HIGHEST_PRICE_MARKUP`): by the smallest markup measured at the top of the curves, `min(max P_i - max C_i)`, bounded by the lowest equilibrium price.
+
+- **`supply_function_equilibrium_max_curve_points`** (Int, default: 0)
+  Number of points of the price ladder shared by the agents. By default the ladder has `reference_curve_number_of_segments` points per agent, which can end before the agents' curves reach their minimum quantity; whatever is left is then lumped at the last price. A larger value avoids that. When the resulting curve has more segments than the bid model holds, the neighbouring segments with the closest prices are merged at their quantity-weighted price. `0` keeps the default.
+
+### Performance options
+
+These options do not change the problem being solved and are disabled by default.
+
+- **`market_clearing_read_cuts_once_in_cyclic_graph`** (Int, 0 or 1, default: 0)
+  With a cyclic policy graph, the clearing models are built once and read the cuts of every node, so reading the cuts again in each period only adds duplicates. When `1`, the cuts are read only in the first period.
+
+- **`market_clearing_clear_solver_data`** (Int, 0 or 1, default: 0)
+  When `1`, the HiGHS solver data (basis, factorization) is cleared before each market clearing solve, so each solve depends only on the current problem. This can avoid simplex stalls in long clearing runs. In degenerate problems, a different optimal solution with the same cost may be chosen. The reference curve and the policy training are not affected.
+
+- **`train_mincost_forward_pass_max_depth`** (Int, default: 0)
+  Maximum number of nodes visited by each SDDP forward pass, also applied to the simulations of the stopping rule. With a cyclic policy graph and a realistic discount rate, the forward pass rarely ends on its own. `0` means no limit.
 
 - **`reference_curve_multipliers`** (Vector{Float64}, default: empty)
   Fractions of the available energy defining each reference curve segment, strictly increasing and within `(0, 1]`, e.g. `[0.01, 0.1, 0.25, 0.5, 1.0]`. When left empty, `reference_curve_number_of_segments` evenly spaced fractions are used instead.

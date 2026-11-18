@@ -146,6 +146,19 @@ end
 end
 
 """
+    Configurations_SupplyFunctionEquilibriumForcedShift
+
+  - `DO_NOT_FORCE`: the curves are shifted down by the smallest markup across agents (0)
+  - `LOWEST_EQUILIBRIUM_PRICE`: the curves are shifted down by the lowest equilibrium price, so the cheapest segment lands at zero (1)
+  - `HIGHEST_PRICE_MARKUP`: the curves are shifted down by the smallest markup measured at the top of the curves, `min(max P_i - max C_i)` (2)
+"""
+@enumx Configurations_SupplyFunctionEquilibriumForcedShift begin
+    DO_NOT_FORCE = 0
+    LOWEST_EQUILIBRIUM_PRICE = 1
+    HIGHEST_PRICE_MARKUP = 2
+end
+
+"""
     Configurations_BidProcessing
 
   - `READ_BIDS_FROM_FILE`: (0)
